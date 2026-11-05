@@ -14,12 +14,12 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
 from ....domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
-from ..m303_arrivals import _transition_period_applicability_from_registry
+from ..m303_arrivals import transition_period_applicability_from_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,9 +65,9 @@ def test_every_edition_declares_the_periodic_carry_the_applicability_is_read_fro
 
 @pytest.mark.parametrize("filing_year", _QUARTERLY_YEARS)
 def test_the_fourth_quarter_is_a_transition_period(filing_year: int) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            _transition_period_applicability_from_registry(
+            transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, "4T"), operation=_authority_operation_for_test
             )
             is True
@@ -76,9 +76,9 @@ def test_the_fourth_quarter_is_a_transition_period(filing_year: int) -> None:
 
 @pytest.mark.parametrize("filing_year", _MONTHLY_YEARS)
 def test_december_is_a_transition_period(filing_year: int) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            _transition_period_applicability_from_registry(
+            transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, "12"), operation=_authority_operation_for_test
             )
             is True
@@ -87,9 +87,9 @@ def test_december_is_a_transition_period(filing_year: int) -> None:
 
 @pytest.mark.parametrize("filing_year", _QUARTERLY_YEARS)
 def test_the_first_quarter_is_not_a_transition_period(filing_year: int) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            _transition_period_applicability_from_registry(
+            transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, "1T"), operation=_authority_operation_for_test
             )
             is False
@@ -98,9 +98,9 @@ def test_the_first_quarter_is_not_a_transition_period(filing_year: int) -> None:
 
 @pytest.mark.parametrize("filing_year", _MONTHLY_YEARS)
 def test_january_is_not_a_transition_period(filing_year: int) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            _transition_period_applicability_from_registry(
+            transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, "01"), operation=_authority_operation_for_test
             )
             is False
@@ -115,9 +115,9 @@ def test_the_last_period_of_an_edition_replaced_mid_year_is_not_a_transition_per
     filing_year: int, period_code: str
 ) -> None:
     """A mid-year edition declares only the periods it governs; the cadence ends in its successor."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            _transition_period_applicability_from_registry(
+            transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, period_code), operation=_authority_operation_for_test
             )
             is False

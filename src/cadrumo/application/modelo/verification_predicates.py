@@ -164,7 +164,7 @@ def _predicate_literals(
         if threshold is None:
             raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     elif operator is VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE:
-        cutoff = _parse_predicate_date(parsed.cutoff)
+        cutoff = parse_predicate_date(parsed.cutoff)
         if cutoff is None:
             raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     if operator in _LITERAL_OPERATORS and not parsed.literal:
@@ -237,7 +237,7 @@ def _unique_predicate_casilla_id(
     return casilla_ids[0] if len(casilla_ids) == 1 else None
 
 
-def _parse_predicate_date(raw: str) -> _date | None:
+def parse_predicate_date(raw: str) -> _date | None:
     """Parse a date string, or ``None`` when absent/unparseable.
 
     Accepts the ISO form (the cutoff literal shape) and the Spanish day-first
@@ -297,7 +297,7 @@ _NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
 _IRNR_TAX_REGIME = "irnr"
 
 
-def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
+def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
     """Return whether the profile falls inside a predicate's named applicability filter.
 
     Each filter name a registry predicate may cite has one entry here; any other
@@ -479,7 +479,7 @@ def _evaluate_profile_field_required(
     profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
 ) -> bool:
-    if not _evaluate_applicability_filter(predicate.parsed.applicability_filter, profile):
+    if not evaluate_applicability_filter(predicate.parsed.applicability_filter, profile):
         return True
     field_value = getattr(profile, predicate.parsed.profile_field, None)
     return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
@@ -744,7 +744,7 @@ def _advisory_deduccion_requires_adquisicion_before_fires(
         raise AssertionError("admission reads every deduction cutoff")
     if casilla_values.get(amount_id, Decimal(0)) <= Decimal(0):
         return False
-    acquisition_date = _parse_predicate_date(text_values.get(acquisition_date_id, ""))
+    acquisition_date = parse_predicate_date(text_values.get(acquisition_date_id, ""))
     eligible_by_acquisition = acquisition_date is not None and acquisition_date < cutoff
     eligible_by_construction = bool(text_values.get(construction_date_id, "").strip())
     return not (eligible_by_acquisition or eligible_by_construction)
@@ -827,7 +827,7 @@ _CAPITAL_MOBILIARIO_RETENCION_ADVISORY_SUFFIX = (
 )
 
 
-def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> ModeloVerificationFinding:
+def advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> ModeloVerificationFinding:
     """Build the warning for a registry-authored advisory predicate.
 
     Each constructor carries its ``message_locale_key`` as a literal, so the
@@ -1096,7 +1096,7 @@ def _evaluate_selected_predicate_findings(
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
             if evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
-                findings.append(_advisory_predicate_finding(predicate))
+                findings.append(advisory_predicate_finding(predicate))
         else:
             if not evaluate_predicate_expression(predicate.expression, casilla_values, profile, text_values):
                 finding = _blocking_predicate_finding(predicate, casilla_values)

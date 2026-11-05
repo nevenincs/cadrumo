@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _TRANSCRIPTION_SHA = "b" * 64
 
 
-def _fully_populated_draft() -> InvoiceDraft:
+def fully_populated_draft() -> InvoiceDraft:
     """Return a draft with every defaultable field set to a non-default value."""
     return InvoiceDraft(
         supplier_tax_id="B12345674",
@@ -178,7 +178,7 @@ def test_every_defaultable_field_is_populated_off_default() -> None:
     default and compare equal. This asserts the fixture actually differs from a
     bare draft on every field that has a default.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     bare = InvoiceDraft()
 
     defaulted = {name for name, info in InvoiceDraft.model_fields.items() if not info.is_required()}
@@ -190,7 +190,7 @@ def test_every_defaultable_field_is_populated_off_default() -> None:
 
 def test_populated_draft_survives_a_real_json_round_trip() -> None:
     """Strict equality across a genuine JSON-text cycle, not a dict comparison."""
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
 
     reloaded = InvoiceDraft.model_validate_json(draft.model_dump_json())
 
@@ -204,7 +204,7 @@ def test_a_dropped_field_is_surfaced_rather_than_re_defaulted() -> None:
     of a save-drops-field regression. The reload must not compare equal to the
     original -- if it did, every round trip in this module would be vacuous.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     payload = json.loads(draft.model_dump_json())
     del payload["retencion_amount"]
 
@@ -216,7 +216,7 @@ def test_a_dropped_field_is_surfaced_rather_than_re_defaulted() -> None:
 
 def test_an_unknown_serialized_field_is_refused_not_absorbed() -> None:
     """The draft is ``extra="forbid"``; a stray key raises rather than vanishing."""
-    payload = json.loads(_fully_populated_draft().model_dump_json())
+    payload = json.loads(fully_populated_draft().model_dump_json())
     payload["model_confidence"] = 0.93
 
     with pytest.raises(ValidationError, match="model_confidence"):

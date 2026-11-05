@@ -32,9 +32,9 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ..cross_period_clean_state import (
-    _qualifies_for_first_year_fractional_suppression,
-    _suppressed_first_year_fractional_evidence,
-    _suppressed_pre_activity_evidence,
+    qualifies_for_first_year_fractional_suppression,
+    suppressed_first_year_fractional_evidence,
+    suppressed_pre_activity_evidence,
 )
 from ..cross_period_models import (
     CrossPeriodCleanStateVerdict,
@@ -100,7 +100,7 @@ def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() 
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
@@ -108,7 +108,7 @@ def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() 
         )
         is True
     )
-    evidence = _suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    evidence = suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
     assert evidence.clean is True
     assert evidence.blockers == ()
     assert evidence.suppressed_first_year_fractional is True
@@ -134,7 +134,7 @@ def test_mandatory_modalidad_base_m202_dependency_is_not_suppressed() -> None:
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
@@ -153,7 +153,7 @@ def test_incomplete_and_none_modality_m202_dependency_is_not_suppressed() -> Non
     requirement = _requirement("202")
     for modality in (Modelo202Modality.INCOMPLETE, None):
         assert (
-            _qualifies_for_first_year_fractional_suppression(
+            qualifies_for_first_year_fractional_suppression(
                 requirement,
                 modelo_202_modality=modality,
                 activity_start_date=date(_TARGET_YEAR, 3, 1),
@@ -172,7 +172,7 @@ def test_non_first_year_m202_dependency_is_not_suppressed() -> None:
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=date(_TARGET_YEAR - 1, 11, 1),
@@ -190,7 +190,7 @@ def test_missing_activity_start_date_m202_dependency_is_not_suppressed() -> None
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=None,
@@ -208,7 +208,7 @@ def test_non_m202_dependency_is_never_first_year_fractional_suppressed() -> None
     """
     requirement = _requirement("303")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
@@ -228,8 +228,8 @@ def test_first_year_fractional_facet_is_distinct_from_pre_activity_facet() -> No
     suppressions are independent and their advisory channels never collide.
     """
     requirement = _requirement("202")
-    pre_activity = _suppressed_pre_activity_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
-    first_year = _suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    pre_activity = suppressed_pre_activity_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    first_year = suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
 
     # Pre-activity facet behaves exactly as before and never reads as first-year.
     assert pre_activity.suppressed_pre_activity is True

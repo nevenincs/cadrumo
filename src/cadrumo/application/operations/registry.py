@@ -35,21 +35,6 @@ from ...core.operations import (
     OperationInteractionKind,
 )
 from ..operator_actions.models import ActionReference
-from ._registry_contracts import (
-    build_public_contract as _build_public_contract,
-)
-from ._registry_contracts import (
-    contract_set_digest as _contract_set_digest,
-)
-from ._registry_contracts import (
-    definition_contract_digest as _definition_contract_digest,
-)
-from ._registry_contracts import (
-    require_positional_callable_signature as _require_positional_callable_signature,
-)
-from ._registry_contracts import (
-    validate_public_registration as _validate_public_registration,
-)
 from .access_port import OperationAccessResolver
 from .capabilities import (
     OperationBaselinePolicy,
@@ -67,6 +52,13 @@ from .models import (
     OperationTerminalReceipt,
 )
 from .refusal_evidence import validate_refusal_code
+from .registry_contracts import (
+    build_public_contract,
+    contract_set_digest,
+    definition_contract_digest,
+    require_positional_callable_signature,
+    validate_public_registration,
+)
 from .registry_schema_validation import strict_model_json_schema
 from .schema_identity import OperationPublicSchemaId, OperationSchemaIdentityV1
 from .subject_reference import OperationSubjectReferenceV1
@@ -118,7 +110,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
             raise ValueError("refusal evidence requires a registered terminal projection schema")
         for code in self.refusal_detail_codes:
             validate_refusal_code(code)
-        expected = _definition_contract_digest(self)
+        expected = definition_contract_digest(self)
         if self.definition_contract_digest != expected:
             raise ValueError("operation definition contract digest does not reproduce")
         return self
@@ -166,7 +158,7 @@ class OperationPublicContractSetV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_digest(self) -> OperationPublicContractSetV1:
-        expected = _contract_set_digest(self.definitions)
+        expected = contract_set_digest(self.definitions)
         if self.contract_set_digest != expected:
             raise ValueError("operation public contract-set digest does not reproduce")
         return self
@@ -178,7 +170,7 @@ class OperationPublicContractSetV1(BaseModel):
     ) -> OperationPublicContractSetV1:
         """Build the canonical sorted set and its deterministic digest."""
         canonical = tuple(sorted(definitions, key=lambda item: item.definition_id))
-        return cls(definitions=canonical, contract_set_digest=_contract_set_digest(canonical))
+        return cls(definitions=canonical, contract_set_digest=contract_set_digest(canonical))
 
 
 class OperationReconciliationPolicy(StrEnum):
@@ -198,9 +190,9 @@ class OperationFrontendProjection(StrEnum):
     INSTALLED_SERVICE = "installed-service"
 
 
-from . import operation_definition as _operation_definition  # noqa: E402 — the enum must exist before model binding
+from . import operation_definition  # noqa: E402 — the enum must exist before model binding
 
-_operation_definition.OperationDefinition.model_rebuild(
+operation_definition.OperationDefinition.model_rebuild(
     _types_namespace={"OperationReconciliationPolicy": OperationReconciliationPolicy}
 )
 
@@ -230,7 +222,7 @@ class OperationEffectReceipt(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class _SchemaBindingIdentitySeed:
+class SchemaBindingIdentitySeed:
     schema_id: OperationPublicSchemaId
     schema_version: int
 
@@ -254,14 +246,14 @@ class OperationSchemaBindingV1(BaseModel):
     ) -> OperationSchemaIdentityV1:
         model_type = (info.data or {}).get("model_type")
         if not isinstance(model_type, type) or not issubclass(model_type, BaseModel):
-            if type(value) is _SchemaBindingIdentitySeed:
+            if type(value) is SchemaBindingIdentitySeed:
                 raise ValueError("operation schema identity requires a valid model type")
             identity = handler(value)
             if not isinstance(identity, OperationSchemaIdentityV1):
                 raise ValueError("operation schema identity validator must return a validated identity")
             return identity
 
-        if type(value) is _SchemaBindingIdentitySeed:
+        if type(value) is SchemaBindingIdentitySeed:
             fingerprint = content_hash_hex(strict_model_json_schema(model_type))
             # The seed carries only metadata: the ordinary concrete identity
             # constructor validates it, and no supplied fingerprint is trusted.
@@ -313,7 +305,7 @@ class OperationSchemaBindingV1(BaseModel):
         return cls.model_validate(
             {
                 "model_type": model_type,
-                "identity": _SchemaBindingIdentitySeed(schema_id=schema_id, schema_version=schema_version),
+                "identity": SchemaBindingIdentitySeed(schema_id=schema_id, schema_version=schema_version),
             }
         )
 
@@ -387,11 +379,11 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     @pydantic_validation_boundary
     def _validate_adapter_signatures(self) -> OperationPublicDefinitionRegistrationV1:
         if self.access_resolver is not None:
-            _require_positional_callable_signature(self.access_resolver, arity=2, label="Access resolver")
+            require_positional_callable_signature(self.access_resolver, arity=2, label="Access resolver")
         if self.review_projector is not None:
-            _require_positional_callable_signature(self.review_projector, arity=2, label="REVIEW projector")
+            require_positional_callable_signature(self.review_projector, arity=2, label="REVIEW projector")
         if self.workspace_refresh_adapter is not None:
-            _require_positional_callable_signature(
+            require_positional_callable_signature(
                 self.workspace_refresh_adapter,
                 arity=1,
                 label="Workspace refresh adapter",
@@ -402,7 +394,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     def compose_request_only(
         cls,
         *,
-        definition: _operation_definition.OperationDefinition,
+        definition: operation_definition.OperationDefinition,
         request_schema_id: OperationPublicSchemaId,
         request_schema_version: int = 1,
         access_resolver: OperationAccessResolver | None = None,
@@ -422,7 +414,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     def compose_request_result(
         cls,
         *,
-        definition: _operation_definition.OperationDefinition,
+        definition: operation_definition.OperationDefinition,
         public_result_type: type[BaseModel],
         access_resolver: OperationAccessResolver,
         result_projector: OperationResultProjector | None = None,
@@ -455,7 +447,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     def compose(
         cls,
         *,
-        definition: _operation_definition.OperationDefinition,
+        definition: operation_definition.OperationDefinition,
         request_schema: OperationSchemaBindingV1,
         result_schema: OperationSchemaBindingV1 | None = None,
         review_projection_schema: OperationSchemaBindingV1 | None = None,
@@ -509,15 +501,15 @@ class OperationRegistry(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    definitions: tuple[_operation_definition.OperationDefinition, ...] = Field(min_length=1)
+    definitions: tuple[operation_definition.OperationDefinition, ...] = Field(min_length=1)
     public_registrations: tuple[OperationPublicDefinitionRegistrationV1, ...] = ()
 
     @field_validator("definitions")
     @classmethod
     @pydantic_validation_boundary
     def _canonical_definitions(
-        cls, value: tuple[_operation_definition.OperationDefinition, ...]
-    ) -> tuple[_operation_definition.OperationDefinition, ...]:
+        cls, value: tuple[operation_definition.OperationDefinition, ...]
+    ) -> tuple[operation_definition.OperationDefinition, ...]:
         definition_ids = tuple(item.definition_id for item in value)
         if len(set(definition_ids)) != len(definition_ids):
             raise ValueError("operation definition IDs must be unique")
@@ -554,10 +546,10 @@ class OperationRegistry(BaseModel):
 
     @staticmethod
     def _validate_public_registration(
-        definition: _operation_definition.OperationDefinition,
+        definition: operation_definition.OperationDefinition,
         registration: OperationPublicDefinitionRegistrationV1,
     ) -> None:
-        _validate_public_registration(
+        validate_public_registration(
             definition,
             registration,
             contract_builder=_public_contract_for_definition,
@@ -572,7 +564,7 @@ class OperationRegistry(BaseModel):
             tuple(registration.contract for registration in self.public_registrations),
         )
 
-    def lookup(self, definition_id: str) -> _operation_definition.OperationDefinition:
+    def lookup(self, definition_id: str) -> operation_definition.OperationDefinition:
         """Return the exact registered definition or fail closed."""
         for definition in self.definitions:
             if definition.definition_id == definition_id:
@@ -615,7 +607,7 @@ class OperationRegistry(BaseModel):
             f"{identity.schema_id!r} version {identity.schema_version}"
         )
 
-    def lookup_action(self, action: ActionReference) -> _operation_definition.OperationDefinition:
+    def lookup_action(self, action: ActionReference) -> operation_definition.OperationDefinition:
         """Resolve an optional canonical action join without owning its catalogue."""
         for definition in self.definitions:
             if definition.action_reference == action:
@@ -654,7 +646,7 @@ def operation_public_schema_reference(identity: OperationSchemaIdentityV1) -> st
 
 
 def _public_contract_for_definition(
-    definition: _operation_definition.OperationDefinition,
+    definition: operation_definition.OperationDefinition,
     *,
     request_schema: OperationSchemaIdentityV1,
     result_schema: OperationSchemaIdentityV1 | None,
@@ -662,7 +654,7 @@ def _public_contract_for_definition(
     interaction_response_schema: OperationSchemaIdentityV1 | None,
     workspace_refresh_target_schema: OperationSchemaIdentityV1 | None,
 ) -> OperationPublicDefinitionContractV1:
-    return _build_public_contract(
+    return build_public_contract(
         contract_type=OperationPublicDefinitionContractV1,
         definition=definition,
         request_schema=request_schema,

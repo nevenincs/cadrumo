@@ -36,7 +36,6 @@ from ...operations.registry import (
     OperationRegistry,
 )
 from .. import m145_communication_execution as m145_operation
-from .._ports import FicheroBoeRecordRenderer
 from ..m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
@@ -75,6 +74,7 @@ from ..m145_communication_records_ports import (
     M145CommunicationRecordsPorts,
     M145CommunicationRecordsPortsFactory,
 )
+from ..ports import FicheroBoeRecordRenderer
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 

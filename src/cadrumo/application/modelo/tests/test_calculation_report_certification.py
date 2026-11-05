@@ -26,7 +26,7 @@ from ..calculation_report_certification import (
     parse_certification_statement,
 )
 from ..review_package_signing import ReviewPackageSigningKeypair
-from ._calculation_report_fixture import EXPORTED_AT, TAXPAYER_NAME, TAXPAYER_TAX_ID, build_fixture_report
+from .calculation_report_fixture import EXPORTED_AT, TAXPAYER_NAME, TAXPAYER_TAX_ID, build_fixture_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

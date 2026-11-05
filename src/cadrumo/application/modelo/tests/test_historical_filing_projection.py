@@ -25,20 +25,20 @@ from ....domain.modelos.calculation_revision_sources import CalculationSourceIss
 from ....domain.modelos.filing_record import derive_filing_record_id
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..filing_record_view_operation import ModeloFilingRecordViewRequest, _capture
+from ..filing_record_view_operation import ModeloFilingRecordViewRequest, capture
 from ..historical_filing_projection import (
     ModeloHistoricalContextEntryProjection,
     ModeloHistoricalFilingContentProjection,
     ModeloHistoricalUnresolvedProjection,
     project_historical_filing_content,
 )
-from .test_filing_record_view_operation import _PROFILE, _bundle, _Repository, _source
+from .test_filing_record_view_operation import PROFILE, Repository, filing_record_view_operation_bundle, source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _revision() -> CalculationRevision:
-    unit, _record = _source()
+    unit, _record = source()
     casilla_id = validated_casilla_id("01", surface="saved filing test")
     outputs = {casilla_id: Decimal("7.125")}
     issues = (
@@ -85,7 +85,7 @@ def _revision() -> CalculationRevision:
 
 def test_real_filing_view_selects_historical_content_and_keeps_current_layers_separate() -> None:
     revision = _revision()
-    unit, source_record = _source()
+    unit, source_record = source()
     record = source_record.model_copy(
         update={
             "calculation_revision_id": revision.calculation_revision_id,
@@ -96,19 +96,19 @@ def test_real_filing_view_selects_historical_content_and_keeps_current_layers_se
             ),
         }
     )
-    bundle = _bundle(record=record, unit=unit)
+    bundle = filing_record_view_operation_bundle(record=record, unit=unit)
     object.__setattr__(
         bundle,
         "calculation",
-        _Repository(
-            str(_PROFILE),
+        Repository(
+            str(PROFILE),
             CalculationRevisionCatalogue(
                 revisions={revision.calculation_revision_id: revision},
             ),
         ),
     )
-    result = _capture(
-        ModeloFilingRecordViewRequest(profile_id=_PROFILE, filing_record_id=record.filing_record_id), bundle
+    result = capture(
+        ModeloFilingRecordViewRequest(profile_id=PROFILE, filing_record_id=record.filing_record_id), bundle
     )
     historical = result.historical_content
     assert historical.availability == "available"
@@ -123,9 +123,10 @@ def test_real_filing_view_selects_historical_content_and_keeps_current_layers_se
 
 
 def test_missing_saved_revision_cannot_substitute_current_values() -> None:
-    _unit, record = _source()
-    result = _capture(
-        ModeloFilingRecordViewRequest(profile_id=_PROFILE, filing_record_id=record.filing_record_id), _bundle()
+    _unit, record = source()
+    result = capture(
+        ModeloFilingRecordViewRequest(profile_id=PROFILE, filing_record_id=record.filing_record_id),
+        filing_record_view_operation_bundle(),
     )
     assert result.historical_content.availability == "missing"
     assert result.historical_content.observations == ()
@@ -140,7 +141,7 @@ def test_missing_saved_revision_cannot_substitute_current_values() -> None:
 @pytest.mark.parametrize("defect", ["revision", "coordinate", "values", "observation"])
 def test_historical_content_refuses_substitution_and_corrupt_saved_content(defect: str) -> None:
     revision = _revision()
-    _unit, source_record = _source()
+    _unit, source_record = source()
     record = source_record.model_copy(
         update={
             "calculation_revision_id": revision.calculation_revision_id,
@@ -200,7 +201,7 @@ def _revision_with_rows_and_an_unresolved_outcome() -> CalculationRevision:
 
 def test_saved_rows_and_unresolved_outcomes_are_released_as_declared_fields_and_never_as_a_json_string() -> None:
     revision = _revision_with_rows_and_an_unresolved_outcome()
-    _unit, source_record = _source()
+    _unit, source_record = source()
     record = source_record.model_copy(
         update={
             "calculation_revision_id": revision.calculation_revision_id,

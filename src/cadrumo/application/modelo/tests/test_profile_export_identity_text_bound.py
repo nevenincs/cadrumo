@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.schema import ProfileValueRefusalKind, profile_value_refusal
 
-from ..profile_export_binding import _identity_from_profile_facts
+from ..profile_export_binding import identity_from_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -41,7 +41,7 @@ def test_the_refusal_names_the_field_and_never_the_value(
     schema = operation.profile_schema()
 
     with pytest.raises(ProfileSchemaValidationError) as refused:
-        _identity_from_profile_facts({**_PERSON, **facts}, schema=schema)
+        identity_from_profile_facts({**_PERSON, **facts}, schema=schema)
 
     assert refused.value.translated_message == "application.user_profile.errors.profile_text_too_long"
     assert refused.value.context is not None
@@ -51,7 +51,7 @@ def test_the_refusal_names_the_field_and_never_the_value(
 
 
 def test_a_name_at_the_bound_is_carried(operation: PinnedAuthorityOperation) -> None:
-    identity = _identity_from_profile_facts(
+    identity = identity_from_profile_facts(
         {**_PERSON, "identity.name": "N" * 127, "identity.surnames": "S" * 128},
         schema=operation.profile_schema(),
     )

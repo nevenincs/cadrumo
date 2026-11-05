@@ -137,7 +137,7 @@ def _work_capture_generation_for(domain: str, observation: tuple[str, ...]) -> i
         return _work_capture_generation
 
 
-def _work_capture_observation(
+def work_capture_observation(
     request: ModeloWorkSelectorRequest,
     *,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
@@ -181,7 +181,7 @@ def capture_modelo_work_resolution(
     carrying the catalogue generation. No registry is consulted and the
     catalogue is read exactly once per successful attempt.
     """
-    bucket_id, catalogue, observation, implicit = _work_capture_observation(
+    bucket_id, catalogue, observation, implicit = work_capture_observation(
         request,
         catalogue_repository=catalogue_repository,
     )
@@ -210,7 +210,7 @@ def read_modelo_work_current_coordinate(
     observes, in the same owner domain, so a catalogue write since the capture
     yields a different generation.
     """
-    bucket_id, _catalogue, observation, implicit = _work_capture_observation(
+    bucket_id, _catalogue, observation, implicit = work_capture_observation(
         request,
         catalogue_repository=catalogue_repository,
     )

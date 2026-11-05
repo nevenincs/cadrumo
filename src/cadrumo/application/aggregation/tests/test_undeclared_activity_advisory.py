@@ -38,13 +38,13 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from .._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregation,
     aggregate_renta_income_ledger,
     aggregate_renta_m131_agrario_income_ledger,
 )
 from ..source_mesh import CalculationSourceDiagnostic
+from ..undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,

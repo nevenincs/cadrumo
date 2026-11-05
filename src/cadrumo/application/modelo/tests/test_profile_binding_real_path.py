@@ -35,15 +35,13 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
 )
@@ -107,7 +105,7 @@ def _full_m100_profile() -> UserProfileRecord:
     Dates arrive as Python ``date`` objects; booleans as ``bool``;
     strings as ``str``; Decimals as ``Decimal``.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -163,7 +161,7 @@ def _full_m100_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -293,7 +291,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
 ) -> None:
     """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
     snapshot = _modelo_100_snapshot()
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -306,7 +304,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -341,7 +339,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
     assert dictionary_field == "ECIVIL"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -354,7 +352,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -377,7 +375,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved(
 ) -> None:
     """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
     snapshot = _modelo_100_snapshot()
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -390,7 +388,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     resolved = resolve_profile_sourced_bindings(
@@ -543,13 +541,13 @@ _M130_MODALITY_BINDING = "modelo-130-estimacion-directa-modalidad"
 
 
 def _m130_record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"), *facts),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

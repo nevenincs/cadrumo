@@ -17,13 +17,13 @@ from ...core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import LegalRefId
 from ..filing.draft_review import describe_stale_reason
 from ..filing.draft_review_ports import DraftReviewPorts
-from ._aggregator import ReviewQueue
+from .aggregator import ReviewQueue
 from .enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .errors import ReviewItemNotFoundError, UnknownReviewKindError
 from .models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
@@ -32,7 +32,7 @@ from .models import FindingReviewItem, InvoiceReviewItem, ReviewItem, Transactio
 class ReviewQueueRow(BaseModel):
     """CLI-ready read-only review queue row."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     item_id: str = Field(min_length=1)
     kind: str = Field(min_length=1)
@@ -70,7 +70,7 @@ class ReviewQueueRow(BaseModel):
 class ReviewQueueReport(BaseModel):
     """Read-only review queue report."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: tuple[ReviewQueueRow, ...]
 
@@ -121,15 +121,15 @@ def project_review_queue(
     transactions whose ``classification_confidence`` is non-None and
     strictly below the threshold, so the operator can triage the
     lowest-confidence classifications first (see
-    :meth:`~cadrumo.application.review._aggregator.ReviewQueue.collect`). Invoice and
+    :meth:`~cadrumo.application.review.aggregator.ReviewQueue.collect`). Invoice and
     finding rows carry no decision-confidence and are excluded while the
     filter is active.
     """
-    selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
-    from ...core.config import load_settings as _load_settings
+    selected = resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
+    from ...core.config import load_settings
 
     items = ReviewQueue.collect(
-        settings or _load_settings(),
+        settings or load_settings(),
         bucket_id=bucket_id,
         ports=ports,
         operation=operation,
@@ -143,8 +143,8 @@ def project_review_queue(
     rows = tuple(
         row
         for item in items
-        for row in (_to_row(item, state=state, bucket_id=bucket_id),)
-        if _row_matches(row, accepted_kinds, accepted_source_kinds)
+        for row in (to_row(item, state=state, bucket_id=bucket_id),)
+        if row_matches(row, accepted_kinds, accepted_source_kinds)
     )
     return ReviewQueueReport(rows=rows)
 
@@ -174,7 +174,7 @@ def project_review_item(
     raise ReviewItemNotFoundError()
 
 
-def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
+def resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
     internal: set[ReviewItemKind] = set()
     accepted = tuple(kind.strip() for kind in kinds if kind.strip())
     if not accepted:
@@ -194,7 +194,7 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
     return frozenset(internal)
 
 
-def _row_matches(
+def row_matches(
     row: ReviewQueueRow,
     accepted_kinds: frozenset[str],
     accepted_source_kinds: frozenset[str],
@@ -206,7 +206,7 @@ def _row_matches(
     return kind_matches and source_matches
 
 
-def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
+def to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
     if isinstance(item, TransactionReviewItem):
         return ReviewQueueRow(
             item_id=item.item_id,

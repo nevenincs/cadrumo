@@ -17,8 +17,8 @@ from cadrumo.application.auth.session_types import AeatSession, CertificateSessi
 from cadrumo.application.live import notifications
 from cadrumo.application.live.filed_data_ports import FiledEffectGuard
 from cadrumo.application.live.filed_history_pull import (
-    _capture_filed_history_iva_wallet,
-    _capture_filed_history_notifications,
+    capture_filed_history_iva_wallet,
+    capture_filed_history_notifications,
 )
 from cadrumo.application.live.notification_ports import NotificationsPorts, NotificationsSnapshot
 from cadrumo.application.live.remote_state_models import IvaWalletCaptureReport
@@ -26,7 +26,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.period import Period
 
-from .filed_observation_test_support import _UnavailableIvaRemoteStatePort
+from .filed_observation_test_support import UnavailableIvaRemoteStatePort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -63,7 +63,7 @@ class _Guard:
             self.active = False
 
 
-class _IvaPort(_UnavailableIvaRemoteStatePort):
+class _IvaPort(UnavailableIvaRemoteStatePort):
     def __init__(self, failure: BaseException, *, local: bool, guard: _Guard) -> None:
         self.failure = failure
         self.local = local
@@ -127,7 +127,7 @@ async def _stage(
     guard = _Guard()
     if stage == "iva":
         port = _IvaPort(failure, local=local, guard=guard)
-        result = await _capture_filed_history_iva_wallet(
+        result = await capture_filed_history_iva_wallet(
             iva_remote_state_port=port,
             resolved_today=date(2026, 10, 2),
             output_root=tmp_path,
@@ -149,7 +149,7 @@ async def _stage(
             raise failure
 
         with override_settings(cadrumo_active_profile=_PROFILE_ID):
-            result = await _capture_filed_history_notifications(
+            result = await capture_filed_history_notifications(
                 certificate_secret_backend_factory=cast(CertificateSecretBackendFactory, object()),
                 browser_session_factory=cast(BrowserSessionFactoryPort, object()),
                 operator_scope_ports=cast(OperatorScopePorts, object()),
@@ -215,7 +215,7 @@ async def test_iva_failure_after_successful_local_write_propagates_exact_error(t
 
     port = _RereadFailurePort(failure, local=True, guard=guard)
     with pytest.raises(OSError) as caught:
-        await _capture_filed_history_iva_wallet(
+        await capture_filed_history_iva_wallet(
             iva_remote_state_port=port,
             resolved_today=date(2026, 10, 2),
             output_root=tmp_path,

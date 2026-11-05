@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -17,9 +17,7 @@ from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
 from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
-from .calendar_test_support import BUCKET_ID as _BUCKET_ID
-from .calendar_test_support import SOURCE_URL as _SOURCE_URL
-from .calendar_test_support import profile as _profile
+from .calendar_test_support import BUCKET_ID, SOURCE_URL, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,7 +60,7 @@ def test_calendar_autonomo_still_shows_modelo_130(authority_operation: PinnedAut
     """The autónomo persona is unchanged: Modelo 130 still appears."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" in modelos
 
@@ -187,9 +185,9 @@ def test_calendar_undeclared_profile_preserves_observed_events(
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 declarations=(
                     ExpedientesDeclaration(
                         modelo="303",
@@ -302,7 +300,7 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
     """Agenda and backlog compose the calendar, so the non-applicable
     exclusion must reach them too — neither may leak the NOT_APPLICABLE
     Modelo 130 as a confident due / late row for an objetiva autónomo."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..agenda import build_overview_agenda
         from ..backlog import build_overview_backlog
 
@@ -424,7 +422,7 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     operator error. The agenda must answer instead — every cohort is a
     valid tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..agenda import build_overview_agenda
 
         profile = _fully_enrolled_autonomo()
@@ -451,7 +449,7 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     spans into 2026. The backlog must answer rather than crash on the
     uncovered 2027 year.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..backlog import build_overview_backlog
 
         profile = _fully_enrolled_autonomo()
@@ -564,7 +562,7 @@ def test_calendar_natural_person_shows_irpf_not_corporate(
     Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "130" in surfaced

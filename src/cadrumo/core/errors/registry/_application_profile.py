@@ -673,7 +673,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage.calc_sheets._translator.TranslationError",
+        "cadrumo.application.storage.calc_sheets.translator.TranslationError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_TRANSLATION",
             category=ErrorCategory.ERROR,

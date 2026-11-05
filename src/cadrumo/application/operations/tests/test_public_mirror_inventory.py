@@ -26,7 +26,7 @@ from cadrumo.application.modelo.workbench_projection import (
     PublicModeloWorkFormLoadV1,
     PublicSpanishTaxIdFormat,
 )
-from cadrumo.application.operations._dataclass_fields import dataclass_type_hints
+from cadrumo.application.operations.dataclass_fields import dataclass_type_hints
 from cadrumo.application.operations.public_mirror import PublicScalarValueV1, bare_annotation
 from cadrumo.application.workbench_generation_public_contracts import (
     PublicDeclarationSummary,

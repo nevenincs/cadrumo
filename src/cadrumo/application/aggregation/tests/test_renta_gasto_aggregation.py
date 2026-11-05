@@ -35,7 +35,7 @@ from ..renta_gasto_ledger import (
 from ..renta_ledger import aggregate_renta_ledger_expenses
 from ..renta_ledger_models import RentaLedgerAggregationIssueReason
 from .renta_gasto_aggregation_support import gasto_transaction
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 from .usage_ratio_support import (
     HOME_OFFICE_SUMINISTRO_RATIO,
     dwelling_classify_share,
@@ -48,8 +48,8 @@ SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-_Q1_2024 = _period(2025, "1T")
-_Q2_2024 = _period(2025, "2T")
+_Q1_2024 = renta_income_aggregation_period(2025, "1T")
+_Q2_2024 = renta_income_aggregation_period(2025, "2T")
 
 
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
@@ -451,7 +451,7 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2025, "0A"),
+        period=renta_income_aggregation_period(2025, "0A"),
         profile_year=2025,
     )
 
@@ -494,7 +494,7 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2025, "0A"),
+        period=renta_income_aggregation_period(2025, "0A"),
         profile_year=2025,
     )
 
@@ -521,7 +521,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2025, "0A"),
+        period=renta_income_aggregation_period(2025, "0A"),
         profile_year=2025,
     )
 
@@ -735,7 +735,7 @@ def test_quarterly_and_annual_deduct_the_same_home_office_rows(operation: Pinned
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2025, "0A"),
+        period=renta_income_aggregation_period(2025, "0A"),
         profile_year=2025,
         usage_ratios=ratios,
         profile_record=profile,

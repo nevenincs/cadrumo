@@ -33,7 +33,7 @@ from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n.render import tr
 from ...core.parsing.utils import parse_bool
 from ...core.tty import stdin_is_tty
-from .capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
+from .capability import NO_CONSOLE_ERRORS
 from .checkpoint import CheckpointStore, checkpoint_available, discard_checkpoint, save_checkpoint
 from .copy import (
     PAGE_REQUIREMENT_LOCALE_KEYS,
@@ -116,7 +116,7 @@ class LineFlowFrontend:
 
             output = create_output(always_prefer_tty=True)
             output.flush()
-        except _NO_CONSOLE_ERRORS as exc:
+        except NO_CONSOLE_ERRORS as exc:
             raise FlowUnsupportedConsoleError(
                 translated_message="flows.errors.unsupported_console",
             ) from exc
@@ -256,7 +256,7 @@ class LineFlowFrontend:
         default = current if current is not None else (entry.page.default or "")
         try:
             return self._widget_prompts()[entry.page.widget](prompt, default, copy)
-        except _NO_CONSOLE_ERRORS as exc:
+        except NO_CONSOLE_ERRORS as exc:
             raise FlowUnsupportedConsoleError(
                 translated_message="flows.errors.unsupported_console",
             ) from exc

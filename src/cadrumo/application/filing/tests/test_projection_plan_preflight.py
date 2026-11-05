@@ -33,12 +33,18 @@ from ..projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
     FilingRecordRenderContext,
-    _require_regimen_snapshot_matches_registry,
     build_m303_filing_projection_plan,
     project_filing_record,
+    require_regimen_snapshot_matches_registry,
 )
 from ..record_renderer import preflight_projection_plan
-from .producer_snapshot_support import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
+from .producer_snapshot_support import (
+    elections,
+    m303_filing_facts,
+    m303_profile,
+    producer_snapshot_presenter,
+    taxpayer_identity,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -179,14 +185,14 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
     producer = build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=_m303_filing_facts(period_code="1T"),
+        m303_filing_facts=m303_filing_facts(period_code="1T"),
     )
     snapshot_2026 = published_snapshot("303", filing_year=2026, period="1T")
     snapshot_2025 = published_snapshot("303", filing_year=2025, period="4T")
@@ -237,14 +243,14 @@ def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict
     producer = build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=_m303_filing_facts(),
+        m303_filing_facts=m303_filing_facts(),
     )
     facts = producer.m303_filing_facts
     assert facts is not None
@@ -259,4 +265,4 @@ def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(FilingExportValidationError, match="annual Orden"):
-        _require_regimen_snapshot_matches_registry(snapshot, wrong_producer)
+        require_regimen_snapshot_matches_registry(snapshot, wrong_producer)

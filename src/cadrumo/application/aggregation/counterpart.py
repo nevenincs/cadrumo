@@ -37,7 +37,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
-from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from .grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
@@ -118,7 +118,7 @@ def _active_counterpart_modelos(
 
 # Registry authority: selected M347/M349 counterpart declarations are consumed through
 # one generation-pinned operation and the dated mapping fact.
-def _registry_counterpart_catalogue(
+def registry_counterpart_catalogue(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
@@ -297,7 +297,7 @@ def _aggregate_for_modelo(
     period: Period,
     operation: PinnedAuthorityOperation,
 ) -> CounterpartAggregation:
-    registry_catalogue = _registry_counterpart_catalogue(period.end_date, operation=operation)
+    registry_catalogue = registry_counterpart_catalogue(period.end_date, operation=operation)
     # A clave of the other modelo is filtered below; only a token in neither
     # vocabulary would silently vanish from both passes.
     undeclared = sorted(

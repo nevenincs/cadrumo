@@ -391,7 +391,7 @@ async def _capture_and_absorb_one_declaration(
     )
 
 
-async def _absorb_declarations(
+async def absorb_declarations(
     declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     *,
     opened_register: FiledDataRegisterPort,
@@ -573,7 +573,7 @@ async def _capture_filed_data_query_pair(
         dry_run=dry_run,
         state=phase_state,
     )
-    await _absorb_declarations(
+    await absorb_declarations(
         within_limit,
         opened_register=opened_register,
         accumulator=accumulator,

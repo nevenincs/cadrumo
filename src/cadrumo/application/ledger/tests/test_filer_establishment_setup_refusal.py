@@ -31,16 +31,16 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ....domain.iva.schema import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..confirm_establishment import _filer_scope
+from ..confirm_establishment import confirm_establishment_filer_scope
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 from ..preconditions import LedgerPreconditionCondition
@@ -55,11 +55,11 @@ def _profile(postcode: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if postcode is not None:
         facts = (*facts, UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=postcode))
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -83,7 +83,7 @@ def test_a_declared_postcode_resolves_the_filers_own_territory(
     expected: IvaTerritorialScope,
 ) -> None:
     """The whole point of the fact: the operator side is answered without the paper."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
             == expected
@@ -111,7 +111,7 @@ def test_an_unresolvable_own_territory_refuses_rather_than_defaulting(postcode: 
     the case a permissive parse turns into a confident mainland answer.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(PurchaseInvoiceEvidenceInputError),
     ):
         resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
@@ -126,7 +126,7 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
     quietly answering for the malformed shapes, so the absence of any returned
     value is asserted over the set rather than per case.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         returned = []
         for postcode in (None, "", "   ", "2801", "280134", "28O13", "Madrid"):
             try:
@@ -147,7 +147,7 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
 def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
     """No profile is not an empty profile, and neither is a territory."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(PurchaseInvoiceEvidenceInputError),
     ):
         resolve_filer_territorial_scope(profile_record=None, operation=_authority_operation_for_test)
@@ -155,9 +155,9 @@ def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
 
 def test_confirm_boundary_preserves_the_exact_profile_precondition_refusal() -> None:
     """Confirm does not flatten a profile precondition into review-item prose."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            _filer_scope(_profile(None), operation=_authority_operation_for_test)
+            confirm_establishment_filer_scope(_profile(None), operation=_authority_operation_for_test)
 
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
@@ -172,7 +172,7 @@ class TestTheRefusalIsActionable:
 
     def test_the_refusal_names_the_missing_fact(self) -> None:
         """Naming the fact path is what makes the gap addressable rather than abstract."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
                 resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
 
@@ -180,7 +180,7 @@ class TestTheRefusalIsActionable:
 
     def test_the_refusal_names_the_verb_that_supplies_it(self) -> None:
         """The recovery path travels with the refusal, not in documentation elsewhere."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
                 resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
 
@@ -197,7 +197,7 @@ class TestTheRefusalIsActionable:
         need different operator actions, and an automation told the fact is missing
         when it is actually malformed will re-supply the same malformed value.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
                 resolve_filer_territorial_scope(
                     profile_record=_profile("Madrid"), operation=_authority_operation_for_test

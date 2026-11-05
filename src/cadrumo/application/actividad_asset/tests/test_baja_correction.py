@@ -38,14 +38,14 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_register import _ACQUISITION, _NAME, _forecast, _full_year, _operations, _revision
+from .test_register import ACQUISITION, NAME, full_year, register_forecast, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ASSET = "laptop-1"
+ASSET = "laptop-1"
 
 
-def _sale(on: date) -> ActivityAssetDisposal:
+def sale(on: date) -> ActivityAssetDisposal:
     return ActivityAssetDisposal(
         disposal_date=on,
         reason=ActivityAssetDisposalReason.SALE,
@@ -54,12 +54,12 @@ def _sale(on: date) -> ActivityAssetDisposal:
     )
 
 
-def _disposed(on: date = date(2026, 6, 30)) -> tuple[ActivityAssetOperations, MemoryRepository, ActivityAssetRevision]:
-    operations, repository = _operations(today=date(2028, 12, 31), last_admitted_year=2027)
-    operations.create(_revision(), _NAME)
+def disposed(on: date = date(2026, 6, 30)) -> tuple[ActivityAssetOperations, MemoryRepository, ActivityAssetRevision]:
+    operations, repository = register_operations(today=date(2028, 12, 31), last_admitted_year=2027)
+    operations.create(register_revision(), NAME)
     for year in (2025, 2026, 2027):
-        operations.record_claim(_full_year(operations, year), creating_operation=f"test.{year}")
-    after = operations.dispose(_ASSET, _sale(on))
+        operations.record_claim(full_year(operations, year), creating_operation=f"test.{year}")
+    after = operations.dispose(ASSET, sale(on))
     return operations, repository, after.revisions[-1]
 
 
@@ -67,12 +67,12 @@ def _effective_by_year(repository: MemoryRepository) -> dict[int, Decimal]:
     return {claim.tax_year: claim.amount for claim in effective_claims(repository.history.claims)}
 
 
-def _without_baja(baja: ActivityAssetRevision) -> ActivityAssetRevision:
-    return _revision(number=baja.revision_number + 1, supersedes=baja.revision_id)
+def baja_correction_without_baja(baja: ActivityAssetRevision) -> ActivityAssetRevision:
+    return register_revision(number=baja.revision_number + 1, supersedes=baja.revision_id)
 
 
 def test_removing_a_baja_restores_the_year_it_zeroed_in_one_write(monkeypatch: pytest.MonkeyPatch) -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
     applied: list[object] = []
     apply = repository.apply
 
@@ -82,7 +82,7 @@ def test_removing_a_baja_restores_the_year_it_zeroed_in_one_write(monkeypatch: p
 
     monkeypatch.setattr(repository, "apply", counted)
 
-    after = operations.correct(_without_baja(baja), origin="test.correct")
+    after = operations.correct(baja_correction_without_baja(baja), origin="test.correct")
 
     assert len(applied) == 1
     assert after.revisions[-1].disposal is None
@@ -100,47 +100,47 @@ def test_removing_a_baja_restores_the_year_it_zeroed_in_one_write(monkeypatch: p
 
 
 def test_the_shortened_year_reads_as_a_gap_after_the_baja_is_removed() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
 
-    operations.correct(_without_baja(baja))
+    operations.correct(baja_correction_without_baja(baja))
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2026]
+    row = {item.tax_year: item for item in operations.plan(ASSET)}[2026]
     assert row.claim_state is ActivityAssetClaimState.PARTIAL
     assert row.claimable_intervals[0].covered_from == date(2026, 7, 1)
     # The rest of 2026 charges 520.00 - 257.86.
-    rest = operations.forecast(asset_id=_ASSET, covered_from=date(2026, 7, 1), covered_until=date(2027, 1, 1))
+    rest = operations.forecast(asset_id=ASSET, covered_from=date(2026, 7, 1), covered_until=date(2027, 1, 1))
     assert rest.amount == Decimal("262.14")
     assert operations.record_claim(rest, creating_operation="test.rest").claim.amount == Decimal("262.14")
     assert _effective_by_year(repository)[2025] == Decimal("520.00")
 
 
 def test_claiming_the_remainder_after_the_baja_is_removed_completes_the_year_at_the_full_charge() -> None:
-    operations, repository, baja = _disposed()
-    operations.correct(_without_baja(baja))
-    rest = operations.forecast(asset_id=_ASSET, covered_from=date(2026, 7, 1), covered_until=date(2027, 1, 1))
+    operations, repository, baja = disposed()
+    operations.correct(baja_correction_without_baja(baja))
+    rest = operations.forecast(asset_id=ASSET, covered_from=date(2026, 7, 1), covered_until=date(2027, 1, 1))
 
     operations.record_claim(rest, creating_operation="test.rest")
 
     year = [claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026]
     assert sorted(claim.amount for claim in year) == [Decimal("257.86"), Decimal("262.14")]
     assert sum((claim.amount for claim in year), Decimal("0")) == Decimal("520.00")
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2026]
+    row = {item.tax_year: item for item in operations.plan(ASSET)}[2026]
     assert row.claim_state is ActivityAssetClaimState.SUPERSEDED
     assert row.claimable_intervals == ()
 
 
 def test_redating_a_baja_later_restores_a_zeroed_year_now_inside_service() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
 
-    operations.correct(baja.with_disposal(_sale(date(2028, 6, 30))))
+    operations.correct(baja.with_disposal(sale(date(2028, 6, 30))))
 
     assert _effective_by_year(repository)[2027] == Decimal("520.00")
 
 
 def test_redating_a_baja_into_a_zeroed_year_charges_up_to_the_new_boundary() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
 
-    after = operations.correct(baja.with_disposal(_sale(date(2027, 6, 30))))
+    after = operations.correct(baja.with_disposal(sale(date(2027, 6, 30))))
 
     assert _effective_by_year(repository)[2027] == Decimal("257.86")
     last = next(claim for claim in effective_claims(after.claims) if claim.tax_year == 2027)
@@ -149,9 +149,9 @@ def test_redating_a_baja_into_a_zeroed_year_charges_up_to_the_new_boundary() -> 
 
 
 def test_redating_a_baja_earlier_zeroes_what_now_lies_after_it() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
 
-    operations.correct(baja.with_disposal(_sale(date(2025, 12, 31))))
+    operations.correct(baja.with_disposal(sale(date(2025, 12, 31))))
 
     assert _effective_by_year(repository) == {
         2025: Decimal("520.00"),
@@ -161,7 +161,7 @@ def test_redating_a_baja_earlier_zeroes_what_now_lies_after_it() -> None:
 
 
 def test_a_correction_that_keeps_the_baja_touches_no_claim() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
     before = _effective_by_year(repository)
     corrected = baja.model_copy(
         update={"revision_number": baja.revision_number + 1, "supersedes_revision_id": baja.revision_id}
@@ -174,12 +174,12 @@ def test_a_correction_that_keeps_the_baja_touches_no_claim() -> None:
 
 
 def test_removing_a_baja_is_refused_for_a_foral_resident_and_writes_nothing() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
     before = repository.history
     foral = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=register_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=replace(
             memory_register_authority(today=date(2028, 12, 31)),
@@ -188,14 +188,14 @@ def test_removing_a_baja_is_refused_for_a_foral_resident_and_writes_nothing() ->
     )
 
     with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
-        foral.correct(_without_baja(baja))
+        foral.correct(baja_correction_without_baja(baja))
 
     assert repository.history == before
-    assert operations.plan(_ASSET)
+    assert operations.plan(ASSET)
 
 
-def _low_value_revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAssetRevision:
-    base = _revision(number=number, supersedes=supersedes, basis="250", method=AmortizationMethod.LINEAR)
+def low_value_revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAssetRevision:
+    base = register_revision(number=number, supersedes=supersedes, basis="250", method=AmortizationMethod.LINEAR)
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["acquired_condition"] = AcquiredCondition.NEW
     facts["amortization"] = ActivityAssetAmortizationElection(
@@ -209,7 +209,7 @@ def _low_value_revision(*, number: int = 1, supersedes: str | None = None) -> Ac
     return ActivityAssetRevision(**facts)
 
 
-def _low_value_forecast(
+def low_value_forecast(
     revision: ActivityAssetRevision,
     *,
     covered_from: date,
@@ -241,38 +241,38 @@ def test_removing_a_baja_restores_a_free_amount_as_the_taxpayer_elected_it() -> 
     repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_low_value_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2026, 12, 31)),
     )
-    operations.create(_low_value_revision(), _NAME)
+    operations.create(low_value_revision(), NAME)
     elected = operations.forecast(
-        asset_id=_ASSET,
+        asset_id=ASSET,
         covered_from=date(2025, 7, 1),
         covered_until=date(2026, 1, 1),
         requested_free_amount=Decimal("180.00"),
     )
     operations.record_claim(elected, creating_operation="test.free")
-    baja = operations.dispose(_ASSET, _sale(date(2025, 3, 31))).revisions[-1]
+    baja = operations.dispose(ASSET, sale(date(2025, 3, 31))).revisions[-1]
     assert _effective_by_year(repository) == {2025: Decimal("0.00")}
 
-    operations.correct(_low_value_revision(number=baja.revision_number + 1, supersedes=baja.revision_id))
+    operations.correct(low_value_revision(number=baja.revision_number + 1, supersedes=baja.revision_id))
 
     assert _effective_by_year(repository) == {2025: Decimal("180.00")}
 
 
 def test_a_walk_after_removal_shows_the_claim_against_its_charge() -> None:
-    operations, repository, baja = _disposed()
+    operations, repository, baja = disposed()
 
-    operations.correct(_without_baja(baja))
+    operations.correct(baja_correction_without_baja(baja))
 
     rows = {
         row.tax_year: row
         for row in walk_element(
             repository.history.revisions[-1],
             repository.history,
-            forecast=_forecast,
+            forecast=register_forecast,
             through_year=2027,
         )
     }

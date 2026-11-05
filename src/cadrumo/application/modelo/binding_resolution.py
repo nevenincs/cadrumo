@@ -33,9 +33,9 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.aggregation import BindingSourceKind as _BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.period import Period as _Period
+from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -67,7 +67,7 @@ def resolve_borrador_source_tier(
     bucket_id: str,
     snapshot: RegistrySnapshot,
     filing_year: int,
-    period: _Period,
+    period: Period,
     borrador_snapshot_id: str | None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
@@ -140,7 +140,7 @@ def resolve_profile_source_tier(
             bucket_id=bucket_id,
             modelo=snapshot.modelo.id,
             filing_year=snapshot.filing_year,
-            period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+            period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
             profile=profile,
         ),
@@ -217,7 +217,7 @@ def resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: _Period,
+    period: Period,
     declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
     """Resolve the declaration's filing context into informational casilla inputs.
@@ -301,7 +301,7 @@ def _reject_boolean_binding_channel_mismatch(
     boolean_profile_binding_ids = {
         binding.id
         for binding in revision.bindings
-        if binding.value.channel is BindingValueChannel.BOOLEAN and binding.source is _BindingSourceKind.PROFILE
+        if binding.value.channel is BindingValueChannel.BOOLEAN and binding.source is BindingSourceKind.PROFILE
     }
     misrouted = sorted(boolean_profile_binding_ids & set(binding_values) - set(boolean_binding_values))
     if not misrouted:
@@ -326,7 +326,7 @@ def _resolve_borrador_bindings_for_calculation(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: _Period,
+    period: Period,
     borrador_snapshot_id: str | None,
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
@@ -377,7 +377,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
         ):
             continue
         binding = bindings_by_id.get(casilla.binding)
-        if binding is None or binding.source != _BindingSourceKind.PREVIOUS_FILING:
+        if binding is None or binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if casilla.binding in resolved_bindings:
             continue
@@ -389,7 +389,7 @@ def _resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: _Period,
+    period: Period,
     declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
     """Return informational-casilla inputs sourced from the declaration's filing context."""

@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionArgumentSource
 
 
@@ -30,7 +30,7 @@ class ActionArgumentBindingSpecification(BaseModel):
     nor a resolution status.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=128)
     source: ActionArgumentSource
@@ -52,7 +52,7 @@ class ActionArgumentBindingSpecification(BaseModel):
 class ActionCatalogueEntry(BaseModel):
     """One stable next action projected to a canonical command-schema key."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     action_id: NamespacedId
     target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
@@ -122,7 +122,7 @@ class ActionCatalogueEntry(BaseModel):
 class ActionCatalogue(BaseModel):
     """Immutable deterministic action-id registry with fail-closed lookup."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: tuple[ActionCatalogueEntry, ...] = Field(min_length=1)
 

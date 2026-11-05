@@ -16,9 +16,9 @@ from typing import Protocol
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_64
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 
 RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 2
@@ -37,11 +37,11 @@ class RecipientEncryptionKeypair(BaseModel):
     does not expose a cryptography implementation type.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    private_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     created_at: UtcInstant
 
 
@@ -53,17 +53,17 @@ class RecipientEncryptedPackage(BaseModel):
     replay nonce, timestamp or disposition fails authentication.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     envelope_version: int = Field(
         default=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
         ge=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
         le=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
     )
-    ephemeral_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    recipient_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    ephemeral_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    recipient_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     ciphertext: bytes = Field(min_length=1)
-    envelope_nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
+    envelope_nonce_hex: str = Field(pattern=HEX_PATTERN_64)
     issued_at: UtcInstant
     valid_until: UtcInstant | None = Field(default=None)
     review_only: bool = Field(default=False)
@@ -91,7 +91,7 @@ class RecipientEncryptedPackage(BaseModel):
 class RecipientDecryptedPackage(BaseModel):
     """Recovered package bytes plus the envelope's disposition flag."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     package_bytes: bytes = Field(min_length=1)
     review_only: bool

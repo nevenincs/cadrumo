@@ -87,12 +87,12 @@ def _pinned_authority() -> Iterator[None]:
         yield
 
 
-_ACQUISITION = acquisition_transaction()
-_NAME = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
+ACQUISITION = acquisition_transaction()
+NAME = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
 _AT = datetime(2025, 3, 1, 9, 0, tzinfo=UTC)
 
 
-def _revision(
+def register_revision(
     *,
     number: int = 1,
     supersedes: str | None = None,
@@ -105,7 +105,7 @@ def _revision(
         revision_number=number,
         supersedes_revision_id=supersedes,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id=_ACQUISITION.transaction_id,
+            observed_transaction_id=ACQUISITION.transaction_id,
             invoice_evidence_id="invoice-1",
             evidence_fingerprint="b" * 64,
         ),
@@ -128,7 +128,7 @@ def _revision(
     )
 
 
-def _forecast(
+def register_forecast(
     revision: ActivityAssetRevision,
     *,
     covered_from: date,
@@ -155,7 +155,7 @@ def _forecast(
     )
 
 
-def _operations(
+def register_operations(
     *,
     today: date = date(2025, 12, 31),
     consumers: dict[str, tuple[str, ...]] | None = None,
@@ -165,8 +165,8 @@ def _operations(
     return (
         ActivityAssetOperations(
             repository=repository,
-            ledger=MemoryLedger(_ACQUISITION),
-            forecast_operation=_forecast,
+            ledger=MemoryLedger(ACQUISITION),
+            forecast_operation=register_forecast,
             taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
             register_authority=memory_register_authority(
                 today=today, consumers=consumers, last_admitted_year=last_admitted_year
@@ -176,7 +176,7 @@ def _operations(
     )
 
 
-def _full_year(operations: ActivityAssetOperations, year: int) -> ScheduledAmortizationCharge:
+def full_year(operations: ActivityAssetOperations, year: int) -> ScheduledAmortizationCharge:
     return operations.forecast(
         asset_id="laptop-1",
         covered_from=date(year, 1, 1),
@@ -185,10 +185,10 @@ def _full_year(operations: ActivityAssetOperations, year: int) -> ScheduledAmort
 
 
 def test_a_descriptor_changes_no_revision_claim_or_fingerprint() -> None:
-    operations, repository = _operations()
-    revision = _revision()
-    operations.create(revision, _NAME, recorded_at=_AT, origin="test.create")
-    charge = _full_year(operations, 2025)
+    operations, repository = register_operations()
+    revision = register_revision()
+    operations.create(revision, NAME, recorded_at=_AT, origin="test.create")
+    charge = full_year(operations, 2025)
     operations.record_claim(charge, creating_operation="test.claim")
     before = repository.history
 
@@ -200,7 +200,7 @@ def test_a_descriptor_changes_no_revision_claim_or_fingerprint() -> None:
 
     assert after.same_tax_facts(before)
     assert after.revisions[0].revision_id == revision.revision_id
-    assert _full_year(operations, 2025).schedule_fingerprint == charge.schedule_fingerprint
+    assert full_year(operations, 2025).schedule_fingerprint == charge.schedule_fingerprint
     descriptor = after.current_descriptor("laptop-1")
     assert descriptor is not None
     assert (descriptor.descriptor_number, descriptor.facts.name) == (2, "Renamed laptop")
@@ -209,27 +209,27 @@ def test_a_descriptor_changes_no_revision_claim_or_fingerprint() -> None:
 
 
 def test_restating_the_current_descriptor_writes_nothing_and_a_blank_name_is_refused() -> None:
-    operations, repository = _operations()
-    operations.create(_revision(), _NAME)
+    operations, repository = register_operations()
+    operations.create(register_revision(), NAME)
     before = repository.history
 
-    assert operations.describe("laptop-1", _NAME) is before
+    assert operations.describe("laptop-1", NAME) is before
     with pytest.raises(ValueError, match="must not be blank"):
         ActivityAssetDescriptorFacts(name="   ")
 
 
 def test_describing_an_unknown_element_is_refused() -> None:
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
     with pytest.raises(ActividadAssetValidationError, match="asset_not_found"):
-        operations.describe("absent", _NAME)
+        operations.describe("absent", NAME)
 
 
 def test_events_keep_history_order_with_nullable_time_outside_identity() -> None:
-    operations, repository = _operations()
-    revision = _revision()
-    operations.create(revision, _NAME, recorded_at=_AT, origin="test.create")
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations, repository = register_operations()
+    revision = register_revision()
+    operations.create(revision, NAME, recorded_at=_AT, origin="test.create")
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
     events = repository.history.ordered_events()
 
@@ -241,16 +241,16 @@ def test_events_keep_history_order_with_nullable_time_outside_identity() -> None
     ]
     assert [event.recorded_at for event in events] == [_AT, _AT, None]
     assert events[2].origin == "test.claim"
-    assert revision.revision_id == _revision().revision_id
+    assert revision.revision_id == register_revision().revision_id
 
 
 def test_a_correction_and_its_superseding_claim_land_together() -> None:
-    operations, repository = _operations()
-    first = _revision()
-    operations.create(first, _NAME)
-    claim = operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim").claim
+    operations, repository = register_operations()
+    first = register_revision()
+    operations.create(first, NAME)
+    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
     assert claim.amount == Decimal("520.00")
-    corrected = _revision(number=2, supersedes=first.revision_id, basis="400")
+    corrected = register_revision(number=2, supersedes=first.revision_id, basis="400")
     before = repository.history
 
     with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
@@ -278,20 +278,22 @@ def test_a_correction_and_its_superseding_claim_land_together() -> None:
 
 
 def test_a_correction_exactly_at_the_claimed_basis_needs_no_superseding_claim() -> None:
-    operations, _ = _operations()
-    first = _revision()
-    operations.create(first, _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations, _ = register_operations()
+    first = register_revision()
+    operations.create(first, NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
-    assert operations.correct(_revision(number=2, supersedes=first.revision_id, basis="520")).revisions[-1].basis
+    assert (
+        operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="520")).revisions[-1].basis
+    )
 
 
 def test_an_earlier_year_is_claimable_at_a_rate_method_up_to_its_maximum() -> None:
-    operations, _ = _operations(today=date(2026, 12, 31))
-    operations.create(_revision(), _NAME)
-    operations.record_claim(_full_year(operations, 2026), creating_operation="test.2026")
+    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations.create(register_revision(), NAME)
+    operations.record_claim(full_year(operations, 2026), creating_operation="test.2026")
 
-    earlier = _full_year(operations, 2025)
+    earlier = full_year(operations, 2025)
 
     assert earlier.amount == Decimal("520.00")
     assert operations.record_claim(earlier, creating_operation="test.2025").claim.tax_year == 2025
@@ -318,9 +320,9 @@ def test_an_earlier_year_behind_a_later_claim_is_refused_with_its_typed_reason(
 
 
 def test_the_plan_lists_each_year_until_the_basis_runs_out() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
-    claim = operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim").claim
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
+    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
 
     rows = operations.plan("laptop-1")
 
@@ -343,8 +345,8 @@ def test_the_plan_lists_each_year_until_the_basis_runs_out() -> None:
 
 
 def test_a_past_unclaimed_year_is_missing_and_a_partial_one_is_partial() -> None:
-    operations, _ = _operations(today=date(2026, 6, 30))
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations(today=date(2026, 6, 30))
+    operations.create(register_revision(), NAME)
     operations.record_claim(
         operations.forecast(asset_id="laptop-1", covered_from=date(2026, 1, 1), covered_until=date(2026, 4, 1)),
         creating_operation="test.q1",
@@ -358,9 +360,9 @@ def test_a_past_unclaimed_year_is_missing_and_a_partial_one_is_partial() -> None
 
 
 def test_the_list_row_reports_name_figures_and_findings() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
     row = operations.list_elements()[0]
 
@@ -380,10 +382,10 @@ def test_the_list_row_reports_name_figures_and_findings() -> None:
 
 def test_the_timeline_says_what_changed_what_used_a_claim_and_why_it_is_stale() -> None:
     claim_consumers: dict[str, tuple[str, ...]] = {}
-    operations, _ = _operations(consumers=claim_consumers)
-    first = _revision()
-    operations.create(first, _NAME, origin="test.create")
-    claim = operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim").claim
+    operations, _ = register_operations(consumers=claim_consumers)
+    first = register_revision()
+    operations.create(first, NAME, origin="test.create")
+    claim = operations.record_claim(full_year(operations, 2025), creating_operation="test.claim").claim
     claim_consumers[claim.claim_id] = ("calculation-1",)
 
     current = operations.timeline("laptop-1")[-1]
@@ -393,7 +395,7 @@ def test_the_timeline_says_what_changed_what_used_a_claim_and_why_it_is_stale() 
     assert current.claim.stale_reason is None
     assert current.affects_calculation is True
 
-    operations.correct(_revision(number=2, supersedes=first.revision_id, basis="1000"), origin="test.correct")
+    operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="1000"), origin="test.correct")
     operations.describe("laptop-1", ActivityAssetDescriptorFacts(name="Renamed"), origin="test.describe")
 
     events = operations.timeline("laptop-1")
@@ -417,11 +419,11 @@ def test_the_timeline_says_what_changed_what_used_a_claim_and_why_it_is_stale() 
 
 
 def test_a_candidate_states_unknown_non_deductible_iva_and_never_zero() -> None:
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
     candidate = operations.acquisition_candidates()[0]
 
-    assert candidate.transaction_id == _ACQUISITION.transaction_id
+    assert candidate.transaction_id == ACQUISITION.transaction_id
     assert candidate.non_deductible_iva_state is ActivityAssetNonDeductibleIvaState.UNKNOWN
     assert candidate.non_deductible_iva is None
     assert candidate.taxable_base is not None
@@ -429,14 +431,14 @@ def test_a_candidate_states_unknown_non_deductible_iva_and_never_zero() -> None:
 
 
 def test_an_acquisition_an_element_names_is_no_longer_a_candidate() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     assert operations.acquisition_candidates() == ()
 
 
 def test_form_options_come_from_the_published_registry() -> None:
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
     options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=2025)
 
@@ -453,8 +455,8 @@ def test_form_options_come_from_the_published_registry() -> None:
 
 
 def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
     period = Period.from_year_and_code(2025, "2T")
 
     # 2,000.00 x 26% x 181/365 = 257.86 through 30 June, with nothing recorded.
@@ -482,12 +484,12 @@ def test_the_handoff_refuses_a_foral_profile() -> None:
     repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=register_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(territory=ResidenceTerritory.FORAL),
     )
-    operations.create(_revision(), _NAME)
+    operations.create(register_revision(), NAME)
 
     with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
         operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
@@ -507,7 +509,7 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
                 context={"ended_on": "2027-01-01"},
                 translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
             )
-        return _forecast(
+        return register_forecast(
             revision,
             covered_from=covered_from,
             covered_until=covered_until,
@@ -518,12 +520,12 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
     repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=elapsed_after_2026,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2028, 6, 30)),
     )
-    operations.create(_revision(), _NAME)
+    operations.create(register_revision(), NAME)
 
     rows = {row.tax_year: row for row in operations.plan("laptop-1")}
     assert rows[2027].absence is PlanFigureAbsence.PERIOD_ELAPSED
@@ -584,8 +586,8 @@ def _supported_floor() -> int:
 
 
 def test_the_years_of_an_element_are_its_service_window_inside_the_registry_support() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     row = operations.list_elements()[0]
 
@@ -598,12 +600,12 @@ def test_the_years_of_an_element_are_its_service_window_inside_the_registry_supp
 def test_a_decades_old_element_is_offered_only_the_years_the_registry_supports() -> None:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=_slow_rate_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2025, 12, 31)),
     )
-    operations.create(_revision(in_service=date(2001, 1, 1)), _NAME)
+    operations.create(register_revision(in_service=date(2001, 1, 1)), NAME)
 
     row = operations.list_elements()[0]
 
@@ -616,8 +618,8 @@ def test_a_decades_old_element_is_offered_only_the_years_the_registry_supports()
 
 
 def test_the_register_years_merge_every_element_once_in_ascending_order() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
     row = operations.list_elements()[0]
     other: ActivityAssetListRow = row.model_copy(update={"years": (2024, 2025)})
 
@@ -651,10 +653,10 @@ def test_every_served_token_has_a_catalogue_word_in_every_locale(locale: str) ->
 
 
 def test_the_timeline_words_each_token_it_changes_and_leaves_other_values_bare() -> None:
-    operations, _ = _operations()
-    first = _revision()
-    operations.create(first, _NAME)
-    operations.correct(_revision(number=2, supersedes=first.revision_id, basis="1000"))
+    operations, _ = register_operations()
+    first = register_revision()
+    operations.create(first, NAME)
+    operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="1000"))
 
     created, corrected = [
         event for event in operations.timeline("laptop-1") if event.kind is ActivityAssetEventKind.REVISION
@@ -671,7 +673,7 @@ def test_the_timeline_words_each_token_it_changes_and_leaves_other_values_bare()
 
 
 def test_a_candidate_serves_the_key_of_its_non_deductible_iva_state() -> None:
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
     candidate = operations.acquisition_candidates()[0]
 
@@ -691,7 +693,7 @@ def _elapsed_after_2026(
             context={"ended_on": "2027-01-01"},
             translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
         )
-    return _forecast(
+    return register_forecast(
         revision,
         covered_from=covered_from,
         covered_until=covered_until,
@@ -703,18 +705,18 @@ def _elapsed_after_2026(
 def _elapsed_operations() -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=_elapsed_after_2026,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2028, 6, 30)),
     )
-    operations.create(_revision(), _NAME)
+    operations.create(register_revision(), NAME)
     return operations
 
 
 def test_a_period_that_ended_over_unclaimed_years_keeps_the_value_pending() -> None:
     operations = _elapsed_operations()
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.2025")
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
 
     row = operations.list_elements()[0]
 
@@ -728,7 +730,7 @@ def test_a_period_that_ended_over_unclaimed_years_keeps_the_value_pending() -> N
 def test_a_period_that_ended_with_every_year_claimed_is_fully_amortized_and_shows_the_rest() -> None:
     operations = _elapsed_operations()
     for year in (2025, 2026):
-        operations.record_claim(_full_year(operations, year), creating_operation=f"test.{year}")
+        operations.record_claim(full_year(operations, year), creating_operation=f"test.{year}")
 
     row = operations.list_elements()[0]
 
@@ -739,9 +741,9 @@ def test_a_period_that_ended_with_every_year_claimed_is_fully_amortized_and_show
 
 
 def test_a_baja_keeps_the_formula_value_pending() -> None:
-    operations, _ = _operations(today=date(2026, 12, 31))
-    operations.create(_revision(), _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.2025")
+    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations.create(register_revision(), NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
     operations.dispose(
         "laptop-1",
         ActivityAssetDisposal(

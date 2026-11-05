@@ -51,7 +51,7 @@ from ..catalogue_intake_operation_ports import (
 )
 from ..catalogue_intake_projection import project_invoice_intake_result
 from ..catalogue_intake_refusal import INVOICE_WIZARD_VALIDATION_REFUSAL_CODE
-from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("29292929-2929-4292-8292-292929292929")

@@ -20,7 +20,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
@@ -38,13 +38,13 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ._edit_execution import apply_modelo_edit
 from .action_errors import (
     modelo_edit_refusal_error,
 )
 from .calculation_action_ports import CalculationActionPortsFactory
 from .edit_apply_contracts import ModeloEditApplyPublicResultV1
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
+from .edit_execution import apply_modelo_edit
 from .edit_models import (
     ModeloEditApplyRequestV1,
     ModeloEditDomainRefusalV1,
@@ -120,7 +120,7 @@ class ModeloEditApplyExecutor:
                     ModeloEditApplyRequestV1(operation_id=context.identity.operation_id, submission=submission),
                     ports=self._calculation_action_ports_factory(bucket_id=baseline.bucket_id, operation=operation),
                     receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
-                    now=_utc_now(),
+                    now=now(),
                     result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
                 )
 
@@ -145,7 +145,7 @@ class ModeloEditApplyExecutor:
                         receipt_id=outcome.receipt.receipt_id,
                         calculation_revision_id=outcome.receipt.calculation_revision_id,
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:

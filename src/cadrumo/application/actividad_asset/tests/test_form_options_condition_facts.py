@@ -12,27 +12,31 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AssetKind,
 )
 
-from .test_form_options_stage_facts import _options
-from .test_register import _NAME, _operations, _revision
+from .test_form_options_stage_facts import form_options_stage_facts_options
+from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_each_condition_serves_the_facts_only_it_carries() -> None:
-    options = _options()
+    options = form_options_stage_facts_options()
 
     assert {item.condition: item.facts for item in options.acquired_conditions} == dict(ACQUIRED_CONDITION_FACTS)
     assert next(item.facts for item in options.acquired_conditions if item.condition is AcquiredCondition.NEW) == ()
 
 
 def test_the_used_condition_serves_the_construction_date_and_the_original_price() -> None:
-    used = next(item for item in _options().acquired_conditions if item.condition is AcquiredCondition.USED)
+    used = next(
+        item
+        for item in form_options_stage_facts_options().acquired_conditions
+        if item.condition is AcquiredCondition.USED
+    )
 
     assert used.facts == ("building_construction_date", "used_original_price")
 
 
 def test_the_further_acquisition_shapes_stand_apart_from_the_registerable_ones() -> None:
-    options = _options()
+    options = form_options_stage_facts_options()
 
     assert options.further_acquisition_shapes == FURTHER_ACQUISITION_SHAPES
     assert set(options.further_acquisition_shapes) == {AcquisitionShape.SPLIT_PAYMENT, AcquisitionShape.ANCILLARY_COST}
@@ -41,8 +45,8 @@ def test_the_further_acquisition_shapes_stand_apart_from_the_registerable_ones()
 
 
 def test_the_served_shapes_do_not_depend_on_the_asset_kind() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
     intangible = operations.form_options(asset_kind=AssetKind.INTANGIBLE, tax_year=2025)
 
     assert intangible.further_acquisition_shapes == FURTHER_ACQUISITION_SHAPES

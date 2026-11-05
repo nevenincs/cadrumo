@@ -23,19 +23,19 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
-from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
-from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
-from ._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_advisory_finding_for_work_unit
-from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
-from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
 )
 from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
+from .art109_activity_income import derive_art109_activity_income_coverage_for_work_unit
+from .attribution_received_advisory import attribution_received_omission_advisory_findings
+from .autonomic_deduccion_advisory import madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from .export_content_findings import append_export_content_findings
+from .m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
+from .objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
 from .preconditions import ModeloPreconditionFailure
 from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from .verification_finding_contracts import (
@@ -115,7 +115,7 @@ def append_revision_advisory_findings(
             operation=operation,
             profile=work_profile,
         ),
-        _m210_convenio_lob_advisory_finding(
+        m210_convenio_lob_advisory_finding(
             snapshot,
             profile,
             target.input_values_by_casilla_id,
@@ -124,9 +124,9 @@ def append_revision_advisory_findings(
     ):
         if finding is not None:
             findings.append(finding)
-    findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
+    findings.extend(objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
     findings.extend(
-        _attribution_received_omission_advisory_findings(
+        attribution_received_omission_advisory_findings(
             work_unit=work_unit,
             snapshot=snapshot,
             casilla_values=target.casilla_values,
@@ -591,7 +591,7 @@ def profile_with_art109_period_evidence(
 
     Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
-    coverage = _derive_art109_coverage(
+    coverage = derive_art109_activity_income_coverage_for_work_unit(
         work_unit,
         transaction_repository=transaction_repository,
         operation=operation,

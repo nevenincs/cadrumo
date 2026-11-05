@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ...foreign_asset_thresholds import foreign_asset_declaration_thresholds
@@ -48,7 +48,7 @@ def test_effective_registry_revision_supplies_each_modelos_threshold_and_groundi
     legal_refs: set[str],
     source_refs: set[str],
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         thresholds = foreign_asset_declaration_thresholds(
             modelo=modelo, filing_year=filing_year, operation=_authority_operation_for_test
         )

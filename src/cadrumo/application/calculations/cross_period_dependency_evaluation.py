@@ -33,7 +33,7 @@ from ...domain.modelos.filing_record import (
     ModeloRecordStatus,
 )
 from ...domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReportCatalogue
-from .cross_period_external_evidence import filing_external_evidence_blockers as _filing_external_evidence_blockers
+from .cross_period_external_evidence import filing_external_evidence_blockers
 from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyEvidence,
@@ -316,7 +316,7 @@ def _resolve_observation_values(
     return _single_observation_values(requirement, payload, operation=operation)
 
 
-def _declared_source_blockers(
+def declared_source_blockers(
     requirement: CrossPeriodDependencyRequirement,
     payload: ObservationPayload,
     *,
@@ -369,7 +369,7 @@ def _member_observation_values(
     if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
         blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
     for item in value_member_payloads:
-        blockers.extend(_declared_source_blockers(requirement, item, operation=operation))
+        blockers.extend(declared_source_blockers(requirement, item, operation=operation))
     return observation_source_kind, {}, blockers
 
 
@@ -384,7 +384,7 @@ def _single_observation_values(
     blockers: list[CrossPeriodCleanStateBlocker] = []
     if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
         blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-    blockers.extend(_declared_source_blockers(requirement, payload, operation=operation))
+    blockers.extend(declared_source_blockers(requirement, payload, operation=operation))
     return observation_source_kind, observation_values, blockers
 
 
@@ -712,7 +712,7 @@ def _evaluate_filing_history(
         return _FilingHistory(None, None, None, None, None, None, blockers)
 
     blockers.extend(
-        _filing_external_evidence_blockers(
+        filing_external_evidence_blockers(
             filing,
             observation_source_kind,
             justificante_repository,

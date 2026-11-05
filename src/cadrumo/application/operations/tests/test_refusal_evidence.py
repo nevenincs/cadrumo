@@ -21,7 +21,6 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .._supervisor_refusal import _validated_refusal_receipt
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -50,6 +49,7 @@ from ..registry import (
     OperationSchemaBindingV1,
 )
 from ..subject_reference import OperationSubjectReferenceV1
+from ..supervisor_refusal import validated_refusal_receipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -264,7 +264,7 @@ def test_supervisor_evidence_requires_the_exact_declared_code_before_detail_reso
     undeclared = OperationRefusalEvidence(refusal_code=_OTHER_REFUSAL_CODE, detail_ref=_DETAIL_REF)
     with pytest.raises(OperationDeclarationError, match="refusal evidence is not declared"):
         asyncio.run(
-            _validated_refusal_receipt(
+            validated_refusal_receipt(
                 registry=registry,
                 operands=operands,
                 snapshot=snapshot,
@@ -276,7 +276,7 @@ def test_supervisor_evidence_requires_the_exact_declared_code_before_detail_reso
 
     declared = OperationRefusalEvidence(refusal_code=_REFUSAL_CODE, detail_ref=_DETAIL_REF)
     receipt = asyncio.run(
-        _validated_refusal_receipt(
+        validated_refusal_receipt(
             registry=registry,
             operands=operands,
             snapshot=snapshot,

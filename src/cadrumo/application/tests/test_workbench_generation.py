@@ -42,19 +42,19 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
-from ._workbench_generation_support import (
-    _NOW,
-    _PROFILE_ID,
-    _admission,
-    _declaration_work_unit,
-    _inputs,
-    _ledger_ports,
-    _plain_generation_door,
-    _profile_record,
-    _Repository,
-    _StableStore,
-    _stub_empty_calendar,
-    _test_censal_operation_definition,
+from .workbench_generation_support import (
+    NOW,
+    PROFILE_ID,
+    Repository,
+    StableStore,
+    admission,
+    censal_test_operation_definition,
+    declaration_work_unit,
+    inputs,
+    ledger_ports,
+    plain_generation_door,
+    profile_record,
+    stub_empty_calendar,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
     """The TUI calendar can select quarterly work from the completed tax year."""
-    assert calendar_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
+    assert calendar_module.calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
         from_date=date(2025, 1, 1),
         to_date=date(2026, 12, 31),
     )
@@ -70,7 +70,7 @@ def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
 
 def test_source_result_rejects_confident_absence_and_preserves_known_empty() -> None:
     """An observed empty collection is distinct from a source never read."""
-    known_empty = WorkbenchGenerationSourceResultV1[tuple[int, ...]].available((), observed_at=_NOW)
+    known_empty = WorkbenchGenerationSourceResultV1[tuple[int, ...]].available((), observed_at=NOW)
     never_captured = WorkbenchGenerationSourceResultV1[tuple[int, ...]].never_captured(refusal="source.never")
 
     assert known_empty.value == ()
@@ -80,14 +80,14 @@ def test_source_result_rejects_confident_absence_and_preserves_known_empty() -> 
     with pytest.raises(ValidationError, match="requires a value"):
         WorkbenchGenerationSourceResultV1[tuple[int, ...]](
             availability=WorkbenchGenerationAvailability.AVAILABLE,
-            observed_at=_NOW,
+            observed_at=NOW,
         )
 
 
 def test_generation_inputs_reject_admission_source_contradictions() -> None:
     """A route cannot claim availability that its defining source does not have."""
-    payload = _inputs().model_dump()
-    payload["ledger_admission"] = _admission(
+    payload = inputs().model_dump()
+    payload["ledger_admission"] = admission(
         "workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE
     ).model_dump()
     with pytest.raises(ValidationError, match=r"workbench\.ledger admission must match"):
@@ -99,12 +99,12 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
 ) -> None:
     """The production door verifies real local authorities without fake fixtures."""
 
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue())
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue())
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
 
-    door = _plain_generation_door(
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
@@ -135,17 +135,17 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An invalid declaration identity refuses its row while retaining its healthy neighbour."""
-    unit = _declaration_work_unit(authority_operation)
+    unit = declaration_work_unit(authority_operation)
     duplicate_address = unit.model_copy(update={"work_unit_id": "a" * 64})
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(
         WorkUnitCatalogue.model_construct(
             work_units={unit.work_unit_id: unit, duplicate_address.work_unit_id: duplicate_address}
         )
     )
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
-    door = _plain_generation_door(
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
@@ -172,24 +172,24 @@ def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The Modelo source names every work unit the profile holds, through the reader it is given."""
-    unit = _declaration_work_unit(authority_operation)
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    unit = declaration_work_unit(authority_operation)
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
 
     exact_target = ModeloWorkspaceExactWorkUnitTargetV1(
         target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
     )
     static_result = resolve_static_inspection_result(
         exact_target,
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         catalogue_repository=cast(Any, work_units),
         authority=authority_operation,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
-    door = _plain_generation_door(
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
@@ -213,8 +213,8 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
     from ...domain.transactions.models import TransactionCatalogue
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
-    profile = _Repository(
-        _profile_record(
+    profile = Repository(
+        profile_record(
             authority_operation,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -222,32 +222,32 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
             ),
         )
     )
-    work_units = _Repository(WorkUnitCatalogue())
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    work_units = Repository(WorkUnitCatalogue())
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
     contracts = OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
+        (build_censal_operation_registration(censal_test_operation_definition()).contract,)
     )
     with pytest.raises(ValidationError):
         read_local_aeat_sync_workspace_projection(
-            bucket_id=_PROFILE_ID,
+            bucket_id=PROFILE_ID,
             subject_key="00000000T",
-            observed_at=_NOW,
+            observed_at=NOW,
             filings=(),
             operation_contracts=contracts,
             censo_values={"contact.fiscal_address": "x" * 257},
         )
-    door = _plain_generation_door(
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
         revisions=revisions,
         filings=filings,
         operation_contracts=contracts,
-        ledger_action_ports=_ledger_ports(
+        ledger_action_ports=ledger_ports(
             authority_operation,
-            transactions=_StableStore(TransactionCatalogue()),
-            invoices=_StableStore(InvoiceCatalogue()),
+            transactions=StableStore(TransactionCatalogue()),
+            invoices=StableStore(InvoiceCatalogue()),
         ),
         modelo_projection_reader=lambda _unit: pytest.fail("the empty catalogue must not invoke the Modelo reader"),
     )
@@ -272,23 +272,23 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error(
     """A malformed subject reaches the real projector and is contained at the door."""
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue())
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue())
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
     contracts = OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
+        (build_censal_operation_registration(censal_test_operation_definition()).contract,)
     )
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="subject key cannot be blank"):
         read_local_aeat_sync_workspace_projection(
-            bucket_id=_PROFILE_ID,
+            bucket_id=PROFILE_ID,
             subject_key=" ",
-            observed_at=_NOW,
+            observed_at=NOW,
             filings=(),
             operation_contracts=contracts,
             censo_values={},
         )
-    door = _plain_generation_door(
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
@@ -299,7 +299,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error(
 
     projection, refusal = door._read_aeat_sync(
         " ",
-        observed_at=_NOW,
+        observed_at=NOW,
         filings=(),
         custody_count=None,
         censo_values={},
@@ -314,13 +314,13 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A cross-repository capture is never published after a revision changes."""
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue(), revisions=("work-1", "work-2"))
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue(), revisions=("work-1", "work-2"))
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
 
-    _stub_empty_calendar(monkeypatch)
-    door = _plain_generation_door(
+    stub_empty_calendar(monkeypatch)
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,

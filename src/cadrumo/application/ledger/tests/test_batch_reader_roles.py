@@ -15,7 +15,7 @@ import pytest
 
 from ....core.document_shape import DocumentShape
 from ....core.model_roles import ModelRole
-from ..batch_ingest import _reader_role_for
+from ..batch_ingest import reader_role_for
 from ..evidence_input_ports import EvidenceDocumentShapeProbe
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -57,4 +57,4 @@ def test_each_document_names_the_reader_role_it_will_reach(shape: DocumentShape,
     """DISCRIMINATING: the role follows the probed shape of the bytes, never a file name."""
     data = f"document probed as {shape.value}".encode()
 
-    assert _reader_role_for(data, document_shape_probe=_probe_answering(shape, expected_data=data)) is expected
+    assert reader_role_for(data, document_shape_probe=_probe_answering(shape, expected_data=data)) is expected

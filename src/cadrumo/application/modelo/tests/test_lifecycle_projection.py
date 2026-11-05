@@ -23,7 +23,7 @@ from cadrumo.domain.modelos.tests.filing_record_test_support import (
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 
-from .test_verification_preconditions import _blocked_report, _finding
+from .test_verification_preconditions import blocked_report, verification_preconditions_finding
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,10 +44,10 @@ def test_filing_snapshot_preserves_settlement_amounts_evidence_and_time() -> Non
 
 
 def test_report_snapshot_preserves_decimal_string_integer_and_boolean_facts() -> None:
-    base = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    base = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
     facts = {"amount": Decimal("1.00"), "token": "1.00", "count": 1, "allowed": True}
     finding = ModeloVerificationFinding.model_validate(base.model_dump(mode="python") | {"message_facts": facts})
-    report = _blocked_report((finding,))
+    report = blocked_report((finding,))
     failure = build_verification_precondition_failure(
         calculation_revision_id=report.calculation_revision_id,
         work_unit_id="b" * 64,

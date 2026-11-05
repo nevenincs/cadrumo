@@ -42,8 +42,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ..binding_prefill import PrefilledBinding, _prefilled_bindings
-from ..relation_prefill import _relation_value_grounding
+from ..binding_prefill import PrefilledBinding, prefilled_bindings
+from ..relation_prefill import relation_value_grounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -85,7 +85,7 @@ def _grounded_treatments(snapshot: RegistrySnapshot) -> dict[str, str]:
     by_binding = _requirements_by_binding(snapshot)
     treatments: dict[str, str] = {}
     for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
-        grounding = _relation_value_grounding(binding, provider, by_binding.get(binding.id))
+        grounding = relation_value_grounding(binding, provider, by_binding.get(binding.id))
         treatments[str(binding.id)] = grounding["dependency_treatment"]
     return treatments
 
@@ -109,7 +109,7 @@ def test_the_join_carries_both_declared_treatments_and_they_differ(filing_year: 
         requirement = RegistryFoldRequirement.model_validate(
             {**original.model_dump(), "dependency_treatment": treatment}
         )
-        grounding = _relation_value_grounding(binding, provider, requirement)
+        grounding = relation_value_grounding(binding, provider, requirement)
         assert grounding["dependency_treatment"] == treatment
         carried.add(grounding["dependency_treatment"])
     assert carried == {_SETTLEMENT, _EVIDENCE}, "the join collapsed the two classes into one value"
@@ -143,7 +143,7 @@ def test_an_unresolved_binding_carries_no_treatment_rather_than_a_default_one() 
     assert binding_and_provider is not None, "the revision declares no relation-prefill binding to exercise"
     binding, provider = binding_and_provider
 
-    grounding = _relation_value_grounding(binding, provider, None)
+    grounding = relation_value_grounding(binding, provider, None)
 
     assert grounding["dependency_treatment"] == ""
     assert grounding["dependency_treatment"] != _SETTLEMENT
@@ -200,7 +200,7 @@ def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> 
     )
     binding_id = requirement.binding_ids[0]
 
-    prefilled = _prefilled_bindings(
+    prefilled = prefilled_bindings(
         snapshot,
         {binding_id: Decimal("1.00")},
         observations=(),

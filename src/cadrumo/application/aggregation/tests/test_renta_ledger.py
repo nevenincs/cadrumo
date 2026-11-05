@@ -8,13 +8,13 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from cadrumo.domain.categories.proportionality_catalogue import require_proportionality_kind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
@@ -38,7 +38,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
 from ..renta_ledger import aggregate_renta_ledger_expenses
 from ..renta_ledger_models import RentaLedgerAggregationIssueReason
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 from .renta_ledger_support import (
     ledger_expense_transaction,
 )
@@ -60,8 +60,8 @@ pytestmark = [
 ]
 
 
-_ANNUAL_2025 = _period(2025, "0A")
-_Q1_2025 = _period(2025, "1T")
+_ANNUAL_2025 = renta_income_aggregation_period(2025, "0A")
+_Q1_2025 = renta_income_aggregation_period(2025, "1T")
 _M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199", surface="_M100_ASESORIA_CASILLA")
 _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     "0203",
@@ -625,11 +625,11 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if ccaa_value is not None:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=facts,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

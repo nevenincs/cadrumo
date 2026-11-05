@@ -71,7 +71,7 @@ from ...modelo.printed_boxes import snapshot_printed_boxes
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
-from .renta_income_aggregation_support import _period, catalogue_read_ports
+from .renta_income_aggregation_support import catalogue_read_ports, renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -246,7 +246,7 @@ def _resolve(
             bucket_id=_BUCKET,
             modelo=modelo,
             filing_year=_YEAR,
-            period=_period(_YEAR, period_code),
+            period=renta_income_aggregation_period(_YEAR, period_code),
             revision=revision,
             profile=cash_criterion_profile(_YEAR),
         ),

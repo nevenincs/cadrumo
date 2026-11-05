@@ -358,7 +358,7 @@ class _InMemoryBucketEventRepository:
         raise RuntimeError("test bundle does not provide secure event writes")
 
 
-class _UnavailableIvaRemoteStatePort:
+class UnavailableIvaRemoteStatePort:
     """Keep the unrelated IVA wallet stage local and deterministically refused."""
 
     @property
@@ -540,7 +540,7 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
             filing_reconciliation=_UnavailableFilingReconciliation(),
         ),
         filed_data_port=UnavailableFiledDataCapturePort(),
-        iva_remote_state_port=_UnavailableIvaRemoteStatePort(),
+        iva_remote_state_port=UnavailableIvaRemoteStatePort(),
     )
 
 

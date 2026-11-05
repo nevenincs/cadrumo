@@ -36,16 +36,16 @@ def test_an_absent_key_is_refused_with_its_key() -> None:
 def test_a_padded_registry_mapping_reads_as_the_declared_one(module: object, monkeypatch: pytest.MonkeyPatch) -> None:
     with private_authority_lease() as operation:
         declared = counterpart_operation_catalogue_entries(_EFFECTIVE, operation=operation)
-        read_catalogue = counterpart._registry_counterpart_catalogue(_EFFECTIVE, operation=operation)
-        read_m349 = catalogue_creation._registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation)
+        read_catalogue = counterpart.registry_counterpart_catalogue(_EFFECTIVE, operation=operation)
+        read_m349 = catalogue_creation.registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation)
 
         padded = {key: f"  {value}\t" for key, value in declared.items()}
         monkeypatch.setattr(module, "counterpart_operation_catalogue_entries", lambda *_args, **_kwargs: padded)
 
         if module is counterpart:
-            assert counterpart._registry_counterpart_catalogue(_EFFECTIVE, operation=operation) == read_catalogue
+            assert counterpart.registry_counterpart_catalogue(_EFFECTIVE, operation=operation) == read_catalogue
         else:
-            assert catalogue_creation._registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation) == (
+            assert catalogue_creation.registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation) == (
                 read_m349
             )
 
@@ -64,6 +64,6 @@ def test_a_blank_registry_value_is_refused_by_each_reader(module: object, monkey
 
         with pytest.raises(ValueError, match=f"counterpart registry mapping is missing '{blank_key}'"):
             if module is counterpart:
-                counterpart._registry_counterpart_catalogue(_EFFECTIVE, operation=operation)
+                counterpart.registry_counterpart_catalogue(_EFFECTIVE, operation=operation)
             else:
-                catalogue_creation._registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation)
+                catalogue_creation.registry_m349_operation_type_requirement(_EFFECTIVE, operation=operation)

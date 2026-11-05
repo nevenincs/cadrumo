@@ -35,7 +35,7 @@ from ..bundle_export import ProfileBundleExportReconciliation, reconcile_prepare
 from ..bundle_export_contracts import ProfileBundleExportReconcileFailure
 from ..bundle_export_operation import ProfileBundleExportJournalRepository
 from .archive_operation_support import Subject, empty_push_report
-from .test_bundle_export_scope import _prepared
+from .test_bundle_export_scope import prepared
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -253,8 +253,8 @@ async def test_canonical_exact_profile_orphan_reconciliation_fences_real_owned_c
     subject: Subject, tmp_path: Path
 ) -> None:
     repository = ProfileBundleExportJournalRepository(storage_root=tmp_path)
-    own, own_staged = _prepared(repository, tmp_path, str(PROFILE_ID), "own")
-    foreign, foreign_staged = _prepared(repository, tmp_path, str(uuid4()), "foreign")
+    own, own_staged = prepared(repository, tmp_path, str(PROFILE_ID), "own")
+    foreign, foreign_staged = prepared(repository, tmp_path, str(uuid4()), "foreign")
 
     def reconcile(*, write: ArchiveLocalWriter) -> ProfileBundleExportReconciliation:
         assert not subject.fence.active

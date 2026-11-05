@@ -19,10 +19,10 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from .. import export as export_module
-from .._producer_ownership import filing_producer_ownership
 from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
-from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from ..export_producer import SHARED_SNAPSHOT_PRODUCER_KEYS
+from ..producer_ownership import filing_producer_ownership
 from ..record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
 
 modelo_export_module = import_module("...modelo.export", package=__package__)
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
-    ownership = filing_producer_ownership(shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS)
+    ownership = filing_producer_ownership(shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS)
     assert set(ownership) == set(FilingProducerKey)
     assert all(owner.strip() for owner in ownership.values())
 

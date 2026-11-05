@@ -275,9 +275,9 @@ def test_error_carries_prompt_key_context() -> None:
     assert error.context is not None
     # `prompt_key` is the resolved field label, never the raw
     # translation key path.
-    from ....core.i18n.render import tr as _tr
+    from ....core.i18n.render import tr
 
-    assert error.context["prompt_key"] == _tr(str(_TEXT_PROMPT))
+    assert error.context["prompt_key"] == tr(str(_TEXT_PROMPT))
     assert "prompt_key_path" not in error.context
     assert error.context["question_id"] == "probe"
     assert "raw" not in error.context

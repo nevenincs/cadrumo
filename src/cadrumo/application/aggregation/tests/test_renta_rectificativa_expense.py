@@ -29,13 +29,20 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
     BUCKET_ID,
-    _InMemoryInvoiceCatalogueRepository,
+    InMemoryInvoiceCatalogueRepository,
     m130_box,
     resolve_m100,
     resolve_m130,
 )
 from .ledger_transaction_support import ledger_raw_transaction
-from .test_renta_imputation_criterion import _CASH, _DEVENGO, _declared, _expense_row, _profile, _received
+from .test_renta_imputation_criterion import (
+    CASH,
+    DEVENGO,
+    declared,
+    expense_row,
+    received,
+    renta_imputation_criterion_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -44,7 +51,7 @@ _F_ON = date(_YEAR, 2, 1)
 _R_ON = date(_YEAR, 5, 1)
 
 
-def _correction(
+def renta_rectificativa_expense_correction(
     on: date,
     *,
     rectifies: str | None = "R-1",
@@ -85,12 +92,12 @@ def _correction(
     )
 
 
-def _ledger(*extra: Invoice, accrued: date = _F_ON) -> tuple[Transaction, _InMemoryInvoiceCatalogueRepository]:
-    unlinked = _expense_row(accrued, evidence_id=None)
-    invoice = _received(accrued, linked=(unlinked.transaction_id,))
-    repository = _InMemoryInvoiceCatalogueRepository()
+def _ledger(*extra: Invoice, accrued: date = _F_ON) -> tuple[Transaction, InMemoryInvoiceCatalogueRepository]:
+    unlinked = expense_row(accrued, evidence_id=None)
+    invoice = received(accrued, linked=(unlinked.transaction_id,))
+    repository = InMemoryInvoiceCatalogueRepository()
     repository.save(build_invoice_catalogue((invoice, *extra)))
-    return _expense_row(accrued, evidence_id=invoice.invoice_id), repository
+    return expense_row(accrued, evidence_id=invoice.invoice_id), repository
 
 
 def _m100_total(resolution: CalculationSourceResolution) -> Decimal:
@@ -106,8 +113,8 @@ def _blocked(resolution: CalculationSourceResolution) -> bool:
 
 
 def test_a_same_year_correction_nets_the_annual_expense(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = _ledger(_correction(_R_ON))
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(_R_ON))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("80.00")
     assert not _blocked(resolution)
@@ -117,8 +124,8 @@ def test_a_same_year_correction_nets_the_annual_expense(operation: PinnedAuthori
 def test_the_instalment_nets_from_the_quarter_the_correction_accrues(
     operation: PinnedAuthorityOperation, period: str, expected: Decimal
 ) -> None:
-    row, invoices = _ledger(_correction(_R_ON))
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(_R_ON))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m130(ActivityAssetHistory(), period, rows=(row,), profile=profile, invoices=invoices)
     assert m130_box(resolution) == expected
     assert not _blocked(resolution)
@@ -127,39 +134,39 @@ def test_the_instalment_nets_from_the_quarter_the_correction_accrues(
 def test_a_correction_keeps_each_rows_share(operation: PinnedAuthorityOperation) -> None:
     """60,00 and 40,00 less a fifth are 48,00 and 32,00."""
     first_on, second_on = date(_YEAR, 2, 1), date(_YEAR, 2, 2)
-    first = _expense_row(first_on, evidence_id=None, amount=Decimal("72.60"), base=Decimal("60.00"))
-    second = _expense_row(second_on, evidence_id=None, amount=Decimal("48.40"), base=Decimal("40.00"))
-    invoice = _received(_F_ON, linked=(first.transaction_id, second.transaction_id))
-    repository = _InMemoryInvoiceCatalogueRepository()
-    repository.save(build_invoice_catalogue((invoice, _correction(_R_ON))))
+    first = expense_row(first_on, evidence_id=None, amount=Decimal("72.60"), base=Decimal("60.00"))
+    second = expense_row(second_on, evidence_id=None, amount=Decimal("48.40"), base=Decimal("40.00"))
+    invoice = received(_F_ON, linked=(first.transaction_id, second.transaction_id))
+    repository = InMemoryInvoiceCatalogueRepository()
+    repository.save(build_invoice_catalogue((invoice, renta_rectificativa_expense_correction(_R_ON))))
     rows = (
-        _expense_row(first_on, evidence_id=invoice.invoice_id, amount=Decimal("72.60"), base=Decimal("60.00")),
-        _expense_row(second_on, evidence_id=invoice.invoice_id, amount=Decimal("48.40"), base=Decimal("40.00")),
+        expense_row(first_on, evidence_id=invoice.invoice_id, amount=Decimal("72.60"), base=Decimal("60.00")),
+        expense_row(second_on, evidence_id=invoice.invoice_id, amount=Decimal("48.40"), base=Decimal("40.00")),
     )
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m130(ActivityAssetHistory(), "2T", rows=rows, profile=profile, invoices=repository)
     assert m130_box(resolution) == Decimal("80.00")
 
 
 def test_a_correction_in_a_later_year_refuses(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = _ledger(_correction(date(_YEAR, 3, 1)), accrued=date(_YEAR - 1, 11, 1))
-    profile = _profile(operation, _declared((_YEAR - 1, _DEVENGO), (_YEAR, _DEVENGO)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(date(_YEAR, 3, 1)), accrued=date(_YEAR - 1, 11, 1))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR - 1, DEVENGO), (_YEAR, DEVENGO)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("0")
     assert _refused(resolution, "rectificativa_across_years")
 
 
 def test_a_correction_whose_invoice_is_not_recorded_refuses(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = _ledger(_correction(_R_ON, rectifies="R-404"))
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(_R_ON, rectifies="R-404"))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("100.00")
     assert _refused(resolution, "rectificativa_target_unknown")
 
 
 def test_a_correction_above_its_invoice_refuses(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = _ledger(_correction(_R_ON, base=Decimal("120.00")))
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(_R_ON, base=Decimal("120.00")))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("100.00")
     assert _refused(resolution, "rectificativa_above_invoice")
@@ -184,18 +191,18 @@ def _supplier_refund(on: date, *, evidence_id: str | None) -> Transaction:
 def test_a_supplier_refund_under_cash_refuses_in_its_year(operation: PinnedAuthorityOperation) -> None:
     """Under cash only a pago places an expense, and no source says a cobro on a correction nets it."""
     unlinked = _supplier_refund(_R_ON, evidence_id=None)
-    corrected = _correction(_R_ON, linked=(unlinked.transaction_id,))
+    corrected = renta_rectificativa_expense_correction(_R_ON, linked=(unlinked.transaction_id,))
     row, invoices = _ledger(corrected)
     refund = _supplier_refund(_R_ON, evidence_id=corrected.invoice_id)
-    profile = _profile(operation, _declared((_YEAR, _CASH)))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, CASH)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row, refund), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("100.00")
     assert _refused(resolution, "rectificativa_refund_under_cash")
 
 
 def test_an_unpaid_correction_moves_nothing_under_cash(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = _ledger(_correction(_R_ON))
-    profile = _profile(operation, _declared((_YEAR, _CASH)))
+    row, invoices = _ledger(renta_rectificativa_expense_correction(_R_ON))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, CASH)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("100.00")
     assert not _blocked(resolution)
@@ -204,7 +211,7 @@ def test_an_unpaid_correction_moves_nothing_under_cash(operation: PinnedAuthorit
 def _same_number_in_series_b() -> Invoice:
     """Return a second received R-1, in series B, for a base of 5.000,00."""
     base, iva = Decimal("5000.00"), Decimal("1050.00")
-    first = _received(_F_ON, linked=())
+    first = received(_F_ON, linked=())
     line = first.lines[0].model_copy(update={"unit_price": base, "subtotal": base, "iva_amount": iva})
     return Invoice.model_validate(
         {
@@ -223,14 +230,14 @@ def test_a_correction_two_invoices_could_answer_refuses(
     operation: PinnedAuthorityOperation, second_first: bool
 ) -> None:
     """A correction records only the number it names, so two R-1 leave the 20,00 with nowhere to go, in any order."""
-    unlinked = _expense_row(_F_ON, evidence_id=None)
-    invoice = _received(_F_ON, linked=(unlinked.transaction_id,))
+    unlinked = expense_row(_F_ON, evidence_id=None)
+    invoice = received(_F_ON, linked=(unlinked.transaction_id,))
     other = _same_number_in_series_b()
-    repository = _InMemoryInvoiceCatalogueRepository()
+    repository = InMemoryInvoiceCatalogueRepository()
     ordered = (other, invoice) if second_first else (invoice, other)
-    repository.save(build_invoice_catalogue((*ordered, _correction(_R_ON))))
-    row = _expense_row(_F_ON, evidence_id=invoice.invoice_id)
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    repository.save(build_invoice_catalogue((*ordered, renta_rectificativa_expense_correction(_R_ON))))
+    row = expense_row(_F_ON, evidence_id=invoice.invoice_id)
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=repository)
     assert _m100_total(resolution) == Decimal("100.00")
     assert _refused(resolution, "rectificativa_target_ambiguous")

@@ -369,7 +369,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.invoices.bulk_import._RowParseError",
+        "cadrumo.application.invoices.bulk_import.RowParseError",
         ErrorCode(
             code="INTERNAL_INVOICE_ROW_PARSE",
             category=ErrorCategory.INTERNAL,
@@ -409,7 +409,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.invoices.creation_wizard._WizardFieldError",
+        "cadrumo.application.invoices.creation_wizard.WizardFieldError",
         ErrorCode(
             code="INTERNAL_INVOICE_WIZARD_FIELD",
             category=ErrorCategory.INTERNAL,

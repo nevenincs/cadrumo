@@ -177,7 +177,7 @@ def build_llm_diagnostics_report(
     Returns:
         The populated :class:`LlmDiagnosticsReport`.
     """
-    usage_providers = _aggregate_usage(ports.usage_reader.load_records(since=since, until=until))
+    usage_providers = aggregate_usage(ports.usage_reader.load_records(since=since, until=until))
     confidence_providers = _aggregate_confidence(
         ports.transaction_reader.load_transactions(),
         low_confidence_threshold,
@@ -222,7 +222,7 @@ def _total_usage_cost(usage_providers: Sequence[LlmUsageCostProviderMetrics]) ->
     return sum((row.cost_estimate_usd or Decimal("0") for row in usage_providers), start=Decimal("0"))
 
 
-def _aggregate_usage(records: Sequence[LlmUsageDiagnosticRecord]) -> tuple[LlmUsageCostProviderMetrics, ...]:
+def aggregate_usage(records: Sequence[LlmUsageDiagnosticRecord]) -> tuple[LlmUsageCostProviderMetrics, ...]:
     """Fold usage records into one metric row per provider, provider-sorted."""
     calls: dict[str, int] = {}
     cache_hits: dict[str, int] = {}

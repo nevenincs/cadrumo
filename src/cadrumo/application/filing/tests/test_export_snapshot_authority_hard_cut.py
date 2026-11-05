@@ -10,9 +10,9 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.filing.software_identity import development_mock_software_identity
 from ..export import export_draft
 from .export_support import (
-    _approved_modelo_131_historical_registry_draft,
-    _typed_modelo_131_producer_snapshot,
+    approved_modelo_131_historical_registry_draft,
     export_schema_provider,
+    typed_modelo_131_producer_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -31,9 +31,9 @@ def test_export_uses_the_selected_snapshot_owned_layout(tmp_path) -> None:
     """The public positive path selects its layout from the exact provider snapshot."""
     output_path = tmp_path / "modelo-131.txt"
     result = export_draft(
-        _approved_modelo_131_historical_registry_draft(),
+        approved_modelo_131_historical_registry_draft(),
         output_path=output_path,
-        producer_snapshot=_typed_modelo_131_producer_snapshot(),
+        producer_snapshot=typed_modelo_131_producer_snapshot(),
         product_software_identity=development_mock_software_identity(),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         schema_provider=export_schema_provider(filing_year=2023, period="4T", modelos=("131",)),

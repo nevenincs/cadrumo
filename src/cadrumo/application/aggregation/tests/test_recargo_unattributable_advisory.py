@@ -27,7 +27,7 @@ from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from .._modelo_bindings_invoice_iva import (
+from ..modelo_bindings_invoice_iva import (
     recargo_unattributable_diagnostics,
     screened_invoice_iva_observations,
 )

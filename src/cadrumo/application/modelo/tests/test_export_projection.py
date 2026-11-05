@@ -33,7 +33,7 @@ from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.errors import ModeloExportError
 from ...filing.errors import ModeloApplicationError
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
-from ..export import _export_write_failure
+from ..export import export_write_failure
 from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
 from ..export_ports import ModeloExportPorts
 from ..export_projection import (
@@ -64,7 +64,7 @@ def test_a_box_refusal_keeps_its_message_and_context_at_the_export_boundary(loca
     )
     command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
 
-    failure = _export_write_failure(command, refusal)
+    failure = export_write_failure(command, refusal)
 
     assert isinstance(failure, ModeloExportError)
     assert failure.translated_message == refusal.translated_message
@@ -88,7 +88,7 @@ def test_a_shared_cell_refusal_reaches_the_operator_naming_its_boxes(locale: str
     )
     command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
 
-    failure = _export_write_failure(command, refusal)
+    failure = export_write_failure(command, refusal)
 
     assert failure.translated_message == refusal.translated_message
     assert failure.context == {"calculation_revision_id": "revision-1", **context}
@@ -100,7 +100,7 @@ def test_a_shared_cell_refusal_reaches_the_operator_naming_its_boxes(locale: str
 def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> None:
     command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
 
-    failure = _export_write_failure(command, ModeloApplicationError("a layout invariant broke"))
+    failure = export_write_failure(command, ModeloApplicationError("a layout invariant broke"))
 
     assert failure.translated_message == "application.modelo.errors.export_draft_write_failed"
     assert failure.context == {"calculation_revision_id": "revision-1", "cause": "a layout invariant broke"}

@@ -18,7 +18,7 @@ import pytest
 from ....domain.transactions.date_partition import LedgerDatePartition, OutOfWindowTransactionIndexEntry
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from ..transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .memoized_transaction_catalogue_support import (
     memoized_catalogue,
     memoized_transaction,

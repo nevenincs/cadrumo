@@ -34,7 +34,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
@@ -43,10 +43,10 @@ from ...invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
-from .._modelo_bindings_invoice_iva import (
+from ..modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )
-from .._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
+from ..modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -131,7 +131,7 @@ def test_the_silence_guard_carries_the_degradation_to_its_caller() -> None:
     judgement at all, and returning quietly is the outcome that reads as "checked
     and fine".
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         report = raise_if_invoice_iva_would_be_silent(
             context=_context(),
             period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),

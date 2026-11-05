@@ -35,9 +35,8 @@ from pydantic import BaseModel
 
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..flows.definition import FlowDefinition, FlowSection
-from ..flows.definition import locale_copy_ref as _locale_ref
-from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
+from ..flows.definition import FlowDefinition, FlowSection, locale_copy_ref
+from .catalogue import FAMILIA_SECTION_ID
 from .descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     build_descendant_count_page,
@@ -90,14 +89,14 @@ def build_descendant_door_definition(*, operation: PinnedAuthorityOperation) -> 
     count_page = build_descendant_count_page(operation).model_copy(update={"visible_when": None})
     descendant_group = build_descendant_group(operation)
     section = FlowSection(
-        id=_FAMILIA_SECTION_ID,
-        title=_locale_ref(_FLOW_TITLE_LOCALE_KEY),
+        id=FAMILIA_SECTION_ID,
+        title=locale_copy_ref(_FLOW_TITLE_LOCALE_KEY),
         items=(count_page, descendant_group),
     )
     return FlowDefinition(
         id=DESCENDANT_DOOR_FLOW_ID,
-        title=_locale_ref(_FLOW_TITLE_LOCALE_KEY),
-        description=_locale_ref(_FLOW_DESCRIPTION_LOCALE_KEY),
+        title=locale_copy_ref(_FLOW_TITLE_LOCALE_KEY),
+        description=locale_copy_ref(_FLOW_DESCRIPTION_LOCALE_KEY),
         sections=(section,),
         answers_model=DescendantDoorAnswers,
         checkpoint={

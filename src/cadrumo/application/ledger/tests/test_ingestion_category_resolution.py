@@ -29,7 +29,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
@@ -87,7 +87,7 @@ def _resolve(
     exists to accept.
     """
     declared = _facts(established=established, stated=stated)
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=InvoiceKind.RECEIVED,
@@ -116,7 +116,7 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     classification resting on the document's own record must be distinguishable
     later from one resting on an operator's assertion.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact = declared_category_from_document_record(
             IvaCategory("domestic_reverse_charge").value, operation=_authority_operation_for_test
         )
@@ -136,7 +136,7 @@ def test_an_absent_blank_or_unrecognised_code_establishes_nothing(printed: str |
     label the operator can supply would block a filing the rest of the record
     fully supports.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert declared_category_from_document_record(printed, operation=_authority_operation_for_test) is None
 
 
@@ -296,7 +296,7 @@ def test_a_domestic_case_derives_with_the_supply_nature_unknown_and_asks_nothing
     demanding the nature would still return a category here and would only be
     visible as an operator prompt nobody could answer from the page.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(issuer_scope=_fact(_ES), customer_scope=_fact(_ES))
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
@@ -356,7 +356,7 @@ def _relief(
 ):
     """Resolve a declared relief claim through the real assembly and resolver."""
     declared = _facts(established=False, stated=stated)
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,
@@ -428,7 +428,7 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     an operator meeting false refusals stops reading them. Here both territories
     resolve, so no residency gap is recorded and the claim stands untouched.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
             customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
@@ -554,7 +554,7 @@ def _record_relief(
     spared and every assertion below would hold for any status whatsoever.
     """
     declared = DeclaredFacts(issuer_scope=_fact(_ES), stated_category=_fact(stated))
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,
@@ -633,7 +633,7 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     would trade an under-declaration for an over-payment, which nothing in this
     apparatus watches.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
             customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
@@ -688,7 +688,7 @@ def _counterparty_only_relief(
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,

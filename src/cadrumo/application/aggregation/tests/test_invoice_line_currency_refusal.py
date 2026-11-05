@@ -38,9 +38,9 @@ from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from ...exchange_rate_provider import bind_exchange_rate_provider_factory
-from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..errors import AggregationValidationError
-from ..oss_ioss_resolver import _candidate_for_invoice_line
+from ..modelo_bindings_invoice_iva import screened_invoice_line_observations
+from ..oss_ioss_resolver import candidate_for_invoice_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -119,7 +119,7 @@ def test_modelo_bindings_refuses_on_an_unconverted_line() -> None:
     """The M303 general IVA screen raises, it does not silently exclude."""
     invoice = _unconverted_gbp_invoice()
     with pytest.raises(AggregationValidationError) as exc_info:
-        _screened_invoice_line_observations(
+        screened_invoice_line_observations(
             invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
         )
     assert exc_info.value.translated_message == "aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"
@@ -156,7 +156,7 @@ def test_modelo_bindings_does_not_refuse_a_converted_invoice() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    observations = _screened_invoice_line_observations(
+    observations = screened_invoice_line_observations(
         invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
     )
     assert len(observations) == 1
@@ -205,9 +205,7 @@ def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
         bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(None)),
         pytest.raises(AggregationValidationError) as exc_info,
     ):
-        _candidate_for_invoice_line(
-            invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
-        )
+        candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
@@ -246,7 +244,7 @@ def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
         },
     )
     with bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(Decimal("0.23"))):
-        candidate = _candidate_for_invoice_line(
+        candidate = candidate_for_invoice_line(
             resolved, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
         )
     assert candidate is not None
@@ -292,9 +290,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         },
     )
     with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(
-            invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
-        )
+        candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"
     context = exc_info.value.context
     assert context is not None
@@ -333,7 +329,7 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    candidate = _candidate_for_invoice_line(
+    candidate = candidate_for_invoice_line(
         invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
     )
     assert candidate is None

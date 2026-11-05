@@ -15,7 +15,7 @@ from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
-from ..calendar_warnings import _PROFILE_FIELD_WARNING_LOCALE_KEYS
+from ..calendar_warnings import PROFILE_FIELD_WARNING_LOCALE_KEYS
 from ..coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSnapshot, OverviewCalendarSnapshot
 from .calendar_test_support import profile
@@ -122,7 +122,7 @@ def test_calendar_warnings_carry_their_sentence_in_the_read_language(
 def test_every_profile_gap_has_real_prose_in_every_supported_language(language: str, prefix: str) -> None:
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
-        for message_key in _PROFILE_FIELD_WARNING_LOCALE_KEYS.values():
+        for message_key in PROFILE_FIELD_WARNING_LOCALE_KEYS.values():
             assert tr(message_key, locale=language).startswith(prefix)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)

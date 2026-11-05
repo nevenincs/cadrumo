@@ -15,8 +15,8 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.logging import get_logger
 from ...core.operations import (
     OperationEffect,
+    profile_operation_subject,
 )
-from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
 from ...domain.user_profile.errors import UserProfileValidationError
 from ..operations.models import OperationRequest
@@ -103,7 +103,7 @@ async def _profile_mutation_section(context: OperationExecutorContext) -> AsyncG
 
 def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
     """Bind every active-profile authority to exactly its secure operation subject."""
-    if request.subject_ref != _profile_subject(str(profile_id)):
+    if request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("user-profile operation subject does not match its exact profile")
     if require_active_bucket_id() != str(profile_id):
         raise ValueError("user-profile operation requires its profile to be active")

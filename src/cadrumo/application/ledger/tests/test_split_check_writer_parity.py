@@ -67,15 +67,15 @@ def _writer_shape_takes(parent: Transaction, children: tuple[SplitChildCommand, 
     """Run the writer's own shape checks and child building, everything but its storage."""
     try:
         writer.require_splittable_child_count(bucket_id=str(_PROFILE), transaction_id="p", children=children)
-        writer._validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
-        built = writer._build_initial_split_children(
+        writer.validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
+        built = writer.build_initial_split_children(
             parent=parent,
             children=children,
             occurred_at=datetime(2024, 5, 1, tzinfo=UTC),
             actor="operator",
             source_command="synthetic",
         )
-        writer._require_unique_split_child_ids(built)
+        writer.require_unique_split_child_ids(built)
     except TransactionValidationError:
         return False
     return True
@@ -230,7 +230,7 @@ def test_a_movement_gone_or_not_active_is_not_split() -> None:
     assert answer is not None
     assert answer.kind == "not_active"
     with pytest.raises(TransactionValidationError, match="only active"):
-        writer._resolve_active_split_parent(
+        writer.resolve_active_split_parent(
             TransactionCatalogue.model_validate({"transactions": {archived.transaction_id: archived}}),
             bucket_id=str(_PROFILE),
             transaction_id=archived.transaction_id,

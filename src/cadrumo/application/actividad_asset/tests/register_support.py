@@ -117,7 +117,7 @@ def _published_m130_periods(tax_year: int) -> tuple[str, ...]:
         return pinned_m130_periods(operation)(tax_year)
 
 
-def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
+def published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_schedule_authority(
             operation.revision_for_context("100", filing_year=tax_year, period="0A"),
@@ -129,7 +129,7 @@ def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> Sche
         )
 
 
-def _published_class_labels(regime: DirectEstimationRegime, tax_year: int) -> Mapping[str, str]:
+def published_class_labels(regime: DirectEstimationRegime, tax_year: int) -> Mapping[str, str]:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_class_labels(operation, regime=regime, tax_year=tax_year)
 
@@ -170,9 +170,9 @@ def memory_register_authority(
         residence_territory=lambda _on: territory,
         claim_consumers=claim_consumers,
         today=lambda: today,
-        schedule_authority=_published_authority,
+        schedule_authority=published_authority,
         disposal_bounds=_published_disposal_bounds,
-        class_labels=_published_class_labels,
+        class_labels=published_class_labels,
         legal_reference=_published_legal_reference,
     )
 

@@ -39,8 +39,8 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     TransactionCatalogueReader,
 )
-from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .currency_predicates import effective_eur_amount
+from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import CalculationSourceDiagnostic
 

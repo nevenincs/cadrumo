@@ -278,7 +278,7 @@ def _private_result[T: ActivityAssetOperationResult](result: BaseModel, result_t
     return result_type.model_validate(result.model_dump(mode="python"), strict=True)
 
 
-def _project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAssetRefusal | None:
+def project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAssetRefusal | None:
     if refusal is None:
         return None
     return ActivityAssetRefusal(
@@ -335,7 +335,7 @@ def _project_create(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
     )
 
@@ -352,7 +352,7 @@ def _project_inspect(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         asset_id=private.asset_id,
         revisions=private.revisions,
     )
@@ -370,7 +370,7 @@ def _project_correct(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
     )
 
@@ -387,7 +387,7 @@ def _project_forecast(result: BaseModel, receipt: OperationTerminalReceipt, /) -
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         forecast=(
             ScheduledAmortizationChargeSnapshot.from_domain(private.forecast) if private.forecast is not None else None
         ),
@@ -406,7 +406,7 @@ def _project_claim(result: BaseModel, receipt: OperationTerminalReceipt, /) -> A
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         claim_result=(
             ActivityAssetHistoryClaimResultSnapshot.from_domain(private.claim_result)
             if private.claim_result is not None
@@ -432,7 +432,7 @@ def _project_filing_handoff(
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         tax_year=private.tax_year,
         m130_period=private.m130_period,
         filing_handoff=(
@@ -455,7 +455,7 @@ def _project_describe(result: BaseModel, receipt: OperationTerminalReceipt, /) -
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
     )
 
@@ -472,7 +472,7 @@ def _project_dispose(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
         profile_id=private.profile_id,
         authority=private.authority,
         outcome=private.outcome,
-        refusal=_project_refusal(private.refusal),
+        refusal=project_refusal(private.refusal),
         history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
     )
 
@@ -493,7 +493,7 @@ def _read_projector[R: ActivityAssetOperationResult, P: BaseModel](
                 "profile_id": private.profile_id,
                 "authority": private.authority,
                 "outcome": private.outcome,
-                "refusal": _project_refusal(private.refusal),
+                "refusal": project_refusal(private.refusal),
                 **{name: getattr(private, name) for name in fields},
             },
         )
@@ -501,7 +501,7 @@ def _read_projector[R: ActivityAssetOperationResult, P: BaseModel](
     return project
 
 
-_READS: dict[
+READS: dict[
     str,
     tuple[type[BaseModel], type[ActivityAssetOperationResult], type[BaseModel], type, tuple[str, ...], bool],
 ] = {
@@ -571,13 +571,13 @@ def build_activity_asset_read_definitions(
             sensitive_input=sensitive,
             mutation=False,
         )
-        for definition_id, (request_type, result_type, _, executor_type, _, sensitive) in _READS.items()
+        for definition_id, (request_type, result_type, _, executor_type, _, sensitive) in READS.items()
     )
 
 
 def build_activity_asset_read_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Register one read's typed request and projection schemas."""
-    _, result_type, projection_type, _, fields, _ = _READS[definition.definition_id]
+    _, result_type, projection_type, _, fields, _ = READS[definition.definition_id]
     return _registration(
         definition,
         projection_type=projection_type,

@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloValidationFinding
 from ...domain.invoices.models import Invoice
@@ -57,7 +57,7 @@ class _ReviewItemBase(BaseModel):
             review-pending.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     item_id: str = Field(min_length=1)
     modelo: str | None

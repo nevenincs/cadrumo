@@ -31,7 +31,7 @@ from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetE
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_register import _ACQUISITION, _NAME, _forecast, _full_year, _operations, _revision
+from .test_register import ACQUISITION, NAME, full_year, register_forecast, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,10 +50,10 @@ def _sale(on: date = date(2026, 6, 30), proceeds: str = "2000.00", costs: str = 
 
 
 def _claimed_through(last_year: int) -> tuple[ActivityAssetOperations, MemoryRepository]:
-    operations, repository = _operations(today=_AFTER_ALL, last_admitted_year=last_year)
-    operations.create(_revision(), _NAME)
+    operations, repository = register_operations(today=_AFTER_ALL, last_admitted_year=last_year)
+    operations.create(register_revision(), NAME)
     for year in range(2025, last_year + 1):
-        operations.record_claim(_full_year(operations, year), creating_operation="test.claim")
+        operations.record_claim(full_year(operations, year), creating_operation="test.claim")
     return operations, repository
 
 
@@ -107,7 +107,7 @@ def test_a_differing_second_baja_is_refused() -> None:
 
 def test_a_new_charge_past_the_boundary_is_refused() -> None:
     operations, repository = _claimed_through(2025)
-    forecast = _full_year(operations, 2026)
+    forecast = full_year(operations, 2026)
     after = operations.dispose(_ASSET, _sale())
     claim = AmortizationClaim.from_schedule(
         forecast,
@@ -127,12 +127,12 @@ def test_a_foral_resident_is_refused_by_the_existing_refusal() -> None:
     repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=register_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(territory=ResidenceTerritory.FORAL),
     )
-    operations.create(_revision(), _NAME)
+    operations.create(register_revision(), NAME)
 
     with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
         operations.dispose(_ASSET, _sale())
@@ -186,11 +186,11 @@ def test_a_preview_or_read_with_no_baja_stated_is_refused() -> None:
 
 
 def test_a_missing_opening_history_allows_the_baja_but_not_its_figures() -> None:
-    operations, _ = _operations(today=_AFTER_ALL)
-    unknown = _revision().model_copy(
+    operations, _ = register_operations(today=_AFTER_ALL)
+    unknown = register_revision().model_copy(
         update={"opening_history": OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)},
     )
-    operations.create(type(unknown).model_validate(unknown.model_dump()), _NAME)
+    operations.create(type(unknown).model_validate(unknown.model_dump()), NAME)
 
     operations.dispose(_ASSET, _sale())
 

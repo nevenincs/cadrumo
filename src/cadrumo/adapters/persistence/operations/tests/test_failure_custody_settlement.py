@@ -333,7 +333,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
             operation_id = await _submit_bind_and_start(supervisor, executor)
             return await supervisor.settled(operation_id)
 
-        with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations._supervisor_execution"):
+        with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations.supervisor_execution"):
             terminal = asyncio.run(run())
 
     receipt = terminal.terminal_receipt
@@ -343,7 +343,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     records = [
         record
         for record in delivered_records(caplog)
-        if record.name == "cadrumo.application.operations._supervisor_execution"
+        if record.name == "cadrumo.application.operations.supervisor_execution"
         and f"operation={_OPERATION_ID}" in record.getMessage()
         and correlation in record.getMessage()
     ]

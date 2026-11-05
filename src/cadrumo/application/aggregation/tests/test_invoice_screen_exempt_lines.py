@@ -120,7 +120,7 @@ def test_the_screen_keeps_a_line_whose_only_contribution_is_its_base() -> None:
     assert contributes(*ordinary_rated)
     assert not contributes(*contributes_nothing), "an empty line is the only one safe to drop"
 
-    from .._modelo_bindings_invoice_iva import line_contributes_to_the_iva_screen
+    from ..modelo_bindings_invoice_iva import line_contributes_to_the_iva_screen
 
     assert line_contributes_to_the_iva_screen(*exempt_base_only) is True
     assert line_contributes_to_the_iva_screen(*ordinary_rated) is True

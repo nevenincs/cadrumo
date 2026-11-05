@@ -321,9 +321,9 @@ def _field_value(
         case CasillaFieldKind.CASILLA:
             return _casilla_field_value(field, casilla_values)
         case CasillaFieldKind.BINDING:
-            return _binding_field_value(field, binding_values, row_index)
+            return binding_field_value(field, binding_values, row_index)
         case CasillaFieldKind.HEADER:
-            return _header_field_value(field, headers)
+            return header_field_value(field, headers)
         case CasillaFieldKind.PROJECTION:
             return projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
@@ -346,7 +346,7 @@ def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[Casi
     return value
 
 
-def _binding_field_value(
+def binding_field_value(
     field: ExportFieldDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -378,7 +378,7 @@ def projection_field_value(
         raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
 
 
-def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
+def header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)

@@ -39,7 +39,7 @@ from ..invoice_draft_records import (
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
 )
-from .test_evidence_draft_provenance import _fully_populated_draft
+from .test_evidence_draft_provenance import fully_populated_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -138,7 +138,7 @@ def test_every_populated_draft_value_survives_into_the_payload() -> None:
     under the reference fields -- so this exercises the real projection rather
     than a re-implementation of it.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     dumped = json.loads(draft.model_dump_json())
     payload = {
         "bucket_id": "bucket-1",
@@ -166,7 +166,7 @@ def test_the_provenance_envelopes_arrive_whole() -> None:
     while losing exactly the content that makes an exactly-read value
     distinguishable from a model-read one.
     """
-    draft = _fully_populated_draft()
+    draft = fully_populated_draft()
     dumped = json.loads(draft.model_dump_json())
     payload = {
         "bucket_id": "bucket-1",

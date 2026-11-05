@@ -41,7 +41,7 @@ from ..filed_capture_queries import (
 )
 from ..filed_data import BulkFiledDataListingReport
 from ..filed_data_capture import (
-    _absorb_declarations,
+    absorb_declarations,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
@@ -58,7 +58,7 @@ from ..filed_history_discovery import (
     FiledHistoryOnboardingRun,
     expected_but_not_found_notice,
 )
-from ..filed_history_pull import _filed_history_pair_outcomes
+from ..filed_history_pull import filed_history_pair_outcomes
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -154,7 +154,7 @@ def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_
         accumulator = FiledCaptureAccumulator(operation=operation)
         with pytest.raises(ProfileAccessRefusedError) as refusal:
             asyncio.run(
-                _absorb_declarations(
+                absorb_declarations(
                     (_declaration(),),
                     opened_register=cast(FiledDataRegisterPort, Register(staged)),
                     accumulator=accumulator,
@@ -812,7 +812,7 @@ def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
             ),
         )
     )
-    pairs = _filed_history_pair_outcomes(discovery, report)
+    pairs = filed_history_pair_outcomes(discovery, report)
     run = FiledHistoryOnboardingRun(
         pairs=pairs, dry_run=dry_run, reached_count=report.reached_count, captured_count=report.captured_count
     )
@@ -868,7 +868,7 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
             ),
         )
     )
-    (history_pair,) = _filed_history_pair_outcomes(discovery, report)
+    (history_pair,) = filed_history_pair_outcomes(discovery, report)
     assert history_pair.row_count == 2
     assert history_pair.captured_count == (1 if failed_capture else 2)
     assert history_pair.reached_count == report.reached_count

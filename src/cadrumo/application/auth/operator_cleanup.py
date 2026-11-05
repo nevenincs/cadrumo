@@ -8,7 +8,6 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from .acquisition_lock import (
     AuthAcquisitionLockState,
     clear_auth_acquisition_lock,
@@ -24,6 +23,7 @@ from .models import (
     AuthState,
     CertificateSourceRecord,
 )
+from .mutation import AuthBucketEventSpec
 from .operator_results import AuthOperationScopeConflictError
 from .sessions import delete_persisted_session, persisted_session_exists
 
@@ -465,14 +465,14 @@ def auth_cleanup_bucket_events(
     intent: AuthCleanupIntent,
     provider_ids: tuple[str, ...],
     certificate_names: tuple[str, ...],
-) -> tuple[_BucketEventSpec, ...]:
+) -> tuple[AuthBucketEventSpec, ...]:
     """Project durable bucket events for one completed auth cleanup intent."""
     from ...domain.buckets.event import BucketEventType
 
     common = {"operation": "reset", "operation_id": intent.operation_id}
-    events: list[_BucketEventSpec] = []
+    events: list[AuthBucketEventSpec] = []
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_PROVIDER_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -481,7 +481,7 @@ def auth_cleanup_bucket_events(
         for provider_id in provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_SESSION_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -490,7 +490,7 @@ def auth_cleanup_bucket_events(
         for provider_id in intent.session_provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_LOCK_CLEARED,
             provider_id,
             {**common, "provider_id": provider_id},
@@ -499,7 +499,7 @@ def auth_cleanup_bucket_events(
         for provider_id in intent.lock_provider_ids
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_CERTIFICATE_SOURCE_REMOVED,
             name,
             {**common, "name": name},
@@ -508,7 +508,7 @@ def auth_cleanup_bucket_events(
         for name in certificate_names
     )
     events.extend(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
             name,
             {**common, "name": name},

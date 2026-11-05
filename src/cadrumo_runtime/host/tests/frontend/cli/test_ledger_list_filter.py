@@ -376,13 +376,13 @@ def test_a_listing_observes_the_profile_inventory_once(
     them from one observation of the store.
     """
     observed: list[object] = []
-    observe = profile_summary._observe_summary_inventory
+    observe = profile_summary.observe_summary_inventory
 
     def counting(root: Path) -> profile_summary.ProfileSummaryInventory:
         observed.append(root)
         return observe(root)
 
-    monkeypatch.setattr(profile_summary, "_observe_summary_inventory", counting)
+    monkeypatch.setattr(profile_summary, "observe_summary_inventory", counting)
     rows = _list_rows(_corpus_profile)
 
     assert rows, "the listing must reach its profile-bound rendering, or one observation proves nothing"

@@ -25,11 +25,11 @@ from ....domain.user_profile.schema import ProfileValueRefusalKind
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import (
-    _ISSUE_CODE_BY_REFUSAL_KIND,
     BOOLEAN_VALUE_ISSUE_CODE,
     DATE_VALUE_ISSUE_CODE,
     EMAIL_VALUE_ISSUE_CODE,
     ENUM_VALUE_ISSUE_CODE,
+    ISSUE_CODE_BY_REFUSAL_KIND,
     NUMERIC_VALUE_ISSUE_CODE,
     ProfileValidationService,
 )
@@ -54,7 +54,7 @@ def test_every_refusal_kind_has_an_issue_code() -> None:
     an entry here turns a refusal that should have been reported into a
     crash on a taxpayer's own edit.
     """
-    missing = [kind for kind in ProfileValueRefusalKind if kind not in _ISSUE_CODE_BY_REFUSAL_KIND]
+    missing = [kind for kind in ProfileValueRefusalKind if kind not in ISSUE_CODE_BY_REFUSAL_KIND]
     assert not missing, f"refusal kinds with no issue code: {missing}"
 
 

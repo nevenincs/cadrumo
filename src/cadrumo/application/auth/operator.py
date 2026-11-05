@@ -38,8 +38,6 @@ from ...core.config import Settings, load_settings
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..auth_credentials import ActiveCertificateCredentials
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
-from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .actions import update_auth
 from .catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from .certificate_secret_backend import CertificateSecretBackendFactory
@@ -47,28 +45,19 @@ from .credentials import (
     ActiveAuthProjectionSnapshot,
     active_auth_projection_span,
 )
+from .mutation import AuthBucketEventSpec, build_auth_bucket_events
 from .operator_events import append_auth_bucket_event
 from .operator_probe_ports import OperatorProbePorts
 from .operator_probes import (
-    live_auth_identity_kind as _live_auth_identity_kind,
-)
-from .operator_probes import (
-    live_auth_identity_state as _live_auth_identity_state,
-)
-from .operator_probes import (
-    live_auth_mode as _live_auth_mode,
-)
-from .operator_probes import (
+    live_auth_identity_kind,
+    live_auth_identity_state,
+    live_auth_mode,
     probe_clave_credentials,
-)
-from .operator_probes import (
-    probe_local_session as _probe_local_session,
+    probe_local_session,
 )
 from .operator_result_projections import (
-    auth_configure_result as _auth_configure_result,
-)
-from .operator_result_projections import (
-    auth_status_from_projection as _auth_status_from_projection,
+    auth_configure_result,
+    auth_status_from_projection,
 )
 from .operator_results import (
     AuthConfigureDanglingActiveProfileError,
@@ -82,13 +71,11 @@ from .operator_results import (
     AuthTestResult,
     LiveAuthPreflightReport,
 )
-from .operator_scope import active_profile_storage_span as _active_profile_storage_span
 from .operator_scope import (
-    assert_auth_recovery_not_in_progress as _assert_auth_recovery_not_in_progress,
-)
-from .operator_scope import auth_mutation_span as _auth_mutation_span
-from .operator_scope import (
-    auth_operator_settings_scope as _auth_operator_settings_scope,
+    active_profile_storage_span,
+    assert_auth_recovery_not_in_progress,
+    auth_mutation_span,
+    auth_operator_settings_scope,
 )
 from .operator_scope_ports import OperatorScopePorts
 from .preferences import set_profile_auth_preference
@@ -172,7 +159,7 @@ def configure_operator_auth(
     if certificate_path is not None:
         payload["certificate_path"] = str(certificate_path)
 
-    with _active_profile_storage_span(
+    with active_profile_storage_span(
         resolved_settings,
         operator_scope_ports=operator_scope_ports,
     ) as bucket_id:
@@ -180,7 +167,7 @@ def configure_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        with _auth_mutation_span(
+        with auth_mutation_span(
             settings=resolved_settings,
             bucket_id=bucket_id,
             operator_scope_ports=operator_scope_ports,
@@ -190,7 +177,7 @@ def configure_operator_auth(
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
                 nonlocal changed
-                _assert_auth_recovery_not_in_progress(current_state)
+                assert_auth_recovery_not_in_progress(current_state)
                 active_bucket_id = _configured_active_profile(current_state, operation=operation)
                 _, preference_changed = set_profile_auth_preference(
                     profile_id=active_bucket_id,
@@ -237,10 +224,10 @@ def configure_operator_auth(
                         certificate_path=selected_path,
                         friendly_name=selected_source.friendly_name,
                     )
-                events = _build_bucket_events(
+                events = build_auth_bucket_events(
                     bucket_id=bucket_id,
                     events=(
-                        _BucketEventSpec(
+                        AuthBucketEventSpec(
                             BucketEventType.AUTH_PROVIDER_CONFIGURED,
                             listing.id,
                             payload,
@@ -252,7 +239,7 @@ def configure_operator_auth(
 
             next_state = state_repo.update_with_bucket_events(mutate)
 
-    return _auth_configure_result(
+    return auth_configure_result(
         state=next_state,
         provider=listing.id,
         certificate_path=(
@@ -304,7 +291,7 @@ def inspect_operator_auth(
         include_pending_obligations=False,
         operation=operation,
     )
-    return _auth_status_from_projection(projection)
+    return auth_status_from_projection(projection)
 
 
 def test_operator_auth(
@@ -343,7 +330,7 @@ def test_operator_auth(
     same "no provider configured" state on the same state.
     """
     if settings is not None:
-        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
+        with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return test_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -354,7 +341,7 @@ def test_operator_auth(
                 settings=None,
             )
 
-    with _auth_operator_settings_scope(None) as resolved_settings:
+    with auth_operator_settings_scope(None) as resolved_settings:
         provider_kind = _provider_kind_or_none(provider)
         requested_provider = provider_kind.value if provider_kind is not None else None
 
@@ -409,8 +396,8 @@ def _test_operator_auth_from_snapshot(
         include_pending_obligations=False,
         operation=operation,
     )
-    status = _auth_status_from_projection(projection)
-    session_probe = _probe_local_session(
+    status = auth_status_from_projection(projection)
+    session_probe = probe_local_session(
         status.provider,
         settings=resolved_settings,
         operator_scope_ports=operator_scope_ports,
@@ -543,7 +530,7 @@ def _build_live_auth_preflight_report(
 ) -> LiveAuthPreflightReport:
     """Build the report against an open route, refusing when it cannot be reached."""
     if settings is not None:
-        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
+        with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return _build_live_auth_preflight_report(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -576,7 +563,7 @@ def _build_live_auth_preflight_report(
             requested_provider=(provider_kind.value if provider_kind is not None else None),
             resolved_settings=resolved_settings,
         )
-        profile_tax_id_present, provider_identity_present, identity_alignment = _live_auth_identity_state(
+        profile_tax_id_present, provider_identity_present, identity_alignment = live_auth_identity_state(
             provider_kind,
             settings=resolved_settings,
             state=snapshot.state,
@@ -594,13 +581,13 @@ def _build_live_auth_preflight_report(
             profile_tax_id_present=profile_tax_id_present,
             provider_identity_present=provider_identity_present,
             identity_alignment=identity_alignment,
-            identity_kind=_live_auth_identity_kind(
+            identity_kind=live_auth_identity_kind(
                 provider_kind,
                 settings=resolved_settings,
                 state=snapshot.state,
                 operator_probe_ports=operator_probe_ports,
             ),
-            auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
+            auth_mode=live_auth_mode(provider_kind, settings=resolved_settings),
             **_clave_movil_preflight_fields(
                 resolved_settings,
                 provider_kind,
@@ -646,7 +633,7 @@ async def login_operator_auth(
             result consumed here.
     """
     if settings is not None:
-        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
+        with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return await login_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -693,7 +680,7 @@ async def login_operator_auth(
         # provider with no path / a missing file / an unreadable bundle
         # cannot authenticate; refuse here with prose, rather than letting
         # the raw bundle-load exception escape.
-        _assert_login_precondition(
+        assert_login_precondition(
             resolved_settings,
             provider_kind,
             certificate_credentials=certificate_credentials,
@@ -708,13 +695,13 @@ async def login_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        with _auth_mutation_span(
+        with auth_mutation_span(
             settings=resolved_settings,
             bucket_id=bucket_id,
             operator_scope_ports=operator_scope_ports,
         ):
             repository = workflow_state_repository()
-            _assert_auth_recovery_not_in_progress(repository.load())
+            assert_auth_recovery_not_in_progress(repository.load())
             with session_store().defer_writes() as staged:
                 operation_span = (
                     nullcontext(authority_operation)
@@ -791,7 +778,7 @@ def _verified_session_update(
     event_type: BucketEventType,
 ) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
     """Prepare verified-session state and its append-only bucket event."""
-    _assert_auth_recovery_not_in_progress(current)
+    assert_auth_recovery_not_in_progress(current)
     return (
         append_auth_bucket_event(
             update_auth(
@@ -802,10 +789,10 @@ def _verified_session_update(
             action="auth.session.verified",
             object_id=provider_kind.value,
         ),
-        _build_bucket_events(
+        build_auth_bucket_events(
             bucket_id=bucket_id,
             events=(
-                _BucketEventSpec(
+                AuthBucketEventSpec(
                     event_type,
                     provider_kind.value,
                     {"provider_id": provider_kind.value},
@@ -816,7 +803,7 @@ def _verified_session_update(
     )
 
 
-def _assert_login_precondition(
+def assert_login_precondition(
     settings: Settings,
     provider_kind: AuthProviderKind,
     *,

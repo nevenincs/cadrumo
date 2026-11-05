@@ -13,20 +13,18 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
+from ..attribution_received_advisory import attribution_received_omission_advisory_findings
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -71,19 +69,19 @@ def _received_facts() -> tuple[UserProfileFact, ...]:
 
 
 def _profile_record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def test_advisory_reads_attribution_facts_from_profile_record(operation: PinnedAuthorityOperation) -> None:
     snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
-    findings = _attribution_received_omission_advisory_findings(
+    findings = attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values={},
@@ -97,7 +95,7 @@ def test_advisory_reads_attribution_facts_from_profile_record(operation: PinnedA
 
 def test_advisory_with_no_received_profile_facts_returns_no_finding(operation: PinnedAuthorityOperation) -> None:
     snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
-    findings = _attribution_received_omission_advisory_findings(
+    findings = attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values={},

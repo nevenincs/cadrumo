@@ -238,15 +238,15 @@ def test_committed_result_over_its_byte_bound_fails_as_validation_not_profile_mi
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     result, _children, _catalogue = _canonical_result()
-    projection = operation._operation_result(
+    projection = operation.operation_result(
         profile_id=_PROFILE, expected_child_ids=result.source_child_ids, result=result
     )
     assert projection.source_child_ids == result.source_child_ids
 
-    monkeypatch.setattr(operation, "_MAX_MERGE_RESULT_JSON_BYTES", len(projection.model_dump_json()) - 1)
+    monkeypatch.setattr(operation, "MAX_MERGE_RESULT_JSON_BYTES", len(projection.model_dump_json()) - 1)
 
     with pytest.raises(TransactionValidationError, match="registered projection bound"):
-        operation._operation_result(profile_id=_PROFILE, expected_child_ids=result.source_child_ids, result=result)
+        operation.operation_result(profile_id=_PROFILE, expected_child_ids=result.source_child_ids, result=result)
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:
@@ -275,10 +275,10 @@ def test_result_projector_requires_matching_success_receipt() -> None:
         result_ref="b" * 64,
     )
 
-    assert operation._project_operation_result(execution, receipt) == execution.result
+    assert operation.project_operation_result(execution, receipt) == execution.result
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(
+        operation.project_operation_result(
             execution,
             receipt.model_copy(update={"effect": OperationEffect.NONE}),
         )

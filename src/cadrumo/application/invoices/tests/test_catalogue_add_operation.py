@@ -50,7 +50,7 @@ from ..catalogue_add_operation import (
     build_invoice_add_registration,
 )
 from ..catalogue_creation_ports import CatalogueCreationPorts
-from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from ..tests.catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

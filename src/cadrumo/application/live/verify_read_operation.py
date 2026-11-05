@@ -45,7 +45,7 @@ VERIFY_LATEST_DEFINITION_ID = "live.verify.latest"
 _LIST_PHASES = ("verify-list.read", "verify-list.result")
 _VIEW_PHASES = ("verify-view.read", "verify-view.result")
 _LATEST_PHASES = ("verify-latest.read", "verify-latest.result")
-_MAX_VERIFY_LIST_ROWS = 16_384
+MAX_VERIFY_LIST_ROWS = 16_384
 VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersistencePort]
 
 
@@ -100,7 +100,7 @@ class VerifyListExecutor:
                 for observation in observations
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            if len(observations) > _MAX_VERIFY_LIST_ROWS:
+            if len(observations) > MAX_VERIFY_LIST_ROWS:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             rows = tuple(_summary(observation) for observation in observations)
             projection = VerifyListPublicResultV1(bucket_id=bucket_id, count=len(rows), rows=rows)
@@ -246,7 +246,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         message=_RECEIPT_CONTRADICTION,
     )
     projection = VerifyListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
-    if len(report.rows) > _MAX_VERIFY_LIST_ROWS:
+    if len(report.rows) > MAX_VERIFY_LIST_ROWS:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     _require_bounded_result(projection)
     return projection

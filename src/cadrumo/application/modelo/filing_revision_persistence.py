@@ -437,7 +437,7 @@ def prior_domiciliation_payload(
     }
 
 
-def _refresh_filing_retention_snapshot(
+def refresh_filing_retention_snapshot(
     *,
     bucket_id: str,
     catalogue: ModeloRecordCatalogue,
@@ -899,7 +899,7 @@ def persist_filed_revision(
         expected_revision_id=filing_revision_id,
     )
 
-    _refresh_filing_retention_snapshot(
+    refresh_filing_retention_snapshot(
         bucket_id=work_unit.bucket_id,
         catalogue=updated_filing_catalogue,
         observed_at=now,

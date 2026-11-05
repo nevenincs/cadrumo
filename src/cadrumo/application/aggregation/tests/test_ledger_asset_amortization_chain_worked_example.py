@@ -38,10 +38,10 @@ from ....domain.calculations.registry.tests.scenarios import (
 )
 from ...actividad_asset.history import ActivityAssetHistory
 from .ledger_source_mesh_support import (
-    _register_claim,
-    _renta_expense_binding_id,
-    _revision,
+    ledger_source_mesh_revision,
     register_asset,
+    register_claim,
+    renta_expense_binding_id,
     resolve_m100,
 )
 
@@ -74,9 +74,11 @@ def _casilla(code: str) -> CasillaId:
 
 def _chain(claim_amount: Decimal = _CLAIM, *, expected: Decimal = _RENDIMIENTO_NETO) -> RegistryScenarioRunReport:
     asset = register_asset("furniture", transaction_id="c" * 64)
-    claim = _register_claim(asset, amount=claim_amount)
+    claim = register_claim(asset, amount=claim_amount)
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,), claims=(claim,)))
-    material = resolution.binding_values[_renta_expense_binding_id(_revision("100", str(_FILING_YEAR)), "0208")]
+    material = resolution.binding_values[
+        renta_expense_binding_id(ledger_source_mesh_revision("100", str(_FILING_YEAR)), "0208")
+    ]
 
     return run_registry_calculation_scenario(
         RegistryCalculationScenario(

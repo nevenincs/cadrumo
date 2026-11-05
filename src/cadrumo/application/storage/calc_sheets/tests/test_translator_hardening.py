@@ -10,9 +10,9 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema_formula import FormulaExpression
-from .._translator import TranslationError, translate_formula
 from ..layout import plan_layout
 from ..records import SheetCellAddress, TabName
+from ..translator import TranslationError, translate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

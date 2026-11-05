@@ -36,7 +36,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -57,8 +57,8 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..live.borrador_100_keys import borrador_admitted_bindings
 from ..persistence_errors import PersistenceDegradationError
-from ._decimal_parsing import decimal_from_string
 from .action_errors import ModeloPreconditionErrorMixin
+from .decimal_parsing import decimal_from_string
 from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
     before any binding values are emitted.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
@@ -202,7 +202,7 @@ def _resolve_borrador_binding_values(
                 enum_values[binding_id] = str(raw_value).strip()
             continue
         # Parsed even when only compared, so a malformed stored value is refused rather than ignored.
-        value = _decimal_value(binding_id, raw_value)
+        value = decimal_value(binding_id, raw_value)
         if binding.borrador_supplies_value:
             decimal_values[binding_id] = value
     return decimal_values, enum_values
@@ -328,7 +328,7 @@ def borrador_cross_check_values(
     eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
     _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
     return {
-        binding_id: _decimal_value(binding_id, raw_value)
+        binding_id: decimal_value(binding_id, raw_value)
         for binding_id, raw_value in snapshot.binding_values.items()
         if eligible_bindings[binding_id].value.typed_enum is None
         and not eligible_bindings[binding_id].borrador_supplies_value
@@ -452,7 +452,7 @@ def _assert_registry_snapshot_axis(
         )
 
 
-def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
+def decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
     return decimal_from_string(
         binding_id,
         value,

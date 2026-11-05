@@ -147,7 +147,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
         return raw.strip() if (raw is not None and raw) else None
 
     def _bool(path: str) -> bool:
-        return _bool_from_raw(fact_value(record, path))
+        return bool_from_raw(fact_value(record, path))
 
     return MaritimeWorkerFacts(
         worker_class=_raw("maritime_worker.worker_class"),
@@ -160,7 +160,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
     )
 
 
-def _bool_from_raw(raw: str | None) -> bool:
+def bool_from_raw(raw: str | None) -> bool:
     """Read a stored boolean fact, defaulting an absent or unreadable one to ``False``.
 
     Resolves through the one canonical vocabulary rather than a set spelled out

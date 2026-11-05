@@ -9,7 +9,7 @@ import pytest
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ..calendar import _calendar_entry_from_obligation
+from ..calendar import calendar_entry_from_obligation
 from ..calendar_models import (
     OverviewAeatEvidenceConcern,
     OverviewAeatSubmissionState,
@@ -52,7 +52,7 @@ def test_a_regional_holiday_close_survives_the_snapshot_round_trip(
         boe_references=(),
         recovery=None,
     )
-    entry = _calendar_entry_from_obligation(
+    entry = calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,

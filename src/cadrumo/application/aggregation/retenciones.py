@@ -46,7 +46,7 @@ from ...domain.calculations.registry.form_codes import form_codes_in_scope, form
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from .grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 from .withholding_recognition import WithholdingDatedEvent
 
 

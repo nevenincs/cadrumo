@@ -39,40 +39,20 @@ from typing import TYPE_CHECKING
 
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.period import Period as _Period
+from ...core.period import Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
 from ..calculations.observations_repository import ObservationSourceKind
 from ..calculations.ports import FiledDeclaracionObservationProtocol
 from ..operator_actions.catalogue import next_action
-from ._calendar_evidence_sources import (
-    authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
-)
-from ._calendar_evidence_sources import (
-    filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_calculation_observation as _filing_evidence_from_calculation_observation,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_filed_declaration_observation as _filing_evidence_from_filed_declaration_observation,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_modelo_record as _filing_evidence_from_modelo_record,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_observed_event as _filing_evidence_from_observed_event,
-)
-from ._calendar_evidence_sources import (
-    is_active_aeat_filing_status as _is_active_aeat_filing_status,
-)
-from ._calendar_evidence_sources import (
-    justificante_csv_key as _justificante_csv_key,
-)
-from ._calendar_evidence_sources import (
-    justificantes_by_csv as _justificantes_by_csv,
+from .calendar_evidence_sources import (
+    filing_evidence_from_calculation_observation,
+    filing_evidence_from_filed_declaration_observation,
+    filing_evidence_from_justificante_capture_snapshot,
+    filing_evidence_from_modelo_record,
+    filing_evidence_from_observed_event,
+    is_active_aeat_filing_status,
+    justificante_csv_key,
+    justificantes_by_csv,
 )
 from .calendar_models import (
     OverviewAeatSubmissionState,
@@ -248,7 +228,7 @@ def calendar_filing_evidence_from_sources(
     justificantes do not overwrite each other's meaning.
     """
     context = _CalendarFilingEvidenceContext(
-        justificantes_by_csv=_justificantes_by_csv(justificantes),
+        justificantes_by_csv=justificantes_by_csv(justificantes),
         verified_filed_artefact_refs=frozenset(verified_filed_declaration_artefact_refs),
         verified_filed_csv_by_ref=verified_filed_declaration_artefact_csvs or {},
         expected_tax_id=expected_tax_id,
@@ -281,7 +261,7 @@ def _collect_calendar_filing_evidence(
     _merge_projected_evidence(
         by_key,
         (
-            _filing_evidence_from_modelo_record(
+            filing_evidence_from_modelo_record(
                 record,
                 justificantes_by_csv=context.justificantes_by_csv,
                 expected_tax_id=context.expected_tax_id,
@@ -292,7 +272,7 @@ def _collect_calendar_filing_evidence(
     _merge_projected_evidence(
         by_key,
         (
-            _filing_evidence_from_observed_event(event, expected_tax_id=context.expected_tax_id)
+            filing_evidence_from_observed_event(event, expected_tax_id=context.expected_tax_id)
             for event in observed_events
         ),
     )
@@ -307,7 +287,7 @@ def _collect_calendar_filing_evidence(
     _merge_projected_evidence(
         by_key,
         (
-            _filing_evidence_from_calculation_observation(
+            filing_evidence_from_calculation_observation(
                 payload,
                 expected_tax_id=context.expected_tax_id,
                 justificantes_by_csv=context.justificantes_by_csv,
@@ -318,7 +298,7 @@ def _collect_calendar_filing_evidence(
     _merge_projected_evidence(
         by_key,
         (
-            _filing_evidence_from_justificante_capture_snapshot(
+            filing_evidence_from_justificante_capture_snapshot(
                 snapshot,
                 justificantes_by_csv=context.justificantes_by_csv,
                 expected_tax_id=context.expected_tax_id,
@@ -349,7 +329,7 @@ def _filed_declaration_evidence_from_sources(
     """Project filed-declaration observations, omitting rejected rows."""
     projected: list[OverviewCalendarFilingEvidence] = []
     for observation in observations:
-        evidence = _filing_evidence_from_filed_declaration_observation(
+        evidence = filing_evidence_from_filed_declaration_observation(
             observation,
             expected_tax_id=expected_tax_id,
             verified_artefact_refs=verified_artefact_refs,
@@ -516,7 +496,7 @@ def _clean_reference_id(reference_id: str | None) -> str | None:
     left the module with two forms for one identifier. Normalising once here
     means the comparisons below are plain equality.
     """
-    return _justificante_csv_key(reference_id or "") or None
+    return justificante_csv_key(reference_id or "") or None
 
 
 def _calendar_filing_evidence_sort_key(
@@ -546,7 +526,7 @@ def _calendar_entry_filing_evidence(
     *,
     modelo: str,
     filing_year: int,
-    period: _Period,
+    period: Period,
     evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> OverviewCalendarFilingEvidence:
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
@@ -614,11 +594,11 @@ def _calendar_event_filing_evidence(
     return _strongest_filing_evidence(matching_refs)
 
 
-def _calendar_event_filing_target(event: OverviewCalendarEvent) -> tuple[str, int, _Period] | None:
+def _calendar_event_filing_target(event: OverviewCalendarEvent) -> tuple[str, int, Period] | None:
     """Return an active event's natural filing target, or reject the event."""
     if event.modelo is None or event.filing_year is None or event.period is None:
         return None
-    if event.status is not None and not _is_active_aeat_filing_status(event.status):
+    if event.status is not None and not is_active_aeat_filing_status(event.status):
         return None
     return event.modelo, event.filing_year, event.period
 
@@ -629,7 +609,7 @@ def _calendar_event_evidence_matches(
     reference_id: str,
     modelo: str,
     filing_year: int,
-    period: _Period,
+    period: Period,
 ) -> bool:
     """Whether one evidence row addresses the event's exact reference and target."""
     return (
@@ -651,11 +631,6 @@ def _strongest_filing_evidence(
     return strongest
 
 
-authenticated_identity_matches_expected = _authenticated_identity_matches_expected
 calendar_entry_filing_evidence = _calendar_entry_filing_evidence
 calendar_events_with_filing_evidence = _calendar_events_with_filing_evidence
 dedupe_calendar_events = _dedupe_calendar_events
-filing_axes_from_modelo_record = _filing_axes_from_modelo_record
-filing_evidence_from_justificante_capture_snapshot = _filing_evidence_from_justificante_capture_snapshot
-is_active_aeat_filing_status = _is_active_aeat_filing_status
-justificantes_by_csv = _justificantes_by_csv

@@ -43,8 +43,8 @@ from ..printed_boxes import snapshot_printed_boxes
 from ..verification_preconditions import ModeloVerificationResult
 from ..verification_projection import ModeloVerificationSnapshot
 from ..work_form_issue_lines import ModeloFormIssueLine, form_issue_lines
-from .test_verification_preconditions import _blocked_report
-from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
+from .test_verification_preconditions import blocked_report
+from .test_work_form_gate_agreement import checked_form, work_form_gate_agreement_revision, work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,13 +71,13 @@ def _two_elements_without_claims() -> tuple[CalculationSourceDiagnostic, ...]:
 def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, tuple[CalculationSourceIssue, ...]]:
     snapshot = operation.snapshot("100", filing_year=2025, period="0A")
     issues = unrouted_source_issues(_two_elements_without_claims(), snapshot_printed_boxes(operation, snapshot))
-    revision = _revision(operation, _work_unit(operation), *issues)
+    revision = work_form_gate_agreement_revision(operation, work_unit(operation), *issues)
     return CalculationRevision.model_validate_json(revision.model_dump_json()), issues
 
 
 def _gap_lines(operation: PinnedAuthorityOperation, language: OutputLanguage) -> list[ModeloFormIssueLine]:
     revision, _ = _persisted(operation)
-    form = _checked_form(operation, revision)
+    form = checked_form(operation, revision)
     return [line for line in form_issue_lines(form, language) if "activity_asset_claim_gap" in line.technical]
 
 
@@ -107,13 +107,13 @@ def test_the_notes_that_persist_for_the_record_withhold_nothing(operation: Pinne
     assert "activity_asset_claim_gap" in {issue.reason for issue in issues}
     assert not {issue.reason for issue in issues} & GATE_REFUSED_REASONS
     revision, _ = _persisted(operation)
-    form = _checked_form(operation, revision)
+    form = checked_form(operation, revision)
     assert form.blocking_calculation_notes == ()
 
 
 def test_two_notes_of_one_reason_are_two_calculations(operation: PinnedAuthorityOperation) -> None:
     """A note is part of what the revision says, so a different figure is a different revision."""
-    unit = _work_unit(operation)
+    unit = work_unit(operation)
     base = {"reason": "activity_asset_claim_gap", "binding_source": None, "message": "gap"}
     first = CalculationSourceIssue(
         **base, fact=CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, element="furniture")
@@ -123,8 +123,8 @@ def test_two_notes_of_one_reason_are_two_calculations(operation: PinnedAuthority
     )
 
     assert (
-        _revision(operation, unit, first).calculation_revision_id
-        != _revision(operation, unit, second).calculation_revision_id
+        work_form_gate_agreement_revision(operation, unit, first).calculation_revision_id
+        != work_form_gate_agreement_revision(operation, unit, second).calculation_revision_id
     )
 
 
@@ -151,7 +151,7 @@ def test_verify_and_export_carry_what_the_calculation_noted(
     assert sum(note.reason == "activity_asset_claim_gap" for note in notes) == 2
 
     verification = ModeloVerificationResult(
-        report=_blocked_report(()), published=True, finding_preconditions=(), calculation_notes=notes
+        report=blocked_report(()), published=True, finding_preconditions=(), calculation_notes=notes
     )
     assert ModeloVerificationSnapshot.from_verification(verification).to_verification().calculation_notes == notes
 

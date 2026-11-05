@@ -253,7 +253,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
             parameters_provenance=bienes_parameters.provenance,
         ),
     )
-    taxpayer = m303_did._taxpayer_profile()
+    taxpayer = m303_did.taxpayer_profile()
     assert taxpayer.iva is not None
     producer = m303_did.build_filing_producer_snapshot(
         modelo=m303_did.Modelo("303"),
@@ -266,10 +266,10 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         ),
         presenter=m303_did.PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
         model_profile=taxpayer.iva,
-        elections=m303_did._elections(ResultDisposition.DEVOLUCION),
+        elections=m303_did.elections(ResultDisposition.DEVOLUCION),
         amendment_evidence=None,
-        refund_account=m303_did._REFUND_ACCOUNT,
-        charge_account=m303_did._CHARGE_ACCOUNT,
+        refund_account=m303_did.REFUND_ACCOUNT,
+        charge_account=m303_did.CHARGE_ACCOUNT,
         m303_filing_facts=facts,
     )
     return snapshot, producer
@@ -394,10 +394,10 @@ def _m303_real_envelope(_m303_authority_operation: PinnedAuthorityOperation):
         request = FilingEnvelopeRenderRequest(
             registry_snapshot=snapshot,
             layout=layout,
-            draft=m303_did._draft(),
+            draft=m303_did.draft(),
             producer_snapshot=producer,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=m303_did._product_software_identity(),
+            product_software_identity=m303_did.product_software_identity(),
         )
         yield request, render_filing_envelope(request)
 

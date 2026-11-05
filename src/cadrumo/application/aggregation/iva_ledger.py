@@ -46,7 +46,7 @@ from ...core.decimal.constants import HUNDRED
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
@@ -89,7 +89,7 @@ from ...domain.transactions.enums import (
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from . import _shared_issue_reasons
+from . import shared_issue_reasons
 from .errors import AggregationValidationError
 from .invoice_kind import invoice_kind_for_direction
 
@@ -104,11 +104,11 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     are IVA-specific.
     """
 
-    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
-    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    UNSUPPORTED_DIRECTION = shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = shared_issue_reasons.PERSONAL_TRANSACTION
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     MISSING_TAXABLE_BASE = "missing_taxable_base"
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
@@ -273,7 +273,7 @@ class IvaLedgerAggregationIssue(BaseModel):
     on its devengo date, and ``None`` elsewhere.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
@@ -284,7 +284,7 @@ class IvaLedgerAggregationIssue(BaseModel):
 class ProrrataLedgerReference(BaseModel):
     """Bucket-local ledger row pointer to a legal IVA prorrata reference."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     transaction_date: date
@@ -308,7 +308,7 @@ class IvaLedgerSectorApportionment(BaseModel):
             Operator-declared sector this apportionment resolves for.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sector_id: str = Field(min_length=1, max_length=64)
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
@@ -318,7 +318,7 @@ class IvaLedgerSectorApportionment(BaseModel):
 class IvaLedgerSettlementSectorPercentage(BaseModel):
     """One differentiated sector's settled definitive percentage (LIVA arts. 101.Uno, 105.Cuatro)."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sector_id: str = Field(min_length=1, max_length=64)
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
@@ -342,7 +342,7 @@ class IvaLedgerSettlementApportionment(BaseModel):
     ``percentage`` reaches only the common-use slice (art. 106.Uno regla 3.ª).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     period: Period
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
@@ -382,7 +382,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
             Applies the percentage after registry selector resolution.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
     provenance: ProrrataProvisionalProvenance
@@ -403,7 +403,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
 class IvaDifferentiatedDeductionContribution(BaseModel):
     """Immutable canonical apportioned contribution for one sector/source family."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sector_id: str = Field(min_length=1, max_length=64)
     deduction_fact_kind: IvaDeductionFactKind
@@ -443,7 +443,7 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
             apportionment passes.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     deduction_under_general: Decimal = Field(..., ge=Decimal("0"))
     deduction_under_especial: Decimal | None = Field(..., ge=Decimal("0"))
@@ -459,7 +459,7 @@ class IvaLedgerAggregation(BaseModel):
     because every transaction is already loaded for classification.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     period: Period
     observations: Sequence[IvaLedgerObservation] = Field(default_factory=tuple)
@@ -821,7 +821,7 @@ def _collect_iva_transaction(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Classify one included ledger row and add what it yields to ``collected``."""
-    from ._iva_transaction import classify_iva_transaction
+    from .iva_transaction import classify_iva_transaction
 
     outcome = classify_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
     if outcome.gate_issue is not None:

@@ -19,7 +19,7 @@ from ....domain.calculations.registry.binding_targets import sole_bound_casilla
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.codes import ModeloCode
 from ...aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
-from .._calculation_source_staging import add_expected_missing_binding_diagnostics
+from ..calculation_source_staging import add_expected_missing_binding_diagnostics
 from ..work_form import build_modelo_work_form
 from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_service import modelo_form_snapshot

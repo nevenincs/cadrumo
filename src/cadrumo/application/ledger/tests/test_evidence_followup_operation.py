@@ -52,24 +52,12 @@ from ....application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_registrations,
     build_ledger_evidence_review_summary_definition,
     build_ledger_evidence_review_summary_registration,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_attachment_queue_result as _project_attachment_queue,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_attachment_view_result as _project_attachment_view,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_consent_list_result as _project_consent_list,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_list_result as _project_review_list,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_summary_result as _project_review_summary,
-)
-from ....application.ledger.evidence_followup_registration import (
-    project_review_view_result as _project_review_view,
+    project_attachment_queue_result,
+    project_attachment_view_result,
+    project_consent_list_result,
+    project_review_list_result,
+    project_review_summary_result,
+    project_review_view_result,
 )
 from ....application.ledger.evidence_review_summaries import (
     DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
@@ -337,14 +325,14 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceAttachmentQueueExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_attachment_queue,
+            project_attachment_queue_result,
         )
     if definition_id == LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceAttachmentViewProjection(profile_id=_PROFILE, item=_sample_attachment())
         return (
             LedgerEvidenceAttachmentViewExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_attachment_view,
+            project_attachment_view_result,
         )
     if definition_id == LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceConsentListProjection(
@@ -354,14 +342,14 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceConsentListExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_consent_list,
+            project_consent_list_result,
         )
     if definition_id == LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceReviewListProjection(profile_id=_PROFILE)
         return (
             LedgerEvidenceReviewListExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_review_list,
+            project_review_list_result,
         )
     if definition_id == LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID:
         projection = LedgerEvidenceReviewViewProjection(
@@ -374,7 +362,7 @@ def _projection_and_projector(definition_id: str) -> tuple[BaseModel, BaseModel,
         return (
             LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=projection),
             projection,
-            _project_review_view,
+            project_review_view_result,
         )
     raise AssertionError(definition_id)
 
@@ -733,21 +721,21 @@ def test_the_summary_projector_releases_the_summary_and_the_view_projector_still
     summary = LedgerEvidenceReviewSummaryProjection.from_review_view(view)
     summary_receipt = _receipt(LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID)
 
-    released = _project_review_summary(
+    released = project_review_summary_result(
         LedgerEvidenceReviewSummaryExecutionResult(profile_id=_PROFILE, result=summary), summary_receipt
     )
 
     assert released == summary
     with pytest.raises(ValueError):
-        _project_review_summary(
+        project_review_summary_result(
             LedgerEvidenceReviewSummaryExecutionResult(profile_id=_PROFILE, result=summary),
             _receipt(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID),
         )
     with pytest.raises(ValueError):
-        _project_review_summary(
+        project_review_summary_result(
             LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=view), summary_receipt
         )
-    person_view = _project_review_view(
+    person_view = project_review_view_result(
         LedgerEvidenceReviewViewExecutionResult(profile_id=_PROFILE, result=view),
         _receipt(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID),
     )

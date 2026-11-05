@@ -14,7 +14,7 @@ The imported record is the production baseline consumed by the amendment path.
 It is intentionally distinct from a locally calculated and filed return:
 ``external_evidence`` marks that the values came from official AEAT evidence,
 while
-:func:`~cadrumo.application.modelo._calculation_helpers.external_filing_observations`
+:func:`~cadrumo.application.modelo.calculation_helpers.external_filing_observations`
 keeps the imported casilla values on the same registry-grounded
 :class:`CasillaObservation` contract as local
 calculation revisions.
@@ -30,7 +30,7 @@ See Also:
         Receipt metadata store required by justificante-PDF and live-capture evidence
         kinds. CSV/XLSX register imports bind the source reference directly to
         the target work-unit coordinates instead of masquerading as a receipt.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_import_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
     :class:`ExternalEvidence`:
@@ -53,7 +53,7 @@ from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -100,12 +100,12 @@ from ..calculations.observations_repository import (
 )
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 from ..workflow.active_profile import require_active_profile_bucket_id
-from ._calculation_helpers import external_filing_observations as _external_filing_observations
-from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from .action_errors import ExternalModeloImportError
+from .calculation_helpers import external_filing_observations
 from .calculation_repository import calculation_revision_catalogue_repository
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
+from .registry_helpers import reject_unknown_import_casillas
 from .work_addressing import (
     ModeloWorkRevisionConflictError,
     ModeloWorkVisibleTargetAmbiguousError,
@@ -344,7 +344,7 @@ def external_filing_source_casillas(
     """
     _validate_external_source_shape(source)
     lexical_values, decimal_values = _parse_external_source_values(source)
-    snapshot, canonical_values = _reject_unknown_import_casillas(
+    snapshot, canonical_values = reject_unknown_import_casillas(
         modelo=source.modelo,
         filing_year=source.filing_year,
         period=source.period,
@@ -374,7 +374,7 @@ def _load_external_import_target[CasillaKey](
         repository_bucket_id=work_unit_repository.bucket_id,
         use=ActiveWorkUnitUse.IMPORT,
     )
-    snapshot, canonical_values = _reject_unknown_import_casillas(
+    snapshot, canonical_values = reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -463,7 +463,7 @@ def _prepare_external_import_values[CasillaKey](
         source_lexicals=source_lexical_values_by_casilla_id,
     )
     outputs = dict(canonical_values)
-    observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
+    observations = external_filing_observations(casilla_values=outputs, snapshot=snapshot)
     return input_values_by_casilla_id, outputs, observations
 
 
@@ -789,7 +789,7 @@ def import_external_filing_evidence[CasillaKey](
         ports=ports,
         operation=operation,
         actor=actor,
-        clock=clock or _utc_now(),
+        clock=clock or now(),
     )
     return _reconciled_external_import_result(fr_repo, result, work_unit)
 

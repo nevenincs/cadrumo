@@ -70,7 +70,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.justificante.errors import JustificanteVerificationError
@@ -150,7 +150,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     came from an authenticated live capture.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bucket_id: BucketId
@@ -392,7 +392,7 @@ class JustificanteCaptureSnapshotRepository:
 
 
 class _JustificanteCaptureRequest(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     filing_year: int

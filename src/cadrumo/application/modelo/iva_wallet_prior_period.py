@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, NamedTuple
 
 from ...core.modelo import Modelo
-from ...core.period import Period as _Period
+from ...core.period import Period
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
@@ -67,11 +67,11 @@ def _prior_period_observation_requirement(
     return requirements[0]
 
 
-def _prior_period_source_period(requirement: RegistryFoldRequirement) -> _Period:
+def _prior_period_source_period(requirement: RegistryFoldRequirement) -> Period:
     return (
         requirement.filing_periods[0]
         if requirement.filing_periods
-        else _Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
+        else Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
     )
 
 
@@ -79,7 +79,7 @@ def _prior_period_observation_is_usable(
     payload: ObservationEnvelopePayload,
     *,
     requirement: RegistryFoldRequirement,
-    source_period: _Period,
+    source_period: Period,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     observation = payload.observation
@@ -105,7 +105,7 @@ def _prior_period_recurrence(
     payload: ObservationEnvelopePayload,
     *,
     requirement: RegistryFoldRequirement,
-    source_period: _Period,
+    source_period: Period,
 ) -> LocalIvaCompensationRecurrence | None:
     amount = payload.observation.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
     if amount is None:
@@ -129,7 +129,7 @@ def _operator_declared_carry_evidence(
     state: IvaCompensationPeriodState | None,
     *,
     requirement: RegistryFoldRequirement,
-    source_period: _Period,
+    source_period: Period,
 ) -> _PriorPeriodCarryEvidence:
     """Project an operator-declared opening balance into prior-period evidence.
 

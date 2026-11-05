@@ -34,7 +34,7 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
-from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
+from .m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from .producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 
 type _RegimenSimplificadoProjectionRef = (
@@ -109,7 +109,7 @@ def build_m303_filing_projection_plan(
         layout=layout,
         producer_snapshot=producer_snapshot,
     )
-    _require_regimen_snapshot_matches_registry(registry_snapshot, producer_snapshot)
+    require_regimen_snapshot_matches_registry(registry_snapshot, producer_snapshot)
     contexts, values = _project_layout_records(
         registry_snapshot=registry_snapshot,
         layout=layout,
@@ -502,7 +502,7 @@ def _require_nonrepeated_projection_record(record: ExportRecordDefinition) -> No
         )
 
 
-def _require_regimen_snapshot_matches_registry(
+def require_regimen_snapshot_matches_registry(
     registry_snapshot: RegistrySnapshot,
     producer_snapshot: FilingProducerSnapshot,
 ) -> None:

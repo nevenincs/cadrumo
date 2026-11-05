@@ -19,7 +19,7 @@ from ..calendar_models import (
 # ---------------------------------------------------------------------
 
 
-def _entry(**overrides: object) -> OverviewCalendarEntry:
+def calendar_entry(**overrides: object) -> OverviewCalendarEntry:
     base: dict[str, object] = {
         "modelo": "130",
         "period": Period.from_year_and_code(2026, "1T"),

@@ -19,7 +19,7 @@ from ...tests.period_override_authority import (
     OVERRIDE_YEAR,
     override_operation,
 )
-from ..runtime import _snapshot_for_provider, subview_from_snapshot
+from ..runtime import snapshot_for_provider, subview_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,7 +29,7 @@ def test_the_provider_snapshot_uses_the_period_the_override_year_serves() -> Non
         directory = operation.modelo_directory(OVERRIDE_MODELO)
         modelo = directory.materialize(operation.revision(OVERRIDE_MODELO, OVERRIDE_REVISION))
 
-        snapshot = _snapshot_for_provider(
+        snapshot = snapshot_for_provider(
             operation,
             modelo,
             filing_year=OVERRIDE_YEAR,

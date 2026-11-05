@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ..calculation_bucket_actions import _orphaned_override_diagnostics
+from ..calculation_bucket_actions import orphaned_override_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,7 +39,7 @@ def test_retired_relation_key_surfaces_a_structured_advisory() -> None:
     revision = _m303_revision()
     assert _ORPHANED_KEY not in {binding.id for binding in revision.bindings}
 
-    (diagnostic,) = _orphaned_override_diagnostics(
+    (diagnostic,) = orphaned_override_diagnostics(
         revision,
         caller_relation_values={_ORPHANED_KEY: Decimal("50.00")},
     )
@@ -58,7 +58,7 @@ def test_override_on_a_declared_binding_raises_nothing() -> None:
     )
 
     assert (
-        _orphaned_override_diagnostics(
+        orphaned_override_diagnostics(
             revision,
             caller_relation_values={declared: Decimal("50.00")},
         )
@@ -68,4 +68,4 @@ def test_override_on_a_declared_binding_raises_nothing() -> None:
 
 def test_no_overrides_raise_nothing() -> None:
     """An empty override channel is not a gap and produces no advisory."""
-    assert _orphaned_override_diagnostics(_m303_revision(), caller_relation_values={}) == ()
+    assert orphaned_override_diagnostics(_m303_revision(), caller_relation_values={}) == ()

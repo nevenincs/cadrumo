@@ -29,7 +29,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from ..modelo_bindings import _activity_category_matcher, _employment_category_matcher
+from ..modelo_bindings import modelo_bindings_activity_category_matcher, modelo_bindings_employment_category_matcher
 from ..renta_income_ledger import aggregate_renta_m131_agrario_income_ledger
 from .renta_income_aggregation_support import raw_transaction
 
@@ -95,8 +95,8 @@ def _total(*transactions: Transaction) -> Decimal:
             modelo=Modelo("131").value,
             target_casilla_id=validated_casilla_id("05"),
             agrarian_activity_codes=agrarian_activity_codes,
-            activity_category_matcher=_activity_category_matcher(operation),
-            employment_category_matcher=_employment_category_matcher(operation),
+            activity_category_matcher=modelo_bindings_activity_category_matcher(operation),
+            employment_category_matcher=modelo_bindings_employment_category_matcher(operation),
             operation=operation,
         )
     return sum((o.gross_amount for o in aggregation.observations), start=Decimal("0"))

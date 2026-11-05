@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import Requirement
 from .completeness import (
     IVA_REGIME_PATH,
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 class ProfileValidationResult(BaseModel):
     """Typed result of :func:`validate_profile_values`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     valid: bool
     missing_required: tuple[str, ...] = ()

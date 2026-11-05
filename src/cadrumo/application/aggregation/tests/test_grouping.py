@@ -17,13 +17,13 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.transactions.models import TransactionCatalogue
-from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
 from ..errors import AggregationPeriodError
+from ..grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
 from ..renta_income_models import RentaIncomeObservation
 from ..retenciones import RetencionObservation
 from .renta_income_aggregation_support import (
-    _M130_ACCEPT_ACTIVITY_MARKER,
-    _M130_GASTOS_CASILLA,
+    M130_ACCEPT_ACTIVITY_MARKER,
+    M130_GASTOS_CASILLA,
     M130_INGRESOS_CASILLA,
     M130_MODELO,
     m130_activity_category_matcher,
@@ -415,8 +415,8 @@ def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> No
         bucket_id="b",
         period=period,
         modelo=M130_MODELO,
-        target_casilla_id=_M130_GASTOS_CASILLA,
-        accept_activity_marker=_M130_ACCEPT_ACTIVITY_MARKER,
+        target_casilla_id=M130_GASTOS_CASILLA,
+        accept_activity_marker=M130_ACCEPT_ACTIVITY_MARKER,
     )
 
     assert income.period == window.period

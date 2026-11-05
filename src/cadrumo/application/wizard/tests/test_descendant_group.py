@@ -34,24 +34,24 @@ from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, F
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
 from ..descendant_group import (
-    _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
-    _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
-    _ENTRY_IN_FUTURE_LOCALE_KEY,
-    _GASTOS_BOTH_DECLARED_LOCALE_KEY,
-    _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
-    _GASTOS_MENSUALES_INVALID_LOCALE_KEY,
-    _MESES_INVALID_RANGE_LOCALE_KEY,
-    _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
-    _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
+    ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID,
     DESCENDANTS_COUNT_PAGE_ID,
     DESCENDANTS_GROUP_ID,
+    ENTRY_BEFORE_BIRTH_LOCALE_KEY,
+    ENTRY_IN_FUTURE_LOCALE_KEY,
+    GASTOS_BOTH_DECLARED_LOCALE_KEY,
+    GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    GASTOS_MENSUALES_INVALID_LOCALE_KEY,
+    MESES_INVALID_RANGE_LOCALE_KEY,
+    RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
+    RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
     attach_descendant_group,
     build_descendant_count_page,
     build_descendant_group,
 )
-from ..persistence import descendant_facts_from_answers as _descendant_facts_from_answers
+from ..persistence import descendant_facts_from_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -117,7 +117,7 @@ def _descendant_facts(answers: dict[str, str]) -> list[tuple[str, str]]:
     """Project answers under the same real authority seam as the production door."""
 
     with bundled_indexed_authority().operation() as operation:
-        return _descendant_facts_from_answers(answers, operation=operation)
+        return descendant_facts_from_answers(answers, operation=operation)
 
 
 def _attach(base: FlowDefinition) -> FlowDefinition:
@@ -224,7 +224,7 @@ def test_the_monthly_guarderia_page_commits_a_range_and_refuses_a_bad_map() -> N
 
     rejected = answer(definition, state, "descendientes#0.gastos-guarderia-mensuales", "13:210")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.gastos-guarderia-mensuales"]] == [
-        _GASTOS_MENSUALES_INVALID_LOCALE_KEY
+        GASTOS_MENSUALES_INVALID_LOCALE_KEY
     ]
     assert "descendientes#0.gastos-guarderia-mensuales" not in rejected.answers
 
@@ -275,7 +275,7 @@ def test_declaring_both_spend_shapes_blocks_submit_and_names_the_annual_page() -
     validator = resolve_cross_field_validator(DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID)
     verdicts = validator(state.answers)
 
-    assert [v.message_key for v in verdicts] == [_GASTOS_BOTH_DECLARED_LOCALE_KEY]
+    assert [v.message_key for v in verdicts] == [GASTOS_BOTH_DECLARED_LOCALE_KEY]
     assert all(v.context.get("page") == "gastos-guarderia" for v in verdicts)
 
 
@@ -392,7 +392,7 @@ def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:
 
     rejected = answer(definition, state, "descendientes#0.meses-madre-trabajo", "15")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.meses-madre-trabajo"]] == [
-        _MESES_INVALID_RANGE_LOCALE_KEY
+        MESES_INVALID_RANGE_LOCALE_KEY
     ]
     assert "descendientes#0.meses-madre-trabajo" not in rejected.answers
 
@@ -406,7 +406,7 @@ def test_alta_posterior_month_refuses_out_of_range_and_commits_valid_month() -> 
 
     rejected = answer(definition, state, "descendientes#0.alta-posterior-nacimiento-mes", "13")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.alta-posterior-nacimiento-mes"]] == [
-        _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY
+        ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY
     ]
     assert "descendientes#0.alta-posterior-nacimiento-mes" not in rejected.answers
 
@@ -420,7 +420,7 @@ def test_negative_gastos_refuses_as_a_verdict() -> None:
 
     rejected = answer(definition, state, "descendientes#0.gastos-guarderia", "-5")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.gastos-guarderia"]] == [
-        _GASTOS_INVALID_NEGATIVE_LOCALE_KEY
+        GASTOS_INVALID_NEGATIVE_LOCALE_KEY
     ]
     assert "descendientes#0.gastos-guarderia" not in rejected.answers
 
@@ -453,7 +453,7 @@ def test_rentas_over_precise_figure_refuses_as_a_verdict() -> None:
 
     rejected = answer(definition, state, "descendientes#0.rentas-anuales", "8000.123")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.rentas-anuales"]] == [
-        _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY
+        RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY
     ]
     assert "descendientes#0.rentas-anuales" not in rejected.answers
 
@@ -464,7 +464,7 @@ def test_negative_rentas_refuses_as_a_verdict() -> None:
 
     rejected = answer(definition, state, "descendientes#0.rentas-anuales", "-1.50")
     assert [v.message_key for v in rejected.verdicts["descendientes#0.rentas-anuales"]] == [
-        _RENTAS_INVALID_NEGATIVE_LOCALE_KEY
+        RENTAS_INVALID_NEGATIVE_LOCALE_KEY
     ]
     assert "descendientes#0.rentas-anuales" not in rejected.answers
 
@@ -477,7 +477,7 @@ def test_adoption_before_birth_refuses_at_flow_scope() -> None:
             "descendientes#0.inscripcion-registro-civil": "2010-01-01",
         },
     )
-    assert [v.message_key for v in verdicts if not v.ok] == [_ENTRY_BEFORE_BIRTH_LOCALE_KEY]
+    assert [v.message_key for v in verdicts if not v.ok] == [ENTRY_BEFORE_BIRTH_LOCALE_KEY]
 
 
 def test_adoption_in_future_refuses_at_flow_scope() -> None:
@@ -488,7 +488,7 @@ def test_adoption_in_future_refuses_at_flow_scope() -> None:
             "descendientes#0.inscripcion-registro-civil": "2999-01-01",
         },
     )
-    assert [v.message_key for v in verdicts if not v.ok] == [_ENTRY_IN_FUTURE_LOCALE_KEY]
+    assert [v.message_key for v in verdicts if not v.ok] == [ENTRY_IN_FUTURE_LOCALE_KEY]
 
 
 def test_valid_adoption_pair_passes_flow_scope() -> None:

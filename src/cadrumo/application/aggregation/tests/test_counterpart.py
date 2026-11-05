@@ -154,8 +154,8 @@ class TestAggregate349:
 
 class TestInvariants:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from .._grouping import filter_observations_for_modelo
         from ..errors import AggregationUnsupportedModeloError
+        from ..grouping import filter_observations_for_modelo
 
         with pytest.raises(AggregationUnsupportedModeloError) as exc_info:
             filter_observations_for_modelo(

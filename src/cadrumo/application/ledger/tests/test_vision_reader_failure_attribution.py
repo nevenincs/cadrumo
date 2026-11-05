@@ -37,7 +37,7 @@ from ..invoice_draft_records import InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..preconditions import LedgerPreconditionCondition
 from ..structured_invoice_ports import StructuredInvoiceRecord
-from ._evidence_textlayer_test_support import text_layer_ports_for_pages
+from .evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

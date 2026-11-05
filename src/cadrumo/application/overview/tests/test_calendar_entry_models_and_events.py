@@ -25,15 +25,11 @@ from ..calendar_models import (
     OverviewPeriodState,
     user_state_for,
 )
-from .calendar_support import _entry
+from .calendar_support import calendar_entry
 from .calendar_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .calendar_test_support import (
-    PERIOD_2025_1T as _PERIOD_2025_1T,
-)
-from .calendar_test_support import (
-    SOURCE_URL as _SOURCE_URL,
+    BUCKET_ID,
+    PERIOD_2025_1T,
+    SOURCE_URL,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -136,7 +132,7 @@ def test_range_is_frozen() -> None:
 
 
 def test_entry_round_trips_canonical_fields() -> None:
-    entry = _entry()
+    entry = calendar_entry()
     assert entry.modelo == "130"
     assert entry.period == Period.from_year_and_code(2026, "1T")
     assert str(entry.period) == "2026 1T"
@@ -145,21 +141,21 @@ def test_entry_round_trips_canonical_fields() -> None:
 
 def test_entry_rejects_inverted_window() -> None:
     with pytest.raises(ValueError, match=r"opens_on|closes_on|window"):
-        _entry(opens_on=date(2026, 4, 21), closes_on=date(2026, 4, 20))
+        calendar_entry(opens_on=date(2026, 4, 21), closes_on=date(2026, 4, 20))
 
 
 def test_entry_rejects_payment_cutoff_after_closes_on() -> None:
     with pytest.raises(ValueError, match=r"payment_cutoff|closes_on"):
-        _entry(payment_cutoff_on=date(2026, 4, 25))
+        calendar_entry(payment_cutoff_on=date(2026, 4, 25))
 
 
 def test_entry_rejects_user_state_inconsistent_with_engine_status() -> None:
     with pytest.raises(ValueError, match=r"user_state|status|inconsistent"):
-        _entry(status=ObligationStatus.OVERDUE, user_state=OverviewPeriodState.DUE)
+        calendar_entry(status=ObligationStatus.OVERDUE, user_state=OverviewPeriodState.DUE)
 
 
 def test_entry_is_frozen() -> None:
-    entry = _entry()
+    entry = calendar_entry()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         entry.modelo = "303"
 
@@ -172,15 +168,15 @@ def test_entry_is_frozen() -> None:
 def _expedientes_snapshot(authenticated_identity: str) -> PersistedExpedientesSnapshot:
     return PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         authenticated_identity=authenticated_identity,
         declarations=(
             ExpedientesDeclaration(
                 modelo="303",
                 ejercicio=2025,
-                period=_PERIOD_2025_1T,
+                period=PERIOD_2025_1T,
                 expediente_id="12345678901234567890",
                 estado="ALTA",
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -235,13 +231,13 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         rows=(row,),
         persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
     )
@@ -280,13 +276,13 @@ def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent()
         fecha_notificacion=date(2025, 4, 21),
         modo_notificacion="DEHú",
         leida=True,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     first = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 4, 21, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         authenticated_identity="B12345674",
         rows=(row,),
         persisted_at=datetime(2025, 4, 21, 10, 5, tzinfo=UTC),
@@ -332,7 +328,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     other_taxpayer = RemoteNotification(
         certificado_id="2699101808461",
@@ -346,13 +342,13 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         fecha_notificacion=None,
         modo_notificacion="DEHú",
         leida=True,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         rows=(matching, other_taxpayer),
         persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
     )
@@ -380,7 +376,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         fecha_notificacion=date(2025, 3, 12),
         modo_notificacion="DEHú",
         leida=False,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     explicit_other_taxpayer = RemoteNotification(
         certificado_id="2699101808461",
@@ -394,22 +390,22 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         fecha_notificacion=None,
         modo_notificacion="DEHú",
         leida=True,
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
     )
     matching_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         authenticated_identity="B12345674",
         rows=(matching, explicit_other_taxpayer),
         persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
     )
     other_snapshot = PersistedNotificationsSnapshot(
         snapshot_id="b" * 64,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 14, 10, 0, tzinfo=UTC),
-        source_url=_SOURCE_URL,
+        source_url=SOURCE_URL,
         authenticated_identity="C12345674",
         rows=(matching,),
         persisted_at=datetime(2025, 3, 14, 10, 5, tzinfo=UTC),

@@ -33,8 +33,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
-from ..export_verification import _xml_dictionary_expected_wire_value
+from ..export_verification import xml_dictionary_expected_wire_value
+from ..export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -120,7 +120,7 @@ def test_verifier_matches_the_selected_0695_branch(
     """A selected 0695 branch renders the value the verifier expects."""
     entries = _branch_entries()
     assert (
-        _xml_dictionary_expected_wire_value(
+        xml_dictionary_expected_wire_value(
             entries[_NON_NEGATIVE_BRANCH],
             Decimal("1234.56"),
             modelo="100",

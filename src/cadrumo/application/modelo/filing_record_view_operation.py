@@ -238,7 +238,7 @@ def _resolve_period(
     return PublicPeriod.from_period(record.period)
 
 
-def _capture(
+def capture(
     payload: ModeloFilingRecordViewRequest,
     bundle: VerificationRepositoryBundle,
 ) -> ModeloFilingRecordViewProjection:
@@ -288,7 +288,7 @@ class ModeloFilingRecordViewExecutor:
 
         def read() -> ModeloFilingRecordViewProjection:
             bundle = self._factory(str(payload.profile_id), operation=context.authority_operation)
-            return _capture(payload, bundle)
+            return capture(payload, bundle)
 
         return await capture_read_result(context, read, task_name="modelo-filing-record-view")
 

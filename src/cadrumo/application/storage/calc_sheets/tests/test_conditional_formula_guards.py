@@ -6,13 +6,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-from .._translator import translate_formula
 from ..engine import build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..form_workbook import add_form_workbook
 from ..formula_guards import conditional_missing_input_guard
 from ..layout import plan_layout
 from ..records import TabName
+from ..translator import translate_formula
 from .test_form_workbook import form_source as form_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]

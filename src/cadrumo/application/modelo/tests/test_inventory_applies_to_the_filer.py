@@ -30,7 +30,7 @@ from ...aggregation.inventory import InventorySourceResolver
 from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ...aggregation.tests.test_inventory_source import inventory_ledger
 from ...aggregation.tests.withholding_filer_profile_support import withholding_work_profile
-from .._calculation_source_staging import add_expected_missing_binding_diagnostics
+from ..calculation_source_staging import add_expected_missing_binding_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

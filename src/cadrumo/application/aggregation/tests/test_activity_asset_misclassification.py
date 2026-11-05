@@ -32,16 +32,16 @@ from ..activity_asset_ledger_reconciliation import possibly_durable_expense_find
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
     BUCKET_ID,
+    InMemoryInvoiceCatalogueRepository,
     InMemoryTransactionCatalogueRepository,
-    _InMemoryInvoiceCatalogueRepository,
-    _invoice,
+    ledger_source_mesh_invoice,
     machine_acquisition_transaction,
     register_asset,
     resolve_m100,
     resolve_m130,
 )
 from .ledger_source_mesh_support import (
-    reasons as _reasons,
+    reasons as ledger_source_mesh_reasons,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -68,10 +68,10 @@ def test_a_registered_purchase_booked_as_office_material_is_withheld_from_both_r
     history = _history(register_asset("monitor", transaction_id=row.transaction_id, basis=Decimal("1000.00")))
 
     for resolution in (resolve_m100(history, rows=(row,)), resolve_m130(history, "2T", rows=(row,))):
-        assert _WITHHELD in _reasons(resolution)
+        assert _WITHHELD in ledger_source_mesh_reasons(resolution)
         assert row.transaction_id not in resolution.source_transaction_ids
-        assert _EXCEEDS not in _reasons(resolution)
-        assert _PARTLY not in _reasons(resolution)
+        assert _EXCEEDS not in ledger_source_mesh_reasons(resolution)
+        assert _PARTLY not in ledger_source_mesh_reasons(resolution)
 
 
 def test_the_same_row_with_no_element_deducts_as_the_expense_it_was_booked_as() -> None:
@@ -84,7 +84,7 @@ def test_a_capital_good_for_iva_booked_as_an_expense_deducts_nothing_and_is_name
     row = machine_acquisition_transaction(_OFFICE).model_copy(update={"deduction_fact_kind": "domestic_investment"})
 
     for resolution in (resolve_m100(_history(), rows=(row,)), resolve_m130(_history(), "2T", rows=(row,))):
-        assert _reasons(resolution).count(_UNREGISTERED) == 1
+        assert ledger_source_mesh_reasons(resolution).count(_UNREGISTERED) == 1
         assert _expense_total(resolution) == Decimal("0")
 
 
@@ -95,7 +95,7 @@ def test_a_row_lowered_after_registration_is_found_on_both_returns() -> None:
     history = _history(register_asset("monitor", transaction_id=row.transaction_id, basis=Decimal("1000.00")))
 
     for resolution in (resolve_m100(history, rows=(row,)), resolve_m130(history, "2T", rows=(row,))):
-        assert _reasons(resolution).count(_EXCEEDS) == 1
+        assert ledger_source_mesh_reasons(resolution).count(_EXCEEDS) == 1
 
 
 def test_two_elements_that_each_fit_a_row_but_not_together_are_found_once() -> None:
@@ -105,7 +105,7 @@ def test_two_elements_that_each_fit_a_row_but_not_together_are_found_once() -> N
         register_asset("second", transaction_id=row.transaction_id, basis=Decimal("800.00")),
     )
 
-    assert _reasons(resolve_m100(history, rows=(row,))).count(_EXCEEDS) == 1
+    assert ledger_source_mesh_reasons(resolve_m100(history, rows=(row,))).count(_EXCEEDS) == 1
 
 
 def test_two_elements_that_share_a_row_exactly_raise_nothing() -> None:
@@ -115,7 +115,7 @@ def test_two_elements_that_share_a_row_exactly_raise_nothing() -> None:
         register_asset("second", transaction_id=row.transaction_id, basis=Decimal("400.00")),
     )
 
-    reasons = _reasons(resolve_m100(history, rows=(row,)))
+    reasons = ledger_source_mesh_reasons(resolve_m100(history, rows=(row,)))
 
     assert _EXCEEDS not in reasons
     assert _PARTLY not in reasons
@@ -127,7 +127,7 @@ def test_a_price_below_its_row_is_named_and_the_remainder_deducts_nothing() -> N
 
     resolution = resolve_m100(history, rows=(row,))
 
-    assert _reasons(resolution).count(_PARTLY) == 1
+    assert ledger_source_mesh_reasons(resolution).count(_PARTLY) == 1
     assert row.transaction_id not in resolution.source_transaction_ids
 
 
@@ -144,7 +144,7 @@ def test_a_further_row_counts_toward_its_element() -> None:
         )
     )
 
-    reasons = _reasons(resolve_m100(history, rows=(first, second)))
+    reasons = ledger_source_mesh_reasons(resolve_m100(history, rows=(first, second)))
 
     assert _EXCEEDS not in reasons
     assert _PARTLY not in reasons
@@ -159,8 +159,8 @@ def _described(row: Transaction, description: str) -> Transaction:
     return Transaction.model_validate({**facts, "raw": row.raw.model_copy(update={"description": description})})
 
 
-def _with_invoices(*invoices: Invoice) -> _InMemoryInvoiceCatalogueRepository:
-    repository = _InMemoryInvoiceCatalogueRepository()
+def _with_invoices(*invoices: Invoice) -> InMemoryInvoiceCatalogueRepository:
+    repository = InMemoryInvoiceCatalogueRepository()
     repository.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in invoices}))
     return repository
 
@@ -186,8 +186,8 @@ def test_a_row_deleted_after_registration_is_found_once_on_both_returns() -> Non
     history = _history(register_asset("press", transaction_id=row.transaction_id, basis=Decimal("1000.00")))
 
     for resolution in _both_returns(history):
-        assert _reasons(resolution).count(_MISSING) == 1
-        assert _EXCEEDS not in _reasons(resolution)
+        assert ledger_source_mesh_reasons(resolution).count(_MISSING) == 1
+        assert _EXCEEDS not in ledger_source_mesh_reasons(resolution)
         finding = next(item for item in resolution.diagnostics if item.reason == _MISSING)
         assert row.transaction_id in finding.message
         assert "press" in finding.message
@@ -199,12 +199,12 @@ def test_the_same_row_still_in_the_ledger_raises_nothing() -> None:
     history = _history(register_asset("press", transaction_id=row.transaction_id, basis=Decimal("1000.00")))
 
     for resolution in _both_returns(history, rows=(row,)):
-        assert _MISSING not in _reasons(resolution)
+        assert _MISSING not in ledger_source_mesh_reasons(resolution)
 
 
 def test_an_element_acquired_outside_the_ledger_never_misses_a_row() -> None:
     for resolution in _both_returns(_history(_outside_ledger_element())):
-        assert _MISSING not in _reasons(resolution)
+        assert _MISSING not in ledger_source_mesh_reasons(resolution)
 
 
 def test_one_missing_row_of_two_is_found_once_and_nothing_else_is_weighed() -> None:
@@ -221,8 +221,8 @@ def test_one_missing_row_of_two_is_found_once_and_nothing_else_is_weighed() -> N
     )
 
     for resolution in _both_returns(history, rows=(first,)):
-        assert _reasons(resolution).count(_MISSING) == 1
-        assert _EXCEEDS not in _reasons(resolution)
+        assert ledger_source_mesh_reasons(resolution).count(_MISSING) == 1
+        assert _EXCEEDS not in ledger_source_mesh_reasons(resolution)
         finding = next(item for item in resolution.diagnostics if item.reason == _MISSING)
         assert second.transaction_id in finding.message
         assert first.transaction_id not in finding.message
@@ -235,8 +235,8 @@ def test_a_monitor_booked_as_office_material_is_asked_about_and_still_deducts_in
     for resolution, baseline in zip(
         _both_returns(_history(), rows=(row,)), _both_returns(_history(), rows=(plain,)), strict=True
     ):
-        assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
-        assert _MAY_BE_DURABLE not in _reasons(baseline)
+        assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(baseline)
         assert _expense_total(resolution) == _expense_total(baseline)
         assert row.transaction_id in resolution.source_transaction_ids
         finding = next(item for item in resolution.diagnostics if item.reason == _MAY_BE_DURABLE)
@@ -254,14 +254,14 @@ def test_consumables_and_a_keyword_inside_another_word_raise_nothing(description
     row = _described(machine_acquisition_transaction(_OFFICE), description)
 
     for resolution in _both_returns(_history(), rows=(row,)):
-        assert _MAY_BE_DURABLE not in _reasons(resolution)
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(resolution)
 
 
 def test_case_and_accents_do_not_hide_a_keyword() -> None:
     row = _described(machine_acquisition_transaction(_OFFICE), "PORTÁTIL")
 
     for resolution in _both_returns(_history(), rows=(row,)):
-        assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
+        assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
 
 
 @pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
@@ -272,7 +272,7 @@ def test_the_finding_does_not_vary_with_the_interface_language(language: str) ->
     with override_settings(cadrumo_output_language=language):
         assert output_language() == language
         for resolution in _both_returns(_history(), rows=(row,)):
-            assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
+            assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
 
 
 def test_every_amortizable_category_has_keywords_in_every_catalogue() -> None:
@@ -285,10 +285,10 @@ def test_every_amortizable_category_has_keywords_in_every_catalogue() -> None:
 
 def test_a_durable_word_only_on_a_linked_invoice_line_is_asked_about() -> None:
     row = machine_acquisition_transaction(_OFFICE)
-    invoice = _invoice_reading(_invoice(row.transaction_id), "Silla de oficina ergonomica")
+    invoice = _invoice_reading(ledger_source_mesh_invoice(row.transaction_id), "Silla de oficina ergonomica")
 
     for resolution in _both_returns(_history(), rows=(row,), invoices=_with_invoices(invoice)):
-        assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
+        assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
 
 
 def _hundred_euro_row() -> Transaction:
@@ -299,31 +299,31 @@ def _hundred_euro_row() -> Transaction:
 
 def test_a_durable_word_on_an_invoice_the_row_names_as_evidence_is_asked_about() -> None:
     """Modelo 100 refuses evidence that does not link back, so only the instalment deducts this row."""
-    invoice = _invoice_reading(_invoice("f" * 64), "Monitor 27 pulgadas")
+    invoice = _invoice_reading(ledger_source_mesh_invoice("f" * 64), "Monitor 27 pulgadas")
     row = _hundred_euro_row().model_copy(update={"purchase_invoice_evidence_id": invoice.invoice_id})
 
     resolution = resolve_m130(_history(), "2T", rows=(row,), invoices=_with_invoices(invoice))
 
-    assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
+    assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
 
 
 def test_an_invoice_reached_both_ways_asks_once() -> None:
     plain = _hundred_euro_row()
-    invoice = _invoice_reading(_invoice(plain.transaction_id), "Monitor 27 pulgadas")
+    invoice = _invoice_reading(ledger_source_mesh_invoice(plain.transaction_id), "Monitor 27 pulgadas")
     row = plain.model_copy(update={"purchase_invoice_evidence_id": invoice.invoice_id})
 
     for resolution in _both_returns(_history(), rows=(row,), invoices=_with_invoices(invoice)):
-        assert _reasons(resolution).count(_MAY_BE_DURABLE) == 1
+        assert ledger_source_mesh_reasons(resolution).count(_MAY_BE_DURABLE) == 1
 
 
 def test_an_issued_invoice_linked_to_the_row_says_nothing_about_what_was_bought() -> None:
     row = machine_acquisition_transaction(_OFFICE)
-    issued = _invoice_reading(_invoice(row.transaction_id), "Monitor 27 pulgadas").model_copy(
+    issued = _invoice_reading(ledger_source_mesh_invoice(row.transaction_id), "Monitor 27 pulgadas").model_copy(
         update={"kind": CatalogueInvoiceKind.ISSUED}
     )
 
     for resolution in _both_returns(_history(), rows=(row,), invoices=_with_invoices(issued)):
-        assert _MAY_BE_DURABLE not in _reasons(resolution)
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(resolution)
 
 
 def test_the_question_itself_refuses_owned_capital_and_amortizable_rows() -> None:
@@ -354,8 +354,8 @@ def test_a_row_the_register_owns_is_not_asked_about() -> None:
     history = _history(register_asset("monitor", transaction_id=row.transaction_id, basis=Decimal("1000.00")))
 
     for resolution in _both_returns(history, rows=(row,)):
-        assert _MAY_BE_DURABLE not in _reasons(resolution)
-        assert _WITHHELD in _reasons(resolution)
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(resolution)
+        assert _WITHHELD in ledger_source_mesh_reasons(resolution)
 
 
 def test_a_capital_good_is_named_once_and_not_asked_about() -> None:
@@ -364,16 +364,16 @@ def test_a_capital_good_is_named_once_and_not_asked_about() -> None:
     )
 
     for resolution in _both_returns(_history(), rows=(row,)):
-        assert _reasons(resolution).count(_UNREGISTERED) == 1
-        assert _MAY_BE_DURABLE not in _reasons(resolution)
+        assert ledger_source_mesh_reasons(resolution).count(_UNREGISTERED) == 1
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(resolution)
 
 
 def test_a_row_already_in_an_amortizable_category_is_named_once_and_not_asked_about() -> None:
     row = _described(machine_acquisition_transaction("hardware_amortizable"), "Monitor Dell")
 
     for resolution in _both_returns(_history(), rows=(row,)):
-        assert _reasons(resolution).count(_UNREGISTERED) == 1
-        assert _MAY_BE_DURABLE not in _reasons(resolution)
+        assert ledger_source_mesh_reasons(resolution).count(_UNREGISTERED) == 1
+        assert _MAY_BE_DURABLE not in ledger_source_mesh_reasons(resolution)
 
 
 class _UnreadableInvoices:
@@ -388,4 +388,4 @@ def test_an_unreadable_invoice_catalogue_withholds_the_instalment_figure() -> No
     resolution = resolve_m130(_history(), "2T", rows=(row,), invoices=_UnreadableInvoices())
 
     assert _expense_total(resolution) == 0
-    assert _reasons(resolution).count("storage_degraded") == 1
+    assert ledger_source_mesh_reasons(resolution).count("storage_degraded") == 1

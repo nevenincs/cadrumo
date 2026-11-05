@@ -80,7 +80,7 @@ _REPOSITORY_LAYERS = ("/adapters/persistence/profile/", "/adapters/persistence/s
 #: an edit above it does not silently retarget the entry.
 _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
-        "src/cadrumo/application/modelo/_edit_execution.py",
+        "src/cadrumo/application/modelo/edit_execution.py",
         "_capture_edit_receipt",
     ): "the receipt is CONSTRUCTED here, never read, so there is no revision to assert. Its id is a "
     "content hash over the operation, baseline, calculation revision and bucket event, so it is a "

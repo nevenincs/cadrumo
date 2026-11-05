@@ -32,15 +32,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
 from ....domain.iva.schema import InvoiceKind, IvaCategory
-from .._modelo_bindings_invoice_iva import (
-    _recargo_rate_divergence,
+from ..modelo_bindings_invoice_iva import (
+    modelo_bindings_invoice_iva_recargo_rate_divergence,
     recargo_rate_mismatch_diagnostics,
 )
 
@@ -106,7 +105,7 @@ def test_a_recargo_matching_the_published_rate_raises_nothing(operation: PinnedA
     reading it -- which costs more than never having built it.
     """
     assert (
-        _recargo_rate_divergence(
+        modelo_bindings_invoice_iva_recargo_rate_divergence(
             _recargo_invoice(recargo="52.00"),
             devengo_date=_ORDINARY_DAY,
             operation=operation,
@@ -122,7 +121,7 @@ def test_a_mistyped_recargo_is_reported_with_both_figures(operation: PinnedAutho
     that says only "these disagree" cannot be acted on, because the operator
     cannot tell which of the two to go and check.
     """
-    divergence = _recargo_rate_divergence(
+    divergence = modelo_bindings_invoice_iva_recargo_rate_divergence(
         _recargo_invoice(recargo="25.00"),
         devengo_date=_ORDINARY_DAY,
         operation=operation,
@@ -170,7 +169,7 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
     the premise is measured: 2 % pairs with 0,26 % only inside the October to
     December 2024 window, and the table declines outside it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         pairing = recargo_rate_record_for_applied_rate(
             Decimal("0.02"), date(2024, 11, 15), operation=_authority_operation_for_test
         )
@@ -187,7 +186,7 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
 def test_an_invoice_bearing_no_recargo_is_not_this_screens_business(operation: PinnedAuthorityOperation) -> None:
     """An ordinary invoice carries no recargo, and absence is not a divergence of zero."""
     assert (
-        _recargo_rate_divergence(
+        modelo_bindings_invoice_iva_recargo_rate_divergence(
             _recargo_invoice(recargo="0.00"),
             devengo_date=_ORDINARY_DAY,
             operation=operation,
@@ -209,7 +208,7 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction(
     reasonably assume the application has already substituted the computed
     figure, and file believing something the record does not do.
     """
-    divergence = _recargo_rate_divergence(
+    divergence = modelo_bindings_invoice_iva_recargo_rate_divergence(
         _recargo_invoice(recargo="25.00"),
         devengo_date=_ORDINARY_DAY,
         operation=operation,
@@ -238,7 +237,7 @@ def test_the_advisory_is_not_a_refusal(operation: PinnedAuthorityOperation) -> N
     a correct invoice is the worse error. Pinned so a later author does not
     "harden" the advisory into a refusal and read that as an improvement.
     """
-    divergence = _recargo_rate_divergence(
+    divergence = modelo_bindings_invoice_iva_recargo_rate_divergence(
         _recargo_invoice(recargo="25.00"),
         devengo_date=_ORDINARY_DAY,
         operation=operation,

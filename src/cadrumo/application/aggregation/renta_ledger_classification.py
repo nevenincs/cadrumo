@@ -33,16 +33,16 @@ from ...domain.renta.ledger_expenses import (
 )
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction
-from . import _shared_issue_reasons
-from ._renta_business_eligibility import (
+from . import shared_issue_reasons
+from .currency_predicates import (
+    effective_eur_amount,
+    is_non_eur_without_conversion,
+)
+from .renta_business_eligibility import (
     exclusive_business_use,
     relies_on_activity_marker,
     renta_expense_business_proportion,
     row_scaling_proportion,
-)
-from .currency_predicates import (
-    effective_eur_amount,
-    is_non_eur_without_conversion,
 )
 
 if TYPE_CHECKING:
@@ -91,20 +91,20 @@ def resolve_category_rule(
     """
     if category_id is None or not category_id.strip():
         return CategoryRuleRefusal(
-            _shared_issue_reasons.MISSING_CATEGORY,
+            shared_issue_reasons.MISSING_CATEGORY,
             "business expense has no spending category; assign it so its deduction rule can run",
         )
     try:
         category = normalize_spending_category(category_id)
     except RegistryValidationError:
         return CategoryRuleRefusal(
-            _shared_issue_reasons.UNKNOWN_CATEGORY,
+            shared_issue_reasons.UNKNOWN_CATEGORY,
             f"ledger category {category_id!r} is not in the spending taxonomy",
         )
     profile = profiles.get(category)
     if profile is None:
         return CategoryRuleRefusal(
-            _shared_issue_reasons.MISSING_CATEGORY_PROFILE,
+            shared_issue_reasons.MISSING_CATEGORY_PROFILE,
             f"category {category.value!r} has no profile for {profile_year}",
         )
     category_region_overrides = {
@@ -117,7 +117,7 @@ def resolve_category_rule(
     )
     if selected_profile is None:
         return CategoryRuleRefusal(
-            _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE,
+            shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE,
             (
                 f"category {category.value!r} carries a territorial-regime deductibility override for "
                 f"{profile_year} but the residence comunidad autonoma is undeclared"
@@ -227,7 +227,7 @@ def _renta_business_proportion_or_issue(
             "actividad-marked expense needs business-classification review before the annual declaration",
         )
     reason = RentaLedgerAggregationIssueReason(
-        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
+        shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return _renta_transaction_issue(
         transaction,
@@ -366,7 +366,7 @@ def refusal_issue_reason(result: RentaDeductibilityResult) -> str:
     """
     if result.refusal is not None:
         return result.refusal.value
-    return _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+    return shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
 
 
 def _renta_transaction_issue(

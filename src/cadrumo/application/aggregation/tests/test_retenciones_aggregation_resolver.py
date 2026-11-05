@@ -29,9 +29,9 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress, RetencionObservation
 from ..source_mesh import CalculationSourceContext

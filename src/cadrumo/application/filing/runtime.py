@@ -45,7 +45,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -128,7 +128,7 @@ class ModeloOperatorProfile(BaseModel):
         display_name: Human-readable label for the profile.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: SubjectTaxId = Field(min_length=1)
     display_name: str = Field(min_length=1)
@@ -143,7 +143,7 @@ class RegistryCasillaSchema(BaseModel):
     :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value_type: str
@@ -563,7 +563,7 @@ def _runtime_snapshots_for_modelos(
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo in modelos:
         try:
-            snapshots[modelo.id] = _snapshot_for_provider(
+            snapshots[modelo.id] = snapshot_for_provider(
                 authority,
                 modelo,
                 filing_year=filing_year,
@@ -774,7 +774,7 @@ def _is_below_filing_authority(exc: Exception) -> bool:
     )
 
 
-def _snapshot_for_provider(
+def snapshot_for_provider(
     authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
     modelo: ModeloDefinition,
     *,

@@ -92,7 +92,7 @@ def test_terminal_projector_rejects_forged_definition_and_result_reference() -> 
     )
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(result, wrong_definition)
+        operation.project_operation_result(result, wrong_definition)
     with pytest.raises(ValidationError):
         OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": None})
 
@@ -106,7 +106,7 @@ def test_terminal_projector_rejects_foreign_refusal_and_receipt_forbids_its_resu
     receipt = _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE)
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(result, receipt.model_copy(update={"refusal_ref": "REFUSED_OTHER"}))
+        operation.project_operation_result(result, receipt.model_copy(update={"refusal_ref": "REFUSED_OTHER"}))
     with pytest.raises(ValidationError):
         OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": "f" * 64})
 
@@ -123,7 +123,7 @@ def test_update_result_preserves_the_source_id_across_the_worker_wire() -> None:
     result = contracts.LedgerUpdateExecutionResult(outcome="updated", profile_id=_PROFILE, result=projected)
     decoded = contracts.LedgerUpdateExecutionResult.model_validate_json(result.model_dump_json())
     assert (
-        operation._project_operation_result(
+        operation.project_operation_result(
             decoded,
             _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
         )

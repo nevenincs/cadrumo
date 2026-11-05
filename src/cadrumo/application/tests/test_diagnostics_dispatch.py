@@ -33,9 +33,9 @@ from ...core.operator_action_enums import (
 )
 from ..diagnostic_models import DiagnosticCheck, diagnostic_no_recovery_verdict
 from ..diagnostics import (
-    _auth_check,
-    _overall_status,
+    auth_check,
     build_profile_check,
+    overall_status,
 )
 from ..wizard.status import WizardStatusReport
 
@@ -88,7 +88,7 @@ def _wizard_status(
 
 def test_overall_status_empty_checks_returns_ok() -> None:
     """Empty input → no failing or warning members → ok."""
-    assert _overall_status(()) == "ok"
+    assert overall_status(()) == "ok"
 
 
 def test_overall_status_returns_ok_when_every_check_is_ok() -> None:
@@ -97,7 +97,7 @@ def test_overall_status_returns_ok_when_every_check_is_ok() -> None:
         DiagnosticCheck(name="b", status="ok", summary="beta"),
     )
 
-    assert _overall_status(checks) == "ok"
+    assert overall_status(checks) == "ok"
 
 
 def test_overall_status_returns_warn_when_any_check_is_warn_and_none_fail() -> None:
@@ -112,7 +112,7 @@ def test_overall_status_returns_warn_when_any_check_is_warn_and_none_fail() -> N
         DiagnosticCheck(name="c", status="ok", summary="gamma"),
     )
 
-    assert _overall_status(checks) == "warn"
+    assert overall_status(checks) == "warn"
 
 
 def test_overall_status_returns_fail_when_any_check_is_fail() -> None:
@@ -126,7 +126,7 @@ def test_overall_status_returns_fail_when_any_check_is_fail() -> None:
         ),
     )
 
-    assert _overall_status(checks) == "fail"
+    assert overall_status(checks) == "fail"
 
 
 def test_overall_status_fail_priority_overrides_warn() -> None:
@@ -159,7 +159,7 @@ def test_overall_status_fail_priority_overrides_warn() -> None:
         ),
     )
 
-    assert _overall_status(checks) == "fail"
+    assert overall_status(checks) == "fail"
 
 
 def test_overall_status_returns_fail_when_every_check_is_fail() -> None:
@@ -178,7 +178,7 @@ def test_overall_status_returns_fail_when_every_check_is_fail() -> None:
         ),
     )
 
-    assert _overall_status(checks) == "fail"
+    assert overall_status(checks) == "fail"
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +284,7 @@ def test_auth_check_no_provider_returns_warn_with_auth_setup_action() -> None:
     ``auth.readiness`` warn row pointing at auth configure."""
     report = _wizard_status(auth_provider="", login_ready=False)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"
     assert result.status == "warn"
@@ -330,7 +330,7 @@ def _assert_login_verdict_binds_provider(result: DiagnosticCheck, provider: str)
 def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     report = _wizard_status(auth_provider="certificate", login_ready=False)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"
     assert result.status == "warn"
@@ -341,7 +341,7 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
 def test_auth_check_uses_configured_provider_for_session_probe() -> None:
     report = _wizard_status(auth_provider="clave_movil", login_ready=False)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"
     assert result.status == "warn"
@@ -352,7 +352,7 @@ def test_auth_check_uses_configured_provider_for_session_probe() -> None:
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:
     report = _wizard_status(auth_provider="certificate", login_ready=True)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"
     assert result.status == "ok"
@@ -366,7 +366,7 @@ def test_auth_check_summary_carries_provider_name_under_session_warn() -> None:
     operators can see which provider is configured."""
     report = _wizard_status(auth_provider="clave-movil", login_ready=False)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"
     assert "clave-movil" in result.summary
@@ -380,6 +380,6 @@ def test_auth_check_no_provider_branch_wins_when_login_ready_is_also_false() -> 
     summary."""
     report = _wizard_status(auth_provider="", login_ready=False)
 
-    result = _auth_check(report)
+    result = auth_check(report)
 
     assert result.name == "auth.readiness"

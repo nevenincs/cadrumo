@@ -27,9 +27,9 @@ from .action_port_fakes import EmptyInvoiceRepository, InMemoryEventRepository
 from .bulk_classify_operation_support import PROFILE_ID, CommitFence, EffectEvents, PrivateOperands
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 from .test_classification_rule_plan import (
-    _BUCKET,
-    _ClassificationScenario,
-    _transaction,
+    BUCKET,
+    ClassificationScenario,
+    transaction,
 )
 
 
@@ -85,7 +85,7 @@ class Repository(InMemoryTransactionRepository):
     """Reject legacy writes and simulate one guarded all-object commit boundary."""
 
     def __init__(self, catalogue: TransactionCatalogue, fence: CommitFence, invoices: Invoices, events: Events) -> None:
-        super().__init__(bucket_id=_BUCKET, catalogue=catalogue, permit_secure_object_writes=True)
+        super().__init__(bucket_id=BUCKET, catalogue=catalogue, permit_secure_object_writes=True)
         self.fence, self.invoices, self.events = fence, invoices, events
         self.revision = "a" * 64
         self.mode = "normal"
@@ -131,7 +131,7 @@ class Subject:
     def __init__(self, operation: PinnedAuthorityOperation) -> None:
         self.operation = operation
         self.fence, self.effects, self.operands = CommitFence(), EffectEvents(), PrivateOperands()
-        self.transaction = _transaction(provider_id="export-link", description="Synthetic export/link row")
+        self.transaction = transaction(provider_id="export-link", description="Synthetic export/link row")
         catalogue = TransactionCatalogue.from_transactions((self.transaction,))
         self.invoice: Invoice = build_catalogue_invoice(
             bucket_id=str(PROFILE_ID),
@@ -147,11 +147,11 @@ class Subject:
             rate_provider=Rates(),
             operation=operation,
         )
-        self.invoices, self.events = Invoices(bucket_id=_BUCKET), Events()
+        self.invoices, self.events = Invoices(bucket_id=BUCKET), Events()
         self.invoices._catalogue = InvoiceCatalogue(invoices={self.invoice.invoice_id: self.invoice})
         self.repository = Repository(catalogue, self.fence, self.invoices, self.events)
         self.ports = replace(
-            _ClassificationScenario(catalogue, operation=operation).ports,
+            ClassificationScenario(catalogue, operation=operation).ports,
             transaction_repository=self.repository,
             invoice_repository=self.invoices,
             bucket_event_repository=self.events,

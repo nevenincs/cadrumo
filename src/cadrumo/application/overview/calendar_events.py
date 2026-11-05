@@ -11,46 +11,34 @@ from typing import TYPE_CHECKING, Protocol
 
 from ...core.i18n.render import tr
 from ...core.identity.tax_id import same_tax_identifier
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core.notificacion_estado_servicio import (
-    resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio,
+    NotificacionEstadoServicio,
+    resolve_notificacion_estado_servicio,
 )
-from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
-from ...core.post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
-from ...core.post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
-from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
-from ._calendar_evidence_sources import (
-    authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
+from ...core.post_filing_event import (
+    PostFilingEventKind,
+    classify_post_filing_event_kind,
+    post_filing_event_is_actionable,
 )
-from ._calendar_evidence_sources import (
-    filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
-)
-from ._calendar_evidence_sources import (
-    filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
-)
-from ._calendar_evidence_sources import (
-    is_active_aeat_filing_status as _is_active_aeat_filing_status,
-)
-from ._calendar_evidence_sources import (
-    justificantes_by_csv as _justificantes_by_csv,
-)
+from ...domain.deadlines.fact_context import DeadlineFactResolutionContext
 from .calendar_evidence import (
-    dedupe_calendar_events as _dedupe_calendar_events,
+    dedupe_calendar_events,
+)
+from .calendar_evidence_sources import (
+    authenticated_identity_matches_expected,
+    filing_axes_from_modelo_record,
+    filing_evidence_from_justificante_capture_snapshot,
+    is_active_aeat_filing_status,
+)
+from .calendar_evidence_sources import (
+    justificantes_by_csv as calendar_evidence_sources_justificantes_by_csv,
 )
 from .calendar_models import (
-    OverviewAeatSubmissionState as _OverviewAeatSubmissionState,
-)
-from .calendar_models import (
-    OverviewCalendarEvent as _OverviewCalendarEvent,
-)
-from .calendar_models import (
-    OverviewCalendarEventType as _OverviewCalendarEventType,
-)
-from .calendar_models import (
-    OverviewCalendarFilingEvidence as _OverviewCalendarFilingEvidence,
-)
-from .calendar_models import (
-    OverviewCalendarRange as _OverviewCalendarRange,
+    OverviewAeatSubmissionState,
+    OverviewCalendarEvent,
+    OverviewCalendarEventType,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
 )
 
 if TYPE_CHECKING:
@@ -112,10 +100,10 @@ class _RemoteNotification(Protocol):
 
 def calendar_events_from_expedientes_snapshots(
     snapshots: tuple[PersistedExpedientesSnapshot, ...],
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     *,
     expected_tax_id: str | None = None,
-) -> tuple[_OverviewCalendarEvent, ...]:
+) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted declaration-register snapshots into calendar events.
 
     Each in-range declaration becomes an :class:`OverviewCalendarEvent` when
@@ -124,9 +112,9 @@ def calendar_events_from_expedientes_snapshots(
     non-active rows remain historical events and cannot upgrade
     :class:`OverviewCalendarFilingEvidence`.
     """
-    events: list[_OverviewCalendarEvent] = []
+    events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
-        if not _authenticated_identity_matches_expected(
+        if not authenticated_identity_matches_expected(
             getattr(snapshot, "authenticated_identity", None),
             expected_tax_id,
         ):
@@ -143,14 +131,14 @@ def calendar_events_from_expedientes_snapshots(
                 year=declaration.ejercicio,
             )
             aeat_submission_state = (
-                _OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-                if _is_active_aeat_filing_status(declaration.estado)
+                OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+                if is_active_aeat_filing_status(declaration.estado)
                 else None
             )
             events.append(
-                _OverviewCalendarEvent(
-                    event_type=_OverviewCalendarEventType.FILING,
-                    post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
+                OverviewCalendarEvent(
+                    event_type=OverviewCalendarEventType.FILING,
+                    post_filing_kind=PostFilingEventKind.DECLARACION_PRESENTADA,
                     event_date=event_date,
                     source="aeat_sede_expedientes",
                     summary=summary,
@@ -167,16 +155,16 @@ def calendar_events_from_expedientes_snapshots(
                     justificante_verified=False if aeat_submission_state is not None else None,
                 ),
             )
-    return _dedupe_calendar_events(events)
+    return dedupe_calendar_events(events)
 
 
 def calendar_events_from_notification_snapshots(
     snapshots: tuple[PersistedNotificationsSnapshot, ...],
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     *,
     as_of: date,
     expected_tax_id: str | None = None,
-) -> tuple[_OverviewCalendarEvent, ...]:
+) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted AEAT notifications into message events.
 
     Notifications become :class:`OverviewCalendarEventType.MESSAGE` rows only;
@@ -198,10 +186,10 @@ def calendar_events_from_notification_snapshots(
         A tuple of :class:`OverviewCalendarEvent` message observations inside
         ``calendar_range``.
     """
-    events: list[_OverviewCalendarEvent] = []
+    events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         snapshot_identity = getattr(snapshot, "authenticated_identity", None)
-        if snapshot_identity is not None and not _authenticated_identity_matches_expected(
+        if snapshot_identity is not None and not authenticated_identity_matches_expected(
             snapshot_identity,
             expected_tax_id,
         ):
@@ -216,16 +204,16 @@ def calendar_events_from_notification_snapshots(
             event = _calendar_event_from_notification(snapshot, row, calendar_range=calendar_range, as_of=as_of)
             if event is not None:
                 events.append(event)
-    return _dedupe_calendar_events(events)
+    return dedupe_calendar_events(events)
 
 
 def _calendar_event_from_notification(
     snapshot: PersistedNotificationsSnapshot,
     row: _RemoteNotification,
     *,
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     as_of: date,
-) -> _OverviewCalendarEvent | None:
+) -> OverviewCalendarEvent | None:
     """Assemble one in-range notification row into its message observation."""
     event_date = row.fecha_notificacion or row.fecha_emision
     if not calendar_range.covers(event_date):
@@ -233,7 +221,7 @@ def _calendar_event_from_notification(
     read_state = "read" if row.leida is True else "unread" if row.leida is False else None
     status = read_state or row.tipo
     summary = row.concepto.strip() or row.tipo
-    post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
+    post_filing_kind = classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
     # Notification service is calculated in core, while the governed legal
     # parameter is selected at this outer application composition boundary.
     # An undelivered row has no submission coordinate, so ``as_of`` is the
@@ -241,19 +229,19 @@ def _calendar_event_from_notification(
     from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     with bundled_indexed_authority().operation() as operation:
-        facts = _DeadlineFactResolutionContext(
+        facts = DeadlineFactResolutionContext(
             authority=operation,
             filing_period=as_of,
             submission_date=row.fecha_notificacion or as_of,
         )
-        estado_servicio = _resolve_notificacion_estado_servicio(
+        estado_servicio = resolve_notificacion_estado_servicio(
             fecha_notificacion=row.fecha_notificacion,
             leida=row.leida,
             as_of=as_of,
             tacit_rejection_natural_days=facts.integer("dehu-tacit-rejection-natural-days"),
         )
-    return _OverviewCalendarEvent(
-        event_type=_OverviewCalendarEventType.MESSAGE,
+    return OverviewCalendarEvent(
+        event_type=OverviewCalendarEventType.MESSAGE,
         post_filing_kind=post_filing_kind,
         notificacion_estado_servicio=estado_servicio,
         event_date=event_date,
@@ -268,11 +256,11 @@ def _calendar_event_from_notification(
 
 def calendar_events_from_justificante_capture_snapshots(
     snapshots: tuple[JustificanteCaptureSnapshot, ...],
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     *,
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[_OverviewCalendarEvent, ...]:
+) -> tuple[OverviewCalendarEvent, ...]:
     """Project verified live justificante captures into calendar filing events.
 
     A :class:`~cadrumo.application.live.justificante.JustificanteCaptureSnapshot` becomes an
@@ -282,10 +270,10 @@ def calendar_events_from_justificante_capture_snapshots(
     :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED` without opening a
     new live read.
     """
-    justificantes_by_csv = _justificantes_by_csv(justificantes)
-    events: list[_OverviewCalendarEvent] = []
+    justificantes_by_csv = calendar_evidence_sources_justificantes_by_csv(justificantes)
+    events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
-        evidence = _filing_evidence_from_justificante_capture_snapshot(
+        evidence = filing_evidence_from_justificante_capture_snapshot(
             snapshot,
             justificantes_by_csv=justificantes_by_csv,
             expected_tax_id=expected_tax_id,
@@ -297,9 +285,9 @@ def calendar_events_from_justificante_capture_snapshots(
         if not calendar_range.covers(event_date):
             continue
         events.append(
-            _OverviewCalendarEvent(
-                event_type=_OverviewCalendarEventType.FILING,
-                post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
+            OverviewCalendarEvent(
+                event_type=OverviewCalendarEventType.FILING,
+                post_filing_kind=PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="aeat_sede_live_capture",
                 summary=tr(
@@ -314,13 +302,13 @@ def calendar_events_from_justificante_capture_snapshots(
                 filing_year=snapshot.filing_year,
                 period=snapshot.period,
                 status="ALTA",
-                aeat_submission_state=_OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+                aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
                 aeat_submitted_at=submitted_at,
                 justificante_verified=True,
                 verified_justificante_csv=evidence.verified_justificante_csv,
             ),
         )
-    return _dedupe_calendar_events(events)
+    return dedupe_calendar_events(events)
 
 
 def _notification_matches_expected_tax_id(
@@ -348,14 +336,14 @@ def _notification_matches_expected_tax_id(
 
 def build_overview_calendar_events(
     *,
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     as_of: date,
     expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
     notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
     justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[_OverviewCalendarEvent, ...]:
+) -> tuple[OverviewCalendarEvent, ...]:
     """Build observed events from persisted live-read snapshots.
 
     The snapshots are inputs loaded by the caller. This helper only
@@ -394,10 +382,10 @@ def build_overview_calendar_events(
             expected_tax_id=expected_tax_id,
         ),
     ]
-    return _dedupe_calendar_events(events)
+    return dedupe_calendar_events(events)
 
 
-def _event_demands_attention(event: _OverviewCalendarEvent) -> bool:
+def _event_demands_attention(event: OverviewCalendarEvent) -> bool:
     """Return whether one observed event demands operator attention.
 
     Two independent limbs, deliberately not collapsed into one: the procedural
@@ -406,14 +394,14 @@ def _event_demands_attention(event: _OverviewCalendarEvent) -> bool:
     notification matters regardless of category and a requerimiento matters
     regardless of whether it was read.
     """
-    if event.post_filing_kind is not None and _post_filing_event_is_actionable(event.post_filing_kind):
+    if event.post_filing_kind is not None and post_filing_event_is_actionable(event.post_filing_kind):
         return True
-    return event.notificacion_estado_servicio is _NotificacionEstadoServicio.RECHAZO_TACITO
+    return event.notificacion_estado_servicio is NotificacionEstadoServicio.RECHAZO_TACITO
 
 
 def actionable_post_filing_events(
-    events: tuple[_OverviewCalendarEvent, ...],
-) -> tuple[_OverviewCalendarEvent, ...]:
+    events: tuple[OverviewCalendarEvent, ...],
+) -> tuple[OverviewCalendarEvent, ...]:
     """Return the observed :class:`OverviewCalendarEvent` rows that demand operator attention.
 
     An event is actionable when its
@@ -444,11 +432,11 @@ def actionable_post_filing_events(
 
 def calendar_events_from_modelo_records(
     filing_records: tuple[ModeloRecord, ...],
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     *,
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[_OverviewCalendarEvent, ...]:
+) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted Modelo filing records into calendar filing events.
 
     A :class:`~ModeloRecord` always contributes on the
@@ -467,13 +455,13 @@ def calendar_events_from_modelo_records(
     Returns:
         A tuple of :class:`OverviewCalendarEvent`, one per in-range record.
     """
-    justificantes_by_csv = _justificantes_by_csv(justificantes)
-    events: list[_OverviewCalendarEvent] = []
+    justificantes_by_csv = calendar_evidence_sources_justificantes_by_csv(justificantes)
+    events: list[OverviewCalendarEvent] = []
     for record in sorted(
         filing_records,
         key=lambda item: (item.filed_at, str(item.modelo), item.period.registry_token),
     ):
-        evidence = _filing_axes_from_modelo_record(
+        evidence = filing_axes_from_modelo_record(
             record,
             justificantes_by_csv=justificantes_by_csv,
             expected_tax_id=expected_tax_id,
@@ -482,9 +470,9 @@ def calendar_events_from_modelo_records(
         if not calendar_range.covers(event_date):
             continue
         events.append(
-            _OverviewCalendarEvent(
-                event_type=_OverviewCalendarEventType.FILING,
-                post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
+            OverviewCalendarEvent(
+                event_type=OverviewCalendarEventType.FILING,
+                post_filing_kind=PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="modelo_filing_record",
                 reference_id=record.filing_record_id,
@@ -504,10 +492,10 @@ def calendar_events_from_modelo_records(
                 verified_justificante_csv=evidence.verified_justificante_csv,
             ),
         )
-    return _dedupe_calendar_events(events)
+    return dedupe_calendar_events(events)
 
 
-def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: _OverviewCalendarFilingEvidence) -> date:
+def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: OverviewCalendarFilingEvidence) -> date:
     """Return the event date for a local Modelo record's calendar projection."""
     if evidence.justificante_verified and evidence.aeat_submitted_at is not None:
         return evidence.aeat_submitted_at.date()

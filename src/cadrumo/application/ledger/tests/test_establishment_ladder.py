@@ -37,9 +37,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -65,10 +63,10 @@ from ..counterparty_establishment_ports import (
 from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
-    _charged_iva_rates,
-    _spanish_iva_was_charged,
+    charged_iva_rates,
     resolve_counterparty_establishment_scope,
     resolve_draft_counterparty_establishment,
+    spanish_iva_was_charged,
 )
 from ..evidence_draft import counterparty_draft_side
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
@@ -174,7 +172,7 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
     unknown rather than a wrong value. Asserted against the rung's own refusal so
     the trigger is proven to survive it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
 
         resolved = _resolve(repository, country_name="España", postal_code=_MADRID, operation=operation)
@@ -192,7 +190,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
     assertion is what makes this a test of ORDER: it establishes that the postal
     rung, had it been consulted, would have returned a different territory.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = _resolve(repository, country_name="France", postal_code=_MARSEILLE, operation=operation)
 
         assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
@@ -215,7 +213,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
     Spanish province, it is a party the classifier would treat as not subject to
     the tax at all.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = _resolve(repository, country_name="France", postal_code=_CEUTA, operation=operation)
 
         assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
@@ -240,7 +238,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
     resolve this page to Canarias and the old top rung to EU_MEMBER, so the
     assertion cannot pass by every rung agreeing — it fails if either side wins.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = _resolve(
             repository,
             tax_identifier=_GERMAN_IVA,
@@ -269,7 +267,7 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     Left untranslated, a Greek party matches no Member State and is placed in a
     third country -- an intra-community acquisition reclassified as an import.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert country_code_for_printed_tax_identifier(_GREEK_IVA, operation=_authority_operation_for_test) == "GR"
 
         resolved = _resolve(repository, tax_identifier=_GREEK_IVA, operation=operation)
@@ -304,7 +302,7 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     prints no prefix and so states no identification at all: reading that
     absence as Spanish would manufacture the fact from silence.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             identification_state_for_printed_tax_identifier(_SPANISH_CIF, operation=_authority_operation_for_test)
             is None
@@ -639,7 +637,7 @@ class TestDraftRouting:
         number states rather than an inference drawn from it, and a resolution
         that took the wrong party could not leave it empty.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(
                 supplier_tax_id=_GERMAN_IVA,
                 customer_tax_id=_SPANISH_CIF,
@@ -665,7 +663,7 @@ class TestDraftRouting:
         repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """On an invoice the filer received, the counterparty is the supplier."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(
                 supplier_tax_id=_GERMAN_IVA,
                 customer_tax_id=_SPANISH_CIF,
@@ -749,7 +747,7 @@ class TestRungReachabilityFromADraft:
         repository: CounterpartyEstablishmentRepositoryProtocol,
     ) -> None:
         """The rung the read path's country field exists to feed now fires from a draft."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
 
             resolved = resolve_draft_counterparty_establishment(
@@ -774,7 +772,7 @@ class TestRungReachabilityFromADraft:
         that the country resolver deliberately refuses to answer, and the postal
         code separates the three Spanish territories behind it.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(
                 supplier_tax_id=_SPANISH_CIF,
                 supplier_country="España",
@@ -811,7 +809,7 @@ class TestRungReachabilityFromADraft:
         Unchanged by the reading contract gaining a country field: a document that
         prints no country still states none.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
 
             resolved = resolve_draft_counterparty_establishment(
@@ -858,7 +856,7 @@ def test_the_model_read_lanes_only_rate_carrier_is_collected() -> None:
     Those readers recover printed totals rather than a line decomposition, so
     neither structured carrier is ever populated for them.
     """
-    assert _charged_iva_rates(_FLAT_RATE_DRAFT) == (Decimal("21"),)
+    assert charged_iva_rates(_FLAT_RATE_DRAFT) == (Decimal("21"),)
 
 
 @pytest.mark.parametrize(
@@ -872,7 +870,7 @@ def test_the_model_read_lanes_only_rate_carrier_is_collected() -> None:
 )
 def test_each_carrier_alone_is_enough_to_report_the_charge(draft: InvoiceDraft) -> None:
     """A document uses whichever carrier its reader could fill, and no more."""
-    assert _charged_iva_rates(draft) == (Decimal("21"),)
+    assert charged_iva_rates(draft) == (Decimal("21"),)
 
 
 def test_the_two_authorities_on_charged_tax_agree_about_the_flat_carrier() -> None:
@@ -883,20 +881,20 @@ def test_the_two_authorities_on_charged_tax_agree_about_the_flat_carrier() -> No
     the ladder saw no charge at all.
     """
     assert draft_prints_a_repercutido_line(_FLAT_RATE_DRAFT)
-    assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()
+    assert charged_iva_rates(_FLAT_RATE_DRAFT) != ()
 
 
 def test_the_collected_flat_rate_reaches_the_spanish_registry_lookup() -> None:
     """Collecting it is worthless unless it survives to the question it feeds."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        rates = _charged_iva_rates(_FLAT_RATE_DRAFT)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        rates = charged_iva_rates(_FLAT_RATE_DRAFT)
 
-        assert _spanish_iva_was_charged(rates, on_date=date(2026, 5, 12), operation=_authority_operation_for_test)
+        assert spanish_iva_was_charged(rates, on_date=date(2026, 5, 12), operation=_authority_operation_for_test)
 
 
 def test_a_draft_charging_nothing_still_reports_no_rate() -> None:
     """The precision half: an exempt or reverse-charge draft states no rate."""
-    assert _charged_iva_rates(InvoiceDraft(taxable_base=Decimal("1000.00"))) == ()
+    assert charged_iva_rates(InvoiceDraft(taxable_base=Decimal("1000.00"))) == ()
 
 
 def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
@@ -906,7 +904,7 @@ def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
     returns empty for a draft that plainly charges 21%, and every signal derived
     from it goes quiet -- which is the silent lane blindness this closes.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
 
         def _structured_carriers_only(draft: InvoiceDraft) -> tuple[Decimal, ...]:
             rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
@@ -914,9 +912,9 @@ def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
             return tuple(rates)
 
         assert _structured_carriers_only(_FLAT_RATE_DRAFT) == ()
-        assert not _spanish_iva_was_charged(
+        assert not spanish_iva_was_charged(
             _structured_carriers_only(_FLAT_RATE_DRAFT),
             on_date=date(2026, 5, 12),
             operation=_authority_operation_for_test,
         )
-        assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()
+        assert charged_iva_rates(_FLAT_RATE_DRAFT) != ()

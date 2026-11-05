@@ -38,16 +38,16 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
-from .._retencion_rate_advisory import (
-    _conforms_to_fixed_rate,
-    inferred_actividad_retencion_rate_advisory_observations,
-)
 from ..renta_income_evidence import (
     SalesInvoiceEvidenceRefusal,
     income_withheld_amount,
     sales_invoice_evidence_payload,
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
+from ..retencion_rate_advisory import (
+    conforms_to_fixed_rate,
+    inferred_actividad_retencion_rate_advisory_observations,
+)
 from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
@@ -257,7 +257,7 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
     )
     assert observations[0].taxable_base_amount == Decimal("1000.00")
     assert not any(
-        _conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
+        conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
         for rate in statutory_activity_retencion_rates(effective_date=_QUARTER.end_date)
     ), "the figure must match no statutory rate, or the silence below proves nothing"
 

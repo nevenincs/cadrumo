@@ -25,7 +25,7 @@ from ..export_verification import (
 from ..producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..runtime import RegistrySchemaAccessor
 from .export_support import (
-    _approved_modelo_131_historical_registry_draft,
+    approved_modelo_131_historical_registry_draft,
     export_schema_provider,
     typed_producer_snapshot,
 )
@@ -52,7 +52,7 @@ def _modelo_131_snapshot() -> FilingProducerSnapshot:
 def _export_modelo_131(output_path: Path) -> tuple[DeclaracionExportResult, RegistrySchemaAccessor]:
     provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     receipt = export_draft(
-        _approved_modelo_131_historical_registry_draft(),
+        approved_modelo_131_historical_registry_draft(),
         output_path=output_path,
         producer_snapshot=_modelo_131_snapshot(),
         product_software_identity=development_mock_software_identity(),
@@ -67,7 +67,7 @@ def test_export_draft_returns_only_after_the_written_bytes_match_the_draft(tmp_p
     receipt, provider = _export_modelo_131(output_path)
 
     verification = verify_export(
-        _approved_modelo_131_historical_registry_draft(),
+        approved_modelo_131_historical_registry_draft(),
         file_path=output_path,
         schema_provider=provider,
     )
@@ -80,7 +80,7 @@ def test_export_draft_returns_only_after_the_written_bytes_match_the_draft(tmp_p
 def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifact(tmp_path: Path) -> None:
     output_path = tmp_path / "modelo-131.txt"
     _, provider = _export_modelo_131(output_path)
-    draft = _approved_modelo_131_historical_registry_draft()
+    draft = approved_modelo_131_historical_registry_draft()
     layout = provider.get_subview("131").export_layouts[0]
     payload = output_path.read_bytes()
     parsed = parse_export_payload(
@@ -212,7 +212,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
         FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")
     ):
         export_draft(
-            _approved_modelo_131_historical_registry_draft(),
+            approved_modelo_131_historical_registry_draft(),
             output_path=output_path,
             producer_snapshot=_modelo_131_snapshot(),
             schema_provider=provider,
@@ -224,7 +224,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
 
 def test_post_write_tripwire_types_an_unreadable_existing_path_as_missing(tmp_path: Path) -> None:
     provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
-    draft = _approved_modelo_131_historical_registry_draft()
+    draft = approved_modelo_131_historical_registry_draft()
     incompatible_path = tmp_path / "directory-not-a-declaration"
     incompatible_path.mkdir()
 

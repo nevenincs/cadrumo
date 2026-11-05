@@ -49,7 +49,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.payment_election import PaymentElection
 from ...core.payment_instalment_election import PaymentInstalmentElection
@@ -109,7 +109,7 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
 class ModeloExportReadinessRefusal(BaseModel):
     """Application-owned readiness fact and its declared operator outcome."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     reason: str
     context: dict[str, str]
@@ -177,7 +177,7 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
     or result payloads.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     decision_ref: PrefixedContentDigest
     selected_authority: str = Field(min_length=1, max_length=64)
@@ -271,7 +271,7 @@ class ModeloExportCommand(BaseModel):
             the default.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     output_path: Path
@@ -298,7 +298,7 @@ class ModeloExportAccountReference(BaseModel):
             solicitud's account).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     role: OwnAccountRole
     own_account_id: OwnAccountId | None = None
@@ -343,7 +343,7 @@ class ModeloExportResult(BaseModel):
             the taxpayer's assets, in the words the form uses.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId

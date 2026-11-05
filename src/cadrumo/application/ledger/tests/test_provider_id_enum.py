@@ -9,7 +9,7 @@ from typing import override
 import pytest
 
 from ....domain.transactions.errors import TransactionValidationError
-from ..actions_import import LedgerProviderID, _resolve_financial_provider
+from ..actions_import import LedgerProviderID, resolve_financial_provider
 from ..import_ports import LedgerImportPorts
 from ..protocols import FinancialProviderProtocol, ParsedLedgerRowProtocol, ProviderValidationProtocol
 
@@ -72,7 +72,7 @@ def test_ledger_provider_id_dispatch_is_case_and_whitespace_normalised() -> None
     """Application input normalization precedes the provider capability."""
     resolver = _ProviderResolverFake()
 
-    resolved = _resolve_financial_provider("  CSV  ", Path("statement.csv"), ports=_ports(resolver))
+    resolved = resolve_financial_provider("  CSV  ", Path("statement.csv"), ports=_ports(resolver))
 
     assert resolved is resolver.result
     assert resolver.provider_ids == ["csv"]
@@ -83,7 +83,7 @@ def test_unknown_ledger_provider_reports_known_enum_values() -> None:
     resolver = _ProviderResolverFake(result=None)
 
     with pytest.raises(TransactionValidationError) as exc_info:
-        _resolve_financial_provider("bank-json", Path("statement.json"), ports=_ports(resolver))
+        resolve_financial_provider("bank-json", Path("statement.json"), ports=_ports(resolver))
 
     assert exc_info.value.translated_message == "errors.transaction.unknown_ledger_provider"
     context = exc_info.value.context

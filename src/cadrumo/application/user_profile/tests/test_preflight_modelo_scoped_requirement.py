@@ -12,15 +12,15 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.classification.policies import SensitivityClass
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -69,11 +69,11 @@ def _schema() -> ProfileSchemaDefinition:
 
 
 def _missing_paths(modelo: str) -> tuple[str, ...]:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
     report = ProfilePreflightService(schema=_schema()).report(
         record=record,

@@ -10,8 +10,8 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._registry_helpers import reject_unknown_override_casillas
 from ..action_errors import AmendmentOverrideCasillaError
+from ..registry_helpers import reject_unknown_override_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

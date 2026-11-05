@@ -10,34 +10,24 @@ from ....core.period import Period
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange, OverviewLocalFilingState
 from .calendar_test_support import (
-    FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
-)
-from .calendar_test_support import (
-    calendar_with_evidence as _calendar_with_evidence,
-)
-from .calendar_test_support import (
+    FILED_JUSTIFICANTE_STORAGE_REF,
+    calendar_with_evidence,
     expediente_declaration,
     expedientes_filing_events,
-)
-from .calendar_test_support import (
-    filed_declaration_artefact as _filed_declaration_artefact,
-)
-from .calendar_test_support import (
-    filed_declaration_observation as _filed_declaration_observation,
-)
-from .calendar_test_support import (
-    modelo_record as _modelo_record,
+    filed_declaration_artefact,
+    filed_declaration_observation,
+    modelo_record,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
-    record = _modelo_record()
+    record = modelo_record()
     event = expedientes_filing_events(expediente_declaration("12345678901234567890"))
     evidence = calendar_filing_evidence_from_sources(filing_records=(record,), observed_events=event)
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
     )
@@ -54,7 +44,7 @@ def test_calendar_warns_when_aeat_submission_lacks_verified_justificante() -> No
     event = expedientes_filing_events(expediente_declaration("12345678901234567890"))
     evidence = calendar_filing_evidence_from_sources(observed_events=event)
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
     )
@@ -84,7 +74,7 @@ def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull(
     )
     evidence = calendar_filing_evidence_from_sources(observed_events=event)
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
         calendar_range=july_range,
@@ -101,12 +91,12 @@ def test_calendar_clears_justificante_warning_when_filed_history_verifies_receip
     event = expedientes_filing_events(expediente_declaration("12345678901234567890"))
     evidence = calendar_filing_evidence_from_sources(
         observed_events=event,
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
+        filed_declaration_observations=(filed_declaration_observation(artefacts=(filed_declaration_artefact(),)),),
+        verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
+        verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
     )
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
     )
@@ -118,12 +108,12 @@ def test_calendar_event_carries_verified_justificante_from_filed_observation() -
     csv = "CSVFILED3031T2025"
     event = expedientes_filing_events(expediente_declaration("12345678901234567890"), snapshot_id="1" * 64)
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
+        filed_declaration_observations=(filed_declaration_observation(artefacts=(filed_declaration_artefact(),)),),
+        verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
+        verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
     )
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
     )
@@ -142,12 +132,12 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
         snapshot_id="2" * 64,
     )
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
+        filed_declaration_observations=(filed_declaration_observation(artefacts=(filed_declaration_artefact(),)),),
+        verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
+        verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
     )
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=event,
         filing_evidence=evidence,
     )

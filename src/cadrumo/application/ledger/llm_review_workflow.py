@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...core.config import Settings, load_settings
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
@@ -139,7 +139,7 @@ class ReviewedInvoiceDraft(BaseModel):
         provenance: The reader's own stamp, carried for the audit trail.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     evidence_reference: str = Field(min_length=1)
     draft: InvoiceDraft
@@ -164,7 +164,7 @@ class InvoiceDraftDeclineResult(BaseModel):
         operator_reason: What the operator said, when they said anything.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     evidence_reference: str = Field(min_length=1)
@@ -449,9 +449,9 @@ def _decline_invoice_draft(
     """
     from ...domain.buckets.event import BucketEventType
     from .actions_common import resolve_bucket_event_repository
-    from .evidence import emit_evidence_event as _emit_evidence_event
+    from .evidence import emit_evidence_event
 
-    event_id = _emit_evidence_event(
+    event_id = emit_evidence_event(
         event_repository=resolve_bucket_event_repository(
             bucket_id=bucket_id,
             repository=bucket_event_repository,

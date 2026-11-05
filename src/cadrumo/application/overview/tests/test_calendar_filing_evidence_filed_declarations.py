@@ -11,25 +11,13 @@ from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatEvidenceConcern, OverviewAeatSubmissionState, OverviewLocalFilingState
 from .calendar_test_support import (
-    FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
-)
-from .calendar_test_support import (
-    PERIOD_2025_1T as _PERIOD_2025_1T,
-)
-from .calendar_test_support import (
-    external_evidence as _external_evidence,
-)
-from .calendar_test_support import (
-    filed_declaration_artefact as _filed_declaration_artefact,
-)
-from .calendar_test_support import (
-    filed_declaration_observation as _filed_declaration_observation,
-)
-from .calendar_test_support import (
-    justificante_metadata as _justificante_metadata,
-)
-from .calendar_test_support import (
-    modelo_record as _modelo_record,
+    FILED_JUSTIFICANTE_STORAGE_REF,
+    PERIOD_2025_1T,
+    external_evidence,
+    filed_declaration_artefact,
+    filed_declaration_observation,
+    justificante_metadata,
+    modelo_record,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -38,9 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
     csv = "CSVFILED3031T2025"
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
+        filed_declaration_observations=(filed_declaration_observation(artefacts=(filed_declaration_artefact(),)),),
+        verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
+        verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
         expected_tax_id="X1234567L",
     )
 
@@ -57,12 +45,12 @@ def test_filed_declaration_observation_identity_match_is_case_insensitive() -> N
     csv = "CSVFILED3031T2025"
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(
-            _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)).model_copy(
+            filed_declaration_observation(artefacts=(filed_declaration_artefact(),)).model_copy(
                 update={"authenticated_identity": "x1234567l"},
             ),
         ),
-        verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
-        verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
+        verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
+        verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
         expected_tax_id="X1234567L",
     )
 
@@ -74,7 +62,7 @@ def test_filed_declaration_observation_identity_match_is_case_insensitive() -> N
 
 def test_filed_declaration_observation_with_dangling_justificante_manifest_is_observed_only() -> None:
     evidence = calendar_filing_evidence_from_sources(
-        filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
+        filed_declaration_observations=(filed_declaration_observation(artefacts=(filed_declaration_artefact(),)),),
         expected_tax_id="X1234567L",
     )
 
@@ -88,8 +76,8 @@ def test_filed_declaration_observation_with_dangling_justificante_manifest_is_ob
 def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(
-            _filed_declaration_observation(
-                artefacts=(_filed_declaration_artefact(),),
+            filed_declaration_observation(
+                artefacts=(filed_declaration_artefact(),),
             ).model_copy(update={"status": "BAJA"}),
         ),
         expected_tax_id="X1234567L",
@@ -106,8 +94,8 @@ def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None
 def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(
-            _filed_declaration_observation(
-                artefacts=(_filed_declaration_artefact(),),
+            filed_declaration_observation(
+                artefacts=(filed_declaration_artefact(),),
             ).model_copy(update={"authenticated_identity": "Y7654321G"}),
         ),
         expected_tax_id="X1234567L",
@@ -119,13 +107,13 @@ def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
 def test_filed_declaration_observation_without_stored_justificante_is_observed_only() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(
-            _filed_declaration_observation(
+            filed_declaration_observation(
                 artefacts=(
-                    _filed_declaration_artefact(
+                    filed_declaration_artefact(
                         kind="submitted_file",
                         storage_ref="secure-object:financial:" + "e" * 64,
                     ),
-                    _filed_declaration_artefact(storage_ref=None),
+                    filed_declaration_artefact(storage_ref=None),
                 ),
             ),
         ),
@@ -143,9 +131,9 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
     csv = "JUST3032025X1T7"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(
+                external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                     csv,
                     imported_at=imported_at,
@@ -153,7 +141,7 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
                 filed_by="aeat-import",
             ),
         ),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -168,18 +156,18 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
 def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_verified() -> None:
     csv = "JUST3032025X1T7"
     cases = (
-        ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y7654321G"),
-        ("wrong-modelo", "130", 2025, _PERIOD_2025_1T, "X1234567L"),
-        ("wrong-ejercicio", "303", 2024, _PERIOD_2025_1T, "X1234567L"),
+        ("wrong-taxpayer", "303", 2025, PERIOD_2025_1T, "Y7654321G"),
+        ("wrong-modelo", "130", 2025, PERIOD_2025_1T, "X1234567L"),
+        ("wrong-ejercicio", "303", 2024, PERIOD_2025_1T, "X1234567L"),
         ("wrong-period", "303", 2025, Period.from_year_and_code(2025, "2T"), "X1234567L"),
     )
 
     for case_id, modelo, filing_year, period, tax_id in cases:
         evidence = calendar_filing_evidence_from_sources(
             filing_records=(
-                _modelo_record(
+                modelo_record(
                     aeat_accepted=True,
-                    external_evidence=_external_evidence(
+                    external_evidence=external_evidence(
                         ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                         csv,
                         imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
@@ -188,7 +176,7 @@ def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_ve
                 ),
             ),
             justificantes=(
-                _justificante_metadata(
+                justificante_metadata(
                     csv=csv,
                     modelo=modelo,
                     filing_year=filing_year,

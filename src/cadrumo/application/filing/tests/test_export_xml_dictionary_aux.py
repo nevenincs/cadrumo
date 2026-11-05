@@ -9,12 +9,12 @@ import pytest
 from ....core.export_layout_format import ExportLayoutFormat
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.filing.errors import FilingExportError, FilingExportValidationError
-from .._export_xml_dictionary import (
-    _append_declaration_aux,
-    _prune_zero_only_xml_subtrees,
-)
-from .._export_xml_dictionary_values import format_xml_dictionary_value
 from ..export_parity import assert_xml_declaration_aux_declared
+from ..export_xml_dictionary import (
+    append_declaration_aux,
+    prune_zero_only_xml_subtrees,
+)
+from ..export_xml_dictionary_values import format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -33,7 +33,7 @@ def _xml_layout() -> ExportLayoutDefinition:
 def test_xml_aux_writes_the_product_token_after_layout_language() -> None:
     root = ElementTree.Element("Declaracion")
 
-    _append_declaration_aux(root, _xml_layout(), aux_version="051")
+    append_declaration_aux(root, _xml_layout(), aux_version="051")
 
     aux = root.find("Aux")
     assert aux is not None
@@ -60,7 +60,7 @@ def test_optional_zero_only_branches_are_omitted_but_required_zero_siblings_rema
     ElementTree.SubElement(populated, "RequiredZero").text = "0.00"
     ElementTree.SubElement(populated, "Amount").text = "12.00"
 
-    _prune_zero_only_xml_subtrees(root, optional_element_paths=frozenset({"/Optional", "/Populated"}))
+    prune_zero_only_xml_subtrees(root, optional_element_paths=frozenset({"/Optional", "/Populated"}))
 
     assert root.find("Optional") is None
     retained = root.find("Populated")

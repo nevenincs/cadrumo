@@ -86,24 +86,20 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
-from ._modelo_bindings_invoice_iva import (
-    out_of_window_summary_diagnostics,
-)
-from ._modelo_bindings_support import (
-    STORAGE_DEGRADATION_ERRORS,
-    empty_source_resolution,
-    revision_has_binding_source,
-)
-from ._retencion_rate_advisory import (
-    inferred_actividad_retencion_rate_advisory_observations,
-)
-from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from .errors import AggregationValidationError
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from .modelo_bindings_actividad_assets import (
     ActivityAssetDisposalExcess,
     activity_asset_disposal_excess,
     activity_asset_disposal_excess_m131_findings,
+)
+from .modelo_bindings_invoice_iva import (
+    out_of_window_summary_diagnostics,
+)
+from .modelo_bindings_support import (
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
 )
 from .renta_imputation import (
     ActivityImputationCriterion,
@@ -117,17 +113,13 @@ from .renta_imputation import (
 )
 from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
+    fitted_diagnostic_id_list,
     paid_after_cut_off_diagnostics,
     part_payment_diagnostics,
     rectification_diagnostics,
     rectificativa_netting_diagnostics,
     rental_activity_component_diagnostics,
-)
-from .renta_income_diagnostics import (
-    fitted_diagnostic_id_list as _fitted_id_list,
-)
-from .renta_income_diagnostics import (
-    unusable_sales_invoice_diagnostics as _unusable_sales_invoice_diagnostics,
+    unusable_sales_invoice_diagnostics,
 )
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
@@ -139,6 +131,9 @@ from .renta_income_ledger import (
     payment_dated_renta_m100_income_observations,
 )
 from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
+from .retencion_rate_advisory import (
+    inferred_actividad_retencion_rate_advisory_observations,
+)
 from .retencion_soportada_source import declared_activity_epigraphs
 from .source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
@@ -151,12 +146,11 @@ from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
     source_context_operation,
     source_issue_diagnostics,
+    source_provenance_for,
     storage_degradation_resolution,
     unresolved_binding_diagnostics,
 )
-from .source_resolution_operations import (
-    source_provenance_for as _provenance_for,
-)
+from .undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 
 _M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
 _M100_RENTAL_ACTIVITY_SELECTOR = "modelo-100:selector-m036-arrendadores-inmuebles"
@@ -213,7 +207,7 @@ def _irnr_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
     return next(iter(targets))
 
 
-def _activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+def modelo_bindings_activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
     def matcher(transaction: Transaction) -> bool:
         return has_activity_irpf_category(
             transaction.irpf_category,
@@ -224,7 +218,7 @@ def _activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[
     return matcher
 
 
-def _employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+def modelo_bindings_employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
     def matcher(transaction: Transaction) -> bool:
         return has_employment_irpf_category(
             transaction.irpf_category,
@@ -266,7 +260,7 @@ def _rental_tag_missing_diagnostics(
             f"ejercicio {context.filing_year} includes a rental activity, and {len(untagged)} receipt(s) bearing "
             "a retencion record no tipo de actividad, so whether their withholding is the activity's or the "
             "rental's is unknown; set tipo_actividad on each (A01 for the rental): "
-            + _fitted_id_list(sorted(untagged), budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH // 2)
+            + fitted_diagnostic_id_list(sorted(untagged), budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH // 2)
         )[:DIAGNOSTIC_MESSAGE_MAX_LENGTH],
     )
 
@@ -320,8 +314,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
         instalment_basis_values: dict[BindingId, Decimal] = {}
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
-            activity_category_matcher = _activity_category_matcher(operation)
-            employment_category_matcher = _employment_category_matcher(operation)
+            activity_category_matcher = modelo_bindings_activity_category_matcher(operation)
+            employment_category_matcher = modelo_bindings_employment_category_matcher(operation)
             try:
                 if context.modelo == form_for_role("renta.annual"):
                     rental = _rental_activity_screen(context, aggregation_period, operation)
@@ -653,7 +647,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         return (
             _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _withholding_derivation_diagnostics(derivation, resolver_id=self.resolver_id)
-            + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
@@ -700,7 +694,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
                 for accrued in (*aggregation.accrued_unpaid, *aggregation.rectificativa_corrections)
             )
-            + _provenance_for(
+            + source_provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -964,7 +958,7 @@ def _ungrounded_income_diagnostics(
             reason="ungrounded_income_substrate",
             source_kind="ledger_renta_income_aggregation",
             resolver_id=resolver_id,
-            message=preamble + _fitted_id_list(sampled, budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(preamble)),
+            message=preamble + fitted_diagnostic_id_list(sampled, budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(preamble)),
         ),
     )
 
@@ -1090,7 +1084,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=_provenance_for(
+            provenance=source_provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,

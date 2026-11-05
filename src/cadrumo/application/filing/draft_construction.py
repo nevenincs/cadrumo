@@ -18,78 +18,80 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import NamedTuple
 
-from ...core.aggregation import BindingSourceKind as _BindingSourceKind
-from ...core.casilla_id import CasillaId as _CasillaId
-from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
-from ...core.parsing.utils import parse_bool as _parse_bool
-from ...core.period import Period as _Period
-from ...core.time.clock import now as _utc_now
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.parsing.dates import parse_iso8601_date
+from ...core.parsing.utils import parse_bool
+from ...core.period import Period
+from ...core.time.clock import now
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.binding_targets import (
-    bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
+    bound_casilla_binding_ids,
+    revision_bindings_by_id,
 )
-from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ...domain.calculations.registry.binding_value_contract import BindingValueChannel as _BindingValueChannel
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
-    casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
+    casilla_noncanonical_reference_tokens,
+    declared_casilla_ids,
 )
-from ...domain.calculations.registry.casilla_membership import declared_casilla_ids as _declared_casilla_ids
-from ...domain.calculations.registry.errors import RegistrySnapshotError as _RegistrySnapshotError
-from ...domain.calculations.registry.errors import RegistryValidationError as _RegistryValidationError
-from ...domain.calculations.registry.formula_runtime import RegistryCalculationEntry as _RegistryCalculationEntry
-from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult as _RegistryCalculationResult
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot as _calculate_registry_snapshot
-from ...domain.calculations.registry.ids import BindingId as _BindingId
-from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
-from ...domain.calculations.registry.ids import RelationId as _RelationId
-from ...domain.calculations.registry.ids import SourceRefId as _SourceRefId
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.formula_runtime import (
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
+from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
-from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids as _enum_consumed_binding_ids
-from ...domain.calculations.registry.runtime_graph import expression_binding_refs as _expression_binding_refs
-from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids as _revision_date_binding_ids
-from ...domain.calculations.registry.schema import BindingDefinition as _DataBindingDefinition
-from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
-from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
-from ...domain.calculations.registry.schema_references import RegistrySnapshotRef as _RegistrySnapshotRef
-from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type as _registry_scalar_value_type
-from ...domain.calculations.registry.schema_scalars import (
-    validate_registry_text_scalar as _validate_registry_text_scalar,
+from ...domain.calculations.registry.runtime_graph import (
+    enum_consumed_binding_ids,
+    expression_binding_refs,
+    revision_date_binding_ids,
 )
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
-from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format as _runtime_tax_id_format
-from ...domain.filing.protocols import CasillaCollection as _CasillaCollection
-from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
-from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
-from ...domain.filing.protocols import ModeloInputs as _ModeloInputs
-from ...domain.filing.protocols import ModeloProfile as _ModeloProfile
-from ...domain.filing.schema import ModeloBindingValue as _ModeloBindingValue
-from ...domain.filing.schema import ModeloCasillaProvenance as _ModeloCasillaProvenance
-from ...domain.filing.schema import ModeloDraft as _ModeloDraft
-from ...domain.filing.schema import ModeloScalar as _ModeloScalar
-from ...domain.filing.schema import ModeloValue as _ModeloValue
-from ...domain.filing.schema import ModeloValueKind as _ModeloValueKind
-from ...domain.filing.schema import compute_modelo_draft_id as _compute_modelo_draft_id
-from ...domain.filing.schema import registry_schema_version as _registry_schema_version
-from ...domain.filing.validator import ModeloValidator as _ModeloValidator
-from ...domain.filing.validator import apply_validation as _apply_validation
-from ...domain.period import calculation_filing_date as _calculation_filing_date
-from ...domain.submission.models import ModeloDraftStatus as _ModeloDraftStatus
+from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.schema_scalars import (
+    registry_scalar_value_type,
+    validate_registry_text_scalar,
+)
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ...domain.filing.protocols import (
+    CasillaCollection,
+    CasillaSchemaProvider,
+    DeadlineChecker,
+    ModeloInputs,
+    ModeloProfile,
+)
+from ...domain.filing.schema import (
+    ModeloBindingValue,
+    ModeloCasillaProvenance,
+    ModeloDraft,
+    ModeloScalar,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
+from ...domain.filing.validator import ModeloValidator, apply_validation
+from ...domain.period import calculation_filing_date
+from ...domain.submission.models import ModeloDraftStatus
 from .errors import ModeloApplicationError
-from .errors import ModeloApplicationError as _ModeloBuilderError
+from .errors import ModeloApplicationError as ErrorsModeloBuilderError
 
 
 def build_draft(
     *,
     modelo: str,
-    period: _Period,
-    profile: _ModeloProfile,
-    inputs: _ModeloInputs,
-    schema_provider: _CasillaSchemaProvider,
-    deadline_checker: _DeadlineChecker | None = None,
+    period: Period,
+    profile: ModeloProfile,
+    inputs: ModeloInputs,
+    schema_provider: CasillaSchemaProvider,
+    deadline_checker: DeadlineChecker | None = None,
     fail_on_warning: bool = False,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
-) -> _ModeloDraft:
+) -> ModeloDraft:
     """Build and validate a filing draft from a registry snapshot.
 
     Args:
@@ -115,21 +117,21 @@ def build_draft(
         :class:`ModeloBuilderError`: If the registry has no
             matching snapshot, inputs are malformed, or strict validation fails.
     """
-    snapshot = _load_registry_snapshot(modelo=modelo, period=period, schema_provider=schema_provider)
+    snapshot = load_registry_snapshot(modelo=modelo, period=period, schema_provider=schema_provider)
     filing_year, registry_period = _registry_period(period)
-    snapshot_ref = _RegistrySnapshotRef(
+    snapshot_ref = RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         modelo_year=filing_year,
         period=registry_period,
     )
     collection = schema_provider.get_collection(modelo)
-    expected_schema_version = _registry_schema_version(
+    expected_schema_version = registry_schema_version(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
     )
     if collection.schema_version != expected_schema_version:
-        raise _ModeloBuilderError(
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.schema_version_snapshot_mismatch",
             context={
                 "modelo": snapshot.modelo.id,
@@ -138,7 +140,7 @@ def build_draft(
                 "revision_id": snapshot.revision.id,
             },
         )
-    input_channels = _draft_input_channels(snapshot, inputs)
+    input_channels = draft_input_channels(snapshot, inputs)
     result = _calculate_draft_result(
         snapshot=snapshot,
         period=period,
@@ -151,7 +153,7 @@ def build_draft(
         result=result,
         input_channels=input_channels,
     )
-    created_at = _utc_now()
+    created_at = now()
     draft = _draft_record(
         modelo=modelo,
         period=period,
@@ -172,37 +174,37 @@ def build_draft(
 
 
 class _DraftInputChannels(NamedTuple):
-    casilla_inputs: dict[_CasillaId, Decimal]
-    text_casilla_inputs: dict[_CasillaId, str]
-    date_casilla_inputs: dict[_CasillaId, date]
-    binding_inputs: dict[_BindingId, Decimal]
-    enum_binding_inputs: dict[_BindingId, str]
-    date_binding_inputs: dict[_BindingId, date]
-    boolean_binding_inputs: dict[_BindingId, bool]
-    relation_inputs: dict[_RelationId, Decimal]
-    filing_binding_values: list[_ModeloBindingValue]
+    casilla_inputs: dict[CasillaId, Decimal]
+    text_casilla_inputs: dict[CasillaId, str]
+    date_casilla_inputs: dict[CasillaId, date]
+    binding_inputs: dict[BindingId, Decimal]
+    enum_binding_inputs: dict[BindingId, str]
+    date_binding_inputs: dict[BindingId, date]
+    boolean_binding_inputs: dict[BindingId, bool]
+    relation_inputs: dict[RelationId, Decimal]
+    filing_binding_values: list[ModeloBindingValue]
 
 
-def _draft_input_channels(
-    snapshot: _RegistrySnapshot,
-    inputs: _ModeloInputs,
+def draft_input_channels(
+    snapshot: RegistrySnapshot,
+    inputs: ModeloInputs,
 ) -> _DraftInputChannels:
-    casilla_ids = set(_declared_casilla_ids(snapshot.revision))
+    casilla_ids = set(declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
     date_casilla_ids = _date_casilla_ids(snapshot)
     bindings = revision_bindings_by_id(snapshot.revision)
-    calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
-    enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
-    date_binding_ids = _date_binding_ids(snapshot)
-    relation_ids = _relation_ids(snapshot)
+    calculation_binding_ids = formula_binding_ids(snapshot) | snapshot_bound_casilla_binding_ids(snapshot)
+    enum_binding_ids = enum_consumed_binding_ids(snapshot.revision)
+    date_binding_ids = draft_construction_date_binding_ids(snapshot)
+    relation_ids = draft_construction_relation_ids(snapshot)
     boolean_binding_ids = {
-        binding_id for binding_id, binding in bindings.items() if binding.value.channel is _BindingValueChannel.BOOLEAN
+        binding_id for binding_id, binding in bindings.items() if binding.value.channel is BindingValueChannel.BOOLEAN
     }
     # A binding the revision declares on the row-set channel holds one value per
     # row; its replayed rows reach the fichero through ``filing_binding_values``
     # and never stand for one scalar answer.
     row_set_binding_ids = {
-        binding_id for binding_id, binding in bindings.items() if binding.value.channel is _BindingValueChannel.ROW_SET
+        binding_id for binding_id, binding in bindings.items() if binding.value.channel is BindingValueChannel.ROW_SET
     }
     # Date, truth-value and relation ids ride dedicated engine channels; never
     # coerce their values through the Decimal binding channel.
@@ -227,12 +229,12 @@ def _draft_input_channels(
     return _DraftInputChannels(
         casilla_inputs=_decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types) - date_casilla_ids),
         text_casilla_inputs=_text_inputs_for_ids(inputs, text_casilla_data_types),
-        date_casilla_inputs=_date_inputs_for_ids(inputs, date_casilla_ids),
+        date_casilla_inputs=date_inputs_for_ids(inputs, date_casilla_ids),
         binding_inputs=_decimal_inputs_for_ids(inputs, decimal_binding_ids),
-        enum_binding_inputs=_string_inputs_for_ids(inputs, enum_binding_ids),
-        date_binding_inputs=_date_inputs_for_ids(inputs, date_binding_ids),
+        enum_binding_inputs=string_inputs_for_ids(inputs, enum_binding_ids),
+        date_binding_inputs=date_inputs_for_ids(inputs, date_binding_ids),
         boolean_binding_inputs={
-            binding_id: _boolean_input(binding_id, inputs[binding_id])
+            binding_id: boolean_input(binding_id, inputs[binding_id])
             for binding_id in boolean_binding_ids
             if inputs.get(binding_id) is not None
         },
@@ -248,13 +250,13 @@ def _draft_input_channels(
 
 def _calculate_draft_result(
     *,
-    snapshot: _RegistrySnapshot,
-    period: _Period,
+    snapshot: RegistrySnapshot,
+    period: Period,
     input_channels: _DraftInputChannels,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
-) -> _RegistryCalculationResult:
+) -> RegistryCalculationResult:
     try:
-        return _calculate_registry_snapshot(
+        return calculate_registry_snapshot(
             snapshot,
             inputs=input_channels.casilla_inputs,
             date_context={"filing_period": filing_period_date(period)},
@@ -266,8 +268,8 @@ def _calculate_draft_result(
             text_inputs=input_channels.text_casilla_inputs or None,
             closed_record_row_sets=closed_record_row_sets,
         )
-    except _RegistryValidationError as exc:
-        raise _ModeloBuilderError(
+    except RegistryValidationError as exc:
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.registry_calculation_failed",
             context={
                 "modelo": snapshot.modelo.id,
@@ -279,11 +281,11 @@ def _calculate_draft_result(
 
 def _draft_values(
     *,
-    snapshot: _RegistrySnapshot,
-    collection: _CasillaCollection,
-    result: _RegistryCalculationResult,
+    snapshot: RegistrySnapshot,
+    collection: CasillaCollection,
+    result: RegistryCalculationResult,
     input_channels: _DraftInputChannels,
-) -> tuple[_ModeloValue, ...]:
+) -> tuple[ModeloValue, ...]:
     # A computed casilla's formula_trace_casilla_ids documents the static casilla inputs its
     # formula declares (the validator checks the trace against
     # ``CasillaSchema.formula_input_casilla_ids``). It must NOT be the branch-dependent
@@ -314,67 +316,67 @@ def _draft_values(
 
 def _draft_value_for_casilla(
     *,
-    casilla: _CasillaDefinition,
-    entries: Mapping[_CasillaId, _RegistryCalculationEntry],
-    result: _RegistryCalculationResult,
-    formula_input_casilla_ids_by_casilla: Mapping[_CasillaId, tuple[_CasillaId, ...]],
+    casilla: CasillaDefinition,
+    entries: Mapping[CasillaId, RegistryCalculationEntry],
+    result: RegistryCalculationResult,
+    formula_input_casilla_ids_by_casilla: Mapping[CasillaId, tuple[CasillaId, ...]],
     input_channels: _DraftInputChannels,
-) -> _ModeloValue:
+) -> ModeloValue:
     if casilla.id in entries:
         entry = entries[casilla.id]
         trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
         if trace is None:
             trace = entry.operand_casilla_refs
-        return _ModeloValue(
+        return ModeloValue(
             casilla_id=casilla.id,
             value=result.values[casilla.id],
-            kind=_ModeloValueKind.COMPUTED,
+            kind=ModeloValueKind.COMPUTED,
             source=f"registry formula {entry.formula_id}",
             formula_trace_casilla_ids=trace,
         )
-    if casilla.input_kind == _InputKind.BOUND:
+    if casilla.input_kind == InputKind.BOUND:
         value = result.values.get(casilla.id)
         if value is not None:
-            return _ModeloValue(
+            return ModeloValue(
                 casilla_id=casilla.id,
                 value=value,
-                kind=_ModeloValueKind.INHERITED,
+                kind=ModeloValueKind.INHERITED,
                 source=f"registry binding {casilla.binding}",
             )
     if casilla.id in input_channels.casilla_inputs:
-        return _ModeloValue(
+        return ModeloValue(
             casilla_id=casilla.id,
             value=input_channels.casilla_inputs[casilla.id],
-            kind=_ModeloValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="registry input",
         )
     if casilla.id in input_channels.text_casilla_inputs:
-        return _ModeloValue(
+        return ModeloValue(
             casilla_id=casilla.id,
             value=input_channels.text_casilla_inputs[casilla.id],
-            kind=_ModeloValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="registry input",
         )
     if casilla.id in input_channels.date_casilla_inputs:
-        return _ModeloValue(
+        return ModeloValue(
             casilla_id=casilla.id,
             value=input_channels.date_casilla_inputs[casilla.id],
-            kind=_ModeloValueKind.LITERAL,
+            kind=ModeloValueKind.LITERAL,
             source="registry input",
         )
-    return _ModeloValue(
+    return ModeloValue(
         casilla_id=casilla.id,
         value=None,
-        kind=_ModeloValueKind.EMPTY,
+        kind=ModeloValueKind.EMPTY,
         source="registry schema",
     )
 
 
 def _draft_casilla_provenance(
-    snapshot: _RegistrySnapshot,
-) -> tuple[_ModeloCasillaProvenance, ...]:
+    snapshot: RegistrySnapshot,
+) -> tuple[ModeloCasillaProvenance, ...]:
     return tuple(
-        _ModeloCasillaProvenance(
+        ModeloCasillaProvenance(
             casilla_id=casilla.id,
             formula_id=casilla.formula,
             legal_refs=tuple(casilla.legal_refs),
@@ -387,23 +389,23 @@ def _draft_casilla_provenance(
 def _draft_record(
     *,
     modelo: str,
-    period: _Period,
-    profile: _ModeloProfile,
-    snapshot_ref: _RegistrySnapshotRef,
-    values: tuple[_ModeloValue, ...],
-    binding_values: list[_ModeloBindingValue],
-    casilla_provenance: tuple[_ModeloCasillaProvenance, ...],
+    period: Period,
+    profile: ModeloProfile,
+    snapshot_ref: RegistrySnapshotRef,
+    values: tuple[ModeloValue, ...],
+    binding_values: list[ModeloBindingValue],
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...],
     created_at: datetime,
     schema_version: str,
-) -> _ModeloDraft:
+) -> ModeloDraft:
     binding_value_tuple = tuple(sorted(binding_values, key=lambda value: value.binding_id))
     # Propagate identity from the validated profile substrate into the
     # draft. ``profile.tax_id`` is already validated against the AEAT
     # checksum via ``SubjectTaxId`` on the profile model, so the
     # post-validation result type-checks at the ModeloDraft boundary
     # and survives every downstream encrypted-persistence roundtrip.
-    return _ModeloDraft(
-        draft_id=_compute_modelo_draft_id(
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
             modelo=modelo,
             period=period,
             profile_tax_id=profile.tax_id,
@@ -416,7 +418,7 @@ def _draft_record(
         profile_tax_id=profile.tax_id,
         subject_tax_id=profile.tax_id,
         snapshot_ref=snapshot_ref,
-        status=_ModeloDraftStatus.BORRADOR,
+        status=ModeloDraftStatus.BORRADOR,
         values=values,
         binding_values=binding_value_tuple,
         casilla_provenance=casilla_provenance,
@@ -427,16 +429,16 @@ def _draft_record(
 
 
 def _validate_built_draft(
-    draft: _ModeloDraft,
+    draft: ModeloDraft,
     *,
-    schema_provider: _CasillaSchemaProvider,
-    deadline_checker: _DeadlineChecker | None,
+    schema_provider: CasillaSchemaProvider,
+    deadline_checker: DeadlineChecker | None,
     fail_on_warning: bool,
-) -> _ModeloDraft:
-    validator = _ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
+) -> ModeloDraft:
+    validator = ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
     findings = validator.validate(draft)
     if fail_on_warning and findings:
-        raise _ModeloBuilderError(
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.findings_under_fail_on_warning",
             context={
                 "modelo": draft.modelo,
@@ -444,29 +446,29 @@ def _validate_built_draft(
                 "codes": tuple(finding.code for finding in findings),
             },
         )
-    return _apply_validation(draft, findings)
+    return apply_validation(draft, findings)
 
 
-def _load_registry_snapshot(
+def load_registry_snapshot(
     *,
     modelo: str,
-    period: _Period,
-    schema_provider: _CasillaSchemaProvider,
-) -> _RegistrySnapshot:
+    period: Period,
+    schema_provider: CasillaSchemaProvider,
+) -> RegistrySnapshot:
     """Read the exact snapshot already pinned into the filing schema provider."""
     filing_year, registry_period = _registry_period(period)
     try:
         get_snapshot = getattr(schema_provider, "get_snapshot", None)
         if not callable(get_snapshot):
-            raise _RegistrySnapshotError("filing schema provider carries no generation-pinned snapshot")
+            raise RegistrySnapshotError("filing schema provider carries no generation-pinned snapshot")
         snapshot = get_snapshot(modelo)
-        if not isinstance(snapshot, _RegistrySnapshot):
-            raise _RegistrySnapshotError("filing schema provider returned an invalid registry snapshot")
+        if not isinstance(snapshot, RegistrySnapshot):
+            raise RegistrySnapshotError("filing schema provider returned an invalid registry snapshot")
         if snapshot.filing_year != filing_year or snapshot.period != registry_period:
-            raise _RegistrySnapshotError("filing schema provider snapshot does not match the requested period")
+            raise RegistrySnapshotError("filing schema provider snapshot does not match the requested period")
         return snapshot
-    except (_RegistrySnapshotError, _RegistryValidationError, ModeloApplicationError) as exc:
-        raise _ModeloBuilderError(
+    except (RegistrySnapshotError, RegistryValidationError, ModeloApplicationError) as exc:
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
             context={
                 "modelo": modelo,
@@ -478,38 +480,38 @@ def _load_registry_snapshot(
 
 
 def _registry_period(period: object) -> tuple[int, str]:
-    if not isinstance(period, _Period):
-        raise _ModeloBuilderError(
+    if not isinstance(period, Period):
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.period_type_invalid",
             context={"observed_type": type(period).__name__},
         )
     return period.filing_year, period.registry_token
 
 
-def filing_period_date(period: _Period) -> date:
+def filing_period_date(period: Period) -> date:
     """Return the shared calculation filing date for a typed draft period."""
     _registry_period(period)
-    return _calculation_filing_date(period)
+    return calculation_filing_date(period)
 
 
-def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
+def formula_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
     return {
         binding_id
         for formula in snapshot.revision.formulas
-        for binding_id in _expression_binding_refs(formula.expression)
+        for binding_id in expression_binding_refs(formula.expression)
     }
 
 
-def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
+def snapshot_bound_casilla_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
     return {
         binding_id
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == _InputKind.BOUND
-        for binding_id in _registry_bound_casilla_binding_ids(casilla)
+        if casilla.input_kind == InputKind.BOUND
+        for binding_id in bound_casilla_binding_ids(casilla)
     }
 
 
-def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
+def draft_construction_date_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
     """Collect every date_binding id referenced by the revision's formulas.
 
     Date bindings (date-valued profile facts such as ``birth_date``,
@@ -519,10 +521,10 @@ def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
     refuses the calculation. Delegates to the canonical
     :func:`revision_date_binding_ids` registry query (single source of truth).
     """
-    return set(_revision_date_binding_ids(snapshot.revision))
+    return set(revision_date_binding_ids(snapshot.revision))
 
 
-def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
+def draft_construction_relation_ids(snapshot: RegistrySnapshot) -> set[RelationId]:
     """Collect the cross-model relation ids declared on the revision.
 
     Period relations (e.g. prior pagos fraccionados aggregated into the
@@ -537,31 +539,31 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     }
 
 
-def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, str]:
+def _text_casilla_data_types(snapshot: RegistrySnapshot) -> dict[CasillaId, str]:
     """Map casillas assigned to the registry's typed text-scalar channel."""
     return {
         casilla.id: casilla.data_type
         for casilla in snapshot.revision.casillas
-        if _registry_scalar_value_type(casilla.data_type) == "str"
+        if registry_scalar_value_type(casilla.data_type) == "str"
     }
 
 
-def _date_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
+def _date_casilla_ids(snapshot: RegistrySnapshot) -> set[CasillaId]:
     """Collect casillas assigned to the registry's date channel.
 
     A date is not a quantity: routed through the Decimal channel an ISO date is
     refused as malformed, so a required date casilla could never be supplied.
     """
     return {
-        casilla.id for casilla in snapshot.revision.casillas if _registry_scalar_value_type(casilla.data_type) == "date"
+        casilla.id for casilla in snapshot.revision.casillas if registry_scalar_value_type(casilla.data_type) == "date"
     }
 
 
-def _refuse_non_string_input_keys(inputs: _ModeloInputs) -> None:
+def _refuse_non_string_input_keys(inputs: ModeloInputs) -> None:
     non_string = tuple(repr(key) for key in inputs if type(key) is not str)
     if not non_string:
         return
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.input_key_not_string",
         context={
             "offending_count": len(non_string),
@@ -570,11 +572,11 @@ def _refuse_non_string_input_keys(inputs: _ModeloInputs) -> None:
     )
 
 
-def _refuse_padded_input_keys(inputs: _ModeloInputs) -> None:
+def _refuse_padded_input_keys(inputs: ModeloInputs) -> None:
     padded = tuple(key for key in inputs if key != key.strip())
     if not padded:
         return
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.input_key_padded",
         context={
             "offending_count": len(padded),
@@ -583,12 +585,12 @@ def _refuse_padded_input_keys(inputs: _ModeloInputs) -> None:
     )
 
 
-def _refuse_noncanonical_casilla_input_keys(inputs: _ModeloInputs, snapshot: _RegistrySnapshot) -> None:
-    noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
+def _refuse_noncanonical_casilla_input_keys(inputs: ModeloInputs, snapshot: RegistrySnapshot) -> None:
+    noncanonical_tokens = casilla_noncanonical_reference_tokens(snapshot.revision)
     supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
     if not supplied_noncanonical:
         return
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.input_key_noncanonical_casilla",
         context={
             "modelo": snapshot.modelo.id,
@@ -606,19 +608,19 @@ def _refuse_noncanonical_casilla_input_keys(inputs: _ModeloInputs, snapshot: _Re
 
 
 def _refuse_unknown_input_keys(
-    inputs: _ModeloInputs,
+    inputs: ModeloInputs,
     *,
-    accepted_ids: set[_BindingId | _CasillaId | _RelationId],
-    snapshot: _RegistrySnapshot,
+    accepted_ids: set[BindingId | CasillaId | RelationId],
+    snapshot: RegistrySnapshot,
 ) -> None:
     unknown = tuple(key for key in inputs if key not in accepted_ids)
     if not unknown:
         return
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.input_key_unknown",
         context={
             "modelo": snapshot.modelo.id,
-            "schema_version": _registry_schema_version(
+            "schema_version": registry_schema_version(
                 modelo=snapshot.modelo.id,
                 revision_id=snapshot.revision.id,
             ),
@@ -629,10 +631,10 @@ def _refuse_unknown_input_keys(
 
 
 def _validate_filing_input_keys(
-    inputs: _ModeloInputs,
+    inputs: ModeloInputs,
     *,
-    accepted_ids: set[_BindingId | _CasillaId | _RelationId],
-    snapshot: _RegistrySnapshot,
+    accepted_ids: set[BindingId | CasillaId | RelationId],
+    snapshot: RegistrySnapshot,
 ) -> None:
     """Reject input keys that are not canonical registry input ids."""
     _refuse_non_string_input_keys(inputs)
@@ -641,7 +643,7 @@ def _validate_filing_input_keys(
     _refuse_unknown_input_keys(inputs, accepted_ids=accepted_ids, snapshot=snapshot)
 
 
-def _date_inputs_for_ids[InputId: str](inputs: _ModeloInputs, input_ids: set[InputId]) -> dict[InputId, date]:
+def date_inputs_for_ids[InputId: str](inputs: ModeloInputs, input_ids: set[InputId]) -> dict[InputId, date]:
     """Extract ISO-date-shaped inputs for ``input_ids`` as ``date`` values."""
     date_inputs: dict[InputId, date] = {}
     for binding_id in input_ids:
@@ -656,13 +658,13 @@ def _calendar_date_input(input_id: str, value: object) -> date:
     """Share one calendar-date refusal between calculation and filing values."""
     if isinstance(value, date) and not isinstance(value, datetime):
         return value
-    refusal = _ModeloBuilderError(
+    refusal = ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.date_binding_not_iso",
         context={"binding_id": input_id, "supplied_value": value},
     )
     if isinstance(value, str):
         try:
-            parsed = _parse_iso8601_date(value)
+            parsed = parse_iso8601_date(value)
         except ValueError as exc:
             raise refusal from exc
         if parsed is not None:
@@ -671,7 +673,7 @@ def _calendar_date_input(input_id: str, value: object) -> date:
 
 
 def _decimal_inputs_for_ids[InputId: str](
-    inputs: _ModeloInputs,
+    inputs: ModeloInputs,
     input_ids: set[InputId],
 ) -> dict[InputId, Decimal]:
     decimal_inputs: dict[InputId, Decimal] = {}
@@ -679,18 +681,18 @@ def _decimal_inputs_for_ids[InputId: str](
         value = inputs.get(input_id)
         if value is None:
             continue
-        decimal_inputs[input_id] = _decimal_input(input_id, value)
+        decimal_inputs[input_id] = decimal_input(input_id, value)
     return decimal_inputs
 
 
-def _text_inputs_for_ids(inputs: _ModeloInputs, input_data_types: Mapping[_CasillaId, str]) -> dict[_CasillaId, str]:
-    text_inputs: dict[_CasillaId, str] = {}
+def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[CasillaId, str]) -> dict[CasillaId, str]:
+    text_inputs: dict[CasillaId, str] = {}
     for input_id, data_type in input_data_types.items():
         value = inputs.get(input_id)
         if value is None:
             continue
         if not isinstance(value, str):
-            raise _ModeloBuilderError(
+            raise ErrorsModeloBuilderError(
                 translated_message="application.filing.build_draft.errors.text_casilla_not_string",
                 context={
                     "casilla_id": input_id,
@@ -699,13 +701,13 @@ def _text_inputs_for_ids(inputs: _ModeloInputs, input_data_types: Mapping[_Casil
                 },
             )
         try:
-            text_inputs[input_id] = _validate_registry_text_scalar(
+            text_inputs[input_id] = validate_registry_text_scalar(
                 data_type,
                 value,
-                tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
+                tax_id_format=runtime_tax_id_format() if data_type == "nif" else None,
             )
-        except _RegistryValidationError as exc:
-            raise _ModeloBuilderError(
+        except RegistryValidationError as exc:
+            raise ErrorsModeloBuilderError(
                 translated_message="application.filing.build_draft.errors.text_casilla_invalid",
                 context={
                     "casilla_id": input_id,
@@ -716,9 +718,9 @@ def _text_inputs_for_ids(inputs: _ModeloInputs, input_data_types: Mapping[_Casil
     return text_inputs
 
 
-def _string_inputs_for_ids(inputs: _ModeloInputs, input_ids: frozenset[_BindingId]) -> dict[_BindingId, str]:
+def string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[BindingId]) -> dict[BindingId, str]:
     # Enum-channel bindings carry string values; skip None and non-string entries.
-    string_inputs: dict[_BindingId, str] = {}
+    string_inputs: dict[BindingId, str] = {}
     for binding_id in input_ids:
         value = inputs.get(binding_id)
         if value is None:
@@ -730,8 +732,8 @@ def _string_inputs_for_ids(inputs: _ModeloInputs, input_ids: frozenset[_BindingI
 
 
 def binding_provenance(
-    binding: _DataBindingDefinition,
-) -> tuple[_BindingSourceKind, tuple[_LegalRefId, ...], tuple[_SourceRefId, ...]]:
+    binding: BindingDefinition,
+) -> tuple[BindingSourceKind, tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
 
     The ``binding`` is the registry ``BindingDefinition`` already held by
@@ -746,7 +748,7 @@ def binding_provenance(
     legal_refs = binding.legal_refs
     source_refs = binding.source_refs
     if not legal_refs or not source_refs:
-        raise _ModeloBuilderError(
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_provenance_missing",
             context={
                 "binding_id": binding.id,
@@ -759,13 +761,13 @@ def binding_provenance(
 
 
 def filing_binding_values(
-    inputs: _ModeloInputs,
-    bindings: Mapping[_BindingId, _DataBindingDefinition],
-    enum_binding_ids: frozenset[_BindingId] = frozenset(),
-    non_decimal_binding_ids: frozenset[_BindingId] = frozenset(),
-) -> list[_ModeloBindingValue]:
+    inputs: ModeloInputs,
+    bindings: Mapping[BindingId, BindingDefinition],
+    enum_binding_ids: frozenset[BindingId] = frozenset(),
+    non_decimal_binding_ids: frozenset[BindingId] = frozenset(),
+) -> list[ModeloBindingValue]:
     """Project literal filing bindings while preserving their registry provenance."""
-    values: list[_ModeloBindingValue] = []
+    values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
         if (binding_id in enum_binding_ids or binding_id in non_decimal_binding_ids) and not isinstance(
             binding.provider, ManualInputProvider
@@ -783,10 +785,10 @@ def filing_binding_values(
         source, legal_refs, source_refs = binding_provenance(binding)
         if isinstance(raw_value, list | tuple):
             values.extend(
-                _ModeloBindingValue(
+                ModeloBindingValue(
                     binding_id=binding_id,
-                    value=_binding_input(binding_id, row_value, binding),
-                    kind=_ModeloValueKind.LITERAL,
+                    value=binding_input(binding_id, row_value, binding),
+                    kind=ModeloValueKind.LITERAL,
                     source=source,
                     legal_refs=legal_refs,
                     source_refs=source_refs,
@@ -797,23 +799,23 @@ def filing_binding_values(
             continue
         if isinstance(raw_value, Mapping):
             values.extend(
-                _ModeloBindingValue(
+                ModeloBindingValue(
                     binding_id=binding_id,
-                    value=_binding_input(binding_id, row_value, binding),
-                    kind=_ModeloValueKind.LITERAL,
+                    value=binding_input(binding_id, row_value, binding),
+                    kind=ModeloValueKind.LITERAL,
                     source=source,
                     legal_refs=legal_refs,
                     source_refs=source_refs,
-                    row_index=_binding_row_index(binding_id, row_key),
+                    row_index=binding_row_index(binding_id, row_key),
                 )
                 for row_key, row_value in raw_value.items()
             )
             continue
         values.append(
-            _ModeloBindingValue(
+            ModeloBindingValue(
                 binding_id=binding_id,
-                value=_binding_input(binding_id, raw_value, binding),
-                kind=_ModeloValueKind.LITERAL,
+                value=binding_input(binding_id, raw_value, binding),
+                kind=ModeloValueKind.LITERAL,
                 source=source,
                 legal_refs=legal_refs,
                 source_refs=source_refs,
@@ -822,9 +824,9 @@ def filing_binding_values(
     return values
 
 
-def _refuse_binding_row_index(binding_id: _BindingId, row_key: object) -> _ModeloBuilderError:
+def _refuse_binding_row_index(binding_id: BindingId, row_key: object) -> ErrorsModeloBuilderError:
     """Return the refusal for a row key that is not a positive integer."""
-    return _ModeloBuilderError(
+    return ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.binding_row_key_not_positive_integer",
         context={
             "binding_id": binding_id,
@@ -834,7 +836,7 @@ def _refuse_binding_row_index(binding_id: _BindingId, row_key: object) -> _Model
     )
 
 
-def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
+def binding_row_index(binding_id: BindingId, row_key: object) -> int:
     if isinstance(row_key, bool):
         raise _refuse_binding_row_index(binding_id, row_key)
     if isinstance(row_key, int):
@@ -851,7 +853,7 @@ def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
     return index
 
 
-def _binding_data_type(binding: _DataBindingDefinition) -> str:
+def _binding_data_type(binding: BindingDefinition) -> str:
     """Return the scalar type the binding's value contract declares.
 
     A row field's scalar type is registry data: the binding declares it on its
@@ -868,7 +870,7 @@ def _binding_data_type(binding: _DataBindingDefinition) -> str:
     return str(binding.value.data_type)
 
 
-def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingDefinition) -> _ModeloScalar:
+def binding_input(binding_id: BindingId, value: object, binding: BindingDefinition) -> ModeloScalar:
     """Route one binding input to the channel its declared data type belongs to.
 
     The runtime family comes from the registry classifier rather than a local
@@ -880,9 +882,9 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
     """
     data_type = _binding_data_type(binding)
     try:
-        family = _registry_scalar_value_type(data_type)
-    except _RegistryValidationError as exc:
-        raise _ModeloBuilderError(
+        family = registry_scalar_value_type(data_type)
+    except RegistryValidationError as exc:
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
             context={"binding_id": binding_id, "data_type": data_type},
         ) from exc
@@ -896,12 +898,12 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
     if family == "int":
         return _integer_binding_input(binding_id, value, data_type)
     if family == "bool":
-        return _boolean_input(binding_id, value)
+        return boolean_input(binding_id, value)
     if family == "decimal":
-        return _decimal_input(binding_id, value)
+        return decimal_input(binding_id, value)
     if family == "date":
         return None if value is None else _calendar_date_input(binding_id, value)
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.binding_family_has_no_input_channel",
         context={
             "binding_id": binding_id,
@@ -915,19 +917,19 @@ def _empty_numeric_binding(family: str, value: object) -> bool:
     return family in {"int", "decimal"} and (value is None or value == "")
 
 
-def _text_binding_input(binding_id: _BindingId, value: object, data_type: str) -> str:
+def _text_binding_input(binding_id: BindingId, value: object, data_type: str) -> str:
     # Coerce first so the generic ``text`` channel keeps accepting a
     # non-string scalar (an integer ``rectified_year``); the canonical
     # validator is an identity for ``text`` and a real check for the
     # specific families, which previously bypassed their validators.
     try:
-        return _validate_registry_text_scalar(
+        return validate_registry_text_scalar(
             data_type,
             str(value),
-            tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
+            tax_id_format=runtime_tax_id_format() if data_type == "nif" else None,
         )
-    except _RegistryValidationError as exc:
-        raise _ModeloBuilderError(
+    except RegistryValidationError as exc:
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_text_value_invalid",
             context={
                 "binding_id": binding_id,
@@ -937,25 +939,25 @@ def _text_binding_input(binding_id: _BindingId, value: object, data_type: str) -
         ) from exc
 
 
-def _integer_binding_input(binding_id: _BindingId, value: object, data_type: str) -> int:
-    decimal_value = _decimal_input(binding_id, value)
+def _integer_binding_input(binding_id: BindingId, value: object, data_type: str) -> int:
+    decimal_value = decimal_input(binding_id, value)
     if decimal_value != decimal_value.to_integral_value():
-        raise _ModeloBuilderError(
+        raise ErrorsModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_value_not_integer",
             context={"binding_id": binding_id, "data_type": data_type},
         )
     return int(decimal_value)
 
 
-def _refuse_decimal_input(input_id: str, value: object) -> _ModeloBuilderError:
+def _refuse_decimal_input(input_id: str, value: object) -> ErrorsModeloBuilderError:
     """Return the refusal for an input that cannot carry a Decimal amount."""
-    return _ModeloBuilderError(
+    return ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.input_not_decimal",
         context={"input_id": input_id, "observed_type": type(value).__name__},
     )
 
 
-def _decimal_input(input_id: str, value: object) -> Decimal:
+def decimal_input(input_id: str, value: object) -> Decimal:
     if isinstance(value, bool):
         raise _refuse_decimal_input(input_id, value)
     if isinstance(value, Decimal):
@@ -972,7 +974,7 @@ def _decimal_input(input_id: str, value: object) -> Decimal:
     return parsed
 
 
-def _boolean_input(input_id: str, value: object) -> bool:
+def boolean_input(input_id: str, value: object) -> bool:
     """Coerce a binding input to a boolean, refusing a word nothing can read.
 
     Resolves through the one canonical vocabulary rather than the two sets
@@ -985,10 +987,10 @@ def _boolean_input(input_id: str, value: object) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        parsed = _parse_bool(value)
+        parsed = parse_bool(value)
         if parsed is not None:
             return parsed
-    raise _ModeloBuilderError(
+    raise ErrorsModeloBuilderError(
         translated_message="application.filing.build_draft.errors.binding_value_not_boolean",
         context={"binding_id": input_id, "observed_type": type(value).__name__},
     )

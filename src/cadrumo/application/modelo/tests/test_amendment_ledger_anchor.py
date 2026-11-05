@@ -47,9 +47,9 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from ...tests.ledger_partition_support import CatalogueTransactionRepository
-from .._calculation_helpers import build_typed_observations
-from .._calculation_modelo_adjustments import drop_row_field_template_outputs
-from ..amendment_actions import _amendment_ledger_anchor
+from ..amendment_actions import amendment_ledger_anchor
+from ..calculation_helpers import build_typed_observations
+from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -140,7 +140,7 @@ def _revision(*source_transaction_ids: str):
 
 def test_a_revision_with_no_contributors_anchors_to_nothing_and_says_so() -> None:
     """``None`` rather than an empty snapshot, which would read as a checked ledger."""
-    snapshot, evidence = _amendment_ledger_anchor(
+    snapshot, evidence = amendment_ledger_anchor(
         amendment_draft=_revision(),
         work_unit=_work_unit(),
         transaction_repository=CatalogueTransactionRepository(
@@ -183,7 +183,7 @@ def test_the_anchor_describes_the_ledger_at_amend_time_not_at_baseline_time() ->
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale, restated)))
 
-    snapshot, evidence = _amendment_ledger_anchor(
+    snapshot, evidence = amendment_ledger_anchor(
         amendment_draft=revision,
         work_unit=_work_unit(),
         transaction_repository=tx_repo,
@@ -215,7 +215,7 @@ def test_the_anchor_bundles_evidence_covering_every_fingerprinted_contributor() 
         bucket_id=_WORK_BUCKET, catalogue=TransactionCatalogue.from_transactions((sale, purchase))
     )
 
-    snapshot, evidence = _amendment_ledger_anchor(
+    snapshot, evidence = amendment_ledger_anchor(
         amendment_draft=revision,
         work_unit=_work_unit(),
         transaction_repository=tx_repo,
@@ -321,7 +321,7 @@ def test_an_amendment_of_a_revision_without_row_field_inputs_bundles_every_manua
         source_transaction_ids=(purchase.transaction_id,),
     )
 
-    snapshot, evidence = _amendment_ledger_anchor(
+    snapshot, evidence = amendment_ledger_anchor(
         amendment_draft=draft,
         work_unit=work_unit,
         transaction_repository=tx_repo,
@@ -354,7 +354,7 @@ def test_a_row_field_scalar_input_is_refused_at_calculate_before_any_amendment_c
     assert all(obs.casilla_id != _M193_PERCEPTOR_RETENCIONES for obs in draft.observations)
 
     with pytest.raises(ModeloValidationError) as capture_refusal:
-        _amendment_ledger_anchor(
+        amendment_ledger_anchor(
             amendment_draft=draft,
             work_unit=work_unit,
             transaction_repository=tx_repo,

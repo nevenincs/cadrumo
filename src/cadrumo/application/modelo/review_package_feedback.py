@@ -57,11 +57,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .recipient_encryption import (
     RecipientDecryptedPackage,
@@ -115,7 +115,7 @@ class FeedbackPackage(BaseModel):
     written to disk by the caller.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     feedback_version: int = Field(default=_FEEDBACK_PACKAGE_VERSION, ge=1)
     bucket_id: BucketId
@@ -163,7 +163,7 @@ def build_feedback_package(
         calculation_revision_id=calculation_revision_id,
         note=note,
         counter_signed_receipt=counter_signed_receipt,
-        submitted_at=submitted_at or _utc_now(),
+        submitted_at=submitted_at or now(),
         submitted_by=submitted_by,
     )
 
@@ -204,7 +204,7 @@ def encrypt_feedback_package_for_originator(
         issued_at: Optional override for the envelope's ``issued_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    feedback_bytes = feedback.model_dump_json().encode(_UTF_8_ENCODING)
+    feedback_bytes = feedback.model_dump_json().encode(UTF_8_ENCODING)
     return encrypt_review_package_for_recipient(
         feedback_bytes,
         recipient_public_key_hex=originator_public_key_hex,
@@ -275,7 +275,7 @@ class ImportedFeedback(BaseModel):
     from "a sign-off was offered and it verified/failed".
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     feedback: FeedbackPackage
     counter_signature_verified: bool | None

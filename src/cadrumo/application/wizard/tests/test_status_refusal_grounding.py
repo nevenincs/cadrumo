@@ -15,7 +15,7 @@ import pytest
 
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...user_profile.preflight import build_profile_preflight_requirement
-from ..status import _TAX_ID_PATH, _grounded_tax_id_requirement
+from ..status import TAX_ID_PATH, grounded_tax_id_requirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,21 +33,21 @@ def _label(path: str) -> str:
 
 def test_the_tax_id_field_label_differs_from_both_its_path_and_its_token() -> None:
     """Anchor: the assertions below are vacuous if any of the three coincide."""
-    label = _label(_TAX_ID_PATH)
+    label = _label(TAX_ID_PATH)
 
-    assert label != _TAX_ID_PATH
+    assert label != TAX_ID_PATH
     assert label != _LEGACY_TAX_ID_SELECTOR
 
 
 def test_the_wizard_refusal_names_the_tax_identifier_by_its_operator_label() -> None:
-    rendered = _grounded_tax_id_requirement(schema=published_profile_schema())
+    rendered = grounded_tax_id_requirement(schema=published_profile_schema())
 
-    assert _label(_TAX_ID_PATH) in rendered
+    assert _label(TAX_ID_PATH) in rendered
 
 
 def test_the_wizard_refusal_carries_no_raw_identifier_for_the_field() -> None:
     """Neither the dotted path nor the selector token may reach the operator."""
-    rendered = _grounded_tax_id_requirement(schema=published_profile_schema())
+    rendered = grounded_tax_id_requirement(schema=published_profile_schema())
 
-    assert _TAX_ID_PATH not in rendered
+    assert TAX_ID_PATH not in rendered
     assert _LEGACY_TAX_ID_SELECTOR not in rendered

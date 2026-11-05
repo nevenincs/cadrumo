@@ -11,12 +11,12 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...core.period import Period
-from ...core.time.clock import now as _utcnow
+from ...core.time.clock import now
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
-from ._deadline_stage import abort_missing_deadline_obligation
 from .abort import WorkflowAbortReason
+from .deadline_stage import abort_missing_deadline_obligation
 from .engine_helpers import (
     DeadlineRole,
     FilingWindowState,
@@ -80,7 +80,7 @@ def decide_filing_deadline(
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.deadline_future",
                 details=WorkflowDeadlineContextDetails(
@@ -117,7 +117,7 @@ def decide_filing_deadline(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=True,
                     summary_locale_key="application.workflow.steps.deadline_overdue",
                     details=WorkflowDeadlineContextDetails(
@@ -135,7 +135,7 @@ def decide_filing_deadline(
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.deadline_closed",
                 details=WorkflowDeadlineContextDetails(
@@ -164,7 +164,7 @@ def decide_filing_deadline(
         WorkflowStep(
             stage=WorkflowStage.COMPUTING_DEADLINES,
             started_at=started,
-            ended_at=_utcnow(),
+            ended_at=now(),
             success=True,
             summary_locale_key="application.workflow.steps.deadline_open",
             details=WorkflowDeadlineContextDetails(
@@ -215,7 +215,7 @@ def _record_verify_deadline_context(
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.deadline_informational",
                 details=WorkflowDeadlineContextDetails(
@@ -247,7 +247,7 @@ def _record_verify_deadline_context(
         WorkflowStep(
             stage=WorkflowStage.COMPUTING_DEADLINES,
             started_at=started,
-            ended_at=_utcnow(),
+            ended_at=now(),
             success=True,
             summary_locale_key="application.workflow.steps.deadline_absent",
             details=WorkflowDeadlineContextDetails(

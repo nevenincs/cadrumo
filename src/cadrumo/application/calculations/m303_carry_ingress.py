@@ -66,7 +66,7 @@ def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
 
 def m303_declaration_type_header_key(*, filing_year: int, period: str, operation: PinnedAuthorityOperation) -> str:
     """Resolve the declaration-type header key for one governed M303 filing scope."""
-    entries = _selected_registry_mapping(
+    entries = selected_registry_mapping(
         modelo="303",
         filing_year=filing_year,
         period=period,
@@ -121,7 +121,7 @@ def _validated_carry_mapping_entries(
     return entries
 
 
-def _selected_registry_mapping(
+def selected_registry_mapping(
     *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
 ) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
@@ -301,7 +301,7 @@ def normalize_m303_carry_observation_envelope(
     if envelope.observation.modelo != form_for_role("iva.periodic"):
         return envelope
 
-    registry_mapping = _selected_registry_mapping(
+    registry_mapping = selected_registry_mapping(
         modelo=envelope.observation.modelo,
         filing_year=envelope.observation.filing_year,
         period=envelope.observation.period,

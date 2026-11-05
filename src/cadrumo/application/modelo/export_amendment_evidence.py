@@ -35,7 +35,7 @@ from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..filing.producer_snapshot import AmendmentEvidence
-from ._amendment_kind_resolution import assert_amendment_kind_permitted
+from .amendment_kind_resolution import assert_amendment_kind_permitted
 
 
 class AmendmentExportCommand(Protocol):

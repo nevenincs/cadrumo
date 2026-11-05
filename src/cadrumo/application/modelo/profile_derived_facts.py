@@ -1061,7 +1061,7 @@ def inject_derived_autonomic_deduccion_facts(
     fact_index[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] = weighted_count
 
 
-def _guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
+def guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     """Resolve the Art. 81.2 annual cap parameter for the snapshot's filing year.
 
     Its own registry parameter rather than an inline literal in the formula: a
@@ -1117,7 +1117,7 @@ def inject_derived_incremento_guarderia_facts(
     if key not in declared_selectors:
         return
 
-    cap_anual = _guarderia_cap_anual(snapshot)
+    cap_anual = guarderia_cap_anual(snapshot)
     if cap_anual is None:
         return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)

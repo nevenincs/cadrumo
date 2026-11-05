@@ -44,7 +44,7 @@ from ....core.filing_year import FilingYear
 from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
 from ....core.identity.transaction_ids import TransactionId
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.parsing.codes import IsoCurrencyCode
 from ....core.period import Period, RegistrySelectorPeriodCode, is_administrative_period_token
 from ....core.time.utc import validate_utc_aware
@@ -62,7 +62,7 @@ from ....domain.calculations.registry.schema_base import (
     CasillaSignConstraint,
     CasillaSignConstraintValue,
 )
-from ....domain.calculations.registry.schema_scalars import DecimalValue as _RegistryDecimalValue
+from ....domain.calculations.registry.schema_scalars import DecimalValue
 from .errors import CalcSheetsRecordError
 from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 
@@ -74,7 +74,6 @@ from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 # engine therefore uses plain `Decimal` for fields that mix value
 # types, and the imported `_RegistryDecimalValue` only where the
 # field is unambiguously a Decimal.
-DecimalValue = _RegistryDecimalValue
 
 
 _COLUMN_LETTERS = 26
@@ -164,7 +163,7 @@ def column_letters_to_index(letters: str) -> int:
 class SheetCellAddress(BaseModel):
     """A single Sheets cell address, expressed as tab + row + column."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     row: int = Field(ge=1)
@@ -220,7 +219,7 @@ class SheetValueCell(BaseModel):
     structural section/header labels.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     value: Decimal | str | bool | None = None
@@ -262,7 +261,7 @@ class SheetFormulaCell(BaseModel):
     must already be A1-resolved.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     formula: str = Field(min_length=1)
@@ -287,7 +286,7 @@ class SheetCellConstraint(BaseModel):
     even before they attempt invalid input.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     sign: CasillaSignConstraintValue = CasillaSignConstraint.ANY
@@ -390,7 +389,7 @@ class SheetCellConstraint(BaseModel):
 class SheetRowSetColumn(BaseModel):
     """One column of a `SheetRowSet`, mapping a binding id to a header cell."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding: BindingId
     header_address: SheetCellAddress
@@ -419,7 +418,7 @@ class SheetRowSet(BaseModel):
     fields.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     grouping: str = Field(min_length=1)
     tab: TabName
@@ -438,7 +437,7 @@ class SheetProtectedRange(BaseModel):
     operators are allowed to mutate.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     start_row: int = Field(ge=1)
@@ -468,7 +467,7 @@ class SheetProtectedRange(BaseModel):
 class SheetNumberFormat(BaseModel):
     """Display-format directive for a numeric workbook cell."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     casilla_id: CasillaId | None = None
@@ -484,7 +483,7 @@ class SheetSectionHeader(BaseModel):
     group casillas under bold section banners for operator orientation.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     text: str = Field(min_length=1)
@@ -499,7 +498,7 @@ class SheetAnchor(BaseModel):
     unambiguously oriented, mirroring the published workbook layout.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     address: SheetCellAddress
     kind: Literal["start", "final"]
@@ -517,7 +516,7 @@ class SheetStyledRange(BaseModel):
     emitted after the broad column range it refines.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     start_row: int = Field(ge=1)
@@ -549,7 +548,7 @@ class SheetStyledRange(BaseModel):
 class SheetMergedRange(BaseModel):
     """One merged rectangle; only its top-left cell may carry content."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     start_row: int = Field(ge=1)
@@ -568,7 +567,7 @@ class SheetMergedRange(BaseModel):
 class SheetRowHeight(BaseModel):
     """Explicit row height in pixels, shared by both materializers."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     row: int = Field(ge=1)
@@ -578,7 +577,7 @@ class SheetRowHeight(BaseModel):
 class SheetHiddenRow(BaseModel):
     """Calculation support retained at its address but omitted from the visible form."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     row: int = Field(ge=1)
@@ -592,7 +591,7 @@ class SheetColumnWidth(BaseModel):
     columns read without clipping.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     column: int = Field(ge=1)
@@ -606,7 +605,7 @@ class SheetFrozenView(BaseModel):
     so the header stays visible while an operator scrolls a long modelo.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     frozen_rows: int = Field(ge=0, default=0)
@@ -630,7 +629,7 @@ class SheetAutoFilter(BaseModel):
     it to ``worksheet.auto_filter.ref``; online to ``setBasicFilter``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tab: TabName
     start_row: int = Field(ge=1)
@@ -665,7 +664,7 @@ class SheetProvenanceRow(BaseModel):
     figure back to a registry source.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     display_number: str
@@ -680,7 +679,7 @@ class SheetProvenanceRow(BaseModel):
 class SheetEvidenceContributorRow(BaseModel):
     """One ledger contributor rendered into the workbook evidence surface."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     transaction_id: TransactionId
@@ -706,7 +705,7 @@ class SheetEvidenceContributorRow(BaseModel):
 class SheetEvidenceManualEntry(BaseModel):
     """One non-ledger fact basis entry rendered into the evidence surface."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: str = Field(min_length=1)
@@ -724,7 +723,7 @@ class SheetEvidenceFacet(BaseModel):
     facet to the Evidencia worksheet.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_fingerprint: ContentDigest | None = None
     contributor_rows: tuple[SheetEvidenceContributorRow, ...] = ()
@@ -734,7 +733,7 @@ class SheetEvidenceFacet(BaseModel):
 class SheetTariffTableRow(BaseModel):
     """One row of a parameter bracket table mirrored to the `Tarifas` tab."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     lower_bound: DecimalValue
     upper_bound: DecimalValue | None = None
@@ -752,7 +751,7 @@ class SheetTariffTable(BaseModel):
     depending on the parameter's `data_type`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     parameter: ParameterId
     label: str
@@ -801,7 +800,7 @@ class ParameterCell(BaseModel):
     mirrored value instead of inlining a literal.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     parameter: ParameterId
     anchor: SheetCellAddress
@@ -816,7 +815,7 @@ class OperatorInput(BaseModel):
     is free to overwrite them in the workbook.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: Decimal | str | bool | None = None
@@ -825,7 +824,7 @@ class OperatorInput(BaseModel):
 class OperatorInputs(BaseModel):
     """Caller-supplied seed values for the `Entradas` tab."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     values: tuple[OperatorInput, ...] = ()
 
@@ -895,7 +894,7 @@ class RelationValue(BaseModel):
     modelo, source casilla, and legal grounding.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     relation: RelationId
     value: Decimal | None = None
@@ -922,7 +921,7 @@ class RelationValue(BaseModel):
 class RelationValues(BaseModel):
     """Caller-supplied relation aggregations for the `Tarifas` tab."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     values: tuple[RelationValue, ...] = ()
 
@@ -945,7 +944,7 @@ class SheetGuideContent(BaseModel):
     surface resolves them through `tr()` so locale parity holds).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     title: str = Field(min_length=1)
     paragraphs: tuple[str, ...] = Field(min_length=1)
@@ -959,7 +958,7 @@ class SheetAdministrativeFrame(BaseModel):
     cadence are inferred for a communication.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: FilingYear
     code: RegistrySelectorPeriodCode
@@ -986,7 +985,7 @@ class SheetExportMetadata(BaseModel):
     see provenance at a glance.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo_id: str = Field(min_length=1)
     revision_id: RevisionId
@@ -1019,7 +1018,7 @@ class SheetExportMetadata(BaseModel):
 class SheetReviewMetadata(BaseModel):
     """Publication identity without inventing a Modelo for a ledger review."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["calculation", "ledger", "reconciliation"]
     snapshot_digest: Hex64Str
@@ -1042,7 +1041,7 @@ class SheetReviewMetadata(BaseModel):
 class SheetTemplatePreviewMetadata(BaseModel):
     """Identity of a fictional design preview, without filing or publication authority."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["template_preview"]
     modelo_id: str = Field(min_length=1)
@@ -1076,7 +1075,7 @@ class SheetExportPlan(BaseModel, Generic[MetadataT]):
     registry metadata, relation provenance, row sets, and workbook evidence.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     metadata: MetadataT
     human_presentation: bool = False

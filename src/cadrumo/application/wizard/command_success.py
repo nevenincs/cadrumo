@@ -103,8 +103,8 @@ def ccaa_was_defaulted(
     )
 
 
-_MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
-_MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
+MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
+MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
 
 
 def _selected_profile_label() -> str | None:
@@ -368,7 +368,7 @@ def _wizard_success_notices(
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code=_MODIFY_NO_RESUME_CODE,
+                code=MODIFY_NO_RESUME_CODE,
                 message=modify_no_resume_message,
             ),
         )
@@ -376,7 +376,7 @@ def _wizard_success_notices(
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code=_MODIFY_DESCENDANTS_DOOR_CODE,
+                code=MODIFY_DESCENDANTS_DOOR_CODE,
                 message=modify_descendants_message,
                 action=modify_descendants_action,
             ),

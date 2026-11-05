@@ -29,8 +29,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.schedules import applicable_filing_schedules
 from ...domain.calculations.registry.temporal import select_revision_metadata
-from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .errors import AggregationError
+from .preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .withholding_modelo_routing import periodic_withholding_modelos
 
 if TYPE_CHECKING:

@@ -57,9 +57,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -201,7 +199,7 @@ def test_a_genuine_third_country_still_classifies_as_the_export(*, operation: Pi
     the entire file -- and refusing a legitimate export is the over-payment
     direction nothing else in this codebase watches.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _issued_goods_to("US", operation=operation)
 
         assert assembly.assembled
@@ -213,7 +211,7 @@ def test_a_genuine_third_country_still_classifies_as_the_export(*, operation: Pi
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
 def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
     """The operator's typo signal, on the non-blocking channel."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
             InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
         )
@@ -227,7 +225,7 @@ def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
 
 def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> None:
     """The two kinds must be distinguishable, or the operator hunts a typo we caused."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         specimen = an_uncatalogued_alpha2()
         advisory = country_vocabulary_advisory(
             InvoiceDraft(customer_stated_country_code=specimen), operation=_authority_operation_for_test
@@ -243,7 +241,7 @@ def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> No
 
 def test_the_check_runs_on_the_issuing_side_too() -> None:
     """Both parties, because establishment is asked of each independently."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
             InvoiceDraft(supplier_stated_country_code="XX"), operation=_authority_operation_for_test
         )
@@ -256,7 +254,7 @@ def test_the_check_runs_on_the_issuing_side_too() -> None:
 @pytest.mark.parametrize("code", ["US", "DE", "ES", "XI"])
 def test_a_catalogued_code_raises_no_country_advisory(code: str) -> None:
     """The negative control. A check that fired on everything would be noise."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             country_vocabulary_advisory(
                 InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
@@ -268,7 +266,7 @@ def test_a_catalogued_code_raises_no_country_advisory(code: str) -> None:
 @pytest.mark.parametrize("stated", [None, "", "  ", "Calle Mayor 3, 28013 Madrid"])
 def test_nothing_that_is_not_a_code_raises_a_country_advisory(stated: str | None) -> None:
     """An absent field is an honest absence, and an address line is not a bad code."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             country_vocabulary_advisory(
                 InvoiceDraft(customer_stated_country_code=stated), operation=_authority_operation_for_test
@@ -284,7 +282,7 @@ def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
     printed "Alemania" while the structured country-code slot carried a
     placeholder. The territory is established, so the placeholder cost nothing.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
             InvoiceDraft(customer_country="Alemania", customer_stated_country_code="XX"),
             operation=_authority_operation_for_test,
@@ -304,7 +302,7 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(
     reader checking only blockers would not know why), and a blocker could be
     raised from something other than a finding.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = _as_read(InvoiceDraft(customer_stated_country_code=code), operation=operation)
 
         assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
@@ -324,7 +322,7 @@ def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(
     conditions, so the same call that returns no country blocker returns the
     postal one.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = _as_read(
             InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL),
             operation=operation,

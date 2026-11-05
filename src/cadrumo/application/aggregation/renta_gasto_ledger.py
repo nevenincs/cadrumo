@@ -61,7 +61,7 @@ from pydantic import BaseModel, Field
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
@@ -87,16 +87,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
-from . import _shared_issue_reasons
-from ._grouping import CumulativeWindow, cumulative_year_to_date_window, fold_casilla_observations
-from ._models import CasillaAggregation, LedgerAggregationResultBase
-from ._renta_business_eligibility import (
-    RentaExpenseAdvisory,
-    exclusive_business_use,
-    is_supplier_refund,
-    renta_expense_business_proportion,
-    row_scaling_proportion,
-)
+from . import shared_issue_reasons
 from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
@@ -104,6 +95,15 @@ from .currency_predicates import (
     is_non_eur_without_conversion,
 )
 from .errors import AggregationValidationError
+from .grouping import CumulativeWindow, cumulative_year_to_date_window, fold_casilla_observations
+from .models import CasillaAggregation, LedgerAggregationResultBase
+from .renta_business_eligibility import (
+    RentaExpenseAdvisory,
+    exclusive_business_use,
+    is_supplier_refund,
+    renta_expense_business_proportion,
+    row_scaling_proportion,
+)
 
 # Intra-package reuse of the sibling ledger's category-rule construction and
 # resolvers, permitted by the architecture rule; the cross-package boundary is
@@ -145,8 +145,8 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     gastos) and never produce an issue.
     """
 
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    UNSUPPORTED_CURRENCY = shared_issue_reasons.UNSUPPORTED_CURRENCY
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     # RIRPF art. 7 cannot place the row in an ejercicio; it enters no box.
     IMPUTATION_UNRESOLVED = "imputation_unresolved"
     # A BUSINESS / MIXED expense with no declared IVA-exclusive base imponible:
@@ -157,17 +157,17 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     MISSING_TAXABLE_BASE = "missing_taxable_base"
     # An expense with no spending category: no deduction rule can run on it, and
     # the gasto is not zero either, so the row is held back.
-    MISSING_CATEGORY = _shared_issue_reasons.MISSING_CATEGORY
+    MISSING_CATEGORY = shared_issue_reasons.MISSING_CATEGORY
     # The row's category rule could not be evaluated or refused the row. Each
     # is a declarable gasto the rule dropped, so it is surfaced, never summed
     # at full value in place of the rule.
-    UNKNOWN_CATEGORY = _shared_issue_reasons.UNKNOWN_CATEGORY
-    MISSING_CATEGORY_PROFILE = _shared_issue_reasons.MISSING_CATEGORY_PROFILE
-    REGION_UNDECLARED_FOR_OVERRIDE = _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
-    INVALID_LEDGER_FACT = _shared_issue_reasons.INVALID_LEDGER_FACT
-    INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
-    EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
-    MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
+    UNKNOWN_CATEGORY = shared_issue_reasons.UNKNOWN_CATEGORY
+    MISSING_CATEGORY_PROFILE = shared_issue_reasons.MISSING_CATEGORY_PROFILE
+    REGION_UNDECLARED_FOR_OVERRIDE = shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
+    INVALID_LEDGER_FACT = shared_issue_reasons.INVALID_LEDGER_FACT
+    INELIGIBLE_DEDUCTIBILITY = shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+    EXCLUSIVE_USE_REQUIRED = shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
+    MISSING_OWNERSHIP_SHARE = shared_issue_reasons.MISSING_OWNERSHIP_SHARE
     # A supplier's refund whose invoice cannot state what it takes back.
     REFUND_EVIDENCE_REFUSED = "refund_evidence_refused"
 
@@ -183,7 +183,7 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
 class RentaGastoLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating gasto ledger rows."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     reason: RentaGastoLedgerAggregationIssueReason
@@ -207,7 +207,7 @@ class RentaGastoObservation(BaseModel):
     zero, so the fold takes it off the expense.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId
@@ -525,7 +525,7 @@ def _classified_gasto_rows(
             continue
         if transaction.tipo_actividad in agrarian:
             continue
-        outcome = _classify_gasto_transaction(
+        outcome = classify_gasto_transaction(
             transaction,
             bucket_id=bucket_id,
             cumulative_start=window.start,
@@ -548,7 +548,7 @@ def _classified_gasto_rows(
     return observations, issues, advisories
 
 
-def _classify_gasto_transaction(
+def classify_gasto_transaction(
     transaction: Transaction,
     *,
     bucket_id: str,

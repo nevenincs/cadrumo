@@ -126,7 +126,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, divergent_evidence_fields
 
     stamp = datetime(2024, 11, 15, 9, 0, tzinfo=UTC)
     prior = PurchaseInvoiceEvidence(
@@ -147,7 +147,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         updated_at=stamp,
     )
 
-    unchanged = _divergent_evidence_fields(
+    unchanged = divergent_evidence_fields(
         prior,
         source_sha256="a" * 64,
         media_kind=MediaKind.PDF,
@@ -163,7 +163,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
 
     # Change two fields far apart in the record, including the notes field a
     # subset-match would be most tempted to skip.
-    divergent = _divergent_evidence_fields(
+    divergent = divergent_evidence_fields(
         prior,
         source_sha256="a" * 64,
         media_kind=MediaKind.PDF,
@@ -192,7 +192,7 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
     """
     import inspect
 
-    from ..evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
+    from ..evidence import PurchaseInvoiceEvidence, divergent_evidence_fields
 
     not_caller_supplied = {
         "evidence_id",
@@ -205,7 +205,7 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
         "linked_transaction_ids",
     }
     caller_supplied = set(PurchaseInvoiceEvidence.model_fields) - not_caller_supplied
-    source = inspect.getsource(_divergent_evidence_fields)
+    source = inspect.getsource(divergent_evidence_fields)
 
     missing = sorted(name for name in caller_supplied if f'"{name}"' not in source)
     assert missing == [], f"the conflict comparison must cover every caller-supplied field; missing: {missing}"

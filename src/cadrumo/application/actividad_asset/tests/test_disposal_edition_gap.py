@@ -26,7 +26,7 @@ from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, 
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_register import _ACQUISITION, _NAME, _forecast, _full_year, _operations, _revision
+from .test_register import ACQUISITION, NAME, full_year, register_forecast, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,8 +40,8 @@ _SALE = ActivityAssetDisposal(
 
 
 def _pre_floor() -> ActivityAssetOperations:
-    operations, _ = _operations(today=date(2024, 6, 30))
-    operations.create(_revision(in_service=date(2020, 1, 1)), _NAME)
+    operations, _ = register_operations(today=date(2024, 6, 30))
+    operations.create(register_revision(in_service=date(2020, 1, 1)), NAME)
     return operations
 
 
@@ -80,8 +80,8 @@ def test_the_public_view_carries_the_unresolved_minimum_as_null_with_its_word() 
 
 
 def test_a_covered_element_keeps_a_stated_minimum() -> None:
-    operations, _ = _operations(today=date(2026, 6, 30))
-    operations.create(_revision(in_service=date(2025, 1, 1)), _NAME)
+    operations, _ = register_operations(today=date(2026, 6, 30))
+    operations.create(register_revision(in_service=date(2025, 1, 1)), NAME)
     sale = _SALE.model_copy(update={"disposal_date": date(2025, 12, 31)})
 
     _, calculation = operations.disposal_calculation(_ASSET, sale)
@@ -100,7 +100,7 @@ def _forecast_from_the_floor(
 ) -> ScheduledAmortizationCharge:
     if covered_from.year < 2022:
         raise RegistryError("no edition covers this year")
-    return _forecast(
+    return register_forecast(
         revision,
         covered_from=covered_from,
         covered_until=covered_until,
@@ -112,12 +112,12 @@ def _forecast_from_the_floor(
 def test_a_year_no_edition_covers_is_distinct_from_a_missing_claim_in_the_plan() -> None:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=_forecast_from_the_floor,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2024, 6, 30)),
     )
-    operations.create(_revision(in_service=date(2020, 1, 1)), _NAME)
+    operations.create(register_revision(in_service=date(2020, 1, 1)), NAME)
 
     rows = {row.tax_year: row for row in operations.plan(_ASSET)}
 
@@ -131,17 +131,17 @@ def test_a_year_no_edition_covers_is_distinct_from_a_missing_claim_in_the_plan()
 
 
 def test_an_uncovered_opening_year_is_a_gap_and_a_covered_one_is_not() -> None:
-    operations, _ = _operations(today=date(2027, 6, 30))
-    base = _revision(in_service=date(2025, 1, 1))
+    operations, _ = register_operations(today=date(2027, 6, 30))
+    base = register_revision(in_service=date(2025, 1, 1))
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["opening_history"] = base.opening_history.model_copy(
         update={"accumulated_amount": Decimal("520.00"), "covered_through_tax_year": 2025},
     )
-    operations.create(type(base)(**facts), _NAME)
+    operations.create(type(base)(**facts), NAME)
     sale = _SALE.model_copy(update={"disposal_date": date(2027, 3, 31)})
 
     _, calculation = operations.disposal_calculation(_ASSET, sale)
 
     gaps = [f.tax_year for f in calculation.findings if f.kind is ActivityAssetDisposalFindingKind.CLAIM_GAP]
     assert gaps == [2026, 2027]
-    assert _full_year(operations, 2026).amount == Decimal("520.00")
+    assert full_year(operations, 2026).amount == Decimal("520.00")

@@ -26,7 +26,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.flows import FlowMode
 from ...flows.definition import FlowDefinition
@@ -34,7 +34,7 @@ from ...flows.engine import FlowState, answer, jump_to, next_page, start_flow, v
 from ...flows.errors import FlowAnswerError
 from ...flows.review import review
 from ...flows.scripted import run_scripted_flow
-from ..commands import _project_scripted_answers, setup_flow_definition
+from ..commands import project_scripted_answers, setup_flow_definition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,9 +119,9 @@ def _drive_interactive(definition: FlowDefinition, intended: Mapping[str, str], 
 )
 def test_scripted_and_interactive_walks_agree(canonical: dict[str, str], *, registry_setup_flow: WizardFlow) -> None:
     """The scripted driver and a page-by-page walk agree on answers and eligibility."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
-        tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+        tokens, intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
 
         scripted_state, scripted_projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
         interactive_state = _drive_interactive(definition, intended, mode=FlowMode.CREATE)
@@ -140,7 +140,7 @@ def test_scripted_and_interactive_walks_agree(canonical: dict[str, str], *, regi
 
 def test_scripted_walk_refuses_a_starved_required_page(*, registry_setup_flow: WizardFlow) -> None:
     """An empty queue that reaches a required page raises the underflow refusal."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
 
         with pytest.raises(FlowAnswerError) as caught:
@@ -155,9 +155,9 @@ def test_scripted_walk_refuses_a_starved_required_page(*, registry_setup_flow: W
 
 def test_scripted_walk_refuses_trailing_unconsumed_tokens(*, registry_setup_flow: WizardFlow) -> None:
     """A queue longer than the visible sequence raises the overflow refusal."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
-        tokens, _intended = _project_scripted_answers(definition, _INDIVIDUAL_CANONICAL, mode=FlowMode.CREATE)
+        tokens, _intended = project_scripted_answers(definition, _INDIVIDUAL_CANONICAL, mode=FlowMode.CREATE)
 
         with pytest.raises(FlowAnswerError) as caught:
             run_scripted_flow(definition, [*tokens, "orphan-token"], mode=FlowMode.CREATE)

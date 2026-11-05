@@ -64,7 +64,7 @@ from ..renta_income_ledger import aggregate_renta_m100_income_ledger
 from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from .impatriado_income_ledger_support import impatriado_transaction
 from .renta_income_aggregation_support import (
-    _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+    M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
@@ -223,7 +223,7 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
         bucket_id="test",
         period=_ANNUAL_2024,
         modelo=Modelo("100").value,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
     )

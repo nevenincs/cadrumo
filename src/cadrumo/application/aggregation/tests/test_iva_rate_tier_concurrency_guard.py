@@ -33,7 +33,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..iva_ledger_classification import iva_rate_kind_for
 
@@ -68,7 +68,7 @@ def test_a_standard_rate_still_classifies_inside_the_temporary_windows(
     at 4 % is the common case, not an edge case, and it must not become
     unclassifiable as a side effect of teaching the table about 2 %.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = iva_rate_kind_for(rate, on_date=on_date, operation=_authority_operation_for_test)
 
         assert resolved is not None, f"{rate} on {on_date} must classify -- it is an ordinary Spanish rate"
@@ -88,7 +88,7 @@ def test_the_temporary_rates_now_classify_in_their_own_window(rate: Decimal, exp
     with their tier's ordinary rate rather than replacing it -- rather than a
     test quietly relaxed to match new behaviour.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         resolved = iva_rate_kind_for(rate, on_date=_IN_WINDOW, operation=_authority_operation_for_test)
 
         assert resolved is not None
@@ -113,7 +113,7 @@ def test_a_temporary_rate_does_not_leak_outside_its_window(rate: Decimal, on_dat
     test above would still pass, because they only ever ask inside the windows.
     A 2 % sale dated June 2025 is not a legitimate Spanish rate and must refuse.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert iva_rate_kind_for(rate, on_date=on_date, operation=_authority_operation_for_test) is None
 
 
@@ -124,5 +124,5 @@ def test_zero_is_already_representable_so_the_gap_is_three_rates_not_four() -> N
     2024 classifies correctly today. Stating it here keeps a later reader from
     scoping the remediation one rate wider than it is.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert iva_rate_kind_for(Decimal("0"), on_date=_IN_WINDOW, operation=_authority_operation_for_test) is not None

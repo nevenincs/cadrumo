@@ -18,16 +18,16 @@ from ...domain.calculations.registry.ledger_impatriado_bindings import (
 )
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ._modelo_bindings_invoice_iva import (
+from .impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
+from .modelo_bindings import aggregation_period_for_modelo
+from .modelo_bindings_invoice_iva import (
     out_of_window_summary_diagnostics,
 )
-from ._modelo_bindings_support import (
+from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
 )
-from .impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
-from .modelo_bindings import aggregation_period_for_modelo
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -38,10 +38,8 @@ from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
     source_context_operation,
     source_issue_diagnostics,
+    source_provenance_for,
     storage_degradation_resolution,
-)
-from .source_resolution_operations import (
-    source_provenance_for as _provenance_for,
 )
 
 _IMPATRIADO_REGISTRY_FACT_ID = "impatriado-income-ledger-registry-mapping"
@@ -248,7 +246,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=_provenance_for(
+            provenance=source_provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,

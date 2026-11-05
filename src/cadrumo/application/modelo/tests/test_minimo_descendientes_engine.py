@@ -33,7 +33,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -58,7 +58,7 @@ def _engine_filing_years() -> tuple[int, ...]:
     """
     supported_years = published_supported_filing_years()
     assert supported_years is not None, "the bundled registry declares no supported filing years"
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         authored_start_years = {metadata.valid_from.year for metadata in operation.modelo_directory("100").revisions}
     return tuple(year for year in supported_years.years if year in authored_start_years)
 
@@ -151,7 +151,7 @@ def test_estatal_and_autonomico_casillas_are_computed() -> None:
 
 
 def test_no_descendientes_facts_injects_legally_correct_zero() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         fact_index: dict[str, object] = {}
         fact_index_narrowed: Any = fact_index
@@ -162,7 +162,7 @@ def test_no_descendientes_facts_injects_legally_correct_zero() -> None:
 
 
 def test_one_eligible_descendant_uses_first_tranche_plus_menor_tres() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         tranches, menor_tres = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
@@ -177,7 +177,7 @@ def test_one_eligible_descendant_uses_first_tranche_plus_menor_tres() -> None:
 
 
 def test_ineligible_descendant_over_25_contributes_nothing() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         fact_index: dict[str, object] = {
             "renta_family.descendiente.0.birth_date": "1990-01-01",
@@ -206,7 +206,7 @@ _SINGLE_FILER_HOUSEHOLD: dict[str, object] = {
 
 
 def test_custodia_compartida_halves_the_contribution() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         tranches, _ = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
@@ -228,7 +228,7 @@ def test_two_descendientes_stack_first_and_second_tranche_for_a_single_filer() -
     individually would have each tranche prorated under Art. 61 norma 1a,
     so the full sum asserted here is specific to the sole-entitlement case.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         tranches, _ = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
@@ -259,7 +259,7 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
     The profile declares no descendants, so the computed answer is the
     legally-correct zero, and the assertion discriminates between the two.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(2024)
         fact_index: dict[str, object] = {_aggregate_key(2024): Decimal("999")}
         fact_index_narrowed: Any = fact_index
@@ -271,7 +271,7 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
 
 
 def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _ENGINE_FILING_YEARS:
             snapshot = _snapshot(year)
             tranches, _ = _registry_tranches(snapshot)
@@ -311,7 +311,7 @@ def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants() -> Non
     autonómico aggregate must equal the estatal one for the identical
     descendientes facts.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _ENGINE_FILING_YEARS:
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {
@@ -375,7 +375,7 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
     one (general Art. 58 tranches) for the identical descendientes facts —
     the exact under-computation Madrid family filers would otherwise see.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _ENGINE_FILING_YEARS:
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {

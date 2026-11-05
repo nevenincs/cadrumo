@@ -16,16 +16,16 @@ from ...domain.categories.spending_category_catalogue import amortizable_spendin
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.claims import current_revisions
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
-from . import _shared_issue_reasons
+from . import shared_issue_reasons
 from .source_mesh import CalculationSourceDiagnostic
 from .source_resolution_operations import source_diagnostics_for
 
 _NOT_A_DECLARED_EXPENSE_ISSUE_REASONS: Final[frozenset[str]] = frozenset(
     {
-        _shared_issue_reasons.OUTSIDE_PERIOD,
-        _shared_issue_reasons.UNSUPPORTED_DIRECTION,
-        _shared_issue_reasons.PERSONAL_TRANSACTION,
-        _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE,
+        shared_issue_reasons.OUTSIDE_PERIOD,
+        shared_issue_reasons.UNSUPPORTED_DIRECTION,
+        shared_issue_reasons.PERSONAL_TRANSACTION,
+        shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE,
     },
 )
 """Refusals saying a row is not this period's business expense, so it declares no amortization here."""

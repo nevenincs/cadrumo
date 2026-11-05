@@ -29,9 +29,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.iva.schema import IvaRateKind
 
@@ -159,7 +157,7 @@ class TestARegistrationSettlesNoPlace:
         An operator saying where a party operates from has not said which State
         registered it, so an intra-community branch still has to ask.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(_authority_operation_for_test, "b2b_iva_registered", "es_mainland", "eu_member")
             assert not assembly.assembled
             assert {gap.field for gap in assembly.missing} == {"customer_identification_state"}
@@ -170,7 +168,7 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
 
     def test_a_domestic_operation_assembles_with_no_identification_anywhere(self) -> None:
         """The commonest document there is. Asking it for a NIF-IVA would be noise."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(
                 _authority_operation_for_test,
                 "b2c_consumer",
@@ -189,7 +187,7 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
         printed number supplies it, because for this branch the prefix was never
         a proxy for anything. It was the operative fact.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(
                 _authority_operation_for_test,
                 "b2b_iva_registered",
@@ -203,14 +201,14 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
 
     def test_an_intra_community_branch_with_no_printed_number_asks(self) -> None:
         """The same operation without the evidence: a question, never a blank."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(_authority_operation_for_test, "b2b_iva_registered", "es_mainland", "eu_member")
             assert not assembly.assembled
             gap = next(item for item in assembly.missing if item.field == "customer_identification_state")
             assert gap.settled_by
 
     def test_an_operator_assertion_settles_it_where_no_number_was_printed(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(
                 _authority_operation_for_test,
                 "b2b_iva_registered",
@@ -232,7 +230,7 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
     """
 
     def test_an_unplaced_operation_demands_the_identification(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assembly = _assemble_goods(_authority_operation_for_test, "b2b_iva_registered", "eu_member", "eu_member")
             assert not assembly.assembled
             assert "customer_identification_state" in {gap.field for gap in assembly.missing}
@@ -244,7 +242,7 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
         stopped declaring both facts, this and the producer would change
         together instead of drifting.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             projected = resolve_iva_classification_inputs(effective_date=_DATE, operation=_authority_operation_for_test)
             unplaced = classify_iva(
                 IvaInvoiceClassificationCriteria(

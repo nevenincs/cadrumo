@@ -233,7 +233,7 @@ class CalculationSummaryVerification(BaseModel):
         return tuple(check.reason for check in self.checks if check.reason is not None)
 
 
-class _DocumentReading(BaseModel):
+class DocumentReading(BaseModel):
     """What the document layer established, for the store layer to continue from."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -438,20 +438,20 @@ def _read_document(
     *,
     reader: CalculationSummaryPdfReader,
     trusted_public_key_hex: str | None,
-) -> _DocumentReading:
+) -> DocumentReading:
     checks = _Checks(CalculationSummaryVerificationLayer.DOCUMENT)
     try:
         contents = reader(payload)
     except CalculationSummaryPdfUnreadableError:
         checks.failed(CalculationSummaryCheckName.PDF, CalculationSummaryVerificationReason.PDF_UNREADABLE)
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     checks.passed(CalculationSummaryCheckName.PDF)
     if not checks.expect(
         CalculationSummaryCheckName.CADRUMO_REPORT,
         contents.product_metadata is not None,
         CalculationSummaryVerificationReason.NOT_A_CADRUMO_REPORT,
     ):
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     names = (REPORT_ATTACHMENT_NAME, CSV_ATTACHMENT_NAME, STATEMENT_ATTACHMENT_NAME, SIGNATURE_ATTACHMENT_NAME)
     missing = [name for name in names if name not in contents.attachments]
     for name in missing:
@@ -461,7 +461,7 @@ def _read_document(
             detail=name,
         )
     if missing:
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     checks.passed(CalculationSummaryCheckName.ATTACHMENTS)
     report_bytes = contents.attachments[REPORT_ATTACHMENT_NAME]
     csv_bytes = contents.attachments[CSV_ATTACHMENT_NAME]
@@ -469,7 +469,7 @@ def _read_document(
     signature = contents.attachments[SIGNATURE_ATTACHMENT_NAME]
     statement = _check_statement(checks, statement_bytes)
     if statement is None:
-        return _DocumentReading(checks=tuple(checks.rows))
+        return DocumentReading(checks=tuple(checks.rows))
     _check_document_integrity(
         checks,
         contents,
@@ -485,10 +485,10 @@ def _read_document(
         checks.failed(
             CalculationSummaryCheckName.REPORT_CANONICAL, CalculationSummaryVerificationReason.REPORT_NOT_CANONICAL
         )
-        return _DocumentReading(checks=tuple(checks.rows), statement=statement)
+        return DocumentReading(checks=tuple(checks.rows), statement=statement)
     checks.passed(CalculationSummaryCheckName.REPORT_CANONICAL)
     _check_report_derivation(checks, contents, statement, report, csv_bytes)
-    return _DocumentReading(checks=tuple(checks.rows), statement=statement, report=report)
+    return DocumentReading(checks=tuple(checks.rows), statement=statement, report=report)
 
 
 def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExportPorts) -> frozenset[str]:
@@ -501,7 +501,7 @@ def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExp
 
 
 @dataclass(frozen=True, slots=True)
-class _ExistingSigningKeypairCapability:
+class ExistingSigningKeypairCapability:
     """Keep report reconstruction bound to the keypair already read."""
 
     keypair: ReviewPackageSigningKeypair
@@ -520,8 +520,8 @@ class _ExistingSigningKeypairCapability:
         return self.keypair
 
 
-def _trace_against_store(
-    reading: _DocumentReading,
+def trace_against_store(
+    reading: DocumentReading,
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
@@ -578,7 +578,7 @@ def _trace_against_store(
             revision.calculation_revision_id,
             active_bucket_id=active_bucket_id,
             export_ports=export_ports,
-            signing_keypair=_ExistingSigningKeypairCapability(keypair),
+            signing_keypair=ExistingSigningKeypairCapability(keypair),
             operation=operation,
             report_language=report.header.report_language,
             exported_at=statement.exported_at,
@@ -671,7 +671,7 @@ def verify_calculation_summary(
     store_rows: tuple[CalculationSummaryVerificationCheck, ...] = ()
     store_checked = False
     if store is not None and reading.statement is not None and reading.report is not None:
-        store_rows = _trace_against_store(
+        store_rows = trace_against_store(
             reading,
             active_bucket_id=store.active_bucket_id,
             export_ports=store.export_ports,

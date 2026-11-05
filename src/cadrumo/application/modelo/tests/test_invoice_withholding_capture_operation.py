@@ -63,7 +63,7 @@ from ..invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCaptureReport,
     ModeloInvoiceWithholdingCaptureRequest,
 )
-from ..invoice_withholding_capture_execution import ModeloInvoiceWithholdingCaptureExecutor, _PreparedCapture
+from ..invoice_withholding_capture_execution import ModeloInvoiceWithholdingCaptureExecutor, PreparedCapture
 from ..invoice_withholding_capture_operation import (
     build_modelo_invoice_withholding_capture_definition,
     build_modelo_invoice_withholding_capture_registration,
@@ -335,7 +335,7 @@ class _WithholdingService(WithholdingWindowServiceFixture):
         super().__init__(baseline=_BASELINE, generation=1, observations=observations, include_audit=False)
 
 
-def _prepared() -> _PreparedCapture:
+def _prepared() -> PreparedCapture:
     service = _WithholdingService()
     ports = SimpleNamespace(
         profile_id=str(_PROFILE),
@@ -344,7 +344,7 @@ def _prepared() -> _PreparedCapture:
         withholding_observation_service=service,
     )
     capture = SimpleNamespace(command=object(), scope=_SCOPE, catalogue_read_revision_id="b" * 64)
-    return _PreparedCapture(
+    return PreparedCapture(
         ports=cast(ModeloInvoiceWithholdingCapturePorts, cast(object, ports)),
         cadence=cast(WithholdingFilerCadence, object()),
         capture=cast(InvoiceWithholdingCapture, cast(object, capture)),
@@ -473,7 +473,7 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     )
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
-    def refuse_before_commit(*_args: object) -> _PreparedCapture:
+    def refuse_before_commit(*_args: object) -> PreparedCapture:
         raise InvoiceWithholdingEvidenceError("not_a_retenedor_liability")
 
     monkeypatch.setattr(executor, "_prepare", refuse_before_commit)
@@ -528,7 +528,7 @@ def test_invoice_retencion_defects_refuse_naming_every_defect_under_their_own_co
         InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
     )
 
-    def refuse_with_defects(*_args: object) -> _PreparedCapture:
+    def refuse_with_defects(*_args: object) -> PreparedCapture:
         raise InvoiceWithholdingDefectsError(defects)
 
     monkeypatch.setattr(executor, "_prepare", refuse_with_defects)

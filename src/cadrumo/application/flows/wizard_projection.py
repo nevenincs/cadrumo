@@ -28,8 +28,8 @@ from .definition import (
     FlowPage,
     FlowSection,
     FlowVisibility,
+    locale_copy_ref,
 )
-from .definition import locale_copy_ref as _locale_ref
 
 if TYPE_CHECKING:
     from ..wizard.models import (
@@ -55,8 +55,8 @@ def flow_definition_from_wizard_flow(
     """
     return FlowDefinition(
         id=flow.id,
-        title=_locale_ref(str(flow.title)),
-        description=_locale_ref(str(flow.description)),
+        title=locale_copy_ref(str(flow.title)),
+        description=locale_copy_ref(str(flow.description)),
         sections=tuple(_section(section) for section in flow.sections),
         answers_model=flow.answers_model,
         checkpoint=checkpoint,
@@ -66,7 +66,7 @@ def flow_definition_from_wizard_flow(
 def _section(section: WizardSection) -> FlowSection:
     return FlowSection(
         id=section.id,
-        title=_locale_ref(str(section.title)),
+        title=locale_copy_ref(str(section.title)),
         items=tuple(_page(question) for question in section.questions),
     )
 
@@ -83,8 +83,8 @@ def _page(question: WizardQuestion) -> FlowPage:
     return FlowPage(
         id=question.id,
         widget=widget,
-        prompt=_locale_ref(str(question.prompt)),
-        help=_locale_ref(str(question.help)) if question.help is not None else None,
+        prompt=locale_copy_ref(str(question.prompt)),
+        help=locale_copy_ref(str(question.help)) if question.help is not None else None,
         choices=tuple(_choice(choice) for choice in question.choices),
         default=question.default,
         required=question.required,
@@ -97,8 +97,8 @@ def _page(question: WizardQuestion) -> FlowPage:
 def _choice(choice: WizardChoice) -> FlowChoice:
     return FlowChoice(
         value=choice.value,
-        label=_locale_ref(str(choice.label)),
-        description=_locale_ref(str(choice.description)) if choice.description is not None else None,
+        label=locale_copy_ref(str(choice.label)),
+        description=locale_copy_ref(str(choice.description)) if choice.description is not None else None,
     )
 
 
@@ -107,9 +107,9 @@ def _visibility(
 ) -> FlowCondition | FlowVisibility | None:
     if visible_when is None:
         return None
-    from ..wizard.models import WizardCondition as _WizardCondition
+    from ..wizard.models import WizardCondition
 
-    if isinstance(visible_when, _WizardCondition):
+    if isinstance(visible_when, WizardCondition):
         return _condition(visible_when)
     return FlowVisibility(any_of=tuple(_condition(clause) for clause in visible_when.any_of))
 

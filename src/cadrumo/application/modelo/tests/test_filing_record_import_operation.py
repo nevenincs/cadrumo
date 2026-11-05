@@ -54,9 +54,9 @@ from ..filing_record_import_contracts import (
     ModeloFilingRecordImportRequest,
 )
 from ..filing_record_import_operation import (
-    _project_filing_record_import,
     build_modelo_filing_record_import_definition,
     build_modelo_filing_record_import_registration,
+    project_filing_record_import,
 )
 from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 
@@ -316,9 +316,9 @@ def test_public_result_omits_source_locators_settlement_and_transaction_ids() ->
     )
     report = ModeloFilingRecordImportOperationReport(projection=projection, local_write_performed=True)
 
-    assert _project_filing_record_import(report, receipt) == projection
+    assert project_filing_record_import(report, receipt) == projection
     with pytest.raises(ValueError):
-        _project_filing_record_import(
+        project_filing_record_import(
             report.model_copy(update={"local_write_performed": False}),
             receipt,
         )
@@ -346,7 +346,7 @@ def test_source_refuses_discarded_or_stale_exact_work_unit_before_import(
     # The discarded unit is the caller's own, so the refusal is its declared
     # terminal lifecycle verdict, the one every frontend renders, not a denial.
     with pytest.raises(WorkUnitMutationRefusedError) as inactive:
-        operation_module._selected_work_unit(
+        operation_module.selected_work_unit(
             cast(CalculationActionPorts, cast(object, ports)),
             cast(ModeloFilingRecordImportRequest, _request(source_path="C:/evidence.xlsx").payload),
         )
@@ -365,7 +365,7 @@ def test_source_refuses_discarded_or_stale_exact_work_unit_before_import(
         lambda **_kwargs: "different-law-revision",
     )
     with pytest.raises(ProfileAccessRefusedError) as stale:
-        operation_module._require_law_current_source_work_unit(
+        operation_module.require_law_current_source_work_unit(
             active,
             operation=cast(PinnedAuthorityOperation, object()),
         )

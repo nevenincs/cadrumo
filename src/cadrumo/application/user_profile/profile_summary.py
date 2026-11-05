@@ -125,7 +125,7 @@ def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
         observed = snapshot.get(resolved_root)
         if observed is not None:
             return observed
-    inventory = _observe_summary_inventory(resolved_root)
+    inventory = observe_summary_inventory(resolved_root)
     if snapshot is not None and inventory.recognized:
         snapshot[resolved_root] = inventory
     return inventory
@@ -197,7 +197,7 @@ def profile_listing(*, root: Path | None = None) -> ProfileListing:
     )
 
 
-def _observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
+def observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
     try:
         witnesses = profile_custody_port().list_committed_capsule_summaries(root=root)
     except ProfileCustodyConcurrentChangeError as exc:

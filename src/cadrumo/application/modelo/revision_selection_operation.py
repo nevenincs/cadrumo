@@ -206,7 +206,7 @@ def _confirmed_external_revision_record(
     )
 
 
-def _filed_external_without_report(
+def revision_selection_operation_filed_external_without_report(
     revision: CalculationRevision,
     unit: WorkUnit,
     bundle: VerificationRepositoryBundle,
@@ -260,7 +260,7 @@ def _require_selected_revision_grant_evidence(
     filed_external_without_report = (
         not granting
         and not filed_amendment_without_report
-        and _filed_external_without_report(revision, unit, bundle, profile_id=profile_id)
+        and revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=profile_id)
     )
     if len(granting) > 1 or (
         (revision.verified_at is not None) != bool(granting)

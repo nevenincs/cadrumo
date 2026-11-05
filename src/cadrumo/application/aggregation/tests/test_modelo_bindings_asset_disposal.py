@@ -50,10 +50,10 @@ from .ledger_source_mesh_support import (
     BUCKET_ID,
     InMemoryTransactionCatalogueRepository,
     StaticActivityAssetHistoryRepository,
-    _register_claim,
-    _revision,
+    ledger_source_mesh_revision,
     reasons,
     register_asset,
+    register_claim,
     resolve_m100,
     resolve_m130,
 )
@@ -79,7 +79,7 @@ def disposed_asset_history(
     transaction_id: str = _TRANSACTION,
 ) -> ActivityAssetHistory:
     asset = register_asset("furniture", transaction_id=transaction_id, in_service=in_service)
-    claims = () if prior_claim is None else (_register_claim(asset, amount=Decimal(prior_claim), tax_year=2024),)
+    claims = () if prior_claim is None else (register_claim(asset, amount=Decimal(prior_claim), tax_year=2024),)
     history = ActivityAssetHistory(revisions=(asset,), claims=claims)
     baja = ActivityAssetDisposal(
         disposal_date=on,
@@ -119,7 +119,7 @@ def _income(
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
-            revision=_revision("130", _M130),
+            revision=ledger_source_mesh_revision("130", _M130),
         ),
     )
 
@@ -160,7 +160,7 @@ def test_a_sale_gain_enters_its_box_and_states_clave_5_on_the_row() -> None:
 def test_the_stated_clave_is_not_reported_as_a_missing_box() -> None:
     resolution = resolve_m100(disposed_asset_history())
 
-    checked = apply_expected_missing_binding_diagnostics(_revision("100", "2025"), resolution)
+    checked = apply_expected_missing_binding_diagnostics(ledger_source_mesh_revision("100", "2025"), resolution)
 
     assert "unresolved_binding" not in reasons(checked)
     assert not {str(binding) for binding in checked.unresolved_binding_ids} & {
@@ -209,7 +209,7 @@ def test_each_supported_edition_binds_every_route() -> None:
         ActivityAssetDisposalRoute.TRANSMISSION_ELEMENT_TYPE: "1626",
     }
     for year in ("2022", "2023", "2024", "2025"):
-        revision = _revision("100", year)
+        revision = ledger_source_mesh_revision("100", year)
         assert dict(activity_asset_disposal_route_casillas(revision)) == expected
         casilla = next(item for item in revision.casillas if item.id == "1626")
         assert casilla.input_kind == "bound"

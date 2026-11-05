@@ -42,7 +42,7 @@ from ..core.config import (
 from ..core.config_support import StorageRouteClassification, StorageRouteKind
 from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ..core.i18n.render import tr
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
@@ -109,7 +109,7 @@ class StorageWritePolicyDecision(BaseModel):
             never carry a failed verdict.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     allowed: bool
     code: StorageWritePolicyCode

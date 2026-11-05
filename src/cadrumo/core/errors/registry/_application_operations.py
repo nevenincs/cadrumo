@@ -339,7 +339,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.operations.observation._DefinitionContractMismatchError",
+        "cadrumo.application.operations.observation.DefinitionContractMismatchError",
         ErrorCode(
             code="INTERNAL_OPERATION_DEFINITION_CONTRACT_MISMATCH",
             category=ErrorCategory.INTERNAL,

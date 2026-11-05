@@ -39,8 +39,6 @@ from ....domain.calculations.registry.schema_rounding import RegistryRoundingCod
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence
 from ....domain.period import calculation_filing_date
-from ._styling import compute_styling
-from ._translator import is_translatable, translate_formula
 from .errors import CalcSheetsEngineError
 from .evidence import sheet_evidence_from_ledger_filing
 from .fictional_rows import fictional_unused_form_rows
@@ -73,7 +71,9 @@ from .records import (
 )
 from .relation_cells import relation_value_cells, relation_values_with_registry_grounding
 from .row_sets import collect_row_sets
+from .styling import compute_styling
 from .template_source import WorkbookTemplateSource
+from .translator import is_translatable, translate_formula
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
 # registry snapshot. Increment it whenever a change can move an operator
@@ -92,7 +92,7 @@ _SCALAR_TARIFF_DATA_TYPES: Final[Mapping[LegalParameterDataType, Literal["decima
 }
 
 
-def _rounding_rule_for(
+def rounding_rule_for(
     formula: FormulaDefinition,
 ) -> tuple[SheetRoundingRuleValue, int | None]:
     """Map a registry rounding code to (rule_name, scale).
@@ -376,7 +376,7 @@ def _formula_cells(
             continue
         formula = formulas[casilla.formula]
         body = translate_formula(formula.expression, layout=layout)
-        rule, scale = _rounding_rule_for(formula)
+        rule, scale = rounding_rule_for(formula)
         cells.append(
             SheetFormulaCell(
                 address=layout.calculos_cells[casilla.id],
@@ -572,7 +572,7 @@ def _provenance_rows(
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        rule, _ = _rounding_rule_for(formula)
+        rule, _ = rounding_rule_for(formula)
         rows.append(
             SheetProvenanceRow(
                 casilla_id=casilla.id,

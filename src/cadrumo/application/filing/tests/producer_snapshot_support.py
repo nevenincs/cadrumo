@@ -52,17 +52,17 @@ from ..producer_snapshot import (
     TaxpayerIdentityFacts,
 )
 
-_TAXPAYER_TAX_ID = "12345678Z"
+TAXPAYER_TAX_ID = "12345678Z"
 
 
-_PRESENTER_TAX_ID = "00000000T"
+PRESENTER_TAX_ID = "00000000T"
 
 
-def _presenter() -> PresenterIdentity:
-    return PresenterIdentity(tax_id=_PRESENTER_TAX_ID, full_name="Gestoría Ejemplo")
+def producer_snapshot_presenter() -> PresenterIdentity:
+    return PresenterIdentity(tax_id=PRESENTER_TAX_ID, full_name="Gestoría Ejemplo")
 
 
-def _taxpayer_identity() -> TaxpayerIdentityFacts:
+def taxpayer_identity() -> TaxpayerIdentityFacts:
     return TaxpayerIdentityFacts(
         legal_name=None,
         given_name="María",
@@ -71,7 +71,7 @@ def _taxpayer_identity() -> TaxpayerIdentityFacts:
     )
 
 
-def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
+def elections(disposition: ResultDisposition) -> FilingElectionFacts:
     return FilingElectionFacts(
         result_disposition=disposition,
         payment=(
@@ -82,7 +82,7 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
     )
 
 
-def _m303_profile() -> ModeloIVAProfile:
+def m303_profile() -> ModeloIVAProfile:
     return ModeloIVAProfile(
         tax_territory=M303TaxTerritory.from_registry("common_regime"),
         regime_composition=M303RegimeComposition.from_registry("general"),
@@ -113,7 +113,7 @@ def _covered_prorrata_register(filing_year: int) -> ProrrataRegister:
     )
 
 
-def _empty_m303_export_arrivals(
+def empty_m303_export_arrivals(
     filing_year: int,
 ) -> tuple[ProrrataRegister, BienesInversionIvaRegister, RegistroRegularizacionResult]:
     register = _covered_prorrata_register(filing_year)
@@ -127,15 +127,15 @@ def _empty_m303_export_arrivals(
     return register, bienes_register, regularisation
 
 
-def _m303_filing_facts(
+def m303_filing_facts(
     *,
     filing_year: int = 2026,
     period_code: str = "4T",
     annual_volume_nonzero: bool = False,
 ) -> M303FilingFacts:
     period = Period.from_year_and_code(filing_year, period_code)
-    register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
-    evidence = _m303_instance_evidence(period)
+    register, bienes_register, regularisation = empty_m303_export_arrivals(period.filing_year)
+    evidence = m303_instance_evidence(period)
     with bundled_indexed_authority().operation() as operation:
         prorrata_transition = resolve_m303_prorrata_transition_arrival(
             period=period, prorrata_register=register, operation=operation
@@ -197,7 +197,7 @@ def m303_exonerado_390_evidence(*, applicable: bool) -> M303Exonerado390FilingEv
     )
 
 
-def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
+def m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
     with bundled_indexed_authority().operation() as operation:
         scope = M303RegimenSimplificadoScopeDecision(
             scope=m303_regime_composition_simplified_scope("general", authority=operation),

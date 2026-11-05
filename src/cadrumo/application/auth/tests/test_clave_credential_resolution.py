@@ -31,7 +31,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import Settings, override_settings
 from ...user_profile.preflight import build_profile_preflight_requirement
-from .. import sessions as _sessions
+from .. import sessions
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
@@ -80,8 +80,8 @@ def _bind_profile_facts(
     global _ACTIVE_PROFILE_FACTS
     _ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
     monkeypatch.setattr(
-        _sessions,
-        "_active_profile_auth_facts",
+        sessions,
+        "active_profile_auth_facts",
         lambda **_: _ACTIVE_PROFILE_FACTS,
     )
     with validating_governed_facts(_profile_fact_operation):

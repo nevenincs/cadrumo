@@ -21,14 +21,14 @@ from cadrumo.application.actividad_asset.operation_dtos import (
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .test_baja_correction import _ASSET, _disposed
+from .test_baja_correction import ASSET, disposed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _forecast_json() -> str:
-    operations, _, _ = _disposed()
-    forecast = operations.forecast(asset_id=_ASSET, covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1))
+    operations, _, _ = disposed()
+    forecast = operations.forecast(asset_id=ASSET, covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1))
     return ScheduledAmortizationChargeSnapshot.from_domain(forecast).model_dump_json()
 
 
@@ -62,7 +62,7 @@ def test_a_forecast_with_a_wrong_last_day_is_refused_through_the_claim_request()
 
 
 def test_a_claim_snapshot_states_its_last_day_and_keeps_its_identity() -> None:
-    operations, repository, _ = _disposed()
+    operations, repository, _ = disposed()
     claim: AmortizationClaim = next(item for item in repository.history.claims if item.tax_year == 2025)
 
     snapshot = AmortizationClaimSnapshot.from_domain(claim)

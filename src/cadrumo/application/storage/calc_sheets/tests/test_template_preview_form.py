@@ -14,7 +14,7 @@ from ..export_tables import export_identity_stamps
 from ..form_workbook import add_template_preview_form
 from ..records import SheetGuideContent, TabName
 from ..template_source import WorkbookTemplateSource
-from .test_form_context_fields import _producer, _with_context
+from .test_form_context_fields import producer, with_context
 from .test_form_workbook import form_source as form_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -109,7 +109,7 @@ def test_preview_refuses_every_coordinate_or_content_mismatch(form_source, field
 )
 def test_preview_reads_only_illustrative_frame_not_producer_facts(form_source, monkeypatch, producer, draft, expected):
     snapshot, _ = form_source
-    snapshot, _ = _with_context(snapshot, producer=producer, draft=draft)
+    snapshot, _ = with_context(snapshot, producer=producer, draft=draft)
     source, plan = _preview(snapshot)
 
     def forbidden(*args, **kwargs):
@@ -160,14 +160,14 @@ def test_preview_repeating_rows_are_unknown_and_never_read_saved_revision(form_s
 @pytest.mark.usefixtures("operation")
 def test_preview_projects_only_explicit_illustrative_identity(form_source, monkeypatch, key, expected):
     snapshot, _ = form_source
-    snapshot, _ = _with_context(snapshot, producer=key)
+    snapshot, _ = with_context(snapshot, producer=key)
     source, plan = _preview(snapshot)
 
     def forbidden(*args, **kwargs):
         pytest.fail("illustrative identity invoked a production context reader")
 
     monkeypatch.setattr("cadrumo.application.storage.calc_sheets.form_workbook.form_context_value", forbidden)
-    rendered = add_template_preview_form(plan, source, illustrative_producer=_producer())
+    rendered = add_template_preview_form(plan, source, illustrative_producer=producer())
     label = next(c for c in rendered.value_cells if c.address.tab is TabName.FORM and c.value == "Dato declarado")
     value = next(
         c
@@ -184,4 +184,4 @@ def test_preview_refuses_other_modelo_illustrative_identity_even_without_context
     snapshot, _ = form_source
     source, plan = _preview(snapshot)
     with pytest.raises(CalcSheetsEngineError, match="another modelo"):
-        add_template_preview_form(plan, source, illustrative_producer=_producer("131"))
+        add_template_preview_form(plan, source, illustrative_producer=producer("131"))

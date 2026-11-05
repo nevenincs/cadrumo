@@ -14,7 +14,7 @@ from ....domain.user_profile.values import ProfileSetupState
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
-    _assert_profile_identity_available_for_deferred_check,
+    assert_profile_identity_available_for_deferred_check,
 )
 from .leased_profile_authority import leased_profile_decode_context
 
@@ -33,7 +33,7 @@ def test_no_provider_binds_a_session_against_a_blank_profile_identity(kind: Auth
     """Every provider sweep reaches the same cleared-identity refusal policy."""
     del kind
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_profile_identity_available_for_deferred_check(
+        assert_profile_identity_available_for_deferred_check(
             _complete_profile_without_identity(), profile_decode_context=leased_profile_decode_context()
         )
 
@@ -41,10 +41,10 @@ def test_no_provider_binds_a_session_against_a_blank_profile_identity(kind: Auth
 def test_a_profile_still_in_setup_may_still_authenticate() -> None:
     """An incomplete profile may authenticate while it records its identity."""
     facts = ClaveAuthFacts(profile_setup_state=ProfileSetupState.INCOMPLETE)
-    _assert_profile_identity_available_for_deferred_check(facts, profile_decode_context=leased_profile_decode_context())
+    assert_profile_identity_available_for_deferred_check(facts, profile_decode_context=leased_profile_decode_context())
 
 
 def test_a_recorded_identity_is_unaffected() -> None:
     """A complete profile carrying its identity is not refused by this guard."""
     facts = ClaveAuthFacts(tax_id=_TAX_ID, profile_setup_state=ProfileSetupState.COMPLETE)
-    _assert_profile_identity_available_for_deferred_check(facts, profile_decode_context=leased_profile_decode_context())
+    assert_profile_identity_available_for_deferred_check(facts, profile_decode_context=leased_profile_decode_context())

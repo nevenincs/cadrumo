@@ -24,7 +24,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from ...aggregation.ledger_membership import LedgerSourceMembership
-from .._ledger_drift_gate import ledger_drift_findings
+from ..ledger_drift_gate import ledger_drift_findings
 from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .empty_borrador_revision_support import empty_borrador_revision
 

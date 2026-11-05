@@ -28,7 +28,7 @@ import pytest
 
 from ....core.config_support import LLMProvider
 from ....core.provenance_stamp import build_provenance_stamp, provenance_stamp_transport
-from ..llm_classification import _transport_from_provenance
+from ..llm_classification import transport_from_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +42,7 @@ def test_the_audit_transport_matches_the_canonical_parser(provider: LLMProvider)
     """
     stamp = build_provenance_stamp(provider=provider, reader="text", model="m1")
 
-    assert _transport_from_provenance(stamp) == provenance_stamp_transport(stamp)
+    assert transport_from_provenance(stamp) == provenance_stamp_transport(stamp)
 
 
 @pytest.mark.parametrize("provider", list(LLMProvider))
@@ -55,7 +55,7 @@ def test_the_reader_is_not_glued_onto_the_transport(provider: LLMProvider) -> No
     """
     stamp = build_provenance_stamp(provider=provider, reader="text", model="m1")
 
-    published = _transport_from_provenance(stamp)
+    published = transport_from_provenance(stamp)
 
     # The enum spells its members upper-case and the stamp grammar lower-cases
     # them, so the comparison folds rather than asserting the enum's spelling --
@@ -75,7 +75,7 @@ def test_a_second_reader_does_not_move_the_transport() -> None:
     vision = build_provenance_stamp(provider=LLMProvider.AGENT, reader="vision", model="m1")
 
     assert text != vision
-    assert _transport_from_provenance(text) == _transport_from_provenance(vision)
+    assert transport_from_provenance(text) == transport_from_provenance(vision)
 
 
 def test_an_unreadable_stamp_surfaces_rather_than_being_blanked() -> None:
@@ -85,5 +85,5 @@ def test_an_unreadable_stamp_surfaces_rather_than_being_blanked() -> None:
     and would drop exactly the artefact a consent withdrawal most needs to see.
     Falling back to empty would hide it just as well.
     """
-    assert _transport_from_provenance("not-a-stamp") == "not-a-stamp"
+    assert transport_from_provenance("not-a-stamp") == "not-a-stamp"
     assert provenance_stamp_transport("not-a-stamp") is None

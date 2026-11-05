@@ -21,9 +21,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .. import _edit_execution, revision_persistence
-from .. import edit_models as _edit_models
-from .. import edit_services as _edit_services
+from .. import edit_execution, edit_models, edit_services, revision_persistence
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationResultReceiptV1
 from ..edit_models import (
     ModeloEditBaselineV1,
@@ -32,7 +30,7 @@ from ..edit_models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EDIT_CONTRACT_MODULES = (_edit_models, _edit_services, _edit_execution, revision_persistence)
+_EDIT_CONTRACT_MODULES = (edit_models, edit_services, edit_execution, revision_persistence)
 
 _MODELO = "131"
 _FILING_YEAR = 2025

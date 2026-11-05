@@ -22,7 +22,7 @@ from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, 
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+from ..bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

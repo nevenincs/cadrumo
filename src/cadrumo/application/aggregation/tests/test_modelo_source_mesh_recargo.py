@@ -30,7 +30,7 @@ def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
     where an unscreened one is only unscreened. That gap is a limit of the
     invoice-level field, not of this screen.
     """
-    from .._modelo_bindings_invoice_iva import _sole_recargo_bearing_line_index
+    from ..modelo_bindings_invoice_iva import sole_recargo_bearing_line_index
 
     mixed = Invoice.model_validate(
         {
@@ -68,4 +68,4 @@ def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
         },
     )
 
-    assert _sole_recargo_bearing_line_index(mixed) is None
+    assert sole_recargo_bearing_line_index(mixed) is None

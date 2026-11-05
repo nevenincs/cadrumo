@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _WHEN = datetime(2026, 9, 27, tzinfo=UTC)
 
 
-def _prepared(
+def prepared(
     repository: ProfileBundleExportJournalRepository, root: Path, profile_id: str, label: str
 ) -> tuple[ProfileBundleExportOperation, Path]:
     destination = root / f"{label}.json"
@@ -65,8 +65,8 @@ def _prepared(
 def test_scoped_reconciliation_cleans_only_own_orphan_and_discloses_only_own_operation(tmp_path: Path) -> None:
     own_id, foreign_id = str(uuid4()), str(uuid4())
     repository = ProfileBundleExportJournalRepository(storage_root=tmp_path)
-    own, own_staged = _prepared(repository, tmp_path, own_id, "own")
-    foreign, foreign_staged = _prepared(repository, tmp_path, foreign_id, "foreign")
+    own, own_staged = prepared(repository, tmp_path, own_id, "own")
+    foreign, foreign_staged = prepared(repository, tmp_path, foreign_id, "foreign")
     foreign_before = foreign_staged.read_bytes()
 
     with bundled_indexed_authority().operation() as authority:
@@ -90,7 +90,7 @@ def test_scoped_reconciliation_cleans_only_own_orphan_and_discloses_only_own_ope
 def test_unknown_journal_ownership_refuses_scoped_recovery_without_identity_disclosure(tmp_path: Path) -> None:
     own_id = str(uuid4())
     repository = ProfileBundleExportJournalRepository(storage_root=tmp_path)
-    own, own_staged = _prepared(repository, tmp_path, own_id, "own")
+    own, own_staged = prepared(repository, tmp_path, own_id, "own")
     unknown_id = "d" * 64
     unknown_path = repository.path_for(unknown_id)
     unknown_path.write_text("{invalid journal", encoding="utf-8")

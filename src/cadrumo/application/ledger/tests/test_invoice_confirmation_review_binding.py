@@ -45,10 +45,10 @@ def test_stale_review_refuses_before_candidate_or_persistence(monkeypatch: pytes
     preparation = type("Preparation", (), {"attachment_id": source_sha256, "draft": draft})()
     candidate_calls: list[str] = []
 
-    monkeypatch.setattr(confirmation, "_prepare_invoice_confirmation", lambda **_kwargs: preparation)
+    monkeypatch.setattr(confirmation, "prepare_invoice_confirmation", lambda **_kwargs: preparation)
     monkeypatch.setattr(
         confirmation,
-        "_build_confirmed_invoice_candidate",
+        "build_confirmed_invoice_candidate",
         lambda **_kwargs: candidate_calls.append("built"),
     )
     expected_source = "b" * 64 if stale_part == "source" else source_sha256

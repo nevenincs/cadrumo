@@ -34,9 +34,9 @@ from ....domain.iva.schema import InvoiceKind, IvaRateKind, spanish_eu_member_st
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from .._modelo_bindings_invoice_iva import ScreenedInvoiceIva, screened_invoice_iva_observations
 from ..errors import AggregationValidationError
 from ..invoice_devengo import invoice_devengo_in_period
+from ..modelo_bindings_invoice_iva import ScreenedInvoiceIva, screened_invoice_iva_observations
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

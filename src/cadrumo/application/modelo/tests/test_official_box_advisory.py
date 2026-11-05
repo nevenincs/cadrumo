@@ -13,8 +13,8 @@ from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
 )
 from ....domain.calculations.registry.tests.published_authority import published_authored_revision
-from .._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ..action_errors import ModeloVerificationPredicateMalformedError
+from ..official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ..verification_predicates import VerificationPredicateRefusal, VerificationPredicateRoute
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]

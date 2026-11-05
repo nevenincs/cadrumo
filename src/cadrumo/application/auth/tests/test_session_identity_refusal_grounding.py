@@ -16,9 +16,9 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..sessions import (
-    _PROFILE_TAX_ID_PATH,
-    _grounded_profile_identity_requirement,
-    _profile_field_label,
+    PROFILE_TAX_ID_PATH,
+    grounded_profile_identity_requirement,
+    profile_field_label,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -37,7 +37,7 @@ _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
 
 def _label() -> str:
     return build_profile_preflight_requirement(
-        _PROFILE_TAX_ID_PATH,
+        PROFILE_TAX_ID_PATH,
         schema=published_profile_schema(),
     ).label
 
@@ -46,18 +46,18 @@ def test_the_field_label_differs_from_both_its_path_and_its_selector_token() -> 
     """Anchor: the assertions below are vacuous if any of the three coincide."""
     label = _label()
 
-    assert label != _PROFILE_TAX_ID_PATH
+    assert label != PROFILE_TAX_ID_PATH
     assert label != _TAX_ID_SELECTOR
 
 
 def test_the_refusal_text_names_the_field_by_its_operator_label() -> None:
-    assert _label() in _grounded_profile_identity_requirement(profile_decode_context=_PROFILE_DECODE_CONTEXT)
+    assert _label() in grounded_profile_identity_requirement(profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
 
 def test_the_refusal_text_carries_no_raw_identifier_for_the_field() -> None:
-    rendered = _grounded_profile_identity_requirement(profile_decode_context=_PROFILE_DECODE_CONTEXT)
+    rendered = grounded_profile_identity_requirement(profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
-    assert _PROFILE_TAX_ID_PATH not in rendered
+    assert PROFILE_TAX_ID_PATH not in rendered
     assert _TAX_ID_SELECTOR not in rendered
 
 
@@ -71,7 +71,7 @@ _CLAVE_FIELD_PATHS = (
 @pytest.mark.parametrize("path", _CLAVE_FIELD_PATHS)
 def test_each_clave_credential_field_label_differs_from_its_path(path: str) -> None:
     """Anchor: the assertion below is vacuous for any field where they match."""
-    assert _profile_field_label(path, profile_decode_context=_PROFILE_DECODE_CONTEXT) != path
+    assert profile_field_label(path, profile_decode_context=_PROFILE_DECODE_CONTEXT) != path
 
 
 @pytest.mark.parametrize("path", _CLAVE_FIELD_PATHS)
@@ -82,7 +82,7 @@ def test_no_clave_credential_rendering_leaks_its_storage_path(path: str) -> None
     what distinguishes a resolved label from the builder's documented fallback
     of returning the argument unchanged.
     """
-    rendered = _profile_field_label(path, profile_decode_context=_PROFILE_DECODE_CONTEXT)
+    rendered = profile_field_label(path, profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
     assert rendered
     assert path not in rendered

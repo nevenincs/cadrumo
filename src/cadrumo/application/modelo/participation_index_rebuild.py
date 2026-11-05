@@ -28,7 +28,7 @@ from __future__ import annotations
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
@@ -60,7 +60,7 @@ class ParticipationRebuildStats(BaseModel):
             or reverted to borrador since the last rebuild.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_count: NonNegativeInt
     participation_count: NonNegativeInt

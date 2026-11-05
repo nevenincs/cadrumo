@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -114,7 +114,7 @@ class DataPrepStep(BaseModel):
             step is finished.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     step_id: DataPrepStepId
     state: DataPrepStepState
@@ -136,7 +136,7 @@ class DataPrepWalkthrough(BaseModel):
             :attr:`~application.overview.data_prep.DataPrepStepState.DONE`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     filing_year: int

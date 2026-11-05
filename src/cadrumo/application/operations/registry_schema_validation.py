@@ -21,8 +21,8 @@ from pydantic.json_schema import DefsRef, GenerateJsonSchema, JsonRef
 
 from ...core.hex import HEX_PATTERN_64
 from ...core.type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_str_keyed_dict
-from ._dataclass_fields import dataclass_instance_fields
-from ._model_contract import require_strict_frozen_operation_model_graph
+from .dataclass_fields import dataclass_instance_fields
+from .model_contract import require_strict_frozen_operation_model_graph
 
 #: Field-name tokens a credential-free journal request may not carry.
 #:
@@ -103,7 +103,7 @@ _SCHEMA_COMPILATION_MEMO: ContextVar[_SchemaCompilationMemo | None] = ContextVar
 _SCHEMA_ATOMIC_TYPES = frozenset((str, int, float, bool, bytes, type(None)))
 
 
-class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
+class UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
     """Avoid definition deduplication only when every preferred name is unique.
 
     Pydantic's naming fixed point hashes each definition under multiple aliases.
@@ -503,7 +503,7 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     original_core_schemas = (
         {nested: nested.__pydantic_core_schema__ for nested in model_graph} if model_graph is not None else {}
     )
-    closed_schema = _generate_closed_model_schema(model_type)
+    closed_schema = generate_closed_model_schema(model_type)
     _remember_compiled_model_schema(
         memo,
         model_type,
@@ -526,7 +526,7 @@ def strict_model_input_json_schema(model_type: type[BaseModel]) -> dict[str, obj
     require_strict_frozen_operation_model_graph(model_type, path="input schema")
     try:
         schema: object = model_type.model_json_schema(
-            mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+            mode="validation", schema_generator=UnambiguousDefinitionsSchemaGenerator
         )
     except PydanticInvalidForJsonSchema as error:
         raise ValueError("typed input schema model must have a closed JSON schema") from error
@@ -558,7 +558,7 @@ def _cached_model_schema(
     return _copy_model_schema(compiled.schema)
 
 
-def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, object]:
+def generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Generate both public schema modes and validate their closed shape."""
     validation_schema: object
     serialization_schema: object
@@ -567,10 +567,10 @@ def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, obje
             BaseModel.model_json_schema, "__func__", None
         ):
             validation_schema = model_type.model_json_schema(
-                mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+                mode="validation", schema_generator=UnambiguousDefinitionsSchemaGenerator
             )
             serialization_schema = model_type.model_json_schema(
-                mode="serialization", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+                mode="serialization", schema_generator=UnambiguousDefinitionsSchemaGenerator
             )
         else:
             # An overridden or decorated model method remains authoritative.

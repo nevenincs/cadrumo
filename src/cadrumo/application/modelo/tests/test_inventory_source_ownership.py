@@ -12,10 +12,10 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._registry_helpers import validate_casilla_input_ids
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

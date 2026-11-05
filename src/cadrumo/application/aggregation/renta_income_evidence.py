@@ -17,7 +17,7 @@ from typing import NamedTuple
 from pydantic import BaseModel
 
 from ...core.aggregation import LedgerWithholdingDerivation
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import decompose_invoice
@@ -67,7 +67,7 @@ class SalesInvoiceEvidenceRefusal(StrEnum):
     NO_EUR_VALUE = "sales_invoice_no_eur_value"
 
 
-class _SalesInvoiceEvidencePayload(BaseModel):
+class SalesInvoiceEvidencePayload(BaseModel):
     """The figures a trusted linked sales invoice contributes to one row.
 
     Empty when the row links no invoice, which is the ordinary case and not a
@@ -76,7 +76,7 @@ class _SalesInvoiceEvidencePayload(BaseModel):
     over the transaction's own tax substrate.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
@@ -231,7 +231,7 @@ def sales_invoice_evidence_payload(
     bucket_id: str,
     transaction: Transaction,
     receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None = None,
-) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
+) -> tuple[SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures a linked sales invoice contributes, or why it is refused.
 
     Derive-on-read: nothing is copied onto the transaction at link time, so a
@@ -258,16 +258,16 @@ def sales_invoice_evidence_payload(
     invoice_id = transaction.invoice_id
     invoice = None if invoice_id is None else invoices.get(invoice_id)
     if invoice is None:
-        return _SalesInvoiceEvidencePayload(), None
+        return SalesInvoiceEvidencePayload(), None
     refusal = _linkage_refusal(invoice, transaction, bucket_id=bucket_id)
     if refusal is not None:
-        return _SalesInvoiceEvidencePayload(), refusal
+        return SalesInvoiceEvidencePayload(), refusal
     return _linked_invoice_payload(invoice, transaction, receipts_by_invoice=receipts_by_invoice)
 
 
 def _linked_invoice_payload(
     invoice: Invoice, transaction: Transaction, *, receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None
-) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
+) -> tuple[SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures of an invoice already linked back to the row: its part-payment share, else the whole."""
     base_eur = invoice.base_total_eur
     iva_eur = invoice.iva_total_eur
@@ -276,7 +276,7 @@ def _linked_invoice_payload(
     if share is not None and base_eur is not None and iva_eur is not None:
         if receipts is not None and invoice_settled_in_parts(invoice, receipts):
             return (
-                _SalesInvoiceEvidencePayload(
+                SalesInvoiceEvidencePayload(
                     taxable_base=_settled_part_of(invoice, transaction, receipts, base_eur),
                     iva_amount=_settled_part_of(invoice, transaction, receipts, iva_eur),
                     retencion_amount=_settled_part_of(
@@ -286,7 +286,7 @@ def _linked_invoice_payload(
                 None,
             )
         return (
-            _SalesInvoiceEvidencePayload(
+            SalesInvoiceEvidencePayload(
                 taxable_base=round_to_cents(base_eur * share),
                 iva_amount=round_to_cents(iva_eur * share),
                 retencion_amount=round_to_cents((invoice.retention_amount_eur or Decimal("0")) * share),
@@ -296,11 +296,11 @@ def _linked_invoice_payload(
         )
     refusal = _whole_invoice_refusal(invoice, transaction)
     if refusal is not None:
-        return _SalesInvoiceEvidencePayload(), refusal
+        return SalesInvoiceEvidencePayload(), refusal
     if base_eur is None or iva_eur is None:
-        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
+        return SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     return (
-        _SalesInvoiceEvidencePayload(
+        SalesInvoiceEvidencePayload(
             taxable_base=base_eur,
             iva_amount=iva_eur,
             retencion_amount=invoice.retention_amount_eur,
@@ -378,7 +378,7 @@ def _determinable_cuota(transaction: Transaction) -> Decimal | None:
 def income_withheld_amount(
     transaction: Transaction,
     *,
-    evidence: _SalesInvoiceEvidencePayload | None = None,
+    evidence: SalesInvoiceEvidencePayload | None = None,
 ) -> _WithheldInference:
     """Derive the retención practicada on one income row.
 
@@ -406,7 +406,7 @@ def income_withheld_amount(
     return _inferred_withholding(transaction)
 
 
-def _stated_withholding(evidence: _SalesInvoiceEvidencePayload | None) -> _WithheldInference | None:
+def _stated_withholding(evidence: SalesInvoiceEvidencePayload | None) -> _WithheldInference | None:
     """Return the retención a linked invoice states, or ``None`` when it states none."""
     if evidence is not None and evidence.allocated_to_part_payment and evidence.retencion_amount not in (None, 0):
         return _WithheldInference(evidence.retencion_amount, LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT)

@@ -47,8 +47,8 @@ from ....domain.user_profile.values import (
     UserProfileFactValue,
     create_user_profile_record,
 )
-from .. import _autonomic_deduccion_advisory as advisory_module
-from .._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
+from .. import autonomic_deduccion_advisory as advisory_module
+from ..autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
     madrid_nacimiento_adopcion_candidate_weighted_count,
@@ -95,7 +95,7 @@ def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     _FACT_INDEXES.clear()
     monkeypatch.setattr(
         advisory_module,
-        "_load_fact_index",
+        "load_fact_index",
         lambda bucket_id, *, operation, profile: _FACT_INDEXES.get(bucket_id),
     )
     yield _BUCKET_ID

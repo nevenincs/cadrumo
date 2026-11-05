@@ -48,7 +48,7 @@ LedgerSplitRemergeOperationId = Literal["ledger.merge"]
 _SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",)
 LEDGER_SPLIT_CHILDREN_MAX = 128
 """The most parts one manual split makes."""
-_MAX_SPLIT_RESULT_JSON_BYTES = 16_384
+MAX_SPLIT_RESULT_JSON_BYTES = 16_384
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 LEDGER_SPLIT_PART_DESCRIPTION_MAX = 1024
@@ -288,12 +288,12 @@ def _preflight_result(
         child_business_classification=BusinessClassification.NOT_YET_PROCESSED,
         remerged_by=_SPLIT_REMERGED_BY,
     )
-    _require_result_bound(projection)
+    require_result_bound(projection)
 
 
-def _require_result_bound(projection: LedgerSplitOperationResult) -> None:
+def require_result_bound(projection: LedgerSplitOperationResult) -> None:
     """Reject a result projection larger than its registered byte bound."""
-    if len(projection.model_dump_json().encode("utf-8")) > _MAX_SPLIT_RESULT_JSON_BYTES:
+    if len(projection.model_dump_json().encode("utf-8")) > MAX_SPLIT_RESULT_JSON_BYTES:
         raise TransactionValidationError("ledger split result exceeds its registered projection bound")
 
 
@@ -420,11 +420,11 @@ def _operation_result(
         child_business_classification=next(iter(child_classifications)),
         remerged_by=_SPLIT_REMERGED_BY,
     )
-    _require_result_bound(projection)
+    require_result_bound(projection)
     return projection
 
 
-def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not LedgerSplitExecutionResult or not terminal_receipt_matches(
         receipt,
         definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,
@@ -469,7 +469,7 @@ def build_ledger_split_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerSplitOperationResult,
-        result_projector=_project_operation_result,
+        result_projector=project_operation_result,
         access_resolver=resolve_ledger_split_access,
     )
 

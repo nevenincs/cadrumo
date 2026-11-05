@@ -31,7 +31,7 @@ from ..grounding_anchor import (
     strip_printed_unit,
 )
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
-from ._evidence_textlayer_test_support import text_layer_ports_for_pages
+from .evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

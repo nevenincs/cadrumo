@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.casilla_membership import reject_row_field_template_scalar_inputs
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -89,23 +89,6 @@ from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index, record_to_path_values
-from ._calculation_helpers import (
-    build_typed_observations as _build_typed_observations,
-)
-from ._calculation_modelo_adjustments import (
-    drop_row_field_template_outputs as _drop_row_field_template_outputs,
-)
-from ._calculation_modelo_adjustments import (
-    m131_objective_estimation_data_base_inputs as _m131_objective_estimation_data_base_inputs,
-)
-from ._calculation_modelo_adjustments import (
-    raise_if_m390_303_reconciliation_would_save_silent_zero as _raise_if_m390_303_reconciliation_would_save_silent_zero,
-)
-from ._calculation_modelo_adjustments import (
-    require_detail_rows_declared_for_their_owning_modelo as _require_detail_rows_declared_for_their_owning_modelo,
-)
-from ._calculation_preparation import PreparedCalculation as _PreparedCalculation
-from ._calculation_preparation import prepare_calculation as _prepare_calculation
 from .action_errors import (
     ModeloClearedCasillaSourceFedError,
 )
@@ -113,10 +96,18 @@ from .bucket_unrouted_source_issues import unrouted_source_issues
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
+from .calculation_helpers import (
+    build_typed_observations,
+)
+from .calculation_modelo_adjustments import (
+    drop_row_field_template_outputs,
+    m131_objective_estimation_data_base_inputs,
+    raise_if_m390_303_reconciliation_would_save_silent_zero,
+    require_detail_rows_declared_for_their_owning_modelo,
+)
+from .calculation_preparation import PreparedCalculation, prepare_calculation
 from .calculation_publication import CalculationRevisionPublication
-from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
-from .calculation_resolution import precedence_tier_issue
-from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
+from .calculation_resolution import build_calculation_replay_payloads, precedence_tier_issue, resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
 from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
 from .credit_resolution import (
@@ -265,13 +256,13 @@ def _optional_mapping_as_dict[OptionalMappingKey, OptionalMappingValue](
 
 def _trusted_backend_casilla_inputs(
     *,
-    prepared: _PreparedCalculation,
+    prepared: PreparedCalculation,
     work_unit: WorkUnit,
     revision: ModeloRevision,
 ) -> dict[CasillaId, Decimal]:
     """Combine registry-derived M131 inputs with prepared backend inputs."""
     return {
-        **_m131_objective_estimation_data_base_inputs(
+        **m131_objective_estimation_data_base_inputs(
             work_unit=work_unit,
             revision=revision,
             binding_values=prepared.channels.bindings,
@@ -290,7 +281,7 @@ class TrustedMeshEvaluation:
     a reader can name the boxes they left without a value.
     """
 
-    prepared: _PreparedCalculation
+    prepared: PreparedCalculation
     engine_result: RegistryCalculationResult
     replay_payloads: CalculationReplayPayloads
     casilla_values: dict[CasillaId, Decimal]
@@ -337,7 +328,7 @@ def _profile_diagnostics_for_open_boxes(
 
 def _trusted_calculation_clock(clock: datetime | None) -> datetime:
     """Resolve the timestamp shared by ledger anchoring and persistence."""
-    return clock or _utc_now()
+    return clock or now()
 
 
 def _precedence_issues(diagnostics: Iterable[CalculationSourceDiagnostic]) -> tuple[CalculationSourceIssue, ...]:
@@ -579,7 +570,7 @@ def evaluate_modelo_revision_with_trusted_mesh_sources(
     have saved. Preparation may still persist a refreshed Modelo 303 IVA-wallet
     decision, as it does for every calculation of that modelo.
     """
-    prepared = _prepare_calculation(
+    prepared = prepare_calculation(
         evaluated_at=evaluated_at,
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
@@ -705,7 +696,7 @@ def _calculate_prepared_registry_snapshot(
 
 
 def _evaluate_prepared_calculation(
-    prepared: _PreparedCalculation,
+    prepared: PreparedCalculation,
     ports: CalculationActionPorts,
     detail_rows: tuple[ModeloDetailRow, ...],
     m210_official_tipo_renta_code: str | None,
@@ -740,7 +731,7 @@ def _evaluate_prepared_calculation(
         profile=prepared.profile,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
-    _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
+    require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
     validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = _optional_mapping_as_dict(relation_values)
     backend_casilla_inputs = _trusted_backend_casilla_inputs(
@@ -748,7 +739,7 @@ def _evaluate_prepared_calculation(
         work_unit=work_unit,
         revision=snapshot.revision,
     )
-    channel_inputs = _resolve_calculation_inputs(
+    channel_inputs = resolve_calculation_inputs(
         revision=snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -796,7 +787,7 @@ def _evaluate_prepared_calculation(
         # already have written state; later advisory failures never enter it.
         raise missing from error
 
-    replay_payloads = _build_calculation_replay_payloads(
+    replay_payloads = build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,
         resolved_bindings=prepared.channels.bindings,
         resolved_enum_bindings=prepared.channels.enum_bindings,
@@ -810,7 +801,7 @@ def _evaluate_prepared_calculation(
         casilla_values=casilla_values,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
-    _raise_if_m390_303_reconciliation_would_save_silent_zero(
+    raise_if_m390_303_reconciliation_would_save_silent_zero(
         work_unit=work_unit,
         snapshot=snapshot,
         casilla_values=casilla_values,
@@ -824,8 +815,8 @@ def _evaluate_prepared_calculation(
             (*prepared.channels.bindings, *prepared.channels.boolean_bindings, *settled_binding_ids)
         ),
     )
-    typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
-    casilla_values, typed_observations = _drop_row_field_template_outputs(
+    typed_observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)
+    casilla_values, typed_observations = drop_row_field_template_outputs(
         revision=snapshot.revision,
         casilla_values=casilla_values,
         observations=typed_observations,

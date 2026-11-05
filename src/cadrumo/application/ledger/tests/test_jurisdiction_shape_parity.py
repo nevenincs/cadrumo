@@ -21,7 +21,7 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction
-from ..models import _validate_iso_3166_jurisdiction
+from ..models import validate_iso_3166_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -51,7 +51,7 @@ def test_both_layers_accept_the_same_jurisdiction_tokens(raw: str | None, expect
     no parameter here flips under a drift mutation; it pins that the shared
     helper did not narrow the accepted set.
     """
-    assert _validate_iso_3166_jurisdiction(raw) == expected
+    assert validate_iso_3166_jurisdiction(raw) == expected
     assert _domain_jurisdiction(raw) == expected
 
 
@@ -66,7 +66,7 @@ def test_both_layers_refuse_the_same_jurisdiction_tokens(raw: str) -> None:
     implementations refuse regardless.
     """
     with pytest.raises(CoreValidationError, match="ISO 3166-1 alpha-2 uppercase"):
-        _validate_iso_3166_jurisdiction(raw)
+        validate_iso_3166_jurisdiction(raw)
     # The domain validator sits behind the Pydantic translation boundary, so the
     # registered refusal travels as the cause of the ValueError Pydantic reads.
     with pytest.raises(ValueError, match="ISO 3166-1 alpha-2 uppercase") as refusal:
@@ -97,7 +97,7 @@ def test_both_layers_are_wired_to_the_one_shared_normaliser() -> None:
     assert helper_name in domain_validator.__code__.co_names, (
         "domain Transaction._validate_source_jurisdiction must call the shared core normaliser"
     )
-    assert helper_name in inspect.unwrap(_validate_iso_3166_jurisdiction).__code__.co_names, (
+    assert helper_name in inspect.unwrap(validate_iso_3166_jurisdiction).__code__.co_names, (
         "application _validate_iso_3166_jurisdiction must call the shared core normaliser"
     )
 
@@ -117,6 +117,6 @@ def test_each_layer_keeps_its_own_exception_boundary() -> None:
     assert isinstance(domain_refusal.value.__cause__, TransactionValidationError)
 
     with pytest.raises(CoreValidationError):
-        _validate_iso_3166_jurisdiction("es")
+        validate_iso_3166_jurisdiction("es")
 
     assert not issubclass(CoreValidationError, TransactionValidationError)

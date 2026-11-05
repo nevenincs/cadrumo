@@ -39,15 +39,15 @@ from ...core.hashing import sha256_hex
 from ...core.hex import Hex16Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ...domain.submission.models import ModeloDraftStatus
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
-from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason
 from .engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
+from .identity import period_identity_segment
 
 _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS = frozenset(
     {
@@ -123,7 +123,7 @@ class WorkflowSiteHealthFacts(BaseModel):
     facts needed by renderers and operators.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     alert_code: str = Field(
         pattern=r"^workflow\.site\.[a-z][a-z0-9_]*$",
@@ -167,7 +167,7 @@ class SiteHealthAlert(BaseModel):
     to the enclosing :class:`WorkflowResult`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     stage: WorkflowStage
     status: WorkflowSiteHealthFacts
@@ -182,7 +182,7 @@ class WorkflowDeadlineRecoveryFacts(BaseModel):
     only registry identities and evaluated recargo facts.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     still_filable: bool
     recargo_band_id: str = Field(min_length=1, max_length=64)
@@ -214,7 +214,7 @@ class WorkflowObligationFacts(BaseModel):
     and typed overdue facts needed by resume and rendering consumers.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Modelo
     period: Period
@@ -285,7 +285,7 @@ class WorkflowDiagnosticSkipReason(StrEnum):
 class _WorkflowStepDetail(BaseModel):
     """Frozen base for one closed, locale-neutral workflow detail shape."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
@@ -589,7 +589,7 @@ def _reject_prose_precondition_evidence(verdict: PreconditionVerdict) -> None:
 class WorkflowStep(BaseModel):
     """A single step in a :class:`WorkflowResult`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     stage: WorkflowStage
     started_at: datetime
@@ -620,7 +620,7 @@ class WorkflowStep(BaseModel):
 class WorkflowResult(BaseModel):
     """The full result of one :meth:`WorkflowEngine.run_for_period` invocation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: Hex16Str
     started_at: datetime

@@ -89,7 +89,7 @@ _REVISION_ID = "2026-y-siguientes"
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
-_REFUND_ACCOUNT = RefundAccount(
+REFUND_ACCOUNT = RefundAccount(
     iban=_REFUND_IBAN,
     swift_bic="DEUTDEFF",
     bank_name="Refund Bank",
@@ -97,7 +97,7 @@ _REFUND_ACCOUNT = RefundAccount(
     bank_city="Berlin",
     bank_country_code="DE",
 )
-_CHARGE_ACCOUNT = ChargeAccount(iban=_CHARGE_IBAN)
+CHARGE_ACCOUNT = ChargeAccount(iban=_CHARGE_IBAN)
 _LEGAL_REFS = '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
 
 #: ``ordinal`` is the PRINTED label the official design carries, preserved
@@ -223,7 +223,7 @@ def _projection_rows_envelope_layout(
     return _filing_envelope_layout(snapshot, layout)
 
 
-def _product_software_identity() -> AeatProductSoftwareIdentity:
+def product_software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
         developer_tax_id="Y0000001S",
@@ -255,7 +255,7 @@ def _m303_did_producer_snapshot(
 ) -> FilingProducerSnapshot:
     """Build real approved-draft producer authority for the isolated DID layout."""
     period = Period.from_year_and_code(2026, "2T")
-    taxpayer = _taxpayer_profile()
+    taxpayer = taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
     return build_filing_producer_snapshot(
@@ -269,10 +269,10 @@ def _m303_did_producer_snapshot(
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
         model_profile=iva_profile,
-        elections=_elections(disposition),
+        elections=elections(disposition),
         amendment_evidence=None,
-        refund_account=_REFUND_ACCOUNT,
-        charge_account=_CHARGE_ACCOUNT,
+        refund_account=REFUND_ACCOUNT,
+        charge_account=CHARGE_ACCOUNT,
         m303_filing_facts=_m303_filing_facts(
             period,
             registry_snapshot=registry_snapshot,
@@ -281,7 +281,7 @@ def _m303_did_producer_snapshot(
     )
 
 
-def _taxpayer_profile() -> TaxpayerProfile:
+def taxpayer_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAXPAYER_TAX_ID,
         iva_regime=IVARegime("GENERAL"),
@@ -409,7 +409,7 @@ def _m303_filing_facts(
     )
 
 
-def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
+def elections(disposition: ResultDisposition) -> FilingElectionFacts:
     return FilingElectionFacts(
         result_disposition=disposition,
         payment=(
@@ -420,7 +420,7 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
     )
 
 
-def _draft() -> ModeloDraft:
+def draft() -> ModeloDraft:
     period = Period.from_year_and_code(2026, "2T")
     timestamp = datetime(2026, 8, 11, 12, 0, tzinfo=UTC)
     return ModeloDraft(
@@ -475,10 +475,10 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
         FilingEnvelopeRenderRequest(
             registry_snapshot=registry_snapshot,
             layout=layout,
-            draft=_draft(),
+            draft=draft(),
             producer_snapshot=producer_snapshot,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
+            product_software_identity=product_software_identity(),
         ),
     )
 
@@ -503,10 +503,10 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
             FilingEnvelopeRenderRequest(
                 registry_snapshot=registry_snapshot,
                 layout=layout,
-                draft=_draft(),
+                draft=draft(),
                 producer_snapshot=producer_snapshot,
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
             ),
         )
 
@@ -572,10 +572,10 @@ def test_production_m303_generated_authority_is_visible_at_the_filing_boundary()
         FilingEnvelopeRenderRequest(
             registry_snapshot=regimen_snapshot,
             layout=regimen_layout,
-            draft=_draft(),
+            draft=draft(),
             producer_snapshot=producer_snapshot,
             prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
+            product_software_identity=product_software_identity(),
         ),
     )
     assert tuple((item.record_id, item.occurrence) for item in rendered.occurrences) == ((regimen_record.id, 1),)
@@ -601,13 +601,13 @@ def test_production_m303_generated_authority_is_visible_at_the_filing_boundary()
             FilingEnvelopeRenderRequest(
                 registry_snapshot=malformed_snapshot,
                 layout=malformed_layout,
-                draft=_draft(),
+                draft=draft(),
                 producer_snapshot=_m303_did_producer_snapshot(
                     ResultDisposition.DEVOLUCION,
                     registry_snapshot=malformed_snapshot,
                     non_agricultural_activity_count=1,
                 ),
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
             ),
         )

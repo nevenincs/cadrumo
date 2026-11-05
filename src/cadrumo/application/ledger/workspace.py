@@ -399,7 +399,7 @@ def _project_reconciliation_facts(
     return suggestions, inconsistencies, affected
 
 
-def _project_workspace_areas(
+def project_workspace_areas(
     *,
     entries: tuple[LedgerWorkspaceEntryRefV1, ...],
     review_ids: tuple[TransactionId, ...],
@@ -439,7 +439,7 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.IMPORT,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
-            status=_import_status(last_import_count),
+            status=import_status(last_import_count),
             item_count=last_import_count or 0,
         ),
         LedgerWorkspaceAreaStateV1(
@@ -451,7 +451,7 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.EVIDENCE,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_INVOICES),
-            status=_evidence_status(evidence_pending_review),
+            status=evidence_status(evidence_pending_review),
             item_count=evidence_pending_review or 0,
         ),
         LedgerWorkspaceAreaStateV1(
@@ -476,7 +476,7 @@ def _review_area_status(*, review_ids: tuple[TransactionId, ...], pending: int) 
     return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending else LedgerWorkspaceStatus.READY
 
 
-def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
+def evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
     """Classify the evidence area from its measured review queue.
 
     ``None`` means the caller did not measure the queue, which stays
@@ -491,7 +491,7 @@ def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
     return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending_review else LedgerWorkspaceStatus.EMPTY
 
 
-def _import_status(last_import_count: int | None) -> LedgerWorkspaceStatus:
+def import_status(last_import_count: int | None) -> LedgerWorkspaceStatus:
     """Classify the import area from the size of the most recent import batch.
 
     ``None`` is an unmeasured history; a profile that never imported is
@@ -547,7 +547,7 @@ def project_ledger_workspace(
         link_consistency_reader=link_consistency_reader,
         filing_staleness_reader=filing_staleness_reader,
     )
-    areas = _project_workspace_areas(
+    areas = project_workspace_areas(
         entries=entries,
         review_ids=review_ids,
         pending=summary.pending_review_count,

@@ -2,7 +2,7 @@
 
 Extends the coverage :mod:`test_reconcile_declaracion_casillas` established for
 Modelo 130 to the five modelos enrolled under
-:data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`
+:data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE`
 in the same slice: Modelo 100 (IRPF annual, printed Renta casilla ids), Modelo
 303 (IVA autoliquidación, compound ``iva.*`` primitive/result casilla ids),
 Modelo 390 (IVA resumen anual, compound ``iva.anual.*`` ids), Modelo 111

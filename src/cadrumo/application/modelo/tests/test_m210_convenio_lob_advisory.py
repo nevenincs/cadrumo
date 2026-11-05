@@ -34,7 +34,7 @@ import pytest
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime
 
-from ._m210_snapshot_fixture import m210_snapshot
+from .m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
@@ -46,7 +46,7 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding as _build_lob_advisory
+from ..m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -60,7 +60,7 @@ def _m210_convenio_lob_advisory_finding(
     input_values_by_casilla_id: Mapping[CasillaId, str],
 ) -> ModeloVerificationFinding | None:
     """Call the application advisory with the explicit test devengo coordinate."""
-    return _build_lob_advisory(
+    return m210_convenio_lob_advisory_finding(
         snapshot,
         profile,
         input_values_by_casilla_id,

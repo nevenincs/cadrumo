@@ -13,7 +13,7 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode
 from ....core.hashing import canonical_json_bytes
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_guards import is_str_keyed_dict
-from ..registry_schema_validation import _UnambiguousDefinitionsSchemaGenerator, strict_model_json_schema
+from ..registry_schema_validation import UnambiguousDefinitionsSchemaGenerator, strict_model_json_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,7 +89,7 @@ def test_default_definition_names_and_schema_bytes_are_preserved(
 ) -> None:
     expected = model_type.model_json_schema(mode=mode, ref_template=ref_template, by_alias=by_alias)
     actual = model_type.model_json_schema(
-        mode=mode, ref_template=ref_template, by_alias=by_alias, schema_generator=_UnambiguousDefinitionsSchemaGenerator
+        mode=mode, ref_template=ref_template, by_alias=by_alias, schema_generator=UnambiguousDefinitionsSchemaGenerator
     )
     assert actual == expected
     assert canonical_json_bytes(actual) == canonical_json_bytes(expected)

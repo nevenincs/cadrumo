@@ -33,9 +33,9 @@ from pydantic import ValidationError
 
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.row_models import Modelo232VinculadaRow
-from .._calculation_modelo_adjustments import detail_row_declaration_modelos
+from ..calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..work_amend_contracts import ModeloWorkAmendBaseline, ModeloWorkAmendOverride, ModeloWorkAmendRequest
-from .test_edit_detail_row_wire_mirror import _PAIRS
+from .test_edit_detail_row_wire_mirror import PAIRS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -122,7 +122,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
     assert type(translated) is type(row)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None:
     """All five kinds, not just the one a hand-picked example would exercise.
 
@@ -130,7 +130,7 @@ def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None
     request that admitted only some row kinds would refuse a lawful correction
     for reasons the operator could not see.
     """
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     request = _request(detail_rows=(mirror.model_dump(),))
 

@@ -93,7 +93,6 @@ from ..filing.producer_snapshot import (
     TaxpayerIdentityFacts,
 )
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
-from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import (
     CalculationRevisionStateError,
     ModeloPriorDomiciliationElectionRefusedError,
@@ -112,6 +111,7 @@ from .profile_export_binding import (
     resolve_profile_export_values,
 )
 from .revision_replay_inputs import revision_filing_replay_inputs
+from .row_source_identity_replay import attach_revision_row_source_identities
 
 
 def envelope_stamped_software_identity(

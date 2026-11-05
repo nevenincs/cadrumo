@@ -13,7 +13,7 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import AggregationCaptureKind
@@ -35,19 +35,19 @@ from ....domain.iva.schema import (
     IvaRateKind,
 )
 from ....tests.terminal_precondition_ast import call_name, fact_expressions
-from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
-from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
-from .. import _preconditions as preconditions_module
 from .. import errors as errors_module
+from .. import modelo_bindings_invoice_iva as modelo_bindings_module
+from .. import modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
 from .. import modelo_bindings_retenciones as modelo_bindings_retenciones_module
+from .. import preconditions as preconditions_module
 from .. import service as service_module
-from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iva_would_be_silent
-from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
+from ..modelo_bindings_invoice_iva_refusal import raise_if_screened_invoice_iva_would_be_silent
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
-from ..service import _supported_per_modelo_modelos, provider_for_modelo
+from ..service import provider_for_modelo, supported_per_modelo_modelos
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -307,7 +307,7 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
 
 
 def test_unsupported_modelo_has_an_exact_application_state_operator_decision_verdict() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(AggregationUnsupportedModeloError) as raised:
             provider_for_modelo(" 347 ", operation=_authority_operation_for_test)
 
@@ -316,7 +316,7 @@ def test_unsupported_modelo_has_an_exact_application_state_operator_decision_ver
             condition=AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
             facts={
                 "modelo": " 347 ",
-                "supported_modelos": "|".join(_supported_per_modelo_modelos(operation=_authority_operation_for_test)),
+                "supported_modelos": "|".join(supported_per_modelo_modelos(operation=_authority_operation_for_test)),
             },
         )
 
@@ -397,10 +397,10 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             "missing_binding_count": 1,
         }
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(AggregationValidationError) as raised,
     ):
-        _raise_if_screened_invoice_iva_would_be_silent(
+        raise_if_screened_invoice_iva_would_be_silent(
             context=context,
             screened_bindings=invoice_ledger_screen_binding_ids(
                 context.revision,

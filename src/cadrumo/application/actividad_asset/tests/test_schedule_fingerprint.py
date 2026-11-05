@@ -27,7 +27,7 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_register import _ACQUISITION, _NAME, _full_year, _operations, _revision
+from .test_register import ACQUISITION, NAME, full_year, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +42,7 @@ def _authority(
     rate: str = "0.26",
     method: AmortizationMethod = AmortizationMethod.LINEAR,
 ) -> ScheduleAuthority:
-    revision = _revision(method=method)
+    revision = register_revision(method=method)
     constant = method is AmortizationMethod.CONSTANT_PERCENTAGE
     return ScheduleAuthority(
         tax_year=tax_year,
@@ -65,7 +65,7 @@ def _charge(
 ) -> ScheduledAmortizationCharge:
     year = authority.tax_year
     return schedule_charge(
-        _revision(method=method),
+        register_revision(method=method),
         authority,
         covered_from=date(year, 1, 1),
         covered_until=date(year + 1, 1, 1),
@@ -118,8 +118,8 @@ def test_a_prior_claim_leaves_a_linear_fingerprint_until_the_cap_reaches_the_cha
 
 
 def test_a_claim_identity_stays_exact_across_revisions_sharing_a_fingerprint() -> None:
-    first = _revision()
-    second = _revision(number=2, supersedes=first.revision_id)
+    first = register_revision()
+    second = register_revision(number=2, supersedes=first.revision_id)
     charge = _charge(_authority())
     claim_under_first = AmortizationClaim.from_schedule(
         charge.model_copy(update={"asset_revision_id": first.revision_id}),
@@ -139,7 +139,7 @@ def test_a_claim_identity_stays_exact_across_revisions_sharing_a_fingerprint() -
 def test_a_held_forecast_replays_and_so_does_the_same_figure_under_a_new_generation() -> None:
     first = _charge(_authority(generation="generation-1"))
     second = _charge(_authority(generation="generation-2"))
-    claim = AmortizationClaim.from_schedule(first, asset_kind=_revision().asset_kind, creating_operation="test")
+    claim = AmortizationClaim.from_schedule(first, asset_kind=register_revision().asset_kind, creating_operation="test")
     recorded = record_claim((), claim)
 
     replay = record_claim(
@@ -181,7 +181,7 @@ def _operations_under_generation(
 
     return ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=replace(memory_register_authority(today=date(2026, 12, 31))),
@@ -191,8 +191,8 @@ def _operations_under_generation(
 def test_a_claim_stays_current_under_a_new_generation_of_identical_law() -> None:
     repository = MemoryRepository()
     operations = _operations_under_generation(repository, "generation-1")
-    operations.create(_revision(), _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations.create(register_revision(), NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
     reread = _operations_under_generation(repository, "generation-2")
 
@@ -203,18 +203,18 @@ def test_a_claim_stays_current_under_a_new_generation_of_identical_law() -> None
 
 
 def test_a_claim_whose_later_interval_rests_on_earlier_claims_reads_current() -> None:
-    operations, _ = _operations(today=date(2026, 12, 31))
-    operations.create(_revision(method=AmortizationMethod.LINEAR), _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.2025")
-    operations.record_claim(_full_year(operations, 2026), creating_operation="test.2026")
+    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations.create(register_revision(method=AmortizationMethod.LINEAR), NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
+    operations.record_claim(full_year(operations, 2026), creating_operation="test.2026")
 
     assert operations.list_elements()[0].findings.stale == 0
 
 
 def test_a_disposal_only_revision_leaves_earlier_claims_current() -> None:
-    operations, _ = _operations(today=date(2026, 12, 31))
-    operations.create(_revision(), _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations.create(register_revision(), NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
     operations.dispose(
         _ASSET,
@@ -233,12 +233,12 @@ def test_a_disposal_only_revision_leaves_earlier_claims_current() -> None:
 
 
 def test_a_correction_changing_a_tax_fact_still_reads_as_a_changed_revision() -> None:
-    operations, _ = _operations(today=date(2026, 12, 31))
-    first = _revision()
-    operations.create(first, _NAME)
-    operations.record_claim(_full_year(operations, 2025), creating_operation="test.claim")
+    operations, _ = register_operations(today=date(2026, 12, 31))
+    first = register_revision()
+    operations.create(first, NAME)
+    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
 
-    operations.correct(_revision(number=2, supersedes=first.revision_id, basis="1000"))
+    operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="1000"))
 
     claim_event = next(event for event in operations.timeline(_ASSET) if event.kind is ActivityAssetEventKind.CLAIM)
     assert claim_event.claim is not None

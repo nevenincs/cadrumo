@@ -84,8 +84,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NoReturn
 
 from ...core.capabilities import ServiceCapability
-from ...core.config import Settings
-from ...core.config import load_settings as _load_settings
+from ...core.config import Settings, load_settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.field_origin import FieldOrigin
@@ -246,7 +245,7 @@ def extract_invoice_draft_from_evidence(
             ),
         )
 
-    resolved_settings = settings or _load_settings()
+    resolved_settings = settings or load_settings()
     # Resolved HERE, once, and handed down. The filer's own identifier is a
     # PROFILE fact, never read off the invoice, and both consumers of it live at
     # the far end of the reading chain: the counterparty role resolution excludes
@@ -283,7 +282,7 @@ def extract_invoice_draft_from_evidence(
             # partial one; fall through so a document whose embedded payload is
             # broken can still be read by the text or vision path.
             pass
-    _refuse_an_unrecognised_xml_document(evidence_input)
+    refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         # The `try` wraps ONLY the transcription, and that scoping is the whole
         # asymmetry rather than a formatting choice. A failure to transcribe is a
@@ -303,7 +302,7 @@ def extract_invoice_draft_from_evidence(
         except PurchaseInvoiceEvidenceInputError:
             transcription = None
         if transcription is not None:
-            return _read_transcription_semantically(
+            return read_transcription_semantically(
                 evidence_input,
                 transcription,
                 settings=resolved_settings,
@@ -326,7 +325,7 @@ def extract_invoice_draft_from_evidence(
     )
 
 
-def _refuse_a_text_read_with_no_reader(
+def refuse_a_text_read_with_no_reader(
     exc: Exception, *, precondition_verdict: PreconditionVerdict | None = None
 ) -> NoReturn:
     """Refuse a text-native document the semantic reader could not be run for.
@@ -475,7 +474,7 @@ def _label_read_after_reader_unavailable(
     """
     verdict = error.precondition_verdict
     if labels is None or not labels.read_fields:
-        _refuse_a_text_read_with_no_reader(error.cause, precondition_verdict=verdict)
+        refuse_a_text_read_with_no_reader(error.cause, precondition_verdict=verdict)
     return labels.draft, _label_reading_fallback(
         labels,
         cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
@@ -526,7 +525,7 @@ def _read_transcription_fields(
     return read, None
 
 
-def _read_transcription_semantically(
+def read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
     *,
@@ -672,7 +671,7 @@ def _label_reading_fallback(
     )
 
 
-def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
+def refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     """Refuse an XML document whose syntax no structured reader recognises.
 
     XML must never reach the text-layer or vision fallbacks. Those exist for
@@ -945,7 +944,7 @@ def _extract_invoice_fields_via_vision(
     # statement about the semantic READER, and converting it into "vision
     # reading failed" would send the operator to fix a reader that read the
     # page perfectly well.
-    return _read_transcription_semantically(
+    return read_transcription_semantically(
         evidence,
         transcription,
         settings=settings,

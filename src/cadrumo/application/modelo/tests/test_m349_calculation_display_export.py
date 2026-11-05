@@ -36,8 +36,8 @@ from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_construction import filing_binding_values
-from .._calculation_helpers import build_typed_observations
-from .._calculation_modelo_adjustments import drop_row_field_template_outputs
+from ..calculation_helpers import build_typed_observations
+from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..revision_replay_inputs import revision_detail_record_binding_inputs
 from ..work_form import build_modelo_work_form
 from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormRepeatingBlock

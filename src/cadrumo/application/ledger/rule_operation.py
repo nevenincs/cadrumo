@@ -98,7 +98,7 @@ LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
 LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID = "ledger.rule.apply"
 
 
-class _TrackedRuleRepository:
+class TrackedRuleRepository:
     """Track the canonical encrypted rule save without replacing its behavior."""
 
     def __init__(
@@ -195,7 +195,7 @@ async def _persist_rule_add(
 ) -> tuple[LedgerClassificationRule, LedgerCommitAttemptTracker] | OperationRefusalEvidence:
     repository = await asyncio.to_thread(repository_factory, bucket_id=bucket_id)
     tracker = LedgerCommitAttemptTracker()
-    tracked_repository = _TrackedRuleRepository(repository, tracker)
+    tracked_repository = TrackedRuleRepository(repository, tracker)
 
     def add() -> LedgerClassificationRule:
         return add_classification_rule(

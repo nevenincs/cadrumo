@@ -8,9 +8,9 @@ from typing import cast
 import pytest
 
 from cadrumo.application.state_projection import (
-    _registry_readiness_refusal,
-    _registry_readiness_revision_mismatch_refusal,
-    _resolve_modelo_readiness_registry,
+    registry_readiness_refusal,
+    registry_readiness_revision_mismatch_refusal,
+    resolve_modelo_readiness_registry,
 )
 from cadrumo.application.state_projection_models import ModeloReadinessRequest, ModeloRegistryRefusalCause
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -47,8 +47,8 @@ class _DifferentRevisionAuthority:
 
 def test_registry_readiness_refusals_have_no_authored_describe_command() -> None:
     request = ModeloReadinessRequest(modelo="303", revision_id="rev", filing_year=2025)
-    first = _registry_readiness_refusal(request, period_token=_QUARTER, exc=RuntimeError("missing"))
-    second = _registry_readiness_revision_mismatch_refusal(
+    first = registry_readiness_refusal(request, period_token=_QUARTER, exc=RuntimeError("missing"))
+    second = registry_readiness_revision_mismatch_refusal(
         request,
         period_token=_QUARTER,
         resolved_revision_id="resolved",
@@ -61,11 +61,11 @@ def test_registry_readiness_refusals_have_no_authored_describe_command() -> None
 def test_registry_readiness_refusals_are_worded_in_every_output_language(language: str) -> None:
     request = ModeloReadinessRequest(modelo="303", revision_id="requested-revision", filing_year=2025)
     with override_settings(cadrumo_output_language=language):
-        unresolved = _registry_readiness_refusal(request, period_token=_QUARTER, exc=FileNotFoundError("private"))
-        reasoned = _registry_readiness_refusal(
+        unresolved = registry_readiness_refusal(request, period_token=_QUARTER, exc=FileNotFoundError("private"))
+        reasoned = registry_readiness_refusal(
             request, period_token=_QUARTER, exc=RegistryValidationError("the registry has no such edition")
         )
-        mismatch = _registry_readiness_revision_mismatch_refusal(
+        mismatch = registry_readiness_revision_mismatch_refusal(
             request, period_token=_QUARTER, resolved_revision_id="resolved-revision"
         )
 
@@ -84,7 +84,7 @@ def test_registry_readiness_refusals_are_worded_in_every_output_language(languag
 
 def test_unavailable_snapshot_carries_closed_cause_separate_from_refusal_prose() -> None:
     request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=2025)
-    resolution = _resolve_modelo_readiness_registry(
+    resolution = resolve_modelo_readiness_registry(
         request,
         period=Period.from_year_and_code(2025, "1T"),
         operation=cast(PinnedAuthorityOperation, _UnavailableAuthority()),
@@ -98,7 +98,7 @@ def test_unavailable_snapshot_carries_closed_cause_separate_from_refusal_prose()
 
 def test_revision_mismatch_carries_distinct_closed_cause() -> None:
     request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=2025)
-    resolution = _resolve_modelo_readiness_registry(
+    resolution = resolve_modelo_readiness_registry(
         request,
         period=Period.from_year_and_code(2025, "1T"),
         operation=cast(PinnedAuthorityOperation, _DifferentRevisionAuthority()),
@@ -118,7 +118,7 @@ def test_readiness_of_a_projected_year_resolves_at_the_grade_the_year_reaches(
 ) -> None:
     year = projected_exercise(_MODELO)
 
-    resolution = _resolve_modelo_readiness_registry(
+    resolution = resolve_modelo_readiness_registry(
         _request(operation, year), period=Period.from_year_and_code(year, _PERIOD), operation=operation
     )
 
@@ -137,7 +137,7 @@ def test_readiness_of_a_projected_year_resolves_at_the_grade_the_year_reaches(
 def test_readiness_of_the_newest_authored_year_resolves_unchanged(operation: PinnedAuthorityOperation) -> None:
     year = newest_authored_edition(_MODELO)
 
-    resolution = _resolve_modelo_readiness_registry(
+    resolution = resolve_modelo_readiness_registry(
         _request(operation, year), period=Period.from_year_and_code(year, _PERIOD), operation=operation
     )
 
@@ -156,7 +156,7 @@ def test_readiness_refused_by_the_registry_serves_words_not_a_bare_english_line(
     request = ModeloReadinessRequest(modelo=_MODELO, revision_id="any-revision", filing_year=below_floor)
 
     with override_settings(cadrumo_output_language="es"):
-        resolution = _resolve_modelo_readiness_registry(
+        resolution = resolve_modelo_readiness_registry(
             request, period=Period.from_year_and_code(below_floor, _PERIOD), operation=operation
         )
 

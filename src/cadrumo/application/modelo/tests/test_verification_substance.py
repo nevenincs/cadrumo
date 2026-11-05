@@ -8,18 +8,18 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import (
-    _CASILLA_01,
-    _CASILLA_02,
-    _CASILLA_07,
-    _CASILLA_10,
-    _CASILLA_11,
-    _CASILLA_14,
-    _CASILLA_15,
-    _M200_BIN_APPLIED_CASILLA,
-    _M200_BIN_CLOSING_CASILLA,
-    _M200_BIN_GENERATED_CASILLA,
-    _M200_BIN_OPEN_CASILLA,
-    _casilla_values,
+    CASILLA_01,
+    CASILLA_02,
+    CASILLA_07,
+    CASILLA_10,
+    CASILLA_11,
+    CASILLA_14,
+    CASILLA_15,
+    M200_BIN_APPLIED_CASILLA,
+    M200_BIN_CLOSING_CASILLA,
+    M200_BIN_GENERATED_CASILLA,
+    M200_BIN_OPEN_CASILLA,
+    verification_substance_casilla_values,
     workflow_profile,
 )
 
@@ -58,31 +58,31 @@ def test_nonzero_collection_predicates() -> None:
         (
             "all-present-nonzero",
             'all_nonzero(["01", "02"])',
-            _casilla_values((_CASILLA_01, "1000"), (_CASILLA_02, "500")),
+            verification_substance_casilla_values((CASILLA_01, "1000"), (CASILLA_02, "500")),
             True,
         ),
         (
             "all-one-zero",
             'all_nonzero(["01", "02"])',
-            _casilla_values((_CASILLA_01, "1000"), (_CASILLA_02, "0")),
+            verification_substance_casilla_values((CASILLA_01, "1000"), (CASILLA_02, "0")),
             False,
         ),
         (
             "all-one-absent",
             'all_nonzero(["01", "02"])',
-            _casilla_values((_CASILLA_01, "1000")),
+            verification_substance_casilla_values((CASILLA_01, "1000")),
             False,
         ),
         (
             "any-one-nonzero",
             'any_nonzero(["01", "02"])',
-            _casilla_values((_CASILLA_01, "0"), (_CASILLA_02, "500")),
+            verification_substance_casilla_values((CASILLA_01, "0"), (CASILLA_02, "500")),
             True,
         ),
         (
             "any-all-zero",
             'any_nonzero(["01", "02"])',
-            _casilla_values((_CASILLA_01, "0"), (_CASILLA_02, "0")),
+            verification_substance_casilla_values((CASILLA_01, "0"), (CASILLA_02, "0")),
             False,
         ),
         ("any-all-absent", 'any_nonzero(["01", "02"])', {}, False),
@@ -94,7 +94,7 @@ def test_nonzero_collection_predicates() -> None:
 
 def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
     """Predicate casilla references fail instead of reading malformed ids as absent zeroes."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
 
     with pytest.raises(ModeloError) as raised:
         evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, workflow_profile())
@@ -107,7 +107,7 @@ def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
 
 def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
     """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("300"), _CASILLA_10: Decimal("500")}
+    values: dict[CasillaId, Decimal] = {CASILLA_11: Decimal("300"), CASILLA_10: Decimal("500")}
     assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, workflow_profile()) is True
 
 
@@ -119,7 +119,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     "en ningún caso podrá figurar en la casilla 11 un importe superior
     a la cantidad positiva consignada en la casilla 10".
     """
-    values: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("500")}
+    values: dict[CasillaId, Decimal] = {CASILLA_11: Decimal("750"), CASILLA_10: Decimal("500")}
     assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, workflow_profile()) is False
 
 
@@ -141,7 +141,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
         finding_kind="BLOCKING_RULE",
     )
     # C14 = 1000 (positive ceiling), C15 = 1500 (exceeds cap)
-    casilla_values = {_CASILLA_14: Decimal("1000"), _CASILLA_15: Decimal("1500")}
+    casilla_values = {CASILLA_14: Decimal("1000"), CASILLA_15: Decimal("1500")}
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
@@ -161,7 +161,7 @@ def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
         finding_kind="BLOCKING_RULE",
     )
     # C14 = 1000, C15 = 600 — within cap
-    casilla_values = {_CASILLA_14: Decimal("1000"), _CASILLA_15: Decimal("600")}
+    casilla_values = {CASILLA_14: Decimal("1000"), CASILLA_15: Decimal("600")}
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
     assert findings == []
@@ -170,18 +170,14 @@ def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
 @pytest.mark.parametrize(
     ("casilla_values", "expected"),
     (
+        pytest.param({CASILLA_11: Decimal("0"), CASILLA_10: Decimal("-50")}, True, id="zero-limited-negative-ceiling"),
+        pytest.param({CASILLA_11: Decimal("0")}, True, id="zero-limited-missing-ceiling"),
+        pytest.param({CASILLA_11: Decimal("750"), CASILLA_10: Decimal("0")}, False, id="positive-limited-zero-ceiling"),
         pytest.param(
-            {_CASILLA_11: Decimal("0"), _CASILLA_10: Decimal("-50")}, True, id="zero-limited-negative-ceiling"
+            {CASILLA_11: Decimal("750"), CASILLA_10: Decimal("-50")}, False, id="positive-limited-negative-ceiling"
         ),
-        pytest.param({_CASILLA_11: Decimal("0")}, True, id="zero-limited-missing-ceiling"),
-        pytest.param(
-            {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("0")}, False, id="positive-limited-zero-ceiling"
-        ),
-        pytest.param(
-            {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("-50")}, False, id="positive-limited-negative-ceiling"
-        ),
-        pytest.param({_CASILLA_11: Decimal("750")}, False, id="positive-limited-missing-ceiling"),
-        pytest.param({_CASILLA_11: Decimal("500"), _CASILLA_10: Decimal("500")}, True, id="exact-ceiling-boundary"),
+        pytest.param({CASILLA_11: Decimal("750")}, False, id="positive-limited-missing-ceiling"),
+        pytest.param({CASILLA_11: Decimal("500"), CASILLA_10: Decimal("500")}, True, id="exact-ceiling-boundary"),
     ),
 )
 def test_cap_le_when_positive_admits_no_positive_amount_without_a_positive_ceiling(
@@ -208,47 +204,47 @@ _M200_POSITIVE_APPLICATION_STOCK = 'positive_application_le_present_stock(["DP20
     (
         pytest.param({}, True, id="omitted-application-and-stock"),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("0")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("0")},
             True,
             id="zero-application-with-missing-stock",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("1")},
             False,
             id="positive-application-with-missing-stock",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("0")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("1"), M200_BIN_OPEN_CASILLA: Decimal("0")},
             False,
             id="positive-application-with-explicit-zero-stock",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("1"), M200_BIN_OPEN_CASILLA: Decimal("-1")},
             False,
             id="positive-application-with-negative-stock",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("50"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("50"), M200_BIN_OPEN_CASILLA: Decimal("100")},
             True,
             id="partial-application",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("100"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("100"), M200_BIN_OPEN_CASILLA: Decimal("100")},
             True,
             id="exact-stock-boundary",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("101"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("101"), M200_BIN_OPEN_CASILLA: Decimal("100")},
             False,
             id="application-exceeds-stock",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("-1")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("-1")},
             True,
             id="negative-application-is-not-sign-validated-here",
         ),
         pytest.param(
-            {_M200_BIN_APPLIED_CASILLA: Decimal("0"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            {M200_BIN_APPLIED_CASILLA: Decimal("0"), M200_BIN_OPEN_CASILLA: Decimal("-1")},
             True,
             id="zero-application-does-not-validate-stock-sign",
         ),
@@ -275,7 +271,7 @@ def test_positive_application_le_present_stock_emits_block_when_stock_is_absent(
     )
     findings = evaluate_verification_predicates(
         (predicate,),
-        {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+        {M200_BIN_APPLIED_CASILLA: Decimal("1")},
         workflow_profile(),
     )
 
@@ -294,17 +290,17 @@ _APPLICATION_MAXIMUM = 'application_equals_present_maximum(["15", "14"])'
     ("casilla_values", "expected"),
     (
         pytest.param({}, False, id="omitted-application-and-maximum"),
-        pytest.param({_CASILLA_15: Decimal("0")}, False, id="zero-application-missing-maximum"),
-        pytest.param({_CASILLA_15: Decimal("5")}, False, id="positive-application-missing-maximum"),
-        pytest.param({_CASILLA_14: Decimal("0")}, True, id="omitted-application-zero-maximum"),
-        pytest.param({_CASILLA_15: Decimal("0"), _CASILLA_14: Decimal("0")}, True, id="zero-application-zero-maximum"),
+        pytest.param({CASILLA_15: Decimal("0")}, False, id="zero-application-missing-maximum"),
+        pytest.param({CASILLA_15: Decimal("5")}, False, id="positive-application-missing-maximum"),
+        pytest.param({CASILLA_14: Decimal("0")}, True, id="omitted-application-zero-maximum"),
+        pytest.param({CASILLA_15: Decimal("0"), CASILLA_14: Decimal("0")}, True, id="zero-application-zero-maximum"),
         pytest.param(
-            {_CASILLA_15: Decimal("5"), _CASILLA_14: Decimal("0")}, False, id="positive-application-zero-maximum"
+            {CASILLA_15: Decimal("5"), CASILLA_14: Decimal("0")}, False, id="positive-application-zero-maximum"
         ),
-        pytest.param({_CASILLA_14: Decimal("100")}, False, id="omitted-application-positive-maximum"),
-        pytest.param({_CASILLA_15: Decimal("99.99"), _CASILLA_14: Decimal("100")}, False, id="under-application"),
-        pytest.param({_CASILLA_15: Decimal("100"), _CASILLA_14: Decimal("100.00")}, True, id="exact-maximum"),
-        pytest.param({_CASILLA_15: Decimal("100.01"), _CASILLA_14: Decimal("100")}, False, id="over-application"),
+        pytest.param({CASILLA_14: Decimal("100")}, False, id="omitted-application-positive-maximum"),
+        pytest.param({CASILLA_15: Decimal("99.99"), CASILLA_14: Decimal("100")}, False, id="under-application"),
+        pytest.param({CASILLA_15: Decimal("100"), CASILLA_14: Decimal("100.00")}, True, id="exact-maximum"),
+        pytest.param({CASILLA_15: Decimal("100.01"), CASILLA_14: Decimal("100")}, False, id="over-application"),
     ),
 )
 def test_application_equals_present_maximum_contract(
@@ -329,17 +325,17 @@ def test_application_equals_present_maximum_names_entered_and_required_amounts()
     """A known maximum the application misses is refused on the application box with both amounts."""
     findings = evaluate_verification_predicates(
         (_application_maximum_predicate(),),
-        {_CASILLA_15: Decimal("40"), _CASILLA_14: Decimal("100")},
+        {CASILLA_15: Decimal("40"), CASILLA_14: Decimal("100")},
         workflow_profile(),
     )
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert findings[0].casilla_id == _CASILLA_15
+    assert findings[0].casilla_id == CASILLA_15
     assert findings[0].message_locale_key == "application.modelo.findings.application_not_required_maximum"
     assert dict(findings[0].message_facts) == {
         "predicate_id": "test-cuantia-maxima",
-        "box": _CASILLA_15,
+        "box": CASILLA_15,
         "casilla_value": Decimal("40"),
         "computed_value": Decimal("100"),
     }
@@ -349,23 +345,23 @@ def test_application_equals_present_maximum_blocks_an_unknown_maximum_as_unresol
     """An absent maximum blocks with its own unresolved finding rather than passing."""
     findings = evaluate_verification_predicates(
         (_application_maximum_predicate(),),
-        {_CASILLA_15: Decimal("0")},
+        {CASILLA_15: Decimal("0")},
         workflow_profile(),
     )
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert findings[0].casilla_id == _CASILLA_15
+    assert findings[0].casilla_id == CASILLA_15
     assert findings[0].message_locale_key == "application.modelo.findings.required_maximum_unresolved"
-    assert dict(findings[0].message_facts) == {"predicate_id": "test-cuantia-maxima", "box": _CASILLA_15}
+    assert dict(findings[0].message_facts) == {"predicate_id": "test-cuantia-maxima", "box": CASILLA_15}
 
 
 def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:
     """at_most_one_positive treats absent, zero, and negative values as non-positive."""
 
     expression = 'at_most_one_positive(["01", "02", "07"])'
-    allowed = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "0"), (_CASILLA_07, "-50"))
-    violating = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "1"), (_CASILLA_07, "0"))
+    allowed = verification_substance_casilla_values((CASILLA_01, "1200"), (CASILLA_02, "0"), (CASILLA_07, "-50"))
+    violating = verification_substance_casilla_values((CASILLA_01, "1200"), (CASILLA_02, "1"), (CASILLA_07, "0"))
 
     assert evaluate_predicate_expression(expression, allowed, workflow_profile()) is True
     assert evaluate_predicate_expression(expression, violating, workflow_profile()) is False
@@ -381,7 +377,7 @@ def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
         expression='at_most_one_positive(["01", "02"])',
         finding_kind="BLOCKING_RULE",
     )
-    values = _casilla_values((_CASILLA_01, "1200"), (_CASILLA_02, "800"))
+    values = verification_substance_casilla_values((CASILLA_01, "1200"), (CASILLA_02, "800"))
 
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile())
 
@@ -410,44 +406,44 @@ def test_roll_forward_balances_core_cases() -> None:
     cases = (
         (
             "reconciles",
-            _casilla_values(
-                (_M200_BIN_OPEN_CASILLA, "10000"),
-                (_M200_BIN_APPLIED_CASILLA, "3000"),
-                (_M200_BIN_GENERATED_CASILLA, "5000"),
-                (_M200_BIN_CLOSING_CASILLA, "7000"),
+            verification_substance_casilla_values(
+                (M200_BIN_OPEN_CASILLA, "10000"),
+                (M200_BIN_APPLIED_CASILLA, "3000"),
+                (M200_BIN_GENERATED_CASILLA, "5000"),
+                (M200_BIN_CLOSING_CASILLA, "7000"),
             ),
             True,
             False,
         ),
         (
             "dropped-closing",
-            _casilla_values(
-                (_M200_BIN_OPEN_CASILLA, "10000"),
-                (_M200_BIN_APPLIED_CASILLA, "3000"),
-                (_M200_BIN_GENERATED_CASILLA, "5000"),
-                (_M200_BIN_CLOSING_CASILLA, "0"),
+            verification_substance_casilla_values(
+                (M200_BIN_OPEN_CASILLA, "10000"),
+                (M200_BIN_APPLIED_CASILLA, "3000"),
+                (M200_BIN_GENERATED_CASILLA, "5000"),
+                (M200_BIN_CLOSING_CASILLA, "0"),
             ),
             False,
             True,
         ),
         (
             "legitimate-zero-closing",
-            _casilla_values(
-                (_M200_BIN_OPEN_CASILLA, "3000"),
-                (_M200_BIN_APPLIED_CASILLA, "3000"),
-                (_M200_BIN_GENERATED_CASILLA, "8000"),
-                (_M200_BIN_CLOSING_CASILLA, "0"),
+            verification_substance_casilla_values(
+                (M200_BIN_OPEN_CASILLA, "3000"),
+                (M200_BIN_APPLIED_CASILLA, "3000"),
+                (M200_BIN_GENERATED_CASILLA, "8000"),
+                (M200_BIN_CLOSING_CASILLA, "0"),
             ),
             True,
             False,
         ),
         (
             "generated-loss-added",
-            _casilla_values(
-                (_M200_BIN_OPEN_CASILLA, "5000"),
-                (_M200_BIN_APPLIED_CASILLA, "2000"),
-                (_M200_BIN_GENERATED_CASILLA, "-4000"),
-                (_M200_BIN_CLOSING_CASILLA, "7000"),
+            verification_substance_casilla_values(
+                (M200_BIN_OPEN_CASILLA, "5000"),
+                (M200_BIN_APPLIED_CASILLA, "2000"),
+                (M200_BIN_GENERATED_CASILLA, "-4000"),
+                (M200_BIN_CLOSING_CASILLA, "7000"),
             ),
             True,
             False,
@@ -462,13 +458,13 @@ def test_roll_forward_balances_core_cases() -> None:
 def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
     """Sub-cent drift reconciles; a euro-scale discontinuity fires."""
     base: dict[CasillaId, Decimal] = {
-        _M200_BIN_OPEN_CASILLA: Decimal("10000"),
-        _M200_BIN_APPLIED_CASILLA: Decimal("3000"),
-        _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
+        M200_BIN_OPEN_CASILLA: Decimal("10000"),
+        M200_BIN_APPLIED_CASILLA: Decimal("3000"),
+        M200_BIN_GENERATED_CASILLA: Decimal("5000"),
     }
-    within = {**base, _M200_BIN_CLOSING_CASILLA: Decimal("7000.01")}
+    within = {**base, M200_BIN_CLOSING_CASILLA: Decimal("7000.01")}
     assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, within) is False
-    beyond = {**base, _M200_BIN_CLOSING_CASILLA: Decimal("7001")}
+    beyond = {**base, M200_BIN_CLOSING_CASILLA: Decimal("7001")}
     assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, beyond) is True
 
 
@@ -496,8 +492,8 @@ def test_roll_forward_balances_bad_arity_refuses_on_both_routes() -> None:
     """A malformed arity is a malformed registry predicate: it neither holds nor stays silent."""
     expr = 'roll_forward_balances(["00671", "00670", "DP200014:00547"])'
     values: dict[CasillaId, Decimal] = {
-        _M200_BIN_CLOSING_CASILLA: Decimal("0"),
-        _M200_BIN_OPEN_CASILLA: Decimal("9999"),
+        M200_BIN_CLOSING_CASILLA: Decimal("0"),
+        M200_BIN_OPEN_CASILLA: Decimal("9999"),
     }
     profile = workflow_profile()
     _assert_predicate_refused(
@@ -525,10 +521,10 @@ def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None
     )
     # roll-forward = 10000 − 3000 + 0 = 7000; operator dropped closing to 0
     values: dict[CasillaId, Decimal] = {
-        _M200_BIN_OPEN_CASILLA: Decimal("10000"),
-        _M200_BIN_APPLIED_CASILLA: Decimal("3000"),
-        _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
-        _M200_BIN_CLOSING_CASILLA: Decimal("0"),
+        M200_BIN_OPEN_CASILLA: Decimal("10000"),
+        M200_BIN_APPLIED_CASILLA: Decimal("3000"),
+        M200_BIN_GENERATED_CASILLA: Decimal("5000"),
+        M200_BIN_CLOSING_CASILLA: Decimal("0"),
     }
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile())
     assert len(findings) == 1
@@ -546,10 +542,10 @@ def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
         finding_kind="ADVISORY",
     )
     values: dict[CasillaId, Decimal] = {
-        _M200_BIN_OPEN_CASILLA: Decimal("10000"),
-        _M200_BIN_APPLIED_CASILLA: Decimal("3000"),
-        _M200_BIN_GENERATED_CASILLA: Decimal("5000"),
-        _M200_BIN_CLOSING_CASILLA: Decimal("7000"),
+        M200_BIN_OPEN_CASILLA: Decimal("10000"),
+        M200_BIN_APPLIED_CASILLA: Decimal("3000"),
+        M200_BIN_GENERATED_CASILLA: Decimal("5000"),
+        M200_BIN_CLOSING_CASILLA: Decimal("7000"),
     }
     assert evaluate_verification_predicates((predicate,), values, workflow_profile()) == []
 
@@ -574,7 +570,7 @@ def test_unknown_expression_refuses_on_both_routes() -> None:
 
 def test_known_operator_with_broken_syntax_refuses_naming_its_operator() -> None:
     """A vocabulary operator whose arguments do not match its grammar is unparseable."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('all_nonzero("01", "02")', values, workflow_profile()),
         refusal=VerificationPredicateRefusal.UNPARSEABLE,
@@ -585,7 +581,7 @@ def test_known_operator_with_broken_syntax_refuses_naming_its_operator() -> None
 
 def test_repeated_evaluation_keeps_unknown_and_hostile_token_refusals() -> None:
     """Every evaluation repeats the unknown-expression refusal and the hostile-token refusal."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
     profile = workflow_profile()
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('threshold(["01"], 100)', values, profile),
@@ -605,7 +601,7 @@ def test_repeated_evaluation_keeps_unknown_and_hostile_token_refusals() -> None:
 
 def test_an_operator_on_the_wrong_route_refuses() -> None:
     """A blocking predicate must name a blocking operator, and an advisory one an advisory operator."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('advisory_when_positive(["01"])', values, workflow_profile()),
         refusal=VerificationPredicateRefusal.OPERATOR_FAMILY,
@@ -655,7 +651,7 @@ def test_an_unreadable_registry_literal_refuses(
     route: VerificationPredicateRoute,
 ) -> None:
     """A registry-authored cutoff, flag field or comparison literal that cannot be read is refused."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
     profile = workflow_profile()
     if route is VerificationPredicateRoute.BLOCKING:
         _assert_predicate_refused(
@@ -675,7 +671,7 @@ def test_an_unreadable_registry_literal_refuses(
 
 def test_each_verification_route_refuses_its_own_malformed_predicate() -> None:
     """Registry-order evaluation refuses a malformed ADVISORY and a malformed BLOCKING_RULE predicate alike."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000")}
     profile = workflow_profile()
     advisory = VerificationPredicateDefinition(
         id="all-nonzero:advisory-on-a-blocking-operator",
@@ -710,8 +706,8 @@ def test_repeated_evaluation_reuses_the_parse_and_keeps_its_verdicts(
 ) -> None:
     """A second evaluation of the same expression runs no grammar and reaches the same verdicts."""
     expression = 'implies_nonzero(["01", "07"])'
-    violated = _casilla_values((_CASILLA_01, "100"))
-    satisfied = _casilla_values((_CASILLA_01, "100"), (_CASILLA_07, "5"))
+    violated = verification_substance_casilla_values((CASILLA_01, "100"))
+    satisfied = verification_substance_casilla_values((CASILLA_01, "100"), (CASILLA_07, "5"))
     profile = workflow_profile()
     first_verdicts = (
         evaluate_predicate_expression(expression, violated, profile),
@@ -746,11 +742,15 @@ _IMPLIES_NONZERO_C01_C07 = 'implies_nonzero(["01", "07"])'
 def test_predicate_implies_nonzero_cases() -> None:
     """implies_nonzero engages only for strictly-positive antecedents and treats absent consequents as zero."""
     cases = (
-        ("antecedent-zero", _casilla_values((_CASILLA_01, "0"), (_CASILLA_07, "0")), True),
-        ("antecedent-negative", _casilla_values((_CASILLA_01, "-100"), (_CASILLA_07, "0")), True),
-        ("both-positive", _casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "200")), True),
-        ("positive-antecedent-zero-consequent", _casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "0")), False),
-        ("positive-antecedent-absent-consequent", _casilla_values((_CASILLA_01, "500")), False),
+        ("antecedent-zero", verification_substance_casilla_values((CASILLA_01, "0"), (CASILLA_07, "0")), True),
+        ("antecedent-negative", verification_substance_casilla_values((CASILLA_01, "-100"), (CASILLA_07, "0")), True),
+        ("both-positive", verification_substance_casilla_values((CASILLA_01, "500"), (CASILLA_07, "200")), True),
+        (
+            "positive-antecedent-zero-consequent",
+            verification_substance_casilla_values((CASILLA_01, "500"), (CASILLA_07, "0")),
+            False,
+        ),
+        ("positive-antecedent-absent-consequent", verification_substance_casilla_values((CASILLA_01, "500")), False),
     )
 
     for case_id, values, expected in cases:
@@ -776,25 +776,25 @@ def test_casilla_equals_implies_nonzero_fires_cases() -> None:
     cases = (
         (
             "antecedent-matches-consequent-zero-fires",
-            _casilla_values((_CASILLA_07, "0")),
-            {_CASILLA_01: "literal-value"},
+            verification_substance_casilla_values((CASILLA_07, "0")),
+            {CASILLA_01: "literal-value"},
             True,
         ),
         (
             "antecedent-matches-consequent-nonzero-holds",
-            _casilla_values((_CASILLA_07, "500")),
-            {_CASILLA_01: "literal-value"},
+            verification_substance_casilla_values((CASILLA_07, "500")),
+            {CASILLA_01: "literal-value"},
             False,
         ),
         (
             "antecedent-differs-holds",
-            _casilla_values((_CASILLA_07, "0")),
-            {_CASILLA_01: "other-value"},
+            verification_substance_casilla_values((CASILLA_07, "0")),
+            {CASILLA_01: "other-value"},
             False,
         ),
         (
             "antecedent-absent-holds",
-            _casilla_values((_CASILLA_07, "0")),
+            verification_substance_casilla_values((CASILLA_07, "0")),
             {},
             False,
         ),
@@ -808,15 +808,15 @@ def test_casilla_equals_implies_nonzero_fires_cases() -> None:
 
 def test_casilla_equals_implies_nonzero_defaults_text_values_to_empty() -> None:
     """Callers that omit text_values (every pre-existing call site) never fire this operator."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    values: dict[CasillaId, Decimal] = {CASILLA_07: Decimal("0")}
     assert evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, values) is False
 
 
 def test_casilla_equals_implies_nonzero_bad_arity_refuses_on_both_routes() -> None:
     """Two tokens where three are required is a malformed predicate on either route."""
     expr = 'casilla_equals_implies_nonzero(["01", "07"])'
-    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
-    text_values = {_CASILLA_01: "literal-value"}
+    values: dict[CasillaId, Decimal] = {CASILLA_07: Decimal("0")}
+    text_values = {CASILLA_01: "literal-value"}
     _assert_predicate_refused(
         lambda: evaluate_advisory_predicate_fires(expr, values, text_values),
         refusal=VerificationPredicateRefusal.ARITY,
@@ -833,13 +833,13 @@ def test_casilla_equals_implies_nonzero_bad_arity_refuses_on_both_routes() -> No
 
 def test_casilla_equals_implies_nonzero_blocking_branch_uses_exact_text() -> None:
     """Missing/nonmatching text does not trigger; an exact match requires the value."""
-    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
+    values: dict[CasillaId, Decimal] = {CASILLA_07: Decimal("0")}
     assert evaluate_predicate_expression(_CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile()) is True
     assert not evaluate_predicate_expression(
-        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value"}
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {CASILLA_01: "literal-value"}
     )
     assert evaluate_predicate_expression(
-        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value "}
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {CASILLA_01: "literal-value "}
     )
 
 
@@ -852,8 +852,8 @@ def test_casilla_equals_implies_nonzero_emits_advisory_finding_via_evaluate_veri
         expression=_CASILLA_EQUALS_IMPLIES_NONZERO,
         finding_kind="ADVISORY",
     )
-    values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
-    text_values = {_CASILLA_01: "literal-value"}
+    values: dict[CasillaId, Decimal] = {CASILLA_07: Decimal("0")}
+    text_values = {CASILLA_01: "literal-value"}
 
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), text_values)
     assert len(findings) == 1
@@ -879,7 +879,7 @@ def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> 
         expression='all_nonzero(["01", "02"])',
         finding_kind="BLOCKING_RULE",
     )
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000"), _CASILLA_02: Decimal("0")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000"), CASILLA_02: Decimal("0")}
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
@@ -896,7 +896,7 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
         expression='all_nonzero(["01", "02"])',
         finding_kind="BLOCKING_RULE",
     )
-    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000"), _CASILLA_02: Decimal("500")}
+    values: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("1000"), CASILLA_02: Decimal("500")}
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile())
     assert findings == []
 
@@ -989,16 +989,16 @@ def test_categorical_blocking_rule_reports_required_field(marker, receipt) -> No
         expression=expression,
         finding_kind="BLOCKING_RULE",
     )
-    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
-    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: marker})
+    values = {} if receipt is None else {CASILLA_07: Decimal(receipt)}
+    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), {CASILLA_01: marker})
     if receipt == "1560000000001":
         assert findings == []
     else:
         assert len(findings) == 1
         assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].casilla_id == CASILLA_07
         assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_nonzero"
-    assert evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: "  "}) == []
+    assert evaluate_verification_predicates((predicate,), values, workflow_profile(), {CASILLA_01: "  "}) == []
 
 
 @pytest.mark.parametrize("marker", [None, "  ", "C ", " S", " "])
@@ -1012,12 +1012,12 @@ def test_categorical_zero_rule_requires_explicit_zero_only_for_exact_marker(mark
         expression=expression,
         finding_kind="BLOCKING_RULE",
     )
-    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
-    texts = {} if marker is None else {_CASILLA_01: marker}
+    values = {} if receipt is None else {CASILLA_07: Decimal(receipt)}
+    texts = {} if marker is None else {CASILLA_01: marker}
     violation = marker == "  " and receipt != "0"
     findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), texts)
     assert bool(findings) is violation
     assert evaluate_advisory_predicate_fires(expression, values, texts) is violation
     if violation:
-        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].casilla_id == CASILLA_07
         assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_zero"

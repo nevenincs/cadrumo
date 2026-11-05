@@ -31,7 +31,7 @@ from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.profile_session import ProfileSessionRefusalReason
-from ...core.time.clock import now as _now
+from ...core.time.clock import now as clock_now
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
@@ -170,7 +170,7 @@ def _bucket_session_windows() -> tuple[int, int]:
     )
 
 
-def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
+def revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
     """Delete receipt bytes and keychain material for journalled custody removal.
 
     The custody transaction fences the durable human generation first. This
@@ -220,7 +220,7 @@ def remove_profile_session_acceleration_for_custody_delete(
     path = _profile_login_sessions().acceleration_receipt_path(storage_root=storage_root, profile_id=UUID(bucket_id))
     was_present = os.path.lexists(path)
     close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
-    _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+    revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
     _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
     if os.path.lexists(path):
         raise UserProfileError(
@@ -266,7 +266,7 @@ def publish_created_profile_session(
         profile_decode_context: Decode context of the pinned authority
             operation the registration ran under.
     """
-    instant = _now() if now is None else now
+    instant = clock_now() if now is None else now
     storage_root = effective_storage_root()
     idle_minutes, absolute_minutes = _bucket_session_windows()
     absolute_deadline = instant + timedelta(minutes=absolute_minutes)
@@ -378,7 +378,7 @@ def authenticate_profile_candidate(
     """
     if cancellation is not None:
         cancellation.raise_if_cancelled()
-    instant = _now() if now is None else now
+    instant = clock_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(str(bucket_id))
     if target.bucket_id != str(bucket_id):
@@ -420,7 +420,7 @@ def authenticate_profile_candidate(
 
 def _require_live_receipt_candidate(session: ProfileBucketSessionPort) -> None:
     """Refuse retired or expired proof, including time spent acquiring custody."""
-    instant = _now()
+    instant = clock_now()
     if session.sealed or instant < session.opened_at:
         raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
     if instant >= session.absolute_deadline:
@@ -479,7 +479,7 @@ def authenticate_profile_for_invocation(
     It closes a displaced local session because this process holds one profile's
     custody at a time. The returned outcome is always process-scoped.
     """
-    instant = _now() if now is None else now
+    instant = clock_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(name)
     candidate = _authenticate_unthrottled_candidate(

@@ -817,7 +817,7 @@ async def test_executor_stores_actual_generation_and_none_effect_only_after_read
     generated = _generation()
     calls: list[object] = []
     loop = asyncio.get_running_loop()
-    validate = generation_operation_module._require_pageable_result
+    validate = generation_operation_module.require_pageable_result
 
     def responsive_validation(projection: WorkbenchGenerationOperationProjection) -> None:
         heartbeat = Event()
@@ -825,7 +825,7 @@ async def test_executor_stores_actual_generation_and_none_effect_only_after_read
         assert heartbeat.wait(2), "projection validation blocked runtime observations and lease renewal"
         validate(projection)
 
-    monkeypatch.setattr(generation_operation_module, "_require_pageable_result", responsive_validation)
+    monkeypatch.setattr(generation_operation_module, "require_pageable_result", responsive_validation)
 
     async def reader(
         identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest

@@ -237,7 +237,7 @@ def _build_preview_result(
         incoming_identity=observation.identity.nif,
     )
     adopted = _preview_facts(reconciliation.adopted)
-    unchanged = _unchanged_preview_facts(projected, reconciliation)
+    unchanged = unchanged_preview_facts(projected, reconciliation)
     effective = record_to_effective_facts(record)
     divergences = tuple(
         CensalPreviewDivergenceProjection(
@@ -266,7 +266,7 @@ def _preview_facts(facts: tuple[UserProfileFact, ...]) -> tuple[CensalPreviewFac
     )
 
 
-def _unchanged_preview_facts(
+def unchanged_preview_facts(
     projected: tuple[UserProfileFact, ...],
     reconciliation: CensalReconciliation,
 ) -> tuple[CensalPreviewFactProjection, ...]:

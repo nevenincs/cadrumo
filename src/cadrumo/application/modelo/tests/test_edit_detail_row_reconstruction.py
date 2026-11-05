@@ -16,7 +16,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.modelos.row_models import Modelo232VinculadaRow, Modelo349OperadorRow, Modelo349RectificacionRow
-from .._edit_execution import _reconstruct_detail_rows
+from ..edit_execution import reconstruct_detail_rows
 from ..edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditDetailRowAddressV1,
@@ -64,7 +64,7 @@ def test_add_row_appends_to_an_empty_set() -> None:
         address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row
     )
 
-    result = _reconstruct_detail_rows(current_detail_rows=(), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(), detail_row_intents=(intent,))
 
     assert result == (row,)
 
@@ -77,7 +77,7 @@ def test_update_row_replaces_content_in_place_preserving_position() -> None:
         address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=updated_first
     )
 
-    result = _reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
 
     assert result == (updated_first, second)
 
@@ -89,7 +89,7 @@ def test_update_row_refuses_an_unknown_natural_key() -> None:
         address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=ghost
     )
 
-    result = _reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
 
     assert isinstance(result, ModeloEditExecutionNoEffectV1)
 
@@ -99,7 +99,7 @@ def test_delete_row_removes_by_key_leaving_the_rest_untouched() -> None:
     second = _vinculada("22222222J", "1000")
     intent = ModeloDetailRowEditIntentV1(address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
-    result = _reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
 
     assert result == (second,)
 
@@ -108,7 +108,7 @@ def test_delete_row_refuses_an_unknown_natural_key() -> None:
     existing = _vinculada("11111111H", "5000")
     intent = ModeloDetailRowEditIntentV1(address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
-    result = _reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
 
     assert isinstance(result, ModeloEditExecutionNoEffectV1)
 
@@ -139,7 +139,7 @@ def test_editing_one_m349_row_kind_never_touches_the_sibling_kind() -> None:
         kind=ModeloEditDetailRowIntentKind.DELETE_ROW,
     )
 
-    result = _reconstruct_detail_rows(current_detail_rows=(operador, rectificacion), detail_row_intents=(intent,))
+    result = reconstruct_detail_rows(current_detail_rows=(operador, rectificacion), detail_row_intents=(intent,))
 
     assert result == (rectificacion,)
 
@@ -147,6 +147,6 @@ def test_editing_one_m349_row_kind_never_touches_the_sibling_kind() -> None:
 def test_no_intents_returns_the_current_set_unchanged() -> None:
     existing = (_vinculada("11111111H", "5000"),)
 
-    result = _reconstruct_detail_rows(current_detail_rows=existing, detail_row_intents=())
+    result = reconstruct_detail_rows(current_detail_rows=existing, detail_row_intents=())
 
     assert result == existing

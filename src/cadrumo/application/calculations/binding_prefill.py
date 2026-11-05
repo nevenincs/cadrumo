@@ -47,7 +47,7 @@ from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -69,22 +69,12 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
 )
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
@@ -95,10 +85,10 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from .errors import BindingPrefillTypeError
 from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
+from .per_grupo_member_keys import per_grupo_member_requirement_keys
 from .revision_carry_gate import revision_carry_outcome
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
@@ -127,7 +117,7 @@ def _revision_carry_outcome(
 class _GatheredObservation(BaseModel):
     """Registry observation plus the persisted source channel that produced it."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     observation: RegistryModeloObservation
     registry_snapshot_ref: RegistrySnapshotRef
@@ -214,7 +204,7 @@ class PrefilledBinding(BaseModel):
     that satisfied the registry previous-filing requirement.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     value: Decimal
@@ -251,7 +241,7 @@ class UnsatisfiedBinding(BaseModel):
     tax than is owed and looking entirely ordinary while it does so.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     source_modelo: str
@@ -271,7 +261,7 @@ class BindingPrefillReport(BaseModel):
     diagnostics channel.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
@@ -286,7 +276,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     and wallet reconciliation decision remain the only selectors.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     amount: Decimal
@@ -470,16 +460,16 @@ def observation_from_iva_compensation_history(
             return ()
         operand_refs: tuple[CasillaId, ...] = ()
         operand_values: tuple[Decimal, ...] = ()
-        if casilla_id == _M303_POSTERIOR_CASILLA and (
+        if casilla_id == M303_COMPENSATION_POSTERIOR_CASILLA and (
             state.prior_pending_amount is not None and state.applied_amount is not None
         ):
-            operand_refs = (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, _M303_COMPENSACION_APLICADA_CASILLA)
+            operand_refs = (M303_COMPENSATION_PENDING_PRIOR_CASILLA, M303_COMPENSATION_APLICADA_CASILLA)
             operand_values = (state.prior_pending_amount, state.applied_amount)
-        elif casilla_id == _M303_GENERADA_CASILLA and state.period_result_amount is not None:
-            operand_refs = (_M303_RESULTADO_CASILLA,)
+        elif casilla_id == M303_COMPENSATION_GENERADA_CASILLA and state.period_result_amount is not None:
+            operand_refs = (M303_COMPENSATION_RESULTADO_CASILLA,)
             operand_values = (state.period_result_amount,)
-        elif casilla_id == _M303_DISPONIBLE_CASILLA and state.pending_for_later_amount is not None:
-            operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+        elif casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA and state.pending_for_later_amount is not None:
+            operand_refs = (M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_GENERADA_CASILLA)
             operand_values = (state.pending_for_later_amount, state.generated_amount)
         return iva_compensation_history_observation(
             modelo_id=Modelo("303").value,
@@ -497,13 +487,13 @@ def observation_from_iva_compensation_history(
         filing_year=state.filing_year,
         period=state.period.registry_token,
         observations=(
-            *observed(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, state.prior_pending_amount),
-            *observed(_M303_COMPENSACION_APLICADA_CASILLA, state.applied_amount),
-            *observed(_M303_POSTERIOR_CASILLA, state.pending_for_later_amount),
-            *observed(_M303_RESULTADO_CASILLA, state.period_result_amount),
+            *observed(M303_COMPENSATION_PENDING_PRIOR_CASILLA, state.prior_pending_amount),
+            *observed(M303_COMPENSATION_APLICADA_CASILLA, state.applied_amount),
+            *observed(M303_COMPENSATION_POSTERIOR_CASILLA, state.pending_for_later_amount),
+            *observed(M303_COMPENSATION_RESULTADO_CASILLA, state.period_result_amount),
             *observed(m303_resultado_final_casilla(revision), state.final_result_amount),
-            *observed(_M303_GENERADA_CASILLA, state.generated_amount),
-            *observed(_M303_DISPONIBLE_CASILLA, state.available_end_amount),
+            *observed(M303_COMPENSATION_GENERADA_CASILLA, state.generated_amount),
+            *observed(M303_COMPENSATION_AVAILABLE_CASILLA, state.available_end_amount),
         ),
     )
 
@@ -747,7 +737,7 @@ def _source_kind_for_binding(
     return _LOCAL_FILING_PROVENANCE
 
 
-def _prefilled_bindings(
+def prefilled_bindings(
     snapshot: RegistrySnapshot,
     resolved_map: Mapping[BindingId, Decimal],
     *,
@@ -911,7 +901,7 @@ def resolve_bindings_from_local_store(
     )
 
     return BindingPrefillReport(
-        prefilled=_prefilled_bindings(
+        prefilled=prefilled_bindings(
             snapshot,
             resolved_map,
             observations=observations,

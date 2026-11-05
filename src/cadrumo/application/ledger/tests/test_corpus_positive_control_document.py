@@ -47,7 +47,7 @@ from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ..invoice_draft_records import InvoiceDraft
-from ._evidence_textlayer_test_support import text_layer_ports_for_pages
+from .evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

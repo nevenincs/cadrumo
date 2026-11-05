@@ -32,7 +32,7 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
@@ -70,7 +70,7 @@ class ModeloReconciliationDiffKind(StrEnum):
     receipt total and the canonical computed result casilla. ``casilla`` — a
     per-casilla value disagreement between the persisted computed revision and
     a filed declaración, emitted for modelos enrolled under
-    :data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`
+    :data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE`
     (:func:`application.modelo.reconcile_casilla.detect_casilla_divergences`).
     """
 
@@ -96,7 +96,7 @@ class ModeloReconciliationDiff(BaseModel):
     :class:`~application.modelo.reconcile_casilla.CasillaDivergenceKind`).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     field_name: str = Field(min_length=1)
     work_unit_value: str = ""
@@ -147,7 +147,7 @@ class ModeloReconciliationAdvisory(BaseModel):
     silent false green), not that a value diverged.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
@@ -184,7 +184,7 @@ class ModeloReconciliationRecord(BaseModel):
     source PDF.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_event_id: Hex64Str
     bucket_id: BucketId
@@ -226,7 +226,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     registry — see :class:`ModeloReconciliationRecord`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     event_id: Hex64Str
     bucket_id: BucketId

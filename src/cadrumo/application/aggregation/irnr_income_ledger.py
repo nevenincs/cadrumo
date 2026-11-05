@@ -26,7 +26,7 @@ from ...core.i18n.render import tr as render_tr
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.irnr import M210PayerMode
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.unit_proportion import UnitProportion
@@ -39,16 +39,16 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from . import _shared_issue_reasons
-from ._grouping import fold_casilla_observations
-from ._models import CasillaAggregation, LedgerAggregationResultBase
+from . import shared_issue_reasons
 from .errors import AggregationPeriodError, AggregationValidationError
+from .grouping import fold_casilla_observations
+from .models import CasillaAggregation, LedgerAggregationResultBase
 
 
 class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a row did not reach the M210 gross-income fact."""
 
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
     FOREIGN_SOURCE_OUT_OF_SCOPE = "foreign_source_out_of_scope"
     SOURCE_JURISDICTION_UNRESOLVED = "source_jurisdiction_unresolved"
@@ -66,7 +66,7 @@ class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
 class IrnrIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while resolving the M210 ledger projection."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     reason: IrnrIncomeLedgerAggregationIssueReason
@@ -77,7 +77,7 @@ class IrnrIncomeLedgerAggregationIssue(BaseModel):
 class IrnrIncomeObservation(BaseModel):
     """One selected, ES-source, explicitly M210-classified income observation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId

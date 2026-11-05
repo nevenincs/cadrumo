@@ -15,8 +15,7 @@ from ....core.period import Period
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -43,9 +42,9 @@ from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
 from ..iva_ledger import (
-    aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
+    aggregate_iva_ledger_observations as iva_ledger_aggregate_iva_ledger_observations_with_authority,
 )
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -58,8 +57,8 @@ def aggregate_iva_ledger_observations(
     period: Period,
 ) -> IvaLedgerAggregation:
     """Exercise the public path with an explicit empty authority owned by this test profile."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        return _aggregate_iva_ledger_observations_with_authority(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        return iva_ledger_aggregate_iva_ledger_observations_with_authority(
             transactions,
             period=period,
             ledger_profile_id="test-profile",
@@ -133,8 +132,8 @@ def _modelo_303_iva_revision() -> ModeloRevision:
     )
 
 
-_Q2_2023 = _period(2023, "2T")
-_Q2_2026 = _period(2026, "2T")
+_Q2_2023 = renta_income_aggregation_period(2023, "2T")
+_Q2_2026 = renta_income_aggregation_period(2026, "2T")
 # Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
 # outside the rate table's coverage: no ES window of any tier reaches back past
 # it.
@@ -269,10 +268,10 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(AggregationValidationError) as refusal,
     ):
-        _aggregate_iva_ledger_observations_with_authority(
+        iva_ledger_aggregate_iva_ledger_observations_with_authority(
             catalogue,
             period=_Q2_2026,
             ledger_profile_id="test-profile",
@@ -305,8 +304,8 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
         )
     )
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = _aggregate_iva_ledger_observations_with_authority(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        result = iva_ledger_aggregate_iva_ledger_observations_with_authority(
             TransactionCatalogue.from_transactions((transaction,)),
             period=_Q2_2026,
             ledger_profile_id="test-profile",
@@ -765,9 +764,9 @@ def test_a_period_below_the_supported_floor_is_refused_before_any_row_is_read() 
     supported date no positive tier reaches, which the rate-coverage tripwire
     keeps unreachable today.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         below_floor = operation.supported_filing_years().floor - 1
-    period = _period(below_floor, "2T")
+    period = renta_income_aggregation_period(below_floor, "2T")
     transaction = _transaction(
         "row-pre-registry",
         booked_date=period.start_date,
@@ -926,7 +925,7 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((food,)),
-        period=_period(2024, "4T"),
+        period=renta_income_aggregation_period(2024, "4T"),
     )
 
     assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
@@ -953,7 +952,7 @@ def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((late,)),
-        period=_period(2025, "2T"),
+        period=renta_income_aggregation_period(2025, "2T"),
     )
 
     assert result.observations == ()
@@ -1009,7 +1008,7 @@ def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
     )
 
     result = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((row,)), period=_period(year, "2T")
+        TransactionCatalogue.from_transactions((row,)), period=renta_income_aggregation_period(year, "2T")
     )
 
     assert result.issues == ()
@@ -1064,7 +1063,7 @@ def test_a_mixed_use_mobile_phone_deducts_no_iva(year: int) -> None:
     )
 
     result = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((row,)), period=_period(year, "2T")
+        TransactionCatalogue.from_transactions((row,)), period=renta_income_aggregation_period(year, "2T")
     )
 
     assert result.observations == ()

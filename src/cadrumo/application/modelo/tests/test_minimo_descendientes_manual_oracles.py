@@ -39,9 +39,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.resources.bundled_data import bundled_path
@@ -407,7 +405,7 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     is the mutation pair proving the flag reads the predicate rather than a
     constant.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         key = f"renta_family.anualidades_sin_minimo_descendientes_{_ORACLE_YEAR}"
 
         excluded: dict[str, UserProfileFactValue] = {

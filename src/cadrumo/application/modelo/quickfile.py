@@ -48,7 +48,7 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -198,7 +198,7 @@ class QuickfileCommand(BaseModel):
         refund_account_id: Per-filing refund own account for the export.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     modelo: str

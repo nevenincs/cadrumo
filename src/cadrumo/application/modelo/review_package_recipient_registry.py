@@ -45,9 +45,9 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.hex import HEX_PATTERN_64
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from .review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 
 #: Raw X25519 public key size in bytes (RFC 7748).
@@ -80,11 +80,11 @@ class RecipientFingerprintRecord(BaseModel):
     export).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     recipient_id: str = Field(min_length=1, max_length=256)
     label: str = Field(default="", max_length=256)
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     added_at: datetime
 
     @property
@@ -105,7 +105,7 @@ class RecipientFingerprintRegister(BaseModel):
     public key a package is sealed to.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     records: tuple[RecipientFingerprintRecord, ...] = Field(default_factory=tuple)
 
@@ -204,7 +204,7 @@ def add_recipient_fingerprint(
         recipient_id=recipient_id,
         label=label,
         public_key_hex=public_key_hex,
-        added_at=added_at or _utc_now(),
+        added_at=added_at or now(),
     )
     updated = RecipientFingerprintRegister(records=(*current.records, record))
     ports.registry_repository.save(updated)

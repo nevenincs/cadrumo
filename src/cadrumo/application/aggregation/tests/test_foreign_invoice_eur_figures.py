@@ -38,7 +38,7 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ...modelo.work_profile import ModeloWorkProfile
 from ..activity_asset_ledger_reconciliation import possibly_durable_expense_findings
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
-from ..modelo_bindings_renta_expenses import _accrual_coverage_gap
+from ..modelo_bindings_renta_expenses import accrual_coverage_gap
 from ..renta_imputation import ImputationCriteria, ImputationFilingHistory
 from ..renta_income_diagnostics import rectification_diagnostics
 from ..renta_income_evidence import income_withheld_amount
@@ -46,7 +46,7 @@ from ..renta_ledger_classification import classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .ledger_source_mesh_support import BUCKET_ID, InMemoryTransactionCatalogueRepository, cash_criterion_profile
-from .renta_income_aggregation_support import _period, catalogue_read_ports
+from .renta_income_aggregation_support import catalogue_read_ports, renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -187,7 +187,7 @@ def _m100(
             bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_period(_YEAR, "0A"),
+            period=renta_income_aggregation_period(_YEAR, "0A"),
             revision=published_snapshot("100", filing_year=_YEAR, period="0A").revision,
             profile=cash_criterion_profile(_YEAR) if profile is None else profile,
         ),
@@ -450,14 +450,14 @@ def test_a_euro_row_covers_a_foreign_invoice_by_its_eur_base() -> None:
     """EUR 500,00 of base is the whole USD 1.000,00 at 0,50, not half of it."""
     row = _row("605.00", currency="EUR", base="500.00", iva="105.00", direction=TransactionDirection.OUTGOING)
 
-    assert _accrual_coverage_gap(_received(), (row,)) is None
+    assert accrual_coverage_gap(_received(), (row,)) is None
 
 
 def test_a_foreign_row_does_not_cover_a_euro_invoice_digit_for_digit() -> None:
     """USD 1.000,00 of base at 0,50 is 500,00 EUR of a 1.000,00 EUR base: half is still unclassified."""
     row = _row("1210.00", eur="605.00", base="1000.00", iva="210.00", direction=TransactionDirection.OUTGOING)
 
-    gap = _accrual_coverage_gap(_received(currency="EUR", fx_rate=None), (row,))
+    gap = accrual_coverage_gap(_received(currency="EUR", fx_rate=None), (row,))
 
     assert gap is not None
     assert "accrues 1000.00" in gap
@@ -467,7 +467,7 @@ def test_a_foreign_row_does_not_cover_a_euro_invoice_digit_for_digit() -> None:
 def test_rows_with_no_eur_value_leave_the_coverage_unknown() -> None:
     row = _row("1210.00", base="1000.00", iva="210.00", direction=TransactionDirection.OUTGOING)
 
-    gap = _accrual_coverage_gap(_received(currency="EUR", fx_rate=None), (row,))
+    gap = accrual_coverage_gap(_received(currency="EUR", fx_rate=None), (row,))
 
     assert gap is not None
     assert "not known" in gap

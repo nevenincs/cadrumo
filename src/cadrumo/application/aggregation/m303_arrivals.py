@@ -25,7 +25,7 @@ from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
 
 
-def _transition_period_applicability_from_registry(
+def transition_period_applicability_from_registry(
     period: Period,
     *,
     operation: PinnedAuthorityOperation,
@@ -315,7 +315,7 @@ def resolve_m303_prorrata_transition_arrival(
     operation: PinnedAuthorityOperation,
 ) -> M303ProrrataTransitionArrival:
     """Resolve a registry-selected prorrata transition from register evidence."""
-    if not _transition_period_applicability_from_registry(period, operation=operation):
+    if not transition_period_applicability_from_registry(period, operation=operation):
         return M303ProrrataTransitionArrival(
             period=period,
             is_applicable=False,

@@ -101,7 +101,7 @@ def _review(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> 
     )
 
 
-def _layout(
+def work_form_layout(
     snapshot: RegistrySnapshot, *, placements: tuple[FormPlacementDefinition, ...] | None = None
 ) -> FormLayoutDefinition:
     grid = FormGridBlock(
@@ -174,7 +174,7 @@ def _layout(
     )
 
 
-def _form(
+def work_form(
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
     *,
@@ -207,7 +207,7 @@ def _by_casilla(form: ModeloWorkForm) -> dict[str, ModeloFormField]:
 def test_without_a_layout_every_casilla_is_listed_once_in_box_order(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    form = _form(snapshot, operation)
+    form = work_form(snapshot, operation)
 
     boxes = [field.box for field in form.fields()]
     assert form.layout_provenance is ModeloFormLayoutProvenance.INSPECTION_ONLY
@@ -221,9 +221,9 @@ def test_without_a_layout_every_casilla_is_listed_once_in_box_order(
 def test_a_layout_for_another_revision_is_only_inspected(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    layout = _layout(snapshot).model_copy(update={"revision_id": "2000"})
+    layout = work_form_layout(snapshot).model_copy(update={"revision_id": "2000"})
 
-    form = _form(snapshot, operation, layout=layout)
+    form = work_form(snapshot, operation, layout=layout)
 
     assert form.inspection_reason is ModeloFormInspectionReason.LAYOUT_FOR_ANOTHER_REVISION
 
@@ -231,7 +231,7 @@ def test_a_layout_for_another_revision_is_only_inspected(
 def test_a_declared_layout_accounts_for_every_casilla_exactly_once(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    form = _form(snapshot, operation, layout=_layout(snapshot))
+    form = work_form(snapshot, operation, layout=work_form_layout(snapshot))
 
     keys = [address_key(field.address) for field in form.fields()]
     assert form.layout_provenance is ModeloFormLayoutProvenance.GENERATED
@@ -249,17 +249,17 @@ def test_a_declared_layout_accounts_for_every_casilla_exactly_once(
 def test_a_layout_that_forgets_a_casilla_is_refused(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    complete = _layout(snapshot)
+    complete = work_form_layout(snapshot)
     forgetful = tuple(item for item in complete.placements if str(item.casilla_id) != _WORKING)
 
     with pytest.raises(ModeloWorkFormLayoutError, match="no placement"):
-        _form(snapshot, operation, layout=_layout(snapshot, placements=forgetful))
+        work_form(snapshot, operation, layout=work_form_layout(snapshot, placements=forgetful))
 
 
 def test_a_layout_that_shows_a_casilla_twice_is_refused(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    layout = _layout(snapshot)
+    layout = work_form_layout(snapshot)
     page = layout.pages[0]
     doubled = page.sections[1].model_copy(
         update={"blocks": (*page.sections[1].blocks, FormFieldBlock(id="again", casilla_id="08"))}
@@ -267,14 +267,14 @@ def test_a_layout_that_shows_a_casilla_twice_is_refused(
     twice = layout.model_copy(update={"pages": (page.model_copy(update={"sections": (page.sections[0], doubled)}),)})
 
     with pytest.raises(ModeloWorkFormLayoutError, match="more than once"):
-        _form(snapshot, operation, layout=twice)
+        work_form(snapshot, operation, layout=twice)
 
 
 @pytest.mark.parametrize("fault", (None, "undeclared", "same-section"))
 def test_a_declared_alias_is_read_only_and_keeps_one_address(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation, fault: str | None
 ) -> None:
-    layout = _layout(snapshot)
+    layout = work_form_layout(snapshot)
     page = layout.pages[0]
     alias = FormSectionDefinition(
         id="payment-copy",
@@ -297,9 +297,9 @@ def test_a_declared_alias_is_read_only_and_keeps_one_address(
     )
     if fault is not None:
         with pytest.raises(ModeloWorkFormLayoutError, match="more than once"):
-            _form(snapshot, operation, layout=layout)
+            work_form(snapshot, operation, layout=layout)
         return
-    form = _form(snapshot, operation, layout=layout)
+    form = work_form(snapshot, operation, layout=layout)
     copied = form.pages[0].sections[-1].blocks[0]
     assert isinstance(copied, ModeloFormContextFieldBlock)
     primary = _by_casilla(form)["08"]
@@ -312,7 +312,7 @@ def test_a_declared_alias_is_read_only_and_keeps_one_address(
 def test_before_any_calculation_each_input_kind_reads_its_own_origin(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    fields = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot)))
+    fields = _by_casilla(work_form(snapshot, operation, layout=work_form_layout(snapshot)))
 
     assert fields["03"].origin is ModeloFormOrigin.NOT_CALCULATED_YET
     assert fields["01"].origin is ModeloFormOrigin.NOT_IMPORTED_YET
@@ -337,8 +337,10 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
         }
     )
 
-    unknown = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot), review=held))
-    recorded = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot), review=held, entered=frozenset({"06"})))
+    unknown = _by_casilla(work_form(snapshot, operation, layout=work_form_layout(snapshot), review=held))
+    recorded = _by_casilla(
+        work_form(snapshot, operation, layout=work_form_layout(snapshot), review=held, entered=frozenset({"06"}))
+    )
 
     assert unknown["06"].origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
     assert unknown["06"].unattributed
@@ -370,8 +372,8 @@ def test_editability_follows_the_admission_and_the_source_policy(
         ),
     )
 
-    unadmitted = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot)))
-    admitted = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot), surface=surface))
+    unadmitted = _by_casilla(work_form(snapshot, operation, layout=work_form_layout(snapshot)))
+    admitted = _by_casilla(work_form(snapshot, operation, layout=work_form_layout(snapshot), surface=surface))
 
     assert unadmitted["06"].editability is ModeloFormEditability.NO_ADMISSION
     assert admitted["06"].editability is ModeloFormEditability.EDITABLE_VALUE
@@ -385,7 +387,7 @@ def test_editability_follows_the_admission_and_the_source_policy(
 def test_labels_and_headings_say_which_language_served_them(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    form = _form(snapshot, operation, layout=_layout(snapshot), language=OutputLanguage.EN)
+    form = work_form(snapshot, operation, layout=work_form_layout(snapshot), language=OutputLanguage.EN)
     fields = _by_casilla(form)
     section = form.pages[0].sections[0]
 
@@ -398,7 +400,7 @@ def test_labels_and_headings_say_which_language_served_them(
 def test_grids_keep_official_rows_constants_and_blanks(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    form = _form(snapshot, operation, layout=_layout(snapshot))
+    form = work_form(snapshot, operation, layout=work_form_layout(snapshot))
     grid = form.pages[0].sections[0].blocks[0]
 
     assert isinstance(grid, ModeloFormGridBlock)
@@ -411,7 +413,7 @@ def test_grids_keep_official_rows_constants_and_blanks(
 def test_counts_roll_up_from_sections_to_the_form(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    form = _form(snapshot, operation, layout=_layout(snapshot))
+    form = work_form(snapshot, operation, layout=work_form_layout(snapshot))
     page = form.pages[0]
 
     assert page.counts.total == sum(section.counts.total for section in page.sections)

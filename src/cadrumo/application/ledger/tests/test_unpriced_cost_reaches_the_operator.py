@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.config_support import LLMProvider, RetiredLLMProvider
-from ..llm_diagnostics import _aggregate_usage
+from ..llm_diagnostics import aggregate_usage
 from ..llm_diagnostics_ports import LlmUsageDiagnosticRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,7 +45,7 @@ def _record(
 
 def test_a_provider_with_only_priced_calls_reports_their_sum() -> None:
     """The positive control: the fold still totals when everything is priced."""
-    rows = _aggregate_usage([_record(Decimal("1.50")), _record(Decimal("2.25"))])
+    rows = aggregate_usage([_record(Decimal("1.50")), _record(Decimal("2.25"))])
 
     assert len(rows) == 1
     assert rows[0].cost_estimate_usd == Decimal("3.75")
@@ -58,7 +58,7 @@ def test_one_unpriced_call_makes_the_provider_total_unavailable() -> None:
     ``1.50`` would be a defensible-looking answer and a wrong one: it is the
     cost of some of the calls, presented as the cost of all of them.
     """
-    rows = _aggregate_usage([_record(Decimal("1.50")), _record(None)])
+    rows = aggregate_usage([_record(Decimal("1.50")), _record(None)])
 
     assert len(rows) == 1
     assert rows[0].cost_estimate_usd is None
@@ -73,7 +73,7 @@ def test_an_unpriced_provider_does_not_hide_a_priced_one() -> None:
     """Poisoning is per provider, so one unpriceable model does not blank the rest."""
     rows = {
         row.provider: row
-        for row in _aggregate_usage(
+        for row in aggregate_usage(
             [
                 _record(Decimal("1.50"), provider=LLMProvider.AGENT),
                 _record(None, provider=LLMProvider.AGENT),

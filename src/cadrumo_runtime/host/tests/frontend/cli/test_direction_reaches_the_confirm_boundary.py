@@ -274,11 +274,11 @@ def test_confirming_in_the_direction_the_document_supports_raises_no_direction_b
     """
     draft = live_document(_PURCHASE_LINES, _PURCHASE_READ).extract()
 
-    stamped = invoice_confirmation._with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
+    stamped = invoice_confirmation.with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
 
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED not in {f.kind for f in stamped.discrepancies}
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED in {
-        f.kind for f in invoice_confirmation._with_direction_contradiction(draft, kind=InvoiceKind.ISSUED).discrepancies
+        f.kind for f in invoice_confirmation.with_direction_contradiction(draft, kind=InvoiceKind.ISSUED).discrepancies
     }, "the same draft must contradict the other direction, or this passes for the wrong reason"
 
 

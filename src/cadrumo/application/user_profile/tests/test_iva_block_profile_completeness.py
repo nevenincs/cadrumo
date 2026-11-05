@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.deadlines.errors import ProfileError
 from ....domain.deadlines.profiles import (
@@ -42,7 +42,7 @@ _SATISFIED_IVA_BLOCK: dict[str, str] = {
 
 def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
     """The reported symptom: a regime with no composition must not read as ready."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = validate_profile_values(
             {
                 "identity.tax_id": "12345678Z",
@@ -60,7 +60,7 @@ def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
 
 def test_profile_with_no_iva_facts_is_never_asked_for_the_block() -> None:
     """A taxpayer with no IVA obligation declares none of the block-owned paths."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         values = {
             "identity.tax_id": "12345678Z",
             "taxpayer_type.entity_type": "natural_person",
@@ -82,7 +82,7 @@ def test_any_single_iva_fact_claims_the_block_including_a_declined_enrolment() -
     ``config profile set`` claimed the block for the resolver while every
     readiness surface stayed silent.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         values = {
             "identity.tax_id": "12345678Z",
             "taxpayer_type.entity_type": "natural_person",

@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...domain.calculations.registry.form_codes import form_for_role
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
@@ -121,7 +121,7 @@ class OverviewStatusNextStep(BaseModel):
             required input is already known, otherwise ``None``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     step_id: OverviewStatusNextStepId
     next_action: DeclaredNextAction | None = None

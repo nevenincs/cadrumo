@@ -32,31 +32,24 @@ from ..calculations.m303_settlement_observation import m303_annual_settlement_ob
 from ..persistence_errors import PersistenceDegradationError
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_read_ports import ProfileReadPorts
-from ._calculation_source_staging import (
-    add_expected_missing_binding_diagnostics as _add_expected_missing_binding_diagnostics,
-)
-from ._calculation_source_staging import (
-    add_terminal_origin_diagnostics as _add_terminal_origin_diagnostics,
-)
-from ._calculation_source_staging import (
-    add_unhandled_source_diagnostics as _add_unhandled_source_diagnostics,
-)
-from ._calculation_source_staging import (
-    resolve_prorrata_regularizacion_sources as _resolve_prorrata_regularizacion_sources,
-)
-from ._calculation_source_staging import stage_prorrata_definitive_percentage
-from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .advisory_binding_value import add_advisory_binding_value_diagnostics
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
-from .calculation_route import CalculationRouteStage as _CalculationRouteStage
-from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
+from .calculation_route import CalculationRouteStage, require_calculation_route_resolver
+from .calculation_source_staging import (
+    add_expected_missing_binding_diagnostics,
+    add_terminal_origin_diagnostics,
+    add_unhandled_source_diagnostics,
+    resolve_prorrata_regularizacion_sources,
+    stage_prorrata_definitive_percentage,
+)
 from .imputation_filings import imputation_filings_from_repositories
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
+from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
@@ -138,9 +131,9 @@ def resolve_bucket_source_mesh(
     def resolve_declared(
         resolver: ModeloSourceResolver,
         *,
-        stage: _CalculationRouteStage = "mesh",
+        stage: CalculationRouteStage = "mesh",
     ) -> CalculationSourceResolution:
-        _require_calculation_route_resolver(stage, resolver)
+        require_calculation_route_resolver(stage, resolver)
         return resolver.resolve(context)
 
     annual_summary_resolutions, inventory_resolutions = _resolve_conditional_families(
@@ -197,7 +190,7 @@ def resolve_bucket_source_mesh(
             snapshot,
             merge_source_resolutions((resolve_ledger_iva(settlement), *family_resolutions)),
         )
-    source_resolution = _resolve_prorrata_regularizacion_sources(
+    source_resolution = resolve_prorrata_regularizacion_sources(
         registry_snapshot=snapshot,
         work_unit=work_unit,
         context=context,
@@ -217,9 +210,9 @@ def resolve_bucket_source_mesh(
         investment_asset_profile_id=iva_investment_asset_profile_id,
         operation=ports.operation,
     )
-    source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
-    source_resolution = _add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
-    source_resolution = _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
     return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=ports.operation)
 
 

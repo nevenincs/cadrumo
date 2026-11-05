@@ -23,7 +23,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..errors import UnacceptedLedgerRegistryValueError
-from ..modelo_bindings import _activity_category_matcher, _employment_category_matcher
+from ..modelo_bindings import modelo_bindings_activity_category_matcher, modelo_bindings_employment_category_matcher
 from ..renta_income_ledger import aggregate_renta_m131_agrario_income_ledger
 from .renta_income_aggregation_support import raw_transaction
 
@@ -81,8 +81,8 @@ def _casilla_05(row: Transaction) -> Decimal:
                     authority=operation,
                 )
             ),
-            activity_category_matcher=_activity_category_matcher(operation),
-            employment_category_matcher=_employment_category_matcher(operation),
+            activity_category_matcher=modelo_bindings_activity_category_matcher(operation),
+            employment_category_matcher=modelo_bindings_employment_category_matcher(operation),
             operation=operation,
         )
     return sum((observation.gross_amount for observation in aggregation.observations), start=Decimal("0"))

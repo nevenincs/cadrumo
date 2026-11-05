@@ -68,7 +68,7 @@ from .source_mesh import (
 from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 
 
-def _candidate_for_invoice_line(
+def candidate_for_invoice_line(
     invoice: Invoice,
     line: InvoiceLine,
     *,
@@ -247,7 +247,7 @@ def _project_oss_invoice(
         candidate.model_copy(update={"corrected_period": corrected_period})
         for index, line in enumerate(invoice.lines, start=1)
         if (
-            candidate := _candidate_for_invoice_line(
+            candidate := candidate_for_invoice_line(
                 invoice,
                 line,
                 line_index=index,

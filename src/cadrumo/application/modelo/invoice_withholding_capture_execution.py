@@ -175,7 +175,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         self,
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
-        prepared: _PreparedCapture,
+        prepared: PreparedCapture,
         operation: PinnedAuthorityOperation,
     ) -> str | OperationRefusalEvidence:
         async with context.cancellation.irreversible_section():
@@ -205,7 +205,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         self,
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
-        prepared: _PreparedCapture,
+        prepared: PreparedCapture,
     ) -> WithholdingEvidenceCaptureResult | OperationRefusalEvidence | None:
         try:
             return await asyncio.to_thread(
@@ -229,7 +229,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         self,
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
-        prepared: _PreparedCapture,
+        prepared: PreparedCapture,
         operation: PinnedAuthorityOperation,
         *,
         local_write_performed: bool,
@@ -290,7 +290,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         payload: ModeloInvoiceWithholdingCaptureRequest,
         profile_id: str,
         operation: PinnedAuthorityOperation,
-    ) -> _PreparedCapture:
+    ) -> PreparedCapture:
         if require_active_bucket_id() != profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         command = payload.command.to_domain()
@@ -325,7 +325,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
             raise InvoiceWithholdingEvidenceError("invalid_evidence") from exc
         if capture.scope.modelo != command.modelo or capture.scope.period != command.period:
             raise InvoiceWithholdingEvidenceError("invoice_withholding_period_mismatch")
-        return _PreparedCapture(ports=ports, cadence=cadence, capture=capture, aggregate_command=command)
+        return PreparedCapture(ports=ports, cadence=cadence, capture=capture, aggregate_command=command)
 
     @staticmethod
     def _aggregate(
@@ -372,7 +372,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
 
 
 @dataclass(frozen=True, slots=True)
-class _PreparedCapture:
+class PreparedCapture:
     ports: ModeloInvoiceWithholdingCapturePorts
     cadence: WithholdingFilerCadence
     capture: InvoiceWithholdingCapture

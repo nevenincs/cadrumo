@@ -64,7 +64,7 @@ from .llm_review_results import LedgerLlmExecutionResult, LedgerLlmOperationResu
 from .read_access import resolve_ledger_read_access
 
 
-def _review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+def review_projector(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
     """Release only this invocation's digest-bound authority-free review facts."""
     if not isinstance(operand, LedgerLlmReviewedOperand) or operand.request.preview:
         raise ValueError("invalid ledger reviewed operand")
@@ -121,7 +121,7 @@ def resolve_ledger_llm_review_access(
     return ResolvedOperationAccess(request=resolved.request, policy=policy)
 
 
-def _result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+def result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     """Match the complete private invocation to its exact settled public receipt."""
     if not isinstance(result, LedgerLlmExecutionResult):
         raise ValueError("invalid ledger review terminal result")
@@ -210,7 +210,7 @@ def build_ledger_llm_review_registration(definition: OperationDefinition) -> Ope
         review_projection_schema=review,
         interaction_response_schema=response,
         reviewed_operand_type=LedgerLlmReviewedOperand,
-        review_projector=_review_projector,
-        result_projector=_result_projector,
+        review_projector=review_projector,
+        result_projector=result_projector,
         access_resolver=resolve_ledger_llm_review_access,
     )

@@ -18,7 +18,7 @@ from ...aggregation.source_mesh import CalculationSourceContext
 from ...modelo.tests.advisory_diagnostic_repositories import EmptyObservationRepository
 from ..iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
-    _annual_source_evidence_diagnostics,
+    annual_source_evidence_diagnostics,
 )
 from ..observations_repository import ObservationEnvelopePayload
 
@@ -83,7 +83,7 @@ def test_annual_evidence_diagnostics_name_only_the_actual_unresolved_binding() -
     assert len(requirement_binding_ids) > 1
     unresolved_binding_id, *resolved_binding_ids = requirement_binding_ids
 
-    diagnostics = _annual_source_evidence_diagnostics(
+    diagnostics = annual_source_evidence_diagnostics(
         binding_ids=(unresolved_binding_id,),
         resolver_id="iva_compensation_annual_partition",
     )

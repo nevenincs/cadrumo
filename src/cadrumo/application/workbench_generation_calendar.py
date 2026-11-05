@@ -100,7 +100,7 @@ def declarations_observation(
     )
 
 
-def _scope_filing_records(
+def scope_filing_records(
     filing_records: tuple[ModeloRecord, ...],
     schedule_calendar: OverviewCalendar,
 ) -> tuple[ModeloRecord, ...]:
@@ -314,7 +314,7 @@ def _refused_declarations_calendar(
         aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](state=unavailable),
     )
     calendar = OverviewCalendar(
-        range=_calendar_query_range(as_of),
+        range=calendar_query_range(as_of),
         entries=(),
         generated_at=observed_at,
         evaluated_on=as_of,
@@ -332,7 +332,7 @@ def _refused_declarations_calendar(
     )
 
 
-def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
+def calendar_query_range(as_of: date) -> OverviewCalendarRange:
     """Cover the latest completed filing year and the current calendar year.
 
     Annual returns for the completed filing year can close in the current
@@ -391,14 +391,14 @@ def _build_workbench_calendar_inputs(
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
-    query_range = _calendar_query_range(as_of)
+    query_range = calendar_query_range(as_of)
 
     def evidence_for(schedule_calendar: OverviewCalendar) -> CalendarEvidenceProjection:
         projection = build_calendar_evidence_projection(
             local=CalendarEvidenceReadOutcome(
                 state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
                 value=LocalCalendarEvidenceSources(
-                    filing_records=_scope_filing_records(
+                    filing_records=scope_filing_records(
                         tuple(filings.records.values()),
                         schedule_calendar,
                     ),

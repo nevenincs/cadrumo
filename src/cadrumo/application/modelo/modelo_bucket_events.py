@@ -6,8 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime
 
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
-from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
+from ...domain.buckets.event_repository import build_bucket_event, emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
@@ -37,7 +36,7 @@ def emit_modelo_bucket_event(
     mutation. Payloads stay compact and reference the owning calculation revision,
     filing record, or work unit instead of duplicating their catalogued state.
     """
-    return _emit_domain_bucket_event(
+    return emit_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=event_type,
@@ -68,7 +67,7 @@ def build_modelo_bucket_event(
     :func:`domain.buckets.event_repository.bucket_event_history_write` to commit the event in the same unit of
     work as the catalogues it records.
     """
-    return _build_domain_bucket_event(
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,

@@ -54,9 +54,9 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
@@ -134,7 +134,7 @@ class ReviewPackageManifest(BaseModel):
     bytes.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     package_info_version: int = Field(default=_PACKAGE_INFO_VERSION, ge=1)
     bucket_id: BucketId
@@ -167,7 +167,7 @@ class ReviewPackageManifest(BaseModel):
 class ReviewPackageBuildResult(BaseModel):
     """Receipt produced by :func:`build_review_package`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     output_path: Path
     manifest: ReviewPackageManifest
@@ -186,7 +186,7 @@ class ReviewPackageVerification(BaseModel):
     clean enough to read it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: ReviewPackageManifest
     missing: tuple[str, ...] = Field(default=())
@@ -289,7 +289,7 @@ def build_review_package(
             },
         )
 
-    built_at = generated_at or _utc_now()
+    built_at = generated_at or now()
     manifest = ReviewPackageManifest(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,

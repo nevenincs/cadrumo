@@ -28,7 +28,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..operator_actions.models import PreconditionVerdict
 from .catalogue import AuthProviderListing
 from .probes import ProviderProbeResult
@@ -76,7 +76,7 @@ class AuthLoginPreconditionError(CadrumoError):
 class AuthProvidersReport(BaseModel):
     """Auth provider catalogue projected for operator output."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     providers: tuple[AuthProviderListing, ...]
 
@@ -97,7 +97,7 @@ class AuthConfigureResult(BaseModel):
     "configured" when the provider cannot yet be used.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     changed: bool = True
@@ -132,7 +132,7 @@ class AuthStatusResult(BaseModel):
     :class:`application.state_projection_models.ProjectionActiveProfile`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str = ""
     configured: bool = False
@@ -181,7 +181,7 @@ class AuthTestResult(AuthStatusResult):
             means no provider probe ran.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
@@ -199,7 +199,7 @@ class LiveAuthPreflightReport(BaseModel):
     read.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str = ""
     configured: bool = False
@@ -233,7 +233,7 @@ class AuthLoginResult(BaseModel):
     the provider-session lifecycle without exposing session material.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     authenticated: bool
@@ -276,7 +276,7 @@ class AuthProviderNotConfiguredError(CadrumoError):
 class AuthLogoutResult(BaseModel):
     """Secret-free result of terminating local auth sessions."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     providers: tuple[str, ...]
@@ -287,7 +287,7 @@ class AuthLogoutResult(BaseModel):
 class AuthResetResult(BaseModel):
     """Secret-free result of removing local provider auth configuration."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     providers: tuple[str, ...]
@@ -311,7 +311,7 @@ class CertificateSourcePayload(BaseModel):
     reference already stored in workflow state.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     certificate_path: str
@@ -323,7 +323,7 @@ class CertificateSourcePayload(BaseModel):
 class CertificateSourceListResult(BaseModel):
     """Result of ``cadrumo-runtime config auth certificate list``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sources: tuple[CertificateSourcePayload, ...] = ()
     active_source: str = ""
@@ -332,7 +332,7 @@ class CertificateSourceListResult(BaseModel):
 class CertificateSourceMutationResult(BaseModel):
     """Result of registering, selecting, or removing a certificate source."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     certificate_path: str = ""
@@ -365,7 +365,7 @@ class CertificateSourceCheckEntry(BaseModel):
             corrupt, missing path/file, or no configured decode password).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     certificate_path: str
@@ -385,7 +385,7 @@ class CertificateSourceCheckReport(BaseModel):
     per entry without re-deriving the same predicate.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: tuple[CertificateSourceCheckEntry, ...] = ()
     has_warnings: bool = False
@@ -404,7 +404,7 @@ class CertificateSourceSecretMutationResult(BaseModel):
     is observable, its *value* never is.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     has_secret: bool = False

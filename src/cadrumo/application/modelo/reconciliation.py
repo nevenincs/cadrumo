@@ -62,7 +62,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.form_codes import forms_for_role
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -118,7 +118,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
     from ..live.filed_observation_ports import FiledObservationProtocol
 
-_DECLARATION_RECONCILE_ROLE = "filed_declaration_reconciliation.modelos"
+DECLARATION_RECONCILE_ROLE = "filed_declaration_reconciliation.modelos"
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 
 A modelo not in this set still accepts
@@ -205,7 +205,7 @@ class ModeloReconciliationCommand(BaseModel):
     unenrolled modelo is refused before parsing.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId | None = None
@@ -223,7 +223,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
     reconciliation event.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId | None = None
@@ -252,7 +252,7 @@ class ModeloReconciliationReport(BaseModel):
     advisories never flip the verdict.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId | None = None
@@ -338,12 +338,12 @@ def _require_declaration_enrolled_modelo(
         catalogue=catalogue,
         bucket_id=bucket_id,
     )
-    if str(work_unit.modelo) not in forms_for_role(_DECLARATION_RECONCILE_ROLE):
+    if str(work_unit.modelo) not in forms_for_role(DECLARATION_RECONCILE_ROLE):
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
             context={
                 "modelo": str(work_unit.modelo),
-                "enrolled_modelos": ",".join(sorted(forms_for_role(_DECLARATION_RECONCILE_ROLE))),
+                "enrolled_modelos": ",".join(sorted(forms_for_role(DECLARATION_RECONCILE_ROLE))),
             },
         )
     return work_unit
@@ -525,12 +525,12 @@ def prepare_parsed_declaracion(
 ) -> PreparedModeloReconciliation:
     """Compare parsed declaration evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
-    if str(work_unit.modelo) not in forms_for_role(_DECLARATION_RECONCILE_ROLE):
+    if str(work_unit.modelo) not in forms_for_role(DECLARATION_RECONCILE_ROLE):
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
             context={
                 "modelo": str(work_unit.modelo),
-                "enrolled_modelos": ",".join(sorted(forms_for_role(_DECLARATION_RECONCILE_ROLE))),
+                "enrolled_modelos": ",".join(sorted(forms_for_role(DECLARATION_RECONCILE_ROLE))),
             },
         )
 

@@ -519,7 +519,7 @@ def _capture_source_imports() -> str:
         inspect.getsource(member)
         for member in (
             work_capture.capture_modelo_work_resolution,
-            work_capture._work_capture_observation,
+            work_capture.work_capture_observation,
         )
     )
 

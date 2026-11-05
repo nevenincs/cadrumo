@@ -13,7 +13,7 @@ from ..core.aggregation import BindingSourceKind
 from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ..core.filing_year import FilingYear
 from ..core.identity.profile import ProfileId
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import OperatorActionAxis
 from ..core.period import Period
 from ..domain.calculations.registry.ids import RevisionId
@@ -48,7 +48,7 @@ class ProjectionActiveProfile(BaseModel):
             from :func:`~cadrumo.application.workflow.profile_health.assess_active_profile_health`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId | None = None
     label: str | None = None
@@ -91,7 +91,7 @@ class ProjectionWorkspaceSummary(BaseModel):
             decrypt — an integrity warning.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transactions: int = Field(default=0, ge=0)
     invoices: int = Field(default=0, ge=0)
@@ -119,7 +119,7 @@ class ProjectionObligation(BaseModel):
         status: The engine :class:`ObligationStatus`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     period: Period
@@ -150,12 +150,12 @@ class OperatorStateProjection(BaseModel):
             :func:`~cadrumo.domain.deadlines.engine.compute_obligation_schedule`, the
             same schedule producer that the workflow deadline stage filters
             through
-            :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
+            :func:`~cadrumo.application.workflow.deadline_stage.resolve_deadline_stage_obligation`.
             The workflow does not consume this tuple directly; the shared
             invariant is producer-level schedule agreement.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile: ProjectionActiveProfile
     auth: ProjectionAuthReadiness
@@ -179,7 +179,7 @@ class ModeloReadinessRequest(BaseModel):
             ledger preflight resolution).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: RevisionId = Field(min_length=1, max_length=64)
@@ -197,7 +197,7 @@ class ProjectionModeloBindingRequirement(BaseModel):
     these rows as operator-facing missing input requirements.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: str = Field(min_length=1, max_length=128)
     source: BindingSourceKind
@@ -450,7 +450,7 @@ class ProjectionModeloReadiness(BaseModel):
             rendered as a clean bill of health.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)

@@ -33,9 +33,9 @@ from ....domain.user_profile.values import UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from ...modelo.work_profile import ModeloWorkProfile
-from .._renta_business_eligibility import RentaExpenseAdvisoryReason
 from ..iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from ..modelo_bindings_renta_expenses import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
+from ..renta_business_eligibility import RentaExpenseAdvisoryReason
 from ..renta_gasto_ledger import (
     RentaGastoLedgerAggregation,
     RentaGastoLedgerAggregationIssueReason,
@@ -46,13 +46,13 @@ from ..renta_ledger_models import RentaLedgerAggregationIssueReason, RentaLedger
 from ..source_mesh import CalculationSourceContext
 from .ledger_source_mesh_support import (
     BUCKET_ID,
+    EmptyActivityAssetHistoryRepository,
     InMemoryTransactionCatalogueRepository,
-    _EmptyActivityAssetHistoryRepository,
-    _ledger_iva_resolver,
-    _revision,
     cash_criterion_profile,
     empty_invoice_repository,
     empty_prorrata_repository,
+    ledger_iva_resolver,
+    ledger_source_mesh_revision,
     m130_box,
     resolve_m100,
 )
@@ -314,7 +314,7 @@ def _repository(row: Transaction) -> InMemoryTransactionCatalogueRepository:
 
 def test_the_iva_refusal_blocks_through_the_source_mesh_without_any_preflight() -> None:
     row = _row(None)
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=_repository(row),
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -324,7 +324,7 @@ def test_the_iva_refusal_blocks_through_the_source_mesh_without_any_preflight() 
             modelo="303",
             filing_year=_YEAR,
             period=_QUARTER,
-            revision=_revision("303", "2022"),
+            revision=ledger_source_mesh_revision("303", "2022"),
         ),
     )
     assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["iva_selected_scope_evidence_failure"]
@@ -339,14 +339,14 @@ def _gasto_resolution(row: Transaction, *, profile: ModeloWorkProfile | None = N
         invoice_reader=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
+        activity_asset_history_repository=EmptyActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=_YEAR,
             period=_QUARTER,
-            revision=_revision("130", "2019-y-siguientes"),
+            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
             profile=profile,
         ),
     )

@@ -65,9 +65,9 @@ class ProfileFactWriteDoor(StrEnum):
 
 def _effective(record: UserProfileRecord) -> dict[str, object]:
     """Project a record to its effective fact per path for change comparison."""
-    from .projections import record_to_effective_facts as _projector
+    from .projections import record_to_effective_facts
 
-    return dict(_projector(record))
+    return dict(record_to_effective_facts(record))
 
 
 def _windowed(record: UserProfileRecord) -> frozenset[tuple[str, date | None, date | None, str]]:

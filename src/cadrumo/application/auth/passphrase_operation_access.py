@@ -9,8 +9,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.access_resolution import (
     HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -44,7 +43,7 @@ def resolve_profile_rotation_access(
     if (
         request.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
         or payload.profile_id != context.profile_id
-        or request.subject_ref != _profile_subject(str(payload.profile_id))
+        or request.subject_ref != profile_operation_subject(str(payload.profile_id))
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
@@ -71,7 +70,9 @@ def project_profile_rotation_result(result: BaseModel, receipt: OperationTermina
     except (ValueError, TypeError):
         pass
     else:
-        if receipt.identity.subject_ref == _profile_subject(str(subject_id)) and outcome.profile_id == str(subject_id):
+        if receipt.identity.subject_ref == profile_operation_subject(str(subject_id)) and outcome.profile_id == str(
+            subject_id
+        ):
             return ProfilePassphraseRotationResultProjection(outcome=outcome)
     raise ValueError("invalid passphrase rotation result")
 

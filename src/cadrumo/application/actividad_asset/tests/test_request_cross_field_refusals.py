@@ -22,7 +22,7 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
 )
-from cadrumo.application.actividad_asset.activity_asset_executors import _refusal
+from cadrumo.application.actividad_asset.activity_asset_executors import activity_asset_executors_refusal
 from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetRevisionSnapshot,
@@ -42,7 +42,7 @@ from cadrumo.domain.renta.actividad_asset.register_records import (
     ActivityAssetDescriptorFacts,
 )
 
-from .test_register import _NAME, _operations, _revision
+from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,21 +52,21 @@ _PROFILE = uuid4()
 
 def _broken(**changes: object) -> ActivityAssetRevision:
     """Build a revision with facts that break a rule, which the domain model would refuse to construct."""
-    return _revision().model_copy(update=changes)
+    return register_revision().model_copy(update=changes)
 
 
 def _opening(**changes: object) -> ActivityAssetRevision:
-    base = _revision()
+    base = register_revision()
     return base.model_copy(update={"opening_history": base.opening_history.model_copy(update=changes)})
 
 
 def _basis(**changes: object) -> ActivityAssetRevision:
-    base = _revision()
+    base = register_revision()
     return base.model_copy(update={"basis": base.basis.model_copy(update=changes)})
 
 
 def _election(**changes: object) -> ActivityAssetRevision:
-    base = _revision()
+    base = register_revision()
     return base.model_copy(update={"amortization": base.amortization.model_copy(update=changes)})
 
 
@@ -112,7 +112,7 @@ def test_a_broken_cross_field_rule_decodes_and_is_refused_with_its_reason_key(ke
     with pytest.raises(ActividadAssetError) as refused:
         request.revision.to_domain()
 
-    refusal = _refusal(refused.value)
+    refusal = activity_asset_executors_refusal(refused.value)
     assert refusal is not None
     assert refusal.reason_key == _ERRORS + key
 
@@ -120,7 +120,7 @@ def test_a_broken_cross_field_rule_decodes_and_is_refused_with_its_reason_key(ke
 def test_the_zero_opening_amount_with_a_covered_year_is_refused_with_the_field_it_concerns() -> None:
     refused = _refused(_CASES["opening_covered_year_requires_amount"]())
 
-    refusal = _refusal(refused)
+    refusal = activity_asset_executors_refusal(refused)
     assert refusal is not None
     assert refusal.reason_facts == {"field": "covered_through_tax_year"}
 
@@ -145,8 +145,8 @@ def _refused(revision: ActivityAssetRevision) -> ActividadAssetError:
 
 
 def test_a_document_kind_without_its_number_is_refused_when_the_descriptor_is_written() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
     lopsided = ActivityAssetDescriptorFacts(name="Element").model_copy(
         update={"document_kind": next(iter(AcquisitionDocumentKind))}
     )
@@ -154,7 +154,7 @@ def test_a_document_kind_without_its_number_is_refused_when_the_descriptor_is_wr
     with pytest.raises(ActividadAssetValidationError, match="document_number_and_kind_together") as refused:
         operations.describe("laptop-1", lopsided)
 
-    refusal = _refusal(refused.value)
+    refusal = activity_asset_executors_refusal(refused.value)
     assert refusal is not None
     assert refusal.reason_facts == {"field": "document_number"}
 
@@ -173,7 +173,7 @@ def test_a_forecast_interval_that_cannot_be_settled_is_refused_with_its_own_reas
     for key, request in expected.items():
         with pytest.raises(ActividadAssetValidationError, match=key) as refused:
             request.exclusive_end()
-        refusal = _refusal(refused.value)
+        refusal = activity_asset_executors_refusal(refused.value)
         assert refusal is not None
         assert refusal.reason_key == _ERRORS + key
 
@@ -186,19 +186,19 @@ def test_a_period_that_is_not_one_of_the_tax_year_is_refused_with_its_reason() -
     with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid") as refused:
         request.requested_period()
 
-    refusal = _refusal(refused.value)
+    refusal = activity_asset_executors_refusal(refused.value)
     assert refusal is not None
     assert refusal.reason_facts == {"field": "m130_period"}
 
 
 def test_a_fault_no_rule_words_is_still_refused_with_a_reason_key_and_its_field() -> None:
-    snapshot = ActivityAssetRevisionSnapshot.from_domain(_revision())
+    snapshot = ActivityAssetRevisionSnapshot.from_domain(register_revision())
     broken = snapshot.model_copy(update={"asset_id": "   "})
 
     with pytest.raises(ActividadAssetValidationError) as refused:
         broken.to_domain()
 
-    refusal = _refusal(refused.value)
+    refusal = activity_asset_executors_refusal(refused.value)
     assert refusal is not None
     assert refusal.reason_key == _ERRORS + "request_record_invalid"
     assert refusal.reason_facts == {"field": "asset_id"}

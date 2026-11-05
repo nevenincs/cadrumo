@@ -26,53 +26,26 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from . import operation_requests as _requests
-from . import result_contracts as _result_contracts
+from . import operation_requests, result_contracts
 from .mutation_steps import (
-    CommittedProrrataMutation as _CommittedProrrataMutation,
-)
-from .mutation_steps import (
-    ProrrataPreflightRefusalError as _ProrrataPreflightRefusalError,
-)
-from .mutation_steps import (
-    build_prorrata_refusal_projection as _build_prorrata_refusal_projection,
-)
-from .mutation_steps import (
-    perform_prorrata_mutation as _perform_prorrata_mutation,
-)
-from .mutation_steps import (
-    preflight_prorrata_operation as _preflight_prorrata_operation,
-)
-from .mutation_steps import (
-    whole_seed_refusal_reason as _whole_seed_refusal_reason,
+    CommittedProrrataMutation,
+    ProrrataPreflightRefusalError,
+    build_prorrata_refusal_projection,
+    perform_prorrata_mutation,
+    preflight_prorrata_operation,
+    whole_seed_refusal_reason,
 )
 from .ports import ProrrataRegisterRepositoryFactory
 from .projection_contracts import (
-    GROSS_DECLARATION_OPERATION_IDS as _GROSS_DECLARATION_OPERATION_IDS,
-)
-from .projection_contracts import (
-    PRORRATA_ELECTION_REFUSAL_CODE as _PRORRATA_ELECTION_REFUSAL_CODE,
-)
-from .projection_contracts import (
-    PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE as _PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE,
-)
-from .projection_contracts import (
-    PRORRATA_VALIDATION_REFUSAL_CODE as _PRORRATA_VALIDATION_REFUSAL_CODE,
-)
-from .projection_contracts import (
-    PRORRATA_WHOLE_SEED_REFUSAL_CODE as _PRORRATA_WHOLE_SEED_REFUSAL_CODE,
-)
-from .projection_contracts import (
-    ProrrataFindingProjection as _ProrrataFindingProjection,
-)
-from .projection_contracts import (
-    ProrrataRefusalProjection as _ProrrataRefusalProjection,
-)
-from .projection_contracts import (
-    ProrrataRefusalReason as _ProrrataRefusalReason,
-)
-from .projection_contracts import (
-    ProrrataSeedSourceProjection as _ProrrataSeedSourceProjection,
+    GROSS_DECLARATION_OPERATION_IDS,
+    PRORRATA_ELECTION_REFUSAL_CODE,
+    PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE,
+    PRORRATA_VALIDATION_REFUSAL_CODE,
+    PRORRATA_WHOLE_SEED_REFUSAL_CODE,
+    ProrrataFindingProjection,
+    ProrrataRefusalProjection,
+    ProrrataRefusalReason,
+    ProrrataSeedSourceProjection,
 )
 from .sector_lifecycle import ProrrataSectorLifecycleUnavailableError
 from .service import (
@@ -115,8 +88,8 @@ async def _store_prorrata_refusal(
     context: OperationExecutorContext,
     *,
     profile_id: UUID,
-    operation_id: _requests.ProrrataOperationId,
-    refusal: _ProrrataRefusalProjection,
+    operation_id: operation_requests.ProrrataOperationId,
+    refusal: ProrrataRefusalProjection,
 ) -> OperationRefusalEvidence:
     async with context.cancellation.irreversible_section():
         return await _persist_prorrata_refusal(
@@ -131,10 +104,10 @@ async def _persist_prorrata_refusal(
     context: OperationExecutorContext,
     *,
     profile_id: UUID,
-    operation_id: _requests.ProrrataOperationId,
-    refusal: _ProrrataRefusalProjection,
+    operation_id: operation_requests.ProrrataOperationId,
+    refusal: ProrrataRefusalProjection,
 ) -> OperationRefusalEvidence:
-    result = _result_contracts.ProrrataOperationExecutionResult(
+    result = result_contracts.ProrrataOperationExecutionResult(
         operation_id=operation_id,
         profile_id=profile_id,
         outcome="refused",
@@ -154,7 +127,7 @@ async def _execute_prorrata_operation(
 ) -> str | OperationRefusalEvidence:
     shape, payload = _require_profile_operation_request(definition_id, request, context)
     await context.events.phase(definition_id)
-    if definition_id == _requests.PRORRATA_LIST_OPERATION_DEFINITION_ID:
+    if definition_id == operation_requests.PRORRATA_LIST_OPERATION_DEFINITION_ID:
         return await _read_prorrata_list(repository_factory, payload, context)
     return await _execute_prorrata_mutation(
         repository_factory,
@@ -169,12 +142,12 @@ def _require_profile_operation_request(
     definition_id: str,
     request: OperationRequest[BaseModel],
     context: OperationExecutorContext,
-) -> tuple[_result_contracts.ProrrataOperationContract, _requests.ProrrataProfileRequest]:
-    shape = _result_contracts.prorrata_operation_contract(definition_id)
+) -> tuple[result_contracts.ProrrataOperationContract, operation_requests.ProrrataProfileRequest]:
+    shape = result_contracts.prorrata_operation_contract(definition_id)
     if shape is None or type(request.payload) is not shape.request_type:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     payload = request.payload
-    if not isinstance(payload, _requests.ProrrataProfileRequest):
+    if not isinstance(payload, operation_requests.ProrrataProfileRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     profile = str(payload.profile_id)
     if (
@@ -190,12 +163,12 @@ def _require_profile_operation_request(
 
 async def _read_prorrata_list(
     repository_factory: ProrrataRegisterRepositoryFactory,
-    payload: _requests.ProrrataProfileRequest,
+    payload: operation_requests.ProrrataProfileRequest,
     context: OperationExecutorContext,
 ) -> str | OperationRefusalEvidence:
     async def read() -> str:
         register, references = await asyncio.to_thread(_load_prorrata_list, repository_factory, payload, context)
-        result = _result_contracts.ProrrataOperationExecutionResult(
+        result = result_contracts.ProrrataOperationExecutionResult(
             operation_id="list",
             profile_id=payload.profile_id,
             outcome="success",
@@ -212,15 +185,15 @@ async def _read_prorrata_list(
 
 def _load_prorrata_list(
     repository_factory: ProrrataRegisterRepositoryFactory,
-    payload: _requests.ProrrataProfileRequest,
+    payload: operation_requests.ProrrataProfileRequest,
     context: OperationExecutorContext,
-) -> tuple[ProrrataRegister, tuple[_result_contracts.ProrrataListedReference | None, ...]]:
+) -> tuple[ProrrataRegister, tuple[result_contracts.ProrrataListedReference | None, ...]]:
     with validating_governed_facts(context.authority_operation):
         register = _prorrata_service(repository_factory, payload.profile_id, context.authority_operation).list_all()
         return register, tuple(_listed_reference(entry) for entry in register.entries)
 
 
-def _listed_reference(entry: ProrrataRegisterEntry) -> _result_contracts.ProrrataListedReference | None:
+def _listed_reference(entry: ProrrataRegisterEntry) -> result_contracts.ProrrataListedReference | None:
     """The reference of an entry's percentage in force; an entry holding none has none."""
     if entry.interrupted or (entry.definitive_percentage is None and entry.provisional_percentage is None):
         return None
@@ -232,7 +205,7 @@ def _listed_reference(entry: ProrrataRegisterEntry) -> _result_contracts.Prorrat
     )
     if reference is None:
         return None
-    return _result_contracts.ProrrataListedReference(
+    return result_contracts.ProrrataListedReference(
         reference_id=reference.reference_id,
         kind=reference.kind.value,
     )
@@ -249,19 +222,19 @@ def _prorrata_service(
 async def _execute_prorrata_mutation(
     repository_factory: ProrrataRegisterRepositoryFactory,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
     context: OperationExecutorContext,
 ) -> str | OperationRefusalEvidence:
     try:
         with validating_governed_facts(context.authority_operation):
-            prepared = _preflight_prorrata_operation(
+            prepared = preflight_prorrata_operation(
                 operation_id,
                 payload,
                 context,
                 calculation_action_ports_factory,
             )
-    except _ProrrataPreflightRefusalError as exc:
+    except ProrrataPreflightRefusalError as exc:
         return await _store_prorrata_refusal(
             context,
             profile_id=payload.profile_id,
@@ -286,17 +259,17 @@ async def _execute_prorrata_mutation(
 
 
 def _preflight_refusal_projection(
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
-    error: _ProrrataPreflightRefusalError,
-) -> _ProrrataRefusalProjection:
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
+    error: ProrrataPreflightRefusalError,
+) -> ProrrataRefusalProjection:
     election_refusal = operation_id in {"elect_especial", "elect_general", "revoke_especial"} and error.reason in {
         "provenance_not_electable",
         "reference_required",
         "reference_not_permitted",
     }
-    code = _PRORRATA_ELECTION_REFUSAL_CODE if election_refusal else _PRORRATA_VALIDATION_REFUSAL_CODE
-    return _build_prorrata_refusal_projection(
+    code = PRORRATA_ELECTION_REFUSAL_CODE if election_refusal else PRORRATA_VALIDATION_REFUSAL_CODE
+    return build_prorrata_refusal_projection(
         reason=error.reason,
         detail=error.detail,
         ejercicio=getattr(payload, "ejercicio", None),
@@ -307,10 +280,10 @@ def _preflight_refusal_projection(
 
 
 def _validation_refusal_projection(
-    payload: _requests.ProrrataProfileRequest,
+    payload: operation_requests.ProrrataProfileRequest,
     detail: str,
-) -> _ProrrataRefusalProjection:
-    return _build_prorrata_refusal_projection(
+) -> ProrrataRefusalProjection:
+    return build_prorrata_refusal_projection(
         reason="validation",
         detail=detail,
         ejercicio=getattr(payload, "ejercicio", None),
@@ -321,8 +294,8 @@ def _validation_refusal_projection(
 async def _commit_prorrata_mutation(
     repository_factory: ProrrataRegisterRepositoryFactory,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
     prepared: object,
     context: OperationExecutorContext,
 ) -> str | OperationRefusalEvidence:
@@ -343,7 +316,7 @@ async def _commit_prorrata_mutation(
                 ProrrataWholeSeedUnavailableError,
                 ProrrataSectorLifecycleUnavailableError,
                 ProrrataRegisterValidationError,
-                _ProrrataPreflightRefusalError,
+                ProrrataPreflightRefusalError,
             ) as exc:
                 return await _persist_prorrata_refusal(
                     context,
@@ -359,14 +332,14 @@ async def _commit_prorrata_mutation(
 def _perform_committed_mutation(
     repository_factory: ProrrataRegisterRepositoryFactory,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
     prepared: object,
     context: OperationExecutorContext,
-) -> _CommittedProrrataMutation:
+) -> CommittedProrrataMutation:
     with validating_governed_facts(context.authority_operation):
         service = _prorrata_service(repository_factory, payload.profile_id, context.authority_operation)
-        return _perform_prorrata_mutation(
+        return perform_prorrata_mutation(
             operation_id,
             payload,
             prepared,
@@ -377,15 +350,15 @@ def _perform_committed_mutation(
 
 
 def _committed_mutation_refusal_projection(
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
     error: Exception,
-) -> _ProrrataRefusalProjection:
+) -> ProrrataRefusalProjection:
     if isinstance(error, ProrrataWholeSeedUnavailableError):
         return _whole_seed_refusal_projection(payload, error)
     if isinstance(error, ProrrataSectorLifecycleUnavailableError):
         return _sector_lifecycle_refusal_projection(operation_id, payload, error)
-    if isinstance(error, _ProrrataPreflightRefusalError):
+    if isinstance(error, ProrrataPreflightRefusalError):
         # A gross-declaration CAS candidate refused against the latest register.
         return _preflight_refusal_projection(operation_id, payload, error)
     # Repository singleton validation runs while rebuilding the latest candidate,
@@ -394,53 +367,53 @@ def _committed_mutation_refusal_projection(
 
 
 def _whole_seed_refusal_projection(
-    payload: _requests.ProrrataProfileRequest,
+    payload: operation_requests.ProrrataProfileRequest,
     error: ProrrataWholeSeedUnavailableError,
-) -> _ProrrataRefusalProjection:
-    return _build_prorrata_refusal_projection(
-        reason=_whole_seed_refusal_reason(error.reason),
+) -> ProrrataRefusalProjection:
+    return build_prorrata_refusal_projection(
+        reason=whole_seed_refusal_reason(error.reason),
         detail=str(error),
         ejercicio=getattr(payload, "ejercicio", None),
         sector_id=getattr(payload, "sector_id", None),
         findings=error.findings,
         existing_provenance=(error.existing_provenance.value if error.existing_provenance is not None else None),
-        code=_PRORRATA_WHOLE_SEED_REFUSAL_CODE,
+        code=PRORRATA_WHOLE_SEED_REFUSAL_CODE,
     )
 
 
 def _sector_lifecycle_refusal_projection(
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataProfileRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataProfileRequest,
     error: ProrrataSectorLifecycleUnavailableError,
-) -> _ProrrataRefusalProjection:
-    reason: _ProrrataRefusalReason = (
+) -> ProrrataRefusalProjection:
+    reason: ProrrataRefusalReason = (
         "sector_prior_definitive_absent" if operation_id == "seed_sector" else "sector_settlement_entry_absent"
     )
-    return _build_prorrata_refusal_projection(
+    return build_prorrata_refusal_projection(
         reason=reason,
         detail=str(error),
         ejercicio=getattr(payload, "ejercicio", None),
         sector_id=getattr(payload, "sector_id", None),
-        code=_PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE,
+        code=PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE,
     )
 
 
-def _committed_count(operation_id: _requests.ProrrataOperationId, register: ProrrataRegister) -> int:
+def _committed_count(operation_id: operation_requests.ProrrataOperationId, register: ProrrataRegister) -> int:
     """Count the register collection the operation wrote."""
     if operation_id == "declare_sector":
         return len(register.sector_definitions)
-    if operation_id in _GROSS_DECLARATION_OPERATION_IDS:
+    if operation_id in GROSS_DECLARATION_OPERATION_IDS:
         return len(register.gross_declarations)
     return len(register.entries)
 
 
 async def _persist_prorrata_mutation_success(
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     profile_id: UUID,
-    committed: _CommittedProrrataMutation,
+    committed: CommittedProrrataMutation,
     context: OperationExecutorContext,
 ) -> str:
-    result = _result_contracts.ProrrataOperationExecutionResult(
+    result = result_contracts.ProrrataOperationExecutionResult(
         operation_id=operation_id,
         profile_id=profile_id,
         outcome="success",
@@ -448,8 +421,8 @@ async def _persist_prorrata_mutation_success(
         entry=committed.entry,
         sector_definition=committed.sector_definition,
         gross_declaration=committed.gross_declaration,
-        seed_source=(_ProrrataSeedSourceProjection.from_seed(committed.seed) if committed.seed is not None else None),
-        findings=tuple(_ProrrataFindingProjection.from_finding(item) for item in committed.findings),
+        seed_source=(ProrrataSeedSourceProjection.from_seed(committed.seed) if committed.seed is not None else None),
+        findings=tuple(ProrrataFindingProjection.from_finding(item) for item in committed.findings),
         prior_ejercicio=committed.prior_ejercicio,
         count=_committed_count(operation_id, committed.register),
     )

@@ -16,8 +16,8 @@ from cadrumo.domain.renta.actividad_asset.errors import (
 )
 from cadrumo.domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
 
-from .test_baja_correction import _disposed
-from .test_register import _NAME, _full_year, _operations, _revision
+from .test_baja_correction import disposed
+from .test_register import NAME, full_year, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,11 +30,11 @@ def test_the_two_boundary_helpers_are_inverse() -> None:
 
 
 def test_an_elapsed_period_states_the_day_it_ended_and_the_boundary_after_it() -> None:
-    operations, _ = _operations(today=date(2037, 12, 31))
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations(today=date(2037, 12, 31))
+    operations.create(register_revision(), NAME)
 
     with pytest.raises(ActividadAssetPeriodElapsedError) as refused:
-        _full_year(operations, 2036)
+        full_year(operations, 2036)
 
     facts = {name: str(value) for name, value in (refused.value.context or {}).items()}
     assert facts == {"ended_on": "2034-12-31", "ended_before": "2035-01-01"}
@@ -45,7 +45,7 @@ def test_an_elapsed_period_states_the_day_it_ended_and_the_boundary_after_it() -
 
 
 def test_a_claim_past_the_baja_states_the_last_days_beside_the_boundaries() -> None:
-    _, repository, _ = _disposed()
+    _, repository, _ = disposed()
     shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026)
     later = shortened.model_copy(
         update={
@@ -75,8 +75,8 @@ def test_a_claim_past_the_baja_states_the_last_days_beside_the_boundaries() -> N
 
 
 def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundary() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     limits = operations.plan_limits("laptop-1")
 
@@ -86,7 +86,7 @@ def test_the_election_limits_state_the_last_day_of_the_period_beside_the_boundar
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_the_baja_sentence_fills_in_every_placeholder_in_each_locale(locale: str) -> None:
-    _, repository, _ = _disposed()
+    _, repository, _ = disposed()
     shortened = next(claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026)
     later = shortened.model_copy(
         update={

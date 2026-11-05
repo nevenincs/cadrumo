@@ -59,7 +59,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr as render_tr
 from ...core.identity.hex_ids import InvoiceId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.iva.components import category_components, registry_retencion_role_token
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence
@@ -211,7 +211,7 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
     has no recognition date or liability-total field.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     income_kind: WithholdingIncomeKind
@@ -248,7 +248,7 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
 class InvoiceWithholdingCapture(BaseModel):
     """Canonical invoice-derived producer command and its consistent read revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     command: WithholdingEvidenceCaptureCommand
     scope: WithholdingWindowScope

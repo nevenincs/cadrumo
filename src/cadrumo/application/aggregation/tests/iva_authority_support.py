@@ -11,7 +11,7 @@ from ..iva_ledger import (
     IvaLedgerProrrataApportionment,
 )
 from ..iva_ledger import (
-    aggregate_iva_ledger_observations as _aggregate,
+    aggregate_iva_ledger_observations as iva_ledger_aggregate,
 )
 
 _PROFILE_ID = "484081b3-cc99-46ad-9b87-90097405670d"  # was 'aggregation-test-profile'
@@ -26,7 +26,7 @@ def aggregate_iva_ledger_observations(
 ) -> IvaLedgerAggregation:
     """Delegate with a typed empty register owned by the same explicit profile."""
     with bundled_indexed_authority().operation() as operation:
-        return _aggregate(
+        return iva_ledger_aggregate(
             transactions,
             period=period,
             ledger_profile_id=_PROFILE_ID,

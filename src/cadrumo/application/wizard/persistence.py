@@ -54,7 +54,7 @@ WizardPersistMode = Literal["create", "edit"]
 the create-vs-edit branch; it is never re-derived at runtime."""
 
 
-def _canonicalise(question: WizardQuestion, value: object) -> str:
+def canonicalise(question: WizardQuestion, value: object) -> str:
     """Render ``value`` as the canonical token used by the persistence layer."""
     if value is None:
         return ""
@@ -107,7 +107,7 @@ def serialise_answers(
             continue
         if only_question_ids is not None and question.id not in only_question_ids:
             continue
-        result[question.profile_key] = _canonicalise(question, value)
+        result[question.profile_key] = canonicalise(question, value)
     return result
 
 
@@ -143,7 +143,7 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
     questions = _question_by_id(flow)
     typed: dict[str, object] = {}
     for question in questions.values():
-        canonical = _resolve_canonical(question, values)
+        canonical = resolve_canonical(question, values)
         if canonical is None:
             continue
         field_name = question.id.replace("-", "_")
@@ -151,7 +151,7 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
     return flow.answers_model.model_validate(typed)
 
 
-def _resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> str | None:
+def resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> str | None:
     """Resolve the canonical token to project for ``question``."""
     if question.profile_key is not None:
         candidate = values.get(question.profile_key)

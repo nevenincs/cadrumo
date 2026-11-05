@@ -62,8 +62,8 @@ from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistor
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReader, InvoiceCatalogueReadPorts
 from ...modelo.work_profile import ModeloWorkProfile
 from ...persistence_errors import PersistenceDegradationError
-from ..ledger_membership import LedgerMembershipPorts, LedgerSourceMembership, _collect_ledger_membership
-from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..ledger_membership import LedgerMembershipPorts, LedgerSourceMembership, collect_ledger_membership
+from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
@@ -96,7 +96,7 @@ class _EmptyTransactionCatalogueReader:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
 
 
-class _EmptyActivityAssetHistoryRepository:
+class EmptyActivityAssetHistoryRepository:
     def load(self) -> ActivityAssetHistory:
         return ActivityAssetHistory()
 
@@ -119,7 +119,7 @@ class _EmptyActivityAssetHistoryRepository:
         raise AssertionError("empty resolver repository is read-only")
 
 
-class StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
+class StaticActivityAssetHistoryRepository(EmptyActivityAssetHistoryRepository):
     def __init__(self, history: ActivityAssetHistory) -> None:
         self._history = history
 
@@ -148,14 +148,14 @@ def cash_criterion_profile(*years: int, extra_facts: tuple[UserProfileFact, ...]
     )
 
 
-def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
+def empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
     return InvoiceCatalogueReadPorts(
         invoice_reader=_EmptyInvoiceCatalogueReader(),
         transaction_reader=_EmptyTransactionCatalogueReader(),
     )
 
 
-def _prior_m303_snapshot_ref():
+def prior_m303_snapshot_ref():
     return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
@@ -212,7 +212,7 @@ class InMemoryTransactionCatalogueRepository:
         )
 
 
-class _InMemoryInvoiceCatalogueRepository:
+class InMemoryInvoiceCatalogueRepository:
     """Inward fake for the invoice catalogue read capability."""
 
     def __init__(self) -> None:
@@ -225,7 +225,7 @@ class _InMemoryInvoiceCatalogueRepository:
         self._catalogue = catalogue
 
 
-class _InMemoryProrrataRegisterRepository:
+class InMemoryProrrataRegisterRepository:
     """Inward fake for the bucket-scoped prorrata read capability."""
 
     def __init__(self, *, bucket_id: str, register: ProrrataRegister | None = None) -> None:
@@ -257,7 +257,7 @@ class _InMemoryProrrataRegisterRepository:
 
 def catalogue_read_ports(
     *,
-    invoice_repository: _InMemoryInvoiceCatalogueRepository,
+    invoice_repository: InMemoryInvoiceCatalogueRepository,
     transaction_repository: InMemoryTransactionCatalogueRepository,
 ) -> InvoiceCatalogueReadPorts:
     return InvoiceCatalogueReadPorts(
@@ -266,25 +266,25 @@ def catalogue_read_ports(
     )
 
 
-def empty_invoice_repository() -> _InMemoryInvoiceCatalogueRepository:
-    return _InMemoryInvoiceCatalogueRepository()
+def empty_invoice_repository() -> InMemoryInvoiceCatalogueRepository:
+    return InMemoryInvoiceCatalogueRepository()
 
 
-def empty_prorrata_repository() -> _InMemoryProrrataRegisterRepository:
-    return _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
+def empty_prorrata_repository() -> InMemoryProrrataRegisterRepository:
+    return InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
 
 
-def prorrata_repository_holding(register: ProrrataRegister) -> _InMemoryProrrataRegisterRepository:
-    return _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID, register=register)
+def prorrata_repository_holding(register: ProrrataRegister) -> InMemoryProrrataRegisterRepository:
+    return InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID, register=register)
 
 
-def _ledger_iva_resolver(
+def ledger_iva_resolver(
     *,
     transaction_repository: InMemoryTransactionCatalogueRepository,
-    invoice_repository: _InMemoryInvoiceCatalogueRepository,
-    prorrata_register_repository: _InMemoryProrrataRegisterRepository,
-) -> _LedgerIvaAggregationSourceResolver:
-    return _LedgerIvaAggregationSourceResolver(
+    invoice_repository: InMemoryInvoiceCatalogueRepository,
+    prorrata_register_repository: InMemoryProrrataRegisterRepository,
+) -> LedgerIvaAggregationSourceResolver:
+    return LedgerIvaAggregationSourceResolver(
         transaction_repository=transaction_repository,
         invoice_catalogue_read_ports=catalogue_read_ports(
             invoice_repository=invoice_repository,
@@ -297,21 +297,21 @@ def _ledger_iva_resolver(
 
 
 @cache
-def _revision(modelo: str, revision_id: str) -> ModeloRevision:
+def ledger_source_mesh_revision(modelo: str, revision_id: str) -> ModeloRevision:
     return published_revision(modelo, revision_id)
 
 
 @cache
-def _m100_revision(year: int) -> ModeloRevision:
+def m100_revision(year: int) -> ModeloRevision:
     return published_snapshot("100", filing_year=year, period="0A").revision
 
 
 @cache
-def _m303_revision() -> ModeloRevision:
+def m303_revision() -> ModeloRevision:
     return published_snapshot("303", filing_year=2025, period="1T").revision
 
 
-def _invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
+def ledger_source_mesh_invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
     line = InvoiceLine(
         description="Asesoria fiscal",
         quantity=Decimal("1"),
@@ -340,7 +340,7 @@ def _invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
     )
 
 
-def _domestic_iva_invoice(
+def domestic_iva_invoice(
     invoice_number: str,
     *,
     kind: CatalogueInvoiceKind,
@@ -389,7 +389,7 @@ def _domestic_iva_invoice(
     )
 
 
-def _exempt_intracommunity_invoice(
+def exempt_intracommunity_invoice(
     invoice_number: str,
     *,
     kind: CatalogueInvoiceKind,
@@ -505,7 +505,7 @@ def machine_acquisition_transaction(
     )
 
 
-def _renta_expense_binding_id(revision: ModeloRevision, casilla_id: str) -> BindingId:
+def renta_expense_binding_id(revision: ModeloRevision, casilla_id: str) -> BindingId:
     return next(
         binding.id
         for binding in revision.bindings
@@ -514,7 +514,7 @@ def _renta_expense_binding_id(revision: ModeloRevision, casilla_id: str) -> Bind
     )
 
 
-def _m130_binding_id(revision: ModeloRevision) -> BindingId:
+def m130_binding_id(revision: ModeloRevision) -> BindingId:
     return next(
         binding.id
         for binding in revision.bindings
@@ -564,7 +564,7 @@ def register_asset(
     )
 
 
-def _register_claim(
+def register_claim(
     asset: ActivityAssetRevision,
     *,
     amount: Decimal,
@@ -588,7 +588,7 @@ def _register_claim(
     )
 
 
-def _free_election() -> ActivityAssetAmortizationElection:
+def free_election() -> ActivityAssetAmortizationElection:
     return ActivityAssetAmortizationElection(
         regime=DirectEstimationRegime.NORMAL,
         method=AmortizationMethod.RESEARCH_DEVELOPMENT_FREE,
@@ -619,7 +619,7 @@ def resolve_m130(
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
-            revision=_revision("130", "2019-y-siguientes"),
+            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
             profile=profile,
         ),
     )
@@ -639,7 +639,7 @@ def resolve_m100(
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=InvoiceCatalogueReadPorts(
-            invoice_reader=invoices or _InMemoryInvoiceCatalogueRepository(),
+            invoice_reader=invoices or InMemoryInvoiceCatalogueRepository(),
             transaction_reader=tx_repo,
         ),
         prorrata_register_repository=prorrata_repository_holding(prorrata_register or ProrrataRegister()),
@@ -651,24 +651,24 @@ def resolve_m100(
             modelo="100",
             filing_year=year,
             period=Period.from_year_and_code(year, "0A"),
-            revision=_m100_revision(year),
+            revision=m100_revision(year),
             profile=profile,
         ),
     )
 
 
 def m130_box(resolution: CalculationSourceResolution) -> Decimal:
-    return resolution.binding_values[_m130_binding_id(_revision("130", "2019-y-siguientes"))]
+    return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))]
 
 
 def reasons(resolution: CalculationSourceResolution) -> list[str]:
     return [item.reason for item in resolution.diagnostics]
 
 
-_PRIOR_YEAR_ROW_NOTE = "source_issue"
+PRIOR_YEAR_ROW_NOTE = "source_issue"
 
 
-def _prior_year_purchase() -> Transaction:
+def prior_year_purchase() -> Transaction:
     """The purchase behind a default ``register_asset`` element, booked before the year under calculation.
 
     Its only trace on a return is the ``_PRIOR_YEAR_ROW_NOTE`` saying the row falls outside the period.
@@ -682,19 +682,19 @@ def _prior_year_purchase() -> Transaction:
     )
 
 
-class _UnreadableActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
+class UnreadableActivityAssetHistoryRepository(EmptyActivityAssetHistoryRepository):
     @override
     def load(self) -> ActivityAssetHistory:
         raise PersistenceDegradationError("activity_asset_history_load")
 
 
-def _filing_years() -> tuple[int, ...]:
+def filing_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
     assert support is not None, "the published authority declares no support envelope"
     return tuple(range(support.years[0], newest_authored_edition("100") + 1))
 
 
-_AMORTIZABLE_CATEGORIES = ("hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto")
+AMORTIZABLE_CATEGORIES = ("hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto")
 
 
 class EmptyInventoryRepository:
@@ -737,14 +737,14 @@ def activity_asset_ledger_membership(
         if modelo == "100"
         else LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
     )
-    membership: LedgerSourceMembership = _collect_ledger_membership(
+    membership: LedgerSourceMembership = collect_ledger_membership(
         context=CalculationSourceContext(
             bucket_id=BUCKET_ID,
             work_unit_id=work_unit.work_unit_id,
             modelo=modelo,
             filing_year=2025,
             period=Period.from_year_and_code(2025, period_code),
-            revision=_revision(modelo, "2025" if modelo == "100" else "2019-y-siguientes"),
+            revision=ledger_source_mesh_revision(modelo, "2025" if modelo == "100" else "2019-y-siguientes"),
         ),
         work_unit=work_unit,
         ports=ports,

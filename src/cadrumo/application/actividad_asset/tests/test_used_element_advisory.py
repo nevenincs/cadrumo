@@ -25,8 +25,8 @@ from cadrumo.domain.renta.actividad_asset.election import (
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 
 from .ledger_support import MemoryLedger
-from .register_support import MemoryRepository, _published_authority, memory_register_authority
-from .test_register import _ACQUISITION, _NAME, _forecast, _revision
+from .register_support import MemoryRepository, memory_register_authority, published_authority
+from .test_register import ACQUISITION, NAME, register_forecast, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +42,7 @@ def _element(
     regime: DirectEstimationRegime = DirectEstimationRegime.NORMAL,
     built: date | None = None,
 ) -> ActivityAssetRevision:
-    base = _revision()
+    base = register_revision()
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["acquired_condition"] = condition
     facts["building_construction_date"] = built
@@ -61,12 +61,12 @@ def _advisories(
 ) -> tuple[ActivityAssetOperations, tuple[ActivityAssetPlanAdvisoryKind, ...]]:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=register_forecast,
         taxpayer_modality=lambda: revision.amortization.regime,
         register_authority=memory_register_authority(),
     )
-    operations.create(revision, _NAME)
+    operations.create(revision, NAME)
     return operations, tuple(item.kind for item in operations.plan_advisories(_ASSET))
 
 
@@ -84,7 +84,7 @@ def test_the_warning_changes_no_figure() -> None:
     operations.plan_advisories(_ASSET)
 
     assert operations.plan(_ASSET) == before
-    assert _published_authority(revision, 2025).annual_rate == Decimal("0.24")
+    assert published_authority(revision, 2025).annual_rate == Decimal("0.24")
 
 
 def test_a_coefficient_above_the_ordinary_maximum_is_warned() -> None:

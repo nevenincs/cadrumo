@@ -135,7 +135,7 @@ def build_wizard_status(
         profile_total_keys=profile_total_keys,
         auth_provider=auth_provider,
         login_ready=login_ready,
-        next_action=_next_wizard_action(
+        next_action=next_wizard_action(
             has_profile=record is not None,
             missing_required=missing_required,
             missing_enrolment=missing_enrolment,
@@ -145,7 +145,7 @@ def build_wizard_status(
     )
 
 
-def _next_wizard_action(
+def next_wizard_action(
     *,
     has_profile: bool,
     missing_required: tuple[str, ...],
@@ -227,19 +227,19 @@ def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSc
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     values: dict[str, str] = dict(record_to_path_values(record))
-    if not bool(values.get(_TAX_ID_PATH)):
-        _require_active_profile_tax_id(
+    if not bool(values.get(TAX_ID_PATH)):
+        require_active_profile_tax_id(
             values,
             active_profile=record.profile_id,
-            requirement=_grounded_tax_id_requirement(schema=schema),
+            requirement=grounded_tax_id_requirement(schema=schema),
         )
     return projection_for_taxpayer(record, schema=schema)
 
 
-_TAX_ID_PATH = "identity.tax_id"
+TAX_ID_PATH = "identity.tax_id"
 
 
-def _require_active_profile_tax_id(
+def require_active_profile_tax_id(
     values: Mapping[str, str],
     *,
     active_profile: str | None,
@@ -251,7 +251,7 @@ def _require_active_profile_tax_id(
     owners; this deterministic precondition owns the terminal refusal they
     feed and can be exercised from resolved facts alone.
     """
-    if bool(values.get(_TAX_ID_PATH)):
+    if bool(values.get(TAX_ID_PATH)):
         return
     raise WizardStatusError(
         translated_message="application.wizard.status.errors.missing_tax_id",
@@ -268,7 +268,7 @@ def _require_active_profile_tax_id(
     )
 
 
-def _grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
+def grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
     """Render the tax-identifier field as its operator label with legal grounding.
 
     Reading the label from the schema, as every other missing profile fact
@@ -278,7 +278,7 @@ def _grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
-            _TAX_ID_PATH,
+            TAX_ID_PATH,
             schema=schema,
         ),
     )

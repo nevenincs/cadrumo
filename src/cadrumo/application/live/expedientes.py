@@ -46,7 +46,7 @@ from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
-from .snapshot_identity import derive_snapshot_id as _derive_snapshot_id
+from .snapshot_identity import derive_snapshot_id
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -162,7 +162,7 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, 
 
     @override
     def _derive_snapshot_id(self, capture: ExpedientesCapture) -> str:
-        return _derive_snapshot_id(capture)
+        return derive_snapshot_id(capture)
 
     @override
     def _build_payload(

@@ -27,7 +27,7 @@ surfaced as :class:`~cadrumo.application.modelo.action_errors.ModeloWorkflowGate
 See Also:
     :mod:`~cadrumo.application.workflow.engine`:
         Owns deadline-independence for VERIFY and late-local FILE behavior.
-    :mod:`~cadrumo.application.workflow._deadline_stage`:
+    :mod:`~cadrumo.application.workflow.deadline_stage`:
         Selects the workflow obligation before submission preflight is reached.
     :class:`~cadrumo.domain.submission.engine.SubmissionEngine`:
         Runs the read-only preflight gates using the deadline-window checker
@@ -74,9 +74,9 @@ from ..workflow.engine import WorkflowEngine
 from ..workflow.errors import WorkflowInputMismatchError
 from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
-from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import ModeloWorkflowGateError
 from .revision_replay_inputs import revision_filing_replay_inputs
+from .row_source_identity_replay import attach_revision_row_source_identities
 from .verification_repository_ports import WorkflowRunRepositoryProtocol
 from .workflow_gate_ports import WorkflowGateDraftRepositoryProtocol, WorkflowGatePorts
 
@@ -124,7 +124,7 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
     return declared or work_unit.period
 
 
-class _RevisionInputsProvider:
+class RevisionInputsProvider:
     """Load immutable :class:`CalculationRevision` inputs for the workflow gate."""
 
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
@@ -382,7 +382,7 @@ def build_revision_workflow_engine(
         submission_engine=submission_engine,
         session=None,
         certificate_bundle=None,
-        inputs_provider=_RevisionInputsProvider(
+        inputs_provider=RevisionInputsProvider(
             revision=revision,
             work_unit=work_unit,
         ),
@@ -442,7 +442,7 @@ def run_revision_workflow_gate(
 
 
 __all__ = [
-    "_RevisionInputsProvider",
+    "RevisionInputsProvider",
     "build_revision_deadline_window_checker",
     "build_revision_workflow_engine",
     "run_revision_workflow_gate",

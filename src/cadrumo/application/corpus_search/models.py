@@ -23,7 +23,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -50,7 +50,7 @@ class CorpusChunk(BaseModel):
     held across a rebuild still resolves.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     chunk_id: _Text
     corpus_ref: _Text
@@ -65,7 +65,7 @@ class CorpusChunk(BaseModel):
 class CorpusDocument(BaseModel):
     """Metadata for one extracted corpus source file in the lexical index."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     corpus_ref: _Text
     source_path: _Text
@@ -76,7 +76,7 @@ class CorpusDocument(BaseModel):
 class LexicalSearchHit(BaseModel):
     """One ranked lexical-search result over the FTS5 index."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     chunk_id: _Text
     corpus_ref: _Text
@@ -96,7 +96,7 @@ class CitationResolution(BaseModel):
     extracted corpus the citation's ``corpus_ref`` points at.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     citation_id: _Text
     document_id: _Text
@@ -112,7 +112,7 @@ class CitationResolution(BaseModel):
 class CorpusIndexBuildResult(BaseModel):
     """Summary of one lexical-index build."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     database_path: _Text
     document_count: NonNegativeInt
@@ -129,7 +129,7 @@ class RetrievalHit(BaseModel):
     hit's zero-based position in the lexical ranking.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     chunk_id: _Text
     corpus_ref: _Text
@@ -148,7 +148,7 @@ class RetrievalResponse(BaseModel):
     ``mode`` is ``CITATION``; otherwise ``hits`` carries the ranked results.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     query: _Text
     mode: RetrievalMode

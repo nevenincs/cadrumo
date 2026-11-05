@@ -14,7 +14,7 @@ from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -168,7 +168,7 @@ class ExpectedFiledDeclarationGrid(BaseModel):
             those years as expected-but-not-found would be a false anomaly.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelos: tuple[str, ...] = ()
     ejercicios: tuple[int, ...] = ()
@@ -198,7 +198,7 @@ class FiledHistoryDiscoveryPair(BaseModel):
             nothing is not walked.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
@@ -254,7 +254,7 @@ class FiledHistoryDiscoveryReport(BaseModel):
             not a failure — the design ships fully functional without it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     pairs: tuple[FiledHistoryDiscoveryPair, ...] = ()
     profile_year_span_determined: bool = False
@@ -538,7 +538,7 @@ class FiledHistoryPairOutcome(BaseModel):
     own field and why the notices below branch on it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
@@ -590,7 +590,7 @@ class FiledHistoryOnboardingRun(BaseModel):
     honest form of the same information.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     pairs: tuple[FiledHistoryPairOutcome, ...] = ()
     dry_run: bool = False

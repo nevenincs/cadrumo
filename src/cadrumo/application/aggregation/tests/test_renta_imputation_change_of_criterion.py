@@ -28,51 +28,51 @@ from ..renta_imputation import ImputationFilingHistory
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .ledger_source_mesh_support import (
     BUCKET_ID,
+    InMemoryInvoiceCatalogueRepository,
     InMemoryTransactionCatalogueRepository,
-    _InMemoryInvoiceCatalogueRepository,
     resolve_m100,
 )
 from .renta_income_aggregation_support import catalogue_read_ports
 from .test_renta_imputation_criterion import (
-    _ACCOUNTING,
-    _BASE,
-    _CASH,
-    _CREDIT_0599,
-    _DEVENGO,
-    _INCOME_0171,
-    _INCOME_M130_01,
-    _LATER,
-    _RETENCION,
-    _ZERO,
-    _declared,
-    _expense_row,
-    _in_year,
-    _issued,
-    _profile,
-    _receipt,
-    _received,
-    _unresolved_bindings,
+    ACCOUNTING,
+    BASE,
+    CASH,
+    CREDIT_0599,
+    DEVENGO,
+    INCOME_0171,
+    INCOME_M130_01,
+    LATER,
+    RETENCION,
+    ZERO,
+    declared,
+    expense_row,
+    in_year,
+    issued,
+    received,
+    renta_imputation_criterion_profile,
+    renta_imputation_criterion_receipt,
+    unresolved_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_Y = _LATER - 2
-_Y1 = _LATER - 1
-_Y2 = _LATER
+_Y = LATER - 2
+_Y1 = LATER - 1
+_Y2 = LATER
 _YEARS = (_Y, _Y1, _Y2)
 
 
 def _cash_then_accrual() -> tuple[UserProfileFact, ...]:
     """Cash in the first year, then accrual because Codigo de Comercio accounting ended the election (art. 7.2.2)."""
     return (
-        *_declared((_Y, _CASH), (_Y1, _DEVENGO), (_Y2, _DEVENGO)),
-        _in_year(_ACCOUNTING, True, _Y1),
-        _in_year(_ACCOUNTING, True, _Y2),
+        *declared((_Y, CASH), (_Y1, DEVENGO), (_Y2, DEVENGO)),
+        in_year(ACCOUNTING, True, _Y1),
+        in_year(ACCOUNTING, True, _Y2),
     )
 
 
 def _accrual_then_cash() -> tuple[UserProfileFact, ...]:
-    return _declared((_Y, _DEVENGO), (_Y1, _CASH), (_Y2, _CASH))
+    return declared((_Y, DEVENGO), (_Y1, CASH), (_Y2, CASH))
 
 
 def _resolve(
@@ -102,7 +102,7 @@ def _resolve(
             filing_year=year,
             period=Period.from_year_and_code(year, period),
             revision=published_snapshot(modelo, filing_year=year, period=period).revision,
-            profile=_profile(operation, facts),
+            profile=renta_imputation_criterion_profile(operation, facts),
         ),
     )
 
@@ -115,16 +115,22 @@ def _income_by_year(
     invoices: tuple[Invoice, ...] = (),
 ) -> dict[int, Decimal]:
     return {
-        year: _resolve(operation, facts, year=year, rows=rows, invoices=invoices).binding_values[_INCOME_0171]
+        year: _resolve(operation, facts, year=year, rows=rows, invoices=invoices).binding_values[INCOME_0171]
         for year in _YEARS
     }
 
 
 def _collected(accrued: date, *payments: tuple[date, str]) -> tuple[tuple[Transaction, ...], Invoice]:
-    invoice = _issued(
-        accrued, linked=tuple(_receipt(on, amount=Decimal(amount)).transaction_id for on, amount in payments)
+    invoice = issued(
+        accrued,
+        linked=tuple(
+            renta_imputation_criterion_receipt(on, amount=Decimal(amount)).transaction_id for on, amount in payments
+        ),
     )
-    rows = tuple(_receipt(on, invoice_id=invoice.invoice_id, amount=Decimal(amount)) for on, amount in payments)
+    rows = tuple(
+        renta_imputation_criterion_receipt(on, invoice_id=invoice.invoice_id, amount=Decimal(amount))
+        for on, amount in payments
+    )
     return rows, invoice
 
 
@@ -134,9 +140,9 @@ def test_collected_two_years_after_accruing_lands_in_the_first_accrual_year(
     """The finding itself: accrued in Y under cash, collected in Y+2 under accrual, so Y+1 owns it."""
     rows, invoice = _collected(date(_Y, 11, 1), (date(_Y2, 2, 1), "1060.00"))
     assert _income_by_year(operation, _cash_then_accrual(), rows=rows, invoices=(invoice,)) == {
-        _Y: _ZERO,
-        _Y1: _BASE,
-        _Y2: _ZERO,
+        _Y: ZERO,
+        _Y1: BASE,
+        _Y2: ZERO,
     }
 
 
@@ -145,16 +151,16 @@ def test_the_row_enters_the_first_instalment_of_the_accrual_year(operation: Pinn
     resolution = _resolve(
         operation, _cash_then_accrual(), year=_Y1, rows=rows, invoices=(invoice,), modelo="130", period="1T"
     )
-    assert resolution.binding_values[_INCOME_M130_01] == _BASE
+    assert resolution.binding_values[INCOME_M130_01] == BASE
 
 
 def test_uncollected_income_of_a_cash_year_enters_the_first_accrual_year(operation: PinnedAuthorityOperation) -> None:
     """Art. 7.4 reaches the invoice nobody has paid yet: no later accrual year would ever compute it."""
-    invoice = _issued(date(_Y, 11, 1))
+    invoice = issued(date(_Y, 11, 1))
     assert _income_by_year(operation, _cash_then_accrual(), invoices=(invoice,)) == {
-        _Y: _ZERO,
-        _Y1: _BASE,
-        _Y2: _ZERO,
+        _Y: ZERO,
+        _Y1: BASE,
+        _Y2: ZERO,
     }
 
 
@@ -166,7 +172,7 @@ def test_the_uncollected_rest_of_a_part_paid_invoice_enters_the_first_accrual_ye
     assert _income_by_year(operation, _cash_then_accrual(), rows=rows, invoices=(invoice,)) == {
         _Y: Decimal("500.00"),
         _Y1: Decimal("500.00"),
-        _Y2: _ZERO,
+        _Y2: ZERO,
     }
 
 
@@ -175,23 +181,23 @@ def test_a_part_collected_on_each_side_of_the_change_still_adds_up_once(operatio
     assert _income_by_year(operation, _cash_then_accrual(), rows=rows, invoices=(invoice,)) == {
         _Y: Decimal("500.00"),
         _Y1: Decimal("500.00"),
-        _Y2: _ZERO,
+        _Y2: ZERO,
     }
 
 
 def test_wholly_collected_under_cash_stays_there(operation: PinnedAuthorityOperation) -> None:
     rows, invoice = _collected(date(_Y, 10, 1), (date(_Y, 12, 1), "1060.00"))
     assert _income_by_year(operation, _cash_then_accrual(), rows=rows, invoices=(invoice,)) == {
-        _Y: _BASE,
-        _Y1: _ZERO,
-        _Y2: _ZERO,
+        _Y: BASE,
+        _Y1: ZERO,
+        _Y2: ZERO,
     }
 
 
 def test_the_withholding_travels_with_the_carried_income(operation: PinnedAuthorityOperation) -> None:
     rows, invoice = _collected(date(_Y, 11, 1), (date(_Y2, 2, 1), "1060.00"))
     resolution = _resolve(operation, _cash_then_accrual(), year=_Y1, rows=rows, invoices=(invoice,))
-    assert resolution.binding_values[_CREDIT_0599] == _RETENCION
+    assert resolution.binding_values[CREDIT_0599] == RETENCION
 
 
 def test_collection_after_the_carried_year_was_filed_names_that_year_for_rectification(
@@ -209,32 +215,32 @@ def test_an_undeclared_collection_year_blocks_the_carried_year_rather_than_losin
     operation: PinnedAuthorityOperation,
 ) -> None:
     rows, invoice = _collected(date(_Y, 11, 1), (date(_Y2, 2, 1), "1060.00"))
-    facts = (*_declared((_Y, _CASH), (_Y1, _DEVENGO)), _in_year(_ACCOUNTING, True, _Y1))
+    facts = (*declared((_Y, CASH), (_Y1, DEVENGO)), in_year(ACCOUNTING, True, _Y1))
     resolution = _resolve(operation, facts, year=_Y1, rows=rows, invoices=(invoice,))
-    assert _INCOME_0171 in _unresolved_bindings(resolution)
+    assert INCOME_0171 in unresolved_bindings(resolution)
 
 
 def test_a_cash_year_with_nothing_after_it_keeps_the_invoice_waiting(operation: PinnedAuthorityOperation) -> None:
-    invoice = _issued(date(_Y, 11, 1))
-    facts = _declared((_Y, _CASH), (_Y1, _CASH), (_Y2, _CASH))
-    assert _income_by_year(operation, facts, invoices=(invoice,)) == {_Y: _ZERO, _Y1: _ZERO, _Y2: _ZERO}
+    invoice = issued(date(_Y, 11, 1))
+    facts = declared((_Y, CASH), (_Y1, CASH), (_Y2, CASH))
+    assert _income_by_year(operation, facts, invoices=(invoice,)) == {_Y: ZERO, _Y1: ZERO, _Y2: ZERO}
 
 
 def test_leaving_accrual_for_cash_computes_an_unpaid_invoice_once(operation: PinnedAuthorityOperation) -> None:
-    invoice = _issued(date(_Y, 11, 1))
+    invoice = issued(date(_Y, 11, 1))
     assert _income_by_year(operation, _accrual_then_cash(), invoices=(invoice,)) == {
-        _Y: _BASE,
-        _Y1: _ZERO,
-        _Y2: _ZERO,
+        _Y: BASE,
+        _Y1: ZERO,
+        _Y2: ZERO,
     }
 
 
 def test_leaving_accrual_for_cash_does_not_count_a_later_collection_again(operation: PinnedAuthorityOperation) -> None:
     rows, invoice = _collected(date(_Y, 11, 1), (date(_Y2, 2, 1), "1060.00"))
     assert _income_by_year(operation, _accrual_then_cash(), rows=rows, invoices=(invoice,)) == {
-        _Y: _BASE,
-        _Y1: _ZERO,
-        _Y2: _ZERO,
+        _Y: BASE,
+        _Y1: ZERO,
+        _Y2: ZERO,
     }
 
 
@@ -244,7 +250,7 @@ def test_an_advance_collected_under_accrual_for_a_cash_year_refuses_in_the_colle
     """Collected under accrual before accruing, and accruing under cash: neither rule reaches it, so it says so."""
     rows, invoice = _collected(date(_Y1, 2, 1), (date(_Y, 12, 1), "1060.00"))
     resolution = _resolve(operation, _accrual_then_cash(), year=_Y, rows=rows, invoices=(invoice,))
-    assert _INCOME_0171 in _unresolved_bindings(resolution)
+    assert INCOME_0171 in unresolved_bindings(resolution)
     assert any("uncomputed_across_change" in item.message for item in resolution.diagnostics)
 
 
@@ -255,16 +261,16 @@ def _expense_by_year(
     accrued: date,
     paid: date,
 ) -> dict[int, Decimal]:
-    invoice = _received(accrued, linked=(_expense_row(paid, evidence_id=None).transaction_id,))
-    repository = _InMemoryInvoiceCatalogueRepository()
+    invoice = received(accrued, linked=(expense_row(paid, evidence_id=None).transaction_id,))
+    repository = InMemoryInvoiceCatalogueRepository()
     repository.save(build_invoice_catalogue((invoice,)))
-    row = _expense_row(paid, evidence_id=invoice.invoice_id)
-    profile = _profile(operation, facts)
+    row = expense_row(paid, evidence_id=invoice.invoice_id)
+    profile = renta_imputation_criterion_profile(operation, facts)
     history = ActivityAssetHistory()
     return {
         year: sum(
             resolve_m100(history, rows=(row,), profile=profile, year=year, invoices=repository).binding_values.values(),
-            _ZERO,
+            ZERO,
         )
         for year in _YEARS
     }
@@ -272,17 +278,17 @@ def _expense_by_year(
 
 def test_an_expense_across_the_change_lands_in_the_first_accrual_year(operation: PinnedAuthorityOperation) -> None:
     assert _expense_by_year(operation, _cash_then_accrual(), accrued=date(_Y, 11, 1), paid=date(_Y2, 2, 1)) == {
-        _Y: _ZERO,
+        _Y: ZERO,
         _Y1: Decimal("100.00"),
-        _Y2: _ZERO,
+        _Y2: ZERO,
     }
 
 
 def test_an_expense_leaving_accrual_for_cash_is_not_deducted_twice(operation: PinnedAuthorityOperation) -> None:
     assert _expense_by_year(operation, _accrual_then_cash(), accrued=date(_Y, 11, 1), paid=date(_Y2, 2, 1)) == {
         _Y: Decimal("100.00"),
-        _Y1: _ZERO,
-        _Y2: _ZERO,
+        _Y1: ZERO,
+        _Y2: ZERO,
     }
 
 
@@ -290,9 +296,9 @@ def test_an_unpaid_received_invoice_of_a_cash_year_withholds_the_first_accrual_y
     operation: PinnedAuthorityOperation,
 ) -> None:
     """It is computed there, but only a ledger row carries the category that picks its box, so the box waits."""
-    repository = _InMemoryInvoiceCatalogueRepository()
-    repository.save(build_invoice_catalogue((_received(date(_Y, 11, 1), linked=()),)))
-    profile = _profile(operation, _cash_then_accrual())
+    repository = InMemoryInvoiceCatalogueRepository()
+    repository.save(build_invoice_catalogue((received(date(_Y, 11, 1), linked=()),)))
+    profile = renta_imputation_criterion_profile(operation, _cash_then_accrual())
     resolution = resolve_m100(ActivityAssetHistory(), profile=profile, year=_Y1, invoices=repository)
     assert any(
         item.reason == "unresolved_binding" and "accrual_unclassified" in item.message

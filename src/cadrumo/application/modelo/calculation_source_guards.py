@@ -24,11 +24,11 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 )
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
-from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from .action_errors import (
     ModeloAggregationBindingError,
 )
 from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from .m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,

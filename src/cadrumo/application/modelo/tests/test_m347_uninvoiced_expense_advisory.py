@@ -23,7 +23,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from .._m347_uninvoiced_expense_advisory import (
+from ..m347_uninvoiced_expense_advisory import (
     M347_UNINVOICED_EXPENSE_SOURCE_KIND,
     collect_m347_uninvoiced_expense_diagnostics,
 )

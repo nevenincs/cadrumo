@@ -252,7 +252,7 @@ def missing_scope_raise_sites() -> frozenset[RaiseSite]:
 def observe_automation_proposal_validation() -> Generator[list[bool]]:
     """Observe the real operand validator's result without replacing its implementation."""
     results: list[bool] = []
-    code = automation_administration_service._proposal_is_allowed.__code__
+    code = automation_administration_service.proposal_is_allowed.__code__
     tool = free_monitoring_tool()
     sys.monitoring.use_tool_id(tool, "automation-proposal-proof")
 

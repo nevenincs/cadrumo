@@ -31,7 +31,7 @@ from ..models import (
     OperationTerminalReceipt,
 )
 from ..secret_submission import OperationSecretRequirement
-from . import _journal_snapshot_validation as _snapshot_validation
+from . import journal_snapshot_validation
 from .events import (
     OperationEvent,
     OperationPhaseEvent,
@@ -52,10 +52,10 @@ from .replay import (
     OperationReplayStatus,
 )
 
-_validate_checkpoint_state = _snapshot_validation.validate_checkpoint_state
-_validate_deadline_and_cancellation_state = _snapshot_validation.validate_deadline_and_cancellation_state
-_validate_request_storage = _snapshot_validation.validate_request_storage
-_validate_secret_state = _snapshot_validation.validate_secret_state
+_validate_checkpoint_state = journal_snapshot_validation.validate_checkpoint_state
+_validate_deadline_and_cancellation_state = journal_snapshot_validation.validate_deadline_and_cancellation_state
+_validate_request_storage = journal_snapshot_validation.validate_request_storage
+_validate_secret_state = journal_snapshot_validation.validate_secret_state
 
 
 class OperationPersistedSnapshot(BaseModel):

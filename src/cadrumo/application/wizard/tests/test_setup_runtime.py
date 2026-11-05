@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
@@ -23,9 +23,9 @@ from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, 
 from ...flows.errors import FlowAnswerError, FlowSubmitError
 from ...flows.scripted import run_scripted_flow
 from ..commands import (
-    _answers_model_from_canonical,
-    _force_pages_visible,
-    _project_scripted_answers,
+    answers_model_from_canonical,
+    force_pages_visible,
+    project_scripted_answers,
     setup_flow_definition,
 )
 from ..descendant_group import DESCENDANTS_COUNT_PAGE_ID
@@ -35,7 +35,7 @@ from ..persistence import project_answers, serialise_answers
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _default_tokens(*, registry_setup_flow: WizardFlow) -> dict[str, str]:
+def default_tokens(*, registry_setup_flow: WizardFlow) -> dict[str, str]:
     """Every descriptor default, keyed by question id — the quiet-path seed."""
 
     return {
@@ -62,19 +62,17 @@ def _drive_scripted(
     a question the walk visited carries a key in the map, a gate-hidden
     question is absent.
     """
-    with _indexed_authority_for_test().operation() as operation:
-        definition = _force_pages_visible(
-            setup_flow_definition(registry_setup_flow, operation=operation), force_visible
-        )
-        tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    with bundled_indexed_authority().operation() as operation:
+        definition = force_pages_visible(setup_flow_definition(registry_setup_flow, operation=operation), force_visible)
+        tokens, _intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
         state, _projection = run_scripted_flow(
             definition,
             tokens,
             mode=FlowMode.CREATE,
-            defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+            defaults=default_tokens(registry_setup_flow=registry_setup_flow),
         )
         committed = dict(state.answers)
-        answers = _answers_model_from_canonical(registry_setup_flow, committed)
+        answers = answers_model_from_canonical(registry_setup_flow, committed)
         assert isinstance(answers, SetupAnswers)
         return answers, committed
 
@@ -91,17 +89,17 @@ def _scripted_answers_for_individual_declaration(*, registry_setup_flow: WizardF
     with a positional token queue.
     """
 
-    canonical = _individual_declaration_canonical()
-    with _indexed_authority_for_test().operation() as operation:
+    canonical = individual_declaration_canonical()
+    with bundled_indexed_authority().operation() as operation:
         definition = setup_flow_definition(registry_setup_flow, operation=operation)
-        _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+        _tokens, intended = project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     # The shared fixture carries no token for the descendant count page:
     # the sibling scripted-walk helper defaults that page in walk order, so
     # a positional token for it would misfeed the next visible page.
     return deque(token for key, token in intended.items() if key != DESCENDANTS_COUNT_PAGE_ID)
 
 
-def _individual_declaration_canonical() -> dict[str, str]:
+def individual_declaration_canonical() -> dict[str, str]:
     """Build the canonical answer set for an individual taxation profile.
 
     Conditional spouse questions tied to ``taxation_type == "2"`` stay
@@ -190,7 +188,7 @@ def test_output_language_is_the_first_page_of_the_flow(*, registry_setup_flow: W
 
 
 def test_scripted_walk_collects_visible_questions_in_order(*, registry_setup_flow: WizardFlow) -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    answers, _committed = _drive_scripted(individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     assert answers.tax_id == "12345678Z"
     assert answers.activity == "Software development"
     assert answers.output_language == "en"
@@ -199,7 +197,7 @@ def test_scripted_walk_collects_visible_questions_in_order(*, registry_setup_flo
 def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    _answers, committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    _answers, committed = _drive_scripted(individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     # Every spouse question is joint-gated; none is visited for an
     # individual declaration (taxation_type != "2").
     assert "spouse-tax-id" not in committed
@@ -211,11 +209,11 @@ def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual(
 
 def test_scripted_driver_rejects_unconsumed_tokens(*, registry_setup_flow: WizardFlow) -> None:
     """A queue longer than the visible walk raises overflow, counts only."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
-        tokens, _intended = _project_scripted_answers(
+        tokens, _intended = project_scripted_answers(
             definition,
-            _individual_declaration_canonical(),
+            individual_declaration_canonical(),
             mode=FlowMode.CREATE,
         )
         with pytest.raises(FlowAnswerError) as excinfo:
@@ -223,7 +221,7 @@ def test_scripted_driver_rejects_unconsumed_tokens(*, registry_setup_flow: Wizar
                 definition,
                 [*tokens, "orphan"],
                 mode=FlowMode.CREATE,
-                defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+                defaults=default_tokens(registry_setup_flow=registry_setup_flow),
             )
         assert excinfo.value.translated_message == "application.flows.errors.scripted_queue_overflow"
         assert excinfo.value.context == {
@@ -234,7 +232,7 @@ def test_scripted_driver_rejects_unconsumed_tokens(*, registry_setup_flow: Wizar
 
 
 def test_serialised_answers_round_trip_via_project_answers(*, registry_setup_flow: WizardFlow) -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    answers, _committed = _drive_scripted(individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     canonical = serialise_answers(registry_setup_flow, answers)
     rebuilt = project_answers(registry_setup_flow, canonical)
     assert isinstance(rebuilt, SetupAnswers)
@@ -244,7 +242,7 @@ def test_serialised_answers_round_trip_via_project_answers(*, registry_setup_flo
 
 
 def test_canonical_dict_only_carries_profile_bound_keys(*, registry_setup_flow: WizardFlow) -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    answers, _committed = _drive_scripted(individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     canonical = serialise_answers(registry_setup_flow, answers)
     assert "identity.tax_id" in canonical
     assert canonical["identity.tax_id"] == "12345678Z"
@@ -265,7 +263,7 @@ def test_canonical_dict_only_carries_profile_bound_keys(*, registry_setup_flow: 
 def test_scripted_walk_visits_joint_taxation_spouse_questions(*, registry_setup_flow: WizardFlow) -> None:
     """When ``taxation_type == "2"``, the spouse questions become visible."""
 
-    joint = _individual_declaration_canonical()
+    joint = individual_declaration_canonical()
     joint.update(
         {
             "irpf-income-categories": "actividad_economica,trabajo",
@@ -305,7 +303,7 @@ def _non_interactive_canonical(explicit: dict[str, str], *, registry_setup_flow:
     every descriptor default plus the operator's explicit flag values.
     """
 
-    seeded = _default_tokens(registry_setup_flow=registry_setup_flow)
+    seeded = default_tokens(registry_setup_flow=registry_setup_flow)
     seeded.update(explicit)
     return seeded
 
@@ -405,8 +403,8 @@ def test_payer_fact_questions_carry_no_default_so_an_unanswered_walk_stays_undec
         "monedas-virtuales-extranjero-above-threshold",
         "premio-loteria-gravamen-especial-sin-retencion",
     )
-    assert not set(payer_fact_ids) & set(_default_tokens(registry_setup_flow=registry_setup_flow))
-    canonical = {key: value for key, value in _individual_declaration_canonical().items() if key not in payer_fact_ids}
+    assert not set(payer_fact_ids) & set(default_tokens(registry_setup_flow=registry_setup_flow))
+    canonical = {key: value for key, value in individual_declaration_canonical().items() if key not in payer_fact_ids}
 
     answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
 
@@ -424,7 +422,7 @@ def test_payer_fact_answers_still_write_a_declared_yes_or_no(
     registry_setup_flow: WizardFlow,
 ) -> None:
     canonical = {
-        **_individual_declaration_canonical(),
+        **individual_declaration_canonical(),
         "third-party-transactions-above-347-threshold": token,
         "premio-loteria-gravamen-especial-sin-retencion": token,
     }
@@ -443,7 +441,7 @@ def test_payer_fact_answers_still_write_a_declared_yes_or_no(
 
 def test_a_malformed_quarter_answer_is_refused_at_the_boundary(*, registry_setup_flow: WizardFlow) -> None:
     canonical = {
-        **_individual_declaration_canonical(),
+        **individual_declaration_canonical(),
         "premio-loteria-gravamen-especial-sin-retencion": "true",
         "premio-loteria-gravamen-especial-trimestres": "2025Q1",
     }

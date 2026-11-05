@@ -60,9 +60,9 @@ from ..advisory_binding_value import add_advisory_binding_value_diagnostics
 from ..bucket_unrouted_source_issues import unrouted_source_issues
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
-    _filed_before_grade_cap,
     calculation_filed_before_grade_cap,
     calculation_screen_outdated,
+    filed_before_grade_cap,
     gate_refuses,
     require_work_unit_calculation_unblocked,
     saved_calculation_filed_before_grade_cap,
@@ -392,7 +392,7 @@ def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_found_by_the_re
             ({}, _CAPPED_BOXES),
         ):
             revision = _revision(unit, (), stamp=None, state=state, casilla_values=values)
-            assert _filed_before_grade_cap(revision, snapshot, operation) in boxes, (state, values)
+            assert filed_before_grade_cap(revision, snapshot, operation) in boxes, (state, values)
             # The published revision caps nothing, so the same filed revision exports.
             assert _refused_reasons(operation, revision) is None, (state, values)
             assert (

@@ -33,29 +33,17 @@ from ..calendar_models import (
     SuppressedCalendarEntry,
 )
 from .calendar_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .calendar_test_support import (
-    PERIOD_2025_1T as _PERIOD_2025_1T,
-)
-from .calendar_test_support import (
-    calculation_observation_payload as _calculation_observation_payload,
-)
-from .calendar_test_support import (
-    calendar_with_evidence as _calendar_with_evidence,
-)
-from .calendar_test_support import (
+    BUCKET_ID,
+    PERIOD_2025_1T,
+    calculation_observation_payload,
+    calendar_with_evidence,
     expediente_declaration,
     expedientes_filing_events,
+    external_evidence,
+    modelo_record,
 )
 from .calendar_test_support import (
-    external_evidence as _external_evidence,
-)
-from .calendar_test_support import (
-    justificante_metadata as _justificante_metadata,
-)
-from .calendar_test_support import (
-    modelo_record as _modelo_record,
+    justificante_metadata as calendar_justificante_metadata,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -66,7 +54,7 @@ def _justificante_capture_snapshot(
     csv: str = "CSVLIVE3031T2025",
     modelo: str = "303",
     filing_year: int = 2025,
-    period: Period = _PERIOD_2025_1T,
+    period: Period = PERIOD_2025_1T,
     expediente_id: str = "20253031T2025",
     state: SnapshotLifecycleState = SnapshotLifecycleState.ACTIVE,
 ) -> JustificanteCaptureSnapshot:
@@ -79,7 +67,7 @@ def _justificante_capture_snapshot(
             period=period,
             pdf_sha256=pdf_sha256,
         ),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=period,
@@ -94,7 +82,7 @@ def _justificante_capture_snapshot(
 
 def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
     evidence = calendar_filing_evidence_from_sources(
-        filing_records=(_modelo_record(),),
+        filing_records=(modelo_record(),),
     )
 
     assert len(evidence) == 1
@@ -107,7 +95,7 @@ def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
 
 def test_modelo_record_projects_local_filing_calendar_event() -> None:
     events = calendar_events_from_modelo_records(
-        (_modelo_record(),),
+        (modelo_record(),),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
     )
 
@@ -118,7 +106,7 @@ def test_modelo_record_projects_local_filing_calendar_event() -> None:
     assert event.source == "modelo_filing_record"
     assert event.reference_id
     assert event.modelo == "303"
-    assert event.period == _PERIOD_2025_1T
+    assert event.period == PERIOD_2025_1T
     assert event.status == "ready_to_file:vigente"
     assert event.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
     assert event.aeat_submitted_at is None
@@ -129,13 +117,13 @@ def test_modelo_record_calendar_event_reports_verified_aeat_justificante_axis() 
     csv = "CSVLIVE3031T2025"
     events = calendar_events_from_modelo_records(
         (
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
+                external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
             ),
         ),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -156,7 +144,7 @@ def test_justificante_capture_snapshot_projects_verified_calendar_event_without_
     events = calendar_events_from_justificante_capture_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -179,7 +167,7 @@ def test_justificante_capture_snapshot_creates_verified_evidence_without_local_r
 
     evidence = calendar_filing_evidence_from_sources(
         justificante_capture_snapshots=(snapshot,),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -202,13 +190,13 @@ def test_justificante_capture_snapshot_requires_matching_taxpayer_metadata() -> 
 
     evidence = calendar_filing_evidence_from_sources(
         justificante_capture_snapshots=(snapshot,),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="B76543214"),),
+        justificantes=(calendar_justificante_metadata(csv=csv, tax_id="B76543214"),),
         expected_tax_id="X1234567L",
     )
     events = calendar_events_from_justificante_capture_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="B76543214"),),
+        justificantes=(calendar_justificante_metadata(csv=csv, tax_id="B76543214"),),
         expected_tax_id="X1234567L",
     )
 
@@ -221,7 +209,7 @@ def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> 
         OverviewCalendarFilingEvidence(
             modelo="303",
             filing_year=2025,
-            period=_PERIOD_2025_1T,
+            period=PERIOD_2025_1T,
             aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
             justificante_verified=False,
         )
@@ -230,7 +218,7 @@ def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> 
         OverviewCalendarFilingEvidence(
             modelo="303",
             filing_year=2025,
-            period=_PERIOD_2025_1T,
+            period=PERIOD_2025_1T,
             aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
             justificante_verified=True,
         )
@@ -245,7 +233,7 @@ def test_calendar_event_refuses_contradictory_justificante_state() -> None:
         "reference_id": "12345678901234567890",
         "modelo": "303",
         "filing_year": 2025,
-        "period": _PERIOD_2025_1T,
+        "period": PERIOD_2025_1T,
     }
 
     with pytest.raises(ValidationError):
@@ -271,7 +259,7 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
     evidence = OverviewCalendarFilingEvidence(
         modelo="303",
         filing_year=2025,
-        period=_PERIOD_2025_1T,
+        period=PERIOD_2025_1T,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
     )
     event = OverviewCalendarEvent(
@@ -282,13 +270,13 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
         reference_id="12345678901234567890",
         modelo="303",
         filing_year=2025,
-        period=_PERIOD_2025_1T,
+        period=PERIOD_2025_1T,
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
         justificante_verified=False,
     )
     entry = OverviewCalendarEntry(
         modelo="303",
-        period=_PERIOD_2025_1T,
+        period=PERIOD_2025_1T,
         opens_on=date(2025, 4, 1),
         closes_on=date(2025, 4, 20),
         adjusted_closes_on=date(2025, 4, 21),
@@ -317,12 +305,12 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
     csv = "CSVLIVE3031T2025"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
+                external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv),
             ),
         ),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -346,12 +334,12 @@ def test_modelo_record_justificante_matching_is_case_insensitive() -> None:
     for case_id, evidence_csv, justificante_csv, justificante_tax_id, expected_tax_id in cases:
         evidence = calendar_filing_evidence_from_sources(
             filing_records=(
-                _modelo_record(
+                modelo_record(
                     aeat_accepted=True,
-                    external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, evidence_csv),
+                    external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, evidence_csv),
                 ),
             ),
-            justificantes=(_justificante_metadata(csv=justificante_csv, tax_id=justificante_tax_id),),
+            justificantes=(calendar_justificante_metadata(csv=justificante_csv, tax_id=justificante_tax_id),),
             expected_tax_id=expected_tax_id,
         )
 
@@ -366,12 +354,12 @@ def test_modelo_record_csv_register_external_evidence_is_justificante_backed() -
     csv = "CSVREG3031T2025"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_CSV_REGISTER, csv),
+                external_evidence=external_evidence(ExternalEvidenceKind.AEAT_CSV_REGISTER, csv),
             ),
         ),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -387,14 +375,14 @@ def test_modelo_record_case_equivalent_conflicting_justificantes_do_not_verify()
     csv = "CSVLIVE3031T2025"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv.lower()),
+                external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv.lower()),
             ),
         ),
         justificantes=(
-            _justificante_metadata(csv=csv),
-            _justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
+            calendar_justificante_metadata(csv=csv),
+            calendar_justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
         ),
         expected_tax_id="X1234567L",
     )
@@ -409,9 +397,9 @@ def test_modelo_record_case_equivalent_conflicting_justificantes_do_not_verify()
 def test_live_capture_external_evidence_without_metadata_is_not_justificante_verified() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, "CSVLIVE3031T2025"),
+                external_evidence=external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, "CSVLIVE3031T2025"),
             ),
         ),
         expected_tax_id="X1234567L",
@@ -431,7 +419,7 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
         expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="X1234567L"
     )
     evidence = calendar_filing_evidence_from_sources(
-        filing_records=(_modelo_record(),),
+        filing_records=(modelo_record(),),
         observed_events=event,
         expected_tax_id="X1234567L",
     )
@@ -478,20 +466,20 @@ def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence()
         reference_id="12345678901234567890",
         modelo="303",
         filing_year=2025,
-        period=_PERIOD_2025_1T,
+        period=PERIOD_2025_1T,
         status="BAJA",
     )
     verified_evidence = OverviewCalendarFilingEvidence(
         modelo="303",
         filing_year=2025,
-        period=_PERIOD_2025_1T,
+        period=PERIOD_2025_1T,
         aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
         aeat_reference_id="12345678901234567890",
         verified_justificante_csv="JUST3032025X1T7",
         justificante_verified=True,
     )
 
-    calendar = _calendar_with_evidence(
+    calendar = calendar_with_evidence(
         events=(event,),
         filing_evidence=(verified_evidence,),
     )
@@ -503,7 +491,7 @@ def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence()
 
 
 def test_sede_calculation_observation_is_not_justificante_verification() -> None:
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -527,7 +515,7 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
 
 @pytest.mark.parametrize("source_kind", ("aeat_sede_live_capture", "aeat_csv_register"))
 def test_official_calculation_observation_sources_are_calendar_submission_evidence(source_kind: str) -> None:
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind=source_kind,
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -543,7 +531,7 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
 
     assert len(evidence) == 1
     row = evidence[0]
-    assert row.period == _PERIOD_2025_1T
+    assert row.period == PERIOD_2025_1T
     assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
     assert row.aeat_reference_id == "12345678901234567890"
     assert row.aeat_evidence_kind == source_kind
@@ -552,7 +540,7 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
 
 def test_official_calculation_observation_source_with_matching_justificante_is_verified() -> None:
     csv = "JUST3032025X1T7"
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_csv_register",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -564,7 +552,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -579,7 +567,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
 
 def test_verified_modelo_record_receipt_time_survives_calculation_observation_merge() -> None:
     csv = "JUST3032025X1T7"
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -591,9 +579,9 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
 
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
-            _modelo_record(
+            modelo_record(
                 aeat_accepted=True,
-                external_evidence=_external_evidence(
+                external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                     csv,
                     imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
@@ -601,7 +589,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
             ),
         ),
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -625,7 +613,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
     justificante_metadata: dict[str, str],
 ) -> None:
     csv = "JUST3032025X1T7"
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -637,7 +625,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=csv),),
+        justificantes=(calendar_justificante_metadata(csv=csv),),
         expected_tax_id="X1234567L",
     )
 
@@ -652,7 +640,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
 
 def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_do_not_verify() -> None:
     csv = "JUST3032025X1T7"
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -665,8 +653,8 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
         justificantes=(
-            _justificante_metadata(csv=csv),
-            _justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
+            calendar_justificante_metadata(csv=csv),
+            calendar_justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
         ),
         expected_tax_id="X1234567L",
     )
@@ -677,7 +665,7 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
 
 
 def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_verified() -> None:
-    payload = _calculation_observation_payload(
+    payload = calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -689,7 +677,7 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv="JUST3032025X1T7", tax_id="Y7654321G"),),
+        justificantes=(calendar_justificante_metadata(csv="JUST3032025X1T7", tax_id="Y7654321G"),),
         expected_tax_id="X1234567L",
     )
 
@@ -742,14 +730,16 @@ def test_sede_calculation_observation_requires_valid_register_metadata() -> None
     )
 
     for case_id, source_metadata, expected_tax_id, justificante_csv in cases:
-        payload = _calculation_observation_payload(
+        payload = calculation_observation_payload(
             source_kind="aeat_sede_justificante",
             source_metadata=source_metadata,
         )
 
         evidence = calendar_filing_evidence_from_sources(
             calculation_observations=(payload,),
-            justificantes=(_justificante_metadata(csv=justificante_csv),) if justificante_csv is not None else (),
+            justificantes=(calendar_justificante_metadata(csv=justificante_csv),)
+            if justificante_csv is not None
+            else (),
             expected_tax_id=expected_tax_id,
         )
 

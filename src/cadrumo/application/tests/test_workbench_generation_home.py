@@ -44,18 +44,18 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
-from ._workbench_generation_support import (
-    _NOW,
-    _admission,
-    _ChangingLedgerStore,
-    _inputs,
-    _ledger_ports,
-    _plain_generation_door,
-    _profile_record,
-    _Repository,
-    _StableStore,
-    _stub_empty_calendar,
-    _synthetic_transaction,
+from .workbench_generation_support import (
+    NOW,
+    ChangingLedgerStore,
+    Repository,
+    StableStore,
+    admission,
+    inputs,
+    ledger_ports,
+    plain_generation_door,
+    profile_record,
+    stub_empty_calendar,
+    synthetic_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -75,23 +75,23 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue())
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue())
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
 
-    _stub_empty_calendar(monkeypatch)
-    written = TransactionCatalogue.model_validate([_synthetic_transaction()])
-    door = _plain_generation_door(
+    stub_empty_calendar(monkeypatch)
+    written = TransactionCatalogue.model_validate([synthetic_transaction()])
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
         revisions=revisions,
         filings=filings,
-        ledger_action_ports=_ledger_ports(
+        ledger_action_ports=ledger_ports(
             authority_operation,
-            transactions=_ChangingLedgerStore(TransactionCatalogue(), written),
-            invoices=_StableStore(InvoiceCatalogue()),
+            transactions=ChangingLedgerStore(TransactionCatalogue(), written),
+            invoices=StableStore(InvoiceCatalogue()),
         ),
     )
 
@@ -107,22 +107,22 @@ def test_a_quiet_ledger_publishes_its_generation(
     from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue())
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
+    profile = Repository(profile_record(authority_operation))
+    work_units = Repository(WorkUnitCatalogue())
+    revisions = Repository(CalculationRevisionCatalogue())
+    filings = Repository(ModeloRecordCatalogue())
 
-    _stub_empty_calendar(monkeypatch)
-    door = _plain_generation_door(
+    stub_empty_calendar(monkeypatch)
+    door = plain_generation_door(
         authority_operation,
         profile=profile,
         work_units=work_units,
         revisions=revisions,
         filings=filings,
-        ledger_action_ports=_ledger_ports(
+        ledger_action_ports=ledger_ports(
             authority_operation,
-            transactions=_StableStore(TransactionCatalogue()),
-            invoices=_StableStore(InvoiceCatalogue()),
+            transactions=StableStore(TransactionCatalogue()),
+            invoices=StableStore(InvoiceCatalogue()),
         ),
     )
 
@@ -137,18 +137,18 @@ def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing
     schedule = OverviewCalendar(
         range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         entries=(),
-        generated_at=_NOW,
-        evaluated_on=_NOW.date(),
+        generated_at=NOW,
+        evaluated_on=NOW.date(),
     )
 
-    scoped = calendar_module._scope_filing_records((historical,), schedule)
+    scoped = calendar_module.scope_filing_records((historical,), schedule)
 
     assert scoped == ()
 
 
 def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> None:
     """Missing production loaders remain explicit refusals in every output area."""
-    generation = assemble_workbench_generation(_inputs())
+    generation = assemble_workbench_generation(inputs())
 
     assert generation.home.projection is not None
     assert generation.home.availability is WorkbenchGenerationAvailability.AVAILABLE
@@ -165,7 +165,7 @@ def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> 
 def test_generation_search_refusal_preserves_mixed_source_unavailability() -> None:
     """A single unavailable source prevents a falsely empty search snapshot."""
     generation = assemble_workbench_generation(
-        _inputs(aeat_sync=WorkbenchGenerationSourceResultV1.unavailable(refusal="source.aeat_down"))
+        inputs(aeat_sync=WorkbenchGenerationSourceResultV1.unavailable(refusal="source.aeat_down"))
     )
 
     assert generation.search.projection is None
@@ -177,7 +177,7 @@ def test_generation_accepts_stale_value_without_collapsing_it_to_available() -> 
     """A stale preloaded value remains available to the caller as stale evidence."""
     stale = WorkbenchGenerationSourceResultV1[tuple[int, ...]].stale(
         (1, 2),
-        observed_at=_NOW,
+        observed_at=NOW,
         refusal="source.stale",
     )
 
@@ -188,15 +188,15 @@ def test_generation_accepts_stale_value_without_collapsing_it_to_available() -> 
 
 def test_input_admissions_must_name_the_installed_search_destinations() -> None:
     """Search cannot be assembled against a different destination authority."""
-    values = _inputs().model_dump()
-    values["declarations_admission"] = _admission("workbench.ledger")
+    values = inputs().model_dump()
+    values["declarations_admission"] = admission("workbench.ledger")
     with pytest.raises(ValidationError, match=r"workbench\.declarations"):
         WorkbenchGenerationInputsV1.model_validate(values)
 
 
 def test_output_has_no_source_value_field_or_input_wrapper() -> None:
     """Output serialization contains only projection results, never source inputs."""
-    generation = assemble_workbench_generation(_inputs())
+    generation = assemble_workbench_generation(inputs())
     payload = generation.model_dump_json()
 
     assert "value" not in WorkbenchGenerationInputsV1.model_fields
@@ -242,7 +242,7 @@ class _Door:
 
 def test_structural_read_door_is_accepted() -> None:
     """Composition accepts a typed protocol implementation without a frontend."""
-    generation = assemble_workbench_generation_from(_Door(_inputs()))
+    generation = assemble_workbench_generation_from(_Door(inputs()))
     assert generation.home.projection is not None
 
 
@@ -285,10 +285,10 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
     in a summary is indistinguishable from whole truth once rendered.
     """
     from ..overview.home import HomeLedgerReadiness
-    from ..workbench_generation_home import _home_ledger_readiness
+    from ..workbench_generation_home import home_ledger_readiness
 
     measured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY)
-    readiness = _home_ledger_readiness(measured)
+    readiness = home_ledger_readiness(measured)
     assert isinstance(readiness, HomeLedgerReadiness)
     assert (readiness.entries, readiness.requiring_review) == (2, 2)
 
@@ -299,11 +299,11 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
         LedgerWorkspaceArea.EVIDENCE,
     ):
         partial = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY, unmeasured=area)
-        assert _home_ledger_readiness(partial) is None, (
+        assert home_ledger_readiness(partial) is None, (
             f"an unmeasured {area.value} area still produced a readiness block, so Home renders a zero nobody measured"
         )
 
-    assert _home_ledger_readiness(None) is None
+    assert home_ledger_readiness(None) is None
 
 
 def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
@@ -325,10 +325,10 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     from datetime import UTC, datetime
 
     from ..overview.home import HomeAvailability, HomeZoneState
-    from ..workbench_generation_home import _secure_profile_home_input
+    from ..workbench_generation_home import secure_profile_home_input
 
     observed_at = datetime(2026, 9, 4, tzinfo=UTC)
-    home = _secure_profile_home_input(
+    home = secure_profile_home_input(
         observed_at=observed_at,
         account_session=HomeAccountSession(posture=HomeSessionPosture.NO_PROFILE),
         agenda=None,
@@ -363,19 +363,19 @@ def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
     for Home, and this asserts the whole table so a new calculation state
     cannot be added and silently default to anything.
     """
-    from ..workbench_generation_home import _HOME_DECLARATION_STATES
+    from ..workbench_generation_home import HOME_DECLARATION_STATES
 
-    assert set(_HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
+    assert set(HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
         "a calculation state has no declared Home reading, so it would raise or "
         "default rather than being mapped deliberately"
     )
 
-    ready = {state for state, home in _HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY}
+    ready = {state for state, home in HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY}
     assert ready == {CalculationRevisionState.VERIFICADO_COMPLETO}, (
         f"only a verified-complete calculation may read as READY on Home; found {sorted(ready)}"
     )
 
-    assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (HomeDeclarationState.NEEDS_REVIEW), (
+    assert HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (HomeDeclarationState.NEEDS_REVIEW), (
         "an unverified calculation must keep review in front of the operator"
     )
 
@@ -393,10 +393,10 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
     with no `tui.home.reason.*` entry renders the degraded generic line, so an
     action invented to fill the zone would arrive unreadable.
     """
-    from ..workbench_generation_home import _home_ledger_actions
+    from ..workbench_generation_home import home_ledger_actions
 
     populated = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION)
-    offered = _home_ledger_actions(populated)
+    offered = home_ledger_actions(populated)
     assert offered is not None
     assert {item.reason_code for item in offered} == {
         "ledger_classification_pending",
@@ -412,12 +412,12 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
 
     for area in (LedgerWorkspaceArea.CLASSIFICATION, LedgerWorkspaceArea.EVIDENCE):
         unmeasured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION, unmeasured=area)
-        assert _home_ledger_actions(unmeasured) is None, (
+        assert home_ledger_actions(unmeasured) is None, (
             f"an unmeasured {area.value} area still produced an offer, so Home invites the "
             f"operator to work nobody measured"
         )
 
-    assert _home_ledger_actions(None) is None
+    assert home_ledger_actions(None) is None
 
 
 def _home_reason_keys_for_test() -> frozenset[str]:
@@ -445,7 +445,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     outstanding.
     """
     from ..overview.home import HomeDeclarationResume
-    from ..workbench_generation_home import _home_declaration_actions
+    from ..workbench_generation_home import home_declaration_actions
 
     def _resume(state: HomeDeclarationState, unit: str) -> HomeDeclarationResume:
         return HomeDeclarationResume(
@@ -467,7 +467,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
             (HomeDeclarationState.DISCARDED, "e"),
         )
     )
-    offered = _home_declaration_actions(resumes)
+    offered = home_declaration_actions(resumes)
 
     assert len(offered) == 1, (
         f"only a declaration needing review is outstanding work; got {[item.reason_code for item in offered]}"
@@ -478,7 +478,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     assert only.period is not None, "an addressed action without its period cannot be acted on"
     assert only.action.action.action_id == "operator.modelo.work.revisions"
 
-    assert _home_declaration_actions(None) == ()
+    assert home_declaration_actions(None) == ()
 
 
 def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> None:
@@ -506,7 +506,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         VerificationReportCatalogue,
         derive_verification_report_id,
     )
-    from ..workbench_generation_home import _dependency_blocked_revisions
+    from ..workbench_generation_home import dependency_blocked_revisions
 
     def _catalogue(
         kind: ModeloVerificationFindingKind,
@@ -546,14 +546,14 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         ModeloVerificationFindingSeverity.BLOCKING,
         VerificationCompletenessStatus.BLOCKED,
     )
-    assert _dependency_blocked_revisions(blocked) == frozenset({"b" * 64})
+    assert dependency_blocked_revisions(blocked) == frozenset({"b" * 64})
 
     warning = _catalogue(
         ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
         ModeloVerificationFindingSeverity.WARNING,
         VerificationCompletenessStatus.BLOCKED,
     )
-    assert _dependency_blocked_revisions(warning) == frozenset(), (
+    assert dependency_blocked_revisions(warning) == frozenset(), (
         "a WARNING dependency finding is information, not a blocker"
     )
 
@@ -562,12 +562,12 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         ModeloVerificationFindingSeverity.BLOCKING,
         VerificationCompletenessStatus.BLOCKED,
     )
-    assert _dependency_blocked_revisions(other_kind) == frozenset(), (
+    assert dependency_blocked_revisions(other_kind) == frozenset(), (
         "only the dependency finding kind may read as blocked_dependency; another kind "
         "reaching it would be a guess about what the operator is blocked on"
     )
 
-    assert _dependency_blocked_revisions(None) == frozenset()
+    assert dependency_blocked_revisions(None) == frozenset()
 
 
 def test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing(
@@ -580,13 +580,13 @@ def test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing(
     state by editing one field, so the generation serves every zone it can and
     names the missing paths on the zones that need the projection.
     """
-    record = _profile_record(
+    record = profile_record(
         authority_operation,
         facts=(UserProfileFact(path="iva.regime", value="GENERAL"),),
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(
-        _plain_generation_door(authority_operation, profile=_Repository(record))
+        plain_generation_door(authority_operation, profile=Repository(record))
     )()
 
     assert generation.home.availability is WorkbenchGenerationAvailability.AVAILABLE
@@ -608,7 +608,7 @@ def test_an_undeclared_taxpayer_model_leaves_the_agenda_unavailable(
 ) -> None:
     """No taxpayer model means no schedule, which is not the same as no dates."""
     generation = InstalledWorkbenchGenerationProviderV1(
-        _plain_generation_door(authority_operation, profile=_Repository(_profile_record(authority_operation)))
+        plain_generation_door(authority_operation, profile=Repository(profile_record(authority_operation)))
     )()
 
     home = generation.home.projection

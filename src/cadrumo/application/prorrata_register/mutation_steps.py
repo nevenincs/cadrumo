@@ -38,21 +38,15 @@ from ...domain.prorrata_register.register import (
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..operations.owner import OperationExecutorContext
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from . import operation_requests as _requests
+from . import operation_requests
 from .election import ProrrataElectionError
 from .ports import ProrrataPriorSettlementSnapshotRepositoryProtocol
 from .projection_contracts import (
-    PRORRATA_VALIDATION_REFUSAL_CODE as _PRORRATA_VALIDATION_REFUSAL_CODE,
-)
-from .projection_contracts import (
-    ProrrataFindingProjection as _ProrrataFindingProjection,
-)
-from .projection_contracts import ProrrataRefusalCode as _ProrrataRefusalCode
-from .projection_contracts import (
-    ProrrataRefusalProjection as _ProrrataRefusalProjection,
-)
-from .projection_contracts import (
-    ProrrataRefusalReason as _ProrrataRefusalReason,
+    PRORRATA_VALIDATION_REFUSAL_CODE,
+    ProrrataFindingProjection,
+    ProrrataRefusalCode,
+    ProrrataRefusalProjection,
+    ProrrataRefusalReason,
 )
 from .refusal_words import served_refusal_words
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
@@ -78,13 +72,13 @@ class CommittedProrrataMutation:
 class ProrrataPreflightRefusalError(CadrumoError):
     """Known refusal raised before anything commits: at preflight or on a CAS candidate rebuild."""
 
-    reason: _ProrrataRefusalReason
+    reason: ProrrataRefusalReason
     detail: str
     accepted_provenances: tuple[str, ...]
 
     def __init__(
         self,
-        reason: _ProrrataRefusalReason,
+        reason: ProrrataRefusalReason,
         detail: str,
         *,
         accepted_provenances: tuple[str, ...] = (),
@@ -98,24 +92,24 @@ class ProrrataPreflightRefusalError(CadrumoError):
 
 def build_prorrata_refusal_projection(
     *,
-    reason: _ProrrataRefusalReason,
+    reason: ProrrataRefusalReason,
     detail: str,
     ejercicio: int | None = None,
     sector_id: str | None = None,
     findings: tuple[ProrrataSeedFinding, ...] = (),
     accepted_provenances: tuple[str, ...] = (),
     existing_provenance: str | None = None,
-    code: _ProrrataRefusalCode = _PRORRATA_VALIDATION_REFUSAL_CODE,
-) -> _ProrrataRefusalProjection:
+    code: ProrrataRefusalCode = PRORRATA_VALIDATION_REFUSAL_CODE,
+) -> ProrrataRefusalProjection:
     """Create the typed refusal projection with its safe contextual evidence and the sentence it serves."""
     words, language = served_refusal_words(reason, error_code=code)
-    return _ProrrataRefusalProjection(
+    return ProrrataRefusalProjection(
         code=code,
         reason=reason,
         detail=detail,
         ejercicio=ejercicio,
         sector_id=sector_id,
-        findings=tuple(_ProrrataFindingProjection.from_finding(item) for item in findings),
+        findings=tuple(ProrrataFindingProjection.from_finding(item) for item in findings),
         accepted_provenances=accepted_provenances,
         existing_provenance=existing_provenance,
         refusal_words=words,
@@ -124,8 +118,8 @@ def build_prorrata_refusal_projection(
 
 
 def _build_election_entry(
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataElectionRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataElectionRequest,
 ) -> ProrrataRegisterEntry:
     provenance, reference = _resolve_election_authority(payload)
     regime, transition = _election_regime_transition(operation_id, payload)
@@ -135,7 +129,7 @@ def _build_election_entry(
 
 
 def _resolve_election_authority(
-    payload: _requests.ProrrataElectionRequest,
+    payload: operation_requests.ProrrataElectionRequest,
 ) -> tuple[ProrrataProvisionalProvenance, str | None]:
     carried = carried_prior_definitiva_prorrata_provenance()
     accepted_provenances = tuple(item.value for item in prorrata_electable_provenances() if item != carried)
@@ -173,14 +167,14 @@ def _resolve_election_authority(
 
 
 def _election_regime_transition(
-    operation_id: _requests.ProrrataOperationId,
-    payload: _requests.ProrrataElectionRequest,
+    operation_id: operation_requests.ProrrataOperationId,
+    payload: operation_requests.ProrrataElectionRequest,
 ) -> tuple[ProrrataRegisterRegime, ProrrataEspecialTransitionEvidence | None]:
     transition: ProrrataEspecialTransitionEvidence | None = None
     regime = general_prorrata_register_regime()
     if operation_id == "elect_especial":
         regime = especial_prorrata_register_regime()
-        if not isinstance(payload, _requests.ProrrataElectEspecialRequest):
+        if not isinstance(payload, operation_requests.ProrrataElectEspecialRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         if payload.evidence_reference is not None:
             transition = ProrrataEspecialTransitionEvidence(
@@ -188,7 +182,7 @@ def _election_regime_transition(
                 evidence_reference=payload.evidence_reference,
             )
     elif operation_id == "revoke_especial":
-        if not isinstance(payload, _requests.ProrrataRevokeEspecialRequest):
+        if not isinstance(payload, operation_requests.ProrrataRevokeEspecialRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         transition = ProrrataEspecialTransitionEvidence(
             kind=revocacion_prorrata_transition(),
@@ -198,7 +192,7 @@ def _election_regime_transition(
 
 
 def _create_election_entry(
-    payload: _requests.ProrrataElectionRequest,
+    payload: operation_requests.ProrrataElectionRequest,
     *,
     provenance: ProrrataProvisionalProvenance,
     reference: str | None,
@@ -220,9 +214,9 @@ def _create_election_entry(
         raise ProrrataPreflightRefusalError("validation", str(exc)) from exc
 
 
-def whole_seed_refusal_reason(reason: ProrrataWholeSeedUnavailableReason) -> _ProrrataRefusalReason:
+def whole_seed_refusal_reason(reason: ProrrataWholeSeedUnavailableReason) -> ProrrataRefusalReason:
     """Map service refusal reasons to the closed public result vocabulary."""
-    mapping: dict[ProrrataWholeSeedUnavailableReason, _ProrrataRefusalReason] = {
+    mapping: dict[ProrrataWholeSeedUnavailableReason, ProrrataRefusalReason] = {
         "source_absent": "seed_source_absent",
         "source_blocked": "seed_source_blocked",
         "existing_blocked": "seed_existing_blocked",
@@ -235,7 +229,7 @@ def whole_seed_refusal_reason(reason: ProrrataWholeSeedUnavailableReason) -> _Pr
 
 
 def _preflight_sector_declaration(payload: BaseModel) -> SectorDefinition:
-    if not isinstance(payload, _requests.ProrrataDeclareSectorRequest):
+    if not isinstance(payload, operation_requests.ProrrataDeclareSectorRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     letter = next((item for item in prorrata_sector_letters() if item.value == payload.letra), None)
     if letter is None:
@@ -251,10 +245,10 @@ def _preflight_sector_declaration(payload: BaseModel) -> SectorDefinition:
 
 
 def _preflight_election(
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     payload: BaseModel,
 ) -> ProrrataRegisterEntry:
-    if not isinstance(payload, _requests.ProrrataElectionRequest):
+    if not isinstance(payload, operation_requests.ProrrataElectionRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _build_election_entry(operation_id, payload)
 
@@ -263,7 +257,7 @@ def _preflight_sector_settlement(
     payload: BaseModel,
     context: OperationExecutorContext,
 ) -> RegistrySnapshotRef:
-    if not isinstance(payload, _requests.ProrrataSettleSectorRequest):
+    if not isinstance(payload, operation_requests.ProrrataSettleSectorRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     # Reject malformed volumes before UNKNOWN. The service still derives the
     # settled entry from the latest CAS candidate during COMMIT.
@@ -284,7 +278,7 @@ def _preflight_whole_seed(
     payload: BaseModel,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
 ) -> None:
-    if not isinstance(payload, _requests.ProrrataSeedRequest):
+    if not isinstance(payload, operation_requests.ProrrataSeedRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if calculation_action_ports_factory is None:
         raise InternalInvariantError("whole-entity prorrata seed has no observation source capability")
@@ -292,7 +286,7 @@ def _preflight_whole_seed(
 
 
 def _preflight_sector_seed(payload: BaseModel) -> None:
-    if not isinstance(payload, _requests.ProrrataSeedSectorRequest):
+    if not isinstance(payload, operation_requests.ProrrataSeedSectorRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return None
 
@@ -343,7 +337,7 @@ def _perform_prepared_election(
 
 
 def _perform_whole_seed(
-    payload: _requests.ProrrataSeedRequest,
+    payload: operation_requests.ProrrataSeedRequest,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
     service: ProrrataRegisterService,
     context: OperationExecutorContext,
@@ -378,13 +372,13 @@ def _perform_whole_seed_request(
     service: ProrrataRegisterService,
     context: OperationExecutorContext,
 ) -> CommittedProrrataMutation:
-    if not isinstance(payload, _requests.ProrrataSeedRequest):
+    if not isinstance(payload, operation_requests.ProrrataSeedRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _perform_whole_seed(payload, calculation_action_ports_factory, service, context)
 
 
 def _perform_sector_seed(
-    payload: _requests.ProrrataSeedSectorRequest,
+    payload: operation_requests.ProrrataSeedSectorRequest,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
     register, entry = service.seed_sector_carried(payload.ejercicio, payload.sector_id)
@@ -395,13 +389,13 @@ def _perform_sector_seed_request(
     payload: BaseModel,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
-    if not isinstance(payload, _requests.ProrrataSeedSectorRequest):
+    if not isinstance(payload, operation_requests.ProrrataSeedSectorRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _perform_sector_seed(payload, service)
 
 
 def _perform_sector_settlement(
-    payload: _requests.ProrrataSettleSectorRequest,
+    payload: operation_requests.ProrrataSettleSectorRequest,
     prepared: object,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
@@ -422,7 +416,7 @@ def _perform_sector_settlement_request(
     prepared: object,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
-    if not isinstance(payload, _requests.ProrrataSettleSectorRequest):
+    if not isinstance(payload, operation_requests.ProrrataSettleSectorRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _perform_sector_settlement(payload, prepared, service)
 
@@ -458,7 +452,7 @@ def _preflight_gross_declaration(
     payload: BaseModel,
     context: OperationExecutorContext,
 ) -> ProrrataOperatorGrossDeclaration:
-    if not isinstance(payload, _requests.ProrrataDeclareGrossRequest):
+    if not isinstance(payload, operation_requests.ProrrataDeclareGrossRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     period = _gross_declaration_period(payload.ejercicio, payload.period, context)
     try:
@@ -478,7 +472,7 @@ def _preflight_gross_removal(
     payload: BaseModel,
     context: OperationExecutorContext,
 ) -> Period:
-    if not isinstance(payload, _requests.ProrrataRemoveGrossRequest):
+    if not isinstance(payload, operation_requests.ProrrataRemoveGrossRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _gross_declaration_period(payload.ejercicio, payload.period, context)
 
@@ -488,7 +482,7 @@ def _perform_gross_declaration(
     prepared: object,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
-    if not isinstance(payload, _requests.ProrrataDeclareGrossRequest):
+    if not isinstance(payload, operation_requests.ProrrataDeclareGrossRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if not isinstance(prepared, ProrrataOperatorGrossDeclaration):
         raise InternalInvariantError("gross declaration preflight did not retain its typed declaration")
@@ -519,7 +513,7 @@ def _perform_gross_removal(
     prepared: object,
     service: ProrrataRegisterService,
 ) -> CommittedProrrataMutation:
-    if not isinstance(payload, _requests.ProrrataRemoveGrossRequest):
+    if not isinstance(payload, operation_requests.ProrrataRemoveGrossRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if not isinstance(prepared, Period):
         raise InternalInvariantError("gross removal preflight did not retain its liquidation period")
@@ -544,7 +538,7 @@ def _perform_gross_removal(
 
 
 def preflight_prorrata_operation(
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     payload: BaseModel,
     context: OperationExecutorContext,
     calculation_action_ports_factory: CalculationActionPortsFactory | None,
@@ -568,7 +562,7 @@ def preflight_prorrata_operation(
 
 
 def perform_prorrata_mutation(
-    operation_id: _requests.ProrrataOperationId,
+    operation_id: operation_requests.ProrrataOperationId,
     payload: BaseModel,
     prepared: object,
     service: ProrrataRegisterService,

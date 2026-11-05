@@ -39,14 +39,14 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_filing_snapshot import (
-    _FINGERPRINT_FIELDS_V1,
-    _FINGERPRINT_FIELDS_V2,
-    _FINGERPRINT_FIELDS_V3,
-    _FINGERPRINT_FIELDS_V5,
-    _FINGERPRINT_FIELDS_V6,
-    _FINGERPRINT_FIELDS_V7,
     ACCRUAL_DATE_FIELD_SET_VERSION,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
+    FINGERPRINT_FIELDS_V1,
+    FINGERPRINT_FIELDS_V2,
+    FINGERPRINT_FIELDS_V3,
+    FINGERPRINT_FIELDS_V5,
+    FINGERPRINT_FIELDS_V6,
+    FINGERPRINT_FIELDS_V7,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -137,21 +137,21 @@ def _sealed_under_v1(transaction: Transaction) -> LedgerFilingSnapshot:
 
 def test_v2_appends_to_v1_and_never_reorders_it() -> None:
     """The order feeds the hashed string, so a version cannot rescue a reshuffle."""
-    assert _FINGERPRINT_FIELDS_V2[: len(_FINGERPRINT_FIELDS_V1)] == _FINGERPRINT_FIELDS_V1
-    assert len(_FINGERPRINT_FIELDS_V2) == len(_FINGERPRINT_FIELDS_V1) + 7
+    assert FINGERPRINT_FIELDS_V2[: len(FINGERPRINT_FIELDS_V1)] == FINGERPRINT_FIELDS_V1
+    assert len(FINGERPRINT_FIELDS_V2) == len(FINGERPRINT_FIELDS_V1) + 7
 
 
 def test_v3_appends_exactly_the_two_admission_facts_to_v2() -> None:
-    assert _FINGERPRINT_FIELDS_V3[: len(_FINGERPRINT_FIELDS_V2)] == _FINGERPRINT_FIELDS_V2
-    assert _FINGERPRINT_FIELDS_V3[len(_FINGERPRINT_FIELDS_V2) :] == (
+    assert FINGERPRINT_FIELDS_V3[: len(FINGERPRINT_FIELDS_V2)] == FINGERPRINT_FIELDS_V2
+    assert FINGERPRINT_FIELDS_V3[len(FINGERPRINT_FIELDS_V2) :] == (
         ("investment_asset_id", "investment_asset_id"),
         ("counterparty_identification_state", "counterparty_identification_state"),
     )
 
 
 def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -> None:
-    assert _FINGERPRINT_FIELDS_V5[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
-    assert [label for label, _path in _FINGERPRINT_FIELDS_V5[len(_FINGERPRINT_FIELDS_V3) :]] == [
+    assert FINGERPRINT_FIELDS_V5[: len(FINGERPRINT_FIELDS_V3)] == FINGERPRINT_FIELDS_V3
+    assert [label for label, _path in FINGERPRINT_FIELDS_V5[len(FINGERPRINT_FIELDS_V3) :]] == [
         "operation_date",
         "purchase_invoice_evidence_id",
         "deduction_authority",
@@ -169,13 +169,13 @@ def test_the_older_field_sets_do_not_see_a_new_operation_date_or_a_detached_evid
 
 
 def test_v6_appends_exactly_the_stated_vehicle_use_to_v5() -> None:
-    assert _FINGERPRINT_FIELDS_V6[: len(_FINGERPRINT_FIELDS_V5)] == _FINGERPRINT_FIELDS_V5
-    assert _FINGERPRINT_FIELDS_V6[len(_FINGERPRINT_FIELDS_V5) :] == (("iva_vehicle_use", "iva_vehicle_use"),)
+    assert FINGERPRINT_FIELDS_V6[: len(FINGERPRINT_FIELDS_V5)] == FINGERPRINT_FIELDS_V5
+    assert FINGERPRINT_FIELDS_V6[len(FINGERPRINT_FIELDS_V5) :] == (("iva_vehicle_use", "iva_vehicle_use"),)
 
 
 def test_v7_appends_exactly_the_stated_accrual_date_to_v6_and_is_current() -> None:
-    assert _FINGERPRINT_FIELDS_V7[: len(_FINGERPRINT_FIELDS_V6)] == _FINGERPRINT_FIELDS_V6
-    assert _FINGERPRINT_FIELDS_V7[len(_FINGERPRINT_FIELDS_V6) :] == (("accrual_date", "accrual_date"),)
+    assert FINGERPRINT_FIELDS_V7[: len(FINGERPRINT_FIELDS_V6)] == FINGERPRINT_FIELDS_V6
+    assert FINGERPRINT_FIELDS_V7[len(FINGERPRINT_FIELDS_V6) :] == (("accrual_date", "accrual_date"),)
     assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 7
     assert ACCRUAL_DATE_FIELD_SET_VERSION == 7
 
@@ -329,7 +329,7 @@ def test_v2_was_not_widened_in_place_so_its_hashes_ignore_the_v3_facts() -> None
     """A V2 hash recomputed today must equal the one an older build sealed."""
     before = _purchase()
     after = _with_admission_facts(before)
-    v2_canonical = "|".join(f"{label}={_rendered(before, path)}" for label, path in _FINGERPRINT_FIELDS_V2)
+    v2_canonical = "|".join(f"{label}={_rendered(before, path)}" for label, path in FINGERPRINT_FIELDS_V2)
     assert row_fingerprint(after, field_set_version=2) == sha256_hex(v2_canonical.encode("utf-8"))
     assert row_fingerprint(before, field_set_version=2) == row_fingerprint(after, field_set_version=2)
     assert row_fingerprint(before, field_set_version=1) == row_fingerprint(after, field_set_version=1)
@@ -339,7 +339,7 @@ def test_v2_was_not_widened_in_place_so_its_hashes_ignore_the_v3_facts() -> None
 def test_the_v3_canonical_string_renders_each_admission_fact_by_its_value() -> None:
     """The hashed form is the V2 string plus two ``label=value`` pairs, in order."""
     transaction = _with_admission_facts(_purchase())
-    v2_canonical = "|".join(f"{label}={_rendered(transaction, path)}" for label, path in _FINGERPRINT_FIELDS_V2)
+    v2_canonical = "|".join(f"{label}={_rendered(transaction, path)}" for label, path in FINGERPRINT_FIELDS_V2)
     expected = sha256_hex(
         f"{v2_canonical}|investment_asset_id=bien-inversion-0001|counterparty_identification_state=FR".encode(),
     )

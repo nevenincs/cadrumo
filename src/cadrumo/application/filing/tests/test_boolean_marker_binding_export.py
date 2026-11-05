@@ -28,7 +28,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..export import export_draft
 from ..producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
-from ..record_field_renderer import _binding_field_value, format_field
+from ..record_field_renderer import binding_field_value, format_field
 from ..runtime import ModeloOperatorProfile
 from .export_support import EXPORT_PERIOD, export_schema_provider, typed_producer_snapshot
 
@@ -117,6 +117,6 @@ def test_modelo_184_member_at_year_end_slot_writes_the_design_marker(answer: boo
     assert (field.offset, field.length, field.data_type) == (82, 1, "text")
 
     assert field.binding is not None
-    value = _binding_field_value(field, {(field.binding, 1): answer}, 1)
+    value = binding_field_value(field, {(field.binding, 1): answer}, 1)
 
     assert format_field(field, value) == expected

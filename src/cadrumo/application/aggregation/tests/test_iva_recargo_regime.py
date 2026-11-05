@@ -23,13 +23,13 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
-_Q2_2026 = _period(2026, "2T")
+_Q2_2026 = renta_income_aggregation_period(2026, "2T")
 
 
 def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:

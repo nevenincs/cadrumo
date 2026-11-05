@@ -25,7 +25,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...aggregation.errors import UnacceptedLedgerRegistryValueError
 from ...aggregation.tests.renta_income_aggregation_support import raw_transaction
-from .._art109_activity_income import (
+from ..art109_activity_income import (
     Art109ActivityIncomeCoverage,
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,

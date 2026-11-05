@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from .._supervisor_execution import _application_frame, _raising_frame
+from ..supervisor_execution import application_frame, raising_frame
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -18,8 +18,8 @@ def test_dependency_error_names_application_caller_without_exception_contents() 
         getattr(EmptyModel(), private_attribute)
     except AttributeError as error:
         assert private_attribute in str(error)
-        origin = _raising_frame(error)
-        caller = _application_frame(error)
+        origin = raising_frame(error)
+        caller = application_frame(error)
     else:
         pytest.fail("fixture must raise in the dependency")
     assert origin.endswith(":__getattr__")
@@ -29,4 +29,4 @@ def test_dependency_error_names_application_caller_without_exception_contents() 
 
 
 def test_unraised_error_has_no_invented_application_frame() -> None:
-    assert _application_frame(AttributeError("private detail")) == "-"
+    assert application_frame(AttributeError("private detail")) == "-"

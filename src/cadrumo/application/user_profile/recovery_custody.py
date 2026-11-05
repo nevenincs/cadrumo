@@ -42,7 +42,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
-from ...core.time.clock import now as _now
+from ...core.time.clock import now
 from .authentication import ProfilePasswordProofOperation
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
@@ -286,7 +286,7 @@ def reset_profile_passphrase_with_recovery(
         # Evaluated under the custody lock so concurrent resets for this
         # profile queue behind one another rather than all passing the gate
         # before any of them has recorded its failure.
-        instant = _now()
+        instant = now()
         evaluation = sessions.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=instant)
         if evaluation.throttled:
             raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)

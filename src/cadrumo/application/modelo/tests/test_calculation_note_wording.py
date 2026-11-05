@@ -41,7 +41,7 @@ from ..calculation_notes import fact_locale_key, note_fact_text, read_element_na
 from ..disagreement_words import sources_facts, value_facts
 from ..printed_boxes import snapshot_printed_boxes
 from ..work_form_issue_lines import form_issue_lines
-from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
+from .test_work_form_gate_agreement import checked_form, work_form_gate_agreement_revision, work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -220,12 +220,16 @@ def test_a_rename_leaves_the_calculation_and_its_consumption_alone_and_the_sente
 
     assert [item.fact for item in first.diagnostics] == [item.fact for item in second.diagnostics]
     assert first.provenance == second.provenance
-    unit = _work_unit(operation)
+    unit = work_unit(operation)
     from ..bucket_unrouted_source_issues import unrouted_source_issues
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
-    revision_before = _revision(operation, unit, *unrouted_source_issues(first.diagnostics, boxes))
-    revision_after = _revision(operation, unit, *unrouted_source_issues(second.diagnostics, boxes))
+    revision_before = work_form_gate_agreement_revision(
+        operation, unit, *unrouted_source_issues(first.diagnostics, boxes)
+    )
+    revision_after = work_form_gate_agreement_revision(
+        operation, unit, *unrouted_source_issues(second.diagnostics, boxes)
+    )
     assert revision_before.calculation_revision_id == revision_after.calculation_revision_id
 
     (gap,) = [
@@ -243,9 +247,11 @@ def test_the_form_shows_the_current_name_from_the_read_it_was_given(operation: P
 
     boxes = snapshot_printed_boxes(operation, operation.snapshot("100", filing_year=2025, period="0A"))
     diagnostics = resolve_m100(_described("Standing desk")).diagnostics
-    revision = _revision(operation, _work_unit(operation), *unrouted_source_issues(diagnostics, boxes))
+    revision = work_form_gate_agreement_revision(
+        operation, work_unit(operation), *unrouted_source_issues(diagnostics, boxes)
+    )
 
-    form = _checked_form(operation, revision)
+    form = checked_form(operation, revision)
     note = next(note for note in form.calculation_notes if note.reason == "activity_asset_claim_gap")
     named = form.model_copy(
         update={

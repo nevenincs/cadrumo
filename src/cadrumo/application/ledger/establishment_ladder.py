@@ -313,7 +313,7 @@ def _party_country_code(
 """What a printed IVA rate is divided by to reach the fraction the registry keys on."""
 
 
-def _spanish_iva_was_charged(
+def spanish_iva_was_charged(
     charged_iva_rates: tuple[Decimal, ...],
     *,
     on_date: date | None,
@@ -507,7 +507,7 @@ def _treatment_concurs_with_non_establishment(
     )
 
 
-def _printed_evidence(
+def printed_evidence(
     *,
     tax_identifier: str | None,
     country_code: str | None,
@@ -531,7 +531,7 @@ def _printed_evidence(
     CORROBORATED. It settles no territory by itself at any point in this walk.
     """
     identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
-    spanish_iva_charged = _spanish_iva_was_charged(
+    spanish_iva_charged = spanish_iva_was_charged(
         charged_iva_rates,
         on_date=on_date,
         operation=operation,
@@ -657,7 +657,7 @@ def scope_printed_evidence_would_establish(
     Returns:
         The territory the printed rungs settle, or ``None`` where they exhaust.
     """
-    scope, _rung, _conflict = _printed_evidence(
+    scope, _rung, _conflict = printed_evidence(
         tax_identifier=tax_identifier,
         country_code=_party_country_code(
             stated_country_name=stated_country_name,
@@ -752,7 +752,7 @@ def resolve_counterparty_establishment_scope(
         operation=operation,
     )
     identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
-    evidenced, rung, conflict = _printed_evidence(
+    evidenced, rung, conflict = printed_evidence(
         tax_identifier=tax_identifier,
         country_code=country_code,
         postal_code=postal_code,
@@ -819,7 +819,7 @@ def resolve_counterparty_establishment_scope(
     return CounterpartyEstablishment(identification_state=settled_identification)
 
 
-def _charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
+def charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
     """Return every IVA percentage the document charges, from all three carriers.
 
     All three are read because a document uses whichever its reader could
@@ -938,7 +938,7 @@ def resolve_draft_counterparty_establishment(
         stated_country_name=side.country,
         postal_code=side.postal_code,
         regime_legend=draft.regime_legend,
-        charged_iva_rates=_charged_iva_rates(draft),
+        charged_iva_rates=charged_iva_rates(draft),
         on_date=_draft_date(draft),
         repository=repository,
     )

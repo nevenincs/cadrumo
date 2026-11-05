@@ -21,11 +21,11 @@ from ..acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockState,
-    _remove_lock_file_if_unchanged,
     acquire_auth_acquisition_lock,
     auth_acquisition_lock_path,
     clear_auth_acquisition_lock,
     inspect_auth_acquisition_lock,
+    remove_lock_file_if_unchanged,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -329,7 +329,7 @@ class TestStaleRemovalIsCompareAndDelete:
         live = self._live_record().model_dump_json(indent=2)
         path.write_text(live, encoding=UTF_8_ENCODING)
 
-        removed = _remove_lock_file_if_unchanged(path, stale)
+        removed = remove_lock_file_if_unchanged(path, stale)
 
         assert removed is False
         assert path.read_text(encoding=UTF_8_ENCODING) == live
@@ -340,11 +340,11 @@ class TestStaleRemovalIsCompareAndDelete:
         stale = self._expired_record().model_dump_json(indent=2)
         path.write_text(stale, encoding=UTF_8_ENCODING)
 
-        assert _remove_lock_file_if_unchanged(path, stale) is True
+        assert remove_lock_file_if_unchanged(path, stale) is True
         assert not path.exists()
 
     def test_an_already_absent_file_counts_as_removed(self, tmp_path: pathlib.Path) -> None:
-        assert _remove_lock_file_if_unchanged(tmp_path / "missing.lock", "anything") is True
+        assert remove_lock_file_if_unchanged(tmp_path / "missing.lock", "anything") is True
 
     def test_a_corrupt_record_replaced_by_a_live_one_is_not_deleted(self, tmp_path: pathlib.Path) -> None:
         """A corrupt verdict does not authorise deleting a later valid record."""
@@ -353,7 +353,7 @@ class TestStaleRemovalIsCompareAndDelete:
         live = self._live_record().model_dump_json(indent=2)
         path.write_text(live, encoding=UTF_8_ENCODING)
 
-        assert _remove_lock_file_if_unchanged(path, "{not json") is False
+        assert remove_lock_file_if_unchanged(path, "{not json") is False
         assert path.read_text(encoding=UTF_8_ENCODING) == live
 
     def test_reacquisition_leaves_a_replacement_lock_in_place(self, tmp_path: pathlib.Path) -> None:

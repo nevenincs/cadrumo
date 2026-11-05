@@ -244,8 +244,8 @@ def compute_current_approval_basis(
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),
-        transaction_catalogue_fingerprint=_transaction_catalogue_fingerprint(catalogue),
-        invoice_catalogue_fingerprint=_invoice_catalogue_fingerprint(invoices),
+        transaction_catalogue_fingerprint=transaction_catalogue_fingerprint(catalogue),
+        invoice_catalogue_fingerprint=invoice_catalogue_fingerprint(invoices),
         prior_filing_observations_fingerprint=prior_observations_fingerprint,
         profile_activity_fingerprint=profile_fingerprint,
         category_profiles_fingerprint=_category_profiles_fingerprint(profiles),
@@ -655,10 +655,10 @@ def _load_prior_filing_observations_fingerprint(
     operation: PinnedAuthorityOperation,
 ) -> str:
     """Digest all persisted prior-filing observations supplied by the application port."""
-    return _prior_filing_observations_fingerprint(repository.iter_records(), operation=operation)
+    return prior_filing_observations_fingerprint(repository.iter_records(), operation=operation)
 
 
-def _prior_filing_observations_fingerprint(
+def prior_filing_observations_fingerprint(
     payloads: Iterable[_StoredPriorObservation],
     *,
     operation: PinnedAuthorityOperation,
@@ -713,10 +713,10 @@ def _load_profile_activity_fingerprint(
 ) -> str:
     """Digest the canonical taxpayer-profile projection supplied by the port."""
     path_values = repository.load_path_values(bucket_id=bucket_id)
-    return _profile_activity_fingerprint(path_values)
+    return profile_activity_fingerprint(path_values)
 
 
-def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
+def profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
     """Order-independent digest of the wizard-free taxpayer-profile projection.
 
     Hashes the canonical ``path -> value`` projection (every profile fact rendered
@@ -753,7 +753,7 @@ def _draft_review_fingerprint(draft: ModeloDraft) -> str:
     return content_hash_hex(payload)
 
 
-def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
+def transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
     payload = [
         _normalize_transaction(transaction)
         for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
@@ -761,7 +761,7 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
     return content_hash_hex(payload)
 
 
-def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
+def invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     """Order-independent digest of the bucket's invoice catalogue.
 
     Each :class:`~domain.invoices.models.Invoice` is a frozen record with no

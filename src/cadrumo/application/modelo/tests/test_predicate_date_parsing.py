@@ -20,7 +20,7 @@ from datetime import date
 import pytest
 
 from ....core.parsing.dates import parse_date
-from ..verification_predicates import _parse_predicate_date
+from ..verification_predicates import parse_predicate_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,18 +37,18 @@ UNDER_SPECIFIED = ("1/2/2024", "2024-2-9", "1-2-2024")
 
 @pytest.mark.parametrize(("raw", "expected"), ACCEPTED.items())
 def test_well_formed_dates_still_parse(raw: str, expected: date) -> None:
-    assert _parse_predicate_date(raw) == expected
+    assert parse_predicate_date(raw) == expected
 
 
 @pytest.mark.parametrize("raw", UNDER_SPECIFIED)
 def test_under_specified_dates_yield_no_eligibility_signal(raw: str) -> None:
     """The audit's own probe values: previously resolved, now refused."""
-    assert _parse_predicate_date(raw) is None
+    assert parse_predicate_date(raw) is None
 
 
 @pytest.mark.parametrize("raw", ["", "   ", "not-a-date", "2024-13-01", "32/01/2024", "9/9/24"])
 def test_blank_and_invalid_values_remain_no_signal(raw: str) -> None:
-    assert _parse_predicate_date(raw) is None
+    assert parse_predicate_date(raw) is None
 
 
 @pytest.mark.parametrize(
@@ -69,4 +69,4 @@ def test_predicate_never_accepts_what_the_canonical_parser_refuses(raw: str) -> 
             if canonical is not None:
                 break
 
-    assert _parse_predicate_date(raw) == canonical, raw
+    assert parse_predicate_date(raw) == canonical, raw

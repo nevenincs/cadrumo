@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.prorrata_register_catalogue import (
@@ -71,7 +71,7 @@ def _register(regime: ProrrataRegisterRegime, *, ejercicio: int = _EJERCICIO) ->
 
 def _registry_regimes() -> tuple[ProrrataRegisterRegime, ...]:
     """Return the registry-declared regimes in their authoritative order."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         catalogue = resolve_prorrata_register_catalogue(authority=operation)
         return tuple(definition.token for definition in catalogue.regimes)
 
@@ -86,7 +86,7 @@ def test_the_iva_gate_follows_the_shared_predicate_for_every_regime(
     interesting members, so a regime added later is exercised here without
     anyone remembering to add it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         apportionment = sector_scoped_apportionment(
             _register(regime), _EJERCICIO, sector_id=None, operation=_authority_operation_for_test
         )
@@ -130,7 +130,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
     ``GENERAL`` without a provisional percentage still resolves to nothing, and
     no percentage is fabricated to fill the gap.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         register = ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
@@ -153,7 +153,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
 
 def test_an_absent_entry_yields_no_apportionment() -> None:
     """The ``entry is None`` half of the gate, which both ledgers also share."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             sector_scoped_apportionment(
                 ProrrataRegister(entries=()), _EJERCICIO, sector_id=None, operation=_authority_operation_for_test

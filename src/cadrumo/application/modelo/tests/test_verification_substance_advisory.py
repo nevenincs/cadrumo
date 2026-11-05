@@ -7,11 +7,11 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import (
-    _CASILLA_00501,
-    _CASILLA_01,
-    _CASILLA_06,
-    _M200_BIN_GENERATED_CASILLA,
-    _casilla_values,
+    CASILLA_00501,
+    CASILLA_01,
+    CASILLA_06,
+    M200_BIN_GENERATED_CASILLA,
+    verification_substance_casilla_values,
     workflow_profile,
 )
 
@@ -41,24 +41,48 @@ _M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("art109_activity_income_wi
 _AdvisoryPredicateCase = tuple[str, dict[CasillaId, Decimal], bool]
 
 _ADVISORY_RATIO_GE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
-    ("exact-threshold", _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
-    ("above-threshold", _casilla_values((_CASILLA_00501, "12000"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
-    ("below-threshold", _casilla_values((_CASILLA_00501, "9000"), (_M200_BIN_GENERATED_CASILLA, "15000")), False),
-    ("zero-denominator", _casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    (
+        "exact-threshold",
+        verification_substance_casilla_values((CASILLA_00501, "10500"), (M200_BIN_GENERATED_CASILLA, "15000")),
+        True,
+    ),
+    (
+        "above-threshold",
+        verification_substance_casilla_values((CASILLA_00501, "12000"), (M200_BIN_GENERATED_CASILLA, "15000")),
+        True,
+    ),
+    (
+        "below-threshold",
+        verification_substance_casilla_values((CASILLA_00501, "9000"), (M200_BIN_GENERATED_CASILLA, "15000")),
+        False,
+    ),
+    (
+        "zero-denominator",
+        verification_substance_casilla_values((CASILLA_00501, "5000"), (M200_BIN_GENERATED_CASILLA, "0")),
+        False,
+    ),
 )
 
 _ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
 _ADVISORY_IMPLIES_M200_BASE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
     (
         "positive-result-zero-base",
-        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "0")),
+        verification_substance_casilla_values((CASILLA_00501, "140000"), (M200_BIN_GENERATED_CASILLA, "0")),
         True,
     ),
-    ("loss-result", _casilla_values((_CASILLA_00501, "-5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
-    ("zero-result", _casilla_values((_CASILLA_00501, "0"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    (
+        "loss-result",
+        verification_substance_casilla_values((CASILLA_00501, "-5000"), (M200_BIN_GENERATED_CASILLA, "0")),
+        False,
+    ),
+    (
+        "zero-result",
+        verification_substance_casilla_values((CASILLA_00501, "0"), (M200_BIN_GENERATED_CASILLA, "0")),
+        False,
+    ),
     (
         "determined-base",
-        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "140000")),
+        verification_substance_casilla_values((CASILLA_00501, "140000"), (M200_BIN_GENERATED_CASILLA, "140000")),
         False,
     ),
 )
@@ -72,8 +96,8 @@ def test_advisory_when_ratio_ge_cases() -> None:
 
 def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
     values: dict[CasillaId, Decimal] = {
-        _CASILLA_00501: Decimal("100"),
-        _M200_BIN_GENERATED_CASILLA: Decimal("100"),
+        CASILLA_00501: Decimal("100"),
+        M200_BIN_GENERATED_CASILLA: Decimal("100"),
     }
 
     with pytest.raises(ModeloError):
@@ -97,8 +121,8 @@ def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() ->
     )
     profile = workflow_profile().model_copy(update={"art109_activity_income_withholding_ge_70pct": True})
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("0"),
-        _CASILLA_01: Decimal("15000"),
+        CASILLA_06: Decimal("0"),
+        CASILLA_01: Decimal("15000"),
     }
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
@@ -119,8 +143,8 @@ def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profil
         finding_kind="ADVISORY",
     )
     casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("10500"),
-        _CASILLA_01: Decimal("15000"),
+        CASILLA_06: Decimal("10500"),
+        CASILLA_01: Decimal("15000"),
     }
 
     findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -148,7 +172,7 @@ def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, h
     :class:`ModeloVerificationPredicateMalformedError` refusals on every call rather than leaving the
     advisory silent or letting ``InvalidOperation`` escape.
     """
-    values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
+    values = verification_substance_casilla_values((CASILLA_00501, "10500"), (M200_BIN_GENERATED_CASILLA, "15000"))
     expression = f'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "{threshold}"])'
 
     for _ in range(3):

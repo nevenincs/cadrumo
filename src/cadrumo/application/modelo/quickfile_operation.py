@@ -82,7 +82,7 @@ class QuickfileExecutionResult(BaseModel):
     projection: QuickfileProjection
 
 
-class _Writes(LedgerCommitAttemptTracker):
+class Writes(LedgerCommitAttemptTracker):
     """Count completed concrete writes while preserving canonical uncertain outcomes."""
 
     def __init__(self) -> None:
@@ -179,7 +179,7 @@ class QuickfileExecutor:
         payload = request.payload
         _admit_quickfile_request(request, context)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        writes = _Writes()
+        writes = Writes()
         loop = asyncio.get_running_loop()
         admission_failure: BaseException | None = None
         await context.events.phase(QUICKFILE_OPERATION_DEFINITION_ID)

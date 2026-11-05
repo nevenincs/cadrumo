@@ -54,7 +54,7 @@ _SOURCE_KIND = "modelo_130_prior_pago_fraccionado"
 
 
 @dataclass(frozen=True, slots=True)
-class _PriorPaymentDeclaration:
+class PriorPaymentDeclaration:
     """The selected declaration's casilla identities for one Modelo 130 revision."""
 
     modelo: str
@@ -71,14 +71,14 @@ def _declared_casilla(declarations: Mapping[str, str], key: str) -> CasillaId:
     return validated_casilla_id(value, surface=f"{_MAPPING_FACT_ID} {key}")
 
 
-def _selected_registry_declaration(
+def selected_registry_declaration(
     revision: ModeloRevision,
     *,
     modelo: str,
     period_token: str,
     filing_year: int,
     operation: PinnedAuthorityOperation,
-) -> _PriorPaymentDeclaration | None:
+) -> PriorPaymentDeclaration | None:
     """Resolve the dated declaration when it applies to the selected work scope."""
     effective_date = date(filing_year, 12, 31)
     resolved = operation.resolve_governed_fact(
@@ -102,7 +102,7 @@ def _selected_registry_declaration(
     if selected_revision != revision.id:
         return None
     operation.revision_for_context(selected_modelo, filing_year=filing_year, period=period_token, on=effective_date)
-    return _PriorPaymentDeclaration(
+    return PriorPaymentDeclaration(
         modelo=selected_modelo,
         prior_payment=_declared_casilla(declarations, "casilla.prior_payment"),
         cumulative_income=_declared_casilla(declarations, "casilla.cumulative_income"),
@@ -170,7 +170,7 @@ def collect_prior_payment_not_deducted_diagnostics(
                 observation_repository=observation_repository,
                 operation=indexed_operation,
             )
-    declaration = _selected_registry_declaration(
+    declaration = selected_registry_declaration(
         revision,
         modelo=modelo,
         period_token=period_token,
@@ -235,7 +235,7 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
                 observation_repository=observation_repository,
                 operation=indexed_operation,
             )
-    declaration = _selected_registry_declaration(
+    declaration = selected_registry_declaration(
         revision,
         modelo=modelo,
         period_token=period_token,

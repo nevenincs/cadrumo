@@ -70,13 +70,13 @@ from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index, record_to_path_values
-from ._models import CasillaAggregation, CasillaProvenance
-from ._renta_business_eligibility import (
+from .catalogue_read_binding import require_catalogue_reads_bound_to
+from .errors import AggregationPeriodError
+from .models import CasillaAggregation, CasillaProvenance
+from .renta_business_eligibility import (
     RentaExpenseAdvisory,
     renta_expense_advisory,
 )
-from .catalogue_read_binding import require_catalogue_reads_bound_to
-from .errors import AggregationPeriodError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -97,7 +97,7 @@ _TAX_REGION_PATH = "tax_residence.ccaa"
 
 # Registry authority: selected renta-ledger insurance variants, category-profile
 # routing, issue/applicability, and binding declarations are consumed through the dated mapping
-def _registry_renta_ledger_declarations(
+def registry_renta_ledger_declarations(
     *,
     modelo: str,
     filing_year: int,
@@ -181,7 +181,7 @@ def _seguro_enfermedad_person_counts(
     """Resolve insured-person variant counts using selected registry declarations."""
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
-    declarations = _registry_renta_ledger_declarations(
+    declarations = registry_renta_ledger_declarations(
         modelo=modelo,
         filing_year=filing_year,
         operation=operation,
@@ -804,7 +804,7 @@ def aggregate_renta_ledger_expenses(
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
-    resolved_period = _resolve_annual_period(period)
+    resolved_period = resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
     rules = resolve_category_deduction_rules(
         bucket_id=bucket_id,
@@ -843,7 +843,7 @@ def aggregate_renta_ledger_expenses(
         )
         observations = _net_received_corrections(observations, corrected.fractions)
     observations = _apply_statutory_cap_trims(observations, rules=rules, transactions=transactions, invoices=invoices)
-    casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
+    casilla_aggregation = renta_ledger_casilla_aggregation(resolved_period, observations, modelo=modelo)
     return RentaLedgerExpenseAggregation(
         modelo=modelo,
         period=resolved_period,
@@ -966,7 +966,7 @@ def _trimmed_observation(
     )
 
 
-def _resolve_annual_period(period: Period) -> Period:
+def resolve_annual_period(period: Period) -> Period:
     resolved = period
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
@@ -976,7 +976,7 @@ def _resolve_annual_period(period: Period) -> Period:
     return resolved
 
 
-def _casilla_aggregation(
+def renta_ledger_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaDeductibleExpenseObservation],
     *,

@@ -248,7 +248,7 @@ def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo(
     """Casilla-level declaración reconcile is enrolled one modelo at a time.
 
     A modelo not enrolled under
-    :data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE` (200 here) refuses
+    :data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE` (200 here) refuses
     cleanly with a typed error rather than silently degrading to a header-only
     compare."""
 

@@ -12,7 +12,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind, ForeignAssetClass, RetencionScheme
 from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
@@ -78,7 +78,7 @@ def test_site5_command_rejects_cross_family_observations() -> None:
         foreign_asset_observations=(obs,),
     )
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         pytest.raises(AggregationConfigError),
     ):
         aggregate_per_modelo(command, operation=operation)
@@ -86,7 +86,7 @@ def test_site5_command_rejects_cross_family_observations() -> None:
 
 def test_site6_result_rejects_duplicate_source_kinds() -> None:
     """PerModeloAggregationResult._source_kinds_are_unique raises AggregationConfigError."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..retenciones import RetencionObservation
         from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
@@ -128,7 +128,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
 
 def test_site7_result_rejects_modelo_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for modelo mismatch."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..counterpart import CounterpartObservation
         from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
@@ -171,7 +171,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
 
 def test_site8_result_rejects_period_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for period mismatch."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..counterpart import CounterpartObservation
         from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
@@ -217,7 +217,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
 
     Triggered by a provider / payload type mismatch.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..retenciones import RetencionObservation
         from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
@@ -305,10 +305,10 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
     """_foreign_assets._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from ..foreign_assets import _CANONICAL_SOURCE_KINDS
+    from ..foreign_assets import CANONICAL_SOURCE_KINDS
 
-    assert len(_CANONICAL_SOURCE_KINDS) == 4
-    for kind in _CANONICAL_SOURCE_KINDS:
+    assert len(CANONICAL_SOURCE_KINDS) == 4
+    for kind in CANONICAL_SOURCE_KINDS:
         assert isinstance(kind, BindingSourceKind), (
             f"_foreign_assets._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
         )

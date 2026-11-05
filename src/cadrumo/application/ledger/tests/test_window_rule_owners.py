@@ -29,7 +29,7 @@ from ..readiness_routes import IVA_DERIVABLE_REASONS, READINESS_REASON_FIELDS
 from ..staged_check import check_stored_row
 from ..staged_check_contracts import LedgerStagedCell, LedgerStagedRow, StageFieldName
 from ..staged_identity import TRANSACTION_IDENTITY_FIELDS
-from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _raw_transaction, _transaction
+from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction, raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -96,21 +96,21 @@ def _invoices(*invoices: Invoice) -> InvoiceCatalogue:
 def test_an_identity_field_is_one_the_id_is_worked_out_from(
     field: str, change: dict[str, object], identity: bool
 ) -> None:
-    raw = _raw_transaction("identity")
+    raw = raw_transaction("identity")
 
     assert (derive_transaction_id(raw.model_copy(update=change)) != derive_transaction_id(raw)) is identity
     assert (field in TRANSACTION_IDENTITY_FIELDS) is identity
 
 
 def test_binding_an_own_account_moves_the_id_and_the_field_says_so() -> None:
-    raw = _raw_transaction("identity")
+    raw = raw_transaction("identity")
 
     assert derive_transaction_id(raw, own_account_id="account-2") != derive_transaction_id(raw)
     assert "own_account_id" in TRANSACTION_IDENTITY_FIELDS
 
 
 def test_a_booked_date_is_identity_when_no_value_date_stands_before_it() -> None:
-    raw = _raw_transaction("identity").model_copy(update={"value_date": None})
+    raw = raw_transaction("identity").model_copy(update={"value_date": None})
     moved = raw.model_copy(update={"booked_date": date(2026, 5, 2)})
 
     assert derive_transaction_id(moved) != derive_transaction_id(raw)
@@ -119,7 +119,7 @@ def test_a_booked_date_is_identity_when_no_value_date_stands_before_it() -> None
 
 @pytest.mark.parametrize("field", sorted(TRANSACTION_IDENTITY_FIELDS))
 def test_the_staged_check_names_only_identity_fields_as_new_identity(field: StageFieldName) -> None:
-    stored = _transaction("staged", direction=TransactionDirection.OUTGOING)
+    stored = preflight_transaction("staged", direction=TransactionDirection.OUTGOING)
     answer = check_stored_row(
         LedgerStagedRow(
             transaction_id=stored.transaction_id, cells=(LedgerStagedCell(field=field, value=_MOVED[field]),)
@@ -140,7 +140,7 @@ def test_the_settling_direction_is_the_only_one_reconciliation_suggests(
 ) -> None:
     assert invoice_settling_direction(kind) is direction
     rows = {
-        moving: _transaction(f"row-{moving.value}", direction=moving, amount=Decimal("121.00"))
+        moving: preflight_transaction(f"row-{moving.value}", direction=moving, amount=Decimal("121.00"))
         for moving in (TransactionDirection.INCOMING, TransactionDirection.OUTGOING)
     }
 
@@ -156,7 +156,7 @@ def test_the_settling_direction_is_the_only_one_reconciliation_suggests(
     ((INVOICE_MATCH_TOLERANCE, True), (INVOICE_MATCH_TOLERANCE + Decimal("0.01"), False)),
 )
 def test_the_match_tolerance_is_where_reconciliation_stops_suggesting(distance: Decimal, suggested: bool) -> None:
-    row = _transaction(
+    row = preflight_transaction(
         "near",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("121.00") + distance,
@@ -173,7 +173,7 @@ def test_the_match_tolerance_is_where_reconciliation_stops_suggesting(distance: 
 
 
 def _deducting_row(direction: TransactionDirection) -> Transaction:
-    row = _transaction(
+    row = preflight_transaction(
         f"deducting-{direction.value}",
         direction=direction,
         amount=Decimal("121.00"),
@@ -199,8 +199,8 @@ def test_only_a_purchase_can_bear_the_cuota_of_a_capital_good(
     direction: TransactionDirection, operation: PinnedAuthorityOperation
 ) -> None:
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((_deducting_row(direction),)),
         operation=operation,
     )
@@ -223,7 +223,7 @@ def test_a_derivable_reason_is_one_the_derivation_answers(operation: PinnedAutho
         operation=operation,
     )
     assert derivable
-    missing = _transaction(
+    missing = preflight_transaction(
         "derive",
         amount=Decimal("121.00"),
         iva_category=IvaCategory("domestic_general"),

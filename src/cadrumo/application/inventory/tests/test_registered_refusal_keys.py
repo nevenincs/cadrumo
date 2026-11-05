@@ -13,7 +13,7 @@ from cadrumo.application.inventory.errors import (
     InventoryServiceInputError,
 )
 from cadrumo.application.inventory.refusal_words import served_refusal_words
-from cadrumo.application.inventory.registered_executor import _refusal_for_error
+from cadrumo.application.inventory.registered_executor import refusal_for_error
 from cadrumo.application.inventory.registered_requests import InventoryInspectRequest, InventoryRefusalReason
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
@@ -49,7 +49,7 @@ _FAMILY = "application.inventory.service.errors."
     ],
 )
 def test_the_reason_key_is_the_family_key_of_the_reason(error: Exception, reason: str) -> None:
-    refusal = _refusal_for_error(request=_REQUEST, error=error)
+    refusal = refusal_for_error(request=_REQUEST, error=error)
 
     assert refusal is not None
     assert refusal.reason == reason
@@ -82,7 +82,7 @@ def test_the_refusal_serves_the_catalogue_sentence_of_its_reason_in_the_workers_
     error: Exception, reason: str, language: OutputLanguage
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
-        refusal = _refusal_for_error(request=_REQUEST, error=error)
+        refusal = refusal_for_error(request=_REQUEST, error=error)
         expected = tr(f"{_FAMILY}{reason}", locale=language.value, year="2025")
 
     assert refusal is not None

@@ -62,7 +62,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .binding_prefill import BindingPrefillReport as _BindingPrefillReport
+from .binding_prefill import BindingPrefillReport as BindingPrefillBindingPrefillReport
 
 if TYPE_CHECKING:
     from .binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
@@ -85,9 +85,9 @@ class IvaCompensationReconciliationReport(BaseModel):
 
 
 IvaCompensationReconciliationReport.model_rebuild(
-    _types_namespace={"BindingPrefillReport": _BindingPrefillReport},
+    _types_namespace={"BindingPrefillReport": BindingPrefillBindingPrefillReport},
 )
-del _BindingPrefillReport
+del BindingPrefillBindingPrefillReport
 
 
 class IvaWalletDecisionSourceResolver:

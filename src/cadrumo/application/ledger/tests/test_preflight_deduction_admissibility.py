@@ -27,7 +27,7 @@ from ....domain.iva.schema import IvaCategory, IvaExemptionArticle
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
-from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _transaction
+from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,7 +46,7 @@ def _classified_purchase(provider_id: str, **updates: object) -> Transaction:
     assert isinstance(taxable_base, Decimal)
     assert isinstance(iva_amount, Decimal)
     assert isinstance(booked_date, date)
-    purchase = _transaction(
+    purchase = preflight_transaction(
         provider_id,
         direction=TransactionDirection.OUTGOING,
         amount=taxable_base + iva_amount,
@@ -67,11 +67,11 @@ def _classified_purchase(provider_id: str, **updates: object) -> Transaction:
 
 def _reasons(
     *transactions: Transaction,
-    period: Period = _Q2_2026,
+    period: Period = Q2_2026,
     operation: PinnedAuthorityOperation,
 ) -> list[LedgerPreflightIssueReason]:
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         period=period,
         transactions=TransactionCatalogue.from_transactions(transactions),
         operation=operation,
@@ -110,8 +110,8 @@ def test_readiness_reports_an_investment_deduction_without_its_asset_identity(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((investment,)),
         operation=operation,
     )
@@ -131,7 +131,7 @@ def test_readiness_stays_silent_for_a_row_carrying_no_deduction_facts(*, operati
     here would block every 303 period whose purchases are not yet invoice-linked
     -- a state the aggregation already reports as its own distinct exclusion.
     """
-    unclassified = _transaction(
+    unclassified = preflight_transaction(
         "unclassified-purchase",
         direction=TransactionDirection.OUTGOING,
         iva_category=IvaCategory("domestic_general"),

@@ -120,7 +120,7 @@ _GRAMMARS: dict[str, ModeloEditValueGrammarV1] = {
 _BINDING = "modelo-999-coeficiente"
 
 
-def _baseline() -> ModeloEditBaselineV1:
+def baseline() -> ModeloEditBaselineV1:
     identity = OperationSchemaIdentityV1(schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint=_DIGEST)
     now = datetime.now(UTC)
     return ModeloEditBaselineV1(
@@ -187,7 +187,7 @@ def _parse(
         ModeloEditParseRequestV1(
             address=ModeloEditScalarAddressV1(casilla_id=casilla_id), entry_locale=locale, lexeme=lexeme
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=tax_id_format,
     )
 
@@ -325,7 +325,7 @@ def test_ratios_and_fine_decimals_are_not_held_to_the_money_scale() -> None:
         ModeloEditParseRequestV1(
             address=ModeloEditBindingAddressV1(binding_id=_BINDING), entry_locale=OutputLanguage.EN, lexeme="0.1575"
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=None,
     )
     assert _value(binding) == Decimal("0.1575")

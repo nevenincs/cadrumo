@@ -49,7 +49,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class CasillaDivergenceKind(StrEnum):
@@ -84,7 +84,7 @@ class CasillaDivergence(BaseModel):
     otherwise ``None`` — there is no meaningful delta when one side is absent.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     kind: CasillaDivergenceKind

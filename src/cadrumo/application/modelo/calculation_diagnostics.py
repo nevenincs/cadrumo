@@ -48,9 +48,9 @@ from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
-from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
-from ._m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
-from ._minimo_descendientes_advisory import (
+from .bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+from .m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
+from .minimo_descendientes_advisory_support import (
     collect_guarderia_madre_meses_undeclared_diagnostics,
     collect_guarderia_spend_shape_diagnostics,
     collect_minimo_descendientes_dependencia_diagnostics,
@@ -59,14 +59,14 @@ from ._minimo_descendientes_advisory import (
     collect_minimo_descendientes_rentas_undeclared_diagnostics,
     collect_minimo_descendientes_undeclared_diagnostics,
 )
-from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
-from ._rate_box_advisory import collect_rate_box_coverage_diagnostics
-from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
+from .official_box_advisory import collect_official_box_unpopulated_diagnostics
 from .prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )
 from .prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from .rate_box_advisory import collect_rate_box_coverage_diagnostics
+from .settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from .work_profile import ModeloWorkProfile
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]

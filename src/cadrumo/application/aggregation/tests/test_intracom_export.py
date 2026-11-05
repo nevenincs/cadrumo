@@ -42,7 +42,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -69,7 +69,7 @@ def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> D
     return resolved.get(_CASILLA_BASE_BINDING[casilla_id], Decimal("0"))
 
 
-_PERIOD = _period(2026, "2T")
+_PERIOD = renta_income_aggregation_period(2026, "2T")
 _DE = EUMemberState.from_registry("de")
 _ES = EUMemberState.from_registry("es")
 _XI = EUMemberState.from_registry("xi")

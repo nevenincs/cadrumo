@@ -8,7 +8,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 
-from ..projection import _verb_baseline_projection_bindings
+from ..projection import verb_baseline_projection_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,7 +22,7 @@ def test_the_baseline_supplies_no_profile_sourced_binding_except_the_verbs_own_c
     profile_sourced = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}
     assert "renta-profile-family-minor-children-in-unit" in profile_sourced
 
-    decimal, enum, boolean = _verb_baseline_projection_bindings("madrid", revision)
+    decimal, enum, boolean = verb_baseline_projection_bindings("madrid", revision)
 
     assert profile_sourced.isdisjoint(decimal)
     assert profile_sourced.isdisjoint(boolean)
@@ -37,7 +37,7 @@ def test_every_baseline_binding_travels_on_the_channel_its_registry_declaration_
         revision = operation.snapshot("100", filing_year=year, period="0A").revision
     declared = {binding.id: binding.value.channel for binding in revision.bindings}
 
-    decimal, enum, boolean = _verb_baseline_projection_bindings("madrid", revision)
+    decimal, enum, boolean = verb_baseline_projection_bindings("madrid", revision)
 
     assert decimal
     assert enum

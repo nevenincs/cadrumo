@@ -81,22 +81,22 @@ def catalogue_read_ports(
     )
 
 
-def _period(year: int, code: str) -> Period:
+def renta_income_aggregation_period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-_ANNUAL_2024 = _period(2024, "0A")
-_Q1_2024 = _period(2024, "1T")
-_Q2_2024 = _period(2024, "2T")
+ANNUAL_2024 = renta_income_aggregation_period(2024, "0A")
+Q1_2024 = renta_income_aggregation_period(2024, "1T")
+Q2_2024 = renta_income_aggregation_period(2024, "2T")
 
 
 M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
-_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
-_M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
+M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 M130_MODELO: str = Modelo("130").value
-_M130_ACCEPT_ACTIVITY_MARKER: bool = True
+M130_ACCEPT_ACTIVITY_MARKER: bool = True
 
 
 @cache
@@ -151,7 +151,7 @@ def raw_transaction(
     )
 
 
-def _income_transaction(
+def income_transaction(
     provider_id: str,
     *,
     value_date: date,
@@ -225,7 +225,7 @@ def actividad_transaction(
     )
 
 
-def _actividad_transaction_with_source(
+def actividad_transaction_with_source(
     provider_id: str,
     *,
     value_date: date,

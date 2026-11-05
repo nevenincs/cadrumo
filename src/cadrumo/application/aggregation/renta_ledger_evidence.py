@@ -7,17 +7,17 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction
 from ..invoices.source_observations import is_rectificativa
-from ._renta_business_eligibility import is_supplier_refund
 from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
 )
+from .renta_business_eligibility import is_supplier_refund
 from .renta_income_evidence import settlement_comparison
 from .renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 
@@ -25,7 +25,7 @@ from .renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggrega
 class _PurchaseInvoiceEvidencePayload(BaseModel):
     """Typed enrichment fields copied from a reconciled linked invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_issue_date: date | None = None
     taxable_base: Decimal | None = None

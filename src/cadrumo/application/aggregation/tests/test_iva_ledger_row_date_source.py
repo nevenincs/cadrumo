@@ -31,7 +31,7 @@ from ..iva_ledger import (
     IvaLedgerRowDateSource,
     aggregate_iva_ledger_observations,
 )
-from ..modelo_bindings_iva import _selected_scope_iva_evidence_message
+from ..modelo_bindings_iva import selected_scope_iva_evidence_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -129,7 +129,7 @@ def test_a_value_dated_row_past_the_rate_names_the_movement_date() -> None:
         date=moved.isoformat(),
     )
     # The source resolver's durable marker carries the sentence, not the bare reason.
-    assert _selected_scope_iva_evidence_message(issue).endswith(issue.detail)
+    assert selected_scope_iva_evidence_message(issue).endswith(issue.detail)
 
 
 def test_a_row_with_only_a_booked_date_names_that_source() -> None:
@@ -177,4 +177,4 @@ def test_a_recorded_operation_date_past_the_rate_keeps_the_rate_wording() -> Non
         rate=str(_RATE),
         date=delivered.isoformat(),
     )
-    assert _selected_scope_iva_evidence_message(issue) == "selected-scope IVA evidence failure: unsupported_iva_rate"
+    assert selected_scope_iva_evidence_message(issue) == "selected-scope IVA evidence failure: unsupported_iva_rate"

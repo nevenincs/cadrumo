@@ -43,7 +43,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.record_row_membership import RecordRowMembership
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -82,7 +82,7 @@ from .records import (
 
 
 class _CasillaRow(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     tab: Literal[TabName.ENTRADAS, TabName.CALCULOS]
@@ -91,7 +91,7 @@ class _CasillaRow(BaseModel):
 
 
 class _BindingRow(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding: BindingId
     tab: Literal[TabName.ENTRADAS]
@@ -116,7 +116,7 @@ class BracketRanges(BaseModel):
     stays clean.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     parameter: ParameterId
     lower_bound: str = Field(min_length=1)
@@ -128,7 +128,7 @@ class BracketRanges(BaseModel):
 class SheetLayout(BaseModel):
     """Resolved cell addresses for every casilla, binding, and parameter."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     revision_id: RevisionId
     entradas_cells: Mapping[CasillaId, SheetCellAddress]

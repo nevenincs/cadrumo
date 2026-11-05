@@ -28,7 +28,7 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
 from ...actividad_asset.tests.ledger_support import MemoryLedger, acquisition_transaction
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
-from .ledger_source_mesh_support import _register_claim, reasons, register_asset, resolve_m100, resolve_m130
+from .ledger_source_mesh_support import reasons, register_asset, register_claim, resolve_m100, resolve_m130
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -71,7 +71,7 @@ def test_it_owns_no_row_and_needs_no_reconciliation() -> None:
 
 def test_a_claim_reaches_modelo_100_and_the_instalment_with_no_row() -> None:
     element = _element()
-    history = ActivityAssetHistory(revisions=(element,), claims=(_register_claim(element, amount=Decimal("1200.00")),))
+    history = ActivityAssetHistory(revisions=(element,), claims=(register_claim(element, amount=Decimal("1200.00")),))
 
     annual = resolve_m100(history)
 
@@ -127,11 +127,9 @@ def test_another_shape_cannot_declare_an_activity() -> None:
 def test_an_agrarian_element_stays_out_of_the_instalment_and_in_the_annual_return() -> None:
     agrarian = _element(declared_activity=TipoActividad.B01_AGRICOLA)
     other = _element()
-    claims = (_register_claim(agrarian, amount=Decimal("1200.00")),)
+    claims = (register_claim(agrarian, amount=Decimal("1200.00")),)
     agrarian_history = ActivityAssetHistory(revisions=(agrarian,), claims=claims)
-    other_history = ActivityAssetHistory(
-        revisions=(other,), claims=(_register_claim(other, amount=Decimal("1200.00")),)
-    )
+    other_history = ActivityAssetHistory(revisions=(other,), claims=(register_claim(other, amount=Decimal("1200.00")),))
 
     excluded = resolve_m130(agrarian_history, "4T")
     counted = resolve_m130(other_history, "4T")

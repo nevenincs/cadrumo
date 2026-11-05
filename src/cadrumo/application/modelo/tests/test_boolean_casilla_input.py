@@ -26,7 +26,7 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._registry_helpers import validate_casilla_input_ids
+from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

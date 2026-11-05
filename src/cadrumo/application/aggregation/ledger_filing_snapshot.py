@@ -92,7 +92,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 # assert that the wider facts were checked when the filing was sealed, which
 # nobody knows; the honest report is that its comparison is sound but narrower,
 # which is what ``covers_current_fact_set`` carries.
-_FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
+FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
     ("booked_date", "raw.booked_date"),
     ("value_date", "raw.value_date"),
     ("amount", "raw.amount"),
@@ -119,8 +119,8 @@ _FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
     ("lifecycle_state", "lifecycle_state"),
 )
 
-_FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V1,
+FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V1,
     ("recargo_amount", "recargo_amount"),
     ("usage_ratio_id", "usage_ratio_id"),
     ("deduction_fact_kind", "deduction_fact_kind"),
@@ -147,8 +147,8 @@ _FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
 # fields, ``exemption_article``, ``rectifies_ledger_id``) stay out until a write
 # path can change them; the write-path coverage test fails the moment one can,
 # which forces the next version rather than a silent gap.
-_FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V2,
+FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V2,
     ("investment_asset_id", "investment_asset_id"),
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
@@ -161,8 +161,8 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
 # The purchase evidence link is hashed because a recalculation takes the row's
 # figures from that invoice, so attaching one now asks for a recalculation too.
 # Supplementary ``attachment_ids`` feed no calculation and stay out.
-_FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V3,
+FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V3,
     ("operation_date", "operation_date"),
     ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
     ("deduction_authority", "deduction_provenance.authority"),
@@ -172,26 +172,26 @@ _FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
 
 # V6 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
 # (LIVA art. 95.Tres.2.ª) without moving any amount V5 watches.
-_FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V5,
+FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V5,
     ("iva_vehicle_use", "iva_vehicle_use"),
 )
 
 # V7 adds ``accrual_date``: the operator-stated LIRPF art. 14 date moves the Renta
 # year or period an income or expense falls in without moving any amount or IVA
 # fact V6 watches.
-_FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V6,
+FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V6,
     ("accrual_date", "accrual_date"),
 )
 
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
-    1: _FINGERPRINT_FIELDS_V1,
-    2: _FINGERPRINT_FIELDS_V2,
-    3: _FINGERPRINT_FIELDS_V3,
-    5: _FINGERPRINT_FIELDS_V5,
-    6: _FINGERPRINT_FIELDS_V6,
-    7: _FINGERPRINT_FIELDS_V7,
+    1: FINGERPRINT_FIELDS_V1,
+    2: FINGERPRINT_FIELDS_V2,
+    3: FINGERPRINT_FIELDS_V3,
+    5: FINGERPRINT_FIELDS_V5,
+    6: FINGERPRINT_FIELDS_V6,
+    7: FINGERPRINT_FIELDS_V7,
 }
 
 #: The version every NEW snapshot is sealed under.
@@ -204,7 +204,7 @@ OPERATION_DATE_FIELD_SET_VERSION: Final = 5
 ACCRUAL_DATE_FIELD_SET_VERSION: Final = 7
 
 
-def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
+def fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
     """Return the field set a given version fingerprints over.
 
     Refuses an unknown version rather than falling back to the current one: a
@@ -256,7 +256,7 @@ def row_fingerprint(
             instead, or it compares two different questions and calls the
             difference drift.
     """
-    fields = _fingerprint_fields(field_set_version)
+    fields = fingerprint_fields(field_set_version)
     canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in fields)
     return sha256_hex(canonical.encode("utf-8"))
 

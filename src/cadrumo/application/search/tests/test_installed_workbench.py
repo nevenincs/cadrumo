@@ -306,11 +306,10 @@ def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:
 
 
 def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identities() -> None:
-    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_projection as _projection
-    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_projection, reconciliation_record
     from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
-    receipt = _record()
+    receipt = reconciliation_record()
     declaration = receipt.model_copy(
         update={
             "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
@@ -321,7 +320,7 @@ def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identi
     other_calculation = declaration.model_copy(
         update={"calculation_revision_id": "f" * 64, "bucket_event_id": "1" * 64}
     )
-    projection = _projection((receipt, declaration, other_work, other_calculation))
+    projection = reconciliation_projection((receipt, declaration, other_work, other_calculation))
     snapshot = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),

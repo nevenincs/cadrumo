@@ -65,7 +65,7 @@ def test_bucket_admission_refuses_caller_changes_to_closed_manual_slots(
     enum_values = {country.id: value} if isinstance(value, str) else {}
     # These opaque dependencies only pass to the replaced producer. Any attempt
     # by admission to read or mutate persistence through them fails the test.
-    preparation = calculation_bucket_actions._BucketAggregationPreparation(
+    preparation = calculation_bucket_actions.BucketAggregationPreparation(
         snapshot=snapshot,
         binding_values=numeric_values,
         casilla_inputs={},
@@ -78,7 +78,7 @@ def test_bucket_admission_refuses_caller_changes_to_closed_manual_slots(
         source_relation_values=None,
     )
     with pytest.raises(ModeloAggregationBindingError) as raised:
-        calculation_bucket_actions._resolve_bucket_aggregation_source_resolution(
+        calculation_bucket_actions.resolve_bucket_aggregation_source_resolution(
             preparation=preparation,
             ports=cast(CalculationActionPorts, object()),
             foreign_asset_observations=(),

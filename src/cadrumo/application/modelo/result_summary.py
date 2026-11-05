@@ -44,14 +44,14 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 if TYPE_CHECKING:
@@ -85,7 +85,7 @@ class ResultSummaryRow(BaseModel):
     string decimal values.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     label: str
@@ -103,7 +103,7 @@ class CalculationResultSummary(BaseModel):
     registry token so the summary header does not duplicate the filing year.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     filing_year: int
@@ -155,7 +155,7 @@ def calculation_result_summary(
             )
             return None
     try:
-        snapshot = _resolve_registry_snapshot_for_work_unit(
+        snapshot = resolve_registry_snapshot_for_work_unit(
             work_unit,
             grade=RegistryAuthorityGrade.CALCULATION,
             operation=operation,

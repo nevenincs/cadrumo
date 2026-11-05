@@ -28,12 +28,12 @@ from ....application.ledger.evidence_read_operation import (
     LedgerEvidenceViewRefusal,
     LedgerEvidenceViewRequest,
     LedgerEvidenceViewSuccess,
-    _project_list_result,
-    _project_view_result,
     build_ledger_evidence_list_definition,
     build_ledger_evidence_list_registration,
     build_ledger_evidence_view_definition,
     build_ledger_evidence_view_registration,
+    project_list_result,
+    project_view_result,
 )
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -232,16 +232,16 @@ def test_list_terminal_projector_binds_definition_subject_and_success_shape() ->
     execution_result = LedgerEvidenceListExecutionResult(profile_id=_PROFILE, result=projection)
     receipt = _receipt(definition_id=LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID)
 
-    assert _project_list_result(execution_result, receipt) == projection
+    assert project_list_result(execution_result, receipt) == projection
     with pytest.raises(ValueError):
-        _project_list_result(
+        project_list_result(
             execution_result,
             receipt.model_copy(
                 update={"identity": receipt.identity.model_copy(update={"definition_id": "ledger.evidence.view"})},
             ),
         )
     with pytest.raises(ValueError):
-        _project_list_result(execution_result, receipt.model_copy(update={"result_ref": None}))
+        project_list_result(execution_result, receipt.model_copy(update={"result_ref": None}))
 
 
 def test_view_terminal_projector_binds_definition_subject_and_success_shape() -> None:
@@ -252,7 +252,7 @@ def test_view_terminal_projector_binds_definition_subject_and_success_shape() ->
     execution_result = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
     receipt = _receipt(definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID)
 
-    assert _project_view_result(execution_result, receipt) == projection
+    assert project_view_result(execution_result, receipt) == projection
     wrong_subject = receipt.model_copy(
         update={
             "identity": receipt.identity.model_copy(
@@ -261,9 +261,9 @@ def test_view_terminal_projector_binds_definition_subject_and_success_shape() ->
         },
     )
     with pytest.raises(ValueError):
-        _project_view_result(execution_result, wrong_subject)
+        project_view_result(execution_result, wrong_subject)
     with pytest.raises(ValueError):
-        _project_view_result(execution_result, receipt.model_copy(update={"effect": OperationEffect.UPDATED}))
+        project_view_result(execution_result, receipt.model_copy(update={"effect": OperationEffect.UPDATED}))
 
 
 def test_missing_evidence_has_a_registered_refusal_error() -> None:
@@ -310,7 +310,7 @@ def test_missing_reference_projector_releases_only_the_static_fact() -> None:
     projection = LedgerEvidenceViewProjection(profile_id=_PROFILE, outcome=LedgerEvidenceViewRefusal())
     private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
 
-    public = _project_view_result(private, _refusal_receipt())
+    public = project_view_result(private, _refusal_receipt())
 
     assert public == projection
     assert projection.outcome.model_dump() == {"kind": "refused", "evidence_record_present": False}
@@ -337,7 +337,7 @@ def test_missing_reference_projector_rejects_mismatched_receipts(changes: dict[s
     private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
 
     with pytest.raises(ValueError):
-        _project_view_result(private, _refusal_receipt().model_copy(update=changes))
+        project_view_result(private, _refusal_receipt().model_copy(update=changes))
 
 
 def test_view_projector_rejects_success_record_under_a_refusal_receipt() -> None:
@@ -348,7 +348,7 @@ def test_view_projector_rejects_success_record_under_a_refusal_receipt() -> None
     private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
 
     with pytest.raises(ValueError):
-        _project_view_result(private, _refusal_receipt())
+        project_view_result(private, _refusal_receipt())
 
 
 def test_view_projector_revalidates_unchecked_private_result() -> None:
@@ -358,4 +358,4 @@ def test_view_projector_revalidates_unchecked_private_result() -> None:
     forged = LedgerEvidenceViewExecutionResult.model_construct(profile_id=_PROFILE, result=projection)
 
     with pytest.raises(ValueError):
-        _project_view_result(forged, _refusal_receipt())
+        project_view_result(forged, _refusal_receipt())

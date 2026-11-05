@@ -13,8 +13,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
-from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
-from ...core.hashing import hash_file, sha256_file, sha256_hex
+from ...core.hashing import SHA256_HEX_LENGTH, hash_file, sha256_file, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -29,7 +28,7 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ._export_xml_dictionary import (
+from .export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     mismatched_xml_dictionary_repeated_casillas,
     read_xml_dictionary_root_identity,
@@ -38,8 +37,8 @@ from ._export_xml_dictionary import (
     xml_dictionary_repeated_rows,
     xml_dictionary_value_schema,
 )
-from ._export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
-from ._export_xml_dictionary_values import format_xml_dictionary_value
+from .export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
+from .export_xml_dictionary_values import format_xml_dictionary_value
 from .export_xml_value_limits import XmlValueSchema, canonical_xml_text
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -165,8 +164,8 @@ class DeclaracionVerifyResult(BaseModel):
     def _validate_sha256_hex(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        if len(value) != _SHA256_HEX_LENGTH:
-            raise FilingExportValidationError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
+        if len(value) != SHA256_HEX_LENGTH:
+            raise FilingExportValidationError(f"file_sha256 must be {SHA256_HEX_LENGTH} hex characters when provided")
         try:
             int(value, 16)
         except ValueError as exc:
@@ -286,7 +285,7 @@ def _verify_export_file(
         return _missing_verification_result(draft, file_path=file_path, narrative="filing.export.missing_file")
     digest = sha256_hex(payload)
     try:
-        mismatched, checked = _mismatched_casilla_ids(
+        mismatched, checked = mismatched_casilla_ids(
             subview.export_layouts[0], draft=draft, payload=payload, schema_provider=provider
         )
     except RegistryValidationError:
@@ -408,7 +407,7 @@ def _export_fields_by_identity(layout: ExportLayoutDefinition) -> dict[tuple[str
     return {(record.id, field.id): field for record in layout.records for field in record.fields}
 
 
-def _mismatched_casilla_ids(
+def mismatched_casilla_ids(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, payload: bytes, schema_provider: RegistrySchemaAccessor
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
@@ -542,7 +541,7 @@ def _xml_dictionary_checked_wire_value(
 ) -> str:
     """Attach the signed field identity to an expected-value rendering refusal."""
     try:
-        expected = _xml_dictionary_expected_wire_value(
+        expected = xml_dictionary_expected_wire_value(
             entry, value, modelo=modelo, modelo_100_declarations=modelo_100_declarations
         )
         return canonical_xml_text(value_schema, entry.path, expected)
@@ -552,7 +551,7 @@ def _xml_dictionary_checked_wire_value(
         ) from exc
 
 
-def _xml_dictionary_expected_wire_value(
+def xml_dictionary_expected_wire_value(
     entry: XmlDictionaryEntry,
     value: object,
     *,

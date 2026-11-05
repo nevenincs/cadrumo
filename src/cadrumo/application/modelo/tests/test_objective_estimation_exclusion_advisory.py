@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 
@@ -22,7 +22,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
+from ..objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
 from ..verification_revision_findings import collect_revision_verification_findings
 from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .invoice_catalogue_fake import InvoiceCatalogueFake
@@ -109,7 +109,7 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
+    findings = objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
 
     assert len(findings) == 4
     assert {finding.kind for finding in findings} == {ModeloVerificationFindingKind.ADVISORY}
@@ -154,7 +154,7 @@ def test_objective_estimation_exclusion_advisory_reverts_to_article31_after_dt32
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
@@ -173,7 +173,7 @@ def test_objective_estimation_exclusion_advisory_uses_article31_for_the_invoice_
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
@@ -191,7 +191,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
         objective_estimation_prior_year_purchases_eur=Decimal("999999.00"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=2027),
         profile=profile,
     )
@@ -200,7 +200,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
 
 
 def test_revision_verification_collects_objective_estimation_exclusion_advisory() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit = _work_unit(modelo="131", filing_year=2024)
         profile = _objective_profile(
             objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
@@ -235,6 +235,6 @@ def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimatio
         objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
+    findings = objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
 
     assert findings == ()

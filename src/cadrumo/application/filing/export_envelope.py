@@ -33,7 +33,7 @@ from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft, registry_schema_version
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
-from ._envelope_modelo_policy import filing_envelope_modelo_policy
+from .envelope_modelo_policy import filing_envelope_modelo_policy
 from .producer_snapshot import FilingProducerSnapshot
 
 #: The governed fact holding the envelope's declared extents.

@@ -34,7 +34,7 @@ from ..wizard_attempt_operation import (
 from ..work_calculation_contracts import ModeloWorkCalculateRequest
 from ..work_lifecycle_ports import WorkLifecyclePorts
 from ..work_wizard import ModeloWorkWizardStep
-from .test_wizard_context_operation import _unit, _WorkRepository
+from .test_wizard_context_operation import WorkRepository, wizard_context_operation_unit
 from .work_operation_support import GuardPhaseReachedError, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,7 +51,7 @@ def _executor() -> ModeloWorkWizardAttemptExecutor:
 
 
 def _request(*, profile_id: UUID = _PROFILE, subject_ref: str | None = None) -> OperationRequest[BaseModel]:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     return OperationRequest[BaseModel](
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
@@ -66,7 +66,7 @@ def _request(*, profile_id: UUID = _PROFILE, subject_ref: str | None = None) -> 
 def _executor_request(
     *, profile_id: UUID = _PROFILE, subject_ref: str | None = None
 ) -> OperationRequest[ModeloWorkWizardAttemptRequest]:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     return OperationRequest[ModeloWorkWizardAttemptRequest](
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
@@ -78,7 +78,7 @@ def _executor_request(
     )
 
 
-def _registration(repository: _WorkRepository):
+def _registration(repository: WorkRepository):
     def work_factory() -> WorkLifecyclePorts:
         return cast(WorkLifecyclePorts, cast(object, SimpleNamespace(work_unit_repository=repository)))
 
@@ -145,7 +145,7 @@ def test_wizard_executor_accepts_its_work_unit_subject_at_the_guard_boundary(mon
 
 
 def test_request_and_needs_input_projection_are_strictly_profile_bound() -> None:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     request = _request()
     assert isinstance(request.payload, ModeloWorkWizardAttemptRequest)
     assert request.payload.calculation.work_unit_id == unit.work_unit_id
@@ -185,7 +185,7 @@ def test_request_and_needs_input_projection_are_strictly_profile_bound() -> None
 
 
 def test_exact_profile_rejected_before_work_catalogue_load() -> None:
-    repository = _WorkRepository(_unit())
+    repository = WorkRepository(wizard_context_operation_unit())
     registry, registration = _registration(repository)
     for request, profile_id in (
         (_request(profile_id=_OTHER_PROFILE), _PROFILE),
@@ -201,8 +201,8 @@ def test_exact_profile_rejected_before_work_catalogue_load() -> None:
 
 
 def test_submit_period_and_historical_observation_result_commit_use_admitted_period() -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     registry, registration = _registration(repository)
     request = _request()
     resolved = resolve_operation_access(registry=registry, request=request, context=_context(registration))

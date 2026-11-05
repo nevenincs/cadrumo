@@ -49,7 +49,7 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -69,10 +69,6 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..workflow.engine import WorkflowEngine
-from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
-from ._required_binding_gate import (
-    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
-)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -89,8 +85,9 @@ from .filing_revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
 from .iva_wallet_gate import (
-    require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
+    require_persisted_iva_compensation_decision_matches_revision,
 )
+from .ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     filing_ordering_instants,
@@ -104,11 +101,13 @@ from .m303_regimen_simplificado_scope import (
 )
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .prior_domiciliation import resolveprior_domiciliation_election
+from .required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved,
+)
 from .result_disposition_resolution import resolve_modelo_result_disposition
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
-from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
-from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .workflow_gate import build_revision_workflow_engine, run_revision_workflow_gate
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -298,7 +297,7 @@ def _run_filing_workflow(
     workflow_runs_dir: Path | None,
 ) -> None:
     _filing_phase("workflow_begin")
-    gate_engine = workflow_engine or _build_revision_workflow_engine(
+    gate_engine = workflow_engine or build_revision_workflow_engine(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
         revision=target,
@@ -311,7 +310,7 @@ def _run_filing_workflow(
         workflow_gate_ports=ports.workflow_gate_ports,
         operation=operation,
     )
-    _run_revision_workflow_gate(
+    run_revision_workflow_gate(
         engine=gate_engine,
         profile=workflow_profile,
         work_unit=work_unit,
@@ -344,7 +343,7 @@ def _check_filing_preconditions(
         operation=operation,
     )
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     _require_filing_clock_ordered(
         now,
         target=target,
@@ -616,7 +615,7 @@ def _require_filing_preconditions(
         operation=operation,
         profile=profile,
     )
-    _require_persisted_required_bindings_resolved(
+    require_persisted_revision_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="file", operation=operation
     )
     require_work_unit_calculation_unblocked(
@@ -626,7 +625,7 @@ def _require_filing_preconditions(
         operation=operation,
         resolutions=credit_resolutions_for_work(ports.credit_resolution_reader, work_unit),
     )
-    iva_compensation_decision = _require_iva_compensation_revision_match(
+    iva_compensation_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         target,
         repository=ports.iva_compensation_decision_repository,

@@ -25,19 +25,17 @@ from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo as _Modelo
-from ...core.period import Period as _Period
+from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.applicability import (
-    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
-)
-from ...domain.calculations.registry.applicability import (
-    modelo_requires_iva_regime as _modelo_requires_iva_regime,
+    iter_modelo_applicability_rules,
+    modelo_requires_iva_regime,
 )
 from ...domain.calculations.registry.applicability_models import ModeloApplicabilityRule
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token
-from ...domain.deadlines.models import IVARegime as _IVARegime
+from ...domain.deadlines.models import IVARegime
 from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (
     CalendarCompleteness,
@@ -60,7 +58,7 @@ if TYPE_CHECKING:
 #: command string.
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
 
-_PROFILE_FIELD_WARNING_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType(
+PROFILE_FIELD_WARNING_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType(
     {
         "has_employees": "cli.overview.warning.has_employees_unset",
         "pays_professionals_with_retencion": "cli.overview.warning.retencion_profesionales_unset",
@@ -89,12 +87,12 @@ def _estimation_regime_profile_key(operation: PinnedAuthorityOperation) -> Mappi
 
 _CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] = MappingProxyType(
     {
-        _Modelo("200").value: frozenset(
+        Modelo("200").value: frozenset(
             {
                 "taxpayer_type.legal_entity_form",
             },
         ),
-        _Modelo("202").value: frozenset(
+        Modelo("202").value: frozenset(
             {
                 "taxpayer_type.legal_entity_form",
                 "taxpayer_type.incn_prior_12_months",
@@ -112,7 +110,7 @@ def _record_gating_field(
     key_to_modelos: dict[str, set[str]],
     key_to_meta: dict[str, tuple[str, str]],
 ) -> None:
-    message_key = _PROFILE_FIELD_WARNING_LOCALE_KEYS.get(profile_key)
+    message_key = PROFILE_FIELD_WARNING_LOCALE_KEYS.get(profile_key)
     if message_key is None:
         return
     key_to_modelos.setdefault(profile_key, set()).add(modelo)
@@ -126,12 +124,12 @@ def _collect_deadline_window_profile_keys(
     for modelo, windows in windows_by_modelo:
         for window in windows:
             for condition in window.applicability_conditions:
-                if condition.field in _PROFILE_FIELD_WARNING_LOCALE_KEYS:
+                if condition.field in PROFILE_FIELD_WARNING_LOCALE_KEYS:
                     keys_by_modelo.setdefault(modelo, set()).add(condition.field)
     return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
 
 
-def _deadline_window_profile_keys_by_modelo(
+def deadline_window_profile_keys_by_modelo(
     *,
     operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
@@ -184,14 +182,14 @@ def _gating_fields(
     workbench generation, which builds several calendars, pays for it once.
     """
     if revision_inventory is not None or modelos is not None:
-        return _derive_gating_fields(operation=operation, revision_inventory=revision_inventory, modelos=modelos)
+        return derive_gating_fields(operation=operation, revision_inventory=revision_inventory, modelos=modelos)
     key = operation.pin()
     with _registry_gating_fields_cache_lock:
         cached = _registry_gating_fields_cache.get(key)
         if cached is not None:
             _registry_gating_fields_cache.move_to_end(key)
             return cached
-    derived = _derive_gating_fields(operation=operation)
+    derived = derive_gating_fields(operation=operation)
     with _registry_gating_fields_cache_lock:
         _registry_gating_fields_cache[key] = derived
         _registry_gating_fields_cache.move_to_end(key)
@@ -200,7 +198,7 @@ def _gating_fields(
     return derived
 
 
-def _derive_gating_fields(
+def derive_gating_fields(
     *,
     operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
@@ -208,7 +206,7 @@ def _derive_gating_fields(
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
-    for rule in _iter_modelo_applicability_rules(operation=operation):
+    for rule in iter_modelo_applicability_rules(operation=operation):
         _record_applicability_gating_fields(
             rule=rule,
             operation=operation,
@@ -347,7 +345,7 @@ def calendar_applicability_profile_keys_for_modelo(
     """
     keys: set[str] = set()
     estimation_profile_keys = _estimation_regime_profile_key(operation)
-    for rule in _iter_modelo_applicability_rules(operation=operation):
+    for rule in iter_modelo_applicability_rules(operation=operation):
         if rule.modelo != modelo:
             continue
         keys.add("taxpayer_type.entity_type")
@@ -361,19 +359,19 @@ def calendar_applicability_profile_keys_for_modelo(
             keys.update(payer_fact_profile_keys(rule.required_payer_fact))
         break
     keys.update(
-        _deadline_window_profile_keys_by_modelo(
+        deadline_window_profile_keys_by_modelo(
             operation=operation,
             revision_inventory=revision_inventory,
             modelo=modelo,
         ).get(modelo, ()),
     )
-    if _modelo_requires_iva_regime(modelo, operation=operation):
+    if modelo_requires_iva_regime(modelo, operation=operation):
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
     return tuple(sorted(keys))
 
 
-def _calendar_censo_reconciliation_warnings(
+def calendar_censo_reconciliation_warnings(
     *,
     entries: tuple[OverviewCalendarEntry, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
@@ -397,7 +395,7 @@ def _calendar_censo_reconciliation_warnings(
     )
 
 
-def _calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str]) -> tuple[CalendarWarning, ...]:
+def calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str]) -> tuple[CalendarWarning, ...]:
     """Return the warning for obligations whose profile answer and ledger derivation disagree.
 
     The rows stay in the calendar; this warning is what keeps the contradiction
@@ -418,7 +416,7 @@ def _calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str
     )
 
 
-def _calendar_censo_enrolment_state(
+def calendar_censo_enrolment_state(
     *,
     modelo: str,
     live_censo_verified_profile_keys: tuple[str, ...] | None,
@@ -448,7 +446,7 @@ def _calendar_censo_enrolment_state(
     return OverviewCensoEnrolmentState.UNVERIFIED
 
 
-def _calendar_unverified_justificante_warnings(
+def calendar_unverified_justificante_warnings(
     *,
     entries: tuple[OverviewCalendarEntry, ...],
     events: tuple[OverviewCalendarEvent, ...],
@@ -500,7 +498,7 @@ def _calendar_unverified_justificante_warnings(
     )
 
 
-def _calendar_aeat_evidence_conflict_warnings(
+def calendar_aeat_evidence_conflict_warnings(
     *,
     entries: tuple[OverviewCalendarEntry, ...],
 ) -> tuple[CalendarWarning, ...]:
@@ -530,16 +528,16 @@ def _calendar_aeat_evidence_conflict_warnings(
     )
 
 
-def _calendar_regime_incompatibility_warnings(
+def calendar_regime_incompatibility_warnings(
     *,
-    iva_regime: _IVARegime | None,
+    iva_regime: IVARegime | None,
     entries: tuple[OverviewCalendarEntry, ...],
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
     if iva_regime != iva_regime_simplificado_token(authority=operation):
         return ()
-    if not any(entry.modelo == _Modelo("303").value for entry in entries):
+    if not any(entry.modelo == Modelo("303").value for entry in entries):
         return ()
     return (
         CalendarWarning(
@@ -547,9 +545,9 @@ def _calendar_regime_incompatibility_warnings(
             message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
             fix_action=declare_next_action(
                 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID,
-                modelo=_Modelo("303").value,
+                modelo=Modelo("303").value,
             ),
-            affected_modelos=(_Modelo("303").value,),
+            affected_modelos=(Modelo("303").value,),
         ),
     )
 
@@ -558,7 +556,7 @@ def _filed_pull_action(
     *,
     modelo: str,
     filing_year: int | None,
-    period: _Period | None,
+    period: Period | None,
 ) -> DeclaredNextAction:
     """Declare the filed-history pull, scoped when the row states its scope.
 
@@ -588,7 +586,7 @@ def _single_fix_action_or_unscoped_pull(actions: list[DeclaredNextAction]) -> De
     return declare_next_action(_FILED_PULL_ACTION_ID)
 
 
-def _build_completeness_and_warnings(
+def build_completeness_and_warnings(
     raw_values: Mapping[str, object] | None,
     entries: tuple[OverviewCalendarEntry, ...],
     *,
@@ -636,12 +634,12 @@ def _build_completeness_and_warnings(
 
 
 __all__ = [
-    "_build_completeness_and_warnings",
-    "_calendar_aeat_evidence_conflict_warnings",
-    "_calendar_applicability_disagreement_warnings",
-    "_calendar_censo_enrolment_state",
-    "_calendar_censo_reconciliation_warnings",
-    "_calendar_regime_incompatibility_warnings",
-    "_calendar_unverified_justificante_warnings",
+    "build_completeness_and_warnings",
+    "calendar_aeat_evidence_conflict_warnings",
+    "calendar_applicability_disagreement_warnings",
     "calendar_applicability_profile_keys_for_modelo",
+    "calendar_censo_enrolment_state",
+    "calendar_censo_reconciliation_warnings",
+    "calendar_regime_incompatibility_warnings",
+    "calendar_unverified_justificante_warnings",
 ]

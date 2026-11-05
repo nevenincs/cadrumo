@@ -51,7 +51,7 @@ from ..work_amend_correction import (
     worded_amendment_context,
 )
 from ..work_form_service import modelo_form_snapshot
-from .test_edit_parsing import _baseline
+from .test_edit_parsing import baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -167,7 +167,7 @@ def test_the_kinds_are_the_period_permits_each_worded_and_motives_only_where_the
 
 def _read(operation: PinnedAuthorityOperation, text: str, language: OutputLanguage, *, casilla: str = "01"):
     snapshot = modelo_form_snapshot(
-        operation, _baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
+        operation, baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
     )
     return parse_modelo_edit_lexeme(
         ModeloEditParseRequestV1(
@@ -175,7 +175,7 @@ def _read(operation: PinnedAuthorityOperation, text: str, language: OutputLangua
             entry_locale=language,
             lexeme=text,
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=None,
         correction_grammars=correction_value_grammars(snapshot),
     )
@@ -227,7 +227,7 @@ def _read_corrected(casilla_id, grammars, text: str, language: OutputLanguage):
         ModeloEditParseRequestV1(
             address=ModeloEditCorrectionAddressV1(casilla_id=casilla_id), entry_locale=language, lexeme=text
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=None,
         correction_grammars=grammars,
     )
@@ -280,7 +280,7 @@ def test_a_correction_entry_without_its_revisions_grammars_is_not_writable() -> 
             entry_locale=OutputLanguage.ES,
             lexeme="1",
         ),
-        baseline=_baseline(),
+        baseline=baseline(),
         tax_id_format=None,
     )
 
@@ -298,7 +298,7 @@ def test_the_correction_grammar_accepts_exactly_what_the_amendment_override_acce
 ) -> None:
     """The wizard's canonical amounts and the override shape agree with the one correction grammar."""
     snapshot = modelo_form_snapshot(
-        operation, _baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
+        operation, baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
     )
     grammar = correction_value_grammars(snapshot)[validated_casilla_id("01")]
     amount = try_parse_canonical_decimal(text)

@@ -40,13 +40,13 @@ from .oss_rate_change_support import ordinary_general_variants, rate_change_insi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
+BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
 _SUPPLY = date(2026, 2, 17)
 _LINE_LENGTH = 42
 
 
 @dataclass(frozen=True)
-class _Regime:
+class Regime:
     revision_id: str
     token: str
     kind: str
@@ -63,19 +63,17 @@ class _Regime:
         return Period.from_year_and_code(on_date.year, code)
 
 
-_EXTERIOR = _Regime(
-    "esquema-exterior", "external_scheme", "external_scheme_services", "modelo-369-exterior-t36901", 221
-)
-_UNION = _Regime("esquema-union", "union_scheme", "oss_union_services", "modelo-369-union-t36904", 222)
-_IMPORT = _Regime(
+EXTERIOR = Regime("esquema-exterior", "external_scheme", "external_scheme_services", "modelo-369-exterior-t36901", 221)
+UNION = Regime("esquema-union", "union_scheme", "oss_union_services", "modelo-369-union-t36904", 222)
+IMPORT = Regime(
     "esquema-importacion", "import_scheme", "ioss_distance_sale_low_value", "modelo-369-importacion-t36910", 253
 )
-_REGIMES = (_EXTERIOR, _UNION, _IMPORT)
+_REGIMES = (EXTERIOR, UNION, IMPORT)
 _regime_ids = [regime.revision_id for regime in _REGIMES]
 
 
-def _invoice(
-    regime: _Regime,
+def oss_detail_sections_invoice(
+    regime: Regime,
     number: str,
     *,
     country: str,
@@ -125,8 +123,8 @@ def _invoice(
     )
 
 
-class _Reader:
-    bucket_id = _BUCKET
+class Reader:
+    bucket_id = BUCKET
 
     def __init__(self, invoices: tuple[Invoice, ...]) -> None:
         self._catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in invoices})
@@ -135,7 +133,7 @@ class _Reader:
         return self._catalogue
 
 
-class _Transactions:
+class Transactions:
     def load(self) -> TransactionCatalogue:
         return TransactionCatalogue()
 
@@ -143,9 +141,9 @@ class _Transactions:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
 
 
-def _resolve(
+def resolve(
     operation: PinnedAuthorityOperation,
-    regime: _Regime,
+    regime: Regime,
     invoices: tuple[Invoice, ...],
     *,
     period: Period | None = None,
@@ -153,10 +151,10 @@ def _resolve(
 ) -> CalculationSourceResolution:
     resolved_period = period or regime.period(_SUPPLY)
     return OssIossLedgerSourceResolver(
-        ports=InvoiceCatalogueReadPorts(invoice_reader=_Reader(invoices), transaction_reader=_Transactions())
+        ports=InvoiceCatalogueReadPorts(invoice_reader=Reader(invoices), transaction_reader=Transactions())
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             work_unit_id="a" * 64,
             modelo="369",
             filing_year=resolved_period.filing_year,
@@ -178,8 +176,8 @@ def _binding_at(revision: ModeloRevision, record: str, position: int) -> str:
     return binding
 
 
-def _row(
-    resolution: CalculationSourceResolution, regime: _Regime, row: int
+def oss_detail_sections_row(
+    resolution: CalculationSourceResolution, regime: Regime, row: int
 ) -> tuple[str, str, Decimal, Decimal, Decimal]:
     revision = published_revision("369", regime.revision_id)
     start = regime.first_position + (row - 1) * _LINE_LENGTH
@@ -195,22 +193,22 @@ def _row(
     )
 
 
-def _two_states_two_tiers(regime: _Regime) -> tuple[Invoice, ...]:
+def _two_states_two_tiers(regime: Regime) -> tuple[Invoice, ...]:
     return (
-        _invoice(regime, "SYNTHETIC-1", country="PL", tier="reduced", base="50.00", cuota="4.00"),
-        _invoice(regime, "SYNTHETIC-2", country="FR", tier="general", base="100.00", cuota="20.00"),
-        _invoice(regime, "SYNTHETIC-3", country="PL", tier="general", base="100.00", cuota="23.00"),
-        _invoice(regime, "SYNTHETIC-4", country="FR", tier="reduced", base="20.00", cuota="2.00"),
+        oss_detail_sections_invoice(regime, "SYNTHETIC-1", country="PL", tier="reduced", base="50.00", cuota="4.00"),
+        oss_detail_sections_invoice(regime, "SYNTHETIC-2", country="FR", tier="general", base="100.00", cuota="20.00"),
+        oss_detail_sections_invoice(regime, "SYNTHETIC-3", country="PL", tier="general", base="100.00", cuota="23.00"),
+        oss_detail_sections_invoice(regime, "SYNTHETIC-4", country="FR", tier="reduced", base="20.00", cuota="2.00"),
     )
 
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
 def test_france_and_a_third_state_at_both_rates_take_their_own_rows(
-    operation: PinnedAuthorityOperation, regime: _Regime
+    operation: PinnedAuthorityOperation, regime: Regime
 ) -> None:
-    resolution = _resolve(operation, regime, _two_states_two_tiers(regime))
+    resolution = resolve(operation, regime, _two_states_two_tiers(regime))
 
-    assert [_row(resolution, regime, row) for row in (1, 2, 3, 4)] == [
+    assert [oss_detail_sections_row(resolution, regime, row) for row in (1, 2, 3, 4)] == [
         ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00")),
         ("FR", "R", Decimal("10"), Decimal("20.00"), Decimal("2.00")),
         ("PL", "S", Decimal("23"), Decimal("100.00"), Decimal("23.00")),
@@ -224,18 +222,28 @@ def test_france_and_a_third_state_at_both_rates_take_their_own_rows(
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
 def test_lines_at_one_destination_and_rate_sum_into_one_row(
-    operation: PinnedAuthorityOperation, regime: _Regime
+    operation: PinnedAuthorityOperation, regime: Regime
 ) -> None:
-    resolution = _resolve(
+    resolution = resolve(
         operation,
         regime,
         (
-            _invoice(regime, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"),
-            _invoice(regime, "SYNTHETIC-2", country="FR", tier="general", base="50.00", cuota="10.00"),
+            oss_detail_sections_invoice(
+                regime, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"
+            ),
+            oss_detail_sections_invoice(
+                regime, "SYNTHETIC-2", country="FR", tier="general", base="50.00", cuota="10.00"
+            ),
         ),
     )
 
-    assert _row(resolution, regime, 1) == ("FR", "S", Decimal("20"), Decimal("150.00"), Decimal("30.00"))
+    assert oss_detail_sections_row(resolution, regime, 1) == (
+        "FR",
+        "S",
+        Decimal("20"),
+        Decimal("150.00"),
+        Decimal("30.00"),
+    )
     closed = {row_set.record_id: row_set for row_set in resolution.closed_record_row_sets}
     assert [row.row_index for row in closed[regime.record].rows if row.occupied] == [1]
 
@@ -243,7 +251,7 @@ def test_lines_at_one_destination_and_rate_sum_into_one_row(
 def test_union_closes_its_goods_and_establishment_tables_empty_on_the_same_read(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    resolution = _resolve(operation, _UNION, _two_states_two_tiers(_UNION))
+    resolution = resolve(operation, UNION, _two_states_two_tiers(UNION))
 
     closed = {row_set.record_id: row_set for row_set in resolution.closed_record_row_sets}
     assert sorted(closed) == [
@@ -268,12 +276,16 @@ def test_union_goods_stay_unrouted_because_the_invoice_has_no_state_of_dispatch(
     operation: PinnedAuthorityOperation, kind: str
 ) -> None:
     """LIVA art. 163 duovicies.Uno.c) separates goods by dispatch state; T36905 and T36907 follow it."""
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _UNION,
+        UNION,
         (
-            _invoice(_UNION, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"),
-            _invoice(_UNION, "SYNTHETIC-2", country="FR", tier="general", base="100.00", cuota="20.00", kind=kind),
+            oss_detail_sections_invoice(
+                UNION, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"
+            ),
+            oss_detail_sections_invoice(
+                UNION, "SYNTHETIC-2", country="FR", tier="general", base="100.00", cuota="20.00", kind=kind
+            ),
         ),
     )
 
@@ -282,10 +294,14 @@ def test_union_goods_stay_unrouted_because_the_invoice_has_no_state_of_dispatch(
 
 
 def test_a_line_of_another_regime_stays_unrouted_on_this_revision(operation: PinnedAuthorityOperation) -> None:
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _EXTERIOR,
-        (_invoice(_IMPORT, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"),),
+        EXTERIOR,
+        (
+            oss_detail_sections_invoice(
+                IMPORT, "SYNTHETIC-1", country="FR", tier="general", base="100.00", cuota="20.00"
+            ),
+        ),
     )
 
     assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["unrouted_observation"]
@@ -295,41 +311,55 @@ def test_a_line_of_another_regime_stays_unrouted_on_this_revision(operation: Pin
 def test_union_services_in_the_state_of_identification_are_refused(operation: PinnedAuthorityOperation) -> None:
     """LIVA art. 163 unvicies.Uno limits the scheme to services in a state other than the seller's."""
     with pytest.raises(AggregationValidationError) as refused:
-        _resolve(
+        resolve(
             operation,
-            _UNION,
-            (_invoice(_UNION, "SYNTHETIC-1", country="ES", tier="general", base="100.00", cuota="21.00"),),
+            UNION,
+            (
+                oss_detail_sections_invoice(
+                    UNION, "SYNTHETIC-1", country="ES", tier="general", base="100.00", cuota="21.00"
+                ),
+            ),
         )
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.detail_consumption_state_excluded"
 
 
-@pytest.mark.parametrize("regime", (_EXTERIOR, _IMPORT), ids=["esquema-exterior", "esquema-importacion"])
+@pytest.mark.parametrize("regime", (EXTERIOR, IMPORT), ids=["esquema-exterior", "esquema-importacion"])
 def test_spain_is_an_ordinary_state_of_consumption_outside_the_union_scheme(
-    operation: PinnedAuthorityOperation, regime: _Regime
+    operation: PinnedAuthorityOperation, regime: Regime
 ) -> None:
-    resolution = _resolve(
+    resolution = resolve(
         operation,
         regime,
-        (_invoice(regime, "SYNTHETIC-1", country="ES", tier="general", base="100.00", cuota="21.00"),),
+        (
+            oss_detail_sections_invoice(
+                regime, "SYNTHETIC-1", country="ES", tier="general", base="100.00", cuota="21.00"
+            ),
+        ),
     )
 
-    assert _row(resolution, regime, 1) == ("ES", "S", Decimal("21"), Decimal("100.00"), Decimal("21.00"))
+    assert oss_detail_sections_row(resolution, regime, 1) == (
+        "ES",
+        "S",
+        Decimal("21"),
+        Decimal("100.00"),
+        Decimal("21.00"),
+    )
 
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
 def test_a_date_before_the_published_rates_refuses_a_figure_the_projection_does_not_explain(
-    operation: PinnedAuthorityOperation, regime: _Regime
+    operation: PinnedAuthorityOperation, regime: Regime
 ) -> None:
     earliest = min(
         variant.valid_from for variant in ordinary_general_variants(operation)["fr"] if variant.valid_from is not None
     )
     uncovered = earliest - timedelta(days=1)
     with pytest.raises(IvaRateNotFoundError):
-        _resolve(
+        resolve(
             operation,
             regime,
             (
-                _invoice(
+                oss_detail_sections_invoice(
                     regime,
                     "SYNTHETIC-1",
                     country="FR",
@@ -351,12 +381,12 @@ def test_union_rows_either_side_of_a_rate_change_carry_their_own_percentage(
     before_cuota = round_to_cents(Decimal("100.00") * change.pct_before / Decimal("100"))
     after_cuota = round_to_cents(Decimal("200.00") * change.pct_after / Decimal("100"))
 
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _UNION,
+        UNION,
         (
-            _invoice(
-                _UNION,
+            oss_detail_sections_invoice(
+                UNION,
                 "SYNTHETIC-BEFORE",
                 country=code,
                 tier="general",
@@ -364,8 +394,8 @@ def test_union_rows_either_side_of_a_rate_change_carry_their_own_percentage(
                 cuota=str(before_cuota),
                 supply_date=change.last_day_before,
             ),
-            _invoice(
-                _UNION,
+            oss_detail_sections_invoice(
+                UNION,
                 "SYNTHETIC-AFTER",
                 country=code,
                 tier="general",
@@ -374,10 +404,10 @@ def test_union_rows_either_side_of_a_rate_change_carry_their_own_percentage(
                 supply_date=change.first_day_after,
             ),
         ),
-        period=_UNION.period(change.first_day_after),
+        period=UNION.period(change.first_day_after),
     )
 
-    assert {_row(resolution, _UNION, row) for row in (1, 2)} == {
+    assert {oss_detail_sections_row(resolution, UNION, row) for row in (1, 2)} == {
         (code, "S", change.pct_before, Decimal("100.00"), before_cuota),
         (code, "S", change.pct_after, Decimal("200.00"), after_cuota),
     }
@@ -389,12 +419,12 @@ def test_union_refuses_an_issue_date_standing_in_for_the_devengo_across_a_rate_c
     change = rate_change_inside_a_quarter(operation)
     cuota = round_to_cents(Decimal("100.00") * change.pct_after / Decimal("100"))
     with pytest.raises(AggregationValidationError) as refused:
-        _resolve(
+        resolve(
             operation,
-            _UNION,
+            UNION,
             (
-                _invoice(
-                    _UNION,
+                oss_detail_sections_invoice(
+                    UNION,
                     "SYNTHETIC-1",
                     country=change.member_state.upper(),
                     tier="general",
@@ -404,7 +434,7 @@ def test_union_refuses_an_issue_date_standing_in_for_the_devengo_across_a_rate_c
                     issued_at=change.first_day_after,
                 ),
             ),
-            period=_UNION.period(change.first_day_after),
+            period=UNION.period(change.first_day_after),
         )
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.rate_change_devengo_undeclared"
 
@@ -417,12 +447,12 @@ def test_importacion_files_by_month_so_each_side_of_a_change_is_its_own_return(
     assert change.last_day_before.month != change.first_day_after.month, "this fixture needs a change at a month start"
     cuota = round_to_cents(Decimal("100.00") * change.pct_after / Decimal("100"))
 
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _IMPORT,
+        IMPORT,
         (
-            _invoice(
-                _IMPORT,
+            oss_detail_sections_invoice(
+                IMPORT,
                 "SYNTHETIC-1",
                 country=change.member_state.upper(),
                 tier="general",
@@ -432,13 +462,13 @@ def test_importacion_files_by_month_so_each_side_of_a_change_is_its_own_return(
                 issued_at=change.first_day_after,
             ),
         ),
-        period=_IMPORT.period(change.first_day_after),
+        period=IMPORT.period(change.first_day_after),
     )
 
-    assert _row(resolution, _IMPORT, 1)[2] == change.pct_after
+    assert oss_detail_sections_row(resolution, IMPORT, 1)[2] == change.pct_after
 
 
-def _distinct_rows(operation: PinnedAuthorityOperation, regime: _Regime, count: int) -> tuple[Invoice, ...]:
+def _distinct_rows(operation: PinnedAuthorityOperation, regime: Regime, count: int) -> tuple[Invoice, ...]:
     """Build one invoice per published destination and tier, from the fact's raw percentages."""
     tiers: list[tuple[str, str, Decimal]] = []
     for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants:
@@ -456,7 +486,7 @@ def _distinct_rows(operation: PinnedAuthorityOperation, regime: _Regime, count: 
             tiers.append((state, str(selectors["kind"]), variant_pct(variant)))
     assert len(tiers) >= count, "the published schedule cannot fill the page this test needs"
     return tuple(
-        _invoice(
+        oss_detail_sections_invoice(
             regime,
             f"SYNTHETIC-{index}",
             country=state.upper(),
@@ -469,20 +499,20 @@ def _distinct_rows(operation: PinnedAuthorityOperation, regime: _Regime, count: 
 
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
-def test_twenty_eight_rows_fill_the_page(operation: PinnedAuthorityOperation, regime: _Regime) -> None:
-    resolution = _resolve(operation, regime, _distinct_rows(operation, regime, 28))
+def test_twenty_eight_rows_fill_the_page(operation: PinnedAuthorityOperation, regime: Regime) -> None:
+    resolution = resolve(operation, regime, _distinct_rows(operation, regime, 28))
 
     closed = {row_set.record_id: row_set for row_set in resolution.closed_record_row_sets}
     assert all(row.occupied for row in closed[regime.record].rows)
-    assert _row(resolution, regime, 28)[3] == Decimal("100.00")
+    assert oss_detail_sections_row(resolution, regime, 28)[3] == Decimal("100.00")
 
 
 @pytest.mark.parametrize("regime", _REGIMES, ids=_regime_ids)
 def test_a_twenty_ninth_row_is_refused_rather_than_exported_short(
-    operation: PinnedAuthorityOperation, regime: _Regime
+    operation: PinnedAuthorityOperation, regime: Regime
 ) -> None:
     with pytest.raises(AggregationValidationError) as refused:
-        _resolve(operation, regime, _distinct_rows(operation, regime, 29))
+        resolve(operation, regime, _distinct_rows(operation, regime, 29))
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.detail_rows_exceed_page"
     assert refused.value.context is not None
     assert refused.value.context["rows"] == "29"

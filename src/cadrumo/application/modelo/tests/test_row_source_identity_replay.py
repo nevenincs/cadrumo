@@ -22,7 +22,7 @@ from ....domain.filing.schema import (
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.submission.models import ModeloDraftStatus
-from .._row_source_identity_replay import (
+from ..row_source_identity_replay import (
     attach_revision_row_source_identities,
 )
 

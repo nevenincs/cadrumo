@@ -36,7 +36,7 @@ from ....domain.transactions.raw_transaction import SourceFormat
 from ....tests.xls_fixtures import XlsFormula, xls_workbook_bytes
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
 from ..catalogue_creation_ports import CatalogueCreationPorts
-from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

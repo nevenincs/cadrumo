@@ -28,8 +28,8 @@ from ..user_profile.custody_ports import (
     inventory_committed_profile_custody,
 )
 from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
-from ._deletion_paths import validated_bucket_deletion_paths
 from .contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
+from .deletion_paths import validated_bucket_deletion_paths
 
 
 class BucketDeletionPreconditionCondition(StrEnum):

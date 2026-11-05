@@ -43,7 +43,7 @@ from pydantic import BaseModel
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
@@ -52,8 +52,8 @@ from ...flows.checkpoint import checkpoint_available
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.line_frontend import LineFlowFrontend
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from ..command_success import _MODIFY_DESCENDANTS_DOOR_CODE, _MODIFY_NO_RESUME_CODE, emit_wizard_success
-from ..commands import _SETUP_CHECKPOINT, setup_flow_definition
+from ..command_success import MODIFY_DESCENDANTS_DOOR_CODE, MODIFY_NO_RESUME_CODE, emit_wizard_success
+from ..commands import SETUP_CHECKPOINT, setup_flow_definition
 from ..descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -89,7 +89,7 @@ def _one_page_definition() -> FlowDefinition:
             ),
         ),
         answers_model=_Answers,
-        checkpoint=dict(_SETUP_CHECKPOINT),
+        checkpoint=dict(SETUP_CHECKPOINT),
     )
 
 
@@ -122,7 +122,7 @@ def test_setup_flow_declares_checkpoint_unavailable_in_both_modes(*, registry_se
     a silent implementation detail), which is what drives the substrate
     refusal above.
     """
-    definition = flow_definition_from_wizard_flow(registry_setup_flow, checkpoint=_SETUP_CHECKPOINT)
+    definition = flow_definition_from_wizard_flow(registry_setup_flow, checkpoint=SETUP_CHECKPOINT)
 
     for mode in (FlowMode.CREATE, FlowMode.MODIFY):
         assert definition.checkpoint[mode] is CheckpointAvailability.UNAVAILABLE
@@ -147,8 +147,8 @@ def test_edit_envelope_carries_modify_no_resume_notice(
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"]: notice for notice in document["notices"]}
-    assert _MODIFY_NO_RESUME_CODE in codes
-    notice = codes[_MODIFY_NO_RESUME_CODE]
+    assert MODIFY_NO_RESUME_CODE in codes
+    notice = codes[MODIFY_NO_RESUME_CODE]
     assert notice["severity"] == NoticeSeverity.INFO.value
     assert notice["message"] == _MODIFY_NO_RESUME_MESSAGE
 
@@ -162,7 +162,7 @@ def test_envelope_omits_modify_notice_when_not_requested(
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"] for notice in document["notices"]}
-    assert _MODIFY_NO_RESUME_CODE not in codes
+    assert MODIFY_NO_RESUME_CODE not in codes
 
 
 # ── surface 3: the descendant group is withheld from modify mode ─────────
@@ -177,7 +177,7 @@ def test_modify_definition_carries_no_descendant_pages(*, registry_setup_flow: W
     definition carries the count page, the group, and the adoption cross-field
     validator; the MODIFY definition carries none of them.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         create_definition = setup_flow_definition(
             registry_setup_flow, attach_descendants=True, operation=_authority_operation_for_test
         )
@@ -211,8 +211,8 @@ def test_edit_envelope_carries_descendants_via_door_notice(
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"]: notice for notice in document["notices"]}
-    assert _MODIFY_DESCENDANTS_DOOR_CODE in codes
-    notice = codes[_MODIFY_DESCENDANTS_DOOR_CODE]
+    assert MODIFY_DESCENDANTS_DOOR_CODE in codes
+    notice = codes[MODIFY_DESCENDANTS_DOOR_CODE]
     assert notice["severity"] == NoticeSeverity.INFO.value
     assert notice["action"]["action"]["action_id"] == "operator.profile.descendiente"
     assert notice["action"]["action"]["target_command_key"] == "config.profile.descendiente.list"
@@ -227,7 +227,7 @@ def test_create_envelope_omits_descendants_via_door_notice(
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"] for notice in document["notices"]}
-    assert _MODIFY_DESCENDANTS_DOOR_CODE not in codes
+    assert MODIFY_DESCENDANTS_DOOR_CODE not in codes
 
 
 # The interactive-edit staging-honesty test went with the retired walk: the

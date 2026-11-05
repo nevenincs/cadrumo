@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, SecretStr, computed_field
 
 from ...core.identity.profile import ProfileId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.user_profile.errors import ProfileExportError
 
 if TYPE_CHECKING:
@@ -98,7 +98,7 @@ class ProfileBundleExportTransport(StrEnum):
 class ProfileBundleExportRequest(BaseModel):
     """Typed request for the sole portable profile export operation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_name: str | None = Field(default=None, min_length=1, max_length=256)
     destination: Path
@@ -116,7 +116,7 @@ class ProfileBundleExportTarget(BaseModel):
     literal spelling the operator supplied.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     destination: Path
 
@@ -139,7 +139,7 @@ class ProfileBundleExportReconcileFailure(BaseModel):
     contents onto an operator-facing surface.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     journal_id: str = Field(min_length=1)
     destination: str | None = None
@@ -159,7 +159,7 @@ class ProfileBundleExportResult(BaseModel):
     bytes on disk and the operator running the export is the one who needs told.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     display_name: str

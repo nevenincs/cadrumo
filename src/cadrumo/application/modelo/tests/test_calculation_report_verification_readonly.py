@@ -12,14 +12,14 @@ from ..calculation_report_verification import (
     CalculationSummaryCheckName,
     CalculationSummaryVerificationLayer,
     CalculationSummaryVerificationReason,
-    _DocumentReading,
-    _ExistingSigningKeypairCapability,
-    _trace_against_store,
+    DocumentReading,
+    ExistingSigningKeypairCapability,
+    trace_against_store,
 )
 from ..export_ports import ModeloExportPorts
 from ..review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
-from ._calculation_report_fixture import BUCKET_ID, EXPORTED_AT, build_fixture_report
-from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
+from .calculation_report_fixture import BUCKET_ID, EXPORTED_AT, build_fixture_report
+from .review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,8 +55,8 @@ def test_verification_refuses_an_absent_key_without_accessing_other_stores(
     )
     reader = _AbsentSigningKeypairReader()
     ports = cast(ModeloExportPorts, _UnreadableExportPorts())
-    checks = _trace_against_store(
-        _DocumentReading(checks=(), statement=certification.statement, report=report),
+    checks = trace_against_store(
+        DocumentReading(checks=(), statement=certification.statement, report=report),
         active_bucket_id=BUCKET_ID,
         export_ports=ports,
         signing_keypair=reader,
@@ -77,7 +77,7 @@ def test_report_rebuild_capability_retains_its_original_key_and_bucket() -> None
         bucket_id=BUCKET_ID,
         generated_at=EXPORTED_AT,
     )
-    retained = _ExistingSigningKeypairCapability(keypair)
+    retained = ExistingSigningKeypairCapability(keypair)
 
     assert retained.ensure_keypair(bucket_id=BUCKET_ID) is keypair
     assert retained.ensure_keypair(bucket_id=f" {BUCKET_ID} ", generated_at=EXPORTED_AT) is keypair

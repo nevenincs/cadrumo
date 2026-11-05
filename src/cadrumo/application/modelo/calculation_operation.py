@@ -20,7 +20,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ..operations.access_port import OperationAccessResolver
@@ -364,7 +364,7 @@ class ModeloWorkCalculateExecutor:
                     operation=context.authority_operation,
                     replaced_head=replaced_calculation_head(prepared, payload, result.work_unit),
                 )
-                return await context.operands.put(public_result, written_at=_utc_now())
+                return await context.operands.put(public_result, written_at=now())
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-calculate-publication")
 

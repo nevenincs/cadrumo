@@ -146,7 +146,7 @@ def _query_ledger_membership(
         m210_gross_income_source_mode=target.m210_gross_income_source_mode,
     )
     try:
-        membership = _collect_ledger_membership(context=context, work_unit=work_unit, ports=ports, selected=selected)
+        membership = collect_ledger_membership(context=context, work_unit=work_unit, ports=ports, selected=selected)
         if not consumed_inventory_rows(target):
             return membership
         return replace(membership, inventory_row_identities=_observe_inventory_rows(context, ports))
@@ -175,7 +175,7 @@ def _observe_inventory_rows(
     )
 
 
-def _collect_ledger_membership(
+def collect_ledger_membership(
     *,
     context: CalculationSourceContext,
     work_unit: WorkUnit,

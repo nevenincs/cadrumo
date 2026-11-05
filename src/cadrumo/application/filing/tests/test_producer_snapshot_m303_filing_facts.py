@@ -59,15 +59,15 @@ from ..producer_snapshot import (
     resolve_m303_filing_facts,
 )
 from .producer_snapshot_support import (
-    _TAXPAYER_TAX_ID,
-    _elections,
-    _empty_m303_export_arrivals,
-    _m303_filing_facts,
-    _m303_instance_evidence,
-    _m303_profile,
-    _presenter,
-    _taxpayer_identity,
+    TAXPAYER_TAX_ID,
+    elections,
+    empty_m303_export_arrivals,
     m303_exonerado_390_evidence,
+    m303_filing_facts,
+    m303_instance_evidence,
+    m303_profile,
+    producer_snapshot_presenter,
+    taxpayer_identity,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -100,7 +100,7 @@ def _m303_filing_facts_payload(
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
 ) -> dict[str, object]:
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_m303_filing_facts().model_dump())
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(m303_filing_facts().model_dump())
     payload["bienes_register"] = bienes_register.model_dump()
     payload["regularisation_result"] = regularisation_result.model_dump()
     return payload
@@ -148,9 +148,9 @@ def _m303_foral_snapshot(
     prorrata_register: ProrrataRegister | None = None,
 ) -> FilingProducerSnapshot:
     period = prorrata_transition.period
-    default_register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+    default_register, bienes_register, regularisation = empty_m303_export_arrivals(period.filing_year)
     register = default_register if prorrata_register is None else prorrata_register
-    evidence = _m303_instance_evidence(period)
+    evidence = m303_instance_evidence(period)
     facts = M303FilingFacts(
         joint_return_elected=True,
         annual_volume_nonzero=False,
@@ -174,7 +174,7 @@ def _m303_foral_snapshot(
         regularisation_result=regularisation,
         bienes_parameters=params_for(period.filing_year),
     )
-    profile = _m303_profile().model_copy(
+    profile = m303_profile().model_copy(
         update={
             "tax_territory": M303TaxTerritory.from_registry("foral_unsupported"),
             "regime_composition": M303RegimeComposition.from_registry("mixed"),
@@ -186,11 +186,11 @@ def _m303_foral_snapshot(
     )
     return build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
         model_profile=profile,
-        elections=_elections(ResultDisposition.NEGATIVA),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
@@ -201,15 +201,15 @@ def _m303_foral_snapshot(
 def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=_m303_filing_facts(),
+        m303_filing_facts=m303_filing_facts(),
     )
     assert type(snapshot.model_profile) is ModeloIVAProfile
     values = filing_producer_values(snapshot)
@@ -249,7 +249,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
     the typed entitlement only from period 02.  This test mutates the boolean
     itself so true and false cannot silently collapse into a numeric default.
     """
-    profile = _m303_profile().model_copy(
+    profile = m303_profile().model_copy(
         update={"hydrocarbon_deposit_advance_payment_deduction_entitled": entitled},
     )
 
@@ -264,7 +264,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
 
 def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
     """The art. 121 marker is not silently inferred from rows or the profile."""
-    facts = _m303_filing_facts(annual_volume_nonzero=True)
+    facts = m303_filing_facts(annual_volume_nonzero=True)
     payload = facts.model_dump(mode="python")
     del payload["annual_volume_nonzero"]
     with pytest.raises(ValidationError, match="annual_volume_nonzero"):
@@ -272,11 +272,11 @@ def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
 
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
@@ -306,7 +306,7 @@ def test_modelo_303_annual_volume_marker_prints_only_for_a_390_exempt_filer_in_t
     expected: str,
 ) -> None:
     """DP30301 Nota 3: "0" in every period but 12 and 4T, and there too for a filer not exempt from Modelo 390."""
-    facts = _m303_filing_facts(annual_volume_nonzero=answer).model_copy(
+    facts = m303_filing_facts(annual_volume_nonzero=answer).model_copy(
         update={
             "period": Period.from_year_and_code(2026, period_code),
             "exonerado_390": m303_exonerado_390_evidence(applicable=exonerado_390),
@@ -319,17 +319,17 @@ def test_modelo_303_annual_volume_marker_prints_only_for_a_390_exempt_filer_in_t
 def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile().model_copy(
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile().model_copy(
             update={"tax_territory": M303TaxTerritory.from_registry("foral_unsupported")}
         ),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=_m303_filing_facts(),
+        m303_filing_facts=m303_filing_facts(),
     )
 
     assert filing_producer_values(snapshot)[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "1"
@@ -423,15 +423,15 @@ def test_m303_regime_composition_projects_only_the_exclusively_simplified_arm(
 ) -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile().model_copy(update={"regime_composition": composition}),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile().model_copy(update={"regime_composition": composition}),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=_m303_filing_facts(),
+        m303_filing_facts=m303_filing_facts(),
     )
     assert filing_producer_values(snapshot)[FilingProducerKey.M303_REGIME_COMPOSITION_CODE] == expected
 
@@ -447,7 +447,7 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
     subtype: M303InsolvencyFilingSubtype,
     expected: str,
 ) -> None:
-    facts = _m303_filing_facts().model_copy(
+    facts = m303_filing_facts().model_copy(
         update={
             "insolvency": M303InsolvencyFilingFact(
                 judicial_order_date=date(2026, 8, 11),
@@ -457,11 +457,11 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
     )
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
-        taxpayer_tax_id=_TAXPAYER_TAX_ID,
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
@@ -487,8 +487,8 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
     # Refused wherever the period first meets a component that needs an official
     # quarterly or monthly period: its evidence, its arrivals, or the facts.
     with pytest.raises((ValidationError, PeriodError), match=_NON_OFFICIAL_PERIOD_REFUSAL):
-        register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
-        evidence = _m303_instance_evidence(period)
+        register, bienes_register, regularisation = empty_m303_export_arrivals(period.filing_year)
+        evidence = m303_instance_evidence(period)
         M303FilingFacts(
             joint_return_elected=False,
             annual_volume_nonzero=False,
@@ -518,9 +518,9 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
     period = Period.from_year_and_code(2026, period_code)
 
     with pytest.raises((ValueError, PeriodError), match=_NON_OFFICIAL_PERIOD_REFUSAL):
-        register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+        register, bienes_register, regularisation = empty_m303_export_arrivals(period.filing_year)
         evidence = FilingInstanceEvidence(
-            m303=_m303_instance_evidence(period),
+            m303=m303_instance_evidence(period),
         )
         resolve_m303_filing_facts(
             evidence=evidence,
@@ -602,7 +602,7 @@ def _m111_producer_profile() -> Modelo111ProfileFacts:
 
 def _m202_producer_profile() -> Modelo202ProducerProfile:
     return Modelo202ProducerProfile(
-        taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL")),
+        taxpayer_profile=TaxpayerProfile(tax_id=TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL")),
         activities=(),
     )
 
@@ -625,20 +625,20 @@ def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(
         with pytest.raises(FilingProducerSnapshotError, match="M303FilingFacts are valid only for modelo 303"):
             build_filing_producer_snapshot(
                 modelo=modelo,
-                taxpayer_tax_id=_TAXPAYER_TAX_ID,
-                taxpayer_identity=_taxpayer_identity(),
-                presenter=_presenter(),
+                taxpayer_tax_id=TAXPAYER_TAX_ID,
+                taxpayer_identity=taxpayer_identity(),
+                presenter=producer_snapshot_presenter(),
                 model_profile=model_profile,
-                elections=_elections(ResultDisposition.NEGATIVA),
+                elections=elections(ResultDisposition.NEGATIVA),
                 amendment_evidence=None,
                 refund_account=None,
                 charge_account=None,
-                m303_filing_facts=_m303_filing_facts(),
+                m303_filing_facts=m303_filing_facts(),
             )
 
 
 def test_m303_filing_facts_refuse_a_regularisation_result_for_another_year() -> None:
-    payload = _m303_filing_facts().model_dump()
+    payload = m303_filing_facts().model_dump()
     payload["regularisation_result"]["regularizacion_year"] = 2025
 
     with pytest.raises(ValidationError, match="regularisation result must use the filing year"):
@@ -733,7 +733,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
 
 
 def test_m303_filing_facts_refuse_final_period_register_coverage_gaps() -> None:
-    payload = _m303_filing_facts().model_dump()
+    payload = m303_filing_facts().model_dump()
     payload["prorrata_register"] = ProrrataRegister()
 
     with pytest.raises(ValidationError, match="complete current-year prorrata register coverage"):
@@ -759,7 +759,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
             )
         }
     )
-    payload = _m303_filing_facts().model_dump()
+    payload = m303_filing_facts().model_dump()
     payload["prorrata_transition"] = M303ProrrataTransitionArrival(
         period=period,
         is_applicable=True,
@@ -777,7 +777,7 @@ def test_m303_evidence_requires_the_modelo_390_exemption_only_in_the_last_period
     period_code: str, required: bool
 ) -> None:
     """DP30301 Nota 4 asks for the exemption in 12 and 4T only; any other period may omit it."""
-    payload = _m303_instance_evidence(Period.from_year_and_code(2026, period_code)).model_dump(mode="python")
+    payload = m303_instance_evidence(Period.from_year_and_code(2026, period_code)).model_dump(mode="python")
     payload["exonerado_390"] = None
     payload["annual_volume_nonzero"] = None
 
@@ -790,7 +790,7 @@ def test_m303_evidence_requires_the_modelo_390_exemption_only_in_the_last_period
 
 def test_m303_filing_facts_without_the_exemption_question_print_zero_for_both_marks() -> None:
     """Outside the last period both DP30301 fields 23 and 24 carry "0", whether or not evidence was stored."""
-    facts = _m303_filing_facts(period_code="2T").model_copy(
+    facts = m303_filing_facts(period_code="2T").model_copy(
         update={"exonerado_390": None, "annual_volume_nonzero": None}
     )
 
@@ -800,7 +800,7 @@ def test_m303_filing_facts_without_the_exemption_question_print_zero_for_both_ma
 
 
 def test_m303_last_period_filing_facts_refuse_a_missing_exemption_question() -> None:
-    payload = _m303_filing_facts(period_code="4T").model_dump(mode="python")
+    payload = m303_filing_facts(period_code="4T").model_dump(mode="python")
     payload["exonerado_390"] = None
 
     with pytest.raises(ValidationError, match="Modelo 390 exemption"):

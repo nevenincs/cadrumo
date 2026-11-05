@@ -17,15 +17,15 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetPlanClaim,
 )
 
-from .test_baja_correction import _ASSET, _disposed, _without_baja
+from .test_baja_correction import ASSET, baja_correction_without_baja, disposed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_a_claim_of_a_full_year_reads_through_the_last_day_of_the_year() -> None:
-    operations, _, _ = _disposed()
+    operations, _, _ = disposed()
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2025]
+    row = {item.tax_year: item for item in operations.plan(ASSET)}[2025]
 
     (claim,) = row.claims
     assert (claim.covered_from, claim.covered_until, claim.covered_through) == (
@@ -36,10 +36,10 @@ def test_a_claim_of_a_full_year_reads_through_the_last_day_of_the_year() -> None
 
 
 def test_the_shortened_claim_ends_the_day_of_the_baja_and_the_gap_resumes_the_next_day() -> None:
-    operations, _, baja = _disposed()
-    operations.correct(_without_baja(baja))
+    operations, _, baja = disposed()
+    operations.correct(baja_correction_without_baja(baja))
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2026]
+    row = {item.tax_year: item for item in operations.plan(ASSET)}[2026]
 
     (claim,) = (item for item in row.claims if item.effective)
     assert (claim.covered_until, claim.covered_through) == (date(2026, 7, 1), date(2026, 6, 30))

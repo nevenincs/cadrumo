@@ -26,7 +26,7 @@ from ...domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
@@ -42,37 +42,31 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.projections import profile_fact_index, record_to_path_values
-from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
-from ._calculation_modelo_adjustments import (
-    calculated_decimal as _calculated_decimal,
-)
-from ._calculation_modelo_adjustments import (
-    detail_row_binding_values_for_calculation as _detail_row_binding_values_for_calculation,
-)
-from ._calculation_modelo_adjustments import (
-    union_detail_rows_by_identity as _union_detail_rows_by_identity,
-)
-from ._calculation_preparation import raise_if_ledger_preflight_blocks_calculation
-from ._calculation_source_staging import settled_binding_ids
-from ._m349_ledger_guard import (
-    raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
-)
-from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
-from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
-from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .action_errors import (
     ModeloAggregationBindingError,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
+from .calculation_aggregation_context import load_bucket_aggregation_context
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .calculation_modelo_adjustments import (
+    calculated_decimal,
+    detail_row_binding_values_for_calculation,
+    union_detail_rows_by_identity,
+)
 from .calculation_notes import (
     CALCULATION_NOTES,
     with_element_names,
 )
+from .calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from .calculation_source_staging import settled_binding_ids
+from .m349_ledger_guard import (
+    raise_if_m349_intracom_ledger_rows_need_operator_rows,
+)
+from .operator_override_advisory import collect_operator_override_divergence_diagnostics
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics
 from .projection import (
@@ -81,6 +75,8 @@ from .projection import (
     unresolved_binding_rows,
     unresolved_casilla_rows,
 )
+from .registry_helpers import validate_casilla_input_ids
+from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -96,7 +92,7 @@ if TYPE_CHECKING:
     )
 
 
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from .bucket_unrouted_source_issues import unrouted_source_issues
 from .calculation_actions import (
     TrustedMeshEvaluation,
@@ -145,7 +141,7 @@ class BucketAggregationCalculationResult:
 
 
 @dataclass(frozen=True, slots=True)
-class _BucketAggregationPreparation:
+class BucketAggregationPreparation:
     """Validated caller inputs plus the bucket context selected for one run."""
 
     work_unit: WorkUnit
@@ -172,7 +168,7 @@ class _BucketAggregationChannels:
     reconciliation: _CallerOverrideReconciliation
 
 
-def _source_provenance_refs(
+def source_provenance_refs(
     source_resolution: CalculationSourceResolution,
 ) -> tuple[CalculationSourceRef, ...]:
     """Project the mesh resolution's application provenance into persisted domain refs.
@@ -245,13 +241,13 @@ def _caller_relation_values_from_bindings(
     applicability admits.
     """
     return {
-        binding.id: _calculated_decimal(caller_binding_values[binding.id])
+        binding.id: calculated_decimal(caller_binding_values[binding.id])
         for binding, _ in relation_prefill_bindings_for_period(revision, period=target_period)
         if binding.id in caller_binding_values
     }
 
 
-def _orphaned_override_diagnostics(
+def orphaned_override_diagnostics(
     revision: ModeloRevision,
     *,
     caller_relation_values: Mapping[RelationId, Decimal],
@@ -371,7 +367,7 @@ def _reconcile_caller_overrides(
         caller_resolved_relation_ids=caller_resolved_relation_ids,
         caller_binding_ids=caller_binding_ids,
         detail_row_binding_values=detail_row_binding_values,
-    ) + _orphaned_override_diagnostics(
+    ) + orphaned_override_diagnostics(
         revision,
         caller_relation_values=caller_relation_values or {},
     )
@@ -430,9 +426,9 @@ def _prepare_bucket_aggregation_calculation(
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     detail_rows: tuple[ModeloDetailRow, ...],
     profile: ModeloWorkProfile | None,
-) -> _BucketAggregationPreparation:
+) -> BucketAggregationPreparation:
     """Load, validate, and protect caller channels before source resolution."""
-    work_unit, snapshot, checked_profile = _load_bucket_aggregation_context(
+    work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
         work_unit_id,
         work_unit_repository=work_unit_repository,
         profile=profile,
@@ -456,7 +452,7 @@ def _prepare_bucket_aggregation_calculation(
         caller_casilla_inputs=validated_casilla_inputs,
         subject_leaf_key="modelo.work.calculate",
     )
-    return _BucketAggregationPreparation(
+    return BucketAggregationPreparation(
         work_unit=work_unit,
         snapshot=snapshot,
         profile=checked_profile,
@@ -478,7 +474,7 @@ def _validated_bucket_casilla_inputs(
     if casilla_inputs is None:
         return dict[CasillaId, Decimal]()
     validated_inputs: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in _validate_casilla_input_ids(snapshot.revision, casilla_inputs).items():
+    for casilla_id, value in validate_casilla_input_ids(snapshot.revision, casilla_inputs).items():
         validated_inputs[casilla_id] = _require_decimal_input(value)
     return validated_inputs
 
@@ -490,9 +486,9 @@ def _require_decimal_input(value: object) -> Decimal:
     return value
 
 
-def _resolve_bucket_aggregation_source_resolution(
+def resolve_bucket_aggregation_source_resolution(
     *,
-    preparation: _BucketAggregationPreparation,
+    preparation: BucketAggregationPreparation,
     ports: CalculationActionPorts,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
@@ -536,23 +532,23 @@ def _resolve_bucket_aggregation_source_resolution(
 
 def _bucket_aggregation_channels(
     *,
-    preparation: _BucketAggregationPreparation,
+    preparation: BucketAggregationPreparation,
     operation: PinnedAuthorityOperation,
     source_resolution: CalculationSourceResolution,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> _BucketAggregationChannels:
     """Compose mesh, detail-row, and caller channels in their established order."""
-    all_detail_rows = _union_detail_rows_by_identity(
+    all_detail_rows = union_detail_rows_by_identity(
         resolver_rows=source_resolution.detail_rows,
         caller_rows=detail_rows,
     )
-    _raise_if_m349_intracom_ledger_rows_need_operator_rows(
+    raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
         transaction_repository=transaction_repository,
         detail_rows=all_detail_rows,
     )
-    detail_row_binding_values = _detail_row_binding_values_for_calculation(
+    detail_row_binding_values = detail_row_binding_values_for_calculation(
         work_unit=preparation.work_unit,
         revision=preparation.snapshot.revision,
         detail_rows=detail_rows,
@@ -619,7 +615,7 @@ def _bucket_aggregation_channels(
 
 
 def _operator_over_source_diagnostics(
-    preparation: _BucketAggregationPreparation,
+    preparation: BucketAggregationPreparation,
     *,
     operation: PinnedAuthorityOperation,
     source_relations: Mapping[RelationId, Decimal],
@@ -661,7 +657,7 @@ def _source_bound_casilla_inputs(
 
 def _caller_operator_layer(
     *,
-    preparation: _BucketAggregationPreparation,
+    preparation: BucketAggregationPreparation,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
 ) -> CalculationOperatorLayer:
@@ -673,13 +669,11 @@ def _caller_operator_layer(
     """
     return CalculationOperatorLayer(
         decimal_casilla_inputs={
-            casilla_id: _canonical_decimal_string(value) for casilla_id, value in preparation.casilla_inputs.items()
+            casilla_id: canonical_decimal_string(value) for casilla_id, value in preparation.casilla_inputs.items()
         },
         text_casilla_inputs=dict(text_casilla_inputs or {}),
         binding_overrides={
-            **{
-                binding_id: _canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()
-            },
+            **{binding_id: canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()},
             **dict(enum_binding_values or {}),
         },
     )
@@ -687,7 +681,7 @@ def _caller_operator_layer(
 
 def _bucket_aggregation_source_diagnostics(
     *,
-    preparation: _BucketAggregationPreparation,
+    preparation: BucketAggregationPreparation,
     channels: _BucketAggregationChannels,
     precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...],
     profile_diagnostics: tuple[CalculationSourceDiagnostic, ...],
@@ -811,7 +805,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
         settled_binding_ids=settled_binding_ids(channels.source_resolution),
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
-        source_provenance=_source_provenance_refs(channels.source_resolution),
+        source_provenance=source_provenance_refs(channels.source_resolution),
         source_issues=unrouted_source_issues(
             channels.reconciliation.source_diagnostics,
             snapshot_printed_boxes(ports.operation, preparation.snapshot),
@@ -909,7 +903,7 @@ def evaluate_modelo_revision_from_bucket_aggregation(
     return evaluate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
         ports=ports,
-        evaluated_at=clock or _utc_now(),
+        evaluated_at=clock or now(),
         casilla_inputs=run.preparation.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
@@ -927,7 +921,7 @@ def evaluate_modelo_revision_from_bucket_aggregation(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         filing_period_date=filing_period_date,
         detail_rows=channels.detail_rows,
-        source_provenance=_source_provenance_refs(channels.source_resolution),
+        source_provenance=source_provenance_refs(channels.source_resolution),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
             channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -940,7 +934,7 @@ def evaluate_modelo_revision_from_bucket_aggregation(
 class _BucketAggregationRun:
     """The validated caller channels and the mesh-derived channels of one calculation, before the engine runs."""
 
-    preparation: _BucketAggregationPreparation
+    preparation: BucketAggregationPreparation
     channels: _BucketAggregationChannels
     transaction_repository: MemoizedTransactionCatalogueRepository
 
@@ -993,7 +987,7 @@ def _resolve_bucket_aggregation_run(
         operation=ports.operation,
         profile_values=record_to_path_values(preparation.profile.record),
     )
-    source_resolution = _resolve_bucket_aggregation_source_resolution(
+    source_resolution = resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
         ports=ports,
         foreign_asset_observations=foreign_asset_observations,

@@ -16,12 +16,12 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -32,7 +32,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..bucket_unrouted_source_issues import unrouted_source_issues
-from ..calculation_bucket_actions import _source_provenance_refs
+from ..calculation_bucket_actions import source_provenance_refs
 from ..calculation_resolution import build_calculation_replay_payloads
 from ..printed_boxes import snapshot_printed_boxes
 from ..profile_binding import resolve_profile_sourced_bindings
@@ -51,13 +51,13 @@ _ASCENDANT_LIMIT = 4
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -103,7 +103,7 @@ def _calculated(operation: PinnedAuthorityOperation, record: UserProfileRecord) 
     return base.model_copy(
         update={
             "row_binding_values": payloads.row_binding_values,
-            "source_provenance": _source_provenance_refs(resolution),
+            "source_provenance": source_provenance_refs(resolution),
             "source_issues": unrouted_source_issues(
                 resolution.diagnostics, snapshot_printed_boxes(operation, snapshot)
             ),

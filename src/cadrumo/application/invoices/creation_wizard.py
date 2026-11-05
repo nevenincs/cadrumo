@@ -105,7 +105,7 @@ class InvoiceWizardResult(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class _WizardFieldError(CadrumoError):
+class WizardFieldError(CadrumoError):
     """Internal control-flow carrier for one field-validation failure."""
 
     field: str
@@ -145,7 +145,7 @@ def _collect_wizard_field[T](
     """
     try:
         return validate()
-    except _WizardFieldError as exc:
+    except WizardFieldError as exc:
         field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
         return fallback
 
@@ -153,26 +153,26 @@ def _collect_wizard_field[T](
 def _validate_counterparty_nif(raw: str, *, country: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="counterparty_nif", reason="must not be blank")
+        raise WizardFieldError(field="counterparty_nif", reason="must not be blank")
     try:
         if country == "ES":
             return validate_runtime_spanish_tax_id(stripped)
         return validate_iva_number(stripped, country)
     except (IdentityError, InvoiceValidationError) as exc:
-        raise _WizardFieldError(field="counterparty_nif", reason=resolve_error_message(exc)) from exc
+        raise WizardFieldError(field="counterparty_nif", reason=resolve_error_message(exc)) from exc
 
 
 def _validate_counterparty_name(raw: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="counterparty_name", reason="must not be blank")
+        raise WizardFieldError(field="counterparty_name", reason="must not be blank")
     return stripped
 
 
 def _validate_invoice_number(raw: str) -> str:
     stripped = raw.strip()
     if not stripped:
-        raise _WizardFieldError(field="invoice_number", reason="must not be blank")
+        raise WizardFieldError(field="invoice_number", reason="must not be blank")
     return stripped
 
 
@@ -188,12 +188,12 @@ def _validate_operation_date(raw: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="operation_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
     if value is None:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="operation_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         )
@@ -204,19 +204,19 @@ def _validate_invoice_date(raw: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
     if value is None:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         )
     return value
 
 
-def _validate_taxable_base(raw: str) -> Decimal:
+def validate_taxable_base(raw: str) -> Decimal:
     """Validate the operator-typed taxable base against the canonical euro grammar.
 
     The two-fractional-digit cap is what makes the Spanish thousands shape
@@ -230,13 +230,13 @@ def _validate_taxable_base(raw: str) -> Decimal:
     """
     value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if value is None:
-        raise _WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}")
+        raise WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}")
     if value < 0:
-        raise _WizardFieldError(field="taxable_base", reason="must not be negative")
+        raise WizardFieldError(field="taxable_base", reason="must not be negative")
     return value
 
 
-def _validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | None:
+def validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | None:
     """Validate the operator-typed IVA percentage against the canonical grammar.
 
     Uncapped fractional digits: this is a percentage, not a euro amount, and the
@@ -253,14 +253,14 @@ def _validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | No
         return None
     value = try_parse_canonical_decimal(raw)
     if value is None:
-        raise _WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
+        raise WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
     if on_date is None:
-        raise _WizardFieldError(field="iva_rate", reason="requires a valid invoice or operation date")
+        raise WizardFieldError(field="iva_rate", reason="requires a valid invoice or operation date")
     try:
         resolve_iva_rate_slot(value, on_date)
     except IvaRateNotFoundError as exc:
         accepted = (exc.context or {}).get("accepted", "")
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="iva_rate",
             reason=f"{format(value, 'f')} is not a recognised IVA percentage; use one of: {accepted}",
         ) from exc
@@ -282,9 +282,9 @@ def _validate_retention_amount(raw: str | None) -> Decimal | None:
         return None
     value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if value is None:
-        raise _WizardFieldError(field="retention_amount", reason=f"invalid decimal amount: {raw!r}")
+        raise WizardFieldError(field="retention_amount", reason=f"invalid decimal amount: {raw!r}")
     if value < 0:
-        raise _WizardFieldError(field="retention_amount", reason="must not be negative")
+        raise WizardFieldError(field="retention_amount", reason="must not be negative")
     return value
 
 
@@ -302,9 +302,9 @@ def _validate_retention_rate(raw: str | None) -> Decimal | None:
         return None
     value = try_parse_canonical_decimal(raw)
     if value is None:
-        raise _WizardFieldError(field="retention_rate", reason=f"invalid decimal fraction: {raw!r}")
+        raise WizardFieldError(field="retention_rate", reason=f"invalid decimal fraction: {raw!r}")
     if value < 0 or value > 1:
-        raise _WizardFieldError(
+        raise WizardFieldError(
             field="retention_rate",
             reason="must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
         )
@@ -315,14 +315,14 @@ def _validate_country_code(raw: str) -> str:
     try:
         return validate_country_code(raw)
     except InvoiceValidationError as exc:
-        raise _WizardFieldError(field="country_code", reason=str(exc)) from exc
+        raise WizardFieldError(field="country_code", reason=str(exc)) from exc
 
 
 def _validate_currency(raw: str) -> str:
     try:
         return normalise_iso_4217_currency(raw)
     except CoreValidationError as exc:
-        raise _WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
+        raise WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
 
 
 def _validate_declared_text(raw: str | None, *, field: str) -> str | None:
@@ -330,7 +330,7 @@ def _validate_declared_text(raw: str | None, *, field: str) -> str | None:
         return None
     value = raw.strip()
     if not value:
-        raise _WizardFieldError(field=field, reason="must not be blank")
+        raise WizardFieldError(field=field, reason="must not be blank")
     return value
 
 
@@ -340,15 +340,15 @@ def _validate_declared_invoice_class(raw: str | None, *, on_date: date | None) -
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=on_date)
     value = next((token for token in catalogue.invoice_class_choices if str(token) == raw.strip()), None)
     if value is None:
-        raise _WizardFieldError(field="invoice_class", reason="must be a declared invoice class")
+        raise WizardFieldError(field="invoice_class", reason="must be a declared invoice class")
     return value
 
 
 def _validate_recargo_amount(raw: str | None) -> Decimal | None:
     try:
         return _validate_retention_amount(raw)
-    except _WizardFieldError as exc:
-        raise _WizardFieldError(field="recargo_amount", reason=exc.reason) from exc
+    except WizardFieldError as exc:
+        raise WizardFieldError(field="recargo_amount", reason=exc.reason) from exc
 
 
 #: The one country code that establishes domesticity. Named rather than inlined
@@ -357,7 +357,7 @@ def _validate_recargo_amount(raw: str | None) -> Decimal | None:
 _DOMESTIC_COUNTRY = "ES"
 
 
-def _derived_domestic_category(
+def derived_domestic_category(
     *,
     country_code: str,
     iva_rate: Decimal | None,
@@ -392,7 +392,7 @@ def _derived_domestic_category(
 
     if operation is None:
         with bundled_indexed_authority().operation() as pinned:
-            return _derived_domestic_category(
+            return derived_domestic_category(
                 country_code=country_code, iva_rate=iva_rate, on_date=on_date, operation=pinned
             )
     rate_kind = unique_rate_kind_for_declared_rate(
@@ -464,12 +464,12 @@ def _validate_wizard_fields(
     )
     resolved_base = _collect_wizard_field(
         field_errors,
-        lambda: _validate_taxable_base(taxable_base),
+        lambda: validate_taxable_base(taxable_base),
         fallback=None,
     )
     resolved_rate = _collect_wizard_field(
         field_errors,
-        lambda: _validate_iva_rate(iva_rate, on_date=resolved_operation_date or resolved_date),
+        lambda: validate_iva_rate(iva_rate, on_date=resolved_operation_date or resolved_date),
         fallback=None,
     )
     resolved_currency = _collect_wizard_field(
@@ -560,7 +560,7 @@ def _build_wizard_invoice(
         # Derived once, before construction, so the built candidate and the
         # persisted record cannot disagree about the category. An
         # operator-supplied value always wins: this only fills a silence.
-        effective_category = iva_category or _derived_domestic_category(
+        effective_category = iva_category or derived_domestic_category(
             country_code=fields.country,
             iva_rate=fields.iva_rate,
             on_date=fields.operation_date or invoice_date,

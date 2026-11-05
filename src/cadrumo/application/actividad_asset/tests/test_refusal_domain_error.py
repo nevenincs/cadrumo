@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from cadrumo.application.actividad_asset import activity_asset_executors
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetRefusal
 from cadrumo.application.actividad_asset.activity_asset_read_models import project_reason_facts
-from cadrumo.application.actividad_asset.registered_operations import _project_refusal
+from cadrumo.application.actividad_asset.registered_operations import project_refusal
 from cadrumo.core.errors.error_codes import get_registered_error_code_by_code
 from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
@@ -34,11 +34,13 @@ def test_elapsed_period_has_a_distinct_registered_error_identity() -> None:
 
 
 def test_elapsed_period_projects_the_public_unsupported_refusal() -> None:
-    refusal = activity_asset_executors._refusal(ActividadAssetPeriodElapsedError("period elapsed"))
+    refusal = activity_asset_executors.activity_asset_executors_refusal(
+        ActividadAssetPeriodElapsedError("period elapsed")
+    )
 
     assert refusal is not None
     assert refusal.code == "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED"
-    public_refusal = _project_refusal(refusal)
+    public_refusal = project_refusal(refusal)
     assert public_refusal is not None
     public_error = public_refusal.to_domain_error(context=_CONTEXT)
     assert type(public_error) is ActividadAssetUnsupportedError

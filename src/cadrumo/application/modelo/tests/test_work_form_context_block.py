@@ -7,8 +7,8 @@ from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAtt
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
 
 from ..work_form_models import ModeloFormContextFieldBlock, section_fields
-from .test_work_form import _form, _layout
 from .test_work_form import snapshot as snapshot
+from .test_work_form import work_form, work_form_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,12 +29,12 @@ def test_walker_projects_declared_year_without_a_false_casilla(snapshot, operati
         heading_key="test.form.year",
         official_heading="Ejercicio",
     )
-    layout = _layout(snapshot)
+    layout = work_form_layout(snapshot)
     page = layout.pages[0]
     section = page.sections[0].model_copy(update={"blocks": (block, *page.sections[0].blocks)})
     page = page.model_copy(update={"sections": (section, *page.sections[1:])})
     layout = layout.model_copy(update={"pages": (page, *layout.pages[1:])})
-    form = _form(snapshot, operation, layout=layout)
+    form = work_form(snapshot, operation, layout=layout)
     projected = form.pages[0].sections[0].blocks[0]
     assert isinstance(projected, ModeloFormContextFieldBlock)
     assert projected.value == snapshot.filing_year
@@ -47,10 +47,10 @@ def test_walker_projects_summary_as_readonly_unknown_without_edit_address(snapsh
     from cadrumo.application.storage.calc_sheets.tests.test_form_context_fields import snapshot_with_binding_context
 
     snapshot = snapshot.model_copy(
-        update={"revision": snapshot.revision.model_copy(update={"form_layouts": (_layout(snapshot),)})}
+        update={"revision": snapshot.revision.model_copy(update={"form_layouts": (work_form_layout(snapshot),)})}
     )
     snapshot, _block, _binding = snapshot_with_binding_context(snapshot)
-    form = _form(snapshot, operation, layout=snapshot.revision.form_layouts[0])
+    form = work_form(snapshot, operation, layout=snapshot.revision.form_layouts[0])
     projected = form.pages[0].sections[0].blocks[0]
     assert isinstance(projected, ModeloFormContextFieldBlock)
     assert projected.value is None

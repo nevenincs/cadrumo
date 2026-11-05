@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -45,7 +44,7 @@ class TestItFiresWhereTheCodeWasNeeded:
     """Spain settles no territory by itself, so the postal code is load-bearing there."""
 
     def test_a_spanish_party_whose_code_is_an_address_blob_is_reported(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
 
             findings = postal_shape_findings(draft, operation=_authority_operation_for_test)
@@ -65,7 +64,7 @@ class TestItFiresWhereTheCodeWasNeeded:
 
     def test_the_detail_quotes_what_the_field_actually_holds(self) -> None:
         """An operator shown the printed text can read the real code out of it."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
 
             assert _ADDRESS_BLOB in postal_shape_findings(draft, operation=_authority_operation_for_test)[0].detail
@@ -82,25 +81,25 @@ class TestItStaysSilentWhereTheCodeCostNothing:
         correct, and refusing confirmation on them would be a large legitimate
         population blocked for no gain.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_BRITISH_CODE, supplier_country="Reino Unido")
 
             assert postal_shape_findings(draft, operation=_authority_operation_for_test) == ()
 
     def test_a_readable_spanish_code_is_not_a_finding(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code="35001", supplier_country="España")
 
             assert postal_shape_findings(draft, operation=_authority_operation_for_test) == ()
 
     def test_an_absent_code_is_an_honest_absence_rather_than_a_misread(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_country="España")
 
             assert postal_shape_findings(draft, operation=_authority_operation_for_test) == ()
 
     def test_a_blank_code_is_treated_as_absent(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code="   ", supplier_country="España")
 
             assert postal_shape_findings(draft, operation=_authority_operation_for_test) == ()
@@ -110,7 +109,7 @@ class TestBothPartiesAreAskedIndependently:
     """On an issued invoice the CUSTOMER is the counterparty whose territory decides."""
 
     def test_the_customer_side_is_checked(self, *, operation: PinnedAuthorityOperation) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(customer_postal_code=_ADDRESS_BLOB, customer_country="España")
 
             findings = postal_shape_findings(draft, operation=_authority_operation_for_test)
@@ -144,7 +143,7 @@ class TestTheCheckIsWiredWhereItMustBe:
 
     def test_the_check_runs_from_the_shared_deterministic_list(self) -> None:
         """Both readers call that list, so enrolment is what reaches the structured path."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
 
             assert "postal_code_shape" in deterministic_check_names()
@@ -159,7 +158,7 @@ class TestTheCheckIsWiredWhereItMustBe:
 
     def test_the_kind_blocks_confirmation_under_its_own_reason(self) -> None:
         """Not an ambiguous identity: no candidates competed and no identifier is in doubt."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
             reviewed = draft.model_copy(
                 update={

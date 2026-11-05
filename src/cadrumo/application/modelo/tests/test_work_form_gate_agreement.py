@@ -76,7 +76,7 @@ _FILE_ACTIONS = frozenset(
 )
 
 
-def _work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
+def work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
     period = Period.from_year_and_code(2025, "0A")
     revision_id = str(form_snapshot(operation, "210", 2025, "0A").revision.id)
     return WorkUnit(
@@ -94,7 +94,7 @@ def _work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
     )
 
 
-def _revision(
+def work_form_gate_agreement_revision(
     operation: PinnedAuthorityOperation,
     unit: WorkUnit,
     *issues: CalculationSourceIssue,
@@ -141,7 +141,7 @@ _PRINTED_BOX = "rendimientos_integros"
 
 
 @dataclass(frozen=True, slots=True)
-class _Note:
+class Note:
     """One note the calculation persists: its reason, the box it names and the binding source that raised it."""
 
     reason: str
@@ -189,13 +189,13 @@ def _disagreement() -> SourceDisagreementFact:
     )
 
 
-def _every_note() -> list[_Note]:
+def every_note() -> list[Note]:
     """Every reason a calculation persists, which is all the gates read, each on a printed box where that matters."""
     reasons = get_args(CalculationSourceIssue.model_fields["reason"].annotation)
-    return [_Note(reason, _PRINTED_BOX if reason in PRINTED_BOX_REASONS else None) for reason in sorted(reasons)]
+    return [Note(reason, _PRINTED_BOX if reason in PRINTED_BOX_REASONS else None) for reason in sorted(reasons)]
 
 
-def _checked_form(
+def checked_form(
     operation: PinnedAuthorityOperation,
     revision: CalculationRevision,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
@@ -232,10 +232,14 @@ def _gate_admits(
     return True
 
 
-def _agrees(operation: PinnedAuthorityOperation, note: _Note | None) -> None:
-    unit = _work_unit(operation)
-    revision = _revision(operation, unit) if note is None else _revision(operation, unit, note.issue())
-    form = _checked_form(operation, revision)
+def _agrees(operation: PinnedAuthorityOperation, note: Note | None) -> None:
+    unit = work_unit(operation)
+    revision = (
+        work_form_gate_agreement_revision(operation, unit)
+        if note is None
+        else work_form_gate_agreement_revision(operation, unit, note.issue())
+    )
+    form = checked_form(operation, revision)
 
     admitted = _gate_admits(unit, revision, operation)
     hold = export_hold(form, OutputLanguage.EN, verified=True, recorded=False)
@@ -264,9 +268,9 @@ def test_a_form_with_no_note_offers_the_file_the_gates_admit(operation: PinnedAu
     _agrees(operation, None)
 
 
-@pytest.mark.parametrize("note", _every_note(), ids=lambda note: note.reason)
+@pytest.mark.parametrize("note", every_note(), ids=lambda note: note.reason)
 def test_every_note_kind_holds_the_file_exactly_where_the_export_and_filing_gates_refuse_it(
-    operation: PinnedAuthorityOperation, note: _Note
+    operation: PinnedAuthorityOperation, note: Note
 ) -> None:
     _agrees(operation, note)
 
@@ -278,9 +282,9 @@ def test_every_note_kind_holds_the_file_exactly_where_the_export_and_filing_gate
 def test_omitted_amortization_is_shown_without_holding_a_checked_return(
     operation: PinnedAuthorityOperation, reason: str
 ) -> None:
-    unit = _work_unit(operation)
-    revision = _revision(operation, unit, _Note(reason).issue())
-    form = _checked_form(operation, revision)
+    unit = work_unit(operation)
+    revision = work_form_gate_agreement_revision(operation, unit, Note(reason).issue())
+    form = checked_form(operation, revision)
 
     assert _gate_admits(unit, revision, operation)
     (note,) = form.calculation_notes
@@ -307,8 +311,8 @@ def test_an_amortization_note_leaves_the_check_as_the_next_step_of_an_unchecked_
     operation: PinnedAuthorityOperation, reason: str
 ) -> None:
     """Nothing can clear such a note, so counting it as missing would offer a fill with nothing to fill."""
-    unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(operation, unit)).model_copy(
+    unit = work_unit(operation)
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit)).model_copy(
         update={
             "verification": None,
             "calculation_notes": (
@@ -334,10 +338,10 @@ def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_ho
         if isinstance(field.address, ModeloFormCasillaAddressV1) and (field.box is None or field.box == "")
     ]
     assert unprinted, "the Modelo 210 form keeps some figure it does not print"
-    for note in (_Note("unresolved_binding", unprinted[0]), _Note("unresolved_binding")):
-        unit = _work_unit(operation)
-        revision = _revision(operation, unit, note.issue())
-        checked = _checked_form(operation, revision)
+    for note in (Note("unresolved_binding", unprinted[0]), Note("unresolved_binding")):
+        unit = work_unit(operation)
+        revision = work_form_gate_agreement_revision(operation, unit, note.issue())
+        checked = checked_form(operation, revision)
         (shown,) = [item for item in checked.calculation_notes if item.reason == note.reason]
 
         assert not _gate_admits(unit, revision, operation), note
@@ -348,12 +352,12 @@ def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_ho
 def test_an_unrouted_one_stop_shop_row_is_the_modelo_369_checks_and_the_gates_admit_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    note = _Note("unrouted_observation", binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION)
-    unit = _work_unit(operation)
-    revision = _revision(operation, unit, note.issue())
+    note = Note("unrouted_observation", binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION)
+    unit = work_unit(operation)
+    revision = work_form_gate_agreement_revision(operation, unit, note.issue())
 
     assert _gate_admits(unit, revision, operation)
-    (shown,) = _checked_form(operation, revision).calculation_notes
+    (shown,) = checked_form(operation, revision).calculation_notes
     assert not shown.withholds_filing
     _agrees(operation, note)
 
@@ -369,9 +373,9 @@ def test_a_stale_screen_offers_recalculation_where_the_gates_refuse_it(
     operation: PinnedAuthorityOperation, stale: int, checked: bool
 ) -> None:
     """An unstamped or differently screened revision is refused by the gates, and the form offers a recalculation."""
-    unit = _work_unit(operation)
-    revision = _revision(operation, unit, stale=(_stale_stamps(operation)[stale],))
-    form = _checked_form(operation, revision)
+    unit = work_unit(operation)
+    revision = work_form_gate_agreement_revision(operation, unit, stale=(_stale_stamps(operation)[stale],))
+    form = checked_form(operation, revision)
     if not checked:
         form = form.model_copy(update={"verification": None})
 
@@ -388,8 +392,8 @@ def test_a_stale_screen_offers_recalculation_where_the_gates_refuse_it(
 
 def test_a_current_screen_carries_no_stale_note(operation: PinnedAuthorityOperation) -> None:
     """Teeth for the stale case: the same revision stamped as a calculation stamps it is not held for staleness."""
-    unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(operation, unit))
+    unit = work_unit(operation)
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit))
 
     assert not [item for item in form.calculation_notes if item.reason == CALCULATION_SCREEN_OUTDATED_REASON]
     assert not form.calculation_out_of_date
@@ -398,8 +402,10 @@ def test_a_current_screen_carries_no_stale_note(operation: PinnedAuthorityOperat
 
 def test_a_stale_screen_reaches_the_public_workbench_read(operation: PinnedAuthorityOperation) -> None:
     """The workbench read and its public projection, which the TUI and MCP consume, offer the same recalculation."""
-    unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(operation, unit, stale=(None,))).model_copy(update={"verification": None})
+    unit = work_unit(operation)
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit, stale=(None,))).model_copy(
+        update={"verification": None}
+    )
     read = _read(form, _refusal("current_calculation_revision_id"), operation)
 
     assert read.next_step is not None and read.next_step.action is ModeloFormNextAction.RECALCULATE
@@ -479,13 +485,13 @@ def _listed_step(
 def test_the_declarations_list_and_the_form_agree_for_one_checked_revision(
     operation: PinnedAuthorityOperation, stale: int | None, note: str | None
 ) -> None:
-    unit = _work_unit(operation)
-    issues = () if note is None else (_Note(note).issue(),)
+    unit = work_unit(operation)
+    issues = () if note is None else (Note(note).issue(),)
     stamp = None if stale is None else (_stale_stamps(operation)[stale],)
-    revision = _revision(operation, unit, *issues, stale=stamp).model_copy(
+    revision = work_form_gate_agreement_revision(operation, unit, *issues, stale=stamp).model_copy(
         update={"state": CalculationRevisionState.VERIFICADO_COMPLETO}
     )
-    form = _checked_form(operation, revision)
+    form = checked_form(operation, revision)
 
     form_step = form_next_step(form, verified=True, filed=False).action
     listed = _listed_step(unit, revision, operation)
@@ -514,8 +520,8 @@ def test_a_source_disagreement_is_held_or_lifted_by_the_form_and_the_gates_alike
     operation: PinnedAuthorityOperation, reason: str, standing: str, lifted: bool
 ) -> None:
     """An open, a resolved and a stale disagreement are judged identically by the gate and the form."""
-    unit = _work_unit(operation)
-    issue = _Note(reason).issue()
+    unit = work_unit(operation)
+    issue = Note(reason).issue()
     assert issue.disagreement is not None
     key = issue.disagreement.finding_key
     resolutions = {
@@ -524,8 +530,8 @@ def test_a_source_disagreement_is_held_or_lifted_by_the_form_and_the_gates_alike
         "resolved-another-finding": SourceDisagreementResolutions(finding_keys=frozenset({_ANOTHER_FINDING_KEY})),
         "resolutions-unreadable": SourceDisagreementResolutions(finding_keys=frozenset({key}), unreadable=True),
     }[standing]
-    revision = _revision(operation, unit, issue)
-    form = _checked_form(operation, revision, resolutions)
+    revision = work_form_gate_agreement_revision(operation, unit, issue)
+    form = checked_form(operation, revision, resolutions)
 
     admitted = _gate_admits(unit, revision, operation, resolutions)
     hold = export_hold(form, OutputLanguage.EN, verified=True, recorded=False)
@@ -546,11 +552,11 @@ def test_a_source_disagreement_is_held_or_lifted_by_the_form_and_the_gates_alike
 def test_the_refusal_names_the_finding_to_answer_and_says_when_the_resolutions_could_not_be_read(
     operation: PinnedAuthorityOperation, reason: str
 ) -> None:
-    unit = _work_unit(operation)
-    issue = _Note(reason).issue()
+    unit = work_unit(operation)
+    issue = Note(reason).issue()
     assert issue.disagreement is not None
     finding_id = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
-    revision = _revision(operation, unit, issue)
+    revision = work_form_gate_agreement_revision(operation, unit, issue)
 
     with pytest.raises(ModeloCalculationBlockedError) as open_refusal:
         require_work_unit_calculation_unblocked(work_unit=unit, revision=revision, action="export", operation=operation)
@@ -575,11 +581,11 @@ def test_the_refusal_names_the_finding_to_answer_and_says_when_the_resolutions_c
 def test_the_check_lists_a_disagreement_with_the_finding_id_an_acceptance_answers_to(
     operation: PinnedAuthorityOperation, reason: str
 ) -> None:
-    unit = _work_unit(operation)
-    issue = _Note(reason).issue()
+    unit = work_unit(operation)
+    issue = Note(reason).issue()
     assert issue.disagreement is not None
     finding_id = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
-    form = _checked_form(operation, _revision(operation, unit, issue))
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit, issue))
 
     (line,) = [line for line in form_issue_lines(form, OutputLanguage.EN) if reason in line.technical]
 

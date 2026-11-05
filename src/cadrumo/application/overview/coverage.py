@@ -41,14 +41,12 @@ from typing import TYPE_CHECKING, Self
 from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.modelo_obligation_scope import (
-    OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS,
-)
-from ...domain.calculations.registry.modelo_obligation_scope import (
-    UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS,
+    OUT_OF_SCOPE_OBLIGATIONS,
+    UNMODELED_OBLIGATIONS,
 )
 from ...domain.deadlines.models import TaxpayerProfile
 
@@ -93,7 +91,7 @@ class CoverageAdviceReason(StrEnum):
 class AdvisedObligation(BaseModel):
     """One registry modelo the operator must investigate, with its reason."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     reason: CoverageAdviceReason
@@ -121,7 +119,7 @@ class ObligationCoverageReport(BaseModel):
             :data:`~domain.calculations.registry.modelo_obligation_scope.OUT_OF_SCOPE_OBLIGATIONS`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     surfaced: tuple[str, ...] = ()
     confidently_excluded: tuple[str, ...] = ()
@@ -230,8 +228,8 @@ def _build_obligation_coverage(
 
     surfaced_set = frozenset(surfaced_modelos)
     registry_codes = frozenset(registry_modelo_codes(operation=operation))
-    unmodeled_codes = {str(code) for code in _UNMODELED_OBLIGATIONS}
-    out_of_scope_codes = {str(code) for code in _OUT_OF_SCOPE_OBLIGATIONS}
+    unmodeled_codes = {str(code) for code in UNMODELED_OBLIGATIONS}
+    out_of_scope_codes = {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
     # The AEAT obligation universe is the registry directory plus every recognized
     # obligation the registry does not model — those advised as unmodeled and those
     # explicitly declared out of scope. Binding the reconciliation to the full union

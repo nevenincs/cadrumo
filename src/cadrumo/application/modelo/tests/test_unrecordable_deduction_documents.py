@@ -42,7 +42,7 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 @dataclass
-class _Transactions:
+class Transactions:
     """Read-only typed unit fixture; a finding must never write the ledger."""
 
     bucket_id: str
@@ -106,9 +106,7 @@ def _issue(transaction_id: str | None) -> CalculationSourceIssue:
     )
 
 
-def _work_and_target(
-    bucket_id: str, issues: tuple[CalculationSourceIssue, ...]
-) -> tuple[WorkUnit, CalculationRevision]:
+def work_and_target(bucket_id: str, issues: tuple[CalculationSourceIssue, ...]) -> tuple[WorkUnit, CalculationRevision]:
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
     )
@@ -162,7 +160,7 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         _transaction("unknown", None, None),
         _transaction("register-owned", "investment_goods_regularisation", "domestic_general"),
     )
-    repository = _Transactions(
+    repository = Transactions(
         bucket_id="13000000-0000-4000-8000-000000000303",
         catalogue=TransactionCatalogue.from_transactions(transactions),
     )
@@ -172,7 +170,7 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         _issue("f" * 64),
         _issue(None),
     )
-    work, target = _work_and_target(repository.bucket_id, issues)
+    work, target = work_and_target(repository.bucket_id, issues)
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
     append_iva_selected_scope_evidence_finding(

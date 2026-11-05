@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.base64_codec import b64_decode
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.user_profile.portable_export import UserProfilePortableExport
 from .custody_ports import (
     default_profile_record_crypto_port,
@@ -55,7 +55,7 @@ class EncryptedProfileBundleExport(BaseModel):
     drifting away from the parameters the writer stamps.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     encrypted_bundle_schema_version: int = Field(ge=1)
     payload_model: str = Field(min_length=1)

@@ -82,7 +82,7 @@ _PHASES = (
 )
 
 
-def _project_filing_record_import(
+def project_filing_record_import(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
     /,
@@ -102,7 +102,7 @@ def _project_filing_record_import(
     return projection
 
 
-def _selected_work_unit(ports: CalculationActionPorts, payload: ModeloFilingRecordImportRequest) -> WorkUnit:
+def selected_work_unit(ports: CalculationActionPorts, payload: ModeloFilingRecordImportRequest) -> WorkUnit:
     """Load the exact selected work unit from the worker's profile repositories."""
     profile_id = str(payload.profile_id)
     repository = ports.work_unit_repository
@@ -128,7 +128,7 @@ def _declared_tax_id(ports: CalculationActionPorts, *, profile_id: str) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def _require_law_current_source_work_unit(
+def require_law_current_source_work_unit(
     work_unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
@@ -221,7 +221,7 @@ class ModeloFilingRecordImportExecutor:
                 or ports.calculation_repository.bucket_id != profile_id
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            work_unit = _selected_work_unit(ports, payload)
+            work_unit = selected_work_unit(ports, payload)
             expected_tax_id = _declared_tax_id(ports, profile_id=profile_id)
 
             if payload.source_path is not None:
@@ -237,7 +237,7 @@ class ModeloFilingRecordImportExecutor:
                     casilla_lexicals=source_file_lexicals,
                     registry_revision_id=work_unit.revision_id,
                 )
-                _require_law_current_source_work_unit(work_unit, operation=context.authority_operation)
+                require_law_current_source_work_unit(work_unit, operation=context.authority_operation)
                 source_lexicals, casilla_values = external_filing_source_casillas(source)
             else:
                 source_lexicals = None
@@ -391,6 +391,6 @@ def build_modelo_filing_record_import_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=ModeloFilingRecordImportProjection,
-        result_projector=_project_filing_record_import,
+        result_projector=project_filing_record_import,
         access_resolver=resolve,
     )

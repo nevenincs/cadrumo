@@ -45,11 +45,11 @@ from ..projection_operation import (
     ModeloProjectOperationProjection,
     ModeloProjectOperationRequest,
     ProjectionOverride,
-    _prepare_and_maybe_commit,
     build_modelo_compare_definition,
     build_modelo_compare_registration,
     build_modelo_project_definition,
     build_modelo_project_registration,
+    prepare_and_maybe_commit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -326,7 +326,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
     )
     repository = ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](str(_PROFILE))
     if failure is None:
-        result = await _prepare_and_maybe_commit(
+        result = await prepare_and_maybe_commit(
             calculation_repository=repository,
             migration=cast(ProjectionMigrationPort, migration),
             context=context,
@@ -335,7 +335,7 @@ async def test_only_cas_commit_is_fenced_and_effect_is_truthful(
         assert result is migration.plan
     else:
         with pytest.raises(type(failure)):
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=repository,
                 migration=cast(ProjectionMigrationPort, migration),
                 context=context,
@@ -362,7 +362,7 @@ async def test_preparation_failure_never_enters_commit_or_claims_a_write(
     )
     repository = ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](str(_PROFILE))
     with pytest.raises(ValueError, match="bad legacy relation"):
-        await _prepare_and_maybe_commit(
+        await prepare_and_maybe_commit(
             calculation_repository=repository,
             migration=cast(ProjectionMigrationPort, migration),
             context=context,
@@ -396,7 +396,7 @@ async def test_confirmed_migration_remains_updated_if_later_projection_fails(
         assert not fence.active and migration.commits == 1
         raise ValueError("later canonical projection failure")
 
-    monkeypatch.setattr(projection_operation, "_valid_execution", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(projection_operation, "valid_execution", lambda *_args, **_kwargs: True)
     monkeypatch.setattr(projection_operation, "project_modelo_100_from_m130", fail_projection)
     executor = ModeloProjectExecutor(
         cast(CalculationActionPortsFactory, factory), cast(ProjectionMigrationPort, migration)

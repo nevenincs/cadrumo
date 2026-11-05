@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import profile_operation_subject
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ..operations.models import OperationTerminalReceipt
 from .ascendant_rows import ProfileAscendantRow
@@ -330,7 +330,7 @@ def project_profile_bundle_export_result(result: BaseModel, receipt: OperationTe
     """Release the canonical export receipt only for its settled profile subject."""
     if not isinstance(result, ProfileBundleExportResult):
         raise TypeError("unexpected profile bundle export result")
-    if receipt.identity.subject_ref != _profile_subject(result.profile_id):
+    if receipt.identity.subject_ref != profile_operation_subject(result.profile_id):
         raise ValueError("profile bundle export result does not match its settled subject")
     return ProfileBundleExportOperationProjection.model_validate(result.model_dump(mode="python"))
 
@@ -453,7 +453,7 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
     """Release only the declared profile witness after exact-subject validation."""
     if not isinstance(result, ProfileMutationOperationResult):
         raise TypeError("unexpected profile mutation result")
-    if receipt.identity.subject_ref != _profile_subject(str(result.profile_id)):
+    if receipt.identity.subject_ref != profile_operation_subject(str(result.profile_id)):
         raise ValueError("profile mutation result does not match its settled subject")
     if isinstance(result, ProfilePatchOperationResult):
         return ProfilePatchOperationProjection(

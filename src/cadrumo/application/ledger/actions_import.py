@@ -299,7 +299,7 @@ def _prepare_source_import(
 ) -> _PreparedSourceImport:
     """Validate, resolve, and ingest one source before touching a repository."""
     _require_readable_source(command.path)
-    provider = _resolve_financial_provider(command.provider, command.path, ports=ports)
+    provider = resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
     parsed_rows = _bind_own_accounts(
@@ -715,7 +715,7 @@ def persist_prepared_ledger_source_import(
     )
 
 
-def _resolve_financial_provider(provider: str, path: Path, *, ports: LedgerImportPorts) -> FinancialProviderProtocol:
+def resolve_financial_provider(provider: str, path: Path, *, ports: LedgerImportPorts) -> FinancialProviderProtocol:
     try:
         provider_id = LedgerProviderID(provider.strip().lower())
     except ValueError as exc:

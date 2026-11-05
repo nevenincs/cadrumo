@@ -196,14 +196,14 @@ class ReviewPackageRecipientRemoveProjection(BaseModel):
     remaining: NonNegativeInt
 
 
-class _RecipientAddExecutionResult(BaseModel):
+class RecipientAddExecutionResult(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     result: ReviewPackageRecipientAddProjection
 
 
-class _RecipientListExecutionResult(BaseModel):
+class RecipientListExecutionResult(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
@@ -218,7 +218,7 @@ class _RecipientRemoveExecutionResult(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class _RecipientPorts:
+class RecipientPorts:
     registry_factory: RecipientFingerprintRegistryPortsFactory
     event_repository_factory: BucketEventHistoryRepositoryFactory
 
@@ -226,7 +226,7 @@ class _RecipientPorts:
 class ReviewPackageRecipientAddExecutor:
     """Register one recipient and append its canonical audit event under COMMIT."""
 
-    def __init__(self, ports: _RecipientPorts) -> None:
+    def __init__(self, ports: RecipientPorts) -> None:
         """Retain the bucket-bound registry and history factories."""
         self._ports = ports
 
@@ -296,7 +296,7 @@ class ReviewPackageRecipientAddExecutor:
 
         projection = await await_cancellation_complete(commit_and_publish(), task_name="collab-recipient-add")
         return await context.operands.put(
-            _RecipientAddExecutionResult(profile_id=payload.profile_id, result=projection),
+            RecipientAddExecutionResult(profile_id=payload.profile_id, result=projection),
             written_at=now(),
         )
 
@@ -341,7 +341,7 @@ class ReviewPackageRecipientListExecutor:
         async def capture() -> str:
             projection = await asyncio.to_thread(read)
             return await context.operands.put(
-                _RecipientListExecutionResult(profile_id=payload.profile_id, result=projection),
+                RecipientListExecutionResult(profile_id=payload.profile_id, result=projection),
                 written_at=now(),
             )
 
@@ -351,7 +351,7 @@ class ReviewPackageRecipientListExecutor:
 class ReviewPackageRecipientRemoveExecutor:
     """Revoke one trusted recipient and append its canonical audit event under COMMIT."""
 
-    def __init__(self, ports: _RecipientPorts) -> None:
+    def __init__(self, ports: RecipientPorts) -> None:
         """Retain the bucket-bound registry and history factories."""
         self._ports = ports
 
@@ -446,9 +446,9 @@ def project_review_package_recipient_add_result(
     /,
 ) -> ReviewPackageRecipientAddProjection:
     """Release an add result only when its receipt confirms UPDATED."""
-    if type(result) is not _RecipientAddExecutionResult:
+    if type(result) is not RecipientAddExecutionResult:
         raise ValueError("invalid recipient add result")
-    private = _RecipientAddExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
+    private = RecipientAddExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
     _require_success_receipt(
         private,
         receipt,
@@ -466,9 +466,9 @@ def project_review_package_recipient_list_result(
     /,
 ) -> ReviewPackageRecipientListProjection:
     """Release a list result only when its receipt confirms a read-only success."""
-    if type(result) is not _RecipientListExecutionResult:
+    if type(result) is not RecipientListExecutionResult:
         raise ValueError("invalid recipient list result")
-    private = _RecipientListExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
+    private = RecipientListExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
     _require_success_receipt(
         private,
         receipt,
@@ -543,11 +543,11 @@ def build_review_package_recipient_add_definition(
     event_repository_factory: BucketEventHistoryRepositoryFactory,
 ) -> OperationDefinition:
     """Build the registered exact-profile recipient add operation."""
-    ports = _RecipientPorts(registry_factory, event_repository_factory)
+    ports = RecipientPorts(registry_factory, event_repository_factory)
     return _definition(
         definition_id=REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID,
         request_type=ReviewPackageRecipientAddRequest,
-        result_type=_RecipientAddExecutionResult,
+        result_type=RecipientAddExecutionResult,
         executor_type=ReviewPackageRecipientAddExecutor,
         build=lambda: ReviewPackageRecipientAddExecutor(ports),
         mutation=True,
@@ -561,7 +561,7 @@ def build_review_package_recipient_list_definition(
     return _definition(
         definition_id=REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID,
         request_type=ReviewPackageRecipientListRequest,
-        result_type=_RecipientListExecutionResult,
+        result_type=RecipientListExecutionResult,
         executor_type=ReviewPackageRecipientListExecutor,
         build=lambda: ReviewPackageRecipientListExecutor(registry_factory),
         mutation=False,
@@ -573,7 +573,7 @@ def build_review_package_recipient_remove_definition(
     event_repository_factory: BucketEventHistoryRepositoryFactory,
 ) -> OperationDefinition:
     """Build the registered exact-profile recipient removal operation."""
-    ports = _RecipientPorts(registry_factory, event_repository_factory)
+    ports = RecipientPorts(registry_factory, event_repository_factory)
     return _definition(
         definition_id=REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID,
         request_type=ReviewPackageRecipientRemoveRequest,

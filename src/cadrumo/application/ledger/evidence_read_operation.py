@@ -368,7 +368,7 @@ def _require_read_receipt(
     )
 
 
-def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the exact list result carried by its successful receipt."""
     if type(result) is not LedgerEvidenceListExecutionResult:
         raise ValueError("invalid ledger evidence list result")
@@ -381,7 +381,7 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
     return result.result
 
 
-def _project_view_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_view_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the closed outcome matching its exact terminal receipt."""
     if type(result) is not LedgerEvidenceViewExecutionResult:
         raise ValueError("invalid ledger evidence view result")
@@ -728,7 +728,7 @@ def build_ledger_evidence_list_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerEvidenceListProjection,
-        result_projector=_project_list_result,
+        result_projector=project_list_result,
         access_resolver=_resolve_list_access,
     )
 
@@ -745,7 +745,7 @@ def build_ledger_evidence_view_registration(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=definition.definition_id + ".result", schema_version=2, model_type=LedgerEvidenceViewProjection
         ),
-        result_projector=_project_view_result,
+        result_projector=project_view_result,
         access_resolver=_resolve_view_access,
     )
 

@@ -21,7 +21,7 @@ from ....domain.modelos.tests.source_disagreement_support import sample_source_d
 from ..calculation_report import CALCULATION_REPORT_CONTENT_VERSION, ModeloCalculationReport
 from ..calculation_report_document import calculation_report_csv_preamble_lines, serialize_calculation_report_csv
 from ..credit_resolution import credit_resolution_for_finding
-from ._calculation_report_fixture import build_fixture_report
+from .calculation_report_fixture import build_fixture_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

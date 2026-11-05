@@ -26,7 +26,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..m036_lifecycle import M036DeclarationAmbiguousError, M036DeclarationNotFoundError, M036DeclarationResult
 from ..m036_lifecycle_ports import M036LifecyclePorts
 from ..m036_operation_ports import M036OperationPorts
-from .test_m036_lifecycle_service import _DeclarationRepository, _EventRepository
+from .test_m036_lifecycle_service import M036LifecycleServiceDeclarationRepository, M036LifecycleServiceEventRepository
 
 PROFILE_ID = UUID("32323232-3232-4232-8232-323232323232")
 INSTANT = datetime(2026, 10, 1, 12, tzinfo=UTC)
@@ -52,7 +52,7 @@ class CommitFence:
             self.active = False
 
 
-class EventRepository(_EventRepository):
+class EventRepository(M036LifecycleServiceEventRepository):
     """The established revisioned audit fixture with a preparation detector."""
 
     def __init__(self, fence: CommitFence) -> None:
@@ -75,7 +75,7 @@ class EventRepository(_EventRepository):
         return super().to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
 
-class DeclarationRepository(_DeclarationRepository):
+class DeclarationRepository(M036LifecycleServiceDeclarationRepository):
     """Atomic declaration/event fixture detecting legacy unfenced writes."""
 
     def __init__(self, events: EventRepository, fence: CommitFence) -> None:

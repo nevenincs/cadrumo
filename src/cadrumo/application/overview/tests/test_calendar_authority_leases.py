@@ -24,7 +24,7 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
-from ..calendar_warnings import _derive_gating_fields
+from ..calendar_warnings import derive_gating_fields
 from ..coverage import build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -139,7 +139,7 @@ def test_a_held_operation_reads_the_rule_table_and_gating_keys_without_leasing(
     operation: PinnedAuthorityOperation,
 ) -> None:
     leases = _leases_during(
-        lambda: (iter_modelo_applicability_rules(operation=operation), _derive_gating_fields(operation=operation))
+        lambda: (iter_modelo_applicability_rules(operation=operation), derive_gating_fields(operation=operation))
     )
 
     assert leases == 0

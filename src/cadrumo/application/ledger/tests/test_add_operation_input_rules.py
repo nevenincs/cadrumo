@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
-from ..ledger_add_command import _resolve_ledger_add_flow, _resolve_ledger_add_irpf_category
+from ..ledger_add_command import resolve_ledger_add_flow, resolve_ledger_add_irpf_category
 from ..ledger_add_contracts import LedgerAddRequest
 from .ledger_input_rule_support import PROFILE
 
@@ -53,12 +53,12 @@ def test_a_share_or_a_rate_keeps_the_fraction_digits_it_has(field: str, fraction
 @pytest.mark.parametrize("state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_pipeline_owned_classifications_cannot_be_assigned(state: str) -> None:
     with pytest.raises(TransactionValidationError, match="assigned by the ledger pipeline"):
-        _resolve_ledger_add_flow(_request(business_classification=state))
+        resolve_ledger_add_flow(_request(business_classification=state))
 
 
 @pytest.mark.parametrize("state", ["NOT_YET_PROCESSED", "BUSINESS", "MIXED", "PERSONAL"])
 def test_the_import_default_and_every_manual_classification_are_accepted(state: str) -> None:
-    classification, direction = _resolve_ledger_add_flow(_request(business_classification=state))
+    classification, direction = resolve_ledger_add_flow(_request(business_classification=state))
 
     assert classification is BusinessClassification(state)
     assert direction is TransactionDirection.OUTGOING
@@ -66,18 +66,18 @@ def test_the_import_default_and_every_manual_classification_are_accepted(state: 
 
 def test_irpf_category_must_be_declared_by_the_published_taxonomy(operation: PinnedAuthorityOperation) -> None:
     assert (
-        _resolve_ledger_add_irpf_category(_request(irpf_category=" Actividad_Economica "), operation=operation)
+        resolve_ledger_add_irpf_category(_request(irpf_category=" Actividad_Economica "), operation=operation)
         == "actividad_economica"
     )
 
     with pytest.raises(TransactionValidationError, match="rental_withholding") as refusal:
-        _resolve_ledger_add_irpf_category(_request(irpf_category="rental_withholding"), operation=operation)
+        resolve_ledger_add_irpf_category(_request(irpf_category="rental_withholding"), operation=operation)
     assert "arrendamiento_local" in str(refusal.value)
 
 
 def test_an_absent_or_blank_category_is_no_category(operation: PinnedAuthorityOperation) -> None:
-    assert _resolve_ledger_add_irpf_category(_request(), operation=operation) is None
-    assert _resolve_ledger_add_irpf_category(_request(irpf_category="   "), operation=operation) is None
+    assert resolve_ledger_add_irpf_category(_request(), operation=operation) is None
+    assert resolve_ledger_add_irpf_category(_request(irpf_category="   "), operation=operation) is None
 
 
 @pytest.mark.usefixtures("operation")

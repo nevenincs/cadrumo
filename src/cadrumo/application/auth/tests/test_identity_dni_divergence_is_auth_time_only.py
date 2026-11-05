@@ -14,7 +14,7 @@ from ....core.auth_provider import AuthProviderKind
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveCredentials,
-    _assert_active_profile_identity_matches_provider,
+    assert_active_profile_identity_matches_provider,
 )
 from .leased_profile_authority import leased_profile_decode_context
 
@@ -37,7 +37,7 @@ def _credentials(kind: AuthProviderKind, *, dni_nie: str) -> ClaveCredentials:
 def test_live_authentication_is_where_the_divergence_is_refused(kind: AuthProviderKind) -> None:
     """The auth-time guard refuses a credential for another taxpayer."""
     with pytest.raises(AuthProfileIdentityMismatchError) as raised:
-        _assert_active_profile_identity_matches_provider(
+        assert_active_profile_identity_matches_provider(
             _credentials(kind, dni_nie=_OTHER_TAX_ID), profile_decode_context=leased_profile_decode_context()
         )
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_profile_mismatch"
@@ -46,7 +46,7 @@ def test_live_authentication_is_where_the_divergence_is_refused(kind: AuthProvid
 @pytest.mark.parametrize("kind", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
 def test_the_matching_profile_still_authenticates(kind: AuthProviderKind) -> None:
     """The positive control proves the guard does not refuse every profile."""
-    expected_identity = _assert_active_profile_identity_matches_provider(
+    expected_identity = assert_active_profile_identity_matches_provider(
         _credentials(kind, dni_nie=_TAX_ID), profile_decode_context=leased_profile_decode_context()
     )
     assert expected_identity == _TAX_ID

@@ -13,7 +13,7 @@ from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.errors import AttachmentValidationError
@@ -86,7 +86,7 @@ def admit_m303_exonerado_390_applicability_attestation(
     operation: PinnedAuthorityOperation,
     store: AttachmentStoreProtocol,
     profile: ModeloWorkProfile | None = None,
-    clock: Callable[[], datetime] = _utc_now,
+    clock: Callable[[], datetime] = now,
 ) -> M303Exonerado390ApplicabilityAttestationAdmission:
     """Admit one canonical ordinary-M303 assertion into encrypted attachment custody."""
     _require_ordinary_not_applicable_request(request, operation=operation)
@@ -137,7 +137,7 @@ def resolve_m303_exonerado_390_not_applicable_attestation(
     operation: PinnedAuthorityOperation,
     store: AttachmentStoreProtocol,
     profile: ModeloWorkProfile | None = None,
-    clock: Callable[[], datetime] = _utc_now,
+    clock: Callable[[], datetime] = now,
 ) -> FilingEvidenceReference:
     """Resolve one current, custody-verified ordinary M303 non-applicability reference."""
     _require_ordinary_coordinate(filing_year=filing_year, period=period, operation=operation)

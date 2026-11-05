@@ -37,11 +37,11 @@ from ..run_read_operation import (
     WorkflowRunListRequest,
     WorkflowRunReadProjection,
     WorkflowRunReadRequest,
-    _read_exact_run,
     build_workflow_run_list_definition,
     build_workflow_run_list_registration,
     build_workflow_run_read_definition,
     build_workflow_run_read_registration,
+    read_exact_run,
 )
 from ..run_read_ports import WorkflowRunReadPorts
 
@@ -180,7 +180,7 @@ def test_explicit_period_requires_trustworthy_matching_captured_record(run: Work
         profile_id=_PROFILE, run_id="a" * 16, expected_period=PublicPeriod.from_period(_PERIOD)
     )
     with pytest.raises((ProfileAccessRefusedError, ValueError)):
-        _read_exact_run(payload, WorkflowRunReadPorts(bucket_id=str(_PROFILE), runs=reader))
+        read_exact_run(payload, WorkflowRunReadPorts(bucket_id=str(_PROFILE), runs=reader))
     assert reader.loads == 1
 
 

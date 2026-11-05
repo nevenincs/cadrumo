@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
@@ -40,7 +40,7 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def test_default_eligible_when_no_descendants() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact_index: dict[str, object] = {}
         fact_index_narrowed: Any = fact_index
         inject_derived_anualidades_eligibility_facts(
@@ -50,7 +50,7 @@ def test_default_eligible_when_no_descendants() -> None:
 
 
 def test_flag_off_when_custody_shared() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact_index: dict[str, object] = {
             "renta_family.descendiente.0.birth_date": "2015-05-01",
             "renta_family.descendiente.0.custodia_compartida": "true",
@@ -63,7 +63,7 @@ def test_flag_off_when_custody_shared() -> None:
 
 
 def test_flag_eligible_when_custody_not_shared() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact_index: dict[str, object] = {
             "renta_family.descendiente.0.birth_date": "2015-05-01",
             "renta_family.descendiente.0.custodia_compartida": "false",
@@ -76,7 +76,7 @@ def test_flag_eligible_when_custody_not_shared() -> None:
 
 
 def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # A non-cohabiting descendant is not eligible for the Art. 58.1 ordinary
         # mínimo, so a shared-custody flag on that row does not negate eligibility.
         fact_index: dict[str, object] = {
@@ -92,7 +92,7 @@ def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
 
 
 def test_untouched_for_out_of_scope_year() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # Modelo 100 publishes no 2019 revision, so the out-of-scope year is
         # exercised by re-stamping a real snapshot's filing_year rather than by
         # asking the authority for a revision that does not exist.
@@ -119,7 +119,7 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
     ``True``. Seed and computation therefore differ, and the assertion proves
     which one survived rather than restating the seed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact_index: dict[str, object] = {_key(2024): False}
         fact_index_narrowed: Any = fact_index
         inject_derived_anualidades_eligibility_facts(
@@ -135,7 +135,7 @@ def test_a_snapshot_without_projection_is_keyed_by_its_own_filing_year() -> None
     which no declared selector matches, so the injector returned without
     deriving anything and the régimen went silently unresolved.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         unprojected = _snapshot(2024).model_copy(update={"authored_filing_year": None})
         fact_index: dict[str, object] = {}
         fact_index_narrowed: Any = fact_index
@@ -156,7 +156,7 @@ def test_all_in_scope_years_default_eligible() -> None:
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     for year in supported_years.years:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {}
             fact_index_narrowed: Any = fact_index

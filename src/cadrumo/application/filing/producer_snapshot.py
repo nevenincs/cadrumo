@@ -60,11 +60,11 @@ from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )
-from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
 from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot_m210 import Modelo210ProfileFacts
 from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
+from .producer_snapshot_m390 import M390FilingFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=FILING_TEXT_CAPACITY)]
 _AeatReceiptNumber = Annotated[
@@ -609,7 +609,7 @@ class FilingProducerSnapshot(BaseModel):
     amendment_evidence: AmendmentEvidence | None
     selected_account: SelectedFilingAccount | None
     m303_filing_facts: M303FilingFacts | None
-    m390_filing_facts: _M390FilingFacts | None = None
+    m390_filing_facts: M390FilingFacts | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

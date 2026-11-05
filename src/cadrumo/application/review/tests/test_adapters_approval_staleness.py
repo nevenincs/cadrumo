@@ -24,13 +24,13 @@ from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
 from ..enums import ReviewSeverity, ReviewState
-from ..operator import _to_row
-from ..source_adapters import _to_stale_approval_item, drafts_pending
+from ..operator import to_row
+from ..source_adapters import drafts_pending, to_stale_approval_item
 from .draft_review_test_support import draft_review_ports
 from .test_adapters import (
-    _PROFILE_ID,
-    _build_settings,
-    _draft,
+    PROFILE_ID,
+    adapters_draft,
+    build_settings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -58,7 +58,7 @@ def _basis(draft_id: str) -> ModeloApprovalBasis:
 
 
 def _approved(*, review_checksum: str | None) -> ModeloDraft:
-    base = _draft(status=ModeloDraftStatus.APROBADO)
+    base = adapters_draft(status=ModeloDraftStatus.APROBADO)
     return base.model_copy(
         update={
             "approval_basis": _basis(base.draft_id),
@@ -74,11 +74,11 @@ def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A checksum that does not describe the stored basis ages the approval out."""
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     draft = _approved(review_checksum=_B)
     items = drafts_pending(
         settings,
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
         operation=operation,
     )
@@ -99,11 +99,11 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(
     staleness unconditionally, which is the failure mode a detector of this
     shape falls into.
     """
-    settings = _build_settings(tmp_path)
-    draft = _draft(status=ModeloDraftStatus.APROBADO)
+    settings = build_settings(tmp_path)
+    draft = adapters_draft(status=ModeloDraftStatus.APROBADO)
     items = drafts_pending(
         settings,
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
         operation=operation,
     )
@@ -113,11 +113,11 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(
 
 def test_the_adapter_records_which_axis_moved(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """The reasons ride on the item as stable enum tokens."""
-    settings = _build_settings(tmp_path)
+    settings = build_settings(tmp_path)
     draft = _approved(review_checksum=_B)
     items = drafts_pending(
         settings,
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
         operation=operation,
     )
@@ -131,12 +131,12 @@ def test_the_queue_projection_renders_the_axis_that_moved() -> None:
     Kept off the profile-session path deliberately: ``_to_row`` is pure, and
     the assertion is about rendering rather than about storage.
     """
-    stale = _to_stale_approval_item(
-        draft=_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
+    stale = to_stale_approval_item(
+        draft=adapters_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
         path_str="drafts/x",
         stale_reasons=(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED,),
     )
-    row = _to_row(stale, state=ReviewState.PENDING, bucket_id=_PROFILE_ID)
+    row = to_row(stale, state=ReviewState.PENDING, bucket_id=PROFILE_ID)
 
     assert describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED) in row.reason
     assert row.reason != row.summary
@@ -144,10 +144,10 @@ def test_the_queue_projection_renders_the_axis_that_moved() -> None:
 
 def test_a_row_with_no_stale_reasons_keeps_the_bare_summary() -> None:
     """The control: rows that are not stale approvals are left alone."""
-    placeholder = _to_stale_approval_item(
-        draft=_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
+    placeholder = to_stale_approval_item(
+        draft=adapters_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
         path_str="drafts/x",
     )
-    row = _to_row(placeholder, state=ReviewState.PENDING, bucket_id=_PROFILE_ID)
+    row = to_row(placeholder, state=ReviewState.PENDING, bucket_id=PROFILE_ID)
 
     assert row.reason == row.summary

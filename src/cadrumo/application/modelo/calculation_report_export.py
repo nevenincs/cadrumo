@@ -50,7 +50,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -420,7 +420,7 @@ def export_modelo_calculation_report(
         signing_keypair=signing_keypair,
         operation=operation,
         report_language=command.report_language,
-        exported_at=clock or _utc_now(),
+        exported_at=clock or now(),
     )
     document = serialize_calculation_report(
         report,

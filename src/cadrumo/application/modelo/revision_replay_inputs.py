@@ -120,7 +120,7 @@ def revision_filing_replay_inputs(
         if projected is not None:
             detail_binding_inputs.update(projected)
     return {
-        **_informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
+        **informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
         **_casilla_replay_inputs(
             revision=revision,
             snapshot=snapshot,
@@ -379,7 +379,7 @@ def _snapshot_for_work_unit(
         return None
 
 
-def _informational_casilla_replay_inputs(
+def informational_casilla_replay_inputs(
     *,
     revision: CalculationRevision,
     snapshot: RegistrySnapshot | None,

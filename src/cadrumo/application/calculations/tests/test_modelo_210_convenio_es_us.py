@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.tests.published_authority import published_legal_reference
-from ._convenio_rate_support import resolve_convenio_rate
+from .convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import profile_operation_subject
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
@@ -114,7 +114,7 @@ def _bind_exact_profile_access(
     here, and the runtime still checks the current destination's own disclosure
     scope.
     """
-    if profile_id != context.profile_id or request.subject_ref != _profile_subject(str(profile_id)):
+    if profile_id != context.profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:

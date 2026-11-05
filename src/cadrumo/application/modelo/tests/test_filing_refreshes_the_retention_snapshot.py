@@ -30,7 +30,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ...filing.retention import FilingRetentionAuthority
-from ..filing_revision_persistence import _refresh_filing_retention_snapshot
+from ..filing_revision_persistence import refresh_filing_retention_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -80,7 +80,7 @@ def test_the_snapshot_written_at_filing_makes_retention_assessable(tmp_path: Pat
         with pytest.raises(FileNotFoundError):
             authority.assess(identity, now=_OBSERVED_AT)
 
-        _refresh_filing_retention_snapshot(
+        refresh_filing_retention_snapshot(
             bucket_id=_BUCKET_ID,
             catalogue=_catalogue(),
             observed_at=_OBSERVED_AT,
@@ -105,7 +105,7 @@ def test_a_failing_snapshot_write_cannot_fail_the_filing() -> None:
     not a UUID cannot be recorded against -- so this exercises the actual
     swallow rather than a stand-in for it.
     """
-    _refresh_filing_retention_snapshot(
+    refresh_filing_retention_snapshot(
         bucket_id="not-a-uuid",
         catalogue=_catalogue(),
         observed_at=_OBSERVED_AT,

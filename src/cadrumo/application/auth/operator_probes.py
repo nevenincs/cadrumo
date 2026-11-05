@@ -17,7 +17,7 @@ from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ..auth_credentials import (
     ActiveCertificateCredentials,
@@ -66,7 +66,7 @@ def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> 
     return "mismatch"
 
 
-def _active_profile_path_values(
+def active_profile_path_values(
     state: WorkflowState | None = None,
     *,
     operator_probe_ports: OperatorProbePorts,
@@ -116,7 +116,7 @@ def probe_clave_credentials(
         provider_kind,
         settings=settings,
         facts=clave_auth_facts_from_profile_values(
-            _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+            active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
         ),
     )
 
@@ -140,7 +140,7 @@ def bind_profile_auth_settings(
     ):
         return settings
     facts = clave_auth_facts_from_profile_values(
-        _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+        active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
     )
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     if credentials is None:
@@ -162,7 +162,7 @@ def live_auth_identity_state(
     """Project whether the configured live-auth identity is usable."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
-    values = _active_profile_path_values(state, operator_probe_ports=operator_probe_ports)
+    values = active_profile_path_values(state, operator_probe_ports=operator_probe_ports)
     facts = clave_auth_facts_from_profile_values(values)
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     provider_identity = credentials.dni_nie if credentials is not None else ""
@@ -205,7 +205,7 @@ def live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings
 class _LocalSessionProbe(BaseModel):
     """Outcome of the on-disk persisted-session probe run by ``auth test``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     present: bool = False
     expired: bool | None = None
@@ -274,7 +274,7 @@ def probe_local_session(
 class _ProviderProbeOutcome(BaseModel):
     """Verdict of the per-provider local probe run by ``auth test``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     result: ProviderProbeResult
     summary: str = ""
@@ -292,7 +292,7 @@ class ProviderConfigurationProbe(BaseModel):
     one-line operator-facing verdict.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     result: ProviderProbeResult

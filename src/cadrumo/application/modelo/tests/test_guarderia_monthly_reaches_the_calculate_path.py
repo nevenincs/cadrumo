@@ -16,14 +16,12 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -47,7 +45,7 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An unparseable stored date is a data defect the operator can fix once told where it is."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=(
@@ -56,7 +54,7 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index(
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     with pytest.raises(ProfileBindingResolutionError, match=re.escape("renta_family.descendiente.0.birth_date")):

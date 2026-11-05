@@ -179,7 +179,7 @@ def _listing_rows_for_report(
     )
 
 
-def _read_bindings_list(
+def read_bindings_list(
     payload: ModeloBindingsListRequest, *, operation: PinnedAuthorityOperation
 ) -> ModeloBindingsListProjection:
     known_codes = registry_modelo_codes(operation=operation)
@@ -332,9 +332,7 @@ class ModeloBindingsListExecutor:
         await context.events.phase(MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
-            result = await asyncio.to_thread(
-                _read_bindings_list, request.payload, operation=context.authority_operation
-            )
+            result = await asyncio.to_thread(read_bindings_list, request.payload, operation=context.authority_operation)
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return ref
@@ -504,7 +502,7 @@ def build_modelo_readiness_definition(factory: ModeloQueryReadPortsFactory) -> O
     )
 
 
-def _requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]:
+def requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]:
     """Return exact period, independence and all-period requirement."""
     if type(payload) is ModeloBindingsListRequest:
         if payload.year is not None and payload.period_code is not None:
@@ -555,7 +553,7 @@ def _authorized_query_scope(
     context: OperationAccessContext,
     definition_id: str,
 ) -> tuple[frozenset[Period], bool, bool]:
-    periods, period_independent, requires_all_periods = _requested_scope(payload)
+    periods, period_independent, requires_all_periods = requested_scope(payload)
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
         require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=definition_id)

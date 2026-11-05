@@ -30,7 +30,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva import lookup as _iva_lookup_module
+from ....domain.iva import lookup
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_authority import (
@@ -75,7 +75,7 @@ class TestTheResolverFollowsTheRateAuthority:
             "positive control: pick a percentage the registry does not already carry"
         )
 
-        real_lookup_rate = _iva_lookup_module.lookup_rate
+        real_lookup_rate = lookup.lookup_rate
 
         def _planted_lookup_rate(
             member_state: EUMemberState,
@@ -93,7 +93,7 @@ class TestTheResolverFollowsTheRateAuthority:
         # must observe the provider through that facade rather than reading the
         # legacy rate table itself.
         with scoped_attribute(
-            _iva_lookup_module,
+            lookup,
             "lookup_rate",
             _planted_lookup_rate,
         ):

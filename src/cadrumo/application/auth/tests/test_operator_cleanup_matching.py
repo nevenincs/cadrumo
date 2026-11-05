@@ -97,7 +97,7 @@ def test_matching_resume_retains_the_exact_intent_without_preparing_another(
         raise AssertionError("a resumed cleanup must not prepare a new intent")
 
     monkeypatch.setattr(revocation, "build_auth_cleanup_intent", unexpected_plan)
-    prepared = revocation._prepare_cleanup_intent(
+    prepared = revocation.prepare_cleanup_intent(
         state,
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         settings=Settings(),
@@ -129,7 +129,7 @@ def test_preparation_retains_the_requested_kind_and_only_stores_a_plan_with_effe
     monkeypatch.setattr(revocation, "build_auth_cleanup_intent", build_plan)
     settings = Settings()
     backend_factory = InMemoryCertificateSecretBackendFactory()
-    prepared = revocation._prepare_cleanup_intent(
+    prepared = revocation.prepare_cleanup_intent(
         state,
         certificate_secret_backend_factory=backend_factory,
         settings=settings,
@@ -173,7 +173,7 @@ def test_mismatched_resume_preserves_the_existing_intent(kind: AuthCleanupOperat
     before = state.model_dump_json()
 
     with pytest.raises(AuthOperationScopeConflictError):
-        revocation._prepare_cleanup_intent(
+        revocation.prepare_cleanup_intent(
             state,
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             settings=Settings(),
@@ -203,7 +203,7 @@ def test_pending_certificate_mutation_refuses_before_cleanup_resume(kind: AuthCl
         updated_at=_STARTED_AT,
     )
     with pytest.raises(CertificateSecretMutationInProgressError):
-        revocation._prepare_cleanup_intent(
+        revocation.prepare_cleanup_intent(
             state,
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             settings=Settings(),
@@ -274,11 +274,11 @@ def test_preparation_scope_retains_lock_lifetime_order_and_original_failure(
 
     load_settings_result = settings
     monkeypatch.setattr(revocation, "load_settings", load_settings)
-    monkeypatch.setattr(revocation, "_revocation_storage_span", storage_span)
+    monkeypatch.setattr(revocation, "revocation_storage_span", storage_span)
     monkeypatch.setattr(revocation, "_auth_mutation_span", mutation_span)
     monkeypatch.setattr(revocation, "now", clock)
     monkeypatch.setattr(persistence, "workflow_state_repository", workflow_repository)
-    scope = revocation._prepared_cleanup_scope(
+    scope = revocation.prepared_cleanup_scope(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         provider="certificate",
         all_providers=False,

@@ -37,7 +37,7 @@ from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixi
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period, StandardPeriodCode
@@ -70,8 +70,6 @@ from ..aggregation.source_mesh import (
 from ..operations.next_step import OperationNextStepErrorMixin
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.projections import fact_value
-from ._calculation_source_staging import add_expected_missing_binding_diagnostics
-from ._registry_helpers import validate_casilla_input_ids
 from .calculate_input_validation import (
     ModeloCalculateBindingInputError,
     decimal_binding_value,
@@ -81,12 +79,14 @@ from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_queries import list_calculation_revisions
 from .calculation_route import require_calculation_route_resolver
 from .calculation_source_guards import reject_caller_overrides_of_source_bindings
+from .calculation_source_staging import add_expected_missing_binding_diagnostics
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_readiness_gate import load_modelo_work_profile
 from .projection_declaration import ProjectionDeclaration, modelo_projection_available, registry_projection_declaration
 from .projection_next_steps import calculate_work_step, create_work_step, open_work_step
 from .projection_quarter_inputs import quarter_open_inputs
+from .registry_helpers import validate_casilla_input_ids
 from .work_form_wording import modelo_number, period_words
 from .work_lifecycle import list_work_units
 from .work_profile import ModeloWorkProfile
@@ -209,7 +209,7 @@ class ModeloProjectInvalidDecimalOverrideError(ModeloProjectionError):
 class ModeloProjectionCasillaObservation(BaseModel):
     """One computed casilla emitted by a projection service."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: Decimal
@@ -228,7 +228,7 @@ class ModeloProjectionUnresolvedBinding(BaseModel):
     note can be served; it is not a public field.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     casilla_id: CasillaId | None
@@ -249,7 +249,7 @@ class ModeloProjectionUnresolvedCasilla(BaseModel):
     unresolved operand, or the engine's typed outcome reason otherwise.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     reason: str = Field(min_length=1)
@@ -261,7 +261,7 @@ class ModeloProjectionUnresolvedCasilla(BaseModel):
 class ModeloProjectM130Accumulated(BaseModel):
     """Accumulated Modelo 130 source values for a Modelo 100 projection."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     ingresos: Decimal
     gastos: Decimal
@@ -272,7 +272,7 @@ class ModeloProjectM130Accumulated(BaseModel):
 class ModeloProjectM100Projection(BaseModel):
     """Projected Modelo 100 output values."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     base_liquidable_general: Decimal
     pagos_fraccionados: Decimal
@@ -286,7 +286,7 @@ class ModeloProjectM100Projection(BaseModel):
 class ModeloProjectServiceResult(BaseModel):
     """Year-end Modelo 100 projection from quarterly Modelo 130 revisions."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     year: int
     ccaa: str = Field(min_length=1)
@@ -300,7 +300,7 @@ class ModeloProjectServiceResult(BaseModel):
     unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
 
 
-def _decimal_overrides(
+def decimal_overrides(
     raw: Mapping[CasillaId, str],
     *,
     translated_message: str,
@@ -378,7 +378,7 @@ def _require_declared_target(
     )
 
 
-def _source_quarter_count(
+def source_quarter_count(
     declaration: ProjectionDeclaration,
     *,
     year: int,
@@ -585,7 +585,7 @@ def _m130_annual_projection(
         (revision.casilla_values[declaration.resultado_final] for revision in m130_quarters.values()),
         Decimal("0"),
     )
-    quarter_count = _source_quarter_count(declaration, year=year, period=latest_period, operation=operation)
+    quarter_count = source_quarter_count(declaration, year=year, period=latest_period, operation=operation)
     if latest_ordinal < quarter_count:
         projected_rendimiento_neto = round_to_cents(
             total_rendimiento_neto * Decimal(quarter_count) / Decimal(latest_ordinal)
@@ -606,7 +606,7 @@ def _m130_annual_projection(
     )
 
 
-def _parse_projection_binding_overrides(
+def parse_projection_binding_overrides(
     binding_overrides: Mapping[BindingId, str] | None,
     revision: ModeloRevision,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
@@ -653,7 +653,7 @@ def _parse_projection_binding_overrides(
     return extra_bindings, extra_enum_bindings
 
 
-def _verb_baseline_projection_bindings(
+def verb_baseline_projection_bindings(
     ccaa: str,
     revision: ModeloRevision,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str], dict[BindingId, bool]]:
@@ -983,7 +983,7 @@ def _source_resolved_casilla_ids(
     return frozenset(casilla_id for casilla_id in bound if casilla_id is not None)
 
 
-def _m100_projection_result(
+def m100_projection_result(
     values: Mapping[CasillaId, Decimal],
     *,
     declaration: ProjectionDeclaration,
@@ -1086,7 +1086,7 @@ def _projection_service_result(
             engine_result,
             source_casilla_ids=_source_resolved_casilla_ids(credits, revision),
         ),
-        m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
+        m100_projection=m100_projection_result(engine_result.values, declaration=declaration),
         unresolved_bindings=unresolved_binding_rows(credits.unresolved_binding_ids, credits.diagnostics, revision),
         unresolved_casillas=unresolved_casilla_rows(engine_result, revision),
     )
@@ -1175,13 +1175,13 @@ def project_modelo_100_from_m130(
 
     extra_inputs = validate_casilla_input_ids(
         m100_snapshot.revision,
-        _decimal_overrides(
+        decimal_overrides(
             casilla_overrides or {},
             translated_message="cli.app.modelo.work.casilla_not_decimal",
         ),
     )
 
-    extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(
+    extra_bindings, extra_enum_bindings = parse_projection_binding_overrides(
         _binding_overrides_with_region(binding_overrides, ccaa=ccaa, revision=m100_snapshot.revision),
         m100_snapshot.revision,
     )
@@ -1222,7 +1222,7 @@ def project_modelo_100_from_m130(
     }
     declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
     verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
-        _verb_baseline_projection_bindings(region, m100_snapshot.revision)
+        verb_baseline_projection_bindings(region, m100_snapshot.revision)
     )
     profile_decimal_bindings, profile_date_bindings, profile_enum_bindings, profile_boolean_bindings = (
         _profile_projection_bindings(

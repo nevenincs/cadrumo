@@ -92,7 +92,7 @@ class FiledHistoryDiscoveryPort(Protocol):
     ) -> FiledHistoryDiscoveryReport: ...
 
 
-def _filed_history_pair_outcomes(
+def filed_history_pair_outcomes(
     discovery: FiledHistoryDiscoveryReport,
     capture: BulkFiledDataCaptureReport,
 ) -> tuple[FiledHistoryPairOutcome, ...]:
@@ -173,7 +173,7 @@ class _FiledHistoryIvaWalletStage:
     failure: str | None = None
 
 
-async def _capture_filed_history_iva_wallet(
+async def capture_filed_history_iva_wallet(
     *,
     iva_remote_state_port: IvaRemoteStatePort,
     resolved_today: date,
@@ -222,7 +222,7 @@ class _FiledHistoryNotificationsStage:
     failure: str | None = None
 
 
-async def _capture_filed_history_notifications(
+async def capture_filed_history_notifications(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
@@ -365,14 +365,14 @@ async def pull_filed_history(
         on_session_write=on_session_write,
         events=events,
     )
-    pairs = _filed_history_pair_outcomes(discovery, capture)
+    pairs = filed_history_pair_outcomes(discovery, capture)
     if dry_run:
         iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
         notifications = _FiledHistoryNotificationsStage(status="not_attempted", row_count=0)
     else:
         if profile is not None:
             await emit_filed_history_phase(events, FILED_HISTORY_PHASE_IVA_WALLET)
-            iva_wallet = await _capture_filed_history_iva_wallet(
+            iva_wallet = await capture_filed_history_iva_wallet(
                 iva_remote_state_port=iva_remote_state_port,
                 resolved_today=resolved_today,
                 output_root=output_root,
@@ -383,7 +383,7 @@ async def pull_filed_history(
         else:
             iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
         await emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
-        notifications = await _capture_filed_history_notifications(
+        notifications = await capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             notifications_ports=notifications_ports,

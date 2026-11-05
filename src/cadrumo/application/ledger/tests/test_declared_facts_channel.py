@@ -34,7 +34,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -140,7 +140,7 @@ class TestTheChannelReachesTheAssembly:
     """Wiring, not just shape: a fact supplied here changes what the assembly does."""
 
     def test_a_declared_status_settles_a_gap_the_evidence_leaves_open(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             bare = assemble_classification_criteria(
                 transaction_date=_DATE,
                 direction=InvoiceKind.ISSUED,
@@ -170,7 +170,7 @@ class TestTheChannelReachesTheAssembly:
 
     def test_a_declared_scope_settles_the_territory_a_country_code_cannot(self) -> None:
         """Spain: the code names the State while the IVA territory stays undetermined."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             supplied = assemble_classification_criteria(
                 transaction_date=_DATE,
                 direction=InvoiceKind.ISSUED,

@@ -27,7 +27,7 @@ from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoi
 from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
-from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

@@ -256,7 +256,7 @@ def build_modelo_work_review_casillas(
     Returns:
         One :class:`ModeloWorkReviewCasilla` per casilla the snapshot declares.
     """
-    from ._work_review_assembly import assemble_modelo_work_review_casillas
+    from .work_review_assembly import assemble_modelo_work_review_casillas
 
     return assemble_modelo_work_review_casillas(
         snapshot=snapshot,
@@ -279,7 +279,7 @@ def build_modelo_work_review(
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloWorkReview:
     """Assemble a work review, optionally using this assembly's fresh calculation read."""
-    from ._work_review_assembly import assemble_modelo_work_review
+    from .work_review_assembly import assemble_modelo_work_review
 
     return assemble_modelo_work_review(
         bucket_id,

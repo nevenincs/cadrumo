@@ -29,22 +29,12 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ...domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -266,13 +256,13 @@ def iva_compensation_state_from_observation_envelope(
         expediente_id=expediente_id,
         status=status,
         presented_at=validated.captured_at,
-        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
-        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
-        pending_for_later_amount=_resolve_casilla_value(values, _M303_POSTERIOR_CASILLA),
-        period_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_CASILLA),
+        prior_pending_amount=_resolve_casilla_value(values, M303_COMPENSATION_PENDING_PRIOR_CASILLA),
+        applied_amount=_resolve_casilla_value(values, M303_COMPENSATION_APLICADA_CASILLA),
+        pending_for_later_amount=_resolve_casilla_value(values, M303_COMPENSATION_POSTERIOR_CASILLA),
+        period_result_amount=_resolve_casilla_value(values, M303_COMPENSATION_RESULTADO_CASILLA),
         final_result_amount=_resolve_casilla_value(values, resultado_final_casilla),
-        generated_amount=values[_M303_GENERADA_CASILLA],
-        available_end_amount=values[_M303_DISPONIBLE_CASILLA],
+        generated_amount=values[M303_COMPENSATION_GENERADA_CASILLA],
+        available_end_amount=values[M303_COMPENSATION_AVAILABLE_CASILLA],
         source_observation_key=source_observation_key,
         source_artefact_sha256=source_artefact_sha256,
     )

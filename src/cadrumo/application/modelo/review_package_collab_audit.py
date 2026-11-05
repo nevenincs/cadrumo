@@ -67,7 +67,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from .modelo_bucket_events import emit_modelo_bucket_event
 from .review_package_recipient_registry import RecipientFingerprintRecord
@@ -104,7 +104,7 @@ def emit_collab_recipient_registered_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_RECIPIENT_REGISTERED,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=record.recipient_id,
@@ -139,7 +139,7 @@ def emit_collab_recipient_removed_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_RECIPIENT_REMOVED,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=recipient_id,
@@ -176,7 +176,7 @@ def emit_collab_package_encrypted_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=envelope.recipient_public_key_hex,
@@ -219,7 +219,7 @@ def emit_collab_package_decrypted_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_DECRYPTED,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=envelope.recipient_public_key_hex,
@@ -260,7 +260,7 @@ def emit_collab_package_counter_signed_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_COUNTER_SIGNED,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=receipt.counter_public_key_hex,
@@ -323,7 +323,7 @@ def emit_collab_feedback_countersign_attached_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_COUNTER_SIGNED,
-        occurred_at=occurred_at or _utc_now(),
+        occurred_at=occurred_at or now(),
         actor=actor,
         object_type=BucketEventObjectType.RECIPIENT,
         object_id=receipt.counter_public_key_hex,

@@ -100,7 +100,7 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
         credentials = resolve_clave_credentials(kind, settings=settings, facts=facts)
     if credentials is None:
         return facts.tax_id or None
-    return sessions._assert_active_profile_identity_matches_provider(
+    return sessions.assert_active_profile_identity_matches_provider(
         credentials, profile_decode_context=leased_profile_decode_context()
     )
 
@@ -298,9 +298,9 @@ class TestClaveIdentityIsComparedCanonically:
         )
 
     def _assert_guard(self, *, profile_tax_id: str, dni_nie: str):
-        from ..sessions import _assert_active_profile_identity_matches_provider
+        from ..sessions import assert_active_profile_identity_matches_provider
 
-        return _assert_active_profile_identity_matches_provider(
+        return assert_active_profile_identity_matches_provider(
             self._credentials(profile_tax_id=profile_tax_id, dni_nie=dni_nie),
             profile_decode_context=leased_profile_decode_context(),
         )
@@ -341,10 +341,10 @@ class TestClaveIdentityIsComparedCanonically:
 
     def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
         """An absent credential admits; a blank profile identity is refused."""
-        from ..sessions import _assert_active_profile_identity_matches_provider
+        from ..sessions import assert_active_profile_identity_matches_provider
 
         assert (
-            _assert_active_profile_identity_matches_provider(
+            assert_active_profile_identity_matches_provider(
                 None, profile_decode_context=leased_profile_decode_context()
             )
             is None
@@ -359,7 +359,7 @@ class TestClaveIdentityIsComparedCanonically:
         while silently admitting malformed pairs, so the source is pinned to the
         shared validator.
         """
-        source = inspect.getsource(sessions._assert_active_profile_identity_matches_provider)
+        source = inspect.getsource(sessions.assert_active_profile_identity_matches_provider)
 
         assert "validate_runtime_spanish_tax_id" in source
         assert ".upper()" not in source, "a local normaliser would diverge from the canonical form"

@@ -11,9 +11,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.spending_category import SpendingCategory
@@ -42,14 +42,14 @@ def no_stored_usage_ratios(*, bucket_id: str, operation: PinnedAuthorityOperatio
 
 def dwelling_profile(*, office_m2: Decimal = Decimal("20")) -> UserProfileRecord:
     """Return a profile declaring an ``office_m2`` office (20 m2 by default) in a 100 m2 dwelling."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="22222222-2222-4222-8222-222222222222",
         facts=(
             UserProfileFact(path="vivienda_office.office_m2", value=office_m2),
             UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
         ),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

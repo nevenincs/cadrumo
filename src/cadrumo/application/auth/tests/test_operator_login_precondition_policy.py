@@ -37,7 +37,7 @@ def test_login_precondition_admits_a_resolved_profile_credential(
 
     monkeypatch.setattr(operator, "probe_clave_credentials", _resolved_profile_credential)
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        operator._assert_login_precondition(
+        operator.assert_login_precondition(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
@@ -58,7 +58,7 @@ def test_login_precondition_still_refuses_when_no_credential_exists(
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(AuthLoginPreconditionError) as raised,
     ):
-        operator._assert_login_precondition(
+        operator.assert_login_precondition(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,

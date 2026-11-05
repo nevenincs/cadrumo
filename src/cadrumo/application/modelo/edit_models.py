@@ -41,18 +41,10 @@ from ..operator_actions.models import ActionReference
 from .edit_contract import (
     MAX_REPEATED_ROW_VALUES,
     EditModel,
-)
-from .edit_contract import (
-    ModeloEditCompatibilityTupleV1 as _ModeloEditCompatibilityTupleV1,
-)
-from .edit_contract import (
-    ModeloEditExecutionEffect as _ModeloEditExecutionEffect,
-)
-from .edit_contract import (
-    ModeloEditMutationFamily as _ModeloEditMutationFamily,
-)
-from .edit_contract import (
-    ModeloEditMutationResultReceiptV1 as _ModeloEditMutationResultReceiptV1,
+    ModeloEditCompatibilityTupleV1,
+    ModeloEditExecutionEffect,
+    ModeloEditMutationFamily,
+    ModeloEditMutationResultReceiptV1,
 )
 from .edit_value_grammar import ModeloEditValueGrammarV1
 
@@ -489,7 +481,7 @@ class ModeloEditBaselineV1(EditModel):
     """
 
     edit_contract_version: Literal[1] = 1
-    compatibility: _ModeloEditCompatibilityTupleV1
+    compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: FilingYear
@@ -505,7 +497,7 @@ class ModeloEditBaselineV1(EditModel):
         tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=MAX_MODELO_EDIT_SURFACE_ENTRIES)
     ]
     permitted_surface_digest: ContentDigest
-    mutation_family: _ModeloEditMutationFamily
+    mutation_family: ModeloEditMutationFamily
     issued_at: datetime
     expires_at: datetime
     baseline_id: ModeloEditBaselineId
@@ -980,7 +972,7 @@ class ModeloEditSubmissionV1(EditModel):
 
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditBaselineV1
-    mutation_family: _ModeloEditMutationFamily
+    mutation_family: ModeloEditMutationFamily
     scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
@@ -1027,14 +1019,14 @@ class ModeloEditApplyRequestV1(EditModel):
 class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
-    effect: Literal[_ModeloEditExecutionEffect.UPDATED] = _ModeloEditExecutionEffect.UPDATED
-    receipt: _ModeloEditMutationResultReceiptV1
+    effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
+    receipt: ModeloEditMutationResultReceiptV1
 
 
 class ModeloEditExecutionNoEffectV1(EditModel):
     """The failed compare-and-swap arm; writes nothing and names the refusal."""
 
-    effect: Literal[_ModeloEditExecutionEffect.NONE] = _ModeloEditExecutionEffect.NONE
+    effect: Literal[ModeloEditExecutionEffect.NONE] = ModeloEditExecutionEffect.NONE
     refusal: ModeloEditRefusalV1
 
 

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
@@ -51,11 +51,6 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ..workflow.run_models import WorkflowPurpose
-from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
-from ._required_binding_gate import (
-    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
-)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -66,6 +61,7 @@ from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .credit_resolution import applied_resolution_notes, credit_resolutions_for_work, load_credit_resolutions
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
+from .ledger_anchor_capture import capture_revision_ledger_evidence
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     require_lifecycle_clock_not_before,
@@ -76,10 +72,14 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
-from .modelo_bucket_events import emit_modelo_bucket_event as _emit_bucket_event
+from .modelo_bucket_events import emit_modelo_bucket_event
 from .participation_writes import build_participation_writes
 from .preconditions import ModeloPreconditionFailure
-from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
+from .registry_helpers import assert_revision_content_integrity
+from .required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved,
+)
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
 from .verification_gate_findings import collect_verification_gate_findings
 from .verification_model_findings import append_readable_model_findings
 from .verification_preconditions import ModeloVerificationResult, project_verification_findings
@@ -90,8 +90,7 @@ from .verification_report_facts import (
 )
 from .verification_repository_ports import VerificationRepositoryBundle
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
-from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
-from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .workflow_gate import build_revision_workflow_engine, run_revision_workflow_gate
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -189,8 +188,8 @@ def _prepare_verification_profile(
     repos: VerificationRepositoryBundle,
     operation: PinnedAuthorityOperation,
 ) -> ModeloWorkProfile:
-    _assert_revision_content_integrity(target)
-    _refuse_stored_row_field_scalar_inputs(target, work_unit=work_unit, operation=operation)
+    assert_revision_content_integrity(target)
+    refuse_stored_row_field_scalar_inputs(target, work_unit=work_unit, operation=operation)
     from .profile_readiness_gate import load_modelo_work_profile, require_profile_ready_for_work_unit
 
     if profile is None:
@@ -217,7 +216,7 @@ def _prepare_verification_profile(
         operation=operation,
         profile=profile,
     )
-    _require_persisted_required_bindings_resolved(
+    require_persisted_revision_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="verify", operation=operation
     )
     try:
@@ -278,7 +277,7 @@ def verify_modelo_revision_with_preconditions(
 
     checked_profile = _prepare_verification_profile(target, work_unit, profile, repos, operation)
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     # Finding collection can refresh persisted wallet authority.
     require_lifecycle_clock_not_before(
         now,
@@ -379,7 +378,7 @@ def _finish_verification(
 ) -> ModeloVerificationResult:
     cr_repo, wu_repo, vr_repo = repos.calculation, repos.work_unit, repos.verification
     if granted:
-        gate_engine = workflow_engine or _build_revision_workflow_engine(
+        gate_engine = workflow_engine or build_revision_workflow_engine(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_scope_ports=operator_scope_ports,
             revision=target,
@@ -392,7 +391,7 @@ def _finish_verification(
             workflow_gate_ports=repos.workflow_gate_ports,
             operation=operation,
         )
-        _run_revision_workflow_gate(
+        run_revision_workflow_gate(
             engine=gate_engine,
             profile=workflow_profile,
             work_unit=work_unit,
@@ -583,7 +582,7 @@ def _emit_verification_bucket_event(
     actor: str,
     occurred_at: datetime,
 ) -> None:
-    _emit_bucket_event(
+    emit_modelo_bucket_event(
         repository=repository,
         bucket_id=work_unit.bucket_id,
         event_type=(

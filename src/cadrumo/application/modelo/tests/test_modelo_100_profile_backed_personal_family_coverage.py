@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -21,11 +21,9 @@ from ....domain.calculations.registry.tests.modelo_100_profile_binding_tables im
 )
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
-)
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -80,7 +78,7 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 
 
 def _full_profile() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -108,7 +106,7 @@ def _full_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

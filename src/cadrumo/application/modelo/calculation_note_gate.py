@@ -284,7 +284,7 @@ def saved_calculation_screen_outdated(
         return revision.state not in _FILED_STATES
 
 
-def _filed_before_grade_cap(
+def filed_before_grade_cap(
     revision: CalculationRevision, snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> CasillaId | None:
     """The first box a capped binding reaches that a filed, unstamped ``revision`` holds a figure in, or ``None``.
@@ -327,7 +327,7 @@ def calculation_filed_before_grade_cap(
     if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
         return None
     snapshot = _read_screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
-    return _filed_before_grade_cap(revision, snapshot, operation)
+    return filed_before_grade_cap(revision, snapshot, operation)
 
 
 def saved_calculation_filed_before_grade_cap(
@@ -418,7 +418,7 @@ def require_work_unit_calculation_screen_current(
     )
     if _screen_outdated(revision, snapshot, operation):
         raise _refuse_outdated_screen(revision, action=action)
-    capped_box = _filed_before_grade_cap(revision, snapshot, operation)
+    capped_box = filed_before_grade_cap(revision, snapshot, operation)
     if capped_box is not None:
         raise _refuse_filed_before_grade_cap(
             revision, action=action, snapshot=snapshot, operation=operation, capped_box=capped_box
@@ -462,7 +462,7 @@ def require_work_unit_calculation_unblocked(
     )
     if snapshot is not None and _screen_outdated(revision, snapshot, operation):
         raise _refuse_outdated_screen(revision, action=action)
-    capped_box = None if snapshot is None else _filed_before_grade_cap(revision, snapshot, operation)
+    capped_box = None if snapshot is None else filed_before_grade_cap(revision, snapshot, operation)
     if snapshot is not None and capped_box is not None:
         raise _refuse_filed_before_grade_cap(
             revision, action=action, snapshot=snapshot, operation=operation, capped_box=capped_box

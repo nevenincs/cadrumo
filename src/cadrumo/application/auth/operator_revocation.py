@@ -37,14 +37,13 @@ from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
-from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .models import (
     AuthCleanupIntent,
     AuthCleanupOperationKind,
     AuthState,
 )
+from .mutation import AuthBucketEventSpec, build_auth_bucket_events
 from .operator_cleanup import (
     apply_auth_cleanup_intent,
     assert_auth_cleanup_request_matches,
@@ -62,12 +61,12 @@ from .operator_results import (
     AuthOperationRequiresCustodySessionError,
     AuthResetResult,
 )
-from .operator_scope import active_profile_storage_span as _active_profile_storage_span
 from .operator_scope import (
-    assert_certificate_secret_mutation_not_in_progress as _assert_certificate_secret_mutation_not_in_progress,
+    active_profile_storage_span,
+    assert_certificate_secret_mutation_not_in_progress,
+    auth_mutation_span,
+    resolve_auth_operation_scope,
 )
-from .operator_scope import auth_mutation_span as _auth_mutation_span
-from .operator_scope import resolve_auth_operation_scope
 from .operator_scope_ports import OperatorScopePorts
 from .preferences import clear_profile_auth_preference
 
@@ -78,7 +77,7 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def _revocation_storage_span(
+def revocation_storage_span(
     settings: Settings,
     *,
     target_bucket_id: str | None = None,
@@ -99,7 +98,7 @@ def _revocation_storage_span(
     """
     entered = False
     try:
-        with _active_profile_storage_span(
+        with active_profile_storage_span(
             settings,
             target_bucket_id=target_bucket_id,
             operator_scope_ports=operator_scope_ports,
@@ -115,7 +114,7 @@ def _revocation_storage_span(
         ) from exc
 
 
-def _prepare_cleanup_intent(
+def prepare_cleanup_intent(
     state: WorkflowState,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
@@ -127,7 +126,7 @@ def _prepare_cleanup_intent(
     started_at: datetime,
 ) -> WorkflowState:
     """Keep a matching durable intent or prepare the requested cleanup before effects."""
-    _assert_certificate_secret_mutation_not_in_progress(state)
+    assert_certificate_secret_mutation_not_in_progress(state)
     existing = state.auth.cleanup_intent
     if existing is not None:
         assert_auth_cleanup_request_matches(
@@ -170,7 +169,7 @@ class _PreparedCleanup(NamedTuple):
 
 
 @contextmanager
-def _prepared_cleanup_scope(
+def prepared_cleanup_scope(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider: str | None,
@@ -181,7 +180,7 @@ def _prepared_cleanup_scope(
 ) -> Generator[_PreparedCleanup]:
     """Prepare one kind of cleanup while retaining its storage and mutation scopes."""
     resolved_settings = load_settings()
-    with _revocation_storage_span(
+    with revocation_storage_span(
         resolved_settings,
         target_bucket_id=target_bucket_id,
         operator_scope_ports=operator_scope_ports,
@@ -192,7 +191,7 @@ def _prepared_cleanup_scope(
             )
         from ..workflow.persistence import workflow_state_repository
 
-        with _auth_mutation_span(
+        with auth_mutation_span(
             settings=resolved_settings,
             bucket_id=bucket_id,
             operator_scope_ports=operator_scope_ports,
@@ -202,7 +201,7 @@ def _prepared_cleanup_scope(
 
             prepared = repository.update(
                 partial(
-                    _prepare_cleanup_intent,
+                    prepare_cleanup_intent,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=resolved_settings,
                     bucket_id=bucket_id,
@@ -226,7 +225,7 @@ def logout_operator_auth(
 ) -> AuthLogoutResult:
     """Terminate persisted sessions while preserving provider configuration."""
     if settings is not None:
-        with _revocation_storage_span(
+        with revocation_storage_span(
             settings,
             target_bucket_id=target_bucket_id,
             operator_scope_ports=operator_scope_ports,
@@ -239,7 +238,7 @@ def logout_operator_auth(
                 settings=None,
                 operator_scope_ports=operator_scope_ports,
             )
-    with _prepared_cleanup_scope(
+    with prepared_cleanup_scope(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         provider=provider,
         all_providers=all_providers,
@@ -301,7 +300,7 @@ def logout_operator_auth(
             )
             if not durable_events:
                 return updated, ()
-            return updated, _build_bucket_events(
+            return updated, build_auth_bucket_events(
                 bucket_id=bucket_id,
                 events=durable_events,
             )
@@ -357,12 +356,12 @@ def _logout_durable_events(
     *,
     operation_id: str,
     occurred_at: datetime,
-) -> tuple[_BucketEventSpec, ...]:
+) -> tuple[AuthBucketEventSpec, ...]:
     """Build the append-only logout evidence for each session removed."""
     from ...domain.buckets.event import BucketEventType
 
     return tuple(
-        _BucketEventSpec(
+        AuthBucketEventSpec(
             BucketEventType.AUTH_SESSION_CLEARED,
             provider_id,
             {"provider_id": provider_id, "operation": "logout", "operation_id": operation_id},
@@ -383,7 +382,7 @@ def reset_operator_auth(
 ) -> AuthResetResult:
     """Remove auth custody through one durable, resumable reset operation."""
     if settings is not None:
-        with _revocation_storage_span(
+        with revocation_storage_span(
             settings,
             target_bucket_id=target_bucket_id,
             operator_scope_ports=operator_scope_ports,
@@ -396,7 +395,7 @@ def reset_operator_auth(
                 settings=None,
                 operator_scope_ports=operator_scope_ports,
             )
-    with _prepared_cleanup_scope(
+    with prepared_cleanup_scope(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         provider=provider,
         all_providers=all_providers,
@@ -506,7 +505,7 @@ def _finalize_reset(
     )
     if not durable_events:
         return updated, ()
-    return updated, _build_bucket_events(
+    return updated, build_auth_bucket_events(
         bucket_id=bucket_id,
         events=durable_events,
     )

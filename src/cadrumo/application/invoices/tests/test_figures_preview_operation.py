@@ -30,7 +30,7 @@ from ....domain.iva.schema import InvoiceKind
 from ...operations.public_scalar import PublicDecimal, restore_facts
 from .. import figures_preview_operation as preview_operation
 from ..catalogue_add_contracts import InvoiceAddRequest
-from ..catalogue_add_operation import _prepare_invoice_add, build_invoice_from_add_request, invoice_add_lease
+from ..catalogue_add_operation import build_invoice_from_add_request, invoice_add_lease, prepare_invoice_add
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateError, CatalogueInvoiceRateProviderPort
 from ..catalogue_lifecycle import CatalogueInvoicePatch
@@ -44,7 +44,7 @@ from ..figures_preview_contracts import (
 from ..figures_preview_operation import (
     preview_invoice_figures,
 )
-from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from ..tests.catalogue_creation_fakes import in_memory_catalogue_creation_ports
 from .figures_preview_support import APRIL, PROFILE, NoRate, Unreachable, preview_draft, preview_line, public_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -801,7 +801,7 @@ def test_an_accepted_draft_runs_the_add_path_to_the_same_id_and_persists_nothing
         ),
     )
 
-    _ports, invoice, _advisory = _prepare_invoice_add(
+    _ports, invoice, _advisory = prepare_invoice_add(
         factory=lambda *, bucket_id: ports,
         payload=payload,
         profile=str(PROFILE),

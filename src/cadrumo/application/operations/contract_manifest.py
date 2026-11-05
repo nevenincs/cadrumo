@@ -33,7 +33,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import packaged_data
 from ...core.type_guards import is_object_list, is_object_list_or_tuple, is_str_keyed_dict
 from ..operator_actions.models import ActionReference
-from ._registry_contracts import declared_public_schema_identities
 from .errors import OperationContractStaleError
 from .operation_definition import OperationDefinition
 from .registry import (
@@ -43,6 +42,7 @@ from .registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from .registry_contracts import declared_public_schema_identities
 from .schema_identity import OperationSchemaIdentityV1
 
 #: Where the generated manifest ships, under ``cadrumo/_data``.

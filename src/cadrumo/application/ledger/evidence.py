@@ -61,7 +61,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
 from ...core.text_bounds import NonNegativeDecimal
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write, build_bucket_event, emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -278,7 +278,7 @@ def _derive_additive_evidence_id(
     )
 
 
-def _divergent_evidence_fields(
+def divergent_evidence_fields(
     prior: PurchaseInvoiceEvidence,
     *,
     source_sha256: str,
@@ -672,7 +672,7 @@ def _keyed_add_replay(
     prior = next((row for row in records if row.evidence_id == keyed_id), None)
     if prior is None:
         return None
-    divergent = _divergent_evidence_fields(
+    divergent = divergent_evidence_fields(
         prior,
         source_sha256=facts.digest,
         media_kind=facts.media_kind,
@@ -860,7 +860,7 @@ class PurchaseInvoiceEvidenceService:
                 readable file or has an unsupported extension.
         """
         resolved, media_kind = _resolve_evidence_source(source_path, source_directory)
-        now = _utc_now()
+        now = clock_utc_now()
         evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
         keyed_id = (
             derive_keyed_purchase_invoice_evidence_id(bucket_id=bucket_id, idempotency_key=idempotency_key)
@@ -987,7 +987,7 @@ class PurchaseInvoiceEvidenceService:
                 exists.
         """
         evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
-        occurred_at = occurred_at or _utc_now()
+        occurred_at = occurred_at or clock_utc_now()
         last_conflict: LedgerPersistenceConflictError | None = None
         for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
             snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
@@ -1058,7 +1058,7 @@ class PurchaseInvoiceEvidenceService:
                 exists.
         """
         evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
-        occurred_at = _utc_now()
+        occurred_at = clock_utc_now()
         last_conflict: LedgerPersistenceConflictError | None = None
         for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
             snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)

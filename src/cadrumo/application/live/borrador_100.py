@@ -25,7 +25,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.continuidad import ContinuidadId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.type_guards import is_object_mapping
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -152,7 +152,7 @@ class Borrador100PrintedObservation(BaseModel):
     not zero.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     continuidad_id: ContinuidadId | None
@@ -185,7 +185,7 @@ class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
 class Borrador100Snapshot(BaseModel):
     """Captured Modelo 100 borrador values available to application consumers."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bucket_id: BucketId
@@ -410,7 +410,7 @@ class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Pro
 
 
 class _Borrador100CaptureRequest(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int
     period: Period

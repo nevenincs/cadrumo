@@ -37,7 +37,7 @@ from ...domain.calculations.registry.situacion_familiar_catalogue import (
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType, SituacionFamiliar
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator
-from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
+from .catalogue import FAMILIA_SECTION_ID
 
 SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID = "setup-familia-conjunta-unidad-familiar"
 """Registered id of the familia section-exit Art. 82.1.2ª validator."""
@@ -117,7 +117,7 @@ def attach_setup_legal_validators(definition: FlowDefinition) -> FlowDefinition:
     """
     sections: list[FlowSection] = []
     for section in definition.sections:
-        if section.id == _FAMILIA_SECTION_ID and SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID not in section.exit_validator_ids:
+        if section.id == FAMILIA_SECTION_ID and SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID not in section.exit_validator_ids:
             sections.append(
                 section.model_copy(
                     update={

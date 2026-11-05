@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.requirement import Requirement
@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_catalogue_is_non_empty_and_unique() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entries = profile_keys(operation=_authority_operation_for_test)
         assert len(entries) >= 1
         keys = [entry.key for entry in entries]
@@ -24,7 +24,7 @@ def test_catalogue_is_non_empty_and_unique() -> None:
 
 
 def test_required_and_optional_partition_covers_catalogue() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         required = tuple(
             entry
             for entry in profile_keys(operation=_authority_operation_for_test)
@@ -39,7 +39,7 @@ def test_required_and_optional_partition_covers_catalogue() -> None:
 
 
 def test_catalogue_lookup_returns_canonical_record() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entry = profile_key("identity.tax_id", operation=_authority_operation_for_test)
         assert isinstance(entry, ProfileKey)
         assert entry.key == "identity.tax_id"
@@ -49,14 +49,14 @@ def test_catalogue_lookup_returns_canonical_record() -> None:
 
 def test_catalogue_lookup_raises_keyerror_for_unknown_key() -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(KeyError, match=r"unknown profile key"),
     ):
         profile_key("not.a.profile.key", operation=_authority_operation_for_test)
 
 
 def test_every_entry_carries_authoritative_profile_description() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for entry in profile_keys(operation=_authority_operation_for_test):
             assert entry.description.strip(), f"{entry.key}: missing description"
 
@@ -108,7 +108,7 @@ def test_spouse_tax_id_is_required_only_for_the_married_joint_unit() -> None:
     promote it while the joint return may be the married unit's, which includes
     an unstated situation.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         entry = profile_key("renta_spouse.tax_id", operation=_authority_operation_for_test)
         assert entry.requirement is Requirement.OPTIONAL
         assert entry.required_when_key is None
@@ -127,7 +127,7 @@ def test_spouse_tax_id_is_required_only_for_the_married_joint_unit() -> None:
 
 def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
     """The remaining spouse identity keys are optional even for joint filing."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for key in (
             "renta_spouse.name",
             "renta_spouse.surnames",
@@ -141,7 +141,7 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
 
 
 def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         expected = {
             "renta_taxpayer.disability_grade",
             "renta_taxpayer.death_date",

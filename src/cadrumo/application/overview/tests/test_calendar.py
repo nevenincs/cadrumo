@@ -38,11 +38,11 @@ from ....tests.log_records import delivered_records
 from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
-    _calendar_entry_from_obligation,
-    _entry_intersects_range,
-    _registry_window_for_work_unit,
     build_overview_calendar,
+    calendar_entry_from_obligation,
+    entry_intersects_range,
     holiday_coverage_statement,
+    registry_window_for_work_unit,
 )
 from ..calendar_events import (
     build_overview_calendar_events,
@@ -57,15 +57,13 @@ from ..calendar_models import (
 from ..calendar_warnings import calendar_applicability_profile_keys_for_modelo
 from ..read_calendar_item_projection import OverviewCalendarWarningSnapshot
 from ..status_report import build_filing_obligation_advisories
-from .calendar_support import _entry
+from .calendar_support import calendar_entry
 from .calendar_test_support import (
-    BUCKET_ID as _BUCKET_ID,
+    BUCKET_ID,
+    SOURCE_URL,
 )
 from .calendar_test_support import (
-    SOURCE_URL as _SOURCE_URL,
-)
-from .calendar_test_support import (
-    profile as _profile,
+    profile as calendar_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -101,13 +99,13 @@ def _annual_work_unit(*, modelo: str, filing_year: int) -> WorkUnit:
     created_at = datetime(filing_year, 1, 2, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo=ModeloCode(modelo),
             filing_year=filing_year,
             period=period,
             revision_id=revision_id,
         ),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
         period=period,
@@ -138,9 +136,9 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     successor = _annual_work_unit(modelo=modelo, filing_year=filing_year + 1)
 
     with withdrawn_deadline_window_operation(modelo_id=modelo, filing_year=filing_year) as operation:
-        assert _registry_window_for_work_unit(work_unit, operation=operation) is None
+        assert registry_window_for_work_unit(work_unit, operation=operation) is None
         calendar = build_overview_calendar(
-            _profile(),
+            calendar_profile(),
             calendar_range,
             operation=operation,
             today=calendar_range.from_date,
@@ -158,7 +156,7 @@ def test_calendar_gives_annual_work_below_the_supported_floor_its_own_year_only(
     assert supported_years is not None
 
     for filing_year in (supported_years.floor - 1, FOUR_DIGIT_YEAR_FIRST):
-        answer = _registry_window_for_work_unit(_annual_work_unit(modelo="100", filing_year=filing_year))
+        answer = registry_window_for_work_unit(_annual_work_unit(modelo="100", filing_year=filing_year))
 
         assert answer is None or isinstance(answer, AuthoredFilingWindow)
         assert answer is None or answer.window.filing_year == filing_year
@@ -173,7 +171,7 @@ def test_calendar_censo_warning_requires_every_modelo_enrolment_key(
     assert _M303_CENSO_ENROLMENT_KEYS - {"activities.iae_epigraph"} <= applicability_303
 
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         operation=authority_operation,
         today=date(2025, 4, 1),
@@ -200,7 +198,7 @@ def test_calendar_censo_warning_is_rendered_in_the_read_language(
     authority_operation: PinnedAuthorityOperation, language: str, terms: tuple[str, ...]
 ) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         operation=authority_operation,
         today=date(2025, 4, 1),
@@ -224,7 +222,7 @@ def test_calendar_censo_warning_clears_when_every_modelo_enrolment_key_is_verifi
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         operation=authority_operation,
         today=date(2025, 4, 1),
@@ -249,7 +247,7 @@ def test_calendar_keeps_unverified_posture_when_no_censo_is_verified(
     post-retirement reality) must never grant a VERIFIED enrolment state.
     """
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
         operation=authority_operation,
         today=date(2025, 1, 1),
@@ -274,7 +272,7 @@ def test_calendar_entry_marks_censo_enrolment_not_checked_when_no_live_censo_sco
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         operation=authority_operation,
         today=date(2025, 4, 1),
@@ -474,9 +472,9 @@ def test_build_overview_calendar_accepts_observed_events(
         notification_snapshots=(
             PersistedNotificationsSnapshot(
                 snapshot_id="a" * 64,
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 rows=(
                     RemoteNotification(
                         certificado_id="2596230606502",
@@ -488,7 +486,7 @@ def test_build_overview_calendar_accepts_observed_events(
                         destinatario_nombre="Test S.L.",
                         fecha_emision=date(2025, 3, 10),
                         leida=True,
-                        source_url=_SOURCE_URL,
+                        source_url=SOURCE_URL,
                     ),
                 ),
                 persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
@@ -497,7 +495,7 @@ def test_build_overview_calendar_accepts_observed_events(
     )
 
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
         operation=authority_operation,
         today=date(2025, 3, 15),
@@ -516,7 +514,7 @@ def test_build_returns_typed_calendar_for_quarterly_window(
 ) -> None:
     """``--from 2026-01-01 --to 2026-04-20`` covers Q1 2026."""
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
         operation=authority_operation,
         today=date(2026, 4, 1),
@@ -530,7 +528,7 @@ def test_build_returns_typed_calendar_for_quarterly_window(
 
 def test_build_only_emits_entries_inside_range(authority_operation: PinnedAuthorityOperation) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
         operation=authority_operation,
         today=date(2026, 4, 1),
@@ -545,7 +543,7 @@ def test_build_orders_entries_by_close_then_modelo_then_period(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         operation=authority_operation,
         today=date(2026, 4, 1),
@@ -564,7 +562,7 @@ def test_build_preserves_each_modelo_303_obligation_once_in_canonical_order(
 ) -> None:
     """Overview must not erase or multiply legal rows while projecting a schedule."""
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(filing_year, 1, 1), to_date=date(filing_year + 1, 2, 28)),
         operation=authority_operation,
         today=date(filing_year, 1, 1),
@@ -588,7 +586,7 @@ def test_calendar_preserves_every_applicable_engine_row_for_all_supported_years(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Fleet parity derives its year horizon and expected rows from canonical owners."""
-    profile = _profile()
+    profile = calendar_profile()
     supported_years = published_supported_filing_years()
     assert supported_years is not None
 
@@ -642,7 +640,7 @@ def test_build_tape_invocation_from_prior_q4_through_horizon_q2_spans_year_bound
     """A ``--from``/``--to`` range from the prior fourth quarter into the horizon spans multiple years."""
     horizon = _SUPPORT.horizon
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(horizon - 1, 10, 1), to_date=date(horizon, 7, 20)),
         operation=authority_operation,
         today=date(horizon, 5, 3),
@@ -656,7 +654,7 @@ def test_build_user_state_matches_engine_status_per_entry(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         operation=authority_operation,
         today=date(2026, 4, 1),
@@ -668,7 +666,7 @@ def test_build_user_state_matches_engine_status_per_entry(
 def test_build_uses_evaluation_date_for_historical_special_regime_route(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    profile = _profile().model_copy(
+    profile = calendar_profile().model_copy(
         update={
             "irpf_special_regime": IrpfSpecialRegime.from_registry("impatriado"),
             "special_regime_start_date": date(2020, 1, 15),
@@ -693,7 +691,7 @@ def test_build_empty_range_when_window_covers_no_obligations(
     """A 1-day window outside every modelo's filing window emits no entries."""
     # 2026-01-15 lies outside every modelo's January quarterly / monthly window.
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 15), to_date=date(2026, 1, 15)),
         operation=authority_operation,
         today=date(2026, 4, 1),
@@ -720,7 +718,7 @@ def test_build_threads_shift_metadata_onto_every_entry(
         "calendar_unavailable",
     }
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     assert cal.entries, "expected the test profile to produce at least one obligation"
     for entry in cal.entries:
         assert entry.adjusted_closes_on >= entry.closes_on
@@ -740,7 +738,7 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
         boe_references=(),
         recovery=None,
     )
-    on_effective_close = _calendar_entry_from_obligation(
+    on_effective_close = calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
@@ -753,7 +751,7 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
     assert on_effective_close.days_overdue is None
     assert on_effective_close.recovery is None
 
-    after_effective_close = _calendar_entry_from_obligation(
+    after_effective_close = calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
@@ -779,7 +777,7 @@ def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
 
 
 def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation):
-    return _calendar_entry_from_obligation(
+    return calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
@@ -857,7 +855,7 @@ def test_build_marks_modelo_369_as_modelo_exception(
 ) -> None:
     """Modelo 369 obligations bypass the shift; reason must be modelo_exception."""
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     modelo_369 = [entry for entry in cal.entries if entry.modelo == "369"]
     # Whether 369 appears for the test profile depends on the profile's
     # OSS enrolment. When it does appear, the shift must be skipped.
@@ -874,7 +872,7 @@ def test_entry_rejects_adjusted_close_that_precedes_original() -> None:
     structural violation: the shift can only move a deadline forward.
     """
     with pytest.raises(ValueError, match=r"adjusted_closes_on|may only move"):
-        _entry(
+        calendar_entry(
             closes_on=date(2026, 4, 20),
             adjusted_closes_on=date(2026, 4, 19),
         )
@@ -883,7 +881,7 @@ def test_entry_rejects_adjusted_close_that_precedes_original() -> None:
 def test_build_is_idempotent_modulo_generated_at(authority_operation: PinnedAuthorityOperation) -> None:
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
-    profile = _profile()
+    profile = calendar_profile()
     a = build_overview_calendar(profile, rng, operation=authority_operation, today=today)
     b = build_overview_calendar(profile, rng, operation=authority_operation, today=today)
     assert a.entries == b.entries
@@ -903,7 +901,7 @@ def test_calendar_omits_warnings_when_raw_values_not_supplied(
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=today)
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today)
     assert cal.warnings == ()
     assert cal.completeness.explicitly_set_keys == ()
     assert cal.completeness.defaulted_keys == ()
@@ -925,7 +923,7 @@ def test_calendar_emits_warning_when_iva_regime_unset(
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
     raw = {"tax.id": "X1234567L", "activity": "design"}
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
     iva_warnings = [w for w in cal.warnings if w.code == "iva.regime"]
     assert len(iva_warnings) == 1
     warning = iva_warnings[0]
@@ -951,7 +949,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason(
         "activity": "design",
         "iva.regime": "GENERAL",
     }
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
     assert "iva.regime" in cal.completeness.explicitly_set_keys
     assert "does_intracomunitario" in cal.completeness.defaulted_keys
     assert "has_employees" in cal.completeness.defaulted_keys
@@ -974,7 +972,7 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
         "iva.regime": "GENERAL",
     }
 
-    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
     warnings_by_code = {warning.code: warning for warning in cal.warnings}
 
     assert "111" in warnings_by_code["has_employees"].affected_modelos
@@ -998,12 +996,12 @@ def test_calendar_places_a_work_unit_by_its_effective_deadline(
 ) -> None:
     assert _SATURDAY_CLOSE.weekday() == 5
     work_unit = _annual_work_unit(modelo="180", filing_year=2025)
-    window = _registry_window_for_work_unit(work_unit, operation=authority_operation)
+    window = registry_window_for_work_unit(work_unit, operation=authority_operation)
     assert window is not None
     assert window.closes_on == _SATURDAY_CLOSE
 
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         _FEBRUARY_2026,
         operation=authority_operation,
         today=_FEBRUARY_2026.from_date,
@@ -1022,7 +1020,7 @@ def test_calendar_leaves_out_a_work_unit_whose_effective_deadline_precedes_the_r
     after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
 
     calendar = build_overview_calendar(
-        _profile(),
+        calendar_profile(),
         after_effective_close,
         operation=authority_operation,
         today=after_effective_close.from_date,
@@ -1047,12 +1045,12 @@ def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
     )
     after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
 
-    assert _entry_intersects_range(
+    assert entry_intersects_range(
         obligation,
         _FEBRUARY_2026,
         operation=authority_operation,
     )
-    assert not _entry_intersects_range(
+    assert not entry_intersects_range(
         obligation,
         after_effective_close,
         operation=authority_operation,

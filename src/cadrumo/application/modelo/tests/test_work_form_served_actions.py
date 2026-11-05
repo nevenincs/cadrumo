@@ -16,7 +16,7 @@ from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..work_form_findings import FINDING_KIND_ACTION_LOCALE_KEYS, FINDING_MESSAGE_ACTION_LOCALE_KEYS
 from ..work_form_issue_lines import form_issue_lines
-from .test_work_form_gate_agreement import _checked_form, _every_note, _Note, _revision, _work_unit
+from .test_work_form_gate_agreement import Note, checked_form, every_note, work_form_gate_agreement_revision, work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,12 +35,12 @@ def _names_a_command(text: str) -> bool:
 
 
 @pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
-@pytest.mark.parametrize("note", _every_note(), ids=lambda note: note.reason)
+@pytest.mark.parametrize("note", every_note(), ids=lambda note: note.reason)
 def test_the_action_of_every_note_line_names_no_command(
-    operation: PinnedAuthorityOperation, note: _Note, language: str
+    operation: PinnedAuthorityOperation, note: Note, language: str
 ) -> None:
-    unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(operation, unit, note.issue()))
+    unit = work_unit(operation)
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit, note.issue()))
 
     lines = [line for line in form_issue_lines(form, OutputLanguage(language)) if line.from_calculation]
 
@@ -62,8 +62,8 @@ def test_the_action_of_every_finding_names_no_command(language: str) -> None:
 def test_a_disagreement_line_says_to_accept_the_value_in_use_and_say_why(
     operation: PinnedAuthorityOperation, reason: str, language: str
 ) -> None:
-    unit = _work_unit(operation)
-    form = _checked_form(operation, _revision(operation, unit, _Note(reason).issue()))
+    unit = work_unit(operation)
+    form = checked_form(operation, work_form_gate_agreement_revision(operation, unit, Note(reason).issue()))
 
     (line,) = [line for line in form_issue_lines(form, OutputLanguage(language)) if line.finding_id is not None]
 

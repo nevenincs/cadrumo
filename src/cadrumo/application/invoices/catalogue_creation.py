@@ -148,7 +148,7 @@ def build_catalogue_invoice_event(
     )
 
 
-def _registry_m349_operation_type_requirement(
+def registry_m349_operation_type_requirement(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
@@ -215,7 +215,7 @@ def _require_operation_type_where_the_category_cannot_settle_it(
     if effective_date < operation.supported_filing_years().date_envelope().floor:
         # No Modelo 349 is filed for a date older than the filing years, so no clave is owed to one.
         return
-    required_category, candidates = _registry_m349_operation_type_requirement(
+    required_category, candidates = registry_m349_operation_type_requirement(
         effective_date,
         operation=operation,
     )

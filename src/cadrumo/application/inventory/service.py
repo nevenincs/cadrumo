@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_va
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.time.clock import now as _now_utc
+from ...core.time.clock import now as clock_now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -314,7 +314,7 @@ class InventoryService:
                     context={"actividad_id": actividad_id, "year": str(year)},
                 ) from exc
             raise
-        now = _now_utc()
+        now = clock_now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
             bucket_id=bucket_id,
@@ -440,7 +440,7 @@ class InventoryService:
             if exc.translated_message in _CHANGE_REFUSAL_KEYS:
                 raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
             raise
-        now = _now_utc()
+        now = clock_now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
             bucket_id=bucket_id,
@@ -481,7 +481,7 @@ class InventoryService:
             derived_closing_value=result.closing_value,
             cogs=result.cogs_value,
         )
-        now = _now_utc()
+        now = clock_now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
             bucket_id=bucket_id,
@@ -601,7 +601,7 @@ class InventoryService:
                 ledger=ledger,
                 actor=actor,
                 source_command=source_command,
-                now=_now_utc(),
+                now=clock_now_utc(),
             )
         except (InventoryLedgerError, ValidationError) as exc:
             needs_document = (
@@ -641,7 +641,7 @@ class InventoryService:
             actividad_id=actividad_id,
             year=year,
             actor=actor,
-            occurred_at=_now_utc(),
+            occurred_at=clock_now_utc(),
             payload=event_payload,
         )
         return InventoryLedgerResult(ledger=write.ledger, bucket_event_ids=(event_id,), changed=True)
@@ -662,7 +662,7 @@ class InventoryService:
             descriptor = InventoryLedgerDescriptor(label=label, description=description)
         except (InventoryLedgerError, ValidationError) as exc:
             raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
@@ -686,7 +686,7 @@ class InventoryService:
         actor: str = "cli",
     ) -> InventoryLedgerResult:
         """Rectify the opening value or valuation method, retaining what they displace."""
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
@@ -721,7 +721,7 @@ class InventoryService:
             record = _movement_record(replacement)
         except (InventoryLedgerError, ValidationError) as exc:
             raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
@@ -756,7 +756,7 @@ class InventoryService:
         actor: str = "cli",
     ) -> InventoryLedgerResult:
         """Take one movement out of the effective set, retaining it as evidence."""
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
@@ -784,7 +784,7 @@ class InventoryService:
         actor: str = "cli",
     ) -> InventoryLedgerResult:
         """Take the inventory out of the active register with every fact retained."""
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
@@ -805,7 +805,7 @@ class InventoryService:
         actor: str = "cli",
     ) -> InventoryLedgerResult:
         """Bring a retired inventory back to the active register."""
-        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
         return self._apply_change(
             bucket_id=bucket_id,
             actividad_id=actividad_id,

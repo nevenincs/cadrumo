@@ -32,16 +32,16 @@ from ..oss_ioss_wire_geometry import record_row_slots
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter
 from .test_oss_detail_sections import (
-    _BUCKET,
-    _EXTERIOR,
-    _IMPORT,
-    _UNION,
-    _invoice,
-    _Reader,
-    _Regime,
-    _resolve,
-    _row,
-    _Transactions,
+    BUCKET,
+    EXTERIOR,
+    IMPORT,
+    UNION,
+    Reader,
+    Regime,
+    Transactions,
+    oss_detail_sections_invoice,
+    oss_detail_sections_row,
+    resolve,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -50,9 +50,9 @@ _SUPPLY = date(2026, 2, 17)
 _CUSTOMER = "FR40303265045"
 _LATER_QUARTER = date(2026, 5, 4)
 _CORRECTION_RECORD = {
-    _EXTERIOR: "modelo-369-exterior-t36902",
-    _UNION: "modelo-369-union-t36908",
-    _IMPORT: "modelo-369-importacion-t36911",
+    EXTERIOR: "modelo-369-exterior-t36902",
+    UNION: "modelo-369-union-t36908",
+    IMPORT: "modelo-369-importacion-t36911",
 }
 
 
@@ -66,8 +66,8 @@ def _correction(
     cuota: str = "20.00",
     supply_date: date = _SUPPLY,
 ) -> Invoice:
-    return _invoice(
-        _UNION, number, country=country, tier=tier, base=base, cuota=cuota, supply_date=supply_date
+    return oss_detail_sections_invoice(
+        UNION, number, country=country, tier=tier, base=base, cuota=cuota, supply_date=supply_date
     ).model_copy(
         update={
             "invoice_class": invoice_class_rectificativa(),
@@ -79,43 +79,55 @@ def _correction(
 
 
 def _first() -> Invoice:
-    return _invoice(_UNION, "F-1", country="FR", tier="general", base="1000.00", cuota="200.00")
+    return oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="general", base="1000.00", cuota="200.00")
 
 
 def _refusal(operation: PinnedAuthorityOperation, *invoices: Invoice, on: date = _SUPPLY) -> str:
     with pytest.raises(AggregationValidationError) as refused:
-        _resolve(operation, _UNION, invoices, period=_UNION.period(on))
+        resolve(operation, UNION, invoices, period=UNION.period(on))
     return str(refused.value.translated_message)
 
 
 def test_a_same_period_correction_nets_its_invoices_row(operation: PinnedAuthorityOperation) -> None:
-    resolution = _resolve(operation, _UNION, (_first(), _correction()))
-    assert _row(resolution, _UNION, 1) == ("FR", "S", Decimal("20"), Decimal("900.00"), Decimal("180.00"))
+    resolution = resolve(operation, UNION, (_first(), _correction()))
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        "FR",
+        "S",
+        Decimal("20"),
+        Decimal("900.00"),
+        Decimal("180.00"),
+    )
 
 
 def test_a_correction_cancelling_its_invoice_leaves_no_row(operation: PinnedAuthorityOperation) -> None:
-    resolution = _resolve(operation, _UNION, (_first(), _correction(base="1000.00", cuota="200.00")))
+    resolution = resolve(operation, UNION, (_first(), _correction(base="1000.00", cuota="200.00")))
     closed = {row_set.record_id: row_set for row_set in resolution.closed_record_row_sets}
-    assert [row.row_index for row in closed[_UNION.record].rows if row.occupied] == []
+    assert [row.row_index for row in closed[UNION.record].rows if row.occupied] == []
 
 
 def test_a_correction_nets_at_the_rate_of_the_invoice_it_corrects(operation: PinnedAuthorityOperation) -> None:
     """Art. 90.Dos fixes the rate at the operation's devengo, so the correction joins the older row."""
     change = rate_change_inside_a_quarter(operation)
     code = change.member_state.upper()
-    period = _UNION.period(change.first_day_after)
+    period = UNION.period(change.first_day_after)
     cuota = round_to_cents(Decimal("100.00") * change.pct_before / Decimal("100"))
-    original = _invoice(
-        _UNION, "F-1", country=code, tier="general", base="100.00", cuota=str(cuota), supply_date=change.last_day_before
+    original = oss_detail_sections_invoice(
+        UNION, "F-1", country=code, tier="general", base="100.00", cuota=str(cuota), supply_date=change.last_day_before
     )
     half = round_to_cents(cuota / 2)
     corrected = _correction(country=code, base="50.00", cuota=str(half), supply_date=change.first_day_after)
-    resolution = _resolve(operation, _UNION, (original, corrected), period=period)
-    assert _row(resolution, _UNION, 1) == (code, "S", change.pct_before, Decimal("50.00"), cuota - half)
+    resolution = resolve(operation, UNION, (original, corrected), period=period)
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        code,
+        "S",
+        change.pct_before,
+        Decimal("50.00"),
+        cuota - half,
+    )
 
 
 def _correction_rows(
-    resolution: CalculationSourceResolution, regime: _Regime
+    resolution: CalculationSourceResolution, regime: Regime
 ) -> list[tuple[str, int, str, str, Decimal]]:
     revision = published_revision("369", regime.revision_id)
     rows = []
@@ -134,18 +146,22 @@ def _correction_rows(
 
 
 def _resolve_corrections(
-    operation: PinnedAuthorityOperation, regime: _Regime, *invoices: Invoice, on: date
+    operation: PinnedAuthorityOperation, regime: Regime, *invoices: Invoice, on: date
 ) -> CalculationSourceResolution:
-    return _resolve(operation, regime, invoices, period=regime.period(on))
+    return resolve(operation, regime, invoices, period=regime.period(on))
 
 
-def _regime_first(regime: _Regime, day: date) -> Invoice:
-    return _invoice(regime, "F-1", country="FR", tier="general", base="1000.00", cuota="200.00", supply_date=day)
+def _regime_first(regime: Regime, day: date) -> Invoice:
+    return oss_detail_sections_invoice(
+        regime, "F-1", country="FR", tier="general", base="1000.00", cuota="200.00", supply_date=day
+    )
 
 
-def _regime_correction(regime: _Regime, day: date, *, number: str = "R-1", cuota: str = "20.00") -> Invoice:
+def _regime_correction(regime: Regime, day: date, *, number: str = "R-1", cuota: str = "20.00") -> Invoice:
     base = str(Decimal(cuota) * 5)
-    return _invoice(regime, number, country="FR", tier="general", base=base, cuota=cuota, supply_date=day).model_copy(
+    return oss_detail_sections_invoice(
+        regime, number, country="FR", tier="general", base=base, cuota=cuota, supply_date=day
+    ).model_copy(
         update={
             "invoice_class": invoice_class_rectificativa(),
             "series": "R",
@@ -158,14 +174,14 @@ def _regime_correction(regime: _Regime, day: date, *, number: str = "R-1", cuota
 @pytest.mark.parametrize(
     ("regime", "later", "period_type", "period"),
     [
-        (_EXTERIOR, _LATER_QUARTER, "T", "1"),
-        (_UNION, _LATER_QUARTER, "T", "1"),
-        (_IMPORT, date(2026, 3, 4), "M", "2"),
+        (EXTERIOR, _LATER_QUARTER, "T", "1"),
+        (UNION, _LATER_QUARTER, "T", "1"),
+        (IMPORT, date(2026, 3, 4), "M", "2"),
     ],
     ids=["exterior", "union", "import"],
 )
 def test_a_correction_of_an_earlier_period_takes_a_row_of_that_period_below_zero(
-    operation: PinnedAuthorityOperation, regime: _Regime, later: date, period_type: str, period: str
+    operation: PinnedAuthorityOperation, regime: Regime, later: date, period_type: str, period: str
 ) -> None:
     """F-1's 200,00 is filed; R-1 takes 20,00 off it, so the later return states -20,00 for the earlier period."""
     resolution = _resolve_corrections(
@@ -181,17 +197,19 @@ def test_corrections_of_one_period_net_into_one_row_and_of_another_take_their_ow
     previous = date(2025, 11, 17)
     resolution = _resolve_corrections(
         operation,
-        _UNION,
-        _regime_first(_UNION, _SUPPLY),
-        _regime_correction(_UNION, _LATER_QUARTER),
-        _regime_correction(_UNION, _LATER_QUARTER, number="R-2", cuota="5.00"),
-        _invoice(_UNION, "F-3", country="FR", tier="general", base="100.00", cuota="20.00", supply_date=previous),
-        _regime_correction(_UNION, _LATER_QUARTER, number="R-3", cuota="10.00").model_copy(
+        UNION,
+        _regime_first(UNION, _SUPPLY),
+        _regime_correction(UNION, _LATER_QUARTER),
+        _regime_correction(UNION, _LATER_QUARTER, number="R-2", cuota="5.00"),
+        oss_detail_sections_invoice(
+            UNION, "F-3", country="FR", tier="general", base="100.00", cuota="20.00", supply_date=previous
+        ),
+        _regime_correction(UNION, _LATER_QUARTER, number="R-3", cuota="10.00").model_copy(
             update={"rectifies_invoice_number": "F-3"}
         ),
         on=_LATER_QUARTER,
     )
-    assert _correction_rows(resolution, _UNION) == [
+    assert _correction_rows(resolution, UNION) == [
         ("FR", 2025, "T", "4", Decimal("-10.00")),
         ("FR", 2026, "T", "1", Decimal("-25.00")),
     ]
@@ -199,14 +217,14 @@ def test_corrections_of_one_period_net_into_one_row_and_of_another_take_their_ow
 
 def test_a_correction_issued_in_the_period_of_its_invoice_stays_on_the_row(operation: PinnedAuthorityOperation) -> None:
     resolution = _resolve_corrections(
-        operation, _UNION, _regime_first(_UNION, _SUPPLY), _regime_correction(_UNION, _SUPPLY), on=_SUPPLY
+        operation, UNION, _regime_first(UNION, _SUPPLY), _regime_correction(UNION, _SUPPLY), on=_SUPPLY
     )
-    assert _correction_rows(resolution, _UNION) == []
+    assert _correction_rows(resolution, UNION) == []
 
 
 def test_a_correction_issued_before_its_invoice_refuses(operation: PinnedAuthorityOperation) -> None:
     assert (
-        _refusal(operation, _regime_first(_UNION, _LATER_QUARTER), _regime_correction(_UNION, _SUPPLY), on=_SUPPLY)
+        _refusal(operation, _regime_first(UNION, _LATER_QUARTER), _regime_correction(UNION, _SUPPLY), on=_SUPPLY)
         == "aggregation.oss_ioss.errors.rectificativa_target_later"
     )
 
@@ -216,9 +234,9 @@ def test_corrections_of_one_invoice_refuse_together_above_what_it_declared(opera
     assert (
         _refusal(
             operation,
-            _regime_first(_UNION, _SUPPLY),
-            _regime_correction(_UNION, _LATER_QUARTER, cuota="150.00"),
-            _regime_correction(_UNION, _LATER_QUARTER, number="R-2", cuota="60.00"),
+            _regime_first(UNION, _SUPPLY),
+            _regime_correction(UNION, _LATER_QUARTER, cuota="150.00"),
+            _regime_correction(UNION, _LATER_QUARTER, number="R-2", cuota="60.00"),
             on=_LATER_QUARTER,
         )
         == "aggregation.oss_ioss.errors.rectificativa_above_row"
@@ -229,14 +247,14 @@ def test_corrections_of_one_invoice_refuse_together_above_what_it_declared(opera
     ("regime", "corrected", "last_inside", "first_outside"),
     [
         # 1T 2023 closed on 30-04-2023, so the limit is 30-04-2026: 1T 2026 is filed from 1 April, 2T from 1 July.
-        (_UNION, date(2023, 2, 17), date(2026, 2, 17), date(2026, 5, 4)),
+        (UNION, date(2023, 2, 17), date(2026, 2, 17), date(2026, 5, 4)),
         # February 2023 closed on 31-03-2023, so the limit is 31-03-2026: 02/2026 is filed from 1 March, 03 from 1 April.
-        (_IMPORT, date(2023, 2, 17), date(2026, 2, 17), date(2026, 3, 4)),
+        (IMPORT, date(2023, 2, 17), date(2026, 2, 17), date(2026, 3, 4)),
     ],
     ids=["quarter", "month"],
 )
 def test_the_three_year_limit_counts_from_the_close_of_the_corrected_return(
-    operation: PinnedAuthorityOperation, regime: _Regime, corrected: date, last_inside: date, first_outside: date
+    operation: PinnedAuthorityOperation, regime: Regime, corrected: date, last_inside: date, first_outside: date
 ) -> None:
     resolution = _resolve_corrections(
         operation, regime, _regime_first(regime, corrected), _regime_correction(regime, last_inside), on=last_inside
@@ -254,15 +272,15 @@ def test_the_three_year_limit_counts_from_the_close_of_the_corrected_return(
 
 
 def test_a_foreign_currency_correction_of_an_earlier_period_refuses(operation: PinnedAuthorityOperation) -> None:
-    corrected = _regime_correction(_UNION, _LATER_QUARTER).model_copy(update={"currency": "PLN"})
+    corrected = _regime_correction(UNION, _LATER_QUARTER).model_copy(update={"currency": "PLN"})
     assert (
-        _refusal(operation, _regime_first(_UNION, _SUPPLY), corrected, on=_LATER_QUARTER)
+        _refusal(operation, _regime_first(UNION, _SUPPLY), corrected, on=_LATER_QUARTER)
         == "aggregation.oss_ioss.errors.correction_currency_unsourced"
     )
 
 
 def _entered_row(
-    operation: PinnedAuthorityOperation, regime: _Regime, *, year: int, period_type: str, period: str
+    operation: PinnedAuthorityOperation, regime: Regime, *, year: int, period_type: str, period: str
 ) -> CalculationSourceResolution:
     revision = published_revision("369", regime.revision_id)
     country_slot, year_slot, type_slot, period_slot, cuota_slot = record_row_slots(
@@ -270,10 +288,10 @@ def _entered_row(
     )[0]
     filed = regime.period(_LATER_QUARTER)
     return OssIossLedgerSourceResolver(
-        ports=InvoiceCatalogueReadPorts(invoice_reader=_Reader(()), transaction_reader=_Transactions())
+        ports=InvoiceCatalogueReadPorts(invoice_reader=Reader(()), transaction_reader=Transactions())
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             work_unit_id="a" * 64,
             modelo="369",
             filing_year=filed.filing_year,
@@ -300,13 +318,13 @@ def test_an_entered_row_the_return_cannot_file_refuses(
     operation: PinnedAuthorityOperation, year: int, period_type: str, period: str, reason: str
 ) -> None:
     with pytest.raises(AggregationValidationError) as refused:
-        _entered_row(operation, _UNION, year=year, period_type=period_type, period=period)
+        _entered_row(operation, UNION, year=year, period_type=period_type, period=period)
     assert str(refused.value.translated_message) == f"aggregation.oss_ioss.errors.{reason}"
 
 
 def test_an_entered_row_of_an_earlier_period_stands(operation: PinnedAuthorityOperation) -> None:
-    resolution = _entered_row(operation, _UNION, year=2026, period_type="T", period="1")
-    assert _correction_rows(resolution, _UNION) == []
+    resolution = _entered_row(operation, UNION, year=2026, period_type="T", period="1")
+    assert _correction_rows(resolution, UNION) == []
 
 
 def test_a_correction_whose_invoice_is_not_recorded_refuses(operation: PinnedAuthorityOperation) -> None:
@@ -330,9 +348,11 @@ def test_a_correction_above_its_row_refuses(operation: PinnedAuthorityOperation)
 def test_a_consignment_within_the_ceiling_is_still_read_with_its_correction(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    period = _IMPORT.period(_SUPPLY)
-    first = _invoice(_IMPORT, "F-1", country="FR", tier="general", base="150.00", cuota="30.00")
-    corrected = _invoice(_IMPORT, "R-1", country="FR", tier="general", base="50.00", cuota="10.00").model_copy(
+    period = IMPORT.period(_SUPPLY)
+    first = oss_detail_sections_invoice(IMPORT, "F-1", country="FR", tier="general", base="150.00", cuota="30.00")
+    corrected = oss_detail_sections_invoice(
+        IMPORT, "R-1", country="FR", tier="general", base="50.00", cuota="10.00"
+    ).model_copy(
         update={
             "invoice_class": invoice_class_rectificativa(),
             "series": "R",
@@ -340,20 +360,26 @@ def test_a_consignment_within_the_ceiling_is_still_read_with_its_correction(
             "rectifies_invoice_number": "F-1",
         }
     )
-    resolution = _resolve(operation, _IMPORT, (first, corrected), period=period)
-    assert _row(resolution, _IMPORT, 1) == ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00"))
+    resolution = resolve(operation, IMPORT, (first, corrected), period=period)
+    assert oss_detail_sections_row(resolution, IMPORT, 1) == (
+        "FR",
+        "S",
+        Decimal("20"),
+        Decimal("100.00"),
+        Decimal("20.00"),
+    )
 
 
 def test_frances_second_reduced_rate_takes_its_own_reduced_row(operation: PinnedAuthorityOperation) -> None:
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _UNION,
+        UNION,
         (
-            _invoice(_UNION, "F-1", country="FR", tier="reduced", base="100.00", cuota="5.50"),
-            _invoice(_UNION, "F-2", country="FR", tier="reduced", base="200.00", cuota="20.00"),
+            oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="reduced", base="100.00", cuota="5.50"),
+            oss_detail_sections_invoice(UNION, "F-2", country="FR", tier="reduced", base="200.00", cuota="20.00"),
         ),
     )
-    assert {_row(resolution, _UNION, row) for row in (1, 2)} == {
+    assert {oss_detail_sections_row(resolution, UNION, row) for row in (1, 2)} == {
         ("FR", "R", Decimal("10"), Decimal("200.00"), Decimal("20.00")),
         ("FR", "R", Decimal("5.5"), Decimal("100.00"), Decimal("5.50")),
     }
@@ -362,23 +388,33 @@ def test_frances_second_reduced_rate_takes_its_own_reduced_row(operation: Pinned
 def test_frances_super_reduced_rate_is_written_as_reduced(operation: PinnedAuthorityOperation) -> None:
     """DR369's code is binary, S:Estandar or R:Reducido, and 2,1 is not the standard rate."""
     on = date(2026, 7, 20)
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _UNION,
-        (_invoice(_UNION, "F-1", country="FR", tier="super_reduced", base="100.00", cuota="2.10", supply_date=on),),
-        period=_UNION.period(on),
+        UNION,
+        (
+            oss_detail_sections_invoice(
+                UNION, "F-1", country="FR", tier="super_reduced", base="100.00", cuota="2.10", supply_date=on
+            ),
+        ),
+        period=UNION.period(on),
     )
-    assert _row(resolution, _UNION, 1) == ("FR", "R", Decimal("2.1"), Decimal("100.00"), Decimal("2.10"))
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        "FR",
+        "R",
+        Decimal("2.1"),
+        Decimal("100.00"),
+        Decimal("2.10"),
+    )
 
 
 def test_a_cuota_matching_no_rate_of_the_tier_still_refuses(operation: PinnedAuthorityOperation) -> None:
-    invoice = _invoice(_UNION, "F-1", country="FR", tier="reduced", base="100.00", cuota="7.00")
+    invoice = oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="reduced", base="100.00", cuota="7.00")
     assert _refusal(operation, invoice) == "aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"
 
 
 def test_a_cuota_two_rates_of_the_tier_both_explain_refuses(operation: PinnedAuthorityOperation) -> None:
     """0,10 at 5,5 and at 10 both round to 0,01, so the row's rate is not known."""
-    invoice = _invoice(_UNION, "F-1", country="FR", tier="reduced", base="0.10", cuota="0.01")
+    invoice = oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="reduced", base="0.10", cuota="0.01")
     assert _refusal(operation, invoice) == "aggregation.oss_ioss.errors.rate_tier_ambiguous"
 
 
@@ -446,13 +482,23 @@ def _before_french_general(operation: PinnedAuthorityOperation) -> date:
 
 def test_a_figure_matching_a_projected_rate_is_accepted_with_a_warning(operation: PinnedAuthorityOperation) -> None:
     uncovered = _before_french_general(operation)
-    resolution = _resolve(
+    resolution = resolve(
         operation,
-        _UNION,
-        (_invoice(_UNION, "F-1", country="FR", tier="general", base="100.00", cuota="20.00", supply_date=uncovered),),
-        period=_UNION.period(uncovered),
+        UNION,
+        (
+            oss_detail_sections_invoice(
+                UNION, "F-1", country="FR", tier="general", base="100.00", cuota="20.00", supply_date=uncovered
+            ),
+        ),
+        period=UNION.period(uncovered),
     )
-    assert _row(resolution, _UNION, 1) == ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00"))
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        "FR",
+        "S",
+        Decimal("20"),
+        Decimal("100.00"),
+        Decimal("20.00"),
+    )
     warnings = [item for item in resolution.diagnostics if item.source_ref == "rate_date_projected"]
     assert len(warnings) == 1
     assert warnings[0].reason == "source_issue"
@@ -463,15 +509,15 @@ def test_a_figure_differing_from_a_projected_rate_is_a_coverage_gap_not_a_mismat
 ) -> None:
     uncovered = _before_french_general(operation)
     with pytest.raises(IvaRateNotFoundError) as refused:
-        _resolve(
+        resolve(
             operation,
-            _UNION,
+            UNION,
             (
-                _invoice(
-                    _UNION, "F-1", country="FR", tier="general", base="100.00", cuota="19.60", supply_date=uncovered
+                oss_detail_sections_invoice(
+                    UNION, "F-1", country="FR", tier="general", base="100.00", cuota="19.60", supply_date=uncovered
                 ),
             ),
-            period=_UNION.period(uncovered),
+            period=UNION.period(uncovered),
         )
     assert refused.value.context is not None
     assert refused.value.context["rate_registry_covers_date"] is False
@@ -479,7 +525,7 @@ def test_a_figure_differing_from_a_projected_rate_is_a_coverage_gap_not_a_mismat
 
 def test_a_correction_two_invoices_could_answer_refuses(operation: PinnedAuthorityOperation) -> None:
     """Two F-1 in different series could each be the one named, and the record cannot say which."""
-    other = _invoice(_UNION, "F-1", country="FR", tier="general", base="500.00", cuota="100.00")
+    other = oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="general", base="500.00", cuota="100.00")
     other = Invoice.model_validate({**other.model_dump(exclude={"invoice_id"}), "series": "B"})
     assert _refusal(operation, _first(), other, _correction()) == (
         "aggregation.oss_ioss.errors.rectificativa_target_ambiguous"
@@ -503,9 +549,9 @@ class _Quote:
 
 
 def _dutch(number: int, *, currency: str, base: str, cuota: str) -> Invoice:
-    return _invoice(_UNION, f"N-{number}", country="NL", tier="general", base=base, cuota=cuota).model_copy(
-        update={"currency": currency}
-    )
+    return oss_detail_sections_invoice(
+        UNION, f"N-{number}", country="NL", tier="general", base=base, cuota=cuota
+    ).model_copy(update={"currency": currency})
 
 
 def test_a_foreign_currency_row_converts_at_the_level_of_the_row(operation: PinnedAuthorityOperation) -> None:
@@ -516,12 +562,24 @@ def test_a_foreign_currency_row_converts_at_the_level_of_the_row(operation: Pinn
     """
     invoices = tuple(_dutch(number, currency="USD", base="1.00", cuota="0.21") for number in range(1000))
     with bind_exchange_rate_provider_factory(_Quote):
-        resolution = _resolve(operation, _UNION, invoices)
-    assert _row(resolution, _UNION, 1) == ("NL", "S", Decimal("21"), Decimal("919.50"), Decimal("193.10"))
+        resolution = resolve(operation, UNION, invoices)
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        "NL",
+        "S",
+        Decimal("21"),
+        Decimal("919.50"),
+        Decimal("193.10"),
+    )
 
 
 def test_a_euro_row_declares_its_cuota_at_its_own_rate(operation: PinnedAuthorityOperation) -> None:
     """100 x 0,99 + 0,21: base 99,00, cuota 99,00 x 0,21 = 20,79, where the lines would add up to 21,00."""
     invoices = tuple(_dutch(number, currency="EUR", base="0.99", cuota="0.21") for number in range(100))
-    resolution = _resolve(operation, _UNION, invoices)
-    assert _row(resolution, _UNION, 1) == ("NL", "S", Decimal("21"), Decimal("99.00"), Decimal("20.79"))
+    resolution = resolve(operation, UNION, invoices)
+    assert oss_detail_sections_row(resolution, UNION, 1) == (
+        "NL",
+        "S",
+        Decimal("21"),
+        Decimal("99.00"),
+        Decimal("20.79"),
+    )

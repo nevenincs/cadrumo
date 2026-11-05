@@ -12,35 +12,35 @@ from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_baja_correction import _low_value_forecast, _low_value_revision
-from .test_register import _ACQUISITION, _NAME, _operations, _revision
+from .test_baja_correction import low_value_forecast, low_value_revision
+from .test_register import ACQUISITION, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_KEY = "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
+KEY = "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
 _UNRESOLVED = "ledger.actividad_asset.disposal_finding.minimum_unresolved"
 
 
 def test_a_free_method_year_with_an_edition_has_the_no_table_minimum_reason() -> None:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_low_value_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2026, 12, 31)),
     )
-    operations.create(_low_value_revision(), _NAME)
+    operations.create(low_value_revision(), NAME)
 
     row = operations.plan("laptop-1")[0]
 
     assert row.minimum_complete is False
     assert row.minimum_through is None
-    assert row.minimum_reason_key == _KEY
+    assert row.minimum_reason_key == KEY
 
 
 def test_a_table_method_with_an_edition_has_a_minimum_and_no_reason() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     row = operations.plan("laptop-1")[0]
 
@@ -51,7 +51,7 @@ def test_a_table_method_with_an_edition_has_a_minimum_and_no_reason() -> None:
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_the_reason_is_worded_in_every_locale_apart_from_the_unresolved_one(locale: str) -> None:
-    worded = lookup_translation(_KEY, locale=locale)
+    worded = lookup_translation(KEY, locale=locale)
 
     assert worded is not None
     assert worded != lookup_translation(_UNRESOLVED, locale=locale)

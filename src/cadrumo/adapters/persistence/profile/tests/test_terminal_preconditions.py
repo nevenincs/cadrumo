@@ -401,7 +401,7 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
         operand_values=(Decimal("7.00"), Decimal("20.00")),
     )
 
-    registry_mapping = m303_module._selected_registry_mapping(
+    registry_mapping = m303_module.selected_registry_mapping(
         modelo=Modelo("303").value,
         filing_year=_PERIOD.filing_year,
         period=_PERIOD.registry_token,

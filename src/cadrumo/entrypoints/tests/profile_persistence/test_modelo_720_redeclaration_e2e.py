@@ -30,7 +30,7 @@ refactor onto ``casilla_values`` reds here instead of silently disarming the
 guard.
 
 See Also:
-    :func:`~cadrumo.application.modelo._m720_redeclaration_gate.modelo_720_redeclaration_findings`
+    :func:`~cadrumo.application.modelo.m720_redeclaration_gate.modelo_720_redeclaration_findings`
         Verify-time gate under test.
     :func:`~cadrumo.application.calculations.modelo_720_evidence_observation`
         Independent per-asset-row valuation projection.

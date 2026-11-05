@@ -15,19 +15,19 @@ from ...domain.calculations.registry.retenciones_bindings import (
     resolve_retenciones_aggregation_binding_values,
 )
 from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
-from ._modelo_bindings_support import (
+from .errors import AggregationValidationError
+from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
 )
-from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
-from ._retencion_rate_advisory import (
-    administrador_retencion_rate_advisory_observations,
-)
-from .errors import AggregationValidationError
+from .preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .retencion_observations_repository import (
     RetencionObservationPersistenceError,
     RetencionObservationPorts,
+)
+from .retencion_rate_advisory import (
+    administrador_retencion_rate_advisory_observations,
 )
 from .retenciones import (
     RetencionesAggregation,
@@ -45,9 +45,10 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .source_resolution_operations import (
-    source_provenance_for as _provenance_for,
+    source_context_operation,
+    source_provenance_for,
+    storage_degradation_resolution,
 )
 from .withholding_modelo_routing import annual_source_observations_modelo
 
@@ -242,7 +243,7 @@ class RetencionesAggregationSourceResolver:
             diagnostics=administrador_retencion_rate_advisory_observations(
                 observations, effective_date=context.period.end_date
             ),
-            provenance=_provenance_for(
+            provenance=source_provenance_for(
                 aggregation.rollups,
                 lambda rollup: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,

@@ -205,12 +205,12 @@ def test_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     result = _result()
-    operation._require_result_bound(result)
+    operation.require_result_bound(result)
 
-    monkeypatch.setattr(operation, "_MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
+    monkeypatch.setattr(operation, "MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
 
     with pytest.raises(TransactionValidationError, match="registered projection bound"):
-        operation._require_result_bound(result)
+        operation.require_result_bound(result)
 
 
 @pytest.mark.asyncio
@@ -331,9 +331,9 @@ def test_result_projector_requires_matching_success_receipt() -> None:
         result_ref="a" * 64,
     )
 
-    assert operation._project_operation_result(result, receipt) == result.result
+    assert operation.project_operation_result(result, receipt) == result.result
     with pytest.raises(ValueError):
-        operation._project_operation_result(
+        operation.project_operation_result(
             result,
             receipt.model_copy(update={"effect": OperationEffect.NONE}),
         )

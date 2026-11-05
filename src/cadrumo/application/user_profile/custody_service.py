@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from ...core.bucket_pointer import BucketPointer
 from ...core.paths import effective_storage_root
 from ...core.profile_publication import ProfilePublicationKind, ProfilePublicationKindValue
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from .custody_hold import ProfileCustodyHoldAuthority
 from .custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
 from .custody_ports import ProfileCustodyPort, profile_custody_port
@@ -130,7 +130,7 @@ class ProfileCustodyTransactionService:
         block, and one carried where nothing blocks is a free pass.
         """
         transaction = transaction_id or uuid4()
-        instant = (now or _utc_now()).astimezone(UTC)
+        instant = (now or clock_utc_now()).astimezone(UTC)
         with profile_custody_transaction_lock(self._root, profile_id):
             self._refuse_active_target_when_required(
                 profile_id=profile_id,
@@ -192,7 +192,7 @@ class ProfileCustodyTransactionService:
         except (ValidationError, ValueError, TypeError) as exc:
             raise ProfileCustodyTransactionRefusalError("profile capsule label is invalid") from exc
         transaction = transaction_id or uuid4()
-        instant = (now or _utc_now()).astimezone(UTC)
+        instant = (now or clock_utc_now()).astimezone(UTC)
         staged_relative_path = self._adapters.staging_path(
             profile_id=profile_id,
             transaction_id=transaction,
@@ -314,7 +314,7 @@ class ProfileCustodyTransactionService:
         the captured pointer witness again immediately before publication.  A
         receipt makes the operation idempotent without replaying adapter effects.
         """
-        instant = (now or _utc_now()).astimezone(UTC)
+        instant = (now or clock_utc_now()).astimezone(UTC)
         journal = self._repository.load_journal(transaction_id)
         if journal.operation is not ProfileCustodyTransactionOperation.CREATE:
             raise ProfileCustodyTransactionRefusalError("journal does not name a custody create transaction")
@@ -524,7 +524,7 @@ class ProfileCustodyTransactionService:
         owner step persists its receipt and next journal state, allowing a crash
         to resume without repeating a completed local effect.
         """
-        instant = (now or _utc_now()).astimezone(UTC)
+        instant = (now or clock_utc_now()).astimezone(UTC)
         journal = self._repository.load_journal(confirmation.transaction_id)
         if journal.operation is not ProfileCustodyTransactionOperation.DELETE:
             raise ProfileCustodyTransactionRefusalError("confirmation does not name a local delete transaction")

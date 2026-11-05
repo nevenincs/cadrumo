@@ -21,7 +21,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..operations.access_port import OperationAccessResolver
@@ -178,7 +178,7 @@ class ModeloWorkRenameExecutor:
                         bucket_id=renamed.bucket_id,
                         unit=ModeloWorkMetadataSnapshot.from_work_unit(renamed),
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-rename-publication")
@@ -256,7 +256,7 @@ class ModeloWorkDiscardExecutor:
                         discarded=True,
                         unit=ModeloWorkMetadataSnapshot.from_work_unit(discarded),
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-discard-publication")
@@ -465,7 +465,7 @@ class ModeloWorkVerifyExecutor:
                         finding_count=len(report.findings),
                         missing_required_casilla_count=len(report.missing_required_casilla_ids),
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-verify-publication")
@@ -650,7 +650,7 @@ class ModeloWorkFileExecutor:
                         work_unit_id=record.work_unit_id,
                         calculation_revision_id=record.calculation_revision_id,
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-file-publication")
@@ -812,7 +812,7 @@ class ModeloWorkAmendExecutor:
                         corrected_casilla_count=len(payload.overrides),
                         m303_rectificativa_motive=payload.m303_rectificativa_motive,
                     ),
-                    written_at=_utc_now(),
+                    written_at=now(),
                 )
 
         return await await_cancellation_complete(publish(), task_name="modelo-work-amend-publication")

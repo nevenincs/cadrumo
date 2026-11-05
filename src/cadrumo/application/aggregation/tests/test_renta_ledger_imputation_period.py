@@ -36,7 +36,7 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
-from .renta_income_aggregation_support import _period, catalogue_read_ports
+from .renta_income_aggregation_support import catalogue_read_ports, renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -142,7 +142,7 @@ def _resolve(
             bucket_id=_BUCKET,
             modelo="100",
             filing_year=year,
-            period=_period(year, "0A"),
+            period=renta_income_aggregation_period(year, "0A"),
             revision=published_snapshot("100", filing_year=year, period="0A").revision,
         ),
     )

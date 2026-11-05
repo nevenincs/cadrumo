@@ -22,14 +22,14 @@ from ..renta_income_ledger import (
 )
 from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from .renta_income_aggregation_support import (
-    _ANNUAL_2024,
-    _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-    _Q1_2024,
+    ANNUAL_2024,
+    M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
     M130_INGRESOS_CASILLA,
     M130_MODELO,
-    _actividad_transaction_with_source,
-    _income_transaction,
+    Q1_2024,
+    actividad_transaction_with_source,
     catalogue_read_ports,
+    income_transaction,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
@@ -62,7 +62,7 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     IRNR / Beckham engines can read the jurisdiction without retrofitting
     the read-side.
     """
-    tx = _actividad_transaction_with_source(
+    tx = actividad_transaction_with_source(
         "ae-es-001",
         value_date=date(2024, 2, 1),
         amount=Decimal("3000.00"),
@@ -73,7 +73,7 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -101,13 +101,13 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     """
     es_amount = Decimal("1000.00")
     fr_amount = Decimal("500.00")
-    es_row = _actividad_transaction_with_source(
+    es_row = actividad_transaction_with_source(
         "ae-es-002",
         value_date=date(2024, 1, 15),
         amount=es_amount,
         source_jurisdiction="ES",
     )
-    fr_row = _actividad_transaction_with_source(
+    fr_row = actividad_transaction_with_source(
         "ae-fr-001",
         value_date=date(2024, 2, 10),
         amount=fr_amount,
@@ -118,7 +118,7 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -148,26 +148,26 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
     leaf 0171, not the M130 casilla 01.
     """
     jan_amount, dec_amount = Decimal("3000.00"), Decimal("5000.00")
-    jan = _income_transaction("m100-jan", value_date=date(2024, 1, 20), amount=jan_amount)
-    dec = _income_transaction("m100-dec", value_date=date(2024, 12, 28), amount=dec_amount)
-    prior = _income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
+    jan = income_transaction("m100-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    dec = income_transaction("m100-dec", value_date=date(2024, 12, 28), amount=dec_amount)
+    prior = income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, dec, prior))
 
     result = aggregate_renta_m100_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2024,
+        period=ANNUAL_2024,
         modelo=_M100_MODELO,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
     )
 
-    assert all(o.target_casilla_id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
+    assert all(o.target_casilla_id == M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "100"
     # Prior-year row excluded; in-year receipts summed into 0171.
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id, dec.transaction_id}
-    assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == sum(
+    assert result.casilla_aggregation.casilla_values[M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == sum(
         (jan_amount, dec_amount),
         Decimal("0"),
     )
@@ -186,15 +186,15 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
     visibility signal without allocating one issue per plaintext index entry.
     """
     jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
-    jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
-    prior = _income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
+    jan = income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    prior = income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
     catalogue = TransactionCatalogue.from_transactions((jan, prior))
 
     result = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2024,
+        period=ANNUAL_2024,
         modelo=_M100_MODELO,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
         ports=catalogue_read_ports(
@@ -204,7 +204,7 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
     )
 
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
-    assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == jan_amount
+    assert result.casilla_aggregation.casilla_values[M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == jan_amount
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
@@ -220,14 +220,14 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     In-window observations and casilla totals/provenance must match; only the
     out-of-window issue taxonomy can differ.
     """
-    in_year = _income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
-    prior_year = _income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
+    in_year = income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
+    prior_year = income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
     partitioned = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2024,
+        period=ANNUAL_2024,
         modelo=_M100_MODELO,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
         ports=catalogue_read_ports(
@@ -238,9 +238,9 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     full_scan = aggregate_renta_m100_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2024,
+        period=ANNUAL_2024,
         modelo=_M100_MODELO,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
     )
@@ -268,9 +268,9 @@ def test_m100_annual_income_rejects_non_annual_period() -> None:
         aggregate_renta_m100_income_ledger(
             catalogue,
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_Q1_2024,
+            period=Q1_2024,
             modelo=_M100_MODELO,
-            target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+            target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
             activity_category_matcher=m130_activity_category_matcher,
             employment_category_matcher=m130_employment_category_matcher,
         )
@@ -284,20 +284,20 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     input, never copied from engine output.
     """
     revision = published_revision("100", "2025")
-    casilla_0171 = next(c for c in revision.casillas if c.id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
+    casilla_0171 = next(c for c in revision.casillas if c.id == M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"
     binding = next(b for b in revision.bindings if b.id == casilla_0171.binding)
     assert str(binding.source) == "ledger_renta_income_aggregation"
 
     base = Decimal("4200.00")
-    tx = _income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
+    tx = income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
     catalogue = TransactionCatalogue.from_transactions((tx,))
     aggregation = aggregate_renta_m100_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2024,
+        period=ANNUAL_2024,
         modelo=_M100_MODELO,
-        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        target_casilla_id=M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
     )

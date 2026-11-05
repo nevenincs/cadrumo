@@ -33,7 +33,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
-from .._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
+from ..m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

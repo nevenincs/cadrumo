@@ -30,8 +30,8 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing.record_renderer import record_render_rows
 from ...filing.record_types import RecordRenderRow
-from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 from ..action_errors import ModeloAggregationBindingError
+from ..calculation_modelo_adjustments import union_detail_rows_by_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

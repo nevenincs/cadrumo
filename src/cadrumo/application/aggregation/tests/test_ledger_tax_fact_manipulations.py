@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -93,7 +93,7 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 
 # --- behavior contract: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
 def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         cases = [
             (Decimal("0.21"), IvaCategory("domestic_general")),
             (Decimal("0.10"), IvaCategory("domestic_reduced")),

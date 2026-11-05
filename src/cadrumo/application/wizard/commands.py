@@ -60,7 +60,6 @@ from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
-from ._format_hints import attach_format_hints
 from .command_parameters import (
     canonical_from_flag_value,
     flag_name,
@@ -80,6 +79,7 @@ from .errors import (
     wizard_no_action_verdict,
 )
 from .flow_validators import attach_taxpayer_projection_validator
+from .format_hints import attach_format_hints
 from .imputation_election import ELECTION_QUESTION_IDS, election_answers, election_changes
 from .models import WizardFlow
 from .patch_edit import (
@@ -109,7 +109,7 @@ _FLOW_MODE_BY_WIZARD_MODE: dict[WizardPersistMode, FlowMode] = {
 #: Neither setup mode offers a checkpoint.  Credential registration owns
 #: profile creation, and profile edits must never leave a half-applied fact
 #: set behind.
-_SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
+SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
     FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
     FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
 }
@@ -118,7 +118,7 @@ _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 # KWARGS-RATIONALE-flow-runner: keyword-only frontend seam injected by the caller.
 
 
-def _missing_required_flags(
+def missing_required_flags(
     flow: WizardFlow,
     canonical: dict[str, str],
 ) -> tuple[str, ...]:
@@ -167,7 +167,7 @@ def setup_flow_definition(
     """
     definition = attach_taxpayer_projection_validator(
         attach_setup_legal_validators(
-            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=SETUP_CHECKPOINT)),
         ),
     )
     if attach_descendants:
@@ -175,7 +175,7 @@ def setup_flow_definition(
     return definition
 
 
-def _force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -> FlowDefinition:
+def force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -> FlowDefinition:
     """Project the named pages as unconditionally visible for one scripted walk.
 
     An explicitly-supplied flag is an unambiguous declaration of intent, so
@@ -199,7 +199,7 @@ def _force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -
     return definition.model_copy(update={"sections": tuple(new_sections)})
 
 
-def _project_scripted_answers(
+def project_scripted_answers(
     definition: FlowDefinition,
     canonical: Mapping[str, str],
     *,
@@ -237,7 +237,7 @@ def _project_scripted_answers(
         answers[target.key] = raw
 
 
-def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]) -> BaseModel:
+def answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]) -> BaseModel:
     """Coerce a page-keyed committed-answer map into the typed answers model.
 
     Every visible page commits during a walk (even blank), so a question the
@@ -261,7 +261,7 @@ def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]
     return flow.answers_model.model_validate(typed)
 
 
-def _run_scripted_walk(
+def run_scripted_walk(
     flow: WizardFlow,
     canonical: dict[str, str],
     *,
@@ -288,11 +288,11 @@ def _run_scripted_walk(
     validates, the substrate refusal stands.
     """
     flow_mode = _FLOW_MODE_BY_WIZARD_MODE[mode]
-    definition = _force_pages_visible(
+    definition = force_pages_visible(
         setup_flow_definition(flow, attach_descendants=mode == "create", operation=operation),
         explicit_question_ids,
     )
-    tokens, intended = _project_scripted_answers(definition, canonical, mode=flow_mode)
+    tokens, intended = project_scripted_answers(definition, canonical, mode=flow_mode)
     defaults = {
         question.id: question.default or ""
         for section in flow.sections
@@ -302,9 +302,9 @@ def _run_scripted_walk(
     try:
         state, _projection = run_scripted_flow(definition, tokens, mode=flow_mode, defaults=defaults)
     except (FlowAnswerError, FlowSubmitError):
-        _answers_model_from_canonical(flow, intended)
+        answers_model_from_canonical(flow, intended)
         raise
-    return _answers_model_from_canonical(flow, dict(state.answers))
+    return answers_model_from_canonical(flow, dict(state.answers))
 
 
 def _collect_flag_values(
@@ -519,7 +519,7 @@ def persist_full_flow_answers(
     return values
 
 
-def _run_full_flow(
+def run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
     *,
@@ -554,7 +554,7 @@ def _run_full_flow(
         canonical = _seed_default_answers(flow, canonical)
 
     if quiet:
-        missing = _missing_required_flags(flow, canonical)
+        missing = missing_required_flags(flow, canonical)
         if missing:
             missing_flags = format_missing_flags(missing)
             raise WizardMissingFlagError(
@@ -574,7 +574,7 @@ def _run_full_flow(
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
-        answers = _run_scripted_walk(
+        answers = run_scripted_walk(
             flow,
             canonical,
             mode=mode,
@@ -582,7 +582,7 @@ def _run_full_flow(
             operation=operation,
         )
     elif accept_defaults:
-        answers = _run_scripted_walk(
+        answers = run_scripted_walk(
             flow,
             canonical,
             mode=mode,
@@ -644,7 +644,7 @@ def _render_error_inside_language_override(exc: CadrumoError) -> None:
     exc.translated_message = None
 
 
-def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
+def require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
     """Return a stripped profile name or raise the wizard missing-flag error."""
     if isinstance(raw_profile_name, str) and raw_profile_name.strip():
         return raw_profile_name.strip()
@@ -678,7 +678,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     from ..workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
-        _require_profile_label_available(
+        require_profile_label_available(
             flow,
             profile_name,
             label_is_registered=read_profile_bucket(profile_name) is not None,
@@ -700,7 +700,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     )
 
 
-def _require_profile_label_available(
+def require_profile_label_available(
     flow: WizardFlow,
     profile_name: str,
     *,
@@ -741,7 +741,7 @@ def _resolve_profile_target_for_mode(
         profile_name = raw_profile_name.strip()
         return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
     if mode == "create":
-        profile_name = _require_profile_name(flow, raw_profile_name)
+        profile_name = require_profile_name(flow, raw_profile_name)
         return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
 
     from ...core.bucket_pointer import require_active_bucket_id
@@ -915,7 +915,7 @@ def run_wizard_persistence_path(
             patch_persister=patch_persister,
         )
 
-    return _run_full_flow(
+    return run_full_flow(
         flow,
         canonical,
         quiet=quiet,

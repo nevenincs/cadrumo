@@ -31,11 +31,11 @@ from ....domain.transactions.raw_transaction import RawTransaction
 from ...ledger.actions_common import mutation_signature
 from ...ledger.actions_manual import transaction_from_command
 from ..ledger_filing_snapshot import (
-    _FINGERPRINT_FIELDS_V2,
-    _FINGERPRINT_FIELDS_V3,
-    _FINGERPRINT_FIELDS_V5,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
-    _fingerprint_fields,
+    FINGERPRINT_FIELDS_V2,
+    FINGERPRINT_FIELDS_V3,
+    FINGERPRINT_FIELDS_V5,
+    fingerprint_fields,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -137,7 +137,7 @@ def test_every_writable_iva_field_is_in_the_current_field_set_or_excluded_with_a
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
-        field_set=_fingerprint_fields(CURRENT_FINGERPRINT_FIELD_SET_VERSION),
+        field_set=fingerprint_fields(CURRENT_FINGERPRINT_FIELD_SET_VERSION),
         excluded=INTENTIONALLY_EXCLUDED,
     )
     assert missing == (), (
@@ -170,7 +170,7 @@ def test_the_guard_would_have_caught_the_v2_gap() -> None:
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
-        field_set=_FINGERPRINT_FIELDS_V2,
+        field_set=FINGERPRINT_FIELDS_V2,
         excluded=INTENTIONALLY_EXCLUDED,
     )
     assert missing == (
@@ -187,7 +187,7 @@ def test_the_guard_would_have_caught_the_v3_gap() -> None:
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
-        field_set=_FINGERPRINT_FIELDS_V3,
+        field_set=FINGERPRINT_FIELDS_V3,
         excluded=INTENTIONALLY_EXCLUDED,
     )
     assert missing == ("deduction_provenance", "iva_vehicle_use", "operation_date")
@@ -198,7 +198,7 @@ def test_the_guard_would_have_caught_the_v5_gap() -> None:
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
-        field_set=_FINGERPRINT_FIELDS_V5,
+        field_set=FINGERPRINT_FIELDS_V5,
         excluded=INTENTIONALLY_EXCLUDED,
     )
     assert missing == ("iva_vehicle_use",)

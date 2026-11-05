@@ -6,7 +6,7 @@ from pydantic import BaseModel, field_validator
 
 from ...core.action_argument_resolution import ActionArgumentResolution
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionArgumentStatus
 from ...core.precondition_action_invariants import (
     PreconditionActionIdentity,
@@ -59,7 +59,7 @@ class DeclaredNextAction(BaseModel):
     the tree in the first place.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     action: ActionReference
     argument_bindings: tuple[ActionArgumentBinding, ...] = ()

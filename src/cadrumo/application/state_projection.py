@@ -51,7 +51,7 @@ See Also:
     :class:`ProjectionModeloReadiness`
         Per-target readiness record built from profile facts, registry
         snapshots, binding availability, and ledger preflight.
-    :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`
+    :func:`~cadrumo.application.workflow.deadline_stage.resolve_deadline_stage_obligation`
         Filing workflow selector that filters a schedule for the workflow gate;
         it does not consume ``pending_obligations`` directly.
     :func:`~cadrumo.domain.deadlines.engine.compute_obligation_schedule`
@@ -72,8 +72,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
-from ..core.aggregation import BindingSourceKind
+from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError
@@ -84,7 +83,6 @@ from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import Schedule, TaxpayerProfile
-from ._state_projection_readiness import readiness_binding_input_channel
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth.operator_probe_ports import OperatorProbePorts
 from .auth.operator_scope_ports import OperatorScopePorts
@@ -110,6 +108,7 @@ from .state_projection_models import (
     ProjectionWorkspaceSummary,
 )
 from .state_projection_ports import StateProjectionReadPorts
+from .state_projection_readiness import readiness_binding_input_channel
 from .user_profile.commands import ProfilePreflightReport
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState
@@ -193,7 +192,7 @@ def build_pending_obligations(
     workflow deadline stage. This function projects the full
     :class:`~cadrumo.domain.deadlines.models.Schedule`; the workflow gate separately
     filters its target :class:`~cadrumo.domain.deadlines.models.ModeloDeadline` through
-    :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
+    :func:`~cadrumo.application.workflow.deadline_stage.resolve_deadline_stage_obligation`.
     A failure to compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
 
@@ -415,7 +414,7 @@ def _evaluate_modelo_readiness(
 ) -> _ModeloReadinessEvaluation:
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
-    registry = _resolve_modelo_readiness_registry(request, period=period, operation=operation)
+    registry = resolve_modelo_readiness_registry(request, period=period, operation=operation)
     profile_report, profile_refusal, profile_precondition_verdict, profile_refusal_cause = _build_modelo_profile_stage(
         request,
         context=context,
@@ -530,10 +529,10 @@ def build_modelo_readiness_reports(
 
 def _snapshot_requires_ledger_preflight(snapshot: RegistrySnapshot) -> bool:
     """Return whether the registry snapshot declares ledger-backed bindings."""
-    return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
+    return any(binding.source in LEDGER_BINDING_SOURCE_KINDS for binding in snapshot.revision.bindings)
 
 
-def _resolve_modelo_readiness_registry(
+def resolve_modelo_readiness_registry(
     request: ModeloReadinessRequest,
     *,
     period: Period,
@@ -564,7 +563,7 @@ def _resolve_modelo_readiness_registry(
             ),
         )
     except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError) as exc:
-        refusal = _registry_readiness_refusal(request, period_token=period_token, exc=exc)
+        refusal = registry_readiness_refusal(request, period_token=period_token, exc=exc)
         _log.debug(
             "state projection: registry snapshot unavailable for modelo readiness",
             extra={
@@ -580,7 +579,7 @@ def _resolve_modelo_readiness_registry(
             snapshot=None, refusal=refusal, cause=ModeloRegistryRefusalCause.SNAPSHOT_UNAVAILABLE
         )
     if request.revision_id and snapshot.revision.id != request.revision_id:
-        refusal = _registry_readiness_revision_mismatch_refusal(
+        refusal = registry_readiness_revision_mismatch_refusal(
             request,
             period_token=period_token,
             resolved_revision_id=snapshot.revision.id,
@@ -591,7 +590,7 @@ def _resolve_modelo_readiness_registry(
     return _ModeloReadinessRegistryResolution(snapshot=snapshot)
 
 
-def _registry_readiness_refusal(
+def registry_readiness_refusal(
     request: ModeloReadinessRequest,
     *,
     period_token: str,
@@ -616,7 +615,7 @@ def _registry_readiness_refusal(
     )
 
 
-def _registry_readiness_revision_mismatch_refusal(
+def registry_readiness_revision_mismatch_refusal(
     request: ModeloReadinessRequest,
     *,
     period_token: str,
@@ -721,7 +720,7 @@ def _build_missing_binding_requirements(
     missing: list[ProjectionModeloBindingRequirement] = []
     for binding in sorted(revision.bindings, key=lambda item: item.id):
         binding_id = binding.id
-        if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
+        if binding.source in LEDGER_BINDING_SOURCE_KINDS and ledger_sources_ready:
             continue
         if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:
             continue

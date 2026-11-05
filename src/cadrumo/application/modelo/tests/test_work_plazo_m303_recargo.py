@@ -34,7 +34,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -93,7 +93,7 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
     frozen literal. The recargo band is cross-checked against the domain
     ``build_recovery_for_overdue`` computation, not a hand-picked percentage.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for quarter, filing_year in _quarter_year_cases():
             case_id = f"M303 {filing_year} {quarter}"
             period = Period.from_year_and_code(filing_year, quarter)

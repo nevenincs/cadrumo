@@ -54,7 +54,7 @@ def _signature_fields() -> set[str]:
 
 def _persisted_fields() -> set[str]:
     """The keys of the sibling full-field projection over the same record."""
-    tree = ast.parse(inspect.getsource(actions_common._transaction_idempotency_fields).lstrip())
+    tree = ast.parse(inspect.getsource(actions_common.transaction_idempotency_fields).lstrip())
     for node in ast.walk(tree):
         if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict):
             # The value check is not ceremony: `ast.Constant.value` spans str,

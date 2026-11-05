@@ -415,7 +415,7 @@ def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) 
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
     manager.scaffold()
 
-    owner = (tmp_path / "api" / "cadrumo.application.aggregation._models.rst").read_text(encoding="utf-8")
+    owner = (tmp_path / "api" / "cadrumo.application.aggregation.models.rst").read_text(encoding="utf-8")
     consumer = (tmp_path / "api" / "cadrumo.application.aggregation.renta_income_ledger.rst").read_text(
         encoding="utf-8",
     )

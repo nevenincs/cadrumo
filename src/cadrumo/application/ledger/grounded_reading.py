@@ -240,7 +240,7 @@ def ground_draft_against_transcription(
     if taxpayer_tax_id is not None:
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=_identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
+            candidates=identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
             taxpayer_tax_id=taxpayer_tax_id,
             origin=_reading_origin(envelopes),
             operation=operation,
@@ -300,7 +300,7 @@ def _suggested_kind_envelope(derivation: InvoiceKindDerivation) -> FieldProvenan
     )
 
 
-def _identity_candidates(
+def identity_candidates(
     *,
     draft: InvoiceDraft,
     envelopes: tuple[FieldProvenance, ...],

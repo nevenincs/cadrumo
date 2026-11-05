@@ -21,13 +21,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ...calculations.observations_repository import ObservationEnvelopePayload
-from ..draft_review import _prior_filing_observations_fingerprint
+from ..draft_review import prior_filing_observations_fingerprint
 from .filing_support import empty_prior_filing_observations_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -69,11 +69,11 @@ def _carrier(
 
 
 def test_prior_filing_fingerprint_changes_when_a_filed_value_changes() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        before = _prior_filing_observations_fingerprint(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        before = prior_filing_observations_fingerprint(
             [_carrier(value="100.00")], operation=_authority_operation_for_test
         )
-        after = _prior_filing_observations_fingerprint(
+        after = prior_filing_observations_fingerprint(
             [_carrier(value="250.00")], operation=_authority_operation_for_test
         )
 
@@ -81,7 +81,7 @@ def test_prior_filing_fingerprint_changes_when_a_filed_value_changes() -> None:
 
 
 def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
 
         def carrier(value: str) -> ObservationEnvelopePayload:
             observation = RegistryModeloObservation(
@@ -107,27 +107,27 @@ def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion
                 source_metadata={},
             )
 
-        before = _prior_filing_observations_fingerprint([carrier("1T")], operation=_authority_operation_for_test)
-        after = _prior_filing_observations_fingerprint([carrier("2T")], operation=_authority_operation_for_test)
+        before = prior_filing_observations_fingerprint([carrier("1T")], operation=_authority_operation_for_test)
+        after = prior_filing_observations_fingerprint([carrier("2T")], operation=_authority_operation_for_test)
 
         assert before != after
 
 
 def test_prior_filing_fingerprint_refuses_a_stale_stamped_revision() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        _prior_filing_observations_fingerprint(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        prior_filing_observations_fingerprint(
             [_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")], operation=_authority_operation_for_test
         )
 
         with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
-            _prior_filing_observations_fingerprint(
+            prior_filing_observations_fingerprint(
                 [_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")],
                 operation=_authority_operation_for_test,
             )
 
 
 def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         a = _carrier(value="100.00")
         b = ObservationEnvelopePayload(
             observation=RegistryModeloObservation(
@@ -150,18 +150,18 @@ def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> No
             source_metadata={},
         )
 
-        assert _prior_filing_observations_fingerprint(
+        assert prior_filing_observations_fingerprint(
             [a, b], operation=_authority_operation_for_test
-        ) == _prior_filing_observations_fingerprint([b, a], operation=_authority_operation_for_test)
+        ) == prior_filing_observations_fingerprint([b, a], operation=_authority_operation_for_test)
 
 
 def test_prior_filing_fingerprint_distinguishes_empty_from_populated() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        empty = _prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)
-        populated = _prior_filing_observations_fingerprint(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        empty = prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)
+        populated = prior_filing_observations_fingerprint(
             [_carrier(value="100.00")], operation=_authority_operation_for_test
         )
 
         assert empty != populated
         assert empty == empty_prior_filing_observations_fingerprint()
-        assert empty == _prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)
+        assert empty == prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)

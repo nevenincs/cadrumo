@@ -31,16 +31,16 @@ from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import (
-    _M130_RETENCIONES_BINDING,
-    _M130_RETENCIONES_CASILLA,
-    _Q1_2024,
     M130_INGRESOS_CASILLA,
     M130_MODELO,
-    _period,
+    M130_RETENCIONES_BINDING,
+    M130_RETENCIONES_CASILLA,
+    Q1_2024,
     actividad_transaction,
     catalogue_read_ports,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
+    renta_income_aggregation_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -104,7 +104,7 @@ def _m130_casilla(casilla_id: str) -> CasillaDefinition:
     )
 
 
-def _m130_2026_q1_revision() -> ModeloRevision:
+def m130_2026_q1_revision() -> ModeloRevision:
     return ModeloRevision(
         id="2019-y-siguientes",
         localization_key="test.schema.revision.2019-y-siguientes.label",
@@ -112,7 +112,7 @@ def _m130_2026_q1_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
         legal_refs=_M130_INGRESOS_LEGAL_REFS,
         source_refs=_M130_INCOME_SOURCE_REFS,
-        casillas=(_m130_casilla(M130_INGRESOS_CASILLA), _m130_casilla(_M130_RETENCIONES_CASILLA)),
+        casillas=(_m130_casilla(M130_INGRESOS_CASILLA), _m130_casilla(M130_RETENCIONES_CASILLA)),
         bindings=(
             _m130_renta_income_binding(
                 _M130_INGRESOS_BINDING,
@@ -120,7 +120,7 @@ def _m130_2026_q1_revision() -> ModeloRevision:
                 legal_refs=_M130_INGRESOS_LEGAL_REFS,
             ),
             _m130_renta_income_binding(
-                _M130_RETENCIONES_BINDING,
+                M130_RETENCIONES_BINDING,
                 fact="declared_withheld_amount_sum",
                 legal_refs=_M130_RETENCIONES_LEGAL_REFS,
             ),
@@ -173,7 +173,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -211,7 +211,7 @@ def test_trabajo_income_excluded_from_m130() -> None:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -249,7 +249,7 @@ def test_taxable_base_amount_populated_when_set() -> None:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -284,7 +284,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     aggregation = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -297,13 +297,13 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
 
     assert observation.withheld_derivation is LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA
 
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert aggregation.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == Decimal("2000.00")
     # The figure is reconstructed, and the credit takes only what an invoice
     # declares, so it reaches the observation and stops short of the binding.
     # What the operator is not claiming is reported, not lost.
-    assert resolved[_M130_RETENCIONES_BINDING] == Decimal("0")
+    assert resolved[M130_RETENCIONES_BINDING] == Decimal("0")
     partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
     assert partition.declared_total == Decimal("0")
     assert partition.inferred_total == Decimal("300.00")
@@ -353,7 +353,7 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
         aggregation = aggregate_renta_income_ledger(
             TransactionCatalogue.from_transactions((tx,)),
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_Q1_2024,
+            period=Q1_2024,
             modelo=M130_MODELO,
             target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=m130_activity_category_matcher,
@@ -406,8 +406,8 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period=_period(2026, "1T"),
-        revision=_m130_2026_q1_revision(),
+        period=renta_income_aggregation_period(2026, "1T"),
+        revision=m130_2026_q1_revision(),
         profile=cash_criterion_profile(2026),
     )
 
@@ -416,8 +416,8 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
     # The retención is reconstructed from the bank shortfall, so the credit
     # leaves it out and says so. Casilla 06 carries the excluded state as a zero
     # PLUS a finding, never a zero alone.
-    assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("0")
-    assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("0")
+    assert resolution.binding_values[M130_RETENCIONES_BINDING] == Decimal("0")
+    assert resolution.bound_inputs_by_casilla_id[M130_RETENCIONES_CASILLA] == Decimal("0")
     excluded = [
         diagnostic
         for diagnostic in resolution.diagnostics
@@ -428,7 +428,7 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
     assert tx.transaction_id in excluded[0].message
     # The zero rests on a row that bears a retención, so it is no proven zero:
     # a grade cap on the binding withholds it like any other capped value.
-    assert resolution.value_outcomes[_M130_RETENCIONES_BINDING] is BindingValueOutcome.FROM_BEARING_ROWS
+    assert resolution.value_outcomes[M130_RETENCIONES_BINDING] is BindingValueOutcome.FROM_BEARING_ROWS
 
 
 def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -> None:
@@ -449,12 +449,12 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
         iva_amount=Decimal("420.00"),
     )
     transactions = TransactionCatalogue.from_transactions((tx,))
-    income_only = _m130_revision_without_the_retenciones_binding()
+    income_only = m130_revision_without_the_retenciones_binding()
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period=_period(2026, "1T"),
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=income_only,
         profile=cash_criterion_profile(2026),
     )
@@ -488,8 +488,8 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="130",
             filing_year=2026,
-            period=_period(2026, "1T"),
-            revision=_m130_2026_q1_revision(),
+            period=renta_income_aggregation_period(2026, "1T"),
+            revision=m130_2026_q1_revision(),
             profile=cash_criterion_profile(2026),
         ),
     )
@@ -525,7 +525,7 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -569,7 +569,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     result_a = aggregate_renta_income_ledger(
         catalogue_a,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -593,7 +593,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     result_b = aggregate_renta_income_ledger(
         catalogue_b,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=Q1_2024,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
@@ -650,8 +650,8 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory() -> None
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period=_period(2026, "1T"),
-        revision=_m130_2026_q1_revision(),
+        period=renta_income_aggregation_period(2026, "1T"),
+        revision=m130_2026_q1_revision(),
         profile=cash_criterion_profile(2026),
     )
 
@@ -688,8 +688,8 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period=_period(2026, "1T"),
-        revision=_m130_2026_q1_revision(),
+        period=renta_income_aggregation_period(2026, "1T"),
+        revision=m130_2026_q1_revision(),
         profile=cash_criterion_profile(2026),
     )
 
@@ -723,8 +723,8 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period=_period(2026, "1T"),
-        revision=_m130_2026_q1_revision(),
+        period=renta_income_aggregation_period(2026, "1T"),
+        revision=m130_2026_q1_revision(),
         profile=cash_criterion_profile(2026),
     )
 
@@ -735,15 +735,15 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
     assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("1500.00")
 
 
-def _m130_revision_without_the_retenciones_binding() -> ModeloRevision:
+def m130_revision_without_the_retenciones_binding() -> ModeloRevision:
     """The same revision with only the ingresos binding declared.
 
     Every row is still consumed -- for its income -- so both row-keyed screens
     stay silent. The retención the rows carry reaches nothing.
     """
-    full = _m130_2026_q1_revision()
+    full = m130_2026_q1_revision()
     return full.model_copy(
         update={
-            "bindings": tuple(binding for binding in full.bindings if binding.id != _M130_RETENCIONES_BINDING),
+            "bindings": tuple(binding for binding in full.bindings if binding.id != M130_RETENCIONES_BINDING),
         },
     )

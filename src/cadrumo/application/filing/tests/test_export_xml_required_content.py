@@ -11,8 +11,8 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
-from .._export_xml_dictionary_modelo100 import refuse_family_minimum_without_its_rows
 from ..errors import ModeloApplicationError
+from ..export_xml_dictionary_modelo100 import refuse_family_minimum_without_its_rows
 from ..export_xml_value_limits import (
     prune_childless_negative_blocks,
     refuse_xml_missing_required_content,

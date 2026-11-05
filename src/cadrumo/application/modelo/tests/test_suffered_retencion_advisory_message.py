@@ -29,7 +29,7 @@ import pytest
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.calculations.registry.tests.published_authority import published_authored_revision
-from ..verification_predicates import _advisory_predicate_finding
+from ..verification_predicates import advisory_predicate_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -69,21 +69,21 @@ def _assert_names_the_certificate_and_no_forbidden_word(locale_key: str) -> None
 
 @pytest.mark.parametrize("year", _REVISION_YEARS)
 def test_the_trabajo_advisory_names_the_certificate_and_never_a_forbidden_word(year: int) -> None:
-    finding = _advisory_predicate_finding(_predicate(year, _trabajo_predicate_id(year)))
+    finding = advisory_predicate_finding(_predicate(year, _trabajo_predicate_id(year)))
     assert finding.message_locale_key == "application.modelo.findings.suffered_retencion_trabajo_uncredited"
     _assert_names_the_certificate_and_no_forbidden_word(finding.message_locale_key)
 
 
 @pytest.mark.parametrize("year", _REVISION_YEARS)
 def test_the_capital_mobiliario_advisory_names_the_certificate_and_never_a_forbidden_word(year: int) -> None:
-    finding = _advisory_predicate_finding(_predicate(year, _capital_mobiliario_predicate_id(year)))
+    finding = advisory_predicate_finding(_predicate(year, _capital_mobiliario_predicate_id(year)))
     assert finding.message_locale_key == "application.modelo.findings.suffered_retencion_capital_mobiliario_uncredited"
     _assert_names_the_certificate_and_no_forbidden_word(finding.message_locale_key)
 
 
 def test_an_unrelated_advisory_predicate_falls_back_to_the_generic_message() -> None:
     """The dispatch is a narrow match, not a blanket override of every advisory."""
-    finding = _advisory_predicate_finding(
+    finding = advisory_predicate_finding(
         _predicate(2025, "modelo-100-2025-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"),
     )
     assert finding.message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
@@ -91,8 +91,8 @@ def test_an_unrelated_advisory_predicate_falls_back_to_the_generic_message() -> 
 
 def test_the_two_predicate_families_resolve_to_distinct_messages() -> None:
     """The trabajo and capital-mobiliario remedies are not accidentally the same string."""
-    trabajo_finding = _advisory_predicate_finding(_predicate(2025, _trabajo_predicate_id(2025)))
-    capital_mobiliario_finding = _advisory_predicate_finding(_predicate(2025, _capital_mobiliario_predicate_id(2025)))
+    trabajo_finding = advisory_predicate_finding(_predicate(2025, _trabajo_predicate_id(2025)))
+    capital_mobiliario_finding = advisory_predicate_finding(_predicate(2025, _capital_mobiliario_predicate_id(2025)))
     trabajo_message = tr(trabajo_finding.message_locale_key, locale="en")
     capital_mobiliario_message = tr(capital_mobiliario_finding.message_locale_key, locale="en")
     assert trabajo_message != capital_mobiliario_message

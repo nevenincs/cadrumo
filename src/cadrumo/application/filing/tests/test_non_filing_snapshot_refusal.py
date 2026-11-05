@@ -25,7 +25,7 @@ import pytest
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.filing.errors import ModeloBuilderError
-from ..draft_construction import _load_registry_snapshot
+from ..draft_construction import load_registry_snapshot
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,7 +56,7 @@ def test_non_filing_grade_snapshot_is_typed_at_build_draft_boundary() -> None:
             raise RegistryValidationError("representative non-filing authority refusal")
 
     with pytest.raises(ModeloBuilderError) as exc_info:
-        _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_RefusingProvider())
+        load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_RefusingProvider())
 
     assert exc_info.value.translated_message == "application.filing.build_draft.errors.registry_snapshot_unavailable"
     assert exc_info.value.context == {

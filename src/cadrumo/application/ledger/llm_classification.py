@@ -98,7 +98,7 @@ if TYPE_CHECKING:
 # The CLI binary each subprocess provider shells out to. Used by
 
 
-def _transport_from_provenance(provenance: str) -> str:
+def transport_from_provenance(provenance: str) -> str:
     """Return the transport segment of an ``llm:<transport>:<model>`` stamp.
 
     The suggestion used to carry a separate ``provider`` enum field, redundant
@@ -445,7 +445,7 @@ def apply_llm_classification(
             "classification": classification.value,
             "category_id": category_id or "",
             "classified_by": suggestion.provenance,
-            "provider": _bounded_transport_label(_transport_from_provenance(suggestion.provenance)),
+            "provider": _bounded_transport_label(transport_from_provenance(suggestion.provenance)),
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
         },
@@ -1007,7 +1007,7 @@ def reject_llm_suggestion(
         }
         if isinstance(suggestion, LLMSaturatedSuggestion) and suggestion.iva_category is not None:
             payload["iva_category"] = suggestion.iva_category.value
-    payload["provider"] = _transport_from_provenance(suggestion.provenance)
+    payload["provider"] = transport_from_provenance(suggestion.provenance)
     payload["provenance"] = suggestion.provenance
     payload["operator_reason"] = reason
     payload["source_command"] = source_command

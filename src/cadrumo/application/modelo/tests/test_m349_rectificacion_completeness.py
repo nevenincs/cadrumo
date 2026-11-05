@@ -27,8 +27,8 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._calculation_helpers import build_typed_observations
-from .._calculation_modelo_adjustments import drop_row_field_template_outputs
+from ..calculation_helpers import build_typed_observations
+from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..verification_finding_contracts import M349_IMPORTE_RECTIFICACIONES_CASILLA, M349_NUMERO_RECTIFICACIONES_CASILLA
 from ..verification_required_fields import detail_row_template_casilla_is_satisfied
 

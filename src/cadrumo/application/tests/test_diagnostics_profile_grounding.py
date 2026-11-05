@@ -14,7 +14,7 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
 
 from ...domain.calculations.registry.tests.published_authority import published_profile_schema
-from ..diagnostics import _grounded_profile_key_summary
+from ..diagnostics import grounded_profile_key_summary
 from ..user_profile.preflight import build_profile_preflight_requirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,7 +42,7 @@ def test_the_known_path_has_a_label_that_differs_from_the_path() -> None:
 
 def test_a_known_profile_path_is_rendered_with_its_operator_label() -> None:
     """The fallback branch names the field, not only its dotted path."""
-    rendered = _grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
+    rendered = grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
     expected_label = build_profile_preflight_requirement(
         _KNOWN_PATH,
@@ -58,7 +58,7 @@ def test_the_rendered_form_keeps_the_path_first_so_deduplication_still_works() -
     Were the label placed first, an enrolment key already named by a required
     finding would stop matching and would be reported twice.
     """
-    rendered = _grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
+    rendered = grounded_profile_key_summary(_KNOWN_PATH, profile_decode_context=_PROFILE_DECODE_CONTEXT)
 
     assert rendered.split(" — ", 1)[0] == _KNOWN_PATH
 
@@ -67,4 +67,4 @@ def test_an_unresolvable_key_is_returned_unchanged_rather_than_guessed() -> None
     """A key naming no schema field must not acquire an invented label."""
     unknown = "no_such_section.no_such_field"
 
-    assert _grounded_profile_key_summary(unknown) == unknown
+    assert grounded_profile_key_summary(unknown) == unknown

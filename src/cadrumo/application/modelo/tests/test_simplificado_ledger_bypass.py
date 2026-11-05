@@ -25,8 +25,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo._calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.codes import ModeloCode

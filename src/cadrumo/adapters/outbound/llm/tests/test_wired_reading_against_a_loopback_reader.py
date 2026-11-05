@@ -121,7 +121,7 @@ def _read_through_the_wired_path():
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-        return invoice_draft_extraction_module._read_transcription_semantically(
+        return invoice_draft_extraction_module.read_transcription_semantically(
             evidence,
             transcribe_text_layer(evidence, text_layer_ports=_CONTROL_TEXT_LAYER_PORTS),
             settings=load_settings(),

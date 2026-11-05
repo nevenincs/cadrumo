@@ -299,7 +299,7 @@ loading inside a projection that is meant to be a pure join.
 
 
 class SettledResultUnitV1(Protocol):
-    """The work-unit surface :func:`~cadrumo.application.modelo.declarations_workspace._settled_result` actually reads.
+    """The work-unit surface :func:`~cadrumo.application.modelo.declarations_workspace.settled_result` actually reads.
 
     Declared structurally so the reader's contract is the four attributes it
     consumes rather than the whole :class:`WorkUnit` aggregate. A caller that

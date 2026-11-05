@@ -54,12 +54,6 @@ from ..invoices.catalogue_reads_ports import (
 from ..invoices.source_observations import is_rectificativa
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
-from ._modelo_bindings_invoice_iva import out_of_window_summary_diagnostics
-from ._modelo_bindings_support import (
-    STORAGE_DEGRADATION_ERRORS,
-    empty_source_resolution,
-    revision_has_binding_source,
-)
 from .activity_asset_disposal_projection import disposal_row_source_identities
 from .activity_asset_expense_reconciliation import (
     LedgerExpenseRegisterClassification,
@@ -90,6 +84,12 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_provenance,
     m100_activity_asset_projection,
     m130_activity_asset_projection,
+)
+from .modelo_bindings_invoice_iva import out_of_window_summary_diagnostics
+from .modelo_bindings_support import (
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
 )
 from .renta_gasto_ledger import (
     RentaGastoLedgerAggregation,
@@ -122,15 +122,13 @@ from .source_mesh import (
     CalculationSourceResolution,
 )
 from .source_resolution_operations import (
-    flatten_source_provenance_for as _flattened_provenance_for,
-)
-from .source_resolution_operations import sorted_source_ids as sorted_ids
-from .source_resolution_operations import (
+    flatten_source_provenance_for,
     source_context_operation,
     source_issue_diagnostics,
+    source_provenance_for,
     storage_degradation_resolution,
 )
-from .source_resolution_operations import source_provenance_for as _provenance_for
+from .source_resolution_operations import sorted_source_ids as sorted_ids
 
 
 class _TransactionRow(Protocol):
@@ -377,7 +375,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         asset_projection: ActivityAssetProjection,
     ) -> tuple[CalculationSourceProvenance, ...]:
         return (
-            _flattened_provenance_for(
+            flatten_source_provenance_for(
                 split.ledger_observations,
                 _renta_observation_provenance,
             )
@@ -559,7 +557,7 @@ def _received_invoice_rows(transactions: TransactionCatalogue) -> dict[str, list
     return rows_by_invoice
 
 
-def _accrual_coverage_gap(invoice: Invoice, rows: Sequence[Transaction]) -> str | None:
+def accrual_coverage_gap(invoice: Invoice, rows: Sequence[Transaction]) -> str | None:
     """Say what of an accruing received invoice its ledger rows leave unclassified, or ``None``."""
     if not rows:
         return f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
@@ -590,7 +588,7 @@ def _unpaid_received_invoice_details(
         detail
         for invoice in accruing
         if not is_rectificativa(invoice)
-        and (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
+        and (detail := accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
     )
 
 
@@ -1023,7 +1021,7 @@ def _m130_unrouted_diagnostics(
 def _m130_ledger_provenance(
     observations: Sequence[RentaGastoObservation], *, resolver_id: str
 ) -> tuple[CalculationSourceProvenance, ...]:
-    return _provenance_for(
+    return source_provenance_for(
         observations,
         lambda observation: CalculationSourceProvenance(
             resolver_id=resolver_id,

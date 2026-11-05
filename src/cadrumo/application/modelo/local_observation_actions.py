@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -67,9 +67,9 @@ from ..calculations.observations_repository import (
     ObservationSourceKind,
     member_observation_key,
 )
-from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 from .action_errors import ModeloLocalObservationError
 from .modelo_bucket_events import build_modelo_bucket_event
+from .registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 from .work_addressing import ModeloWorkSelectorError
 from .work_selection import ModeloWorkSelectionMode, ModeloWorkSelectorRequest, select_modelo_work_resolution
 
@@ -179,7 +179,7 @@ def record_operator_local_observation[CasillaKey](
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         )
     revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
-    canonical_values = _canonical_casilla_values(revision=revision, casilla_values=casilla_values)
+    canonical_values = canonical_casilla_values(revision=revision, casilla_values=casilla_values)
     observations = _observation_rows(revision=revision, casilla_values=canonical_values)
     observation = RegistryModeloObservation(
         modelo=modelo,
@@ -187,7 +187,7 @@ def record_operator_local_observation[CasillaKey](
         period=period.registry_token,
         observations=observations,
     )
-    captured_at = clock or _utc_now()
+    captured_at = clock or now()
     key = member_observation_key(modelo, period, member_nif)
     repo = ports.observation_repository
     replaced = repo.load_observation_layers(modelo, period, member_nif=member_nif).effective
@@ -282,7 +282,7 @@ def clear_operator_local_observation(
             translated_message="application.modelo.errors.local_observation_override_missing",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         )
-    cleared_at = clock or _utc_now()
+    cleared_at = clock or now()
     event = _override_event(
         ports=ports,
         event_type=BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED,
@@ -509,7 +509,7 @@ def _raise_non_numeric_local_observation_casillas(
         )
 
 
-def _canonical_casilla_values[CasillaKey](
+def canonical_casilla_values[CasillaKey](
     *,
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaKey, object],

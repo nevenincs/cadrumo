@@ -28,7 +28,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
@@ -79,6 +78,7 @@ from .m145_communication_records_ports import (
     M145CommunicationRecordsPorts,
     M145CommunicationRecordsPortsFactory,
 )
+from .ports import FicheroBoeRecordRenderer
 
 
 class _WriteGate:

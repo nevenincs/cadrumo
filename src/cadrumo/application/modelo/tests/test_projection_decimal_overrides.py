@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ..projection import ModeloProjectInvalidDecimalOverrideError, _decimal_overrides
+from ..projection import ModeloProjectInvalidDecimalOverrideError, decimal_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,18 +58,18 @@ def test_refuses_forms_the_bare_constructor_would_accept() -> None:
     for raw in _CONSTRUCTOR_ACCEPTS_BUT_GRAMMAR_REFUSES:
         assert isinstance(Decimal(raw), Decimal), raw
         with pytest.raises(ModeloProjectInvalidDecimalOverrideError):
-            _decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
+            decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
 
 
 def test_refuses_malformed_text_through_the_typed_error() -> None:
     for raw in _ALSO_REFUSED:
         with pytest.raises(ModeloProjectInvalidDecimalOverrideError):
-            _decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
+            decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
 
 
 def test_refusal_carries_the_key_value_and_message() -> None:
     with pytest.raises(ModeloProjectInvalidDecimalOverrideError) as excinfo:
-        _decimal_overrides({_casilla("0226"): "1e3"}, translated_message=_MESSAGE_KEY)
+        decimal_overrides({_casilla("0226"): "1e3"}, translated_message=_MESSAGE_KEY)
 
     assert excinfo.value.translated_message == _MESSAGE_KEY
     assert excinfo.value.context == {"key": "0226", "value": "1e3"}
@@ -95,11 +95,11 @@ def test_refusal_carries_the_key_value_and_message() -> None:
     ],
 )
 def test_accepts_canonical_forms_including_sub_cent(raw: str, expected: Decimal) -> None:
-    values = _decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
+    values = decimal_overrides({_casilla("0226"): raw}, translated_message=_MESSAGE_KEY)
     assert values[_casilla("0226")] == expected
 
 
 def test_preserves_the_exact_declared_precision() -> None:
     """The stored Decimal keeps its trailing zeros, so the value is not re-coerced."""
-    values = _decimal_overrides({_casilla("0226"): "1200.50"}, translated_message=_MESSAGE_KEY)
+    values = decimal_overrides({_casilla("0226"): "1200.50"}, translated_message=_MESSAGE_KEY)
     assert str(values[_casilla("0226")]) == "1200.50"

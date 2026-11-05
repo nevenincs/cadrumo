@@ -213,7 +213,7 @@ def _validate_observations(
     return {item.zone: item for item in observations}
 
 
-def _settled_result(
+def settled_result(
     unit: SettledResultUnitV1,
     revisions_by_id: Mapping[str, SettledResultRevisionV1],
     reader: DeclarationResultCasillaReaderV1 | None,
@@ -253,7 +253,7 @@ def _declaration_rows(
             state=unit.state,
             has_current_calculation=unit.current_calculation_revision_id is not None,
             has_current_filing=unit.current_filing_record_id is not None,
-            settled_result=_settled_result(unit, by_id, result_casilla_reader),
+            settled_result=settled_result(unit, by_id, result_casilla_reader),
         )
         for unit in sorted(
             units,

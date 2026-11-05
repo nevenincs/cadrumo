@@ -124,7 +124,7 @@ def _general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
     )
 
 
-def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+def typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
     return _general_ingreso_producer_snapshot("131")
 
 
@@ -339,7 +339,7 @@ def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
 
 
 @cache
-def _approved_registry_draft():
+def approved_registry_draft():
     draft = build_draft(
         modelo="130",
         period=EXPORT_PERIOD,
@@ -454,7 +454,7 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
 
 
 @cache
-def _approved_modelo_131_historical_registry_draft():
+def approved_modelo_131_historical_registry_draft():
     provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
@@ -480,7 +480,7 @@ def _approved_modelo_131_historical_registry_draft():
 
 
 @cache
-def _approved_modelo_111_registry_draft():
+def approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
         period=EXPORT_PERIOD,

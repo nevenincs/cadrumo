@@ -18,13 +18,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..completeness import missing_required_field_paths, profile_value_is_present
 from ..keys_validation import validate_profile_values
@@ -59,12 +59,12 @@ def test_completeness_reports_a_whitespace_only_required_field_missing(blank: st
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        record = _create_profile_record_for_test(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        record = create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
         overview = build_profile_overview(record, schema=published_profile_schema())
@@ -78,12 +78,12 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
 
 
 def test_overview_and_key_authority_agree_on_a_real_value() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        record = _create_profile_record_for_test(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        record = create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
         overview = build_profile_overview(record, schema=published_profile_schema())

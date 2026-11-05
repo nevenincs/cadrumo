@@ -44,10 +44,10 @@ from ...operations.financial_operand_contract import OperationTransientFinancial
 from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from ...operations.schema_identity import OperationSchemaIdentityV1
 from ...operations.subject_reference import OperationSubjectReferenceV1
-from .._edit_execution import _channel_value
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_apply_scalar_contracts import wire_scalar_value
 from ..edit_contract import ModeloEditMutationFamily
+from ..edit_execution import channel_value
 from ..edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmittedV1,
@@ -319,7 +319,7 @@ def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_
             assert read.value is expected
             # What the window sends back on apply is that value, and it reaches the engine as the figure.
             assert (
-                _channel_value(wire_scalar_value(read.value), address=address, grammar=grammar, tax_id_format=None)
+                channel_value(wire_scalar_value(read.value), address=address, grammar=grammar, tax_id_format=None)
                 == channel
             )
         for lexeme, reason in (

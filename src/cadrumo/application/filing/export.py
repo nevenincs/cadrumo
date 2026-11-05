@@ -71,46 +71,34 @@ from ...domain.filing.errors import FilingExportError, FilingExportValidationErr
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity, aeat_aux_version
 from ...domain.submission.models import ModeloDraftStatus
-from ._envelope_modelo_policy import filing_envelope_modelo_policy
-from ._export_xml_dictionary import refuse_incomplete_xml_dictionary_payload, render_xml_dictionary_layout
-from ._m200_projection import build_m200_filing_projection_plan
-from ._m296_projection import build_m296_filing_projection_plan
-from .export_envelope import FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence
-from .export_envelope import FilingEnvelopeRenderRequest as _FilingEnvelopeRenderRequest
-from .export_envelope import FilingEnvelopeRenderResult as _FilingEnvelopeRenderResult
-from .export_envelope import assemble_filing_envelope_payload as _assemble_filing_envelope_payload
-from .export_envelope import envelope_closer_bytes as _envelope_closer_bytes
-from .export_envelope import render_declared_prefix as _render_declared_prefix
+from .envelope_modelo_policy import filing_envelope_modelo_policy
+from .export_envelope import (
+    FilingEnvelopeOccurrence,
+    FilingEnvelopeRenderRequest,
+    FilingEnvelopeRenderResult,
+    assemble_filing_envelope_payload,
+    envelope_closer_bytes,
+    render_declared_prefix,
+)
 from .export_parity import (
     assert_export_mirrors_manifest,
     assert_rate_boxes_account_for_total,
     assert_xml_declaration_aux_declared,
 )
-from .export_producer import filing_producer_values as _filing_producer_values
+from .export_producer import filing_producer_values
 from .export_verification import (
-    DeclaracionExportFormat as _DeclaracionExportFormat,
+    DeclaracionExportFormat,
+    DeclaracionExportResult,
+    FilingExportConsumedResult,
+    FilingExportPayloadConsumer,
+    FilingExportValidatedPayload,
+    assert_export_artifact_matches_receipt,
+    exported_casilla_provenance,
+    verify_written_export,
 )
-from .export_verification import (
-    DeclaracionExportResult as _DeclaracionExportResult,
-)
-from .export_verification import (
-    FilingExportConsumedResult as _FilingExportConsumedResult,
-)
-from .export_verification import (
-    FilingExportPayloadConsumer as _FilingExportPayloadConsumer,
-)
-from .export_verification import (
-    FilingExportValidatedPayload as _FilingExportValidatedPayload,
-)
-from .export_verification import (
-    assert_export_artifact_matches_receipt as _assert_export_artifact_matches_receipt,
-)
-from .export_verification import (
-    exported_casilla_provenance as _exported_casilla_provenance,
-)
-from .export_verification import (
-    verify_written_export as _verify_written_export,
-)
+from .export_xml_dictionary import refuse_incomplete_xml_dictionary_payload, render_xml_dictionary_layout
+from .m200_projection import build_m200_filing_projection_plan
+from .m296_projection import build_m296_filing_projection_plan
 from .producer_snapshot import (
     FilingProducerSnapshot,
 )
@@ -120,10 +108,8 @@ from .projection import (
     FilingRecordRenderContext,
     build_m303_filing_projection_plan,
 )
-from .record_renderer import preflight_projection_plan as _preflight_projection_plan
-from .record_renderer import render_layout_records as _render_layout_records
-from .record_types import RecordRenderRow as _RecordRenderRow
-from .record_types import RenderedRecordOccurrence as _RenderedRecordOccurrence
+from .record_renderer import preflight_projection_plan, render_layout_records
+from .record_types import RecordRenderRow, RenderedRecordOccurrence
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 from .shared_owner_refusal import refuse_written_shared_owners
 
@@ -171,10 +157,10 @@ def _select_export_layout(
     registry_snapshot: RegistrySnapshot,
 ) -> ExportLayoutDefinition:
     if not subview.export_layout_ids:
-        raise _export_layout_not_renderable_error(draft.modelo, None)
+        raise export_layout_not_renderable_error(draft.modelo, None)
     layout = canonical_export_layout(registry_snapshot.revision.export_layouts)
     if layout is None:
-        raise _export_layout_not_renderable_error(draft.modelo, None)
+        raise export_layout_not_renderable_error(draft.modelo, None)
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
     return layout
 
@@ -297,7 +283,7 @@ def _prepare_export_draft(
         subview=subview,
         registry_snapshot=registry_snapshot,
         layout=layout,
-        producer_values=_filing_producer_values(producer_snapshot),
+        producer_values=filing_producer_values(producer_snapshot),
         prior_domiciliation_election=resolvedprior_domiciliation_election,
         renders_filing_envelope=renders_filing_envelope,
         xml_aux_version=aeat_aux_version() if layout.format is ExportLayoutFormat.XML_DICTIONARY else None,
@@ -319,7 +305,7 @@ def _render_prepared_export(
                 "a filing envelope renders only with a resolved prior domiciliation election",
             )
         return render_filing_envelope(
-            _FilingEnvelopeRenderRequest(
+            FilingEnvelopeRenderRequest(
                 registry_snapshot=prepared.registry_snapshot,
                 layout=prepared.layout,
                 draft=draft,
@@ -357,7 +343,7 @@ def _validate_prepared_export(
                 "layout_format": prepared.layout.format.value,
             },
         )
-    casilla_provenance = _exported_casilla_provenance(
+    casilla_provenance = exported_casilla_provenance(
         prepared.layout,
         draft=draft,
         schema_provider=prepared.provider,
@@ -388,18 +374,18 @@ def _write_prepared_export(
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
-) -> _DeclaracionExportResult:
+) -> DeclaracionExportResult:
     if mutation_writer is None:
         atomic_write_bytes(output_path, payload)
     else:
         mutation_writer(lambda: atomic_write_bytes(output_path, payload))
     if not prepared.renders_filing_envelope:
-        _verify_written_export(
+        verify_written_export(
             draft,
             file_path=output_path,
             schema_provider=prepared.provider,
         )
-    receipt = _DeclaracionExportResult(
+    receipt = DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -411,7 +397,7 @@ def _write_prepared_export(
         narrative="filing.export.written",
         casilla_provenance=casilla_provenance,
     )
-    _assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
+    assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
     return receipt
 
 
@@ -421,12 +407,12 @@ def _consume_prepared_export(
     prepared: _PreparedExportDraft,
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
-    payload_consumer: _FilingExportPayloadConsumer,
-) -> _FilingExportConsumedResult:
+    payload_consumer: FilingExportPayloadConsumer,
+) -> FilingExportConsumedResult:
     """Deliver validated bytes synchronously without materialising a plaintext file."""
     format_ = _declaracion_export_format(prepared.layout)
     payload_consumer.consume_validated_payload(
-        _FilingExportValidatedPayload(
+        FilingExportValidatedPayload(
             draft_id=draft.draft_id,
             modelo=draft.modelo,
             period=draft.period,
@@ -435,7 +421,7 @@ def _consume_prepared_export(
             casilla_provenance=casilla_provenance,
         ),
     )
-    return _FilingExportConsumedResult(
+    return FilingExportConsumedResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -460,13 +446,13 @@ def export_draft(
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     states_whole_return: bool = False,
-) -> _DeclaracionExportResult: ...
+) -> DeclaracionExportResult: ...
 @overload
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: None = None,
-    payload_consumer: _FilingExportPayloadConsumer,
+    payload_consumer: FilingExportPayloadConsumer,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
@@ -474,12 +460,12 @@ def export_draft(
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     states_whole_return: bool = False,
-) -> _FilingExportConsumedResult: ...
+) -> FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: Path | None = None,
-    payload_consumer: _FilingExportPayloadConsumer | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
@@ -487,7 +473,7 @@ def export_draft(
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     states_whole_return: bool = False,
-) -> _DeclaracionExportResult | _FilingExportConsumedResult:
+) -> DeclaracionExportResult | FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
@@ -697,7 +683,7 @@ def export_layout_renderability_reason(
     return f"export layout {layout.id!r} declares no export records"
 
 
-def _export_layout_not_renderable_error(
+def export_layout_not_renderable_error(
     modelo: str,
     layout: ExportLayoutDefinition | None,
 ) -> FilingExportError:
@@ -719,13 +705,13 @@ def _export_layout_not_renderable_error(
 
 def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
     if export_layout_renderability_reason_code(layout) is not None:
-        raise _export_layout_not_renderable_error(modelo, layout)
+        raise export_layout_not_renderable_error(modelo, layout)
 
 
-def _declaracion_export_format(layout: ExportLayoutDefinition) -> _DeclaracionExportFormat:
+def _declaracion_export_format(layout: ExportLayoutDefinition) -> DeclaracionExportFormat:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return _DeclaracionExportFormat.XML_DICTIONARY
-    return _DeclaracionExportFormat.FICHERO_BOE
+        return DeclaracionExportFormat.XML_DICTIONARY
+    return DeclaracionExportFormat.FICHERO_BOE
 
 
 def render_export_layout(
@@ -812,7 +798,7 @@ def render_filing_layout(
         raise FilingExportValidationError(
             "an auxiliary-envelope-header export requires explicit product/software identity authority",
         )
-    prefix = _render_declared_prefix(
+    prefix = render_declared_prefix(
         auxiliary_header.prefix_fields,
         prefix_extent=auxiliary_header.prefix_extent,
         modelo=Modelo(draft.modelo),
@@ -830,7 +816,7 @@ def _render_layout_occurrences(
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
     prior_domiciliation_election: PriorDomiciliationElection,
-) -> tuple[_RenderedRecordOccurrence, ...]:
+) -> tuple[RenderedRecordOccurrence, ...]:
     """Derive one projection plan and render every applicable record occurrence.
 
     This is the sole application resolver bridge used by ordinary fixed-width
@@ -845,13 +831,13 @@ def _render_layout_occurrences(
         draft=draft,
         producer_snapshot=producer_snapshot,
     )
-    projection_values = _preflight_projection_plan(projection_plan)
+    projection_values = preflight_projection_plan(projection_plan)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
     refuse_written_shared_owners(layout, registry_snapshot=registry_snapshot, casilla_values=casilla_values)
-    return _render_layout_records(
+    return render_layout_records(
         layout,
         registry_snapshot=registry_snapshot,
         draft=draft,
@@ -865,12 +851,12 @@ def _render_layout_occurrences(
     )
 
 
-def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnvelopeRenderResult:
+def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelopeRenderResult:
     """Render one modelo's variable envelope from the closed, validated request."""
     envelope = request.layout.filing_envelope
     if envelope is None:  # The request validator makes this unreachable; retain type narrowing at the public boundary.
         raise FilingExportValidationError("filing-envelope layout declaration is absent")
-    headers = _filing_producer_values(request.producer_snapshot)
+    headers = filing_producer_values(request.producer_snapshot)
     rendered_occurrences = _render_layout_occurrences(
         request.layout,
         registry_snapshot=request.registry_snapshot,
@@ -880,7 +866,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         prior_domiciliation_election=request.prior_domiciliation_election,
     )
     occurrences = tuple(
-        _FilingEnvelopeOccurrence(
+        FilingEnvelopeOccurrence(
             record_id=item.record_id,
             occurrence=item.occurrence,
             payload=item.payload,
@@ -889,7 +875,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         for item in rendered_occurrences
     )
     _require_envelope_required_occurrences(request.layout, occurrences)
-    prefix = _render_declared_prefix(
+    prefix = render_declared_prefix(
         envelope.prefix_fields,
         prefix_extent=envelope.prefix_extent,
         modelo=request.modelo,
@@ -899,11 +885,11 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         envelope=envelope,
         casilla_values={item.casilla_id: item.value for item in request.draft.values},
     )
-    closer = _envelope_closer_bytes(modelo=request.modelo, period=request.draft.period, envelope=envelope)
-    terminator, payload = _assemble_filing_envelope_payload(
+    closer = envelope_closer_bytes(modelo=request.modelo, period=request.draft.period, envelope=envelope)
+    terminator, payload = assemble_filing_envelope_payload(
         envelope, prefix=prefix, occurrences=occurrences, closer=closer
     )
-    return _FilingEnvelopeRenderResult(
+    return FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
         revision_id=request.registry_snapshot.revision.id,
         layout_id=request.layout.id,
@@ -922,7 +908,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
 
 def _require_envelope_required_occurrences(
     layout: ExportLayoutDefinition,
-    occurrences: tuple[_FilingEnvelopeOccurrence, ...],
+    occurrences: tuple[FilingEnvelopeOccurrence, ...],
 ) -> None:
     present = {item.record_id for item in occurrences}
     missing = tuple(record.id for record in layout.records if record.required and record.id not in present)
@@ -963,9 +949,9 @@ def _projection_plan_for_layout(
 __all__ = [
     "FilingProjectionValue",
     "FilingRecordRenderContext",
-    "_RecordRenderRow",
-    "_preflight_projection_plan",
+    "RecordRenderRow",
     "export_draft",
+    "preflight_projection_plan",
     "refuse_incomplete_xml_export",
     "refuse_xml_export_content",
     "render_export_layout",

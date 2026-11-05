@@ -30,7 +30,7 @@ from ....domain.modelos.filing_kind_evidence import (
     submitted_file_marker_reading,
 )
 from ....domain.modelos.filing_record import FilingDeclarationKind
-from ..cross_period_dependency_evaluation import _declared_source_blockers
+from ..cross_period_dependency_evaluation import declared_source_blockers
 from ..cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyOrigin,
@@ -128,4 +128,4 @@ def test_the_clean_state_gate_reads_filing_kind_through_the_shared_predicate(
     filing_kind: ObservedFilingKind | None,
     expected: list[CrossPeriodCleanStateBlocker],
 ) -> None:
-    assert _declared_source_blockers(_REQUIREMENT, _payload(values, filing_kind), operation=operation) == expected
+    assert declared_source_blockers(_REQUIREMENT, _payload(values, filing_kind), operation=operation) == expected

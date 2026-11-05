@@ -6,22 +6,22 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ..agenda import OverviewAgenda, build_overview_agenda
 from ..errors import OverviewAgendaError
-from .calendar_test_support import profile as _profile
+from .calendar_test_support import profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_agenda_horizon_must_be_positive() -> None:
     """A non-positive horizon is refused at the service boundary."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(OverviewAgendaError) as exc_info:
             build_overview_agenda(
-                _profile(), as_of=date(2026, 1, 15), horizon_days=0, operation=_authority_operation_for_test
+                profile(), as_of=date(2026, 1, 15), horizon_days=0, operation=_authority_operation_for_test
             )
         # The refusal carries a typed translated_message key + context, not a raw
         # args[0] string; assert the locale-independent identity.
@@ -33,8 +33,8 @@ def test_agenda_horizon_must_be_positive() -> None:
 def test_agenda_returns_typed_envelope_with_required_fields() -> None:
     """The aggregator produces an OverviewAgenda envelope carrying the
     as_of date, horizon, generated_at, and the four cohort tuples."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        agenda = build_overview_agenda(_profile(), as_of=date(2026, 1, 15), operation=_authority_operation_for_test)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        agenda = build_overview_agenda(profile(), as_of=date(2026, 1, 15), operation=_authority_operation_for_test)
 
         assert isinstance(agenda, OverviewAgenda)
         assert agenda.as_of == date(2026, 1, 15)
@@ -48,9 +48,9 @@ def test_agenda_next_due_is_earliest_future_or_today_deadline() -> None:
     """When the calendar contains any entry with adjusted_closes_on >=
     as_of, next_due points at the earliest one. The deterministic tie-
     break uses (closes_on, modelo, period)."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         agenda = build_overview_agenda(
-            _profile(), as_of=date(2026, 1, 1), horizon_days=120, operation=_authority_operation_for_test
+            profile(), as_of=date(2026, 1, 1), horizon_days=120, operation=_authority_operation_for_test
         )
 
         if agenda.next_due is not None:
@@ -65,11 +65,9 @@ def test_agenda_partitions_entries_by_deadline_position() -> None:
     """due_today entries close on as_of; due_soon entries close in
     (as_of, as_of+horizon]; overdue entries close before as_of and
     carry LATE state."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         as_of = date(2026, 4, 15)
-        agenda = build_overview_agenda(
-            _profile(), as_of=as_of, horizon_days=30, operation=_authority_operation_for_test
-        )
+        agenda = build_overview_agenda(profile(), as_of=as_of, horizon_days=30, operation=_authority_operation_for_test)
 
         for entry in agenda.due_today:
             assert entry.adjusted_closes_on == as_of
@@ -84,9 +82,9 @@ def test_agenda_partitions_entries_by_deadline_position() -> None:
 
 def test_agenda_partitions_are_disjoint() -> None:
     """The same (modelo, period) cannot appear in more than one cohort."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         agenda = build_overview_agenda(
-            _profile(), as_of=date(2026, 4, 15), horizon_days=30, operation=_authority_operation_for_test
+            profile(), as_of=date(2026, 4, 15), horizon_days=30, operation=_authority_operation_for_test
         )
 
         seen: set[tuple[str, Period]] = set()

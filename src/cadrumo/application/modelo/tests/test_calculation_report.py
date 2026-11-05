@@ -48,7 +48,7 @@ from ..calculation_report_document import (
 )
 from ..calculation_report_provenance_key import OPAQUE_PROVENANCE_FAMILY
 from ..settlement_casilla import DECLARATION_RESULT_SEMANTIC_ROLES, SETTLEMENT_SEMANTIC_ROLES
-from ._calculation_report_fixture import (
+from .calculation_report_fixture import (
     EXPORTED_AT,
     FILING_RECORD_ID,
     FILING_YEAR,
@@ -355,7 +355,7 @@ def test_a_second_process_rebuilds_the_same_report_digest() -> None:
         [
             sys.executable,
             "-c",
-            "from cadrumo.application.modelo.tests._calculation_report_fixture import fixture_report_digest;"
+            "from cadrumo.application.modelo.tests.calculation_report_fixture import fixture_report_digest;"
             "print(fixture_report_digest())",
         ],
         capture_output=True,

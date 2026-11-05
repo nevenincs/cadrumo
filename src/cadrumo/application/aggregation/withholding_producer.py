@@ -159,7 +159,7 @@ class WithholdingProducer:
             )
         if cadence.filing_year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("filer_cadence_year_mismatch")
-        modelo = _modelo_for(command.recognition_evidence.income_kind, command.scheme)
+        modelo = modelo_for(command.recognition_evidence.income_kind, command.scheme)
         recognition = derive_withholding_recognition(command.recognition_evidence, modelo=modelo)
         if recognition.recognized_on.year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("recognition_year_mismatch")
@@ -258,7 +258,7 @@ def _require_counterpart_source(source_kind: BindingSourceKind) -> None:
         raise WithholdingProducerError("unsupported_source_kind") from exc
 
 
-def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> str:
+def modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> str:
     """Return the one grounded periodic modelo for a supported evidence kind."""
     allowed: tuple[RetencionScheme, ...]
     if income_kind is WithholdingIncomeKind.WORK:

@@ -40,7 +40,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
@@ -101,7 +101,7 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
 
 
 def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
         inject_derived_state_attribution_facts(seeded, operation=_authority_operation_for_test)
 
@@ -127,7 +127,7 @@ def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
 
 def test_madrid_count_preserves_a_stored_value_for_a_non_madrid_filer() -> None:
     """Outside Madrid the injector only defaults, so a stored value survives."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         seeded: dict[str, Any] = {
             "tax_residence.ccaa": "cataluna",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
@@ -147,7 +147,7 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
     The override direction of the same injector. Pinned so the preservation
     assertion above cannot be read as "this key is never computed".
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         seeded: dict[str, Any] = {
             "tax_residence.ccaa": "madrid",
             "renta_taxpayer.marital_status": "1",
@@ -168,7 +168,7 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
 
 def test_unidad_familiar_base_preserves_a_stored_value() -> None:
     """The sibling Madrid key is default-only and never overwritten."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         determinable_madrid: dict[str, Any] = {
             "tax_residence.ccaa": "madrid",
             "renta_taxpayer.marital_status": "1",

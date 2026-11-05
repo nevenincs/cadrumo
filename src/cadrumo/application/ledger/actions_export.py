@@ -182,7 +182,7 @@ def _ledger_export_rows(
         and (period is None or period.contains(transaction.raw.value_date or transaction.raw.booked_date))
     )
     return tuple(
-        _ledger_export_row(bucket_id=bucket_id, transaction=transaction)
+        ledger_export_row(bucket_id=bucket_id, transaction=transaction)
         for transaction in sorted(
             transactions,
             key=lambda item: (
@@ -202,7 +202,7 @@ def optional_text(value: str | None) -> str:
     return value or ""
 
 
-def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExportRow:
+def ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExportRow:
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     return LedgerExportRow(

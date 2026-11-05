@@ -27,12 +27,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..projections import facts_to_values, profile_fact_index, record_to_effective_facts, record_to_path_values
 from ..validation import ProfileValidationService
@@ -50,11 +50,11 @@ def _warned_paths(*facts: UserProfileFact) -> set[str | None]:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=facts,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

@@ -27,8 +27,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, resolve_ccaa_catalogue
@@ -41,13 +40,13 @@ from ....domain.contribuyente.renta_codes import (
 from ..catalogue import build_setup_flow
 from ..command_parameters import (
     SETUP_OPTION_INFOS,
-    _help_key,
     canonical_from_flag_value,
     flag_name,
+    help_key,
     required_flag_questions,
     wizard_command_metadata,
 )
-from ..commands import _missing_required_flags, build_wizard_command
+from ..commands import build_wizard_command, missing_required_flags
 from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ..patch_edit import format_missing_flags
 from .registry_setup_flow_support import EmptyAnswersBase
@@ -201,7 +200,7 @@ def test_a_renta_code_flag_takes_its_choices_from_the_leased_flow(
 def test_help_key_composes_wizard_flow_flags_question_help_key() -> None:
     flow = _flow(_question(qid="tax_id"))
     question = _question(qid="tax_id")
-    assert _help_key(flow, question) == "wizard.test.flags.tax_id.help"
+    assert help_key(flow, question) == "wizard.test.flags.tax_id.help"
 
 
 # ---------------------------------------------------------------------------
@@ -256,7 +255,7 @@ def test_required_flag_questions_omits_non_required_question() -> None:
 def test_missing_required_flags_returns_question_id_when_no_value_and_no_default() -> None:
     flow = _flow(_question(qid="tax_id", required=True, default=None))
 
-    missing = _missing_required_flags(flow, {})
+    missing = missing_required_flags(flow, {})
 
     assert missing == ("tax_id",)
 
@@ -269,7 +268,7 @@ def test_missing_required_flags_backfills_descriptor_default_into_canonical() ->
     flow = _flow(_question(qid="tax_residence_ccaa", required=True, default="madrid"))
     canonical: dict[str, str] = {}
 
-    missing = _missing_required_flags(flow, canonical)
+    missing = missing_required_flags(flow, canonical)
 
     assert missing == ()
     assert canonical["tax_residence_ccaa"] == "madrid"
@@ -279,7 +278,7 @@ def test_missing_required_flags_omits_question_when_value_already_set() -> None:
     flow = _flow(_question(qid="tax_id", required=True, default=None))
     canonical = {"tax_id": "12345678Z"}
 
-    missing = _missing_required_flags(flow, canonical)
+    missing = missing_required_flags(flow, canonical)
 
     assert missing == ()
 
@@ -291,7 +290,7 @@ def test_missing_required_flags_treats_empty_string_value_as_missing() -> None:
     flow = _flow(_question(qid="tax_id", required=True, default=None))
     canonical = {"tax_id": ""}
 
-    missing = _missing_required_flags(flow, canonical)
+    missing = missing_required_flags(flow, canonical)
 
     assert missing == ("tax_id",)
 
@@ -402,7 +401,7 @@ def test_wizard_command_metadata_keeps_signature_and_annotations_in_lockstep() -
 
 def test_build_wizard_command_exposes_resolvable_annotation_metadata() -> None:
     """Future-annotation source policy does not erase dynamic Typer metadata."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         command = build_wizard_command(
             _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
             mode="create",
@@ -422,7 +421,7 @@ def test_build_wizard_command_exposes_resolvable_annotation_metadata() -> None:
 
 def test_build_wizard_command_is_discoverable_by_typer() -> None:
     """Typer can register the generated signature and expose its flag."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         command = build_wizard_command(
             _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
             mode="create",

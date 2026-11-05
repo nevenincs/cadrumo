@@ -30,7 +30,7 @@ from ....domain.calculations.registry.runtime_graph import enum_consumed_binding
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calculate_input_validation import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
-from ..projection import _parse_projection_binding_overrides
+from ..projection import parse_projection_binding_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,7 +83,7 @@ def test_a_decimal_binding_refuses_the_spanish_thousands_form(revision: ModeloRe
     ``"1.234,56"`` and no refusal ever reached the operator.
     """
     with pytest.raises(ModeloCalculateDecimalInputError) as excinfo:
-        _parse_projection_binding_overrides({_DECIMAL_BINDING: "1.234,56"}, revision)
+        parse_projection_binding_overrides({_DECIMAL_BINDING: "1.234,56"}, revision)
 
     context = _refusal_context(excinfo.value)
     assert context["key"] == _DECIMAL_BINDING
@@ -99,7 +99,7 @@ def test_a_malformed_decimal_never_reaches_the_enum_channel(revision: ModeloRevi
     never the destination for a decimal binding.
     """
     with pytest.raises(ModeloCalculateDecimalInputError):
-        _parse_projection_binding_overrides({_DECIMAL_BINDING: raw}, revision)
+        parse_projection_binding_overrides({_DECIMAL_BINDING: raw}, revision)
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,7 @@ def test_a_decimal_binding_still_accepts_a_canonical_amount(
     raw: str,
     expected: Decimal,
 ) -> None:
-    decimals, enums = _parse_projection_binding_overrides({_DECIMAL_BINDING: raw}, revision)
+    decimals, enums = parse_projection_binding_overrides({_DECIMAL_BINDING: raw}, revision)
 
     assert decimals == {_DECIMAL_BINDING: expected}
     assert enums == {}
@@ -125,7 +125,7 @@ def test_a_decimal_binding_carries_sub_cent_precision(revision: ModeloRevision) 
     lead group cannot open a grouping run. ``0.335`` qualifies because a leading
     zero never starts one.
     """
-    decimals, enums = _parse_projection_binding_overrides({_DECIMAL_BINDING: "0.335"}, revision)
+    decimals, enums = parse_projection_binding_overrides({_DECIMAL_BINDING: "0.335"}, revision)
 
     assert decimals == {_DECIMAL_BINDING: Decimal("0.335")}
     assert enums == {}
@@ -142,12 +142,12 @@ def test_a_decimal_binding_refuses_a_spanish_thousands_lookalike(revision: Model
     guessing at a thousandfold error.
     """
     with pytest.raises(ModeloCalculateDecimalInputError):
-        _parse_projection_binding_overrides({_DECIMAL_BINDING: "2.345"}, revision)
+        parse_projection_binding_overrides({_DECIMAL_BINDING: "2.345"}, revision)
 
 
 def test_a_genuine_enum_binding_still_carries_its_string_verbatim(revision: ModeloRevision) -> None:
     """The registry-declared enum channel is unaffected by the decimal tightening."""
-    decimals, enums = _parse_projection_binding_overrides({_ENUM_BINDING: "andalucia"}, revision)
+    decimals, enums = parse_projection_binding_overrides({_ENUM_BINDING: "andalucia"}, revision)
 
     assert enums == {_ENUM_BINDING: "andalucia"}
     assert decimals == {}
@@ -160,14 +160,14 @@ def test_an_enum_binding_accepts_a_numeric_looking_string_on_the_enum_channel(re
     this direction, so an enum key that happens to look numeric stayed text only
     by accident.
     """
-    decimals, enums = _parse_projection_binding_overrides({_ENUM_BINDING: "2024"}, revision)
+    decimals, enums = parse_projection_binding_overrides({_ENUM_BINDING: "2024"}, revision)
 
     assert enums == {_ENUM_BINDING: "2024"}
     assert decimals == {}
 
 
 def test_both_channels_resolve_together_in_one_call(revision: ModeloRevision) -> None:
-    decimals, enums = _parse_projection_binding_overrides(
+    decimals, enums = parse_projection_binding_overrides(
         {_DECIMAL_BINDING: "1234.56", _ENUM_BINDING: "andalucia"},
         revision,
     )
@@ -179,7 +179,7 @@ def test_both_channels_resolve_together_in_one_call(revision: ModeloRevision) ->
 def test_a_date_sourced_binding_refuses_rather_than_coercing(revision: ModeloRevision) -> None:
     """A profile date fact cannot ride the --binding flag, matching the calculate path."""
     with pytest.raises(ModeloCalculateBindingInputError) as excinfo:
-        _parse_projection_binding_overrides({_DATE_BINDING: "1980-01-01"}, revision)
+        parse_projection_binding_overrides({_DATE_BINDING: "1980-01-01"}, revision)
 
     assert excinfo.value.translated_message == "application.modelo.errors.calculate_binding_is_date_sourced"
 
@@ -187,7 +187,7 @@ def test_a_date_sourced_binding_refuses_rather_than_coercing(revision: ModeloRev
 def test_an_unknown_binding_id_refuses_naming_the_accepted_set(revision: ModeloRevision) -> None:
     """An undeclared id refuses instead of flowing to the engine as an enum string."""
     with pytest.raises(ModeloCalculateBindingInputError) as excinfo:
-        _parse_projection_binding_overrides({"renta-2024-not-a-real-binding": "1"}, revision)
+        parse_projection_binding_overrides({"renta-2024-not-a-real-binding": "1"}, revision)
 
     assert excinfo.value.translated_message == "application.modelo.errors.calculate_binding_unknown"
     accepted = _refusal_context(excinfo.value)["accepted"]
@@ -196,5 +196,5 @@ def test_an_unknown_binding_id_refuses_naming_the_accepted_set(revision: ModeloR
 
 
 def test_no_overrides_returns_two_empty_channels(revision: ModeloRevision) -> None:
-    assert _parse_projection_binding_overrides(None, revision) == ({}, {})
-    assert _parse_projection_binding_overrides({}, revision) == ({}, {})
+    assert parse_projection_binding_overrides(None, revision) == ({}, {})
+    assert parse_projection_binding_overrides({}, revision) == ({}, {})

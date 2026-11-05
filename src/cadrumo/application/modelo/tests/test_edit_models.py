@@ -100,7 +100,7 @@ def _row_surface_entry(*, reorderable: bool = True) -> ModeloEditWritableRowGrou
     )
 
 
-def _baseline(
+def edit_models_baseline(
     *, mutation_family: ModeloEditMutationFamily = ModeloEditMutationFamily.CALCULATE
 ) -> ModeloEditBaselineV1:
     now = datetime.now(UTC)
@@ -147,7 +147,7 @@ def test_compatibility_tuple_requires_review_axis_together() -> None:
 
 def test_baseline_is_frozen_and_rejects_unknown_fields() -> None:
     """The baseline is strict, frozen, and rejects extra fields at construction."""
-    baseline = _baseline()
+    baseline = edit_models_baseline()
     with pytest.raises(ValidationError):
         baseline.baseline_id = "changed"  # type: ignore[misc]  # reason: mutating a frozen field IS the refusal under test
     with pytest.raises(ValidationError, match="Extra inputs"):
@@ -158,7 +158,7 @@ def test_baseline_is_frozen_and_rejects_unknown_fields() -> None:
 
 def test_baseline_rejects_duplicate_surface_addresses() -> None:
     """Two surface entries addressing the same casilla refuse construction."""
-    fields = _baseline().model_dump(mode="python")
+    fields = edit_models_baseline().model_dump(mode="python")
     fields["permitted_surface"] = (_scalar_surface_entry(), _scalar_surface_entry())
     with pytest.raises(ValidationError, match="permitted surface must address"):
         ModeloEditBaselineV1(**fields)
@@ -167,7 +167,7 @@ def test_baseline_rejects_duplicate_surface_addresses() -> None:
 def test_baseline_rejects_expiry_at_or_before_issue() -> None:
     """A baseline whose expiry does not strictly follow its issue time refuses."""
     now = datetime.now(UTC)
-    fields = _baseline().model_dump(mode="python")
+    fields = edit_models_baseline().model_dump(mode="python")
     fields["issued_at"] = now
     fields["expires_at"] = now
     with pytest.raises(ValidationError, match="strictly after"):
@@ -229,7 +229,7 @@ def test_row_intent_shape_matches_kind() -> None:
 
 def test_submission_rejects_duplicate_addresses_and_mismatched_family() -> None:
     """Duplicate or contradictory address intents and a family mismatch both refuse."""
-    baseline = _baseline()
+    baseline = edit_models_baseline()
     scalar = ModeloScalarEditIntentV1(
         address=ModeloEditScalarAddressV1(casilla_id="casilla-01"),
         kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
@@ -303,7 +303,7 @@ def test_execution_result_discriminates_on_effect() -> None:
 
 def test_admission_result_round_trips_through_json() -> None:
     """Success and refusal arms round-trip through strict JSON without loss."""
-    admitted = ModeloEditAdmittedV1(baseline=_baseline())
+    admitted = ModeloEditAdmittedV1(baseline=edit_models_baseline())
     assert ModeloEditAdmittedV1.model_validate_json(admitted.model_dump_json()) == admitted
 
     refused = ModeloEditRefusedV1(

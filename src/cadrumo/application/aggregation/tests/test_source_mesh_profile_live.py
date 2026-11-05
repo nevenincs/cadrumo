@@ -10,13 +10,11 @@ from functools import cache
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
     published_supported_filing_years,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
@@ -80,7 +78,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -89,13 +87,13 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def _registered_modelo_profile() -> UserProfileRecord:
     """Supply one calculation-relevant fact for every registered modelo profile surface."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -111,7 +109,7 @@ def _registered_modelo_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

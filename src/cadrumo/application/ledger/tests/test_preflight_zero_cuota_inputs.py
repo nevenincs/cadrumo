@@ -27,7 +27,7 @@ from ....domain.iva.schema import IvaCategory, IvaExemptionArticle
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
-from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _transaction
+from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
 type _ZeroCuotaRowFactory = Callable[..., Transaction]
 """One of the two cuota-less rows, built by a case that varies its fields."""
@@ -54,7 +54,7 @@ def _zero_cuota_row(
     **updates: object,
 ) -> Transaction:
     """One received business row whose operation raised no IVA cuota."""
-    row = _transaction(
+    row = preflight_transaction(
         provider_id,
         direction=TransactionDirection.OUTGOING,
         amount=amount,
@@ -93,11 +93,11 @@ def _exempt_premium(*, declare_substrate: bool = True, **updates: object) -> Tra
 
 def _reasons(
     *transactions: Transaction,
-    period: Period = _Q2_2026,
+    period: Period = Q2_2026,
     operation: PinnedAuthorityOperation,
 ) -> list[LedgerPreflightIssueReason]:
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         period=period,
         transactions=TransactionCatalogue.from_transactions(transactions),
         operation=operation,
@@ -151,4 +151,4 @@ def test_an_ordinary_taxable_purchase_keeps_passing_readiness_unclassified(
     distinction survived: readiness reports only a present classification the law
     does not grant.
     """
-    assert _reasons(_transaction("taxable-purchase", booked_date=_BOOKED), operation=operation) == []
+    assert _reasons(preflight_transaction("taxable-purchase", booked_date=_BOOKED), operation=operation) == []

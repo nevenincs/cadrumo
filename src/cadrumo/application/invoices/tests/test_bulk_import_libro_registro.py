@@ -101,7 +101,7 @@ def test_an_exact_column_name_is_never_displaced_by_the_mapping() -> None:
     The same exact-first rule the statement lane uses: a file already written in
     the product's vocabulary must never depend on a judgement to be read.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     headers = ("counterparty_nif", "base_imponible")
     resolution = resolve_bulk_import_columns(
@@ -123,7 +123,7 @@ def test_the_mapping_lane_is_not_consulted_when_exact_names_suffice() -> None:
     can already read, which is both slower and a needless dependency; the extra
     column simply reports.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     def _must_not_be_called(_headers):
         raise AssertionError("the mapping lane was consulted for a fully canonical header")
@@ -147,7 +147,7 @@ def test_a_rejected_role_token_leaves_the_column_unmapped_not_the_file_refused()
     the command boundary and emitted as a notice; what must hold here is that
     the file still reads and every other column still binds.
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     resolution = resolve_bulk_import_columns(
         ("fecha_expedicion", "base_imponible", "algo_raro"),
@@ -168,7 +168,7 @@ def test_a_role_the_importer_has_no_slot_for_is_reported_with_its_role_intact() 
     the difference between "we do not know this column" and "we know it and do
     not take it".
     """
-    from .._bulk_import_columns import resolve_bulk_import_columns
+    from ..bulk_import_columns import resolve_bulk_import_columns
 
     resolution = resolve_bulk_import_columns(
         ("base_imponible", "cuota_iva"),

@@ -25,7 +25,7 @@ from cadrumo.domain.renta.actividad_asset.election_facts import method_facts, me
 from cadrumo.domain.renta.actividad_asset.fact_leaves import FactKind
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .test_register import _operations
+from .test_register import register_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,7 +112,7 @@ def test_an_optional_group_requires_its_own_facts_only_once_stated() -> None:
 
 
 def test_the_form_options_offer_only_methods_with_facts_a_form_can_state() -> None:
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
     options = operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=2025)
 

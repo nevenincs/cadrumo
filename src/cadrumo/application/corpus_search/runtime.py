@@ -31,10 +31,10 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location, storage_path
-from ._retrieval import run_retrieval
 from .citation_lookup import bundled_citation_lookup
 from .lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
 from .models import RetrievalResponse
+from .retrieval import run_retrieval
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -81,13 +81,13 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     database_path.parent.mkdir(parents=True, exist_ok=True)
     corpus_root = bundled_corpus_html_root()
     with exclusive_file_lock(database_path):
-        source_identity = _corpus_identity(corpus_root)
-        if _stored_identity(database_path) == source_identity:
+        source_identity = corpus_identity(corpus_root)
+        if stored_identity(database_path) == source_identity:
             return database_path
         staging_path = _staging_database_path(database_path)
         try:
             build_lexical_index(staging_path, iter_corpus_chunks(corpus_root))
-            if _corpus_identity(corpus_root) != source_identity:
+            if corpus_identity(corpus_root) != source_identity:
                 raise InternalInvariantError("corpus sources changed while the lexical index was being built")
             _store_identity(staging_path, source_identity)
             os.replace(staging_path, database_path)
@@ -96,7 +96,7 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     return database_path
 
 
-def _corpus_identity(corpus_root: Path) -> str:
+def corpus_identity(corpus_root: Path) -> str:
     digest = hashlib.sha256()
     for token in (_INDEX_SCHEMA_VERSION, _EXTRACTOR_SCHEMA_VERSION):
         encoded = token.encode("utf-8")
@@ -112,7 +112,7 @@ def _corpus_identity(corpus_root: Path) -> str:
     return digest.hexdigest()
 
 
-def _stored_identity(database_path: Path) -> str | None:
+def stored_identity(database_path: Path) -> str | None:
     if not database_path.is_file():
         return None
     try:

@@ -37,7 +37,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operator_actions.models import PreconditionVerdict
-from ..calculate_input import _resolve_casilla_overrides, resolve_binding_overrides
+from ..calculate_input import resolve_binding_overrides, resolve_casilla_overrides
 from ..calculate_input_validation import (
     ModeloCalculateBindingInputError,
     ModeloCalculateCasillaInputError,
@@ -212,7 +212,7 @@ def test_unknown_casilla_refusal_carries_its_casillas_verdict(*, operation: Pinn
     assert not casilla_noncanonical_reference_targets(revision, _UNDECLARED_CASILLA_KEY)
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {_UNDECLARED_CASILLA_KEY: "1.00"},
             revision,
             operation=operation,
@@ -252,7 +252,7 @@ def test_a_row_field_casilla_is_refused_as_one_before_its_value_is_parsed(
     records = row_field_template_records_by_casilla(revision)[_ROW_FIELD_CASILLA_KEY]
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {_ROW_FIELD_CASILLA_KEY: "B12345678"},
             revision,
             operation=operation,
@@ -280,7 +280,7 @@ def test_a_former_detail_alias_is_an_undeclared_casilla(*, operation: PinnedAuth
     revision = _revision("180")
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
-        _resolve_casilla_overrides(
+        resolve_casilla_overrides(
             {"perceptor.nif": "B12345678"},
             revision,
             operation=operation,

@@ -40,10 +40,10 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...aggregation.source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
-from .._minimo_descendientes_advisory import (
-    _guarderia_madre_meses_advisory,
-    _guarderia_shape_advisory,
-    _RegistryScope,
+from ..minimo_descendientes_advisory_support import (
+    RegistryScope,
+    guarderia_madre_meses_advisory,
+    guarderia_shape_advisory,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -127,15 +127,15 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
     guarderia = validated_casilla_id("0613")
     indices = _worst_case_indices()
     revision = _headroom_revision()
-    scope = _RegistryScope(
+    scope = RegistryScope(
         revision=revision,
         bindings=tuple(revision.bindings),
         filing_year=_HEADROOM_FILING_YEAR,
         **{"period_token": "0A"},
     )
     return [
-        ("guarderia_shape", lambda: _guarderia_shape_advisory(indices, guarderia, scope)),
-        ("guarderia_madre_meses", lambda: _guarderia_madre_meses_advisory(indices, guarderia, scope)),
+        ("guarderia_shape", lambda: guarderia_shape_advisory(indices, guarderia, scope)),
+        ("guarderia_madre_meses", lambda: guarderia_madre_meses_advisory(indices, guarderia, scope)),
     ]
 
 

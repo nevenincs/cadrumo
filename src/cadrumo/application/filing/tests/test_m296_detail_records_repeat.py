@@ -38,7 +38,7 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from .._m296_projection import build_m296_filing_projection_plan
+from ..m296_projection import build_m296_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,

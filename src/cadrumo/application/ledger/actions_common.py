@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.buckets.event import (
     BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
     BucketEvent,
@@ -438,8 +438,8 @@ def ledger_values_differing_from_stored(
     to a stored ``500.00``. So this can show that a command is a changed write,
     and cannot show that the row it would store is the row that is stored.
     """
-    command_fields = _command_idempotency_fields(command)
-    current_fields = _transaction_idempotency_fields(current)
+    command_fields = command_idempotency_fields(command)
+    current_fields = transaction_idempotency_fields(current)
     return tuple(
         sorted(
             name for name, value in command_fields.items() if name != "classified_by" and current_fields[name] != value
@@ -491,7 +491,7 @@ def verify_evidence_references(
     *,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
-    attachment_store: _AttachmentStoreProtocol | None,
+    attachment_store: AttachmentStoreProtocol | None,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
@@ -505,8 +505,8 @@ def verify_evidence_references(
 
 
 def resolve_attachment_store(
-    attachment_store: _AttachmentStoreProtocol | None,
-) -> _AttachmentStoreProtocol:
+    attachment_store: AttachmentStoreProtocol | None,
+) -> AttachmentStoreProtocol:
     """Require the attachment store selected by the outer composition root."""
     return require_repository(attachment_store, reason="the ledger attachment verification path")
 
@@ -574,7 +574,7 @@ def _verify_attachment_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
-    attachment_store: _AttachmentStoreProtocol | None,
+    attachment_store: AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
     store = resolve_attachment_store(attachment_store)
@@ -592,7 +592,7 @@ def _verify_single_attachment(
     *,
     command: ManualLedgerTransactionCommand,
     transaction_id: str,
-    store: _AttachmentStoreProtocol,
+    store: AttachmentStoreProtocol,
 ) -> None:
     try:
         attachment = store.load_manifest(attachment_id)
@@ -830,7 +830,7 @@ def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
     return command.classified_by_override or CLASSIFIED_BY_MANUAL
 
 
-def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
+def command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
     """Project every persisted field of ``command`` into a name-keyed mapping.
 
     The full-field idempotency contract (``aeat-cli-contract``)
@@ -904,10 +904,10 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
 
 def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
     """Fold :func:`_command_idempotency_fields` into the positional idempotency tuple."""
-    return tuple(_command_idempotency_fields(command).values())
+    return tuple(command_idempotency_fields(command).values())
 
 
-def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
+def transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
     """Project the stored transaction's persisted fields, aligned with the command mapping.
 
     The banking-boundary fields read from ``current.raw``; the classification and
@@ -959,7 +959,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
 
 def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
     """Fold :func:`_transaction_idempotency_fields` into the positional idempotency tuple."""
-    return tuple(_transaction_idempotency_fields(current).values())
+    return tuple(transaction_idempotency_fields(current).values())
 
 
 def command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
@@ -1000,7 +1000,7 @@ def build_ledger_bucket_event(
     )
 
 
-def _commit_with_guarded_events(
+def commit_with_guarded_events(
     *,
     # rationale: calls to_secure_object_write(), an adapter-only escape
     # hatch absent from BucketEventHistoryRepositoryProtocol.
@@ -1072,7 +1072,7 @@ def save_transaction_catalogue_and_events(
     if expected_current is not None:
         if replacement is None:
             raise ValueError("baseline-guarded transaction write requires its replacement")
-        _commit_with_guarded_events(
+        commit_with_guarded_events(
             event_repository=event_repository,
             events=events,
             commit=lambda event_write: transaction_repository.replace_if_current_with_secure_object_writes(
@@ -1085,7 +1085,7 @@ def save_transaction_catalogue_and_events(
     if expected_catalogue_revision is not None:
         if not isinstance(transaction_repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
             raise InternalInvariantError("revision-guarded transaction co-commit capability is unavailable")
-        _commit_with_guarded_events(
+        commit_with_guarded_events(
             event_repository=event_repository,
             events=events,
             commit=lambda event_write: transaction_repository.save_if_revision_with_secure_object_writes(
@@ -1095,7 +1095,7 @@ def save_transaction_catalogue_and_events(
             ),
         )
         return
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=event_repository,
         events=events,
         commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
@@ -1116,7 +1116,7 @@ def save_transaction_catalogue_invoices_and_events(
     invoice_catalogue: InvoiceCatalogue,
     events: tuple[BucketEvent, ...],
 ) -> None:
-    _commit_with_guarded_events(
+    commit_with_guarded_events(
         event_repository=event_repository,
         events=events,
         commit=lambda event_write: transaction_repository.save_with_secure_object_writes(

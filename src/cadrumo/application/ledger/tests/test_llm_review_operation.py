@@ -378,7 +378,7 @@ async def test_acquisition_uses_exact_captured_row_and_review_projector_binds_in
         response_schema_ref=operation_public_schema_reference(response.identity),
         continuation_digest=cast(str, published["continuation_digest"]),
     )
-    projection = operation._review_projector(operand, interaction)
+    projection = operation.review_projector(operand, interaction)
     assert isinstance(projection, LedgerLlmReviewProjection)
     assert projection.reviewed_proposal_digest == sha256_hex(serialize_operation_operand(operand))
     if mode in {"classification", "saturated"}:
@@ -387,7 +387,7 @@ async def test_acquisition_uses_exact_captured_row_and_review_projector_binds_in
         assert projection.suggestion.parent_amount == "121.00"
         assert projection.suggestion.children[0].amount == "60.50"
     with pytest.raises(ValueError, match="another invocation"):
-        operation._review_projector(
+        operation.review_projector(
             operand,
             interaction.model_copy(
                 update={
@@ -467,14 +467,14 @@ async def test_resume_preserves_exact_baseline_and_distinguishes_prewrite_from_p
             settled_at=datetime(2026, 4, 15, tzinfo=UTC),
             result_ref=reference,
         )
-        assert operation._result_projector(execution, receipt) == execution.result
+        assert operation.result_projector(execution, receipt) == execution.result
         for changed in (
             {"effect": OperationEffect.NONE},
             {"result_ref": "f" * 64},
             {"identity": case.identity.model_copy(update={"operation_id": "f" * 64})},
         ):
             with pytest.raises(ValueError, match="terminal receipt"):
-                operation._result_projector(execution, receipt.model_copy(update=changed))
+                operation.result_projector(execution, receipt.model_copy(update=changed))
     else:
         error_type = (
             LedgerPersistenceConflictError
@@ -777,7 +777,7 @@ async def test_terminal_preview_captures_exact_proposal_without_pending_review_o
         settled_at=datetime(2026, 4, 15, tzinfo=UTC),
         result_ref=reference,
     )
-    assert operation._result_projector(execution, receipt) == execution.result
+    assert operation.result_projector(execution, receipt) == execution.result
     for changed in (
         {"effect": OperationEffect.UPDATED},
         {"result_ref": "f" * 64},
@@ -785,7 +785,7 @@ async def test_terminal_preview_captures_exact_proposal_without_pending_review_o
         {"condition": OperationTerminalCondition.REFUSED},
     ):
         with pytest.raises(ValueError, match="terminal receipt"):
-            operation._result_projector(execution, receipt.model_copy(update=changed))
+            operation.result_projector(execution, receipt.model_copy(update=changed))
 
 
 @pytest.mark.parametrize(
@@ -855,7 +855,7 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
         continuation_digest="d" * 64,
     )
     with pytest.raises(ValueError, match="invalid ledger reviewed operand"):
-        operation._review_projector(operand, interaction)
+        operation.review_projector(operand, interaction)
 
     def forbidden_writer(*args: object, **kwargs: object) -> BaseModel:
         raise AssertionError("terminal preview cannot authorize a resumed mutation")

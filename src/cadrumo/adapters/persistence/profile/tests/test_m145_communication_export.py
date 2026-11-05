@@ -250,7 +250,7 @@ def test_export_m145_communication_record_refuses_a_box_written_into_unrelated_c
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    real_snapshot = m145_communication_records._snapshot_for_scope
+    real_snapshot = m145_communication_records.snapshot_for_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
@@ -261,7 +261,7 @@ def test_export_m145_communication_record_refuses_a_box_written_into_unrelated_c
         )
         monkeypatch.setattr(
             m145_communication_records,
-            "_snapshot_for_scope",
+            "snapshot_for_scope",
             lambda **scope: _with_a_shared_box(real_snapshot(**scope)),
         )
         with pytest.raises(M145CommunicationRecordExportError) as caught:

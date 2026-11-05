@@ -13,7 +13,7 @@ from ...modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
 )
 from ..workspace_reader import read_local_aeat_sync_workspace_projection
-from .test_workspace_reader import _unrelated_contracts
+from .test_workspace_reader import unrelated_contracts
 
 _BUCKET = "00000000-0000-4000-8000-000000000001"
 _NOW = datetime(2026, 10, 4, tzinfo=UTC)
@@ -51,6 +51,6 @@ def reconciliation_projection(records):
         subject_key="00000001R",
         observed_at=_NOW,
         filings=(),
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=unrelated_contracts(),
         reconciliations=records,
     )

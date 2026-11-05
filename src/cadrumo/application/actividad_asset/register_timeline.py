@@ -37,12 +37,12 @@ from .history import ActivityAssetHistory
 from .register_reads import RegisterReadContext, matches_current_schedule
 
 
-def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
+def flatten(value: object, prefix: str = "") -> dict[str, str | None]:
     """Flatten a dumped record into dotted fields; a repeated row is named by its position."""
     if is_object_mapping(value):
         flat: dict[str, str | None] = {}
         for name, item in value.items():
-            flat.update(_flatten(item, f"{prefix}.{name}" if prefix else str(name)))
+            flat.update(flatten(item, f"{prefix}.{name}" if prefix else str(name)))
         return flat
     if is_object_list_or_tuple(value):
         items = tuple(value)
@@ -50,7 +50,7 @@ def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
             return {prefix: None}
         flat = {}
         for position, item in enumerate(items):
-            flat.update(_flatten(item, f"{prefix}[{position}]"))
+            flat.update(flatten(item, f"{prefix}[{position}]"))
         return flat
     if isinstance(value, bool):
         return {prefix: ActivityAssetFlag(str(value).lower()).value}
@@ -73,14 +73,14 @@ def _changed_value_label(field: str, value: str | None, names: Mapping[str, str]
     return None
 
 
-def _changes(
+def register_timeline_changes(
     before: BaseModel | None,
     after: BaseModel,
     *,
     class_names: ClassNames,
 ) -> tuple[ActivityAssetTimelineChange, ...]:
-    old = {} if before is None else _flatten(before.model_dump(mode="json"))
-    new = _flatten(after.model_dump(mode="json"))
+    old = {} if before is None else flatten(before.model_dump(mode="json"))
+    new = flatten(after.model_dump(mode="json"))
     old_names: Mapping[str, str] = dict[str, str]() if before is None else class_names(before)
     new_names = class_names(after)
     return tuple(
@@ -150,7 +150,7 @@ def element_timeline(
         if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
             revision = revisions[event.record_id]
             previous = revisions.get(revision.supersedes_revision_id or "")
-            changes = _changes(previous, revision, class_names=class_names)
+            changes = register_timeline_changes(previous, revision, class_names=class_names)
             event_kind, effect_date = _revision_event(revision, previous)
         elif event.kind is ActivityAssetEventKind.CLAIM:
             claim = claims[event.record_id]
@@ -260,4 +260,6 @@ def _descriptor_changes(
         ),
         None,
     )
-    return _changes(None if earlier is None else earlier.facts, descriptor.facts, class_names=class_names)
+    return register_timeline_changes(
+        None if earlier is None else earlier.facts, descriptor.facts, class_names=class_names
+    )

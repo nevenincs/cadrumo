@@ -160,7 +160,7 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                 content_sha256=hashlib.sha256(payload).hexdigest(),
                 attachment_id="c" * 64,
             )
-            return invoice_draft_extraction_module._read_transcription_semantically(
+            return invoice_draft_extraction_module.read_transcription_semantically(
                 evidence,
                 transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
                 settings=load_settings(),

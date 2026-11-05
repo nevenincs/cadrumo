@@ -38,8 +38,8 @@ from ....domain.iva.schema import (
     IvaRateKind,
 )
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 from ..calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from ..rate_box_advisory import collect_rate_box_coverage_diagnostics
 from .advisory_diagnostic_repositories import advisory_diagnostic_repositories
 
 pytestmark = [

@@ -49,7 +49,7 @@ from .in_memory_transaction_repository import InMemoryTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_BUCKET = "22222222-2222-4222-8222-222222222222"
+BUCKET = "22222222-2222-4222-8222-222222222222"
 
 
 class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
@@ -71,7 +71,7 @@ class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
         return self._rules.pop(identifier, None) is not None
 
 
-class _ClassificationScenario:
+class ClassificationScenario:
     """One explicit inward composition for a classification policy case."""
 
     def __init__(self, transactions: TransactionCatalogue, *, operation: PinnedAuthorityOperation) -> None:
@@ -79,22 +79,22 @@ class _ClassificationScenario:
         self.ports = LedgerActionPorts(
             operation=operation,
             transaction_repository=InMemoryTransactionRepository(
-                bucket_id=_BUCKET,
+                bucket_id=BUCKET,
                 catalogue=transactions,
                 permit_secure_object_writes=True,
             ),
             bucket_event_repository=InMemoryEventRepository(),
-            invoice_repository=EmptyInvoiceRepository(bucket_id=_BUCKET),
+            invoice_repository=EmptyInvoiceRepository(bucket_id=BUCKET),
             attachment_store=InMemoryAttachmentStore(),
             usage_ratio_profile=UsageRatioProfile(),
             usage_ratio_profile_loader=empty_usage_ratio_profile,
-            work_unit_repository=EmptyWorkUnitRepository(bucket_id=_BUCKET),
-            calculation_repository=EmptyCalculationRepository(bucket_id=_BUCKET),
+            work_unit_repository=EmptyWorkUnitRepository(bucket_id=BUCKET),
+            calculation_repository=EmptyCalculationRepository(bucket_id=BUCKET),
             purchase_invoice_evidence_records=(),
         )
 
 
-def _transaction(*, provider_id: str, description: str) -> Transaction:
+def transaction(*, provider_id: str, description: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=date(2024, 4, 10),
@@ -127,17 +127,17 @@ def _transaction(*, provider_id: str, description: str) -> Transaction:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Generator[_ClassificationScenario]:
+def _stored(*transactions: Transaction) -> Generator[ClassificationScenario]:
     """Compose application ports around an in-memory transaction catalogue."""
     with bundled_indexed_authority().operation() as operation:
-        yield _ClassificationScenario(TransactionCatalogue.from_transactions(transactions), operation=operation)
+        yield ClassificationScenario(TransactionCatalogue.from_transactions(transactions), operation=operation)
 
 
-def _apply_plan(scenario: _ClassificationScenario, plan: ClassificationRulePlan) -> None:
+def _apply_plan(scenario: ClassificationScenario, plan: ClassificationRulePlan) -> None:
     """Write every planned row through the same boundary the operation supervisor uses."""
     for row in plan.matches:
         apply_classification_rule_match(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             row=row,
             actor="operator",
             source_command="aeat app ledger rule apply",
@@ -149,11 +149,11 @@ def _apply_plan(scenario: _ClassificationScenario, plan: ClassificationRulePlan)
 def test_the_plan_matches_exactly_what_the_apply_writes() -> None:
     """The load-bearing parity claim: a preview cannot promise a different run."""
     with _stored(
-        _transaction(provider_id="a", description="OFFICE SUPPLIES LTD"),
-        _transaction(provider_id="b", description="PERSONAL GYM"),
+        transaction(provider_id="a", description="OFFICE SUPPLIES LTD"),
+        transaction(provider_id="b", description="PERSONAL GYM"),
     ) as scenario:
         add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="OFFICE",
             classification=BusinessClassification.BUSINESS,
             actor="operator",
@@ -161,7 +161,7 @@ def test_the_plan_matches_exactly_what_the_apply_writes() -> None:
         )
 
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -181,11 +181,11 @@ def test_the_plan_matches_exactly_what_the_apply_writes() -> None:
 def test_the_plan_counters_describe_the_scan() -> None:
     """A preview that under-reports the scan is how an operator misjudges scope."""
     with _stored(
-        _transaction(provider_id="a", description="OFFICE SUPPLIES LTD"),
-        _transaction(provider_id="b", description="UNMATCHED NARRATIVE"),
+        transaction(provider_id="a", description="OFFICE SUPPLIES LTD"),
+        transaction(provider_id="b", description="UNMATCHED NARRATIVE"),
     ) as scenario:
         add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="OFFICE",
             classification=BusinessClassification.BUSINESS,
             actor="operator",
@@ -193,7 +193,7 @@ def test_the_plan_counters_describe_the_scan() -> None:
         )
 
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -207,9 +207,9 @@ def test_the_plan_counters_describe_the_scan() -> None:
 
 def test_the_winning_rule_carries_its_category_through_to_the_patch() -> None:
     """A rule's category must survive the plan, or apply silently drops it."""
-    with _stored(_transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
+    with _stored(transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
         add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="OFFICE",
             classification=BusinessClassification.BUSINESS,
             category_id="office-costs",
@@ -218,7 +218,7 @@ def test_the_winning_rule_carries_its_category_through_to_the_patch() -> None:
         )
 
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -228,9 +228,9 @@ def test_the_winning_rule_carries_its_category_through_to_the_patch() -> None:
 
 def test_the_first_rule_in_priority_order_wins() -> None:
     """Two rules can match one row; the engine must pick deterministically."""
-    with _stored(_transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
+    with _stored(transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
         add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="SUPPLIES",
             classification=BusinessClassification.PERSONAL,
             priority=200,
@@ -238,7 +238,7 @@ def test_the_first_rule_in_priority_order_wins() -> None:
             rule_repository=scenario.rule_repository,
         )
         winner = add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="OFFICE",
             classification=BusinessClassification.BUSINESS,
             priority=10,
@@ -247,7 +247,7 @@ def test_the_first_rule_in_priority_order_wins() -> None:
         )
 
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -258,9 +258,9 @@ def test_the_first_rule_in_priority_order_wins() -> None:
 
 def test_an_already_classified_row_is_out_of_scope_until_reaffirmed() -> None:
     """Scope is the other half the two engines had to agree on."""
-    with _stored(_transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
+    with _stored(transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
         add_classification_rule(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             description_pattern="OFFICE",
             classification=BusinessClassification.BUSINESS,
             actor="operator",
@@ -269,14 +269,14 @@ def test_an_already_classified_row_is_out_of_scope_until_reaffirmed() -> None:
         _apply_plan(
             scenario,
             plan_classification_rules(
-                bucket_id=_BUCKET,
+                bucket_id=BUCKET,
                 ports=scenario.ports,
                 rule_repository=scenario.rule_repository,
             ),
         )
 
         second = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -287,9 +287,9 @@ def test_an_already_classified_row_is_out_of_scope_until_reaffirmed() -> None:
 
 def test_a_plan_over_no_rules_matches_nothing_but_still_reports_the_scan() -> None:
     """Zero matches and an unscanned ledger are different states."""
-    with _stored(_transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
+    with _stored(transaction(provider_id="a", description="OFFICE SUPPLIES LTD")) as scenario:
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
@@ -312,10 +312,10 @@ def test_a_plan_over_no_rules_matches_nothing_but_still_reports_the_scan() -> No
 def test_the_rule_writer_stores_nothing_a_classification_write_could_not_carry_out(
     classification: BusinessClassification, category_id: str | None
 ) -> None:
-    with _stored(_transaction(provider_id="a", description="OFFICE")) as scenario:
+    with _stored(transaction(provider_id="a", description="OFFICE")) as scenario:
         with pytest.raises(ClassificationRuleError):
             add_classification_rule(
-                bucket_id=_BUCKET,
+                bucket_id=BUCKET,
                 description_pattern="OFFICE",
                 classification=classification,
                 category_id=category_id,
@@ -323,7 +323,7 @@ def test_the_rule_writer_stores_nothing_a_classification_write_could_not_carry_o
                 rule_repository=scenario.rule_repository,
             )
         plan = plan_classification_rules(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )

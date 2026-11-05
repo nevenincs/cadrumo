@@ -355,10 +355,10 @@ def test_terminal_application_refusal_preserves_the_established_domain_catch_fam
 
 
 def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> None:
-    from ..draft_construction import _decimal_input
+    from ..draft_construction import decimal_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _decimal_input("iva.base", object())
+        decimal_input("iva.base", object())
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.input_not_decimal"
     assert excinfo.value.context == {"input_id": "iva.base", "observed_type": "object"}
@@ -366,20 +366,20 @@ def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> No
 
 
 def test_binding_row_key_refusal_renders_as_its_key() -> None:
-    from ..draft_construction import _binding_row_index
+    from ..draft_construction import binding_row_index
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _binding_row_index("iva.rows", 0)
+        binding_row_index("iva.rows", 0)
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_row_key_not_positive_integer"
     _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_boolean_input_refusal_renders_as_its_key() -> None:
-    from ..draft_construction import _boolean_input
+    from ..draft_construction import boolean_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
-        _boolean_input("iva.flag", Decimal("1"))
+        boolean_input("iva.flag", Decimal("1"))
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_value_not_boolean"
     _assert_terminal_application_refusal(excinfo.value)
@@ -402,9 +402,9 @@ def test_xml_value_refusal_renders_as_its_key_and_terminal_condition() -> None:
 
 
 def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:
-    from ..export import _export_layout_not_renderable_error
+    from ..export import export_layout_not_renderable_error
 
-    error = _export_layout_not_renderable_error("303", None)
+    error = export_layout_not_renderable_error("303", None)
 
     assert str(error) == "application.filing.export.errors.layout_not_renderable"
     assert error.context == {"modelo": "303", "reason_code": "no_complete_export_layouts"}

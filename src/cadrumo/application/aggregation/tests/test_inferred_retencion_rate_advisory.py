@@ -53,13 +53,13 @@ from ....domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
     statutory_activity_retencion_rates,
 )
-from .._retencion_rate_advisory import (
+from ..renta_income_ledger import aggregate_renta_income_ledger
+from ..renta_income_models import RentaIncomeObservation
+from ..retencion_rate_advisory import (
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
     INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
     inferred_actividad_retencion_rate_advisory_observations,
 )
-from ..renta_income_ledger import aggregate_renta_income_ledger
-from ..renta_income_models import RentaIncomeObservation
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,

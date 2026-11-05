@@ -63,13 +63,13 @@ from ..calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
-from ._invoice_drift_gate import invoice_drift_findings
-from ._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 from .imputation_filings import imputation_filings_from_repositories
-from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .invoice_drift_gate import invoice_drift_findings
 from .iva_wallet_gate import (
-    require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
+    ModeloIvaWalletReconciliationBlocked,
+    require_persisted_iva_compensation_decision_matches_revision,
 )
+from .ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 from .preconditions import ModeloPreconditionFailure
 from .verification_cross_period import (
     cross_period_clean_state_findings,
@@ -590,7 +590,7 @@ def collect_verification_gate_findings(
     _append_modality_finding(work_unit, workflow_profile, target, findings, failures_by_finding_id)
     iva_compensation_decision = None
     try:
-        iva_compensation_decision = _require_iva_compensation_revision_match(
+        iva_compensation_decision = require_persisted_iva_compensation_decision_matches_revision(
             work_unit,
             target,
             repository=iva_compensation_decision_repository,

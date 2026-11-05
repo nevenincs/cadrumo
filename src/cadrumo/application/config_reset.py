@@ -779,7 +779,7 @@ def _clear_auth_for_targets(
         target = _update_target(
             target,
             fingerprint=assessment.fingerprint,
-            retention=_retention_decision_from_record(
+            retention=retention_decision_from_record(
                 assessment.retention,
                 target.retention,
             ),
@@ -791,7 +791,7 @@ def _clear_auth_for_targets(
     return operation
 
 
-def _retention_decision_from_record(
+def retention_decision_from_record(
     assessment: RetentionFloorAssessment | None,
     recorded: ConfigResetRetentionDecision | None,
 ) -> ConfigResetRetentionDecision:
@@ -859,7 +859,7 @@ def _reconcile_pointer(
     return operation
 
 
-def _refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
+def refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
     """Refuse to erase a target whose filed records are still legally retained.
 
     The Administration's right to review a filed self-assessment prescribes four
@@ -1008,14 +1008,14 @@ def _delete_targets(
         )
         target = _update_target(
             target,
-            retention=_retention_decision_from_record(assessment.retention, target.retention),
+            retention=retention_decision_from_record(assessment.retention, target.retention),
         )
         operation = _replace_target(operation, index, target)
         repository.save(operation)
         if target.phase is ConfigResetTargetPhase.DELETING and not assessment.exists:
             operation = _recognize_completed_erase(repository, operation, index, target)
             continue
-        _refuse_erase_inside_the_retention_floor(target)
+        refuse_erase_inside_the_retention_floor(target)
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(
                 target,

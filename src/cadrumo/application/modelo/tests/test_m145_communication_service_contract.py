@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.modelo import Modelo
 from ..m145_communication import (
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_m145_communication_service_contract_is_backend_owned_and_registry_backed() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         contract = build_m145_communication_service_contract(
             period_token=M145CommunicationPeriod.COMMUNICATION,
             operation=_authority_operation_for_test,
@@ -57,7 +57,7 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
 
 
 def test_m145_communication_service_contract_excludes_filing_surfaces_and_terms() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         contract = build_m145_communication_service_contract(
             period_token=M145CommunicationPeriod.COMMUNICATION,
             operation=_authority_operation_for_test,

@@ -47,9 +47,9 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...core.period import Period
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.censo_modelos import censo_ownership_refusing_work_units
 from ...domain.calculations.registry.ids import RevisionId
@@ -59,7 +59,6 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence
-from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,
@@ -71,8 +70,9 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
     work_unit_ordering_instants,
 )
-from .modelo_bucket_events import build_modelo_bucket_event as _build_bucket_event
+from .modelo_bucket_events import build_modelo_bucket_event
 from .preconditions import build_modelo_precondition_failure_for_scenario
+from .registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
@@ -499,7 +499,7 @@ def create_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is not None:
         return _require_existing_creation_unit(existing)
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -517,7 +517,7 @@ def create_work_unit(
     # One unit of work: the new work unit and MODELO_WORK_UNIT_CREATED. Emitted
     # through a separate write, an event-storage failure left the unit durable
     # while the history had no record that it was ever created.
-    created_event = _build_bucket_event(
+    created_event = build_modelo_bucket_event(
         bucket_id=unit.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
         occurred_at=now,
@@ -534,7 +534,7 @@ def create_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, unit),
-        (_bucket_event_write(bv_repo, (created_event,)),),
+        (bucket_event_history_write(bv_repo, (created_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return unit
@@ -752,7 +752,7 @@ def rename_work_unit(
                 provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.RENAME,
@@ -762,7 +762,7 @@ def rename_work_unit(
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
     # One unit of work: the renamed unit and MODELO_WORK_UNIT_RENAMED.
-    renamed_event = _build_bucket_event(
+    renamed_event = build_modelo_bucket_event(
         bucket_id=renamed.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_RENAMED,
         occurred_at=now,
@@ -779,7 +779,7 @@ def rename_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, renamed),
-        (_bucket_event_write(bv_repo, (renamed_event,)),),
+        (bucket_event_history_write(bv_repo, (renamed_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return renamed
@@ -831,7 +831,7 @@ def discard_work_unit(
                 provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.DISCARD,
@@ -847,7 +847,7 @@ def discard_work_unit(
         },
     )
     # One unit of work: the discarded unit and MODELO_WORK_UNIT_DISCARDED.
-    discarded_event = _build_bucket_event(
+    discarded_event = build_modelo_bucket_event(
         bucket_id=discarded.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
         occurred_at=now,
@@ -863,7 +863,7 @@ def discard_work_unit(
     )
     repo.save_with_secure_object_writes(
         upsert_work_unit(catalogue, discarded),
-        (_bucket_event_write(bv_repo, (discarded_event,)),),
+        (bucket_event_history_write(bv_repo, (discarded_event,)),),
         expected_revision_id=catalogue_revision_id,
     )
     return discarded

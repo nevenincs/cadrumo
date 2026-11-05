@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_01, _CASILLA_02, workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_fixtures import CASILLA_01, CASILLA_02, workflow_profile
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
@@ -49,8 +49,8 @@ def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero() -> None:
     for revision_id in _M131_REVISION_IDS:
         predicate = _m131_advisory_predicate(revision_id)
         casilla_values: dict[CasillaId, Decimal] = {
-            _CASILLA_01: Decimal("18000.00"),
-            _CASILLA_02: Decimal("0"),
+            CASILLA_01: Decimal("18000.00"),
+            CASILLA_02: Decimal("0"),
         }
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -66,8 +66,8 @@ def test_m131_advisory_silent_when_pago_fraccionado_present() -> None:
     for revision_id in _M131_REVISION_IDS:
         predicate = _m131_advisory_predicate(revision_id)
         casilla_values: dict[CasillaId, Decimal] = {
-            _CASILLA_01: Decimal("18000.00"),
-            _CASILLA_02: Decimal("360.00"),
+            CASILLA_01: Decimal("18000.00"),
+            CASILLA_02: Decimal("360.00"),
         }
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -79,7 +79,7 @@ def test_m131_advisory_silent_when_no_datos_base_activity() -> None:
     for revision_id in _M131_REVISION_IDS:
         predicate = _m131_advisory_predicate(revision_id)
 
-        explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
+        explicit_zero: dict[CasillaId, Decimal] = {CASILLA_01: Decimal("0"), CASILLA_02: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}
 
         assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], revision_id

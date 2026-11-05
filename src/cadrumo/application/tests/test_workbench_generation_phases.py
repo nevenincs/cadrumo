@@ -53,16 +53,16 @@ from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
 )
 from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
-from ._workbench_generation_support import (
-    _NOW,
-    _PROFILE_ID,
-    _declaration_work_unit,
-    _ledger_ports,
-    _plain_generation_door,
-    _profile_record,
-    _Repository,
-    _StableStore,
-    _test_censal_operation_definition,
+from .workbench_generation_support import (
+    NOW,
+    PROFILE_ID,
+    Repository,
+    StableStore,
+    censal_test_operation_definition,
+    declaration_work_unit,
+    ledger_ports,
+    plain_generation_door,
+    profile_record,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -80,19 +80,19 @@ def _declaration_list_door(operation: PinnedAuthorityOperation) -> SecureProfile
     from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
-    unit = _declaration_work_unit(operation)
-    record = _profile_record(operation, facts=(UserProfileFact(path="identity.name", value=_PRIVATE_NAME),))
+    unit = declaration_work_unit(operation)
+    record = profile_record(operation, facts=(UserProfileFact(path="identity.name", value=_PRIVATE_NAME),))
     return SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
+        profile_id=PROFILE_ID,
         operation=operation,
-        profile_repository=cast(Any, _Repository(record)),
-        work_unit_repository=cast(Any, _Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))),
-        calculation_repository=cast(Any, _Repository(CalculationRevisionCatalogue())),
-        filing_repository=cast(Any, _Repository(ModeloRecordCatalogue())),
-        clock=lambda: _NOW,
-        bucket_event_repository=cast(Any, _Repository(BucketEventHistoryCatalogue())),
-        ledger_action_ports=_ledger_ports(
-            operation, transactions=_StableStore(TransactionCatalogue()), invoices=_StableStore(InvoiceCatalogue())
+        profile_repository=cast(Any, Repository(record)),
+        work_unit_repository=cast(Any, Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))),
+        calculation_repository=cast(Any, Repository(CalculationRevisionCatalogue())),
+        filing_repository=cast(Any, Repository(ModeloRecordCatalogue())),
+        clock=lambda: NOW,
+        bucket_event_repository=cast(Any, Repository(BucketEventHistoryCatalogue())),
+        ledger_action_ports=ledger_ports(
+            operation, transactions=StableStore(TransactionCatalogue()), invoices=StableStore(InvoiceCatalogue())
         ),
         notification_custody_reader=lambda: 4,
         census_observation_reader=lambda: None,
@@ -192,11 +192,11 @@ def test_both_surfaces_capture_declaration_sources_in_the_same_order(
 
     def account_session() -> HomeAccountSession:
         session_reads.append("session")
-        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=_NOW)
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=NOW)
 
     def clock() -> datetime:
         clock_reads.append("clock")
-        return _NOW
+        return NOW
 
     door = replace(_declaration_list_door(authority_operation), account_session_reader=account_session, clock=clock)
     with caplog.at_level(logging.DEBUG):
@@ -251,7 +251,7 @@ def test_a_failed_source_stops_both_captures_before_ledger_and_calendar_reads(
 
     def account_session() -> HomeAccountSession:
         session_reads.append("session")
-        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=_NOW)
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=NOW)
 
     door = replace(
         _declaration_list_door(authority_operation),
@@ -281,8 +281,8 @@ def test_the_declarations_list_read_records_every_phase_from_binding_the_reader_
     door = _declaration_list_door(authority_operation)
     request = OperationRequest[ModeloDeclarationsListRequest](
         definition_id=MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(_PROFILE_ID),
-        payload=ModeloDeclarationsListRequest(profile_id=UUID(_PROFILE_ID), output_language=OutputLanguage.EN),
+        subject_ref=profile_operation_subject(PROFILE_ID),
+        payload=ModeloDeclarationsListRequest(profile_id=UUID(PROFILE_ID), output_language=OutputLanguage.EN),
     )
     stored: list[BaseModel] = []
 
@@ -305,7 +305,7 @@ def test_the_declarations_list_read_records_every_phase_from_binding_the_reader_
             authority_operation=authority_operation,
         ),
     )
-    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: _PROFILE_ID)
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: PROFILE_ID)
     executor = ModeloDeclarationsListExecutor(lambda _profile_id, _operation: door.read_declaration_list_inputs)
 
     with caplog.at_level(logging.DEBUG):
@@ -331,11 +331,11 @@ def test_the_filing_history_reads_the_bucket_event_log(
     from ...domain.buckets.event_repository import build_bucket_event
     from ..modelo.declarations_workspace_contracts import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
 
-    unit = _declaration_work_unit(authority_operation)
+    unit = declaration_work_unit(authority_operation)
     created = build_bucket_event(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
-        occurred_at=_NOW,
+        occurred_at=NOW,
         actor="operator",
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=unit.work_unit_id,
@@ -343,9 +343,9 @@ def test_the_filing_history_reads_the_bucket_event_log(
         payload_version=1,
     )
     unrelated = build_bucket_event(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         event_type=BucketEventType.MODELO_EXPORTED,
-        occurred_at=_NOW,
+        occurred_at=NOW,
         actor="operator",
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=unit.work_unit_id,
@@ -355,11 +355,11 @@ def test_the_filing_history_reads_the_bucket_event_log(
     events = BucketEventHistoryCatalogue(events={created.event_id: created, unrelated.event_id: unrelated})
 
     generation = InstalledWorkbenchGenerationProviderV1(
-        _plain_generation_door(
+        plain_generation_door(
             authority_operation,
-            profile=_Repository(_profile_record(authority_operation)),
-            work_units=_Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit})),
-            bucket_events=_Repository(events),
+            profile=Repository(profile_record(authority_operation)),
+            work_units=Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit})),
+            bucket_events=Repository(events),
         )
     )()
 
@@ -386,12 +386,12 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
         identity=CensalObservationIdentity(nif="00000001R"),
         domicilio_fiscal=CensalObservationAddress(),
         domicilio_notificacion=CensalObservationAddress(),
-        captured_at=_NOW,
+        captured_at=NOW,
         source_url=CENSO_SOURCE_URL_FIXTURE,
     )
     reads = iter((None, observation))
     door = replace(
-        _plain_generation_door(authority_operation, profile=_Repository(_profile_record(authority_operation))),
+        plain_generation_door(authority_operation, profile=Repository(profile_record(authority_operation))),
         census_observation_reader=lambda: next(reads),
     )
     with pytest.raises(InternalInvariantError, match="changed during capture"):
@@ -417,7 +417,7 @@ def test_a_resident_s_calendar_survives_the_registered_result_round_trip(
 
     record = create_user_profile_record(
         context=authority_operation.profile_create_context(),
-        profile_id=_PROFILE_ID,
+        profile_id=PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
@@ -426,13 +426,13 @@ def test_a_resident_s_calendar_survives_the_registered_result_round_trip(
         ),
     )
     generation = InstalledWorkbenchGenerationProviderV1(
-        _plain_generation_door(authority_operation, profile=_Repository(record))
+        plain_generation_door(authority_operation, profile=Repository(record))
     )()
     calendar = generation.declarations_calendar.projection
     assert calendar is not None
     assert calendar.entries
 
-    public = project_workbench_generation(UUID(_PROFILE_ID), generation)
+    public = project_workbench_generation(UUID(PROFILE_ID), generation)
     decoded = WorkbenchGenerationOperationProjection.model_validate_json(public.model_dump_json(), strict=True)
     restored = restore_workbench_generation(decoded)
 
@@ -466,13 +466,13 @@ def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
             ),
         )
 
-    profile = _Repository(
-        _profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),))
+    profile = Repository(
+        profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),))
     )
     door = replace(
-        _plain_generation_door(authority_operation, profile=profile),
+        plain_generation_door(authority_operation, profile=profile),
         operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
+            (build_censal_operation_registration(censal_test_operation_definition()).contract,)
         ),
         calendar_aeat_reader=read_captures,
     )

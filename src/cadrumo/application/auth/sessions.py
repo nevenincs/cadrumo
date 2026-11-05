@@ -497,7 +497,7 @@ async def _ensure_authenticated_aeat_session_locked(
             operator_scope_ports=operator_scope_ports,
         )
         async with provider_lifecycle(provider):
-            session, assertion = await _authenticate_and_verify_provider(
+            session, assertion = await authenticate_and_verify_provider(
                 provider,
                 target_url=target_url,
             )
@@ -685,7 +685,7 @@ def prepare_clave_auth(
     meaningless, and a provider that returned no expectation would leave
     the session check silently no-opping.
     """
-    facts = _active_profile_auth_facts(
+    facts = active_profile_auth_facts(
         operator_scope_ports=operator_scope_ports,
         profile_decode_context=profile_decode_context,
     )
@@ -697,7 +697,7 @@ def prepare_clave_auth(
         profile_decode_context=profile_decode_context,
     )
     if credentials is None:
-        _assert_profile_identity_available_for_deferred_check(
+        assert_profile_identity_available_for_deferred_check(
             facts,
             profile_decode_context=profile_decode_context,
         )
@@ -713,7 +713,7 @@ def prepare_clave_auth(
         profile_decode_context=profile_decode_context,
         logs_in=logs_in,
     )
-    expected_identity = _assert_active_profile_identity_matches_provider(
+    expected_identity = assert_active_profile_identity_matches_provider(
         credentials,
         profile_decode_context=profile_decode_context,
     )
@@ -744,7 +744,7 @@ def _resolve_clave_credentials(
         facts=(
             facts
             if facts is not None
-            else _active_profile_auth_facts(
+            else active_profile_auth_facts(
                 operator_scope_ports=operator_scope_ports,
                 profile_decode_context=profile_decode_context,
             )
@@ -795,7 +795,7 @@ _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 
 
-def _profile_field_label(
+def profile_field_label(
     path: str,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -839,7 +839,7 @@ def _require_clave_credentials(
             translated_message="application.auth.sessions.errors.clave_identity_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "identity_field": _profile_field_label(
+                "identity_field": profile_field_label(
                     _CLAVE_DNI_NIE_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
@@ -854,11 +854,11 @@ def _require_clave_credentials(
             translated_message="application.auth.sessions.errors.clave_contraste_missing",
             context={
                 "provider": credentials.provider_kind.value,
-                "nie_field": _profile_field_label(
+                "nie_field": profile_field_label(
                     _CLAVE_NUMERO_SOPORTE_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
-                "dni_field": _profile_field_label(
+                "dni_field": profile_field_label(
                     _CLAVE_FECHA_VALIDEZ_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
@@ -866,7 +866,7 @@ def _require_clave_credentials(
         )
 
 
-def _assert_profile_identity_available_for_deferred_check(
+def assert_profile_identity_available_for_deferred_check(
     facts: ClaveAuthFacts,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -897,17 +897,17 @@ def _assert_profile_identity_available_for_deferred_check(
     raise AuthProfileIdentityMismatchError(
         translated_message="application.auth.sessions.errors.profile_identity_cleared",
         context={
-            "requirements": _grounded_profile_identity_requirement(
+            "requirements": grounded_profile_identity_requirement(
                 profile_decode_context=profile_decode_context,
             ),
         },
     )
 
 
-_PROFILE_TAX_ID_PATH = "identity.tax_id"
+PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 
-def _grounded_profile_identity_requirement(
+def grounded_profile_identity_requirement(
     *,
     profile_decode_context: ProfileDecodeContext,
 ) -> str:
@@ -923,13 +923,13 @@ def _grounded_profile_identity_requirement(
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
-            _PROFILE_TAX_ID_PATH,
+            PROFILE_TAX_ID_PATH,
             schema=profile_decode_context.schema,
         ),
     )
 
 
-def _assert_active_profile_identity_matches_provider(
+def assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
     *,
     profile_decode_context: ProfileDecodeContext,
@@ -969,7 +969,7 @@ def _assert_active_profile_identity_matches_provider(
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
             context={
-                "requirements": _grounded_profile_identity_requirement(
+                "requirements": grounded_profile_identity_requirement(
                     profile_decode_context=profile_decode_context,
                 ),
             },
@@ -1074,7 +1074,7 @@ def clave_auth_facts_from_profile_values(
     value mapping leaves it unset and is treated as the stricter case.
     """
     return ClaveAuthFacts(
-        tax_id=_normalise_tax_identity(values.get(_PROFILE_TAX_ID_PATH)),
+        tax_id=_normalise_tax_identity(values.get(PROFILE_TAX_ID_PATH)),
         dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
@@ -1085,7 +1085,7 @@ def clave_auth_facts_from_profile_values(
     )
 
 
-def _active_profile_auth_facts(
+def active_profile_auth_facts(
     *,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
@@ -1126,12 +1126,12 @@ def _active_profile_auth_facts(
         return ClaveAuthFacts()
 
     path_values = dict(record_to_path_values(record))
-    if not _normalise_tax_identity(path_values.get(_PROFILE_TAX_ID_PATH)):
+    if not _normalise_tax_identity(path_values.get(PROFILE_TAX_ID_PATH)):
         # A record whose tax id reached the projection only through its
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
-        path_values[_PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
+        path_values[PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
@@ -1210,10 +1210,10 @@ async def _probe_existing_session(
         return await provider.probe_persisted_session(
             target_url=target_url,
         )
-    return await _authenticate_and_verify_provider(provider, target_url=target_url)
+    return await authenticate_and_verify_provider(provider, target_url=target_url)
 
 
-async def _authenticate_and_verify_provider(
+async def authenticate_and_verify_provider(
     provider: AuthProvider,
     *,
     target_url: str | None,

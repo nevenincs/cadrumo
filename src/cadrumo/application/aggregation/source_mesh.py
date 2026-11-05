@@ -37,8 +37,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
@@ -202,7 +201,7 @@ class CalculationSourceContext(BaseModel):
     caller has supplied none.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     # Normal calculate routes carry the exact selected work unit.  Legacy
@@ -263,7 +262,7 @@ DIAGNOSTIC_REMEDY_MAX_LENGTH: Final[int] = 512
 class CalculationSourceDiagnostic(BaseModel):
     """Diagnostic emitted while resolving source-backed calculation values."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     reason: CalculationSourceDiagnosticReason
     source_kind: str = Field(min_length=1, max_length=64)
@@ -434,7 +433,7 @@ def out_of_window_summary_source_diagnostic(
 class CalculationSourceProvenance(BaseModel):
     """One primary or contributing node in a resolver-owned provenance graph."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     resolver_id: str = Field(min_length=1, max_length=128)
     resolved_binding_source: BindingSourceKind
@@ -519,7 +518,7 @@ class BorradorSourceProvenance(BaseModel):
     ``borrador:{id}:binding:{bid}`` provenance ``source_ref`` strings.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bindings_sourced: tuple[BindingId, ...] = Field(default_factory=tuple)

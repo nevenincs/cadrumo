@@ -32,7 +32,7 @@ class _PreparedEventWrite(SecureObjectWrite):
     catalogue: BucketEventHistoryCatalogue
 
 
-class _EventRepository:
+class M036LifecycleServiceEventRepository:
     """Minimal revisioned bucket-event capability for inward policy tests."""
 
     def __init__(self) -> None:
@@ -77,10 +77,10 @@ class _EventRepository:
         self.save(write.catalogue)
 
 
-class _DeclarationRepository:
+class M036LifecycleServiceDeclarationRepository:
     """In-memory declaration capability that co-commits event writes."""
 
-    def __init__(self, events: _EventRepository) -> None:
+    def __init__(self, events: M036LifecycleServiceEventRepository) -> None:
         self.events = events
         self.records: dict[str, M036DeclarationResult] = {}
 
@@ -114,9 +114,9 @@ class _DeclarationRepository:
 
 
 def _ports() -> M036LifecyclePorts:
-    events = _EventRepository()
+    events = M036LifecycleServiceEventRepository()
     return M036LifecyclePorts(
-        declaration_repository=_DeclarationRepository(events),
+        declaration_repository=M036LifecycleServiceDeclarationRepository(events),
         bucket_event_repository=events,
     )
 

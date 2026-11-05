@@ -75,7 +75,7 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
         def failed_log(*_args: object, **_kwargs: object) -> None:
             raise OSError("synthetic diagnostic sink failure")
 
-        logger = get_logger("cadrumo.application.operations._execution_context")
+        logger = get_logger("cadrumo.application.operations.execution_context")
         if fail_diagnostics:
             monkeypatch.setattr(logger, "log", failed_log)
         authority = Authorization()

@@ -52,7 +52,7 @@ from pydantic import BaseModel, Field
 from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
@@ -112,7 +112,7 @@ class ModeloHealthRow(BaseModel):
             row already identifies.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     work_unit_id: WorkUnitId | None = None
@@ -152,7 +152,7 @@ class PipelineHealthReport(BaseModel):
             nothing to be ready about yet.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     filing_year: int

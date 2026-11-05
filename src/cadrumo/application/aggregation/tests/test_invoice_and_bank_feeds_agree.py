@@ -49,8 +49,8 @@ from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -190,7 +190,7 @@ def _invoice_side(*, category: IvaCategory, country: str, tax_id: str):
     iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
     assert base_amount_eur is not None
     assert iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
+    observation = invoice_line_iva_observation(
         invoice=invoice,
         line=line,
         line_index=0,

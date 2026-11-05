@@ -70,8 +70,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._reconcile_population import resolve_casilla_population_scope
 from .reconcile_casilla import CasillaDivergence, detect_casilla_divergences
+from .reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -126,7 +126,7 @@ def _law_resolved_snapshot(work_unit: WorkUnit, *, operation: PinnedAuthorityOpe
     on the revision.
     """
     from ...core.errors.hierarchy import CadrumoError
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
         return resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)

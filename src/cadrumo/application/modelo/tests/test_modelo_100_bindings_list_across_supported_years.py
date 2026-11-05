@@ -20,7 +20,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from ..query_read_contracts import ModeloBindingsListRequest
-from ..query_read_operation import _read_bindings_list
+from ..query_read_operation import read_bindings_list
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -64,7 +64,7 @@ def _supported_years() -> tuple[int, ...]:
 def test_bindings_list_carries_the_identity_and_ledger_surface(filing_year: int) -> None:
     """The application reader lists every declared binding in each edition."""
     with bundled_indexed_authority().operation() as operation:
-        result = _read_bindings_list(
+        result = read_bindings_list(
             ModeloBindingsListRequest(profile_id=uuid4(), modelo=_MODELO, year=filing_year, period_code=_PERIOD),
             operation=operation,
         )
@@ -95,7 +95,7 @@ _BORRADOR_SUPPLIED_FROM_2025 = "renta-profile-tax-residence-ccaa"
 def test_bindings_list_reports_borrador_capability_as_the_value_the_borrador_may_supply(filing_year: int) -> None:
     """A cross-check-only credit is never listed as borrador-capable; a supplying binding still is."""
     with bundled_indexed_authority().operation() as operation:
-        result = _read_bindings_list(
+        result = read_bindings_list(
             ModeloBindingsListRequest(profile_id=uuid4(), modelo=_MODELO, year=filing_year, period_code=_PERIOD),
             operation=operation,
         )

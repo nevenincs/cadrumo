@@ -51,7 +51,7 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from .calendar_test_support import profile as _autonomo
+from .calendar_test_support import profile as calendar_autonomo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -164,11 +164,11 @@ def test_core_personas_route_to_expected_modelo_verdicts() -> None:
         ("pensioner-m303", _pensioner, "303", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("pensioner-m200", _pensioner, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("pensioner-m202", _pensioner, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
-        ("autonomo-m100", _autonomo, "100", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m130", _autonomo, "130", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m303", _autonomo, "303", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("autonomo-m200", _autonomo, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
-        ("autonomo-m202", _autonomo, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m100", calendar_autonomo, "100", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m130", calendar_autonomo, "130", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m303", calendar_autonomo, "303", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("autonomo-m200", calendar_autonomo, "200", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
+        ("autonomo-m202", calendar_autonomo, "202", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m100", _sociedad_limitada, "100", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m130", _sociedad_limitada, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m200", _sociedad_limitada, "200", ApplicabilityVerdict.APPLICABLE, True, None),
@@ -195,7 +195,7 @@ def test_undeclared_profile_is_not_declared() -> None:
     """The taxpayer-model declared check is False for an undeclared profile."""
 
     assert taxpayer_model_is_declared(_undeclared()) is False
-    assert taxpayer_model_is_declared(_autonomo()) is True
+    assert taxpayer_model_is_declared(calendar_autonomo()) is True
     assert taxpayer_model_is_declared(_sociedad_limitada()) is True
 
 
@@ -259,7 +259,7 @@ def test_modelo_without_seed_rule_is_incomplete(authority_operation: PinnedAutho
     than a confident guess.
     """
 
-    result = derive_modelo_applicability(_autonomo(), _an_unruled_modelo(authority_operation))
+    result = derive_modelo_applicability(calendar_autonomo(), _an_unruled_modelo(authority_operation))
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
@@ -293,7 +293,7 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operat
 def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
     """The two INCOMPLETE causes carry structurally distinct prose."""
 
-    unruled = derive_modelo_applicability(_autonomo(), "232")
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232")
     undeclared = derive_modelo_applicability(_undeclared(), "100")
     assert unruled.reason != undeclared.reason
 
@@ -406,7 +406,7 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
 
 _TAX_ROUTE_CASES: tuple[tuple[str, _ProfileFactory, TaxRoute], ...] = (
     ("landlord-irpf", _landlord, TaxRoute.IRPF),
-    ("autonomo-irpf", _autonomo, TaxRoute.IRPF),
+    ("autonomo-irpf", calendar_autonomo, TaxRoute.IRPF),
     ("legal-entity-is", _sociedad_limitada, TaxRoute.IMPUESTO_SOCIEDADES),
     ("attribution-pass-through", _attribution_entity, TaxRoute.ATTRIBUTION_PASS_THROUGH),
     ("undeclared", _undeclared, TaxRoute.INCOMPLETE),
@@ -485,8 +485,8 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     cases = (
         ("objetiva-m130", _autonomo_objetiva(), "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("objetiva-m131", _autonomo_objetiva(), "131", ApplicabilityVerdict.APPLICABLE, True),
-        ("directa-normal-m130", _autonomo(), "130", ApplicabilityVerdict.APPLICABLE, True),
-        ("directa-normal-m131", _autonomo(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
+        ("directa-normal-m130", calendar_autonomo(), "130", ApplicabilityVerdict.APPLICABLE, True),
+        ("directa-normal-m131", calendar_autonomo(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("directa-simplificada-m130", _autonomo_simplificada(), "130", ApplicabilityVerdict.APPLICABLE, True),
         ("directa-simplificada-m131", _autonomo_simplificada(), "131", ApplicabilityVerdict.NOT_APPLICABLE, False),
         ("default-directa-m130", default_directa_profile, "130", ApplicabilityVerdict.APPLICABLE, True),
@@ -511,7 +511,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
 
 
 _MODELO_390_CASES: tuple[tuple[str, _ProfileFactory, ApplicabilityVerdict, bool], ...] = (
-    ("autonomo", _autonomo, ApplicabilityVerdict.APPLICABLE, True),
+    ("autonomo", calendar_autonomo, ApplicabilityVerdict.APPLICABLE, True),
     ("legal-entity", _sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
     ("attribution-entity", _attribution_entity, ApplicabilityVerdict.APPLICABLE, True),
     ("landlord", _landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
@@ -531,7 +531,7 @@ def test_modelo_390_tracks_modelo_303_verdict() -> None:
     """Modelo 390 is the annual companion to Modelo 303: the two carry
     the same applicability gate for every core persona."""
 
-    for profile in (_landlord(), _salaried_only(), _autonomo(), _sociedad_limitada(), _attribution_entity()):
+    for profile in (_landlord(), _salaried_only(), calendar_autonomo(), _sociedad_limitada(), _attribution_entity()):
         m303 = derive_modelo_applicability(profile, "303")
         m390 = derive_modelo_applicability(profile, "390")
         assert m303.verdict is m390.verdict, profile.tax_id
@@ -622,7 +622,7 @@ def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
     income, Modelo 111 is INCOMPLETE — the boolean has no tri-state, so
     the engine refuses to guess a NOT_APPLICABLE it cannot justify."""
 
-    result = derive_modelo_applicability(_autonomo(), "111")
+    result = derive_modelo_applicability(calendar_autonomo(), "111")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "depende de un hecho que el perfil no expresa con certeza" in result.reason
     # The undetermined rationale must not tell a declared operator to
@@ -648,7 +648,7 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
     assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
     assert derive_modelo_applicability(attribution_paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(calendar_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
     assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
@@ -657,7 +657,7 @@ def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> 
 
     # The shared autónomo answers the Modelo 347 question with a declared "no";
     # this case needs it unanswered.
-    undeclared = _autonomo().model_copy(update={"third_party_transactions_above_347_threshold": None})
+    undeclared = calendar_autonomo().model_copy(update={"third_party_transactions_above_347_threshold": None})
     for modelo in ("115", "123", "349", "347"):
         result = derive_modelo_applicability(undeclared, modelo)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
@@ -710,9 +710,9 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
     """The payer-fact INCOMPLETE rationale is structurally distinct from
     both the undeclared-taxpayer and the un-ruled-modelo rationales."""
 
-    undetermined = derive_modelo_applicability(_autonomo(), "111")
+    undetermined = derive_modelo_applicability(calendar_autonomo(), "111")
     undeclared = derive_modelo_applicability(_undeclared(), "100")
-    unruled = derive_modelo_applicability(_autonomo(), "232")
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232")
 
     assert undetermined.reason != undeclared.reason
     assert undetermined.reason != unruled.reason
@@ -737,8 +737,8 @@ def test_seed_legal_refs_resolve_against_the_registry(authority_operation: Pinne
     seed_refs: set[str] = set()
     for profile, modelo in (
         (_undeclared(), "100"),
-        (_autonomo(), "111"),
-        (_autonomo(), "232"),
+        (calendar_autonomo(), "111"),
+        (calendar_autonomo(), "232"),
         (_attribution_entity(), "200"),
     ):
         seed_refs.update(derive_modelo_applicability(profile, modelo).legal_refs)

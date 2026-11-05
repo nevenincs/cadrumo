@@ -51,8 +51,8 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 from .test_renta_income_actividad_contract import (
-    _m130_2026_q1_revision,
-    _m130_revision_without_the_retenciones_binding,
+    m130_2026_q1_revision,
+    m130_revision_without_the_retenciones_binding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -212,7 +212,7 @@ def test_declared_retenciones_at_two_rates_reach_the_credit() -> None:
     transactions, invoices = declared_pair()
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT
@@ -255,7 +255,7 @@ def test_an_inferred_row_raises_the_advisory_and_leaves_the_credit_unchanged() -
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), inferred))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
@@ -282,7 +282,7 @@ def test_a_substrate_less_row_is_unresolved_rather_than_a_proven_zero() -> None:
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), substrate_less))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
@@ -321,7 +321,7 @@ def test_employment_and_non_activity_rows_never_reach_the_credit() -> None:
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), employment, uncategorised))
 
     aggregation = _aggregate(transactions, invoices)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT
@@ -347,10 +347,10 @@ def test_the_unrouted_quantity_screen_is_silent_while_a_binding_draws_the_retenc
     transactions, invoices = declared_pair()
     observations = _aggregate(transactions, invoices).observations
 
-    assert unrouted_ledger_renta_income_quantities(_m130_2026_q1_revision(), observations) == ()
+    assert unrouted_ledger_renta_income_quantities(m130_2026_q1_revision(), observations) == ()
 
     stripped = unrouted_ledger_renta_income_quantities(
-        _m130_revision_without_the_retenciones_binding(),
+        m130_revision_without_the_retenciones_binding(),
         observations,
     )
     assert len(stripped) == 1
@@ -369,7 +369,7 @@ def test_the_fourth_quarter_credit_agrees_with_the_same_ledger_read_annually() -
     transactions, invoices = declared_pair()
 
     fourth_quarter = _aggregate(transactions, invoices, period=_Q4)
-    revision = _m130_2026_q1_revision()
+    revision = m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, fourth_quarter.observations)
 
     assert resolved[_M130_RETENCIONES_BINDING] == _DECLARED_CREDIT

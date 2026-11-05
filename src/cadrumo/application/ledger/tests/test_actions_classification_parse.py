@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.transactions.enums import BusinessClassification
-from ..actions_classification import _parse_bulk_classify_rows
+from ..actions_classification import parse_bulk_classify_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,7 +22,7 @@ _TX_EXTRA = "be3084a875bf6b05e423ec89db70bde7a6fce07201293a5b3a950101b0ae3049"
 
 
 def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows() -> None:
-    parsed_rows, failures = _parse_bulk_classify_rows(
+    parsed_rows, failures = parse_bulk_classify_rows(
         "\n".join(
             (
                 "transaction_id,classification",
@@ -45,7 +45,7 @@ def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows() -> No
 
 
 def test_parse_loop_reports_malformed_row_without_dropping_later_rows() -> None:
-    parsed_rows, failures = _parse_bulk_classify_rows(
+    parsed_rows, failures = parse_bulk_classify_rows(
         "\n".join(
             (
                 "transaction_id,classification",

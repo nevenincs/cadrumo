@@ -189,7 +189,7 @@ def _provided_bulk_classify_patch_columns(normalised_row: Mapping[str, str | Non
     )
 
 
-def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
+def parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
     """Parse the CSV header and collect localized row failures in input order."""
     # Parse the CSV header to detect unknown columns before touching storage.
     reader = csv.DictReader(io.StringIO(csv_text))
@@ -385,7 +385,7 @@ def bulk_classify_from_csv(
 
     Returns a :class:`~application.ledger.models.BulkClassifyResult`.
     """
-    parsed_rows, parse_failures = _parse_bulk_classify_rows(csv_text)
+    parsed_rows, parse_failures = parse_bulk_classify_rows(csv_text)
     if not parsed_rows and not parse_failures:
         return BulkClassifyResult(total=0, applied=0, skipped=0)
 

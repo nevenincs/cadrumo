@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -33,9 +33,7 @@ from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
 )
@@ -68,13 +66,13 @@ _DECLARANTE = (
 
 
 def _record(*facts: UserProfileFact):
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_BUCKET,
         setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

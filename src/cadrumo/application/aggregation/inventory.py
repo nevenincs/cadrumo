@@ -36,14 +36,14 @@ _SOURCE = BindingSourceKind.INVENTORY
 _ACTIVITIES_SECTION = "activities"
 _ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
 _OWNED_SOURCES = (_SOURCE,)
-_VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
+VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
     "complete_acquisition_cost": "complete_acquisition_total",
     "closing_minus_opening_positive": "variation_increase_value",
     "opening_minus_closing_positive": "variation_decrease_value",
 }
 _OPERATION_ANNOTATION = InventoryProvider.model_fields["row_field"].annotation
 _CANONICAL_OPERATIONS = get_args(getattr(_OPERATION_ANNOTATION, "__value__", _OPERATION_ANNOTATION))
-if set(_VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
+if set(VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
     raise InternalInvariantError("inventory projection operation adapter is not exhaustive")
 
 
@@ -457,7 +457,7 @@ def _resolve_inventory_rows(
             content_fingerprint = content_hash_hex(projection.model_dump(mode="json"))
             for operation, binding in bindings_by_operation.items():
                 key = (binding.id, row_index)
-                row_values[key] = getattr(projection, _VALUE_ATTRIBUTE_BY_OPERATION[operation])
+                row_values[key] = getattr(projection, VALUE_ATTRIBUTE_BY_OPERATION[operation])
                 row_identities[key] = RowSourceIdentity(
                     source_kind=_SOURCE,
                     source_row_identity=projection.actividad_id,

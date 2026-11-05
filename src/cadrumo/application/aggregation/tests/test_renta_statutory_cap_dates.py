@@ -35,7 +35,7 @@ from ....domain.user_profile.values import UserProfileFact
 from ..renta_gasto_ledger import aggregate_renta_gasto_ledger
 from ..renta_imputation import ActivityImputationCriterion, ImputationCriteria
 from ..renta_ledger import aggregate_renta_ledger_expenses, resolve_category_deduction_rules
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 from .renta_ledger_support import ledger_expense_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -130,7 +130,7 @@ def _annual_total(
         TransactionCatalogue.from_transactions(rows),
         invoices,
         bucket_id=_BUCKET,
-        period=_period(_DECLARED, "0A"),
+        period=renta_income_aggregation_period(_DECLARED, "0A"),
         profile_year=_DECLARED,
         criteria=criteria,
     )
@@ -247,7 +247,7 @@ def test_the_modelo_130_expense_path_counts_a_meal_on_its_own_day_under_cash() -
     result = aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions((first, second)),
         bucket_id=_BUCKET,
-        period=_period(_DECLARED, "1T"),
+        period=renta_income_aggregation_period(_DECLARED, "1T"),
         modelo="130",
         target_casilla_id=validated_casilla_id("02", surface="the Modelo 130 expense box"),
         accept_activity_marker=True,

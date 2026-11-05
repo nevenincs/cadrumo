@@ -35,7 +35,7 @@ from ...core.bucket_pointer import read_pointer, resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
 from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, InternalInvariantError
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -144,7 +144,7 @@ class ActiveProfileHealth(BaseModel):
     contract.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile: str | None
     source: ProfileSource
@@ -179,7 +179,7 @@ class ActiveProfileHealth(BaseModel):
 class ActiveProfileRepairResult(BaseModel):
     """Result of a safe active-profile pointer repair probe/action."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     dry_run: bool
     cleared_pointer: bool
@@ -571,7 +571,7 @@ def _assess_selected_profile(
     )
 
 
-def _profile_record_session_is_missing(
+def profile_record_session_is_missing(
     bucket_id: str,
     *,
     operation: PinnedAuthorityOperation,
@@ -587,7 +587,7 @@ def _profile_record_session_is_missing(
         )
 
 
-def _load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
+def load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
     """Open workflow state only when the caller did not already supply it."""
     if state is not None:
         return
@@ -686,7 +686,7 @@ def _assess_registered_profile(
 ) -> ActiveProfileHealth:
     """Assess the committed profile after discovery has established its identity."""
     active_profile = pointer.bucket_id
-    if not include_private_record or _profile_record_session_is_missing(active_profile, operation=operation):
+    if not include_private_record or profile_record_session_is_missing(active_profile, operation=operation):
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
@@ -699,7 +699,7 @@ def _assess_registered_profile(
         )
 
     try:
-        _load_workflow_state_for_health(active_profile, state)
+        load_workflow_state_for_health(active_profile, state)
     except (CadrumoError, OSError) as exc:
         # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.

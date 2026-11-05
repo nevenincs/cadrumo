@@ -498,7 +498,7 @@ def _bound_ports(
     return ports
 
 
-async def _prepare_and_maybe_commit(
+async def prepare_and_maybe_commit(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     migration: ProjectionMigrationPort,
@@ -545,14 +545,14 @@ class ModeloProjectExecutor:
         self, request: OperationRequest[ModeloProjectOperationRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        if not _valid_execution(
+        if not valid_execution(
             request, context, profile_id=payload.profile_id, definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=ports.calculation_repository,
                 migration=self._migration,
                 context=context,
@@ -591,14 +591,14 @@ class ModeloCompareExecutor:
         self, request: OperationRequest[ModeloCompareOperationRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        if not _valid_execution(
+        if not valid_execution(
             request, context, profile_id=payload.profile_id, definition_id=MODELO_COMPARE_OPERATION_DEFINITION_ID
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(
+            await prepare_and_maybe_commit(
                 calculation_repository=ports.calculation_repository,
                 migration=self._migration,
                 context=context,
@@ -623,7 +623,7 @@ class ModeloCompareExecutor:
         return await await_cancellation_complete(run(), task_name="modelo-compare")
 
 
-def _valid_execution[Payload: BaseModel](
+def valid_execution[Payload: BaseModel](
     request: OperationRequest[Payload],
     context: OperationExecutorContext,
     *,

@@ -39,7 +39,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.user_profile.values import (
     ProfileSetupState,
     create_user_profile_record,
@@ -269,7 +269,7 @@ def _record_creation_snapshots(identity: UUID) -> None:
     try_record_filing_retention_snapshot(
         bucket_id=str(identity),
         records=(),
-        observed_at=_utc_now(),
+        observed_at=now(),
     )
 
     # Record that this profile has zero known open legal cases, for the same
@@ -285,7 +285,7 @@ def _record_creation_snapshots(identity: UUID) -> None:
     try_record_legal_hold_snapshot(
         bucket_id=str(identity),
         open_case_ids=(),
-        observed_at=_utc_now(),
+        observed_at=now(),
     )
 
 

@@ -14,8 +14,8 @@ from ....domain.iva_compensation.carry_forward import (
     derive_iva_compensation_year_end_carry_partition,
     iva_compensation_period_sort_key,
 )
-from ._iva_compensation_history_support import (
-    _state,
+from .iva_compensation_history_support import (
+    state,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -46,10 +46,10 @@ def test_year_end_carry_partition_keeps_the_last_period_result_apart_from_carrie
     70, and the two still account for the 120 once.
     """
     states = (
-        _state(filing_year=2026, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
-        _state(filing_year=2026, period="2T", applied=Decimal("30.00"), available=Decimal("70.00")),
-        _state(filing_year=2026, period="3T", available=Decimal("70.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
+        state(filing_year=2026, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
+        state(filing_year=2026, period="2T", applied=Decimal("30.00"), available=Decimal("70.00")),
+        state(filing_year=2026, period="3T", available=Decimal("70.00")),
+        state(filing_year=2026, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
     )
     report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
 
@@ -73,8 +73,8 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662(
     still satisfy the identity.
     """
     states = (
-        _state(filing_year=2026, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
+        state(filing_year=2026, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
+        state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
     )
     report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
 

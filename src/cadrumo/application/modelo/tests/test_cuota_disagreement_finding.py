@@ -23,7 +23,7 @@ from ..finding_message_text import finding_message_text
 from ..preconditions import ModeloPreconditionFailure
 from ..verification_iva_evidence import append_iva_selected_scope_evidence_finding
 from ..work_form_findings import finding_action_locale_key
-from .test_unrecordable_deduction_documents import _Transactions, _work_and_target
+from .test_unrecordable_deduction_documents import Transactions, work_and_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -49,11 +49,11 @@ def _issue(transaction_id: str) -> CalculationSourceIssue:
 def _verify(
     rows: tuple[Transaction, ...],
 ) -> tuple[list[ModeloVerificationFinding], dict[int, ModeloPreconditionFailure]]:
-    repository = _Transactions(
+    repository = Transactions(
         bucket_id="13000000-0000-4000-8000-000000000303",
         catalogue=TransactionCatalogue.from_transactions(rows),
     )
-    work, target = _work_and_target(repository.bucket_id, tuple(_issue(row.transaction_id) for row in rows))
+    work, target = work_and_target(repository.bucket_id, tuple(_issue(row.transaction_id) for row in rows))
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
     append_iva_selected_scope_evidence_finding(

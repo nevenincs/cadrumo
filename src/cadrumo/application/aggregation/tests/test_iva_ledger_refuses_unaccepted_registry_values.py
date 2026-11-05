@@ -44,7 +44,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..errors import UnacceptedLedgerRegistryValueError
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason, IvaLedgerProrrataApportionment
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
-from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver, _selected_scope_iva_evidence_diagnostics
+from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver, selected_scope_iva_evidence_diagnostics
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -371,7 +371,7 @@ def test_the_refusal_reaches_the_calculation_as_a_blocking_evidence_marker() -> 
     """The source mesh carries the finding as the durable marker verification refuses on."""
     stale = _stale(_cash_sale("cash-marker"), cash_accounting_treatment=IvaCashAccountingTreatment("retired_regime"))
 
-    diagnostics = _selected_scope_iva_evidence_diagnostics(
+    diagnostics = selected_scope_iva_evidence_diagnostics(
         _aggregate(stale).issues,
         resolver_id=LedgerIvaAggregationSourceResolver.resolver_id,
     )

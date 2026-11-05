@@ -94,7 +94,7 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
     taxpayer owes nothing.
     """
     from ....core.period import Period
-    from ..declarations_workspace import _settled_result
+    from ..declarations_workspace import settled_result
 
     class _Unit:
         modelo = ModeloCode("100")
@@ -108,16 +108,16 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
     unit = _Unit()
     revisions = {"a" * 64: _Revision()}
 
-    assert _settled_result(unit, revisions, None) is None, "no reader bound is unknown"
-    assert _settled_result(unit, revisions, lambda *_: None) is None, "no declared role is unknown"
-    assert _settled_result(unit, {}, lambda *_: "0670") is None, "a missing revision is unknown"
-    assert _settled_result(unit, revisions, lambda *_: "9999") is None, "an uncomputed cell is unknown"
+    assert settled_result(unit, revisions, None) is None, "no reader bound is unknown"
+    assert settled_result(unit, revisions, lambda *_: None) is None, "no declared role is unknown"
+    assert settled_result(unit, {}, lambda *_: "0670") is None, "a missing revision is unknown"
+    assert settled_result(unit, revisions, lambda *_: "9999") is None, "an uncomputed cell is unknown"
 
     without_calculation = _Unit()
     without_calculation.current_calculation_revision_id = None
-    assert _settled_result(without_calculation, revisions, lambda *_: "0670") is None
+    assert settled_result(without_calculation, revisions, lambda *_: "0670") is None
 
-    assert _settled_result(unit, revisions, lambda *_: "0670") == "1234.56", (
+    assert settled_result(unit, revisions, lambda *_: "0670") == "1234.56", (
         "a grounded, computed result must reach the projection"
     )
 

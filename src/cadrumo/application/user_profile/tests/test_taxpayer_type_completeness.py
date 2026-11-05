@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..keys_validation import validate_profile_values
 
@@ -26,7 +26,7 @@ _SPOUSE_PREFIX = "renta_spouse."
 
 def test_attribution_entity_is_never_asked_for_spouse_facts() -> None:
     """An attribution entity has no spouse and must not be asked to invent one."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = validate_profile_values(
             {
                 "identity.tax_id": "E66012345",
@@ -48,7 +48,7 @@ def test_a_joint_declaration_does_demand_a_spouse_fact() -> None:
     appears -- which is exactly the defect it had when first written, filtering
     on ``spouse.`` while the schema names these paths ``renta_spouse.``.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = validate_profile_values(
             {
                 "identity.tax_id": "12345678Z",

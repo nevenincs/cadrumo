@@ -11,7 +11,7 @@ from ....domain.calculations.registry.governed_fact_scope import validating_gove
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.schema import InvoiceKind
 from ..creation_wizard import create_invoice_via_wizard
-from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = "29292929-2929-4292-8292-292929292929"

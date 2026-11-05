@@ -9,8 +9,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import Invoice
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 
 _DEVENGO_2024_Q1 = date(2024, 3, 15)
 
@@ -27,7 +27,7 @@ def resolved_for(
     iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
     assert base_amount_eur is not None
     assert iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
+    observation = invoice_line_iva_observation(
         invoice=invoice,
         line=line,
         line_index=0,

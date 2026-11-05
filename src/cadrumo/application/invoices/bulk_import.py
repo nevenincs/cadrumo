@@ -64,7 +64,7 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ..reader_refusal_wording import column_reader_refusal_reason
-from ._bulk_import_columns import (
+from .bulk_import_columns import (
     BulkImportColumnResolution,
     ColumnRoleMapper,
     resolve_bulk_import_columns,
@@ -210,9 +210,9 @@ def _parse_row_date(raw: str, *, row_number: int, field: str) -> date:
     try:
         value = parse_iso8601_date(raw)
     except ValueError as exc:
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
+        raise RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
     if value is None:
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
+        raise RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
     return value
 
 
@@ -255,7 +255,7 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
     else:
         numeric = try_parse_canonical_decimal(coerce_cell_text(raw), max_fraction_digits=2)
     if numeric is None or not numeric.is_finite():
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field=field,
             reason=(
@@ -269,7 +269,7 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
     return numeric
 
 
-class _RowParseError(CadrumoError):
+class RowParseError(CadrumoError):
     """Internal control-flow exception carrying one row's failure detail."""
 
     def __init__(self, *, row_number: int, field: str, reason: str) -> None:
@@ -303,7 +303,7 @@ def _canonicalise_amount_text(raw: object, *, decimal_separator: DecimalSeparato
 def _assert_bulk_row_fields_present(raw_row: Mapping[str, object], *, row_number: int) -> None:
     missing = [column for column in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS if not coerce_cell_text(raw_row.get(column))]
     if missing:
-        raise _RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
+        raise RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
 
 
 def _parse_optional_row_decimal(
@@ -376,14 +376,14 @@ def _parse_bulk_row_retention_rate(
     if rate is None or (rate == 0 and retencion_amount is None):
         return None
     if retencion_amount is None:
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field="retencion_amount",
             reason="retencion_amount is required when retencion_rate is given; the amount is never derived",
         )
     marked_as_percentage = coerce_cell_text(raw_row.get("retencion_rate")).rstrip().endswith("%")
     if rate == 1 and not marked_as_percentage:
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field="retencion_rate",
             reason="a bare retencion_rate of 1 is ambiguous between one per cent and the whole; write 1% or 0.01",
@@ -394,7 +394,7 @@ def _parse_bulk_row_retention_rate(
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
-        raise _RowParseError(
+        raise RowParseError(
             row_number=row_number,
             field="country_code",
             reason="counterparty country is missing or blank; state it in the row or declare one for the import",
@@ -430,7 +430,7 @@ def _build_bulk_invoice_row(
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
         field = str(first["loc"][0]) if bool(first.get("loc")) else "row"
-        raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
+        raise RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
 
 
 def _parse_bulk_invoice_row(
@@ -905,7 +905,7 @@ def import_invoices_from_rows(
                 decimal_separator=source.decimal_separator,
                 declared_country=declared_country,
             )
-        except _RowParseError as exc:
+        except RowParseError as exc:
             refused.append(BulkInvoiceImportRowFailure(row_number=exc.row_number, field=exc.field, reason=exc.reason))
             continue
 

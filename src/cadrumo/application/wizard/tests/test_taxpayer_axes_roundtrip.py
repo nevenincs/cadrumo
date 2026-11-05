@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -278,8 +278,8 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         the canonical dict must not carry the new-entity key at all,
         and the projection must reload at ``None``.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            from ..commands import _run_scripted_walk
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            from ..commands import run_scripted_walk
 
             # The scripted walk is driven by a sparse canonical dict; every
             # visible question falls back to its descriptor default (or
@@ -298,7 +298,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
                 "iva-voluntary-sii-enrolled": "false",
                 "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
             }
-            answers = _run_scripted_walk(
+            answers = run_scripted_walk(
                 registry_setup_flow,
                 canonical,
                 mode="create",

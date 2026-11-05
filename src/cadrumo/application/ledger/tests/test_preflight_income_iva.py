@@ -11,14 +11,14 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.irpf_categories import has_employment_irpf_category
 from ....domain.transactions.models import TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
-from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _transaction
+from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_preflight_skips_iva_facts_on_trabajo_income_rows(operation: PinnedAuthorityOperation) -> None:
     """Nómina income is IVA-exempt and should not surface missing IVA facts."""
-    nomina = _transaction(
+    nomina = preflight_transaction(
         "row-nomina",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1850.00"),
@@ -30,8 +30,8 @@ def test_preflight_skips_iva_facts_on_trabajo_income_rows(operation: PinnedAutho
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
         operation=operation,
     )
@@ -44,7 +44,7 @@ def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The trabajo guard must not silence general income rows."""
-    income_no_irpf = _transaction(
+    income_no_irpf = preflight_transaction(
         "row-income-no-irpf",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("500.00"),
@@ -56,8 +56,8 @@ def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
         operation=operation,
     )
@@ -85,7 +85,7 @@ def test_preflight_reads_the_same_normalized_trabajo_token_as_the_domain(
     income here and an unknown category there. Both now resolve through the
     one catalogue helper, so this parity holds by construction.
     """
-    nomina = _transaction(
+    nomina = preflight_transaction(
         "row-nomina",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1850.00"),
@@ -97,8 +97,8 @@ def test_preflight_reads_the_same_normalized_trabajo_token_as_the_domain(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
         operation=operation,
     )
@@ -112,7 +112,7 @@ def test_preflight_does_not_treat_a_near_miss_token_as_employment(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Normalisation folds case and whitespace only; it does not widen the catalogue."""
-    not_nomina = _transaction(
+    not_nomina = preflight_transaction(
         "row-not-nomina",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1850.00"),
@@ -124,8 +124,8 @@ def test_preflight_does_not_treat_a_near_miss_token_as_employment(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((not_nomina,)),
         operation=operation,
     )

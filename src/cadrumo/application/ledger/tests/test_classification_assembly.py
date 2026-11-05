@@ -15,9 +15,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -93,7 +91,7 @@ def _assemble_with_declared(
         return assemble_classification_criteria(declared=declared, **kwargs)
     # The assembly resolves governed facts, so it runs under the same pinned
     # registry operation production opens around it.
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return assemble_classification_criteria(declared=declared, operation=operation, **kwargs)
 
 
@@ -214,7 +212,7 @@ def test_a_domestic_operation_is_never_asked_for_the_supply_nature() -> None:
     operator a question with no answer that could change anything — on every
     domestic invoice.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete(
             supply_nature=None,
             customer_country_code=None,
@@ -254,7 +252,7 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
     the identical category. If the branch ever starts forking on nature, this
     reds and the laziness above becomes a defect rather than a convenience.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         verdicts = set()
         for nature in (SupplyNature.GOODS, SupplyNature.SERVICES):
             assembly = _complete(
@@ -273,7 +271,7 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
 
 def test_the_probe_forks_only_for_cross_territorial_scope() -> None:
     """The classification probe forks only when territorial scope makes nature material."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for scopes, expect_forks in (
             (
                 (IvaTerritorialScope.from_registry("es_mainland"), IvaTerritorialScope.from_registry("es_mainland")),
@@ -360,7 +358,7 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
     could never assemble anything — which is exactly the failure mode this test
     guards against, since the criteria record was constructed nowhere in production.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete()
 
         assert assembly.assembled
@@ -372,7 +370,7 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
 
 def test_an_unassembled_criteria_set_never_reaches_the_table() -> None:
     """The refusal must stop the classification, not merely annotate it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _complete(supply_nature=None)
 
         assert classify_from_assembled_criteria(assembly, operation=_authority_operation_for_test) is None
@@ -398,7 +396,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
     subject here IS the attribution: the same value settles the assembly only
     when someone is recorded as having claimed it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         goods = DeclaredFact(value=SupplyNature.GOODS, source=ClassifierInputSource.OPERATOR_ASSERTION)
         without = assemble_classification_criteria(
             transaction_date=_DATE,
@@ -518,7 +516,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
     directions, which is what stops the two drifting into a demand the model
     does not make or a silence where it does.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for kind in (
             TransactionKind("construction_reverse_charge"),
             TransactionKind("waste_reverse_charge"),
@@ -871,7 +869,7 @@ def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None
     assemble and would still be wrong, so the placeholder's verdict is compared
     against every substantive status the customer could actually have.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         placeholder = classify_from_assembled_criteria(
             _domestic(asserted_customer_tax_status=None, supply_nature=None), operation=_authority_operation_for_test
         )

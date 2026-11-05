@@ -74,7 +74,7 @@ def flag_name(question: WizardQuestion) -> str:
     return f"--{question.id}"
 
 
-def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
+def help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     """Return the translation key used for the flag's ``--help`` text."""
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
@@ -520,7 +520,7 @@ def _python_parameter(
     flag_name(question)
     option = SETUP_OPTION_INFOS.get(question.id)
     if option is None:
-        option = typer.Option(flag_name(question), help=tr(_help_key(flow, question)))
+        option = typer.Option(flag_name(question), help=tr(help_key(flow, question)))
         SETUP_OPTION_INFOS[question.id] = option
     _configure_select_option(question, operation, option)
     if section_title is not None:

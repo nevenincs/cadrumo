@@ -166,7 +166,7 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
     )
 
 
-def _filer_scope(
+def confirm_establishment_filer_scope(
     profile_record: UserProfileRecord | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -246,7 +246,7 @@ def _resolved_supply_nature(
     return DeclaredFact(value=category_derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
 
 
-def _declared_facts(
+def declared_facts(
     *,
     kind: InvoiceKind,
     counterparty: CounterpartyEstablishment,
@@ -405,7 +405,7 @@ def resolve_confirmed_establishment(
     )
 
     state = workflow_state_repository().load()
-    filer_scope, filer_item = _filer_scope(state.active_profile_record(), operation=operation)
+    filer_scope, filer_item = confirm_establishment_filer_scope(state.active_profile_record(), operation=operation)
     try:
         profile = load_active_taxpayer_profile(state, schema=operation.profile_schema())
     except WizardStatusError:
@@ -479,7 +479,7 @@ def _confirmed_declared_facts(
     filer_scope: IvaTerritorialScope | None,
     supply_nature: SupplyNature | None,
 ) -> DeclaredFacts:
-    return _declared_facts(
+    return declared_facts(
         kind=kind,
         counterparty=counterparty,
         filer_scope=filer_scope,

@@ -23,8 +23,7 @@ from ...core.capabilities import ServiceCapability
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import OperationEffect, OperationInteractionKind
-from ...core.operations import profile_operation_subject as _profile_subject
+from ...core.operations import OperationEffect, OperationInteractionKind, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.ids import (
@@ -236,7 +235,7 @@ def _require_active_profile_subject(
     request: OperationRequest[GoogleSheetsExportOperationRequest],
 ) -> None:
     """Bind the supervised request subject to the selected active profile."""
-    if request.subject_ref != _profile_subject(str(request.payload.profile_id)):
+    if request.subject_ref != profile_operation_subject(str(request.payload.profile_id)):
         raise GoogleSheetsExportSubjectMismatchError("Google Sheets export subject does not match its exact profile")
 
 

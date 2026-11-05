@@ -31,7 +31,7 @@ from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature, supply_nature_implied_by_category
 from ..classification_assembly import DeclaredFact
-from ..confirm_establishment import _declared_facts
+from ..confirm_establishment import declared_facts
 from ..establishment_ladder import CounterpartyEstablishment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -49,7 +49,7 @@ def test_the_assertion_reaches_the_classifier_on_either_direction(
     nature: SupplyNature,
 ) -> None:
     """Both members, both directions: the supply's own property does not swap sides."""
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=kind,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -70,7 +70,7 @@ def test_the_assertion_is_stamped_operator_and_not_an_evidence_provenance(kind: 
     operator's claim into something that reads as read-off-the-page. The
     classifier's inputs are facts about who established them.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=kind,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -94,7 +94,7 @@ def test_no_assertion_leaves_the_axis_unstated_rather_than_defaulted(kind: Invoi
     precisely because it is the commoner case, which is what would make the
     wrong answer invisible.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=kind,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -127,7 +127,7 @@ _GOODS_CITATION = "Exencion art. 21 LIVA"
 
 def test_a_printed_citation_now_settles_the_nature() -> None:
     """The measured gap: this route existed and could not fire."""
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -146,7 +146,7 @@ def test_a_citation_derived_nature_is_backed_by_the_page_not_by_a_person() -> No
     article. Reusing the operator stamp would make the document's own statement
     indistinguishable from somebody vouching for it.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -161,7 +161,7 @@ def test_a_citation_derived_nature_is_backed_by_the_page_not_by_a_person() -> No
 @pytest.mark.parametrize("kind", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
 def test_the_citation_is_direction_independent_like_the_assertion(kind: InvoiceKind) -> None:
     """The supply's own property still does not swap sides when the filer does."""
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=kind,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -180,7 +180,7 @@ def test_the_operators_own_answer_beats_the_printed_citation() -> None:
     including its provenance, because the record should say a person vouched
     for this rather than that the page did.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -207,7 +207,7 @@ def test_a_document_establishing_nothing_still_leaves_the_axis_open(printed: str
     establishing nothing rather than omitting it, so a caller can see it was
     read. Neither may be turned into a nature.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -226,13 +226,13 @@ def test_reading_the_citation_is_what_settles_it() -> None:
     the dormant route this closes. Without this the suite would prove a nature
     ARRIVES, not that reading the citation is what produced it.
     """
-    without_citation = _declared_facts(
+    without_citation = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
     )
-    with_citation = _declared_facts(
+    with_citation = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -266,7 +266,7 @@ def _stated(category: IvaCategory) -> DeclaredFact[IvaCategory]:
 
 def test_a_declared_category_settles_the_nature_with_nothing_printed() -> None:
     """The population this closes: cross-border documents citing no article."""
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -294,7 +294,7 @@ def test_a_category_whose_law_reaches_both_limbs_stays_open(category: IvaCategor
     citation table because nothing ever ruled what it establishes, and art. 84's
     row establishes nothing on purpose.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -321,7 +321,7 @@ def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
     states what its family rests on. So a services citation beats a goods
     category rather than contradicting it into silence.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -335,7 +335,7 @@ def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
 
 def test_the_operator_still_outranks_both_derivations() -> None:
     """The precedence holds all the way down, provenance included."""
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -355,13 +355,13 @@ def test_the_category_join_is_what_settles_it() -> None:
     input. It leaves the axis open on an operation whose own exemption article
     defines it as goods.
     """
-    without_category = _declared_facts(
+    without_category = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
     )
-    with_category = _declared_facts(
+    with_category = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -410,7 +410,7 @@ def test_a_proposal_does_not_reach_the_classifier_on_its_own() -> None:
 
     proposed = InvoiceDraft(proposed_supply_nature=SupplyNature.SERVICES)
 
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
@@ -429,7 +429,7 @@ def test_the_operators_answer_is_what_the_classifier_consumes() -> None:
     reaches nothing, confirmed reaches the classifier as the operator's own
     assertion.
     """
-    declared = _declared_facts(
+    declared = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),

@@ -29,7 +29,7 @@ from ....domain.deadlines.models import ObligationStatus
 from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..calendar import _local_work_unit_status, _registry_window_for_work_unit
+from ..calendar import local_work_unit_status, registry_window_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,7 +79,7 @@ def test_overview_window_lookup_goes_through_the_domain_resolver() -> None:
     produce the same answer, so a duplicate matcher cannot satisfy this gate.
     """
     _work_unit()
-    referenced = _registry_window_for_work_unit.__code__.co_names
+    referenced = registry_window_for_work_unit.__code__.co_names
     assert "_resolve_filing_window" in referenced, (
         "overview._registry_window_for_work_unit must delegate to "
         "domain.deadlines.resolve_filing_window; referenced names were "
@@ -94,7 +94,7 @@ def test_overview_window_lookup_returns_the_domain_entry() -> None:
     explicit while the deadline domain remains the sole matching authority.
     """
     unit = _work_unit()
-    assert _registry_window_for_work_unit(unit) == resolve_filing_window(
+    assert registry_window_for_work_unit(unit) == resolve_filing_window(
         _MODELO,
         _FILING_YEAR,
         unit.period,
@@ -104,7 +104,7 @@ def test_overview_window_lookup_returns_the_domain_entry() -> None:
 def test_overview_reads_the_published_first_quarter_close_date() -> None:
     """The overview window retains the published M130 Q1 closing date."""
     unit = _work_unit()
-    window = _registry_window_for_work_unit(unit)
+    window = registry_window_for_work_unit(unit)
     assert window is not None, "Modelo 130 2026 1T must have a bundled registry deadline window"
 
     assert window.closes_on == date(2026, 4, 20)
@@ -136,7 +136,7 @@ def test_overview_status_calls_the_canonical_classifier() -> None:
     implementation references ``ObligationStatus`` four times and never names
     the classifier.
     """
-    referenced = _local_work_unit_status.__code__.co_names
+    referenced = local_work_unit_status.__code__.co_names
 
     assert "_classify_obligation_status" in referenced, (
         "overview._local_work_unit_status must delegate to "
@@ -157,7 +157,7 @@ def test_overview_filing_gate_short_circuits_before_the_classifier() -> None:
     today = date(2026, 6, 1)
 
     assert classify_obligation_status(closes_on, today, _DUE_SOON_DAYS) is ObligationStatus.OVERDUE
-    assert _local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is ObligationStatus.FILED
+    assert local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is ObligationStatus.FILED
 
 
 @pytest.mark.parametrize(
@@ -192,5 +192,5 @@ def test_unfiled_work_unit_matches_the_classifier_at_every_boundary(
     closes_on = date(2026, 4, 20)
     assert (closes_on - today).days == expected_delta, "the case's stated ground must hold"
 
-    assert _local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is expected
+    assert local_work_unit_status(unit, closes_on, today, _DUE_SOON_DAYS) is expected
     assert classify_obligation_status(closes_on, today, _DUE_SOON_DAYS) is expected

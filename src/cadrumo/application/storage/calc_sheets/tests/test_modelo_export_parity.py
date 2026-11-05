@@ -22,9 +22,9 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .._translator import is_translatable
 from ..engine import build_export_plan
 from ..layout import plan_layout
+from ..translator import is_translatable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

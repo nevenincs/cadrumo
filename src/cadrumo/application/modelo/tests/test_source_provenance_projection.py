@@ -6,7 +6,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
-from ..calculation_bucket_actions import _source_provenance_refs
+from ..calculation_bucket_actions import source_provenance_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,7 +29,7 @@ def test_source_provenance_projection_retains_exact_resolver_identity() -> None:
         ),
     )
 
-    persisted = _source_provenance_refs(resolution)
+    persisted = source_provenance_refs(resolution)
 
     assert len(persisted) == 1
     assert persisted[0].resolver_id == resolution.resolver_id

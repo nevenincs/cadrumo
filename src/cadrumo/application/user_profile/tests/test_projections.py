@@ -23,7 +23,7 @@ from ....domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...wizard import catalogue as _wizard_catalogue
+from ...wizard import catalogue
 from ..projections import (
     facts_to_values,
     projection_for_taxpayer,
@@ -32,7 +32,7 @@ from ..projections import (
     record_to_values,
 )
 
-__all__ = ["_wizard_catalogue"]
+__all__ = ["catalogue"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

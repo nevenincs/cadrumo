@@ -116,12 +116,12 @@ def _prepare_update(
     require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
     catalogue = ports.transaction_repository.load()
     transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
-    patch_values = _manual_patch_values(payload, operation=operation)
+    patch_values = manual_patch_values(payload, operation=operation)
     patch = ManualLedgerTransactionPatch.model_validate(patch_values)
     return ports, catalogue, transaction_id, patch
 
 
-def _manual_patch_values(payload: LedgerUpdateRequest, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
+def manual_patch_values(payload: LedgerUpdateRequest, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
     patch_values: dict[str, object] = {name: getattr(payload.patch, name) for name in payload.patch_fields}
     _normalise_update_dates(patch_values)
     _normalise_update_amounts(patch_values)
@@ -301,7 +301,7 @@ def _validation_messages(error: Exception) -> LedgerUpdateValidationMessages:
     )
 
 
-def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release the matching success projection or field-safe refusal details."""
     if (
         type(result) is not LedgerUpdateExecutionResult
@@ -393,7 +393,7 @@ def build_ledger_update_registration(definition: OperationDefinition) -> Operati
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerUpdateOperationResult,
-        result_projector=_project_operation_result,
+        result_projector=project_operation_result,
         access_resolver=resolve_ledger_update_access,
     )
 

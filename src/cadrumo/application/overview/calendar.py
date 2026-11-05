@@ -38,84 +38,59 @@ from datetime import date
 from itertools import chain
 from typing import TYPE_CHECKING
 
-from ...core.external_constants import OutputLanguage as _OutputLanguage
-from ...core.i18n.render import tr as _tr
-from ...core.logging import get_logger as _get_logger
-from ...core.modelo import Modelo as _Modelo
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
+from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...core.time.clock import now
-from ...domain.calculations.registry.applicability import derive_modelo_applicability as _derive_modelo_applicability
-from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
-from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict as _ApplicabilityVerdict
-from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff as _resolve_payment_cutoff
-from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
-from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
-from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
-from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
-from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
+from ...domain.calculations.registry.applicability import derive_modelo_applicability, taxpayer_model_is_declared
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
+from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer, classify_obligation_status
+from ...domain.deadlines.errors import NoDeadlineWindowsError
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.filing_window_projection import (
-    ProjectedFilingWindowCloseUnavailable as _ProjectedFilingWindowCloseUnavailable,
+    ProjectedFilingWindowCloseUnavailable,
 )
-from ...domain.deadlines.models import CloseUnknownModeloDeadline as _CloseUnknownModeloDeadline
-from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
-from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
-from ...domain.deadlines.models import Schedule as _Schedule
-from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
-from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
-from ...domain.deadlines.recargo import build_recovery_for_overdue as _build_recovery_for_overdue
-from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
-from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
-from ..modelo.effective_deadline import CALENDAR_UNAVAILABLE_SHIFT_REASON as _CALENDAR_UNAVAILABLE_SHIFT_REASON
-from ..modelo.effective_deadline import effective_filing_deadline as _effective_filing_deadline
+from ...domain.deadlines.models import (
+    CloseUnknownModeloDeadline,
+    ModeloDeadline,
+    ObligationStatus,
+    Schedule,
+    TaxpayerProfile,
+)
+from ...domain.deadlines.plazo import resolve_filing_window
+from ...domain.deadlines.recargo import build_recovery_for_overdue
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ..modelo.effective_deadline import CALENDAR_UNAVAILABLE_SHIFT_REASON, effective_filing_deadline
 from .calendar_evidence import (
-    calendar_entry_filing_evidence as _calendar_entry_filing_evidence,
-)
-from .calendar_evidence import (
-    calendar_events_with_filing_evidence as _calendar_events_with_filing_evidence,
+    calendar_entry_filing_evidence,
+    calendar_events_with_filing_evidence,
 )
 from .calendar_models import (
-    CalendarCompleteness as _CalendarCompleteness,
-)
-from .calendar_models import (
-    OverviewCalendar as _OverviewCalendar,
-)
-from .calendar_models import (
-    OverviewCalendarEntry as _OverviewCalendarEntry,
-)
-from .calendar_models import (
-    OverviewCalendarEntrySource as _OverviewCalendarEntrySource,
-)
-from .calendar_models import (
-    OverviewCalendarEvent as _OverviewCalendarEvent,
-)
-from .calendar_models import (
-    OverviewCalendarFilingEvidence as _OverviewCalendarFilingEvidence,
-)
-from .calendar_models import (
-    OverviewCalendarRange as _OverviewCalendarRange,
-)
-from .calendar_models import (
-    OverviewCensoEnrolmentState as _OverviewCensoEnrolmentState,
-)
-from .calendar_models import (
-    OverviewLocalFilingState as _OverviewLocalFilingState,
-)
-from .calendar_models import (
-    SuppressedCalendarEntry as _SuppressedCalendarEntry,
-)
-from .calendar_models import (
-    user_state_for as _user_state_for,
+    CalendarCompleteness,
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarEntrySource,
+    OverviewCalendarEvent,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
+    OverviewCensoEnrolmentState,
+    OverviewLocalFilingState,
+    SuppressedCalendarEntry,
+    user_state_for,
 )
 from .calendar_warnings import (
-    _build_completeness_and_warnings,
-    _calendar_aeat_evidence_conflict_warnings,
-    _calendar_applicability_disagreement_warnings,
-    _calendar_censo_enrolment_state,
-    _calendar_censo_reconciliation_warnings,
-    _calendar_regime_incompatibility_warnings,
-    _calendar_unverified_justificante_warnings,
+    build_completeness_and_warnings,
+    calendar_aeat_evidence_conflict_warnings,
+    calendar_applicability_disagreement_warnings,
+    calendar_censo_enrolment_state,
+    calendar_censo_reconciliation_warnings,
+    calendar_regime_incompatibility_warnings,
+    calendar_unverified_justificante_warnings,
 )
 from .coverage import build_obligation_coverage
-from .next_actions import declare_next_action as _declare_next_action
+from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -123,7 +98,7 @@ if TYPE_CHECKING:
     from .applicability_evidence import FilingYearApplicabilityEvidence
 
 
-_log = _get_logger(__name__)
+_log = get_logger(__name__)
 
 
 def _window_intersects_range(
@@ -131,7 +106,7 @@ def _window_intersects_range(
     nominal_closes_on: date,
     *,
     modelo: str,
-    calendar_range: _OverviewCalendarRange,
+    calendar_range: OverviewCalendarRange,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether [opens_on, effective close date] intersects the range.
@@ -145,7 +120,7 @@ def _window_intersects_range(
         return False
     if nominal_closes_on >= calendar_range.from_date:
         return True
-    deadline = _effective_filing_deadline(
+    deadline = effective_filing_deadline(
         nominal_closes_on,
         modelo=modelo,
         operation=operation,
@@ -153,9 +128,9 @@ def _window_intersects_range(
     return deadline.closes_on >= calendar_range.from_date
 
 
-def _entry_intersects_range(
-    obligation: _ModeloDeadline | _CloseUnknownModeloDeadline,
-    calendar_range: _OverviewCalendarRange,
+def entry_intersects_range(
+    obligation: ModeloDeadline | CloseUnknownModeloDeadline,
+    calendar_range: OverviewCalendarRange,
     *,
     operation: PinnedAuthorityOperation,
 ) -> bool:
@@ -164,7 +139,7 @@ def _entry_intersects_range(
     A window whose close is unknown is placed by its opening and its nominal
     close, the only dates known for it.
     """
-    if isinstance(obligation, _CloseUnknownModeloDeadline):
+    if isinstance(obligation, CloseUnknownModeloDeadline):
         return (
             obligation.opens_on <= calendar_range.to_date and obligation.nominal_closes_on >= calendar_range.from_date
         )
@@ -177,7 +152,7 @@ def _entry_intersects_range(
     )
 
 
-def _calendar_entry_key(entry: _OverviewCalendarEntry) -> tuple[str, int, str]:
+def _calendar_entry_key(entry: OverviewCalendarEntry) -> tuple[str, int, str]:
     return (
         entry.modelo,
         entry.filing_year or entry.period.filing_year,
@@ -185,12 +160,12 @@ def _calendar_entry_key(entry: _OverviewCalendarEntry) -> tuple[str, int, str]:
     )
 
 
-def _work_unit_key(unit: _WorkUnit) -> tuple[str, int, str]:
+def _work_unit_key(unit: WorkUnit) -> tuple[str, int, str]:
     return (str(unit.modelo), unit.filing_year, unit.period.registry_token)
 
 
-def _registry_window_for_work_unit(
-    unit: _WorkUnit,
+def registry_window_for_work_unit(
+    unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation | None = None,
 ) -> FilingWindowResolution | None:
@@ -203,7 +178,7 @@ def _registry_window_for_work_unit(
     does not need, and takes the payment cutoff from the deadline domain's
     cutoff resolver.
     """
-    return _resolve_filing_window(
+    return resolve_filing_window(
         str(unit.modelo),
         unit.filing_year,
         unit.period,
@@ -212,28 +187,28 @@ def _registry_window_for_work_unit(
 
 
 def _work_unit_window_dates(
-    unit: _WorkUnit,
+    unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[date, date, date | None, _ProjectedFilingWindowCloseUnavailable | None]:
+) -> tuple[date, date, date | None, ProjectedFilingWindowCloseUnavailable | None]:
     """Return the calendar span used to place a local work unit row, its payment cutoff and any unknown close.
 
     The last member is the close-unknown projection when the window's close is
     unknown; the span then ends at its nominal close and no cutoff exists.
     """
-    resolution = _registry_window_for_work_unit(unit, operation=operation)
+    resolution = registry_window_for_work_unit(unit, operation=operation)
     opens_on, closes_on = _work_unit_window_span(unit, resolution)
     if resolution is None:
         return opens_on, closes_on, None, None
-    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
         return opens_on, closes_on, None, resolution
-    cutoff = _resolve_payment_cutoff(str(unit.modelo), resolution.window, operation=operation).cutoff_on
+    cutoff = resolve_payment_cutoff(str(unit.modelo), resolution.window, operation=operation).cutoff_on
     return opens_on, closes_on, cutoff, None
 
 
-def _work_unit_window_span(unit: _WorkUnit, resolution: FilingWindowResolution | None) -> tuple[date, date]:
+def _work_unit_window_span(unit: WorkUnit, resolution: FilingWindowResolution | None) -> tuple[date, date]:
     """Return the calendar span used to place a local work unit row."""
-    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
         return resolution.opens_on, resolution.nominal_closes_on
     if resolution is not None:
         return resolution.opens_on, resolution.closes_on
@@ -244,14 +219,14 @@ def _work_unit_window_span(unit: _WorkUnit, resolution: FilingWindowResolution |
 
 
 def _work_unit_intersects_range(
-    unit: _WorkUnit,
-    calendar_range: _OverviewCalendarRange,
+    unit: WorkUnit,
+    calendar_range: OverviewCalendarRange,
     *,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    resolution = _registry_window_for_work_unit(unit, operation=operation)
+    resolution = registry_window_for_work_unit(unit, operation=operation)
     opens_on, closes_on = _work_unit_window_span(unit, resolution)
-    if isinstance(resolution, _ProjectedFilingWindowCloseUnavailable):
+    if isinstance(resolution, ProjectedFilingWindowCloseUnavailable):
         return opens_on <= calendar_range.to_date and closes_on >= calendar_range.from_date
     return _window_intersects_range(
         opens_on,
@@ -262,32 +237,32 @@ def _work_unit_intersects_range(
     )
 
 
-def _work_unit_has_filing_pointers(unit: _WorkUnit) -> bool:
+def _work_unit_has_filing_pointers(unit: WorkUnit) -> bool:
     return unit.filed_calculation_revision_id is not None or unit.current_filing_record_id is not None
 
 
 def _filing_evidence_has_local_state(
-    unit: _WorkUnit,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    unit: WorkUnit,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> bool:
     key = _work_unit_key(unit)
     for evidence in filing_evidence:
         if evidence.modelo is None or evidence.filing_year is None or evidence.period is None:
             continue
         evidence_key = (evidence.modelo, evidence.filing_year, evidence.period.registry_token)
-        if evidence_key == key and evidence.local_filing_state is not _OverviewLocalFilingState.NOT_READY_TO_FILE:
+        if evidence_key == key and evidence.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE:
             return True
     return False
 
 
-def _local_work_unit_status(
-    unit: _WorkUnit,
+def local_work_unit_status(
+    unit: WorkUnit,
     closes_on: date,
     today: date,
     due_soon_days: int,
     *,
     close_known: bool = True,
-) -> _ObligationStatus:
+) -> ObligationStatus:
     """Classify a local work unit, applying overview's filing gate first.
 
     The filing-pointer gate is overview's own concern and is the only
@@ -298,25 +273,25 @@ def _local_work_unit_status(
     ``UNKNOWN`` and is never classified against its nominal close.
     """
     if _work_unit_has_filing_pointers(unit):
-        return _ObligationStatus.FILED
+        return ObligationStatus.FILED
     if not close_known:
-        return _ObligationStatus.UNKNOWN
-    return _classify_obligation_status(closes_on, today, due_soon_days)
+        return ObligationStatus.UNKNOWN
+    return classify_obligation_status(closes_on, today, due_soon_days)
 
 
 def _filing_evidence_with_work_unit_pointers(
-    unit: _WorkUnit,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
-) -> tuple[_OverviewCalendarFilingEvidence, ...]:
+    unit: WorkUnit,
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
     if not _work_unit_has_filing_pointers(unit):
         return filing_evidence
     if _filing_evidence_has_local_state(unit, filing_evidence):
         return filing_evidence
-    pointer_evidence = _OverviewCalendarFilingEvidence(
+    pointer_evidence = OverviewCalendarFilingEvidence(
         modelo=str(unit.modelo),
         filing_year=unit.filing_year,
         period=unit.period,
-        local_filing_state=_OverviewLocalFilingState.READY_TO_FILE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
         local_filing_record_id=unit.current_filing_record_id,
         local_calculation_revision_id=unit.filed_calculation_revision_id,
         evidence_source="work_unit_filing_pointers",
@@ -325,58 +300,58 @@ def _filing_evidence_with_work_unit_pointers(
 
 
 def _annotate_entry_with_work_unit(
-    entry: _OverviewCalendarEntry,
-    unit: _WorkUnit,
+    entry: OverviewCalendarEntry,
+    unit: WorkUnit,
     *,
     today: date,
     due_soon_days: int,
-) -> _OverviewCalendarEntry:
-    status = _local_work_unit_status(
+) -> OverviewCalendarEntry:
+    status = local_work_unit_status(
         unit,
         entry.adjusted_closes_on,
         today,
         due_soon_days,
-        close_known=entry.status is not _ObligationStatus.UNKNOWN,
+        close_known=entry.status is not ObligationStatus.UNKNOWN,
     )
     if entry.filing_evidence.aeat_filed:
-        status = _ObligationStatus.FILED
+        status = ObligationStatus.FILED
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
     return entry.model_copy(
         update={
             "status": status,
-            "user_state": _user_state_for(status),
-            "days_overdue": (today - entry.adjusted_closes_on).days if status is _ObligationStatus.OVERDUE else None,
+            "user_state": user_state_for(status),
+            "days_overdue": (today - entry.adjusted_closes_on).days if status is ObligationStatus.OVERDUE else None,
             "filing_evidence": effective_filing_evidence[-1],
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
             "local_work_unit_revision_id": unit.revision_id,
-            "recovery": None if status is _ObligationStatus.FILED else entry.recovery,
-            "recovery_action": None if status is _ObligationStatus.FILED else entry.recovery_action,
+            "recovery": None if status is ObligationStatus.FILED else entry.recovery,
+            "recovery_action": None if status is ObligationStatus.FILED else entry.recovery_action,
         },
     )
 
 
 def _calendar_entry_from_work_unit(
-    unit: _WorkUnit,
+    unit: WorkUnit,
     *,
     today: date,
     due_soon_days: int,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
-) -> _OverviewCalendarEntry:
+) -> OverviewCalendarEntry:
     opens_on, closes_on, payment_cutoff_on, close_unknown = _work_unit_window_dates(unit, operation=operation)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
     work_unit_fields = {
-        "source": _OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
+        "source": OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
         "local_work_unit_id": unit.work_unit_id,
         "local_work_unit_name": unit.name,
         "local_work_unit_revision_id": unit.revision_id,
     }
     if close_unknown is not None:
         entry = _calendar_entry_from_close_unknown(
-            _CloseUnknownModeloDeadline(
-                modelo=_Modelo(str(unit.modelo)),
+            CloseUnknownModeloDeadline(
+                modelo=Modelo(str(unit.modelo)),
                 period=unit.period,
                 opens_on=close_unknown.opens_on,
                 nominal_closes_on=close_unknown.nominal_closes_on,
@@ -388,21 +363,21 @@ def _calendar_entry_from_work_unit(
             today=today,
             operation=operation,
         )
-        status = _local_work_unit_status(unit, closes_on, today, due_soon_days, close_known=False)
+        status = local_work_unit_status(unit, closes_on, today, due_soon_days, close_known=False)
         if entry.filing_evidence.aeat_filed:
-            status = _ObligationStatus.FILED
-        return entry.model_copy(update={**work_unit_fields, "status": status, "user_state": _user_state_for(status)})
-    obligation = _ModeloDeadline(
-        modelo=_Modelo(str(unit.modelo)),
+            status = ObligationStatus.FILED
+        return entry.model_copy(update={**work_unit_fields, "status": status, "user_state": user_state_for(status)})
+    obligation = ModeloDeadline(
+        modelo=Modelo(str(unit.modelo)),
         period=unit.period,
         opens_on=opens_on,
         closes_on=closes_on,
         payment_cutoff_on=payment_cutoff_on,
-        status=_local_work_unit_status(unit, closes_on, today, due_soon_days),
+        status=local_work_unit_status(unit, closes_on, today, due_soon_days),
         boe_references=(),
         recovery=None,
     )
-    return _calendar_entry_from_obligation(
+    return calendar_entry_from_obligation(
         obligation,
         filing_evidence=effective_filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
@@ -413,21 +388,21 @@ def _calendar_entry_from_work_unit(
 
 
 def _merge_work_units_into_entries(
-    entries: tuple[_OverviewCalendarEntry, ...],
+    entries: tuple[OverviewCalendarEntry, ...],
     *,
-    work_units: tuple[_WorkUnit, ...],
-    calendar_range: _OverviewCalendarRange,
+    work_units: tuple[WorkUnit, ...],
+    calendar_range: OverviewCalendarRange,
     today: date,
     due_soon_days: int,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
-) -> tuple[_OverviewCalendarEntry, ...]:
+) -> tuple[OverviewCalendarEntry, ...]:
     merged = list(entries)
     registry_index = {_calendar_entry_key(entry): index for index, entry in enumerate(entries)}
     annotated_registry_keys: set[tuple[str, int, str]] = set()
     for unit in sorted(
-        (item for item in work_units if item.state is not _WorkUnitState.DESCARTADO),
+        (item for item in work_units if item.state is not WorkUnitState.DESCARTADO),
         key=lambda item: (str(item.modelo), item.filing_year, item.period.registry_token, item.work_unit_id),
     ):
         key = _work_unit_key(unit)
@@ -474,15 +449,15 @@ def _merge_work_units_into_entries(
 def _shift_reason_part_statement(part: str) -> str:
     """Return the localized label for one shift-reason token; holiday names pass through."""
     if part == "business_day":
-        return _tr("application.overview.calendar.shift.business_day")
+        return tr("application.overview.calendar.shift.business_day")
     if part == "calendar_unavailable":
-        return _tr("application.overview.calendar.shift.calendar_unavailable")
+        return tr("application.overview.calendar.shift.calendar_unavailable")
     if part == "domingo":
-        return _tr("application.overview.calendar.shift.domingo")
+        return tr("application.overview.calendar.shift.domingo")
     if part == "modelo_exception":
-        return _tr("application.overview.calendar.shift.modelo_exception")
+        return tr("application.overview.calendar.shift.modelo_exception")
     if part == "sabado":
-        return _tr("application.overview.calendar.shift.sabado")
+        return tr("application.overview.calendar.shift.sabado")
     return part
 
 
@@ -491,7 +466,7 @@ def shift_reason_statement(shift_reason: str) -> str:
     return " + ".join(_shift_reason_part_statement(part) for part in shift_reason.split(" + "))
 
 
-def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, language: _OutputLanguage | None = None) -> str:
+def holiday_coverage_statement(coverage: DeadlineHolidayCoverage, language: OutputLanguage | None = None) -> str:
     """Return the localized statement of which holidays an effective close date accounts for.
 
     Every frontend renders this one statement, so none can describe an
@@ -499,11 +474,11 @@ def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, language: _Ou
     language when not given.
     """
     locale = None if language is None else language.value
-    if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
-        return _tr("application.overview.calendar.holiday_coverage.national_only", locale=locale)
-    if coverage is _DeadlineHolidayCoverage.NOT_SHIFTED:
-        return _tr("application.overview.calendar.holiday_coverage.not_shifted", locale=locale)
-    return _tr("application.overview.calendar.holiday_coverage.calendar_unavailable", locale=locale)
+    if coverage is DeadlineHolidayCoverage.NATIONAL_ONLY:
+        return tr("application.overview.calendar.holiday_coverage.national_only", locale=locale)
+    if coverage is DeadlineHolidayCoverage.NOT_SHIFTED:
+        return tr("application.overview.calendar.holiday_coverage.not_shifted", locale=locale)
+    return tr("application.overview.calendar.holiday_coverage.calendar_unavailable", locale=locale)
 
 
 def _censo_enrolment_state_for(
@@ -511,12 +486,12 @@ def _censo_enrolment_state_for(
     *,
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
-    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None,
-) -> _OverviewCensoEnrolmentState:
+    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None,
+) -> OverviewCensoEnrolmentState:
     """Resolve a modelo's censo enrolment state once per calendar build."""
     censo_enrolment_state = None if censo_enrolment_states is None else censo_enrolment_states.get(modelo)
     if censo_enrolment_state is None:
-        censo_enrolment_state = _calendar_censo_enrolment_state(
+        censo_enrolment_state = calendar_censo_enrolment_state(
             modelo=modelo,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
             operation=operation,
@@ -527,14 +502,14 @@ def _censo_enrolment_state_for(
 
 
 def _calendar_entry_from_close_unknown(
-    obligation: _CloseUnknownModeloDeadline,
+    obligation: CloseUnknownModeloDeadline,
     *,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
     operation: PinnedAuthorityOperation,
-    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None = None,
-) -> _OverviewCalendarEntry:
+    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None = None,
+) -> OverviewCalendarEntry:
     """Build the row of a window whose close is unknown.
 
     The row shows the opening and the nominal close, a lower bound the close
@@ -544,26 +519,26 @@ def _calendar_entry_from_close_unknown(
     recovery or payment cutoff.
     """
     period = obligation.period
-    evidence = _calendar_entry_filing_evidence(
+    evidence = calendar_entry_filing_evidence(
         modelo=obligation.modelo,
         filing_year=period.filing_year,
         period=period,
         evidence=filing_evidence,
     )
-    status = _ObligationStatus.FILED if evidence.aeat_filed else _ObligationStatus.UNKNOWN
-    return _OverviewCalendarEntry(
+    status = ObligationStatus.FILED if evidence.aeat_filed else ObligationStatus.UNKNOWN
+    return OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
         opens_on=obligation.opens_on,
         closes_on=obligation.nominal_closes_on,
         adjusted_closes_on=obligation.nominal_closes_on,
-        shift_reason=_CALENDAR_UNAVAILABLE_SHIFT_REASON,
-        holiday_coverage=_DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        shift_reason=CALENDAR_UNAVAILABLE_SHIFT_REASON,
+        holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
         payment_cutoff_on=None,
         evaluated_on=today,
         days_overdue=None,
         status=status,
-        user_state=_user_state_for(status),
+        user_state=user_state_for(status),
         filing_year=period.filing_year,
         censo_enrolment_state=_censo_enrolment_state_for(
             obligation.modelo,
@@ -575,17 +550,17 @@ def _calendar_entry_from_close_unknown(
     )
 
 
-def _calendar_entry_from_obligation(
-    obligation: _ModeloDeadline,
+def calendar_entry_from_obligation(
+    obligation: ModeloDeadline,
     *,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
-    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None = None,
-) -> _OverviewCalendarEntry:
-    deadline = _effective_filing_deadline(
+    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None = None,
+) -> OverviewCalendarEntry:
+    deadline = effective_filing_deadline(
         obligation.closes_on,
         modelo=obligation.modelo,
         operation=operation,
@@ -593,19 +568,19 @@ def _calendar_entry_from_obligation(
     adjusted = deadline.closes_on
     holiday_coverage = deadline.holiday_coverage
     period = obligation.period
-    status = _classify_obligation_status(adjusted, today, due_soon_days)
-    evidence = _calendar_entry_filing_evidence(
+    status = classify_obligation_status(adjusted, today, due_soon_days)
+    evidence = calendar_entry_filing_evidence(
         modelo=obligation.modelo,
         filing_year=period.filing_year,
         period=period,
         evidence=filing_evidence,
     )
     if evidence.aeat_filed:
-        status = _ObligationStatus.FILED
+        status = ObligationStatus.FILED
     recovery = None
-    if status is _ObligationStatus.OVERDUE:
+    if status is ObligationStatus.OVERDUE:
         try:
-            recovery = _build_recovery_for_overdue(
+            recovery = build_recovery_for_overdue(
                 closes_on=adjusted,
                 reference_today=today,
                 modelo=str(obligation.modelo),
@@ -627,7 +602,7 @@ def _calendar_entry_from_obligation(
         operation=operation,
         censo_enrolment_states=censo_enrolment_states,
     )
-    return _OverviewCalendarEntry(
+    return OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
         opens_on=obligation.opens_on,
@@ -639,12 +614,12 @@ def _calendar_entry_from_obligation(
         holiday_coverage=holiday_coverage,
         payment_cutoff_on=obligation.payment_cutoff_on,
         evaluated_on=today,
-        days_overdue=(today - adjusted).days if status is _ObligationStatus.OVERDUE else None,
+        days_overdue=(today - adjusted).days if status is ObligationStatus.OVERDUE else None,
         status=status,
-        user_state=_user_state_for(status),
+        user_state=user_state_for(status),
         recovery=recovery,
         recovery_action=(
-            _declare_next_action(
+            declare_next_action(
                 "operator.modelo.work.create",
                 modelo=str(obligation.modelo),
                 year=period.filing_year,
@@ -660,13 +635,13 @@ def _calendar_entry_from_obligation(
 
 
 def _schedules_for_calendar_range(
-    profile: _TaxpayerProfile,
-    calendar_range: _OverviewCalendarRange,
+    profile: TaxpayerProfile,
+    calendar_range: OverviewCalendarRange,
     *,
     today: date,
-    engine: _ScheduleProducer | None,
+    engine: ScheduleProducer | None,
     operation: PinnedAuthorityOperation,
-) -> tuple[_ScheduleProducer, list[_Schedule]]:
+) -> tuple[ScheduleProducer, list[Schedule]]:
     """Return the deadline engine and per-year schedules covering ``calendar_range``.
 
     A year inside the range with no registered deadline windows is a normal
@@ -678,8 +653,8 @@ def _schedules_for_calendar_range(
     ``ScheduleComputationError`` and must propagate, mirroring the graceful
     degradation ``overview explain`` applies via the same narrow catch.
     """
-    deadline_engine = engine if engine is not None else _DeadlineEngine(authority=operation)
-    schedules: list[_Schedule] = []
+    deadline_engine = engine if engine is not None else DeadlineEngine(authority=operation)
+    schedules: list[Schedule] = []
     # The prior year that ``covered_years`` adds for late-opening windows can
     # sit below the registry's support floor, where nothing resolves at all.
     modelo_ids = operation.modelo_ids()
@@ -689,7 +664,7 @@ def _schedules_for_calendar_range(
             continue
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
-        except _NoDeadlineWindowsError as exc:
+        except NoDeadlineWindowsError as exc:
             _log.debug(
                 "overview calendar ignored covered year with no registered deadline windows",
                 extra={"year": year, "error_type": type(exc).__name__},
@@ -699,32 +674,32 @@ def _schedules_for_calendar_range(
 
 
 def _calendar_obligation_projection(
-    obligation: _ModeloDeadline | _CloseUnknownModeloDeadline,
+    obligation: ModeloDeadline | CloseUnknownModeloDeadline,
     *,
-    profile: _TaxpayerProfile,
-    calendar_range: _OverviewCalendarRange,
+    profile: TaxpayerProfile,
+    calendar_range: OverviewCalendarRange,
     show_suppressed: bool,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
-    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState],
+    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState],
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[
-    _OverviewCalendarEntry | None,
-    _SuppressedCalendarEntry | None,
+    OverviewCalendarEntry | None,
+    SuppressedCalendarEntry | None,
     str | None,
     str | None,
 ]:
     """Classify one scheduled obligation for the requested calendar projection."""
-    intersects_range = _entry_intersects_range(
+    intersects_range = entry_intersects_range(
         obligation,
         calendar_range,
         operation=operation,
     )
     filing_year = obligation.period.filing_year
-    applicability = _derive_modelo_applicability(
+    applicability = derive_modelo_applicability(
         profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
         obligation.modelo,
         today=today,
@@ -736,9 +711,9 @@ def _calendar_obligation_projection(
     disagreeing_modelo = (
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
-    if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
+    if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
-            _SuppressedCalendarEntry(
+            SuppressedCalendarEntry(
                 modelo=obligation.modelo,
                 period=obligation.period,
                 verdict=applicability.verdict,
@@ -751,7 +726,7 @@ def _calendar_obligation_projection(
 
     if not intersects_range:
         return None, None, obligation.modelo, disagreeing_modelo
-    if isinstance(obligation, _CloseUnknownModeloDeadline):
+    if isinstance(obligation, CloseUnknownModeloDeadline):
         entry = _calendar_entry_from_close_unknown(
             obligation,
             filing_evidence=filing_evidence,
@@ -761,7 +736,7 @@ def _calendar_obligation_projection(
             censo_enrolment_states=censo_enrolment_states,
         )
     else:
-        entry = _calendar_entry_from_obligation(
+        entry = calendar_entry_from_obligation(
             obligation,
             filing_evidence=filing_evidence,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
@@ -774,18 +749,18 @@ def _calendar_obligation_projection(
 
 
 def _entries_and_suppressed_from_schedules(
-    schedules: list[_Schedule],
+    schedules: list[Schedule],
     *,
-    profile: _TaxpayerProfile,
-    calendar_range: _OverviewCalendarRange,
+    profile: TaxpayerProfile,
+    calendar_range: OverviewCalendarRange,
     show_suppressed: bool,
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
-) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str], set[str]]:
+) -> tuple[list[OverviewCalendarEntry], list[SuppressedCalendarEntry], set[str], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
 
     Each modelo's applicability is DERIVED from the taxpayer model. Only a
@@ -805,13 +780,13 @@ def _entries_and_suppressed_from_schedules(
     fourth result names the modelos whose in-range rows carry a disagreement
     between the profile answer and the ledger.
     """
-    entries: list[_OverviewCalendarEntry] = []
-    suppressed: list[_SuppressedCalendarEntry] = []
+    entries: list[OverviewCalendarEntry] = []
+    suppressed: list[SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
     disagreeing_modelos: set[str] = set()
     # Every row shares this pinned authority and live-censo tuple. Resolve
     # enrolment once per modelo, rather than reloading rules for each period.
-    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] = {}
+    censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] = {}
     obligations = chain.from_iterable(
         (*schedule.obligations, *schedule.close_unknown_obligations) for schedule in schedules
     )
@@ -841,20 +816,20 @@ def _entries_and_suppressed_from_schedules(
 
 
 def build_overview_calendar(
-    profile: _TaxpayerProfile,
-    calendar_range: _OverviewCalendarRange,
+    profile: TaxpayerProfile,
+    calendar_range: OverviewCalendarRange,
     *,
     operation: PinnedAuthorityOperation,
     today: date,
-    engine: _ScheduleProducer | None = None,
+    engine: ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
     show_suppressed: bool = False,
-    events: tuple[_OverviewCalendarEvent, ...] = (),
-    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...] = (),
-    work_units: tuple[_WorkUnit, ...] = (),
+    events: tuple[OverviewCalendarEvent, ...] = (),
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...] = (),
+    work_units: tuple[WorkUnit, ...] = (),
     live_censo_verified_profile_keys: tuple[str, ...] | None = None,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
-) -> _OverviewCalendar:
+) -> OverviewCalendar:
     """Build a calendar over the inclusive range from already-loaded evidence.
 
     The caller supplies a generation-pinned authority operation and a reference
@@ -866,7 +841,7 @@ def build_overview_calendar(
     contribute no entries. An undeclared taxpayer model yields an incomplete
     calendar with obligation coverage rather than guessed obligations.
     """
-    if not _taxpayer_model_is_declared(profile):
+    if not taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit
         # incomplete answer — never a confident wrong obligation. The
         # engine does not fall back to the autónomo guess. Coverage is still
@@ -874,16 +849,16 @@ def build_overview_calendar(
         # obligation universe as advised/undetermined rather than empty — an
         # undeclared profile can under-scope the most, so it must not read as
         # "nothing to file".
-        return _OverviewCalendar(
+        return OverviewCalendar(
             range=calendar_range,
             evaluated_on=today,
             entries=(),
             generated_at=now(),
             warnings=(),
-            completeness=_CalendarCompleteness(),
+            completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
-            incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
-            events=_calendar_events_with_filing_evidence(events, filing_evidence),
+            incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+            events=calendar_events_with_filing_evidence(events, filing_evidence),
             coverage=build_obligation_coverage(profile, frozenset(), today=today, operation=operation),
         )
 
@@ -926,18 +901,18 @@ def build_overview_calendar(
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         operation=operation,
     )
-    completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
-    censo_warnings = _calendar_censo_reconciliation_warnings(
+    completeness, warnings = build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
+    censo_warnings = calendar_censo_reconciliation_warnings(
         entries=entries_tuple,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
     )
-    enriched_events = _calendar_events_with_filing_evidence(events, filing_evidence)
-    justificante_warnings = _calendar_unverified_justificante_warnings(
+    enriched_events = calendar_events_with_filing_evidence(events, filing_evidence)
+    justificante_warnings = calendar_unverified_justificante_warnings(
         entries=entries_tuple,
         events=enriched_events,
     )
-    evidence_conflict_warnings = _calendar_aeat_evidence_conflict_warnings(entries=entries_tuple)
-    regime_incompatibility_warnings = _calendar_regime_incompatibility_warnings(
+    evidence_conflict_warnings = calendar_aeat_evidence_conflict_warnings(entries=entries_tuple)
+    regime_incompatibility_warnings = calendar_regime_incompatibility_warnings(
         iva_regime=profile.iva_regime,
         entries=entries_tuple,
         operation=operation,
@@ -948,7 +923,7 @@ def build_overview_calendar(
         today=today,
         operation=operation,
     )
-    return _OverviewCalendar(
+    return OverviewCalendar(
         range=calendar_range,
         evaluated_on=today,
         entries=entries_tuple,
@@ -959,7 +934,7 @@ def build_overview_calendar(
             + justificante_warnings
             + evidence_conflict_warnings
             + regime_incompatibility_warnings
-            + _calendar_applicability_disagreement_warnings(disagreeing_modelos)
+            + calendar_applicability_disagreement_warnings(disagreeing_modelos)
         ),
         completeness=completeness,
         suppressed_entries=tuple(suppressed),

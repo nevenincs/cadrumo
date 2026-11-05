@@ -20,13 +20,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
@@ -82,7 +80,7 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope(
 
 
 def _common_profile() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -93,12 +91,12 @@ def _common_profile() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="27272727-2727-4272-8272-272727272727",
         facts=(
@@ -108,7 +106,7 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

@@ -78,7 +78,6 @@ from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ._registry_helpers import validate_casilla_input_ids
 from .calculate_input_validation import (
     ModeloCalculateBindingInputError,
     ModeloCalculateCasillaInputError,
@@ -113,6 +112,7 @@ from .calculation_action_ports import CalculationActionPorts
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from .profile_derived_facts import MaternidadMesesResolution
+from .registry_helpers import validate_casilla_input_ids
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
 from .work_profile import ModeloWorkProfile
@@ -435,7 +435,7 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     )
 
 
-def _resolve_casilla_overrides(
+def resolve_casilla_overrides(
     casilla_overrides: Mapping[str, str],
     revision: ModeloRevision,
     *,
@@ -586,8 +586,8 @@ def build_work_calculate_input_bundle(
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
     validate_detail_rows(detail_rows, work_unit=work_unit, operation=operation)
-    revision = _revision_for_work_unit(work_unit, operation=operation)
-    casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
+    revision = revision_for_work_unit(work_unit, operation=operation)
+    casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = resolve_casilla_overrides(
         casilla_overrides,
         revision,
         operation=operation,
@@ -658,8 +658,8 @@ def _selected_work_unit(*, work_unit_id: str, catalogue: WorkUnitCatalogue, buck
     return resolution.work_unit
 
 
-def _revision_for_work_unit(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+def revision_for_work_unit(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     # The calculate path needs the rung that computes amounts, not the
     # filing rung: a revision that honestly declares calculation must not be
@@ -678,7 +678,7 @@ def _resolved_maternidad_meses(
     profile: ModeloWorkProfile,
 ) -> MaternidadMesesResolution:
     """Resolve the Art. 81.1 maternidad months the work profile contributes."""
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
     from .profile_derived_facts import resolve_maternidad_meses
 
     snapshot = resolve_registry_snapshot_for_work_unit(
@@ -705,7 +705,7 @@ def _maternidad_casilla_id(
     from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
     return casilla_id_for_unambiguous_revision_semantic_role(
-        _revision_for_work_unit(work_unit, operation=operation),
+        revision_for_work_unit(work_unit, operation=operation),
         _registry_calculate_input_declaration(
             "modelo.role.deduccion_maternidad",
             work_unit=work_unit,

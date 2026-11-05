@@ -34,7 +34,7 @@ from ..work_create_operation import (
     project_modelo_work_create_result,
 )
 from ..work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .test_wizard_context_operation import _unit
+from .test_wizard_context_operation import wizard_context_operation_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -129,7 +129,7 @@ def test_request_schema_and_exact_period_access() -> None:
 
 
 def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> None:
-    unit = ModeloWorkMetadataSnapshot.from_work_unit(_unit())
+    unit = ModeloWorkMetadataSnapshot.from_work_unit(wizard_context_operation_unit())
     for reused, name_applied, effect in (
         (False, None, OperationEffect.UPDATED),
         (True, None, OperationEffect.NONE),
@@ -165,7 +165,7 @@ def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> 
     assert isinstance(projected, ModeloWorkCreateProjection) and projected.outcome == refusal.outcome
     with pytest.raises(ValueError):
         project_modelo_work_create_result(refusal, _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE))
-    source_unit = _unit()
+    source_unit = wizard_context_operation_unit()
     foreign_unit = ModeloWorkMetadataSnapshot.from_work_unit(
         source_unit.model_copy(
             update={

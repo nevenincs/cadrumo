@@ -12,7 +12,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
@@ -25,8 +25,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from ...actividad_asset.history import ActivityAssetHistory
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
@@ -34,13 +33,13 @@ from ...modelo.work_profile import ModeloWorkProfile
 from .. import activity_asset_disposal_projection
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
-    _PRIOR_YEAR_ROW_NOTE,
     BUCKET_ID,
-    _prior_year_purchase,
-    _register_claim,
+    PRIOR_YEAR_ROW_NOTE,
     m130_box,
+    prior_year_purchase,
     reasons,
     register_asset,
+    register_claim,
     resolve_m100,
     resolve_m130,
 )
@@ -77,11 +76,11 @@ def _disposed_with_unknown_opening(
 
 def _profile(operation, *facts: UserProfileFact) -> ModeloWorkProfile:
     return ModeloWorkProfile(
-        record=_create_profile_record_for_test(
+        record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *facts, *cash_criterion_facts(2025)),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),
     )
@@ -167,7 +166,7 @@ def _moved_to_navarra_in_2026(operation) -> ModeloWorkProfile:
 
 def test_a_move_to_foral_territory_in_2026_leaves_the_2025_returns_alone(operation) -> None:
     asset = register_asset("furniture", transaction_id=_TRANSACTION)
-    claim = _register_claim(asset, amount=Decimal("1200.00"))
+    claim = register_claim(asset, amount=Decimal("1200.00"))
     history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
     profile = _moved_to_navarra_in_2026(operation)
 
@@ -181,7 +180,7 @@ def test_a_move_to_foral_territory_in_2026_leaves_the_2025_returns_alone(operati
 
 
 def test_the_foral_refusal_holds_for_the_period_truly_in_foral_territory(operation) -> None:
-    row = _prior_year_purchase()
+    row = prior_year_purchase()
     history = ActivityAssetHistory(revisions=(register_asset("furniture", transaction_id=row.transaction_id),))
 
     profile = _profile(
@@ -190,7 +189,7 @@ def test_the_foral_refusal_holds_for_the_period_truly_in_foral_territory(operati
         UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2025, 7, 1)),
     )
 
-    expected = [_PRIOR_YEAR_ROW_NOTE, "activity_asset_foral_territory"]
+    expected = [PRIOR_YEAR_ROW_NOTE, "activity_asset_foral_territory"]
     assert reasons(resolve_m100(history, rows=(row,), profile=profile)) == expected
     assert reasons(resolve_m130(history, "3T", rows=(row,), profile=profile)) == expected
     # 12,000 x 10% x 90 / 365 = 295.89, in the quarter still in common territory.

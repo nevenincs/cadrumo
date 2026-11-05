@@ -31,7 +31,7 @@ _WORK_UNIT_ID = "b" * 64
 _LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
-def _finding(*, severity: ModeloVerificationFindingSeverity) -> ModeloVerificationFinding:
+def verification_preconditions_finding(*, severity: ModeloVerificationFindingSeverity) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=(
             ModeloVerificationFindingKind.BLOCKING_RULE
@@ -45,7 +45,7 @@ def _finding(*, severity: ModeloVerificationFindingSeverity) -> ModeloVerificati
     )
 
 
-def _blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> VerificationReport:
+def blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> VerificationReport:
     return VerificationReport(
         verification_report_id=derive_verification_report_id(
             calculation_revision_id=_CALCULATION_REVISION_ID,
@@ -69,7 +69,7 @@ def _blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> Verifica
 
 
 def test_registry_snapshot_failure_is_terminal_without_an_operator_action() -> None:
-    finding = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    finding = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
     failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
@@ -114,8 +114,8 @@ def test_operator_decision_failure_preserves_branch_identity_and_typed_facts() -
 
 
 def test_warning_cannot_receive_a_failed_precondition() -> None:
-    blocking = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
-    warning = _finding(severity=ModeloVerificationFindingSeverity.WARNING)
+    blocking = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    warning = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.WARNING)
     failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
@@ -134,8 +134,8 @@ def test_warning_cannot_receive_a_failed_precondition() -> None:
 
 
 def test_application_result_requires_exact_ordered_finding_projection() -> None:
-    blocking = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
-    warning = _finding(severity=ModeloVerificationFindingSeverity.WARNING)
+    blocking = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    warning = verification_preconditions_finding(severity=ModeloVerificationFindingSeverity.WARNING)
     failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
@@ -151,7 +151,7 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
     )
 
     result = ModeloVerificationResult(
-        report=_blocked_report((blocking, warning)),
+        report=blocked_report((blocking, warning)),
         published=True,
         finding_preconditions=projections,
     )
@@ -160,7 +160,7 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
 
     with pytest.raises(ValidationError, match="in order"):
         ModeloVerificationResult(
-            report=_blocked_report((blocking, warning)),
+            report=blocked_report((blocking, warning)),
             published=True,
             finding_preconditions=tuple(reversed(projections)),
         )

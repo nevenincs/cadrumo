@@ -39,7 +39,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts
 from ..registered_execution_result import InventoryOperationExecutionResult, InventoryOperationRefusalDetail
-from ..registered_executor import _SERVICE_INPUT_REASONS, InventoryOperationExecutor
+from ..registered_executor import SERVICE_INPUT_REASONS, InventoryOperationExecutor
 from ..registered_operation import (
     build_inventory_closing_authority_record_definition,
     build_inventory_closing_authority_record_registration,
@@ -334,7 +334,7 @@ def test_every_correction_refusal_reason_is_a_public_reason_with_a_catalogue_key
     public = set(get_args(InventoryRefusalReason))
     assert set(INVENTORY_CORRECTION_REFUSAL_REASONS) <= public
     assert all(
-        _SERVICE_INPUT_REASONS[inventory_refusal_key(reason)] == reason
+        SERVICE_INPUT_REASONS[inventory_refusal_key(reason)] == reason
         for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
     )
 

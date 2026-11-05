@@ -17,10 +17,10 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
 from ..invoices.source_observations import is_rectificativa
-from . import _shared_issue_reasons, renta_income_evidence
-from ._renta_business_eligibility import is_supplier_refund
+from . import renta_income_evidence, shared_issue_reasons
 from .business_proportion import business_proportion
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
+from .renta_business_eligibility import is_supplier_refund
 from .renta_imputation import (
     ActivityImputationCriterion,
     ImputationCriteria,
@@ -170,7 +170,7 @@ def _income_business_proportion_or_issue(
     if proportion is not None:
         return proportion
     reason = RentaIncomeLedgerAggregationIssueReason(
-        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
+        shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return RentaIncomeLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,

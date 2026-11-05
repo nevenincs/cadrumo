@@ -20,9 +20,9 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext

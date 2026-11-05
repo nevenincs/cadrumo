@@ -66,7 +66,6 @@ from ...domain.filing.errors import FilingExportError
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..filing.shared_owner_refusal import refuse_written_shared_owners
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
@@ -77,8 +76,8 @@ from .m145_communication_value_validation import (
     m145_constraint_issue,
     m145_value_shape_issue,
 )
-from .modelo_bucket_events import build_modelo_bucket_event as _build_bucket_event
-from .modelo_bucket_events import emit_modelo_bucket_event as _emit_bucket_event
+from .modelo_bucket_events import build_modelo_bucket_event, emit_modelo_bucket_event
+from .ports import FicheroBoeRecordRenderer
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -401,14 +400,14 @@ def _snapshot_for_command(
     *,
     operation: PinnedAuthorityOperation,
 ):
-    return _snapshot_for_scope(
+    return snapshot_for_scope(
         communication_year=command.communication_year,
         period_token=command.period_token,
         operation=operation,
     )
 
 
-def _snapshot_for_scope(
+def snapshot_for_scope(
     *,
     communication_year: int,
     period_token: M145CommunicationPeriod,
@@ -515,7 +514,7 @@ def _emit_m145_communication_event(
     standalone emit is correct there. Every transition that DOES change record
     state co-commits instead, through :func:`_build_m145_communication_event`.
     """
-    return _emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=ports.bucket_event_repository,
         bucket_id=record.bucket_id,
         event_type=event_type,
@@ -540,7 +539,7 @@ def _build_m145_communication_event(
     The derive half for transitions that must commit the event in the same unit
     of work as the record state it records.
     """
-    return _build_bucket_event(
+    return build_modelo_bucket_event(
         bucket_id=record.bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -601,7 +600,7 @@ def validate_m145_communication_record(
         ports=ports,
         operation=operation,
     )
-    snapshot = _snapshot_for_scope(
+    snapshot = snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
         operation=operation,
@@ -865,7 +864,7 @@ def export_m145_communication_record(
         ports=ports,
         operation=operation,
     )
-    snapshot = _snapshot_for_scope(
+    snapshot = snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
         operation=operation,

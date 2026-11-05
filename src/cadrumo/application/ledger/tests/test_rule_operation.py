@@ -64,7 +64,7 @@ from ..rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
     LedgerRuleApplyExecutor,
-    _TrackedRuleRepository,
+    TrackedRuleRepository,
     build_ledger_rule_add_definition,
     build_ledger_rule_add_registration,
     build_ledger_rule_apply_definition,
@@ -640,7 +640,7 @@ def test_rule_add_save_uses_the_same_precise_writer_fence() -> None:
     events = _EffectProbe()
     repository = _RuleRepositoryProbe(fence)
     tracker = LedgerCommitAttemptTracker()
-    tracked_repository = _TrackedRuleRepository(repository, tracker)
+    tracked_repository = TrackedRuleRepository(repository, tracker)
     context = cast(
         OperationExecutorContext,
         SimpleNamespace(cancellation=fence, events=events),

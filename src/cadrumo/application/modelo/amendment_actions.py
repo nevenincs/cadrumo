@@ -24,13 +24,13 @@ casillas.
 See Also:
     :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
         Creates the AEAT-attested baseline that this module amends.
-    :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
+    :func:`~cadrumo.application.modelo.calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
     :class:`ExternalEvidence`:
         Filing-record evidence marker required before this amendment path can run.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_override_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_unknown_override_casillas`:
         Canonicalizes amendment override casilla ids against the registry.
-    :func:`~cadrumo.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
+    :func:`~cadrumo.application.modelo.registry_helpers.reject_incomplete_amendment_casillas`:
         Reuses the registry completeness gate before the amendment is filed.
 
 Core types:
@@ -49,9 +49,9 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -93,16 +93,6 @@ from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_snapshot,
 )
-from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
-from ._amendment_kind_resolution import (
-    assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
-)
-from ._calculation_helpers import amendment_observations as _amendment_observations
-from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
-from ._calculation_modelo_adjustments import detail_row_declaration_modelos
-from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
-from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from .action_errors import (
     AmendmentDetailRowsRequiredError,
     AmendmentEvidenceMissingError,
@@ -114,19 +104,28 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .amendment_action_ports import AmendmentActionPorts
+from .amendment_kind_resolution import (
+    assert_amendment_kind_permitted,
+    assert_complementaria_liability_direction_permitted,
+)
+from .calculation_helpers import amendment_observations as calculation_amendment_observations
+from .calculation_helpers import resolve_registry_snapshot_for_work_unit
+from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
 from .filing_revision_persistence import filed_calculation_revision
+from .ledger_anchor_capture import capture_revision_ledger_evidence
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     amendment_ordering_instants,
     require_lifecycle_clock_not_before,
 )
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
-from .modelo_bucket_events import build_modelo_bucket_event as _build_bucket_event
+from .modelo_bucket_events import build_modelo_bucket_event
 from .profile_export_binding import resolve_export_identity
+from .registry_helpers import reject_incomplete_amendment_casillas, reject_unknown_override_casillas
 from .result_disposition_resolution import base_modelo_result_disposition
-from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,7 +205,7 @@ def _load_amendment_baseline[CasillaKey](
     # Both revisions contribute stored inputs to the correction, so neither may
     # carry a scalar a detail-row casilla cannot hold.
     for stored_revision in (source_revision, baseline_revision):
-        _refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
+        refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
     if work_unit.modelo == form_for_role("iva.periodic") and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
@@ -216,7 +215,7 @@ def _load_amendment_baseline[CasillaKey](
             },
         )
 
-    canonical_overrides = _reject_unknown_override_casillas(
+    canonical_overrides = reject_unknown_override_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
@@ -362,12 +361,12 @@ def _prepare_amendment_identity(
     # liability (that correction is a solicitud de rectificación, LGT
     # art. 120.3, not a complementaria, LGT art. 122.2). Both guards run
     # before any amendment state is persisted.
-    _assert_amendment_kind_permitted(
+    assert_amendment_kind_permitted(
         modelo=str(baseline.modelo),
         period=baseline.period,
         amendment_kind=amendment_kind,
     )
-    _assert_complementaria_liability_direction_permitted(
+    assert_complementaria_liability_direction_permitted(
         modelo=str(baseline.modelo),
         period=baseline.period,
         amendment_kind=amendment_kind,
@@ -388,7 +387,7 @@ def _prepare_amendment_identity(
         amends_filing_record_id=baseline.filing_record_id,
         m303_rectificativa_motive=m303_rectificativa_motive,
     )
-    amendment_detail_rows = _require_amendment_detail_rows(
+    amendment_detail_rows = require_amendment_detail_rows(
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         supplied=detail_rows,
@@ -515,7 +514,7 @@ def amend_modelo_revision[CasillaKey](
         operation=operation,
     )
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     require_lifecycle_clock_not_before(
         now,
         operation=ModeloLifecycleClockOperation.AMEND,
@@ -543,8 +542,8 @@ def amend_modelo_revision[CasillaKey](
     # persisted amendment revision and its CLI emit preserve
     # legal_refs / source_refs (and baseline formula provenance for
     # non-overridden casillas) instead of an empty observations tuple.
-    registry_snapshot = _resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
-    amendment_observations = _amendment_observations(
+    registry_snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
+    amendment_observations = calculation_amendment_observations(
         corrected_values=corrected_values,
         overrides=canonical_overrides,
         baseline_revision=source_revision,
@@ -623,7 +622,7 @@ def _finalize_amendment(
     # required-manual-input contract before transitioning. The amend
     # path mirrors the standard verify gate so a complementaria
     # cannot be filed with a missing required casilla.
-    _reject_incomplete_amendment_casillas(
+    reject_incomplete_amendment_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
@@ -632,7 +631,7 @@ def _finalize_amendment(
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
-    ledger_snapshot, ledger_evidence = _amendment_ledger_anchor(
+    ledger_snapshot, ledger_evidence = amendment_ledger_anchor(
         amendment_draft=amendment_draft,
         work_unit=work_unit,
         transaction_repository=ports.transaction_repository,
@@ -728,7 +727,7 @@ def _amendment_result_disposition(
     )
 
 
-def _require_amendment_detail_rows(
+def require_amendment_detail_rows(
     *,
     modelo: str,
     filing_year: int,
@@ -873,7 +872,7 @@ def _build_amendment_filing_updates(
     return new_filing_id, new_filing, updated_filing_catalogue
 
 
-def _amendment_ledger_anchor(
+def amendment_ledger_anchor(
     *,
     amendment_draft: CalculationRevision,
     work_unit: WorkUnit,
@@ -1005,7 +1004,7 @@ def _persist_amendment_side_effects(
             },
         ),
     )
-    amended_event = _build_bucket_event(
+    amended_event = build_modelo_bucket_event(
         bucket_id=baseline.bucket_id,
         event_type=BucketEventType.MODELO_AMENDED,
         occurred_at=now,
@@ -1033,7 +1032,7 @@ def _persist_amendment_side_effects(
             ports.work_unit_repository.to_secure_object_write(
                 advanced_work_units, expected_revision_id=catalogue_revisions.work_units
             ),
-            _bucket_event_write(ports.bucket_event_repository, (amended_event,)),
+            bucket_event_history_write(ports.bucket_event_repository, (amended_event,)),
             *observation_writes,
         ),
         expected_revision_id=catalogue_revisions.filing,

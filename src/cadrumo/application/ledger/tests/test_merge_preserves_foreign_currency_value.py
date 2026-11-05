@@ -22,7 +22,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.transactions.models import Transaction
-from ..actions_split_merge import _build_merged_transaction
+from ..actions_split_merge import build_merged_transaction
 from .transaction_row_support import outgoing_manual_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -44,7 +44,7 @@ def _parent(*, currency: str, value_in_eur: Decimal | None) -> Transaction:
 
 
 def _merge(parent: Transaction) -> Transaction:
-    return _build_merged_transaction(
+    return build_merged_transaction(
         parent=parent,
         split_group_id=_GROUP,
         sorted_child_ids=("c" * 64, "d" * 64),

@@ -28,9 +28,9 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
-from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
 from .export_producer_m200_account import m200_account_values
 from .export_producer_m360 import M360_PRODUCER_KEYS, m360_producer_values
+from .producer_ownership import filing_producer_ownership
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -113,7 +113,7 @@ _M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
 }
 
 
-_SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
+SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
     {
         FilingProducerKey.PRESENTER_TAX_ID,
         FilingProducerKey.FILING_RESULT_DISPOSITION,
@@ -1054,8 +1054,8 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
 def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) -> None:
     shared_owned = {
         key
-        for key, owner in _filing_producer_ownership(
-            shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS,
+        for key, owner in filing_producer_ownership(
+            shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS,
         ).items()
         if owner == "shared_snapshot"
     }

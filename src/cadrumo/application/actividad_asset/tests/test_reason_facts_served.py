@@ -26,8 +26,8 @@ from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, 
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_claim_years_and_replay import _constant_forecast
-from .test_register import _ACQUISITION, _NAME, _forecast, _full_year, _operations, _revision
+from .test_claim_years_and_replay import constant_forecast
+from .test_register import ACQUISITION, NAME, full_year, register_forecast, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,8 +40,8 @@ def _stated(facts: tuple[ActivityAssetReasonFact, ...]) -> dict[str, str]:
 
 
 def test_the_election_limits_of_a_year_no_edition_covers_state_the_year_that_words_the_reason() -> None:
-    operations, _ = _operations(today=date(2021, 6, 30))
-    operations.create(_revision(in_service=date(2020, 1, 1)), _NAME)
+    operations, _ = register_operations(today=date(2021, 6, 30))
+    operations.create(register_revision(in_service=date(2020, 1, 1)), NAME)
 
     limits = operations.plan_limits(_ASSET)
 
@@ -54,8 +54,8 @@ def test_the_election_limits_of_a_year_no_edition_covers_state_the_year_that_wor
 
 
 def test_the_election_limits_of_a_year_with_an_edition_state_no_reason() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     limits = operations.plan_limits(_ASSET)
 
@@ -76,7 +76,7 @@ def _without_edition_after_2026(
             context={"tax_year": covered_from.year},
             translated_message=_NO_EDITION,
         )
-    return _forecast(
+    return register_forecast(
         revision,
         covered_from=covered_from,
         covered_until=covered_until,
@@ -88,17 +88,17 @@ def _without_edition_after_2026(
 def _register(forecast: ActivityAssetForecastOperation, revision: ActivityAssetRevision) -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
+        ledger=MemoryLedger(ACQUISITION),
         forecast_operation=forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2028, 12, 31), last_admitted_year=2028),
     )
-    operations.create(revision, _NAME)
+    operations.create(revision, NAME)
     return operations
 
 
 def test_a_year_the_plan_cannot_figure_serves_its_refusal_with_the_facts_the_absence_carries() -> None:
-    operations = _register(_without_edition_after_2026, _revision())
+    operations = _register(_without_edition_after_2026, register_revision())
 
     row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
 
@@ -110,8 +110,8 @@ def test_a_year_the_plan_cannot_figure_serves_its_refusal_with_the_facts_the_abs
 
 
 def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -> None:
-    operations = _register(_constant_forecast, _revision(method=AmortizationMethod.CONSTANT_PERCENTAGE))
-    operations.record_claim(_full_year(operations, 2027), creating_operation="test.2027")
+    operations = _register(constant_forecast, register_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE))
+    operations.record_claim(full_year(operations, 2027), creating_operation="test.2027")
 
     row = {item.tax_year: item for item in operations.plan(_ASSET)}[2025]
 
@@ -144,7 +144,7 @@ def test_each_fact_states_the_kind_it_was_raised_with() -> None:
 
 
 def test_a_refusal_projects_the_kinds_its_context_was_raised_with() -> None:
-    operations = _register(_without_edition_after_2026, _revision())
+    operations = _register(_without_edition_after_2026, register_revision())
 
     row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
 

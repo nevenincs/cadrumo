@@ -26,7 +26,7 @@ from ...core.filing_year import YEAR_DIGITS, is_four_digit_year
 from ...core.i18n.render import tr
 from ...core.identity.documents import IdentityError
 from ...core.parsing.utils import parse_bool
-from ...core.redaction.rules import redact_validation_context as _redact_validation_context
+from ...core.redaction.rules import redact_validation_context
 from ...core.spanish_postcode import is_spanish_postcode
 from ...core.type_guards import is_object_list_or_tuple
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
@@ -36,7 +36,7 @@ from .models import WizardQuestion, WizardWidget
 
 _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 
-_POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
+POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 """Question ids whose answer must be a Spanish 5-digit postcode."""
 
 _YEAR_QUESTION_IDS: frozenset[str] = frozenset({YEAR_QUESTION_ID})
@@ -90,7 +90,7 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     choices = render_context.get("choices")
     if is_object_list_or_tuple(choices):
         render_context["choices"] = ", ".join(str(choice) for choice in choices)
-    error_context = _redact_validation_context(render_context)
+    error_context = redact_validation_context(render_context)
     translated = tr(message_key, **render_context)
     return WizardValidationError(message_key, context=error_context, translated_message=translated)
 
@@ -127,7 +127,7 @@ def _validate_text_tax_id(value: str, raw: str, question: WizardQuestion) -> Non
 
 def _validate_text_postcode(value: str, raw: str, question: WizardQuestion) -> None:
     """Apply the canonical Spanish postcode validator when required."""
-    if value and question.id in _POSTCODE_QUESTION_IDS and not is_spanish_postcode(value):
+    if value and question.id in POSTCODE_QUESTION_IDS and not is_spanish_postcode(value):
         raise _fail(question, "invalid_postcode", raw=raw)
 
 

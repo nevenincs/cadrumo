@@ -20,7 +20,7 @@ from ...domain.modelos.verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from .m210_rate import resolve_m210_rate
 from .verification_finding_contracts import BLOCKED_VERDICT_KINDS, M210_UNRESOLVED_RATE_REASONS
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ def m210_unresolved_outcome_findings(
         if outcome.reason not in M210_UNRESOLVED_RATE_REASONS:
             continue
         resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
-        _rate, obs_findings = _resolve_m210_rate(
+        _rate, obs_findings = resolve_m210_rate(
             profile,
             resolved_tipo_renta,
             year,

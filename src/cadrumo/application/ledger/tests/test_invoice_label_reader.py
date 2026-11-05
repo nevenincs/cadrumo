@@ -51,7 +51,7 @@ from ..invoice_label_reader import (
     text_layer_reads_completely_by_labels,
 )
 from ..structured_invoice_ports import StructuredInvoiceRecord
-from ._evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
+from .evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -38,8 +38,7 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.foreign_asset_obligation import MODELO_720_FOREIGN_ASSET_CLASS_CODES, M720AssetClassCode
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.foreign_assets.register import (
@@ -51,7 +50,6 @@ from ....domain.foreign_assets.register import (
     M720IdentifierScheme,
 )
 from ....domain.foreign_assets.valuation import M720ValuationEvent
-from .._preconditions import AggregationPreconditionCondition
 from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -68,6 +66,7 @@ from ..foreign_assets import (
     declarable_asset_classes_720,
 )
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..preconditions import AggregationPreconditionCondition
 from ..retenciones import (
     Modelo180PropertyEvidence,
     Modelo180StructuredAddress,
@@ -85,9 +84,9 @@ from ..service import (
     PerModeloAggregationContributor,
     PerModeloAggregationLogFields,
     PerModeloAggregationResult,
-    _registered_per_modelo_provider_modelos,
     aggregate_per_modelo,
     provider_for_modelo,
+    registered_per_modelo_provider_modelos,
 )
 from ..source_mesh import CalculationSourceContext
 
@@ -243,7 +242,7 @@ def test_command_contract_is_strict_and_immutable() -> None:
         retencion_observations=(_retencion_obs(),),
     )
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             provider_for_modelo(command.modelo, operation=_authority_operation_for_test)
             is PerModeloAggregationContributor.RETENCIONES
@@ -269,10 +268,10 @@ def test_routing_one_modelo_agrees_with_the_registry_wide_inventory() -> None:
     live registry -- including that a modelo outside every family still refuses.
     Building the inventory also runs its one-family-per-modelo check.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         assigned = {
             modelo: contributor
-            for contributor, modelos in _registered_per_modelo_provider_modelos(operation=operation).items()
+            for contributor, modelos in registered_per_modelo_provider_modelos(operation=operation).items()
             for modelo in modelos
         }
         unassigned = [modelo for modelo in operation.modelo_ids() if modelo not in assigned]
@@ -326,7 +325,7 @@ def test_period_boundary_rejects_combined_period_string() -> None:
 
 
 def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         command = PerModeloAggregationCommand(
             modelo="111",
             period=_P_2025_Q1,
@@ -351,7 +350,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
 
 
 def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = (
             _counterpart_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
             _counterpart_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
@@ -373,7 +372,7 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
 
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = (
             _asset_obs(source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE, valuation="25000.00"),
             _asset_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, valuation="25000.01"),
@@ -423,7 +422,7 @@ def _m720_service_and_resolution(observations, operation):
 
 
 def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = (
             _asset_obs(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -473,7 +472,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
 
 
 def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenance() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = (
             _asset_obs(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -532,7 +531,7 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
         foreign_asset_observations=(_asset_obs(),),
     )
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         pytest.raises(AggregationConfigError, match=r"aggregation\.service\.errors\.observations_mismatch") as exc_info,
     ):
         aggregate_per_modelo(command, operation=operation)
@@ -543,7 +542,7 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
 def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
     command = PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info,
     ):
         aggregate_per_modelo(command, operation=operation)
@@ -565,7 +564,7 @@ def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
         counterpart_observations=(_counterpart_obs(),),
     )
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info,
     ):
         aggregate_per_modelo(command, operation=operation)
@@ -574,7 +573,7 @@ def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
 
 
 def test_result_contract_rejects_incoherent_envelope_payload() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         aggregation_payload = aggregate_per_modelo(
             PerModeloAggregationCommand(
                 modelo="347",
@@ -603,7 +602,7 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
 
 
 def test_result_contract_rejects_provider_payload_mismatch() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         aggregation_payload = aggregate_per_modelo(
             PerModeloAggregationCommand(
                 modelo="111",
@@ -735,7 +734,7 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
 def test_retenciones_collapse_service_and_mesh_reproduce_prior_core_exactly(
     modelo: str, operation: PinnedAuthorityOperation
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = _mixed_scheme_retencion_observations()
         period = _RETENCIONES_PERIOD[modelo]
         expected = _RETENCIONES_CORE_ORACLE[modelo](observations, period=period, operation=operation)

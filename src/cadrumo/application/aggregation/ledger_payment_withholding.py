@@ -64,7 +64,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .retenciones import Modelo193PendingPaymentEvidence
@@ -114,7 +114,7 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
     recognition-date or period field.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     income_kind: WithholdingIncomeKind = WithholdingIncomeKind.WORK
@@ -183,7 +183,7 @@ def _validate_capital_income_evidence(request: LedgerPaymentWithholdingEvidenceR
 class LedgerPaymentWithholdingCapture(BaseModel):
     """Canonical ledger-derived producer command and its consistent read revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     command: WithholdingEvidenceCaptureCommand
     scope: WithholdingWindowScope

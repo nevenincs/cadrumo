@@ -265,14 +265,14 @@ def test_capture_filters_exact_profile_and_does_not_truncate(monkeypatch: pytest
     superseded_303 = _record(actor="third", modelo="303", status=ModeloRecordStatus.SUPERSEDIDO)
     foreign = _record(profile_id=_OTHER_PROFILE, actor="foreign")
     request = ModeloFilingRecordListRequest(profile_id=_PROFILE, modelo="303")
-    projection = operation_module._capture(
+    projection = operation_module.capture(
         request,
         _bundle(current_100, current_303, superseded_303, foreign),
     )
     assert [row.filing_record_id for row in projection.records] == [current_303.filing_record_id]
     assert projection.record_count == 1
 
-    inclusive = operation_module._capture(
+    inclusive = operation_module.capture(
         ModeloFilingRecordListRequest(profile_id=_PROFILE, modelo="303", include_superseded=True),
         _bundle(current_100, superseded_303, current_303),
     )
@@ -281,7 +281,7 @@ def test_capture_filters_exact_profile_and_does_not_truncate(monkeypatch: pytest
 
     monkeypatch.setattr(operation_module, "MAX_MODELO_FILING_RECORD_LIST_ROWS", 1)
     with pytest.raises(ProfileAccessRefusedError) as oversized:
-        operation_module._capture(
+        operation_module.capture(
             ModeloFilingRecordListRequest(profile_id=_PROFILE, include_superseded=True),
             _bundle(current_303, current_100, superseded_303),
         )
@@ -323,7 +323,7 @@ def test_capture_refuses_a_foreign_repository_bucket() -> None:
     from .. import filing_record_list_operation as operation_module
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        operation_module._capture(
+        operation_module.capture(
             ModeloFilingRecordListRequest(profile_id=_PROFILE),
             _bundle(_record(), repository_bucket_id=str(_OTHER_PROFILE)),
         )

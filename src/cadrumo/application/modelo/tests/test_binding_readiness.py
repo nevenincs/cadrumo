@@ -6,7 +6,7 @@ import logging
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
     """An unregistered modelo returns no resolved bindings and emits debug diagnostics."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
         resolved = profile_resolvable_binding_ids(
@@ -41,7 +41,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Explicit Period scopes use the typed registry token at the snapshot boundary."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
         resolved = profile_resolvable_binding_ids(
@@ -62,7 +62,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
 def test_typed_period_scope_must_match_filing_year() -> None:
     """The helper refuses contradictory typed coordinates before querying the registry."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(RegistryValidationError),
     ):
         profile_resolvable_binding_ids(

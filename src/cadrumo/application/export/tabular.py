@@ -28,10 +28,7 @@ from zipfile import BadZipFile
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
-from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
+from ...core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ExportFieldError, ExportFormatError
@@ -56,9 +53,9 @@ class ExportSerializationFormat(StrEnum):
 #: verifier cannot drift apart.
 _FORMAT_WIRE_NAMES: Mapping[ExportSerializationFormat, tuple[str, str]] = MappingProxyType(
     {
-        ExportSerializationFormat.CSV: (_CSV_MIME_TYPE, "csv"),
-        ExportSerializationFormat.JSONL: (_JSONL_MIME_TYPE, "jsonl"),
-        ExportSerializationFormat.XLSX: (_XLSX_MIME_TYPE, "xlsx"),
+        ExportSerializationFormat.CSV: (CSV_MIME_TYPE, "csv"),
+        ExportSerializationFormat.JSONL: (JSONL_MIME_TYPE, "jsonl"),
+        ExportSerializationFormat.XLSX: (XLSX_MIME_TYPE, "xlsx"),
     },
 )
 
@@ -286,7 +283,7 @@ def _payload_row_count(payload: bytes, *, export_format: ExportSerializationForm
 def _csv_payload_row_count(payload: bytes) -> int:
     """Count parsed CSV records after the serializer's one header record."""
     try:
-        rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
+        rows = tuple(csv.reader(StringIO(payload.decode(UTF_8_ENCODING))))
     except (UnicodeDecodeError, csv.Error) as exc:
         raise _payload_decode_error(ExportSerializationFormat.CSV) from exc
     return max(len(rows) - 1, 0)
@@ -295,7 +292,7 @@ def _csv_payload_row_count(payload: bytes) -> int:
 def _jsonl_payload_row_count(payload: bytes) -> int:
     """Count nonblank JSON Lines object records, retaining their source line on refusal."""
     try:
-        lines = payload.decode(_UTF_8_ENCODING).splitlines()
+        lines = payload.decode(UTF_8_ENCODING).splitlines()
     except UnicodeDecodeError as exc:
         raise _payload_decode_error(ExportSerializationFormat.JSONL) from exc
 
@@ -366,13 +363,13 @@ def _serialize_csv(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, .
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, lineterminator="\n")
     writer.writeheader()
     writer.writerows({field: spreadsheet_literal(value) for field, value in row.items()} for row in rows)
-    return buffer.getvalue().encode(_UTF_8_ENCODING)
+    return buffer.getvalue().encode(UTF_8_ENCODING)
 
 
 def _serialize_jsonl(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
     del fieldnames
     text = "".join(json.dumps(row, ensure_ascii=True, sort_keys=True, separators=(",", ":")) + "\n" for row in rows)
-    return text.encode(_UTF_8_ENCODING)
+    return text.encode(UTF_8_ENCODING)
 
 
 def _xlsx_string_cell(worksheet: Worksheet, *, row: int, column: int, value: str) -> Cell:

@@ -2,7 +2,7 @@
 
 from ....domain.calculations.registry.schema import ModeloRevision
 from ...aggregation.source_mesh import CalculationSourceResolution
-from .._calculation_source_staging import add_expected_missing_binding_diagnostics
+from ..calculation_source_staging import add_expected_missing_binding_diagnostics
 
 
 def apply_expected_missing_binding_diagnostics(

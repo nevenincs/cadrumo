@@ -17,9 +17,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.aggregation import BindingSourceKind
@@ -55,14 +53,13 @@ from ..art52_advisory import art52_reduccion_advisory_finding
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..dt12_advisory import dt12_reduccion_advisory_finding
 from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
-from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
-from ..revision_replay_inputs import _informational_casilla_replay_inputs
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked, apply_iva_compensation_decision_binding
+from ..revision_replay_inputs import informational_casilla_replay_inputs
 from ..verification_gate_findings import iva_wallet_error_verification_finding
 from ..verification_predicates import evaluate_verification_predicates
 from ..verification_required_fields import missing_required_casilla_finding
 from ..verification_revision_findings import collect_revision_verification_findings
-from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
+from ..workflow_gate import RevisionInputsProvider, workflow_period_for_work_unit
 from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
@@ -111,7 +108,7 @@ def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResol
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one authority generation for the advisory resolvers under test."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 
@@ -454,7 +451,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     deliberately not asserted verbatim so a translation edit cannot red this
     contract.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
         target = _minimal_calculation_revision(work_unit)
 
@@ -850,7 +847,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
         reason_identity="filed_history_requires_override",
     )
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "1T"),
@@ -881,7 +878,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
 
 def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "1T"),
@@ -940,10 +937,10 @@ class TestWorkflowInputMismatchError:
     and must carry structured context.
     """
 
-    def _make_provider(self, modelo: str = "100", period: str = "0A") -> _RevisionInputsProvider:
+    def _make_provider(self, modelo: str = "100", period: str = "0A") -> RevisionInputsProvider:
         work_unit = _minimal_work_unit(modelo=modelo, period=period)
         revision = _minimal_calculation_revision(work_unit)
-        return _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        return RevisionInputsProvider(revision=revision, work_unit=work_unit)
 
     def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
@@ -955,7 +952,7 @@ class TestWorkflowInputMismatchError:
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
         expected_period = workflow_period_for_work_unit(work_unit)
         result = provider.load_inputs(
             modelo="100",
@@ -970,7 +967,7 @@ class TestWorkflowInputMismatchError:
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
         correct_period = workflow_period_for_work_unit(work_unit)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
@@ -990,7 +987,7 @@ class TestWorkflowInputMismatchError:
         """load_inputs with a wrong period raises WorkflowInputMismatchError."""
         work_unit = _minimal_work_unit(modelo="303", period="1T")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
@@ -1017,7 +1014,7 @@ class TestWorkflowInputMismatchError:
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit)
 
         try:
             provider.load_inputs(
@@ -1118,7 +1115,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         source_provenance=(),
     )
 
-    informational_replay_inputs = _informational_casilla_replay_inputs(
+    informational_replay_inputs = informational_casilla_replay_inputs(
         revision=revision,
         snapshot=snapshot,
     )

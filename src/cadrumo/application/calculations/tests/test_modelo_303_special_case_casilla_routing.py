@@ -42,7 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -247,7 +247,7 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted() -> None:
     anomaly. Reds if the category ever produces a silent declarable deducible
     observation.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         report = aggregate_iva_ledger_observations(
             TransactionCatalogue.from_transactions((_recargo_purchase(),)),
             period=Period.from_year_and_code(_YEAR, _PERIOD),

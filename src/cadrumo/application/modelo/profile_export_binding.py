@@ -456,7 +456,7 @@ def resolve_export_identity(
     if record is None:
         return None
     resolved_schema = operation.profile_schema() if schema is None else schema
-    return _identity_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
+    return identity_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
 
 
 def _load_profile_record(
@@ -520,7 +520,7 @@ def resolve_declaration_contact(
         return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
 
 
-def _identity_from_profile_facts(
+def identity_from_profile_facts(
     facts: Mapping[str, UserProfileFactValue],
     *,
     schema: ProfileSchemaDefinition,

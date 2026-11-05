@@ -13,7 +13,7 @@ from ...modelo.calculation_notes import GATE_REFUSED_REASONS, what_locale_key
 _NOTE_LABEL_PREFIX: Final = "note_"
 """Label keys ``note_<reason>`` word a note that withholds a saved box, by the note catalogue's own sentence."""
 
-_REVIEW_LABEL_KEYS: Final[dict[str, tr]] = {
+REVIEW_LABEL_KEYS: Final[dict[str, tr]] = {
     "overview": tr("application.storage.calc_sheets.review.labels.overview"),
     "baseline_notice": tr("application.storage.calc_sheets.review.labels.baseline_notice"),
     "index_only_notice": tr("application.storage.calc_sheets.review.labels.index_only_notice"),
@@ -199,7 +199,7 @@ class ReviewWorkbookLabels:
         translation_key = (
             _note_translation_key(key.removeprefix(_NOTE_LABEL_PREFIX))
             if key.startswith(_NOTE_LABEL_PREFIX)
-            else _REVIEW_LABEL_KEYS[key]
+            else REVIEW_LABEL_KEYS[key]
         )
         value = lookup_translation(translation_key, locale=self.locale.value)
         if value is None or not value.strip():

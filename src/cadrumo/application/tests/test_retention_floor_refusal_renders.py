@@ -21,7 +21,7 @@ import pytest
 from ...core.errors.error_codes import render_error_text
 from ...domain.retention.errors import RetentionFloorError
 from ..bucket_deletion_contracts import BucketDeletionFingerprint
-from ..config_reset import _refuse_erase_inside_the_retention_floor
+from ..config_reset import refuse_erase_inside_the_retention_floor
 from ..config_reset_models import (
     ConfigResetRetentionDecision,
     ConfigResetTarget,
@@ -68,7 +68,7 @@ def test_the_refusal_renders_both_of_its_numbers_and_the_statute() -> None:
     real option.
     """
     with pytest.raises(RetentionFloorError) as raised:
-        _refuse_erase_inside_the_retention_floor(_target(blocks_erase=True, override_approved=False, retained=4))
+        refuse_erase_inside_the_retention_floor(_target(blocks_erase=True, override_approved=False, retained=4))
 
     rendered = render_error_text(raised.value)
     headline = rendered.splitlines()[0]
@@ -86,9 +86,9 @@ def test_the_refusal_renders_both_of_its_numbers_and_the_statute() -> None:
 
 def test_an_approved_override_is_permitted_through() -> None:
     """The refusal is a floor, not a wall: a recorded override proceeds."""
-    _refuse_erase_inside_the_retention_floor(_target(blocks_erase=True, override_approved=True, retained=4))
+    refuse_erase_inside_the_retention_floor(_target(blocks_erase=True, override_approved=True, retained=4))
 
 
 def test_a_cleared_target_is_permitted_through() -> None:
     """Nothing retained is not a refusal, and must not be treated as one."""
-    _refuse_erase_inside_the_retention_floor(_target(blocks_erase=False, override_approved=False, retained=0))
+    refuse_erase_inside_the_retention_floor(_target(blocks_erase=False, override_approved=False, retained=0))

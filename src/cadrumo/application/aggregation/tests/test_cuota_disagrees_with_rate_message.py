@@ -17,7 +17,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.transactions.models import TransactionCatalogue
 from ..iva_ledger import IvaLedgerAggregationIssue, IvaLedgerAggregationIssueReason
-from ..modelo_bindings_iva import _selected_scope_iva_evidence_diagnostics
+from ..modelo_bindings_iva import selected_scope_iva_evidence_diagnostics
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .iva_ledger_row_support import uncategorised_sale_row
 
@@ -41,7 +41,7 @@ def _issues(*, base: str, rate: str, cuota: str) -> tuple[IvaLedgerAggregationIs
 def test_the_diagnostic_carries_base_rate_expected_and_recorded_cuota_in_the_requested_language(language: str) -> None:
     with override_settings(cadrumo_output_language=language):
         issues = _issues(base="100.00", rate="0.21", cuota="25.00")
-        (diagnostic,) = _selected_scope_iva_evidence_diagnostics(issues, resolver_id="ledger_iva_aggregation")
+        (diagnostic,) = selected_scope_iva_evidence_diagnostics(issues, resolver_id="ledger_iva_aggregation")
 
     assert [issue.reason for issue in issues] == [IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE]
     assert diagnostic.message_language is OutputLanguage(language)
@@ -83,7 +83,7 @@ def test_another_refusal_keeps_its_technical_marker_and_names_no_language() -> N
     issue = IvaLedgerAggregationIssue(
         transaction_id="t-1", reason=IvaLedgerAggregationIssueReason.MISSING_IVA_RATE, detail="no rate"
     )
-    (diagnostic,) = _selected_scope_iva_evidence_diagnostics((issue,), resolver_id="ledger_iva_aggregation")
+    (diagnostic,) = selected_scope_iva_evidence_diagnostics((issue,), resolver_id="ledger_iva_aggregation")
 
     assert diagnostic.message == "selected-scope IVA evidence failure: missing_iva_rate"
     assert diagnostic.message_language is None

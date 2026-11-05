@@ -55,7 +55,13 @@ from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimp
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import build_m303_filing_projection_plan
-from .producer_snapshot_support import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
+from .producer_snapshot_support import (
+    elections,
+    m303_filing_facts,
+    m303_profile,
+    producer_snapshot_presenter,
+    taxpayer_identity,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -352,7 +358,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     projection_snapshot = registry_snapshot.model_copy(
         update={"revision": registry_snapshot.revision.model_copy(update={"export_layouts": (layout,)})},
     )
-    facts = _m303_filing_facts(filing_year=filing_year, period_code=period_code).model_copy(
+    facts = m303_filing_facts(filing_year=filing_year, period_code=period_code).model_copy(
         update={
             "regimen_simplificado": evidence,
             "regimen_simplificado_result": evidence.calculation_result,
@@ -361,10 +367,10 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     producer = build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
-        taxpayer_identity=_taxpayer_identity(),
-        presenter=_presenter(),
-        model_profile=_m303_profile(),
-        elections=_elections(ResultDisposition.NEGATIVA),
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=m303_profile(),
+        elections=elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,

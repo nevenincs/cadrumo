@@ -43,7 +43,7 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 
 
-def _unit() -> WorkUnit:
+def wizard_context_operation_unit() -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
     instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
     return WorkUnit(
@@ -72,7 +72,7 @@ def _request(unit: WorkUnit, *, profile_id: UUID = _PROFILE) -> OperationRequest
     )
 
 
-class _WorkRepository:
+class WorkRepository:
     def __init__(self, unit: WorkUnit, *, bucket_id: str = str(_PROFILE)) -> None:
         self.bucket_id = bucket_id
         self._unit = unit
@@ -83,7 +83,7 @@ class _WorkRepository:
         return WorkUnitCatalogue(work_units={self._unit.work_unit_id: self._unit})
 
 
-def _registration(repository: _WorkRepository):
+def _registration(repository: WorkRepository):
     def factory() -> WorkLifecyclePorts:
         return cast(WorkLifecyclePorts, cast(object, SimpleNamespace(work_unit_repository=repository)))
 
@@ -112,7 +112,7 @@ def _context(
 
 
 def test_request_and_projection_bind_exact_profile_and_unique_step_identity() -> None:
-    unit = _unit()
+    unit = wizard_context_operation_unit()
     request = _request(unit)
     assert isinstance(request.payload, ModeloWorkWizardContextRequest)
     assert request.subject_ref == request.payload.work_unit_id
@@ -141,8 +141,8 @@ def test_request_and_projection_bind_exact_profile_and_unique_step_identity() ->
 
 
 def test_profile_and_subject_mismatch_refuse_before_catalogue_load() -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     registry, registration, _ = _registration(repository)
     for request, profile_id in [
         (_request(unit, profile_id=_OTHER_PROFILE), _PROFILE),
@@ -165,8 +165,8 @@ def test_profile_and_subject_mismatch_refuse_before_catalogue_load() -> None:
 
 
 def test_fresh_submit_uses_stored_period_and_rejects_wrong_repository_bucket() -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     registry, registration, _ = _registration(repository)
     resolved = resolve_operation_access(registry=registry, request=_request(unit), context=_context(registration))
     assert resolved.request.periods == frozenset({unit.period})
@@ -174,7 +174,7 @@ def test_fresh_submit_uses_stored_period_and_rejects_wrong_repository_bucket() -
     assert AccessAction.COMMIT not in resolved.policy.actions
     assert repository.loads == 1
 
-    wrong_repository = _WorkRepository(unit, bucket_id=str(_OTHER_PROFILE))
+    wrong_repository = WorkRepository(unit, bucket_id=str(_OTHER_PROFILE))
     wrong_registry, wrong_registration, _ = _registration(wrong_repository)
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(registry=wrong_registry, request=_request(unit), context=_context(wrong_registration))
@@ -184,8 +184,8 @@ def test_fresh_submit_uses_stored_period_and_rejects_wrong_repository_bucket() -
 
 @pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT])
 def test_historical_read_uses_admitted_period_without_catalogue_reload(action: AccessAction) -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     registry, registration, _ = _registration(repository)
     admitted = OperationAccessRequest(
         profile_id=_PROFILE,
@@ -209,8 +209,8 @@ def test_historical_read_uses_admitted_period_without_catalogue_reload(action: A
 def test_executor_captures_canonical_steps_and_echoes_output_language(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    unit = _unit()
-    repository = _WorkRepository(unit)
+    unit = wizard_context_operation_unit()
+    repository = WorkRepository(unit)
     _, _, factory = _registration(repository)
     stored: list[BaseModel] = []
     effects: list[OperationEffect] = []

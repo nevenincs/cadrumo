@@ -22,7 +22,7 @@ from cadrumo.domain.user_profile.values import (
 
 from ...aggregation.renta_ledger import resident_territory
 from .register_support import MemoryRepository, describing, memory_register_authority
-from .test_operations import _ledger, _linear_forecast, _revision, _simplified
+from .test_operations import ledger, linear_forecast, operations_revision, simplified
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,9 +52,9 @@ def _profile(residence: str, *periods: UserProfileFact) -> UserProfileRecord:
 def _registered(repository: MemoryRepository) -> ActivityAssetOperations:
     return ActivityAssetOperations(
         repository=repository,
-        ledger=_ledger(),
-        forecast_operation=_linear_forecast,
-        taxpayer_modality=_simplified,
+        ledger=ledger(),
+        forecast_operation=linear_forecast,
+        taxpayer_modality=simplified,
         register_authority=memory_register_authority(),
     )
 
@@ -75,9 +75,9 @@ def _resident_of(
     )
     return ActivityAssetOperations(
         repository=repository,
-        ledger=_ledger(),
-        forecast_operation=_linear_forecast,
-        taxpayer_modality=_simplified,
+        ledger=ledger(),
+        forecast_operation=linear_forecast,
+        taxpayer_modality=simplified,
         register_authority=authority,
     )
 
@@ -85,7 +85,7 @@ def _resident_of(
 def _repository_with_a_claim() -> tuple[MemoryRepository, str, str]:
     repository = MemoryRepository()
     registered = _registered(repository)
-    revision = _revision()
+    revision = operations_revision()
     registered.create(revision, describing(revision))
     forecast = registered.forecast(
         asset_id=revision.asset_id,
@@ -118,7 +118,7 @@ def test_a_foral_resident_cannot_forecast_claim_correct_or_hand_off(
         foral.record_claim(carried, creating_operation="test.foral")
     with pytest.raises(ActividadAssetValidationError) as correction:
         foral.correct(
-            _revision(number=2, supersedes=foral.inspect(asset_id)[-1].revision_id),
+            operations_revision(number=2, supersedes=foral.inspect(asset_id)[-1].revision_id),
             (SupersedingClaimRequest(supersedes_claim_id=claim_id),),
         )
     with pytest.raises(ActividadAssetValidationError) as handoff:

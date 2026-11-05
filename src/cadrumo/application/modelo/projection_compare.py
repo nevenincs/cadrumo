@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, RevisionId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -53,7 +53,7 @@ class ModeloCompareNoUsableRevisionsError(ModeloProjectionError):
 class ModeloCompareDeltaRow(BaseModel):
     """One casilla delta row in a modelo year comparison."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     label: str
@@ -70,7 +70,7 @@ class ModeloCompareDeltaRow(BaseModel):
 class ModeloCompareSection(BaseModel):
     """One section grouping for a modelo comparison."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     section: str
     rows: tuple[ModeloCompareDeltaRow, ...]
@@ -79,7 +79,7 @@ class ModeloCompareSection(BaseModel):
 class ModeloCompareServiceResult(BaseModel):
     """Year-over-year comparison result for one modelo."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1)
     year_a: int

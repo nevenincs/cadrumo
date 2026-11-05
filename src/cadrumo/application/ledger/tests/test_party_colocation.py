@@ -26,8 +26,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -173,7 +172,7 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
     side: the resolver attributes the value while the envelope still says nothing
     verified it, and every reader downstream sees the weaker claim.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(),
@@ -188,7 +187,7 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
 
 def test_a_transposed_value_keeps_the_stamp_rather_than_reading_as_attributed() -> None:
     """A contradiction must never clear the stamp -- it is the opposite of a clean bill."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_transposed(),
             transcription=_transcription(),
@@ -255,7 +254,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
     Detecting a swap and discarding it is the same shape as evidence no resolver
     consumes: the check runs, nothing acts, and the draft confirms clean.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
@@ -277,7 +276,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
 
 def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
     """The ordinary case must not be refused, or the blocker trains operators to ignore it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
@@ -293,7 +292,7 @@ def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
 
 def test_an_unresolvable_document_advises_rather_than_refuses() -> None:
     """A layout that cannot be separated stays on the advisory, never the blocker."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = _straight()
         unanchorable = draft.model_copy(
             update={
@@ -446,7 +445,7 @@ def test_a_two_column_document_clears_the_stamp_and_drops_the_advisory(
     to dismiss, and it would hide the document that genuinely cannot be
     separated.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(_TWO_COLUMN_PAGE),
@@ -482,7 +481,7 @@ def test_an_unsplittable_column_keeps_the_stamp_and_the_operator_keeps_the_advis
     and refusing the draft over it would train operators to dismiss the refusal
     that matters.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(_FLATTENED_TWO_COLUMN_PAGE),

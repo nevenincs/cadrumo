@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -24,9 +24,9 @@ from .. import commands as commands_module
 from .. import patch_edit as patch_edit_module
 from .. import status as status_module
 from ..commands import (
-    _require_profile_label_available,
-    _require_profile_name,
-    _run_full_flow,
+    require_profile_label_available,
+    require_profile_name,
+    run_full_flow,
 )
 from ..errors import (
     WizardEditUnsupportedConsoleError,
@@ -38,9 +38,9 @@ from ..errors import (
 from ..patch_edit import missing_filing_baseline_flag_groups_for_flow, require_filing_baseline
 from ..status import (
     WizardStatusError,
-    _next_wizard_action,
-    _require_active_profile_tax_id,
     load_active_taxpayer_profile,
+    next_wizard_action,
+    require_active_profile_tax_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -320,7 +320,7 @@ def test_wizard_status_next_action_declares_only_the_registered_resolved_login_a
     }
     assert action_ids == {"operator.auth.login"}
     assert (
-        _next_wizard_action(
+        next_wizard_action(
             has_profile=False,
             missing_required=(),
             missing_enrolment=(),
@@ -346,7 +346,7 @@ def test_missing_active_profile_has_an_exact_application_state_operator_decision
 
 def test_missing_active_tax_id_has_an_exact_application_state_operator_decision_verdict() -> None:
     with pytest.raises(WizardStatusError) as raised:
-        _require_active_profile_tax_id(
+        require_active_profile_tax_id(
             {},
             active_profile="profile-id",
             requirement="Tax identifier",
@@ -365,7 +365,7 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
     with pytest.raises(WizardMissingFlagError) as raised:
-        _require_profile_name(registry_setup_flow, None)
+        require_profile_name(registry_setup_flow, None)
 
     _assert_terminal_contract(
         raised.value,
@@ -379,12 +379,12 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
 def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        missing = commands_module._missing_required_flags(registry_setup_flow, {})
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        missing = commands_module.missing_required_flags(registry_setup_flow, {})
         assert missing
 
         with pytest.raises(WizardMissingFlagError) as raised:
-            _run_full_flow(
+            run_full_flow(
                 registry_setup_flow,
                 {},
                 quiet=True,
@@ -428,7 +428,7 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
     *, registry_setup_flow: WizardFlow
 ) -> None:
     with pytest.raises(WizardValidationError) as raised:
-        _require_profile_label_available(
+        require_profile_label_available(
             registry_setup_flow,
             "Taken profile",
             label_is_registered=True,
@@ -444,7 +444,7 @@ def test_taken_profile_label_has_an_exact_application_state_operator_decision_ve
 
 
 def test_unregistered_profile_label_passes_the_application_state_gate(*, registry_setup_flow: WizardFlow) -> None:
-    _require_profile_label_available(
+    require_profile_label_available(
         registry_setup_flow,
         "Unregistered profile",
         label_is_registered=False,
@@ -454,9 +454,9 @@ def test_unregistered_profile_label_passes_the_application_state_gate(*, registr
 def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
-            _run_full_flow(
+            run_full_flow(
                 registry_setup_flow,
                 {},
                 quiet=False,
@@ -481,10 +481,10 @@ def test_interactive_profile_create_remains_custody_refused_before_console_handl
 ) -> None:
     """Current custody rejects create; neither status nor wizard offers it as recovery."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(ProfileRegistrationError),
     ):
-        _run_full_flow(
+        run_full_flow(
             registry_setup_flow,
             {},
             quiet=False,

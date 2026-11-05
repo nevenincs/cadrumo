@@ -510,7 +510,7 @@ def _copy_result[T: BaseModel](result: BaseModel, expected_type: type[T]) -> T:
     return expected_type.model_validate(result.model_dump(mode="python"), strict=True)
 
 
-def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
+def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
     private = _copy_result(result, LedgerRatiosListResult)
     refused = private.outcome == "censo_mismatch"
     _receipt_matches(
@@ -524,7 +524,7 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
     return LedgerRatiosListProjection.model_validate(private.model_dump(mode="python"), strict=True)
 
 
-def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
+def project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
     private = _copy_result(result, LedgerRatiosSetResult)
     _receipt_matches(
         receipt,
@@ -535,7 +535,7 @@ def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /)
     return LedgerRatiosSetProjection.model_validate(private.model_dump(mode="python"), strict=True)
 
 
-def _project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
+def project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
     private = _copy_result(result, LedgerRatiosUnsetResult)
     refused = private.outcome == "no_override"
     expected = OperationEffect.NONE if refused else OperationEffect.UPDATED
@@ -622,7 +622,7 @@ def build_ledger_ratios_list_registration(definition: OperationDefinition) -> Op
         definition,
         projection_type=LedgerRatiosListProjection,
         access_resolver=_read_access,
-        result_projector=_project_list_result,
+        result_projector=project_list_result,
     )
 
 
@@ -647,7 +647,7 @@ def build_ledger_ratios_set_registration(definition: OperationDefinition) -> Ope
         definition,
         projection_type=LedgerRatiosSetProjection,
         access_resolver=_set_access,
-        result_projector=_project_set_result,
+        result_projector=project_set_result,
     )
 
 
@@ -675,7 +675,7 @@ def build_ledger_ratios_unset_registration(
         definition,
         projection_type=LedgerRatiosUnsetProjection,
         access_resolver=_unset_access,
-        result_projector=_project_unset_result,
+        result_projector=project_unset_result,
     )
 
 

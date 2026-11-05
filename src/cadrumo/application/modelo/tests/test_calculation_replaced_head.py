@@ -16,7 +16,7 @@ from ..work_calculation_contracts import (
     ModeloWorkCalculateReplacedHead,
     ModeloWorkCalculateRequest,
 )
-from .test_wizard_context_operation import _unit
+from .test_wizard_context_operation import wizard_context_operation_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -25,7 +25,7 @@ _NEW_HEAD = "b" * 64
 
 
 def _unit_at(head: str | None) -> WorkUnit:
-    return _unit().model_copy(update={"current_calculation_revision_id": head})
+    return wizard_context_operation_unit().model_copy(update={"current_calculation_revision_id": head})
 
 
 def _prepared(unit: WorkUnit, *, operator_layer_recorded: bool) -> PreparedModeloWorkCalculation:

@@ -196,7 +196,7 @@ def _split_identity(
     return child_amounts, split_group_id
 
 
-def _build_initial_split_children(
+def build_initial_split_children(
     *,
     parent: Transaction,
     children: tuple[SplitChildCommand, ...],
@@ -218,7 +218,7 @@ def _build_initial_split_children(
     )
 
 
-def _require_unique_split_child_ids(children: tuple[Transaction, ...]) -> tuple[str, ...]:
+def require_unique_split_child_ids(children: tuple[Transaction, ...]) -> tuple[str, ...]:
     """Return child IDs, refusing a content-addressed collision in the cohort."""
     child_ids = tuple(transaction.transaction_id for transaction in children)
     if len(set(child_ids)) != len(child_ids):
@@ -350,24 +350,24 @@ def _build_split_state(
     atomic evidence-driven classified split reuse this builder so the split shape
     is defined once.
     """
-    parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
+    parent = resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
     _reject_split_with_finalized_modelo_blockers(
         parent=parent,
         bucket_id=bucket_id,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    _validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
+    validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
 
     child_amounts, split_group_id = _split_identity(parent, children)
-    child_transactions_initial = _build_initial_split_children(
+    child_transactions_initial = build_initial_split_children(
         parent=parent,
         children=children,
         occurred_at=now,
         actor=actor,
         source_command=source_command,
     )
-    child_ids = _require_unique_split_child_ids(child_transactions_initial)
+    child_ids = require_unique_split_child_ids(child_transactions_initial)
     parent_after = _build_split_parent_transition(
         parent=parent,
         split_group_id=split_group_id,
@@ -377,7 +377,7 @@ def _build_split_state(
         reason=reason,
         now=now,
     )
-    child_eur_values = _split_child_eur_values(parent=parent, child_amounts=child_amounts)
+    child_eur_values = split_child_eur_values(parent=parent, child_amounts=child_amounts)
     final_children = _build_final_split_children(
         parent=parent,
         initial_children=child_transactions_initial,
@@ -540,7 +540,7 @@ def split_transaction_with_classified_children(
     )
 
 
-def _resolve_active_split_parent(
+def resolve_active_split_parent(
     catalogue: TransactionCatalogue,
     *,
     bucket_id: str,
@@ -624,7 +624,7 @@ def require_splittable_child_count(
         )
 
 
-def _split_child_eur_values(
+def split_child_eur_values(
     *,
     parent: Transaction,
     child_amounts: tuple[Decimal, ...],
@@ -706,7 +706,7 @@ def _require_split_children_valid(children: tuple[Transaction, ...]) -> None:
         Transaction.model_validate(child.model_dump())
 
 
-def _validate_split_child_amounts(
+def validate_split_child_amounts(
     *,
     parent_amount: Decimal,
     children: tuple[SplitChildCommand, ...],
@@ -877,7 +877,7 @@ def merge_transactions(
     )
 
     sorted_child_ids = tuple(sorted(child_transaction_ids))
-    merged_transaction = _build_merged_transaction(
+    merged_transaction = build_merged_transaction(
         parent=parent,
         split_group_id=split_group_id,
         sorted_child_ids=sorted_child_ids,
@@ -967,7 +967,7 @@ def _reject_merge_with_finalized_modelo_blockers(
         )
 
 
-def _build_merged_transaction(
+def build_merged_transaction(
     *,
     parent: Transaction,
     split_group_id: str,

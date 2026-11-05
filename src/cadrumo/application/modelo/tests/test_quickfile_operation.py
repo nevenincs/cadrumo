@@ -327,7 +327,7 @@ async def test_prior_confirmed_write_survives_late_failure_and_noop(
     late_failure: str,
 ) -> None:
     subject = Subject(authority_operation)
-    tracker = module._Writes()
+    tracker = module.Writes()
     writes: list[str] = []
 
     def write() -> None:

@@ -110,7 +110,7 @@ from ...domain.iva.establishment import (
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ...domain.iva.supply_nature import SupplyNature
-from . import classification_assembly_rules as _rules
+from . import classification_assembly_rules
 
 if TYPE_CHECKING:
     from ...domain.iva.classification import IvaClassificationResult
@@ -531,7 +531,7 @@ def _status_axis_gap(
     """Demand the customer's IVA status only where the table's verdict turns on it."""
     if status is not None:
         return None
-    if not _rules.axis_forks_the_law(
+    if not classification_assembly_rules.axis_forks_the_law(
         probe,
         slices=[(_status_candidates(operation=operation), (kind,)) for kind in kind_candidates],
         operation=operation,
@@ -551,7 +551,7 @@ def _supply_nature_axis_gap(
     """Demand the supply nature only where the table's verdict turns on it."""
     if supply_nature is not None:
         return None
-    if not _rules.axis_forks_the_law(
+    if not classification_assembly_rules.axis_forks_the_law(
         probe,
         slices=[((candidate,), kind_candidates) for candidate in status_candidates],
         operation=operation,
@@ -578,7 +578,7 @@ def _identification_axis_gap(
     """Demand the counterparty's NIF-IVA only where a reachable branch consumes it."""
     if counterparty_state is not None:
         return None
-    if PartyFact.IVA_IDENTIFICATION_STATE not in _rules.facts_consumed(
+    if PartyFact.IVA_IDENTIFICATION_STATE not in classification_assembly_rules.facts_consumed(
         consumption_probe,
         status_candidates=status_candidates,
         kind_candidates=kind_candidates,
@@ -634,9 +634,15 @@ def _unresolved_axis_gaps(
     # value, so it holds genuinely fixed while the other is judged.
     status_candidates = (status,) if status is not None else _status_candidates(operation=operation)
     kind_candidates = (
-        (_rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date, operation=operation),)
+        (
+            classification_assembly_rules.transaction_kind_for_nature(
+                supply_nature, effective_date=transaction_date, operation=operation
+            ),
+        )
         if supply_nature is not None
-        else _rules.transaction_kind_candidates(effective_date=transaction_date, operation=operation)
+        else classification_assembly_rules.transaction_kind_candidates(
+            effective_date=transaction_date, operation=operation
+        )
     )
     gaps = (
         _status_axis_gap(
@@ -720,7 +726,7 @@ def _initial_classification_state(
     # An undetermined status is passed as an OPEN axis rather than as a value,
     # so the tier is demanded alongside it instead of one round-trip later.
     settled_status = None if status == _undetermined_status(operation=operation) else status
-    if rate_tier is None and _rules.domestic_rate_tier_is_reachable(
+    if rate_tier is None and classification_assembly_rules.domestic_rate_tier_is_reachable(
         issuer_scope,
         customer_scope,
         supply_nature,
@@ -861,7 +867,7 @@ def assemble_classification_criteria(
             rate_tier=rate_tier,
         )
 
-    counterparty_field = _rules.counterparty_identification_field(direction)
+    counterparty_field = classification_assembly_rules.counterparty_identification_field(direction)
     missing.extend(
         _unresolved_axis_gaps(
             _criteria_for,
@@ -869,7 +875,7 @@ def assemble_classification_criteria(
             status=status,
             supply_nature=supply_nature,
             counterparty_field=counterparty_field,
-            counterparty_state=_rules.state_for_field(
+            counterparty_state=classification_assembly_rules.state_for_field(
                 counterparty_field,
                 issuer=issuer_state,
                 customer=customer_state,
@@ -889,13 +895,15 @@ def assemble_classification_criteria(
         criteria=_criteria_for(
             status if status is not None else _undetermined_status(operation=operation),
             (
-                _rules.transaction_kind_for_nature(
+                classification_assembly_rules.transaction_kind_for_nature(
                     supply_nature,
                     effective_date=transaction_date,
                     operation=operation,
                 )
                 if supply_nature is not None
-                else _rules.transaction_kind_indifferent(effective_date=transaction_date, operation=operation)
+                else classification_assembly_rules.transaction_kind_indifferent(
+                    effective_date=transaction_date, operation=operation
+                )
             ),
         ),
     )

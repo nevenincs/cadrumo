@@ -9,7 +9,7 @@ import pytest
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
-from .. import calendar_models as _calendar_models
+from .. import calendar_models
 from ..calendar_events import calendar_events_from_notification_snapshots
 from ..calendar_models import OverviewCalendarEvent, OverviewCalendarRange
 
@@ -50,5 +50,5 @@ def test_calendar_event_projection_materialises_models_from_their_canonical_owne
     )
 
     assert len(events) == 1
-    assert type(events[0]) is _calendar_models.OverviewCalendarEvent
+    assert type(events[0]) is calendar_models.OverviewCalendarEvent
     assert isinstance(events[0], OverviewCalendarEvent)

@@ -57,7 +57,7 @@ from .view_operation import (
 _STATUS_FACT_PATHS = frozenset({"identity.tax_id", "activities.description", "iva.regime", "tax_residence.ccaa"})
 
 
-class _ProfileViewCommon(TypedDict):
+class ProfileViewCommon(TypedDict):
     profile_id: UUID
     page_kind: ProfileViewPageKind
     record_revision: int
@@ -69,7 +69,7 @@ class _ProfileViewCommon(TypedDict):
 
 
 def _refused_page(
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     refusal_code: ProfileViewRefusalCode,
     *,
     total_items: int = 0,
@@ -185,7 +185,7 @@ def _build_status_source(
     request: ProfileViewOperationRequest,
     record: UserProfileRecord,
     authority_operation: PinnedAuthorityOperation,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     committed = read_profile_bucket_by_id(str(request.profile_id))
     if committed is None or committed.bucket_id != str(request.profile_id):
@@ -210,7 +210,7 @@ def _build_status_source(
 
 def _build_overview_source(
     record: UserProfileRecord,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     schema: ProfileSchemaDefinition,
     authority_operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
@@ -262,7 +262,7 @@ def _build_page_source(
     record: UserProfileRecord,
     report: ProfileValidationReport,
     authority_operation: PinnedAuthorityOperation,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     schema: ProfileSchemaDefinition,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     if request.page_kind is ProfileViewPageKind.FACTS:
@@ -285,9 +285,9 @@ def _build_page_source(
     return _build_overview_source(record, common, schema, authority_operation)
 
 
-def _paginate_source(
+def paginate_source(
     request: ProfileViewOperationRequest,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     source: tuple[ProfileViewItem, ...],
 ) -> ProfileViewOperationResult:
     if request.cursor > len(source):
@@ -340,7 +340,7 @@ def read_profile_view_page(
     with override_settings(cadrumo_output_language=request.output_language.value):
         report = ProfileValidationService(schema=profile_decode_context.schema).validate_record(record)
         valid = _is_profile_view_valid(record, report)
-        common: _ProfileViewCommon = {
+        common: ProfileViewCommon = {
             "profile_id": request.profile_id,
             "page_kind": request.page_kind,
             "record_revision": record.record_revision,
@@ -365,4 +365,4 @@ def read_profile_view_page(
         )
         if isinstance(source, ProfileViewOperationResult):
             return source
-        return _paginate_source(request, common, source)
+        return paginate_source(request, common, source)

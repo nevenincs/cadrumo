@@ -21,7 +21,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
@@ -61,7 +61,7 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
     be invisible to any test that starts from a category rather than from the
     facts the classifier reads.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         goods = classify_iva(_eu_inbound_b2b(kind=TransactionKind("goods")), operation=_authority_operation_for_test)
         services = classify_iva(
             _eu_inbound_b2b(kind=TransactionKind("services_general")), operation=_authority_operation_for_test
@@ -94,7 +94,7 @@ def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave()
     membership from the CLASSIFIER's side rather than restating the table means
     the two cannot drift apart silently.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         catalogue = resolve_iva_category_catalogue()
         operation_by_category = {
             IvaCategory("intra_community_acquisition_reverse_charge"): IntracomOperationType(

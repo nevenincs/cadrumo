@@ -16,8 +16,7 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked, apply_iva_compensation_decision_binding
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
@@ -93,7 +92,7 @@ def _apply(
     backend_binding_values: dict[BindingId, Decimal] | None = None,
     decision: IvaCompensationReconciliationDecision | None = None,
 ) -> None:
-    _apply_iva_compensation_decision_binding(
+    apply_iva_compensation_decision_binding(
         "303",
         2026,
         Period.from_year_and_code(2026, "2T"),
@@ -128,7 +127,7 @@ def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:
 
 def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -175,7 +174,7 @@ def test_target_mismatch_refusal_precedes_missing_taxpayer_identity() -> None:
 
 def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -193,7 +192,7 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
 
 def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -220,7 +219,7 @@ def test_modelo_303_without_prior_compensation_binding_can_calculate_without_wal
 
 def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -238,7 +237,7 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
 
 def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -256,7 +255,7 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
 
 def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),
@@ -274,7 +273,7 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
 
 def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
             2026,
             Period.from_year_and_code(2026, "2T"),

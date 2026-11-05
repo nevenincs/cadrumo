@@ -9,7 +9,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
     M303_COMPENSATION_PENDING_PRIOR_CASILLA,
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
+from ..user_profile.projections import profile_path_values_for_bucket
 
 _M303_PRIOR_COMPENSATION_CASILLA_ID = M303_COMPENSATION_PENDING_PRIOR_CASILLA
 _M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
@@ -32,7 +32,7 @@ def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal |
 
 def taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     """Load the profile tax id for a bucket, or ``None`` when absent."""
-    return taxpayer_nif_from_path_values(_profile_path_values_for_bucket(bucket_id))
+    return taxpayer_nif_from_path_values(profile_path_values_for_bucket(bucket_id))
 
 
 def taxpayer_nif_from_path_values(values: Mapping[str, str] | None) -> str | None:

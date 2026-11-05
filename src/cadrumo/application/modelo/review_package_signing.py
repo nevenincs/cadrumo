@@ -58,12 +58,11 @@ from ...core.ed25519_signing import (
     sign_digest_hex,
 )
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
+from ...core.hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .review_package import assert_review_package_verifies
@@ -92,11 +91,11 @@ class ReviewPackageSigningKeypair(BaseModel):
     capability.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    private_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     created_at: UtcInstant
 
     def private_key(self) -> Ed25519PrivateKey:
@@ -119,14 +118,14 @@ class SignedReviewPackage(BaseModel):
     already covers every per-file checksum record.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     envelope_version: int = Field(default=_SIGNATURE_ENVELOPE_VERSION, ge=1)
     bucket_id: BucketId
     calculation_revision_id: CalculationRevisionId
-    manifest_sha256: str = Field(pattern=_HEX_PATTERN_64)
-    signature_hex: str = Field(pattern=_HEX_PATTERN_128)
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    manifest_sha256: str = Field(pattern=HEX_PATTERN_64)
+    signature_hex: str = Field(pattern=HEX_PATTERN_128)
+    public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     signed_at: UtcInstant
 
 
@@ -193,7 +192,7 @@ def sign_review_package(
         manifest_sha256=manifest_sha256,
         signature_hex=signature_hex,
         public_key_hex=keypair.public_key_hex,
-        signed_at=signed_at or _utc_now(),
+        signed_at=signed_at or now(),
     )
 
 

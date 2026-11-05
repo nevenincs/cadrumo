@@ -29,7 +29,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId, TransactionIdReference
 from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import (
     IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,
@@ -65,7 +65,7 @@ from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
 
-def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
+def validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     """Validate and normalise an ISO 3166-1 alpha-2 field value.
 
     Shared by ``source_jurisdiction`` and ``counterparty_country``, which are
@@ -129,16 +129,16 @@ TypeError from eleven unrelated tests rather than as a message about this field.
 class _LedgerCountryCodeModel(BaseModel):
     """Canonical ISO-country normalization for ledger command and read models."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     @field_validator("source_jurisdiction", "counterparty_country", check_fields=False)
     @classmethod
     @pydantic_validation_boundary
     def _normalise_country_codes(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
+        return validate_iso_3166_jurisdiction(value)
 
 
-class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
+class ManualLedgerTransactionInput(_LedgerCountryCodeModel):
     """Canonical input normalization shared by manual-ledger create and patch DTOs."""
 
     @field_validator("currency", mode="before", check_fields=False)
@@ -188,7 +188,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
         return require_input_classification(value)
 
 
-class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
+class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     """Backend command for creating or updating one manual ledger transaction."""
 
     bucket_id: BucketId
@@ -328,7 +328,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
 
-class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
+class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     """Typed partial update for one bucket-scoped ledger transaction."""
 
     booked_date: date | None = None
@@ -388,7 +388,7 @@ class ManualLedgerTransactionResult(BaseModel):
     caller to project into an operator notice, never a refusal.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     ref: BucketTransactionRef
     transaction: Transaction
@@ -476,7 +476,7 @@ class LedgerTransactionReviewPayload(LedgerTransactionPayload):
 class LedgerTransactionResultPayload(BaseModel):
     """Canonical projection for a single ledger mutation/read result."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -487,7 +487,7 @@ class LedgerTransactionResultPayload(BaseModel):
 class LedgerTransactionTrackingPayload(BaseModel):
     """Durable event lineage fields for one ledger transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     # Imported transactions carry no creation bucket-event id (it is set only
@@ -516,7 +516,7 @@ class SplitChildCommand(BaseModel):
             ``value_date``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal
     description: str = Field(min_length=1, max_length=1024)
@@ -546,7 +546,7 @@ class SplitChildCommand(BaseModel):
 class SplitTransactionResult(BaseModel):
     """Backend result of a successful N-way split."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     parent_transaction_id: TransactionId
@@ -560,7 +560,7 @@ class SplitTransactionResult(BaseModel):
 class MergeTransactionsResult(BaseModel):
     """Backend result of a successful split re-merge."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     split_group_id: Hex64Str
@@ -575,7 +575,7 @@ class MergeTransactionsResult(BaseModel):
 class LedgerImportOperationResult(BaseModel):
     """Backend result for an imported ledger transaction batch."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     summary: ImportSummary
     import_batch_id: Hex64Str | None = None
@@ -585,7 +585,7 @@ class LedgerImportOperationResult(BaseModel):
 class LedgerSourceValidationReport(BaseModel):
     """Backend read model for source-provider validation details."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     valid: bool
     warnings: tuple[str, ...] = ()
@@ -596,7 +596,7 @@ class LedgerSourceValidationReport(BaseModel):
 class LedgerSourceVerificationReport(BaseModel):
     """Backend read model for optional source-file verification."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     requested: bool
     path: str | None = None
@@ -606,7 +606,7 @@ class LedgerSourceVerificationReport(BaseModel):
 class LedgerImportDiagnosticReport(BaseModel):
     """Backend read model for one persisted or dry-run import diagnostic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: DiagnosticKind
     severity: DiagnosticSeverity
@@ -619,7 +619,7 @@ class LedgerImportDiagnosticReport(BaseModel):
 class LedgerSourceImportCommand(BaseModel):
     """Backend command for importing ledger rows from an operator source file."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId | None = Field(default=None)
     path: Path
@@ -647,7 +647,7 @@ class LedgerSourceImportCommand(BaseModel):
 class LedgerSourceImportResult(BaseModel):
     """Backend result for source-file import diagnostics and persistence."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: NonNegativeInt
     imported: NonNegativeInt
@@ -678,7 +678,7 @@ class LedgerSourceImportResult(BaseModel):
 class LedgerReviewQuery(BaseModel):
     """Backend query for operator review rows in one bucket ledger."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     period: Period | None = None
@@ -720,7 +720,7 @@ class LedgerReviewRow(BaseModel):
     the row, so an id that is the right length but not a digest names nothing.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: TransactionId
     date: IsoDateText
@@ -733,7 +733,7 @@ class LedgerReviewRow(BaseModel):
 class LedgerReviewQueryResult(BaseModel):
     """Backend result for operator ledger review queries."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     rows: tuple[LedgerReviewRow, ...]
@@ -743,7 +743,7 @@ class LedgerReviewQueryResult(BaseModel):
 class LedgerStatusReport(BaseModel):
     """Backend read model summarizing one bucket's ledger transaction state."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     # Money roll-up over active business/mixed rows (period-scoped when --period
@@ -775,7 +775,7 @@ class LedgerStatusReport(BaseModel):
 class LedgerRemovalBlocker(BaseModel):
     """Finalized modelo revision that prevents ledger transaction removal."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
@@ -788,7 +788,7 @@ class LedgerRemovalBlocker(BaseModel):
 class LedgerTransactionRemovalReport(BaseModel):
     """Backend report for one bucket-local ledger transaction removal."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -810,7 +810,7 @@ class LedgerTransactionRemovalReport(BaseModel):
 class LedgerCatalogueResetReport(BaseModel):
     """Backend report for a protected bucket-local ledger catalogue reset."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     removed_transaction_ids: tuple[str, ...] = ()
@@ -832,7 +832,7 @@ class LedgerCatalogueResetReport(BaseModel):
 class LedgerExportCommand(BaseModel):
     """Backend command for exporting one bucket's canonical ledger rows."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
@@ -870,7 +870,7 @@ class BulkClassifyRow(BaseModel):
     silently.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     #: What the operator typed, not a resolved id. A CSV names rows the way a
     #: terminal does -- by the short display id ``ledger list`` prints -- and
@@ -893,7 +893,7 @@ class BulkClassifyRow(BaseModel):
 class BulkClassifyFailure(BaseModel):
     """One failed row from a ``ledger classify --file`` operation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     row_index: NonNegativeInt
     transaction_id: str
@@ -908,7 +908,7 @@ class BulkClassifyResult(BaseModel):
     collected into ``failures`` and reported without aborting the batch.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     total: NonNegativeInt
     applied: NonNegativeInt
@@ -937,7 +937,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
 class ApplyRulesAppliedRow(BaseModel):
     """One successfully rule-applied transaction from ``ledger rule apply``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     matched_rule_id: str = Field(min_length=1)
@@ -947,7 +947,7 @@ class ApplyRulesAppliedRow(BaseModel):
 class ApplyRulesResult(BaseModel):
     """Aggregate result for a ``ledger rule apply`` operation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rules_evaluated: NonNegativeInt
     transactions_scanned: NonNegativeInt
@@ -961,7 +961,7 @@ class ApplyRulesResult(BaseModel):
 class LedgerExportRow(BaseModel):
     """One serialized ledger transaction row exported from the canonical catalogue."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -1046,7 +1046,7 @@ class LedgerExportRow(BaseModel):
 class LedgerExportResult(BaseModel):
     """Backend result for an exported canonical ledger transaction snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     export_id: Hex64Str

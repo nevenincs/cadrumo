@@ -130,7 +130,7 @@ def test_optional_only_scope_discloses_zero_compared_fields(
         reconcile_when_present_casilla_ids=frozenset({"15"}),
     )
     monkeypatch.setattr(
-        reconciliation_comparison, "_declaracion_registry_context", lambda *args, **kwargs: (snapshot, policy)
+        reconciliation_comparison, "declaracion_registry_context", lambda *args, **kwargs: (snapshot, policy)
     )
     diffs, advisories = reconciliation_comparison.reconcile_casilla_values(
         work_unit=unit, revision=revision, filed_values={}, operation=operation

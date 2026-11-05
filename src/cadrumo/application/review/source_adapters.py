@@ -413,7 +413,7 @@ def _append_unready_draft_review_item(
     if draft.status in {ModeloDraftStatus.BORRADOR, ModeloDraftStatus.VALIDADO}:
         items.append(_to_placeholder_item(draft=draft, path_str=path_str))
     elif draft.status is ModeloDraftStatus.APROBACION_CADUCADA:
-        items.append(_to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
+        items.append(to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
 
 
 def _resolve_review_active_tax_id(
@@ -509,7 +509,7 @@ def _to_placeholder_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewI
     )
 
 
-def _to_stale_approval_item(
+def to_stale_approval_item(
     *,
     draft: ModeloDraft,
     path_str: str,

@@ -117,7 +117,7 @@ from .relation_prefill_diagnostics import (
     unresolved_relation_ids,
 )
 from .relation_prefill_m202 import (
-    modelo_202_first_period_previous_payment_defaults as _modelo_202_first_period_previous_payment_defaults,
+    modelo_202_first_period_previous_payment_defaults,
 )
 from .revision_carry_gate import revision_carry_outcome
 from .source_filing_kind import source_filing_kind_evidence
@@ -214,7 +214,7 @@ class _RelationGrounding(TypedDict):
     source_refs: tuple[SourceRefId, ...]
 
 
-def _relation_value_grounding(
+def relation_value_grounding(
     binding: BindingDefinition,
     provider: RelationPrefillProvider,
     requirement: RegistryFoldRequirement | None,
@@ -257,7 +257,7 @@ def _contains_profile_token(raw: str | None, token: str) -> bool | None:
     return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
 
 
-def _economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) -> frozenset[str]:
+def economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) -> frozenset[str]:
     """Return the revision's source modelos whose obligation is conditional on economic activity.
 
     The revision's ``dependency_classifications`` rows are the authority for
@@ -283,7 +283,7 @@ def _economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) ->
     )
 
 
-def _not_applicable_source_modelos_for_bucket(
+def not_applicable_source_modelos_for_bucket(
     snapshot: RegistrySnapshot,
     bucket_id: str,
     *,
@@ -305,7 +305,7 @@ def _not_applicable_source_modelos_for_bucket(
     empty set, leaving every source enforced and its relation unresolved rather
     than folding in a zero the operator never declared.
     """
-    candidates = _economic_activity_conditional_source_modelos(snapshot)
+    candidates = economic_activity_conditional_source_modelos(snapshot)
     if not candidates:
         return frozenset[str]()
     values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
@@ -634,7 +634,7 @@ def _relation_value_for_relation(
     requirement = requirements_by_relation.get(binding.id)
     target_year = requirement.filing_year if requirement is not None else filing_year
     source_periods = requirement.periods if requirement is not None else provider.required_source_periods
-    grounding = _relation_value_grounding(binding, provider, requirement)
+    grounding = relation_value_grounding(binding, provider, requirement)
     resolved = resolved_map.get(binding.id)
     if resolved is None:
         return _unresolved_relation_value(
@@ -872,7 +872,7 @@ def _relation_prefill_context_inputs(
             bucket_id,
             profile_path_values_reader=profile_path_values_reader,
         ),
-        not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(
+        not_applicable_source_modelos=not_applicable_source_modelos_for_bucket(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_path_values_reader,
@@ -939,7 +939,7 @@ def _relation_prefill_resolution(
     # binding-value map: no second materialisation step can disagree with it.
     resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
     binding_values = {
-        **_modelo_202_first_period_previous_payment_defaults(
+        **modelo_202_first_period_previous_payment_defaults(
             snapshot.revision,
             modelo=context.modelo,
             filing_year=snapshot.filing_year,

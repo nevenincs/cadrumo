@@ -19,9 +19,9 @@ from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.tests.financial_operand_delivery import deliver_financial_operand
 from .. import edit_operation as operation_definitions
-from .._edit_execution import _pre_effect_refusal
 from ..action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
 from ..edit_contract import ModeloEditMutationFamily
+from ..edit_execution import pre_effect_refusal
 from ..edit_models import (
     ModeloEditDomainRefusalV1,
     ModeloEditScalarAddressV1,
@@ -33,7 +33,7 @@ from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
 from ..edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
-from .test_edit_models import _baseline as admitted_baseline
+from .test_edit_models import edit_models_baseline as admitted_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,7 +56,7 @@ def _error(**context: object) -> RegistryValidationError:
 
 
 def test_a_known_producer_names_only_revision_validated_prerequisite_coordinates() -> None:
-    outcome = _pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
+    outcome = pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
     refusal = outcome.refusal
     assert isinstance(refusal, ModeloEditDomainRefusalV1)
     assert refusal.address == ModeloEditScalarAddressV1(casilla_id="1388")
@@ -78,7 +78,7 @@ def test_a_known_producer_names_only_revision_validated_prerequisite_coordinates
     ],
 )
 def test_unknown_or_malformed_producer_context_retains_only_the_safe_family(context: dict[str, object]) -> None:
-    refusal = _pre_effect_refusal(_error(**context), revision=_revision()).refusal
+    refusal = pre_effect_refusal(_error(**context), revision=_revision()).refusal
     assert isinstance(refusal, ModeloEditDomainRefusalV1)
     assert refusal.address is None and refusal.evidence == ()
     assert "calculation_source_unresolved" not in refusal.facts
@@ -158,7 +158,7 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
             financial_baseline_ref=baseline.baseline_id,
         ),
     )
-    refusal = _pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
+    refusal = pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
     monkeypatch.setattr(operation_definitions, "apply_modelo_edit", lambda *args, **kwargs: refusal)
     effects: list[object] = []
 

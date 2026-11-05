@@ -48,7 +48,6 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth_credentials import (
     ActiveCertificateCredentials,
 )
-from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
 from .certificate_secret_backend import CertificateSecretBackend, CertificateSecretBackendFactory
 from .certificate_sources import (
     active_certificate_source,
@@ -63,6 +62,7 @@ from .models import (
     CertificateSecretMutationEventKind,
     CertificateSecretMutationIntent,
 )
+from .mutation import AuthBucketEventSpec, build_auth_bucket_events
 from .operator_probe_ports import OperatorProbePorts
 from .operator_probes import probe_certificate_bundle
 from .operator_results import (

@@ -23,8 +23,7 @@ from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarEntry, OverviewCalendarRange, OverviewPeriodState
-from .calendar_test_support import BUCKET_ID
-from .calendar_test_support import profile as _profile
+from .calendar_test_support import BUCKET_ID, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,7 +70,7 @@ def _work_unit() -> WorkUnit:
 def test_the_calendar_row_shows_the_nominal_close_as_unknown_after_it_passes(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    calendar = build_overview_calendar(_profile(), _APRIL, operation=operation, today=date(_YEAR, 6, 1))
+    calendar = build_overview_calendar(profile(), _APRIL, operation=operation, today=date(_YEAR, 6, 1))
 
     entry = _first_quarter_303(calendar.entries)
     assert entry.status is ObligationStatus.UNKNOWN
@@ -87,7 +86,7 @@ def test_the_calendar_row_shows_the_nominal_close_as_unknown_after_it_passes(
 
 def test_a_local_work_unit_keeps_the_unknown_close(operation: PinnedAuthorityOperation) -> None:
     calendar = build_overview_calendar(
-        _profile(), _APRIL, operation=operation, today=date(_YEAR, 6, 1), work_units=(_work_unit(),)
+        profile(), _APRIL, operation=operation, today=date(_YEAR, 6, 1), work_units=(_work_unit(),)
     )
 
     entry = _first_quarter_303(calendar.entries)
@@ -98,7 +97,7 @@ def test_a_local_work_unit_keeps_the_unknown_close(operation: PinnedAuthorityOpe
 
 def test_the_agenda_makes_no_date_claim_for_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
     # Five days before the nominal close: a dated window would be due soon.
-    agenda = build_overview_agenda(_profile(), as_of=date(_YEAR, 4, 15), operation=operation)
+    agenda = build_overview_agenda(profile(), as_of=date(_YEAR, 4, 15), operation=operation)
 
     cohorts = (*agenda.due_today, *agenda.due_soon, *agenda.overdue)
     assert all(entry.status is not ObligationStatus.UNKNOWN for entry in cohorts)
@@ -108,7 +107,7 @@ def test_the_agenda_makes_no_date_claim_for_an_unknown_close(operation: PinnedAu
 
 def test_the_backlog_never_lists_an_unknown_close(operation: PinnedAuthorityOperation) -> None:
     backlog = build_overview_backlog(
-        _profile(), operation=operation, from_date=_APRIL.from_date, to_date=_APRIL.to_date, as_of=date(_YEAR, 6, 1)
+        profile(), operation=operation, from_date=_APRIL.from_date, to_date=_APRIL.to_date, as_of=date(_YEAR, 6, 1)
     )
 
     assert not any(entry.modelo == "303" and entry.period == _FIRST_QUARTER for entry in backlog.items)

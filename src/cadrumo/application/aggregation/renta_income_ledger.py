@@ -42,11 +42,11 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
-from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
 from .errors import AggregationPeriodError
+from .grouping import cumulative_year_to_date_window, fold_casilla_observations
+from .models import CasillaAggregation, LedgerAggregationResultBase
 from .renta_imputation import (
     ImputationCriteria,
     rows_left_out_summary,

@@ -37,7 +37,7 @@ from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
@@ -134,7 +134,7 @@ class LedgerPreflightIssueReason(StrEnum):
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId | Literal["__period__"]
     reason: LedgerPreflightIssueReason
@@ -144,7 +144,7 @@ class LedgerPreflightIssue(BaseModel):
 class LedgerPreflightReport(BaseModel):
     """Readiness report for ledger facts consumed by modelo calculation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     period: Period
@@ -306,7 +306,7 @@ def preflight_transaction_catalogue(
     for transaction in _period_transactions(period=resolved_period, transactions=transactions):
         checked += 1
         issues.extend(
-            _issues_for_transaction(
+            issues_for_transaction(
                 transaction,
                 period=resolved_period,
                 operation=operation,
@@ -631,8 +631,8 @@ def _iva_preflight_issues(
     issues = [
         _preflight_issue(
             transaction,
-            _preflight_reason_for_iva_issue(reason),
-            _preflight_detail_for_iva_issue(reason),
+            preflight_reason_for_iva_issue(reason),
+            preflight_detail_for_iva_issue(reason),
         )
         for reason in iva_ledger_missing_fact_reasons(transaction)
     ]
@@ -641,7 +641,7 @@ def _iva_preflight_issues(
         issues.append(
             _preflight_issue(
                 transaction,
-                _preflight_reason_for_iva_issue(d5_issue.reason),
+                preflight_reason_for_iva_issue(d5_issue.reason),
                 d5_issue.detail,
             ),
         )
@@ -654,14 +654,14 @@ def _iva_preflight_issues(
         issues.append(
             _preflight_issue(
                 transaction,
-                _preflight_reason_for_iva_issue(deduction_issue.reason),
+                preflight_reason_for_iva_issue(deduction_issue.reason),
                 deduction_issue.detail,
             ),
         )
     return tuple(issues)
 
 
-def _issues_for_transaction(
+def issues_for_transaction(
     transaction: Transaction,
     *,
     period: Period,
@@ -753,7 +753,7 @@ def _transaction_is_trabajo_income(
 #: is absent here raises rather than resolving to a wrong operator message.
 #: What keeps that safe is the partition below, gated so a new enum member
 #: cannot ship without being classified into one side or the other.
-_PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, LedgerPreflightIssueReason]] = {
+PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, LedgerPreflightIssueReason]] = {
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
     IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
@@ -781,7 +781,7 @@ _PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, L
 #: deduction-admissibility gates already compose their own localised detail,
 #: which preflight carries through verbatim rather than re-authoring. Only the
 #: missing-fact screen arrives here with no sentence of its own.
-_PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
+PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
     IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
@@ -961,7 +961,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 _reaching_preflight = (
     IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS | IVA_LEDGER_DEDUCTION_GATE_REASONS
 )
-_classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
+_classified = set(PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
 
 if _classified != set(IvaLedgerAggregationIssueReason):
     _unclassified = ", ".join(sorted(r.value for r in set(IvaLedgerAggregationIssueReason) - _classified))
@@ -973,31 +973,31 @@ if _classified != set(IvaLedgerAggregationIssueReason):
         f"stale: {_stale or 'none'}",
     )
 
-if _both := set(_PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
+if _both := set(PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
     raise InternalInvariantError(
         "an IvaLedgerAggregationIssueReason cannot be both mapped into preflight and declared unable to "
         f"reach it; on both sides: {', '.join(sorted(r.value for r in _both))}",
     )
 
-if _unmapped := _reaching_preflight - set(_PREFLIGHT_REASON_BY_IVA_ISSUE):
+if _unmapped := _reaching_preflight - set(PREFLIGHT_REASON_BY_IVA_ISSUE):
     raise InternalInvariantError(
         "a preflight-facing screen emits an IvaLedgerAggregationIssueReason with no preflight counterpart; "
         f"unmapped: {', '.join(sorted(r.value for r in _unmapped))}",
     )
 
-if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(_PREFLIGHT_DETAIL_BY_IVA_ISSUE):
+if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(PREFLIGHT_DETAIL_BY_IVA_ISSUE):
     raise InternalInvariantError(
         "a missing-fact reason reaches preflight with no detail sentence; "
         f"missing: {', '.join(sorted(r.value for r in _detailless))}",
     )
 
 
-def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
-    return _PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
+def preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
+    return PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
 
 
-def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
-    return _PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
+def preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
+    return PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
 
 
 __all__ = [

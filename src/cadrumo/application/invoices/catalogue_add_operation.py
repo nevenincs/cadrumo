@@ -107,7 +107,7 @@ class InvoiceAddExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
         try:
             ports, invoice, advisory_required = await asyncio.to_thread(
-                _prepare_invoice_add,
+                prepare_invoice_add,
                 factory=self._factory,
                 payload=payload,
                 profile=profile,
@@ -398,7 +398,7 @@ def build_invoice_from_add_request(
     return invoice, advisory_required
 
 
-def _prepare_invoice_add(
+def prepare_invoice_add(
     *,
     factory: CatalogueCreationPortsFactory,
     payload: InvoiceAddRequest,

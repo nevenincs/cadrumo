@@ -18,9 +18,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.casilla_id import CasillaId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import IssueDetail
-from . import _shared_issue_reasons, renta_income_evidence
+from . import renta_income_evidence, shared_issue_reasons
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
@@ -37,11 +37,11 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     observation instead.
     """
 
-    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
-    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    UNSUPPORTED_DIRECTION = shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = shared_issue_reasons.PERSONAL_TRANSACTION
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
     # Nómina / trabajo entries belong to a separate income category and must
     # not feed an activity-income target.
@@ -75,7 +75,7 @@ _DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset
 class RentaIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating income ledger rows."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     reason: RentaIncomeLedgerAggregationIssueReason
@@ -116,7 +116,7 @@ class RentaIncomeObservation(BaseModel):
     downstream IRNR / Beckham engines that read foreign-source rows.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId
@@ -195,7 +195,7 @@ class UnadmittedActivityIncome(BaseModel):
     the same footing as the figure in the box it is quoted against.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     target_casilla_id: CasillaId
     """The casilla the narrowing was guarding, named even when nothing was excluded.
@@ -233,7 +233,7 @@ class RectificativaCorrection(BaseModel):
     moved when the operation was corrected, not when the money went back.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str
     invoice_number: str
@@ -281,7 +281,7 @@ class AccruedUnpaidIncome(BaseModel):
     part is held in ``withholding_unpaid`` and reported.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str
     target_casilla_id: CasillaId

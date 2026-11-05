@@ -159,7 +159,7 @@ class LedgerAllocateExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(allocate)
-                projection = _operation_result(payload.profile_id, result)
+                projection = operation_result(payload.profile_id, result)
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
@@ -185,7 +185,7 @@ def build_ledger_allocate_definition(
     )
 
 
-def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerAllocateOperationResult:
+def operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerAllocateOperationResult:
     """Validate the exact profile and preserve only the canonical result payload."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
     if (

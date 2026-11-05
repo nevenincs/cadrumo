@@ -28,14 +28,12 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
     published_profile_schema,
     published_snapshot,
     published_supported_filing_years,
@@ -43,7 +41,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
+from ..profile_binding import derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -59,13 +57,13 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=facts,
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -169,7 +167,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     snapshot = _snapshot(2024)
     bindings = tuple(b for b in snapshot.revision.bindings if b.source == "profile")
 
-    fired = _derived_binding_diagnostics(bindings, {}, schema, bucket_id=_BUCKET)
+    fired = derived_binding_diagnostics(bindings, {}, schema, bucket_id=_BUCKET)
 
     reasons = {diagnostic.reason for diagnostic in fired}
     assert reasons == {_ADVISORY_REASON}, reasons

@@ -41,7 +41,6 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.verification_report import VerificationReportCatalogue
-from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from .cross_period_dependency_evaluation import evaluate_requirement
 from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -60,6 +59,7 @@ from .m111_no_retenciones import is_m111_no_retenciones_period
 from .observations_repository import (
     CalculationObservationRepositoryProtocol,
 )
+from .per_grupo_member_keys import per_grupo_member_requirement_keys
 from .verification_report_gate import require_verification_report_coordinates_current
 
 
@@ -242,7 +242,7 @@ def cross_period_dependency_inventory(
     )
 
 
-def _suppressed_pre_activity_evidence(
+def suppressed_pre_activity_evidence(
     requirement: CrossPeriodDependencyRequirement,
     *,
     activity_start_date: date,
@@ -265,7 +265,7 @@ def _suppressed_pre_activity_evidence(
     )
 
 
-_OFFICIAL_EVIDENCE_DELTA_BLOCKERS: Final = frozenset(
+OFFICIAL_EVIDENCE_DELTA_BLOCKERS: Final = frozenset(
     {
         CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
@@ -275,7 +275,7 @@ _OFFICIAL_EVIDENCE_DELTA_BLOCKERS: Final = frozenset(
 """The blocker set that distinguishes a locally-evidenced chain from an AEAT-evidenced one."""
 
 
-def _relax_same_year_local_chain(
+def relax_same_year_local_chain(
     evidence: CrossPeriodDependencyEvidence,
     *,
     target_filing_year: int,
@@ -291,7 +291,7 @@ def _relax_same_year_local_chain(
         return evidence
     if not evidence.blockers:
         return evidence
-    if not set(evidence.blockers) <= _OFFICIAL_EVIDENCE_DELTA_BLOCKERS:
+    if not set(evidence.blockers) <= OFFICIAL_EVIDENCE_DELTA_BLOCKERS:
         return evidence
     return evidence.model_copy(
         update={"blockers": (), "non_official_local_chain_advisory": True},
@@ -328,7 +328,7 @@ def _suppressed_m111_no_retenciones_evidence(
     )
 
 
-def _suppressed_first_year_fractional_evidence(
+def suppressed_first_year_fractional_evidence(
     requirement: CrossPeriodDependencyRequirement,
     *,
     activity_start_date: date,
@@ -361,7 +361,7 @@ def _suppressed_first_year_fractional_evidence(
     )
 
 
-def _qualifies_for_first_year_fractional_suppression(
+def qualifies_for_first_year_fractional_suppression(
     requirement: CrossPeriodDependencyRequirement,
     *,
     modelo_202_modality: Modelo202Modality | None,
@@ -392,7 +392,7 @@ def _qualifies_for_first_year_fractional_suppression(
     return activity_start_date.year >= target_filing_year
 
 
-def _non_filer_modelos(
+def cross_period_clean_state_non_filer_modelos(
     snapshot: RegistrySnapshot,
     *,
     taxpayer_files_economic_activity: bool | None,
@@ -466,7 +466,7 @@ def _first_year_fractional_requirements(
     return tuple(
         requirement
         for requirement in requirements
-        if _qualifies_for_first_year_fractional_suppression(
+        if qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=modelo_202_modality,
             activity_start_date=activity_start_date,
@@ -521,7 +521,7 @@ def _clean_state_requirement_scope(
 ) -> _CleanStateRequirementScope:
     """Derive and disposition registry requirements before loading observations."""
     all_requirements = cross_period_dependency_requirements(snapshot)
-    non_filer_modelos = _non_filer_modelos(
+    non_filer_modelos = cross_period_clean_state_non_filer_modelos(
         snapshot,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         not_applicable_source_modelos=not_applicable_source_modelos,
@@ -592,7 +592,7 @@ def _evaluate_in_scope_dependencies(
                 (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
             ),
         )
-        dependencies.append(_relax_same_year_local_chain(evidence, target_filing_year=target_filing_year))
+        dependencies.append(relax_same_year_local_chain(evidence, target_filing_year=target_filing_year))
     return tuple(dependencies)
 
 
@@ -603,7 +603,7 @@ def _pre_activity_dependencies(
     if activity_start_date is None:
         return ()
     return tuple(
-        _suppressed_pre_activity_evidence(requirement, activity_start_date=activity_start_date)
+        suppressed_pre_activity_evidence(requirement, activity_start_date=activity_start_date)
         for requirement in partition.suppressed
     )
 
@@ -615,7 +615,7 @@ def _first_year_fractional_dependencies(
     if activity_start_date is None:
         return ()
     return tuple(
-        _suppressed_first_year_fractional_evidence(requirement, activity_start_date=activity_start_date)
+        suppressed_first_year_fractional_evidence(requirement, activity_start_date=activity_start_date)
         for requirement in requirements
     )
 

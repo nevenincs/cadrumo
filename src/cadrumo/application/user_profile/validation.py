@@ -166,7 +166,7 @@ tuple lives beside the issue-code declarations so a new producer must update
 one source of truth before its dynamic locale key can be rendered.
 """
 
-_ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
+ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
     ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.DATE: DATE_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
@@ -381,7 +381,7 @@ class ProfileValidationService:
         return (
             ProfileValidationIssue(
                 severity=BaseSeverity.ERROR,
-                code=_ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
+                code=ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
                 path=fact.path,
                 message=refusal.message,
             ),

@@ -172,7 +172,7 @@ def test_readiness_summary_preserves_axes_and_typed_cause_without_diagnostic_det
         language=OutputLanguage.ES,
     )
     with bundled_indexed_authority().operation() as operation:
-        summary = subject._readiness_summary(request, _unused_ports, operation)
+        summary = subject.readiness_summary(request, _unused_ports, operation)
     assert summary.profile_refusal_cause is ModeloProfileRefusalCause.NOT_APPLICABLE
     assert summary.ledger_checked_transaction_count == 1
     assert summary.ledger_issues[0].reason is LedgerPreflightIssueReason.UNSUPPORTED_PERIOD

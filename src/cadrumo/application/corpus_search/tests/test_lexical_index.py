@@ -8,7 +8,7 @@ import pytest
 
 from ..errors import CorpusSearchInputError
 from ..lexical_index import build_lexical_index, iter_corpus_chunks, search_lexical
-from ._corpus_fixture import build_sample_corpus
+from .corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

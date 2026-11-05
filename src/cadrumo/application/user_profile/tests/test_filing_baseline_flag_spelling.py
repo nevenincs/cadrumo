@@ -18,8 +18,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...wizard.command_parameters import SETUP_OPTION_INFOS
 from ..filing_baseline import (
-    _profile_path_flag,
     missing_filing_baseline_flag_groups,
+    profile_path_flag,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -98,12 +98,12 @@ def test_namespace_handling_is_not_a_textual_rule(path: str, flag: str) -> None:
     No textual transform reproduces both, which is why the operation-scoped
     wizard descriptor is the authority and a string fallback cannot replace it.
     """
-    assert _profile_path_flag(path, profile_path_flags=_PROFILE_PATH_FLAGS) == flag
+    assert profile_path_flag(path, profile_path_flags=_PROFILE_PATH_FLAGS) == flag
 
 
 def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
     """The fallback may name the wrong flag, but never an unparseable one."""
-    derived = _profile_path_flag("nonexistent_namespace.some_field", profile_path_flags=_PROFILE_PATH_FLAGS)
+    derived = profile_path_flag("nonexistent_namespace.some_field", profile_path_flags=_PROFILE_PATH_FLAGS)
     assert "." not in derived
     assert "_" not in derived
 

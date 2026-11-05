@@ -419,7 +419,7 @@ def test_list_executor_refuses_overflow_without_truncating(monkeypatch: pytest.M
 
     persistence = _MemoryPersistence((_observation("a" * 64), _observation("b" * 64)))
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_MAX_VERIFY_LIST_ROWS", 1)
+    monkeypatch.setattr(operation, "MAX_VERIFY_LIST_ROWS", 1)
     context, operands = _executor_context(VERIFY_LIST_DEFINITION_ID)
 
     with pytest.raises(ProfileAccessRefusedError) as error:

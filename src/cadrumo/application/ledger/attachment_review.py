@@ -31,7 +31,7 @@ class AttachmentReviewItem(BaseModel):
     pending_review: bool
 
 
-def _project(attachment: Attachment) -> AttachmentReviewItem:
+def project(attachment: Attachment) -> AttachmentReviewItem:
     provider_locator = "not-exposed"
     if attachment.source is AttachmentSource.GOOGLE_DRIVE:
         provider_locator = _drive_provider_locator(attachment.source_reference)
@@ -91,13 +91,13 @@ def _drive_file_path_parts(parsed: SplitResult) -> list[str] | None:
 def get_attachment_review_item(store: AttachmentStoreProtocol, attachment_id: str) -> AttachmentReviewItem:
     """Load one manifest and expose only review-safe provenance fields."""
     store.verify_blob(attachment_id)
-    return _project(store.load_manifest(attachment_id))
+    return project(store.load_manifest(attachment_id))
 
 
 def list_attachment_review_queue(store: AttachmentStoreProtocol) -> tuple[AttachmentReviewItem, ...]:
     """List unconfirmed Drive attachments from authoritative secure manifests."""
     return tuple(
-        _project(attachment)
+        project(attachment)
         for attachment in store.iter_manifests()
         if attachment.source is AttachmentSource.GOOGLE_DRIVE and not attachment.linked_invoice_ids
     )

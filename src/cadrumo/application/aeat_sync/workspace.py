@@ -853,9 +853,9 @@ class AeatSyncStatusV1(BaseModel):
 
 def aeat_sync_workspace_sources(zone: AeatSyncWorkspaceZone) -> tuple[AeatSyncWorkspaceSource, ...]:
     """Return the canonical independent sources required by one zone."""
-    from . import _workspace_projection
+    from . import workspace_projection
 
-    return _workspace_projection.aeat_sync_workspace_sources(zone)
+    return workspace_projection.aeat_sync_workspace_sources(zone)
 
 
 _NOTIFICATION_SELECTION_NAMESPACE: Final[str] = "aeat_sync.notification.selection.v1"
@@ -959,6 +959,6 @@ def project_aeat_sync_workspace(
     **arguments: Unpack[_AeatSyncWorkspaceProjectionArguments],
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project already-loaded, scoped facts through the single projection owner."""
-    from ._workspace_projection import project_aeat_sync_workspace as project
+    from .workspace_projection import project_aeat_sync_workspace as project
 
     return project(**arguments)

@@ -35,8 +35,8 @@ from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.pid_liveness import pid_is_alive
-from ...core.time.clock import now as _utc_now
 from ...core.time.clock import now as clock_now
+from ...core.time.clock import now as clock_utc_now
 from ...core.time.utc import coerce_utc_aware
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -274,7 +274,7 @@ def clear_auth_acquisition_lock(
             status=status,
         )
     if status.state is not AuthAcquisitionLockState.ABSENT:
-        if not _remove_lock_file_if_unchanged(status.path, observed):
+        if not remove_lock_file_if_unchanged(status.path, observed):
             # A replacement landed after the operator's snapshot; report the
             # live lock rather than deleting a record they never saw.
             return inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id)
@@ -305,7 +305,7 @@ def acquire_auth_acquisition_lock(
     """
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = _utc_now()
+    now = clock_utc_now()
     from ...core.bucket_pointer import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(
@@ -332,7 +332,7 @@ def acquire_auth_acquisition_lock(
                 # Compare-and-delete: when the stale record was replaced by a
                 # live one after the verdict, retry the create rather than
                 # destroying the replacement.
-                _remove_lock_file_if_unchanged(path, observed)
+                remove_lock_file_if_unchanged(path, observed)
                 continue
             raise AuthAcquisitionLockedError(
                 translated_message="application.auth.acquisition_lock.errors.lock_held",
@@ -431,7 +431,7 @@ def _remove_lock_file(path: Path, *, reason: str) -> bool:
     return False
 
 
-def _remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
+def remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
     """Delete ``path`` only while it still holds ``expected``; report whether it went.
 
     A stale or corrupt verdict authorises removing THOSE bytes, not whatever

@@ -29,7 +29,7 @@ from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ..actions_common import command_matches_current
-from ..actions_manual import _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, _source_sha256, transaction_from_command
+from ..actions_manual import SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, source_sha256, transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -128,7 +128,7 @@ def test_the_pins_would_catch_an_absent_field_folded_in_as_null() -> None:
 
     assert command.investment_asset_id is None
     assert folding_every_field != _PINNED_KEYLESS_SOURCE_SHA256
-    assert _source_sha256(command, occurred_at=_OCCURRED_AT) == _PINNED_KEYLESS_SOURCE_SHA256
+    assert source_sha256(command, occurred_at=_OCCURRED_AT) == _PINNED_KEYLESS_SOURCE_SHA256
 
 
 def test_a_present_asset_link_distinguishes_the_hash_and_the_keyless_identity() -> None:
@@ -163,8 +163,8 @@ def test_every_omitted_field_is_an_optional_command_field_defaulting_to_none() -
     """Omitting a field while ``None`` is lossless only when ``None`` is its default absence."""
     fields = ManualLedgerTransactionCommand.model_fields
 
-    assert set(fields) >= _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, sorted(_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT)
-    for name in _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT:
+    assert set(fields) >= SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, sorted(SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT)
+    for name in SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT:
         assert not fields[name].is_required(), name
         assert fields[name].default is None, name
 

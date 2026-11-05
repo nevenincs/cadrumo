@@ -27,19 +27,17 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core.period import Period as _Period
-from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ...core.period import Period
+from ...core.post_filing_event import PostFilingEventKind
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
-from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
+from ...core.time.date_range import validate_inclusive_date_range
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
-from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
-from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
-from ...domain.deadlines.models import Recovery as _Recovery
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
+from ...domain.deadlines.models import ObligationStatus, Recovery
 from ..operator_actions.models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
 
@@ -47,17 +45,17 @@ from .coverage import ObligationCoverageReport
 def _hydrate_calendar_period(value: object) -> object:
     """Hydrate a calendar JSON period string into :class:`~core.period.Period`."""
     if isinstance(value, str):
-        return _Period.from_string(value)
+        return Period.from_string(value)
     return value
 
 
-def _serialize_calendar_period(value: _Period) -> str:
+def _serialize_calendar_period(value: Period) -> str:
     """Render a typed calendar period for JSON serialization."""
     return str(value)
 
 
 _CalendarPeriod = Annotated[
-    _Period,
+    Period,
     BeforeValidator(_hydrate_calendar_period),
     PlainSerializer(_serialize_calendar_period, return_type=str),
 ]
@@ -129,15 +127,15 @@ class OverviewAeatSubmissionState(StrEnum):
     JUSTIFICANTE_VERIFIED = "justificante_verified"
 
 
-_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewPeriodState] = MappingProxyType(
+_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[ObligationStatus, OverviewPeriodState] = MappingProxyType(
     {
-        _ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
-        _ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
-        _ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
-        _ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
-        _ObligationStatus.FILED: OverviewPeriodState.FILED,
-        _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
-        _ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
+        ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
+        ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
+        ObligationStatus.FILED: OverviewPeriodState.FILED,
+        ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        ObligationStatus.UNKNOWN: OverviewPeriodState.UNKNOWN,
     },
 )
 
@@ -157,7 +155,7 @@ form too.
 """
 
 
-def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
+def user_state_for(obligation_status: ObligationStatus) -> OverviewPeriodState:
     """Return the :class:`OverviewPeriodState` for a deadline engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
@@ -210,7 +208,7 @@ class OverviewCalendarRange(BaseModel):
     this inclusive range.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     from_date: date
     to_date: date
@@ -218,7 +216,7 @@ class OverviewCalendarRange(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_window_order(self) -> OverviewCalendarRange:
-        _validate_inclusive_date_range(self.from_date, self.to_date)
+        validate_inclusive_date_range(self.from_date, self.to_date)
         return self
 
     def covered_years(self) -> tuple[int, ...]:
@@ -253,7 +251,7 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     malformed event from claiming receipt verification without CSV evidence.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str | None = Field(default=None, min_length=1, max_length=16)
     filing_year: FilingYear | None = None
@@ -299,7 +297,7 @@ class OverviewCalendarEntry(BaseModel):
     it carries no payment cutoff, overdue age or recovery.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
@@ -308,14 +306,14 @@ class OverviewCalendarEntry(BaseModel):
     adjusted_closes_on: date
     shift_reason: str = Field(min_length=1, max_length=64)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
-    jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
-    holiday_coverage: _DeadlineHolidayCoverage
+    jurisdictions: tuple[HolidayJurisdiction, ...] = Field(default_factory=tuple)
+    holiday_coverage: DeadlineHolidayCoverage
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
-    status: _ObligationStatus
+    status: ObligationStatus
     user_state: OverviewPeriodState
-    recovery: _Recovery | None = None
+    recovery: Recovery | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True)
     filing_year: FilingYear | None = None
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
@@ -345,8 +343,8 @@ class OverviewCalendarEntry(BaseModel):
     @model_validator(mode="after")
     def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
         unevaluated = self.holiday_coverage in (
-            _DeadlineHolidayCoverage.NOT_SHIFTED,
-            _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            DeadlineHolidayCoverage.NOT_SHIFTED,
+            DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
         )
         if unevaluated and self.adjusted_closes_on != self.closes_on:
             raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
@@ -354,9 +352,9 @@ class OverviewCalendarEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_unknown_close_consistency(self) -> OverviewCalendarEntry:
-        if self.status is not _ObligationStatus.UNKNOWN:
+        if self.status is not ObligationStatus.UNKNOWN:
             return self
-        if self.holiday_coverage is not _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        if self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
             raise ValueError("OverviewCalendarEntry with an unknown close must report the calendar as unavailable")
         if self.payment_cutoff_on is not None or self.recovery is not None:
             raise ValueError("OverviewCalendarEntry with an unknown close carries no payment cutoff or recovery")
@@ -375,7 +373,7 @@ class OverviewCalendarEntry(BaseModel):
     @model_validator(mode="after")
     def _enforce_overdue_age_consistency(self) -> OverviewCalendarEntry:
         expected = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
-        if self.status is _ObligationStatus.OVERDUE:
+        if self.status is ObligationStatus.OVERDUE:
             if self.days_overdue != expected or expected == 0:
                 raise ValueError("OverviewCalendarEntry.days_overdue must measure the effective overdue deadline")
         elif self.days_overdue is not None:
@@ -435,11 +433,11 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     from; every other event source leaves it ``None``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     event_type: OverviewCalendarEventType
-    post_filing_kind: _PostFilingEventKind | None = None
-    notificacion_estado_servicio: _NotificacionEstadoServicio | None = None
+    post_filing_kind: PostFilingEventKind | None = None
+    notificacion_estado_servicio: NotificacionEstadoServicio | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
     summary: _EventSummary
@@ -484,7 +482,7 @@ class CalendarWarning(BaseModel):
         affected_modelos: Obligation rows this gap can distort.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: str = Field(min_length=1, max_length=128)
     message: str = Field(min_length=1, max_length=128)
@@ -495,7 +493,7 @@ class CalendarWarning(BaseModel):
 class CalendarCompleteness(BaseModel):
     """Breakdown of explicit profile values versus deadline-engine defaults."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     explicitly_set_keys: tuple[str, ...] = Field(default=())
     defaulted_keys: tuple[str, ...] = Field(default=())
@@ -506,7 +504,7 @@ class CalendarCompleteness(BaseModel):
 class SuppressedCalendarEntry(BaseModel):
     """One non-applicable obligation retained by ``--show-suppressed``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
@@ -526,7 +524,7 @@ class OverviewCalendar(BaseModel):
     consumer never has to infer coverage from the presence or absence of a row.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     range: OverviewCalendarRange
     evaluated_on: date
@@ -548,7 +546,7 @@ class OverviewStatusReport(BaseModel):
     by :func:`application.overview.status_report.overview_status_report_from_projection`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile_name: str | None = None
     transactions: NonNegativeInt

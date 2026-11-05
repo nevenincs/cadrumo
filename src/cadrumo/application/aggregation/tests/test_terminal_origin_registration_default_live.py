@@ -28,10 +28,10 @@ from datetime import UTC, datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_snapshot,
 )
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
@@ -56,7 +56,7 @@ def _snapshot() -> RegistrySnapshot:
 
 
 def _profile_record() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -65,7 +65,7 @@ def _profile_record() -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

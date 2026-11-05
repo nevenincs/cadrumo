@@ -67,7 +67,6 @@ from ...domain.deadlines.models import ChargeAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from .action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -76,6 +75,7 @@ from .action_errors import (
     ModeloRefundElectionNotEligibleError,
     ModeloResultDispositionUncodifiedError,
 )
+from .calculation_helpers import assert_snapshot_matches_work_unit_revision
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -199,7 +199,7 @@ def base_modelo_result_disposition(
             header but the modelo has no codified spec, so any code written
             there would be a guess.
     """
-    registry_revision, result_values = _result_disposition_values_for_revision(
+    registry_revision, result_values = result_disposition_values_for_revision(
         work_unit=work_unit,
         revision=revision,
         period=period,
@@ -365,7 +365,7 @@ def require_admissible_charge_account(*, work_unit: WorkUnit, charge_account: Ch
     )
 
 
-def _result_disposition_values_for_revision(
+def result_disposition_values_for_revision(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,

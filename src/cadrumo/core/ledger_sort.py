@@ -39,7 +39,7 @@ class LedgerSortField(StrEnum):
     last under both orders, never crashing the sort.
 
     The value set is consumed by the command-spec runtime and by
-    :func:`cadrumo.application.ledger.list_query._sort_field_value`, so any new
+    :func:`cadrumo.application.ledger.list_query.sort_field_value`, so any new
     member must be added with a projection over
     :class:`~cadrumo.domain.transactions.models.Transaction` and covered by the real
     repository sort tests.

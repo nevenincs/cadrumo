@@ -219,7 +219,7 @@ def _m156_pair() -> tuple[Modelo156AfiliadoRowWireV1, Modelo156AfiliadoRow]:
     return mirror, expected
 
 
-_PAIRS = {
+PAIRS = {
     "m156_afiliado": _m156_pair,
     "m184_miembro": _m184_pair,
     "m232_vinculada": _m232_pair,
@@ -229,10 +229,10 @@ _PAIRS = {
 }
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_each_detail_row_mirror_translates_to_an_identical_domain_row(kind: str) -> None:
     """Translation reproduces the domain row exactly, field for field."""
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     translated = mirror.to_row()
 
@@ -241,10 +241,10 @@ def test_each_detail_row_mirror_translates_to_an_identical_domain_row(kind: str)
     assert type(translated) is type(expected)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_domain_row_field_is_carried_by_its_mirror(kind: str) -> None:
     """No field is silently dropped: the mirror covers the row's whole shape."""
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     missing = set(type(expected).model_fields) - set(type(mirror).model_fields)
 
@@ -327,10 +327,10 @@ def test_the_address_derives_the_exact_natural_key_the_domain_derives() -> None:
     assert address.to_address().natural_key == detail_row_natural_key(row)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_row_kind_addresses_itself_through_carried_components(kind: str) -> None:
     """Each kind's own identity fields reconstruct its domain address key."""
-    _, row = _PAIRS[kind]()
+    _, row = PAIRS[kind]()
     expected = detail_row_natural_key(row)
 
     address = ModeloEditApplyDetailRowAddressV1(

@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -27,8 +27,8 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ..profile_derived_facts import (
-    _guarderia_cap_anual,
     declared_profile_selectors,
+    guarderia_cap_anual,
     inject_derived_incremento_guarderia_facts,
 )
 
@@ -85,12 +85,12 @@ def test_the_cap_resolves_from_the_registry_parameter() -> None:
     It previously existed only inside the formula expression, which the
     application layer cannot read.
     """
-    assert _guarderia_cap_anual(_snapshot()) == Decimal("1000")
+    assert guarderia_cap_anual(_snapshot()) == Decimal("1000")
 
 
 def test_the_injector_lands_the_manual_worked_figure() -> None:
     """End of the wiring: a real snapshot in, the manual's 166,67 out."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
         inject_derived_incremento_guarderia_facts(
@@ -109,7 +109,7 @@ def test_the_injector_is_inert_where_no_consumer_is_declared() -> None:
     Positive control for the assertion above: without it, an injector that
     ignored the gate entirely would pass every other test here.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
         inject_derived_incremento_guarderia_facts(
@@ -125,7 +125,7 @@ def test_a_stored_value_at_the_derived_key_is_overwritten() -> None:
     Deferring to it would substitute an operator's number for the law's — the
     same defect the sibling guardería injector documents.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
         index[_KEY] = Decimal("999999")
 
@@ -145,7 +145,7 @@ def test_a_childless_profile_resolves_to_zero_rather_than_absent() -> None:
     Distinct from the unresolvable cases, which leave the fact ABSENT so the
     casilla stays visibly unresolved instead of reading as a computed nil.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         index: dict[str, Any] = {}
 
         inject_derived_incremento_guarderia_facts(

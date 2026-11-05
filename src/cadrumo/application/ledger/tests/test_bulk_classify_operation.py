@@ -36,7 +36,7 @@ from ..persistence_ports import LedgerPersistenceConflictError
 from ..protocols import InvoiceCatalogueCoCommitWriterProtocol
 from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
 from .in_memory_transaction_repository import InMemoryTransactionRepository
-from .test_classification_rule_plan import _BUCKET, _transaction
+from .test_classification_rule_plan import BUCKET, transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -71,8 +71,8 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
 @pytest.fixture
 def transactions() -> tuple[Transaction, Transaction]:
     return (
-        _transaction(provider_id="bulk-office", description="Synthetic office purchase"),
-        _transaction(provider_id="bulk-personal", description="Synthetic personal purchase"),
+        transaction(provider_id="bulk-office", description="Synthetic office purchase"),
+        transaction(provider_id="bulk-personal", description="Synthetic personal purchase"),
     )
 
 
@@ -135,14 +135,14 @@ def test_complete_result_projector_correlates_effect_profile_and_terminal_condit
     projection = operation.LedgerBulkClassifyProjection(profile_id=PROFILE_ID, outcome="classified", result=result)
     execution = operation.LedgerBulkClassifyExecutionResult(projection=projection)
     receipt = _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED)
-    assert operation._project_result(execution, receipt) == projection
+    assert operation.project_result(execution, receipt) == projection
     for defect in (
         {"effect": OperationEffect.NONE},
         {"condition": OperationTerminalCondition.REFUSED},
         {"identity": receipt.identity.model_copy(update={"subject_ref": profile_operation_subject(str(uuid4()))})},
     ):
         with pytest.raises(ValueError):
-            operation._project_result(execution, receipt.model_copy(update=defect))
+            operation.project_result(execution, receipt.model_copy(update=defect))
 
 
 def test_real_csv_batch_loads_once_co_commits_once_and_preserves_row_failure(
@@ -195,7 +195,7 @@ def test_unknown_csv_header_is_an_explicit_prewrite_validation_refusal(subject: 
     execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
     assert execution.projection.outcome == "validation_error" and execution.projection.result is None
     assert (
-        operation._project_result(execution, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE))
+        operation.project_result(execution, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE))
         == execution.projection
     )
 
@@ -264,7 +264,7 @@ def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassif
     subject.ports = replace(
         subject.ports,
         transaction_repository=InMemoryTransactionRepository(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             catalogue=subject.repository.current,
             permit_secure_object_writes=True,
         ),

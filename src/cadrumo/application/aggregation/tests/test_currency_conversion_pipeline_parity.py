@@ -114,15 +114,15 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...exchange_rate_provider import bind_exchange_rate_provider_factory
-from .._iva_transaction import _substrate_admission_issue
-from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssue,
-    _classify_impatriado_income_transaction,
+    classify_impatriado_income_transaction,
 )
 from ..iva_ledger import IvaLedgerAggregationIssueReason
-from ..oss_ioss_resolver import _candidate_for_invoice_line
-from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
+from ..iva_transaction import substrate_admission_issue
+from ..modelo_bindings_invoice_iva import screened_invoice_line_observations
+from ..oss_ioss_resolver import candidate_for_invoice_line
+from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, classify_gasto_transaction
 from ..renta_income_classification import classify_income_transaction
 from ..renta_income_models import RentaIncomeLedgerAggregationIssue
 from ..renta_ledger import RentaCategoryDeductionRules
@@ -348,7 +348,7 @@ def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate(
         taxable_base=Decimal("826.45"),
         iva_amount=Decimal("173.55"),
     )
-    issue = _substrate_admission_issue(tx)
+    issue = substrate_admission_issue(tx)
     assert issue is not None
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE
 
@@ -385,7 +385,7 @@ def test_renta_gasto_ledger_reads_converted_eur_substrate(operation: PinnedAutho
         irpf_category="actividad_economica",
         category_id="material_oficina",
     )
-    result = _classify_gasto_transaction(
+    result = classify_gasto_transaction(
         tx,
         bucket_id="parity-bucket",
         cumulative_start=date(2025, 1, 1),
@@ -412,7 +412,7 @@ def test_impatriado_income_ledger_reads_converted_eur_amount() -> None:
         direction=TransactionDirection.INCOMING,
         irpf_category="actividad_economica",
     )
-    result = _classify_impatriado_income_transaction(
+    result = classify_impatriado_income_transaction(
         tx,
         window_start=date(2025, 1, 1),
         window_end=date(2025, 12, 31),
@@ -488,7 +488,7 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
         base_total=base_total_native,
         iva_total=iva_total_native,
     )
-    observations = _screened_invoice_line_observations(
+    observations = screened_invoice_line_observations(
         invoice,
         devengo_date=date(2025, 2, 10),
         deduction_authority=None,
@@ -547,7 +547,7 @@ def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
     )
     close = date(2025, 3, 31)
     with bind_exchange_rate_provider_factory(lambda: _OneQuote(close, Decimal("0.8"))):
-        candidate = _candidate_for_invoice_line(
+        candidate = candidate_for_invoice_line(
             invoice, line, line_index=1, devengo_date=date(2025, 2, 10), period_last_day=close
         )
     assert candidate is not None

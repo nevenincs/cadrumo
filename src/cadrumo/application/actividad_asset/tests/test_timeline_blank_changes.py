@@ -11,8 +11,8 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     FurtherAcquisitionRow,
 )
 
-from ..register_timeline import _changes
-from .test_register import _revision
+from ..register_timeline import register_timeline_changes
+from .test_register import register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -24,13 +24,13 @@ def _with_further_evidence(evidence: str) -> ActivityAssetRevision:
         shape=AcquisitionShape.SPLIT_PAYMENT,
         lineage=AcquisitionLineageReference(observed_transaction_id="e" * 64, invoice_evidence_id=evidence),
     )
-    return _revision().model_copy(update={"further_acquisitions": (row,)})
+    return register_revision().model_copy(update={"further_acquisitions": (row,)})
 
 
 def _fields(
     before: ActivityAssetRevision | None, after: ActivityAssetRevision
 ) -> dict[str, tuple[str | None, str | None]]:
-    changes = _changes(before, after, class_names=lambda _record: {})
+    changes = register_timeline_changes(before, after, class_names=lambda _record: {})
     return {change.field: (change.before, change.after) for change in changes}
 
 

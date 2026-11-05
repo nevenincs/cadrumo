@@ -288,7 +288,7 @@ def _unresolved_diagnostics(
     )
 
 
-def _annual_source_evidence_diagnostics(
+def annual_source_evidence_diagnostics(
     *,
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
@@ -461,7 +461,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 resolver_id=self.resolver_id,
                 opening_unknown_binding_ids=unresolved if periods_complete else (),
             )
-            + _annual_source_evidence_diagnostics(
+            + annual_source_evidence_diagnostics(
                 binding_ids=unresolved,
                 resolver_id=self.resolver_id,
             ),

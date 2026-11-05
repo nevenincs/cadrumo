@@ -34,21 +34,6 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from ._modelo_bindings_invoice_iva import (
-    InvoiceIvaSilenceReport,
-    category_counterparty_mismatch_diagnostics,
-    missing_invoice_deduction_authority_diagnostics,
-    out_of_window_summary_diagnostics,
-    recargo_rate_mismatch_diagnostics,
-    recargo_unattributable_diagnostics,
-    reverse_charge_underivable_diagnostics,
-)
-from ._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
-from ._modelo_bindings_support import (
-    STORAGE_DEGRADATION_ERRORS,
-    empty_source_resolution,
-    revision_has_binding_source,
-)
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
 )
@@ -63,6 +48,21 @@ from .iva_ledger import (
 )
 from .iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .modelo_bindings import aggregation_period_for_modelo
+from .modelo_bindings_invoice_iva import (
+    InvoiceIvaSilenceReport,
+    category_counterparty_mismatch_diagnostics,
+    missing_invoice_deduction_authority_diagnostics,
+    out_of_window_summary_diagnostics,
+    recargo_rate_mismatch_diagnostics,
+    recargo_unattributable_diagnostics,
+    reverse_charge_underivable_diagnostics,
+)
+from .modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
+from .modelo_bindings_support import (
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
+)
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -71,14 +71,10 @@ from .source_mesh import (
 )
 from .source_resolution_operations import (
     source_context_operation,
+    source_diagnostics_for,
     source_issue_diagnostics,
+    source_provenance_for,
     storage_degradation_resolution,
-)
-from .source_resolution_operations import (
-    source_diagnostics_for as _diagnostics_for,
-)
-from .source_resolution_operations import (
-    source_provenance_for as _provenance_for,
 )
 
 _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
@@ -141,7 +137,7 @@ def _selected_scope_iva_evidence_language(issue: IvaLedgerAggregationIssue) -> O
     return OutputLanguage(normalise_supported_language(output_language()) or OutputLanguage.EN.value)
 
 
-def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
+def selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
     if issue.reason in _IVA_SELECTED_SCOPE_FIGURE_REASONS:
         return issue.detail
     marker = f"selected-scope IVA evidence failure: {issue.reason.value}"
@@ -153,7 +149,7 @@ def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> st
     return marker
 
 
-def _selected_scope_iva_evidence_diagnostics(
+def selected_scope_iva_evidence_diagnostics(
     issues: Sequence[IvaLedgerAggregationIssue],
     *,
     resolver_id: str,
@@ -165,7 +161,7 @@ def _selected_scope_iva_evidence_diagnostics(
             source_kind="ledger_iva_aggregation",
             resolver_id=resolver_id,
             source_ref=f"transaction:{issue.transaction_id}",
-            message=_selected_scope_iva_evidence_message(issue),
+            message=selected_scope_iva_evidence_message(issue),
             message_language=_selected_scope_iva_evidence_language(issue),
         )
         for issue in issues
@@ -409,11 +405,11 @@ class LedgerIvaAggregationSourceResolver:
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
             )
-            + _selected_scope_iva_evidence_diagnostics(
+            + selected_scope_iva_evidence_diagnostics(
                 aggregation.issues,
                 resolver_id=self.resolver_id,
             )
-            + _diagnostics_for(
+            + source_diagnostics_for(
                 unconsumed,
                 reason="unrouted_observation",
                 source_kind="ledger_iva_aggregation",
@@ -426,7 +422,7 @@ class LedgerIvaAggregationSourceResolver:
                     "its base/cuota is not declared on this calculation"
                 ),
             )
-            + _diagnostics_for(
+            + source_diagnostics_for(
                 unrouted_quantities,
                 reason="unrouted_declarable_quantity",
                 source_kind="ledger_iva_aggregation",
@@ -440,7 +436,7 @@ class LedgerIvaAggregationSourceResolver:
                     f"for their other quantities, so no other screen reports them"
                 ),
             )
-            + _diagnostics_for(
+            + source_diagnostics_for(
                 unroutable_categories,
                 reason="structurally_unroutable_base_category",
                 source_kind="ledger_iva_aggregation",
@@ -454,7 +450,7 @@ class LedgerIvaAggregationSourceResolver:
                 ),
             ),
             provenance=(
-                _provenance_for(
+                source_provenance_for(
                     aggregation.observations,
                     lambda observation: CalculationSourceProvenance(
                         resolver_id=self.resolver_id,
@@ -467,7 +463,7 @@ class LedgerIvaAggregationSourceResolver:
                         terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
                 )
-                + _provenance_for(
+                + source_provenance_for(
                     aggregation.prorrata_references,
                     lambda reference: CalculationSourceProvenance(
                         resolver_id=self.resolver_id,

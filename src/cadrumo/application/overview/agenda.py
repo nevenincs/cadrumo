@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.deadlines.models import ObligationStatus
 from .calendar_models import (
@@ -87,7 +87,7 @@ class OverviewAgenda(BaseModel):
             present only when ``taxpayer_model_declared`` is ``False``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     as_of: date
     horizon_days: int = Field(ge=1, le=366)

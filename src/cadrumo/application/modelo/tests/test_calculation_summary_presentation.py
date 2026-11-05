@@ -28,7 +28,7 @@ from ..calculation_summary_presentation import (
     format_summary_value,
 )
 from ..value_presentation import LOCALE_NUMBER_FORMATS
-from ._calculation_report_fixture import (
+from .calculation_report_fixture import (
     MEASURED_CASILLA,
     NOT_APPLICABLE_CASILLA,
     TAXPAYER_NAME,

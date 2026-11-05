@@ -31,8 +31,7 @@ from ....core.errors.error_codes import build_error_envelope
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.iva.regime_legend import resolve_regime_legends
 
 # The MODULE object, not names from it: the tests below scope an attribute
@@ -46,8 +45,8 @@ from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounded_reading import (
     GROUNDABLE_ORIGINS,
-    _identity_candidates,
     ground_draft_against_transcription,
+    identity_candidates,
     verified_provenance,
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
@@ -61,7 +60,7 @@ from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..preconditions import LedgerPreconditionCondition
 from ..structured_invoice_ports import StructuredInvoiceRecord
-from ._evidence_textlayer_test_support import text_layer_ports_for_pages
+from .evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -218,7 +217,7 @@ def test_the_reader_output_starts_entirely_unverified() -> None:
 
 def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
     """The upgrade the wiring exists to perform, on the real control document."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -233,7 +232,7 @@ def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
 
 def test_grounding_upgrades_a_percentage_anchor() -> None:
     """`21%` is the most common field in the corpus; it must survive the chain."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -253,7 +252,7 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     anchor, no matter how confidently the reader claimed it.
     """
     assert _FABRICATED_IVA_ANCHOR not in _control_transcription().text, "the fixture must not print the fabrication"
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -276,7 +275,7 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
     operator acts differently on the two, and downstream every trace of the
     first is gone the moment the anchor is cleared without recording it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         offered_nothing = FieldProvenance(
             field="currency",
             origin=FieldOrigin.TEXT_LAYER,
@@ -307,7 +306,7 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
 
 def test_a_located_anchor_records_no_refusal() -> None:
     """The negative leg: a passing check must not stamp a refusal it did not reach."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -322,7 +321,7 @@ def test_a_located_anchor_records_no_refusal() -> None:
 
 def test_grounding_attaches_the_closure_finding() -> None:
     """The second leg runs on the wired path, not only in its own suite."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -336,7 +335,7 @@ def test_grounding_attaches_the_closure_finding() -> None:
 
 def test_role_resolution_runs_when_the_filer_is_known() -> None:
     """Both identity guards reach the live path on the control document."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -358,7 +357,7 @@ def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
     Skipping is the honest behaviour, and it must be visible as an absence of
     findings rather than as a resolution nobody could justify.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -425,7 +424,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
         return _reader_output()
 
     ports = dataclasses.replace(_reader_unavailable_ports(), read_text=reader)
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         draft = invoice_draft_extraction_module.extract_invoice_draft_from_evidence(
             bucket_id="c" * 64,
             evidence_id="d" * 16,
@@ -458,10 +457,10 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 
 def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     """A missing reader is a typed refusal, not an inferred recovery command."""
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
+        refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
 
     envelope = build_error_envelope(raised.value)
     assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
@@ -497,11 +496,11 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        from ..invoice_draft_extraction import _read_transcription_semantically
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        from ..invoice_draft_extraction import read_transcription_semantically
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            _read_transcription_semantically(
+            read_transcription_semantically(
                 _control_evidence(),
                 _control_transcription(),
                 settings=load_settings(),
@@ -585,10 +584,10 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     no draft at all, so there is no provenance for a notice to describe; the
     non-blocking notice channel is for a draft that exists but degraded.
     """
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("Ollama is not reachable"))
+        refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("Ollama is not reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
@@ -661,7 +660,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
                 for field, value in values.items()
             ),
         )
-        return _identity_candidates(
+        return identity_candidates(
             draft=draft,
             envelopes=draft.provenance,
             transcription=cls._transcription(text),
@@ -850,7 +849,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         assert recorded.role_evidence == "Lieferant:", "the reading stage must record the claim verbatim"
         assert recorded.grounding is FieldGroundingOutcome.UNANCHORED, "and must pass no verdict on it"
 
-        candidates = _identity_candidates(
+        candidates = identity_candidates(
             draft=draft,
             envelopes=draft.provenance,
             transcription=self._transcription(),
@@ -896,7 +895,7 @@ def _ground_unprinted_supplier(*, anchor: str | None) -> InvoiceDraft:
             revision="gate",
         ),
     )
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return ground_draft_against_transcription(
             draft=draft,
             transcription=transcription,

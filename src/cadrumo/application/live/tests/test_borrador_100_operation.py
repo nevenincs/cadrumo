@@ -50,7 +50,7 @@ from .borrador_100_operation_support import (
     Subject,
     policy_decision,
 )
-from .test_borrador_100 import _InMemoryBorradorRepository
+from .test_borrador_100 import InMemoryBorradorRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _PERIOD = Period.from_year_and_code(2023, "0A")
@@ -91,7 +91,7 @@ def _snapshot(
     period: Period = _PERIOD,
     values: dict[str, Decimal | str] | None = None,
 ) -> Borrador100Snapshot:
-    repository = _InMemoryBorradorRepository(bucket_id=str(PROFILE_ID))
+    repository = InMemoryBorradorRepository(bucket_id=str(PROFILE_ID))
     return Borrador100SnapshotService(bucket_id=str(PROFILE_ID), repository=repository).capture(
         filing_year=period.filing_year,
         period=period,

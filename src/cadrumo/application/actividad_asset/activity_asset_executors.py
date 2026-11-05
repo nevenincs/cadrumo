@@ -269,7 +269,9 @@ def _worker_bucket[T: BaseModel](
     return bucket_id
 
 
-def _refusal(error: Exception, language: OutputLanguage | None = None) -> ActivityAssetRefusalResult | None:
+def activity_asset_executors_refusal(
+    error: Exception, language: OutputLanguage | None = None
+) -> ActivityAssetRefusalResult | None:
     if not isinstance(error, ActividadAssetError):
         return None
     reason_key = error.translated_message
@@ -344,7 +346,7 @@ async def _store_refusal(
     m130_period: str | None = None,
     language: OutputLanguage | None = None,
 ) -> OperationRefusalEvidence:
-    refusal = _refusal(error, language)
+    refusal = activity_asset_executors_refusal(error, language)
     if refusal is None:
         raise error
     result = result_type(
@@ -516,7 +518,7 @@ class ActivityAssetInspectExecutor:
         return await await_cancellation_complete(capture(), task_name="activity-asset-inspect")
 
 
-def _assigned_correction(
+def assigned_correction(
     operations: ActivityAssetOperations,
     snapshot: ActivityAssetCorrectionRevisionSnapshot,
 ) -> ActivityAssetRevision:
@@ -568,7 +570,7 @@ class ActivityAssetCorrectExecutor:
                 try:
                     history = await asyncio.to_thread(
                         operations.correct,
-                        _assigned_correction(operations, payload.revision),
+                        assigned_correction(operations, payload.revision),
                         tuple(
                             SupersedingClaimRequest(
                                 supersedes_claim_id=item.supersedes_claim_id,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..draft_construction import _load_registry_snapshot
+from ..draft_construction import load_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -17,7 +17,7 @@ def test_snapshot_resolution_exposes_no_cache_handle() -> None:
     if a future change makes the staleness window harder to trigger.
     """
     for attribute in ("cache_clear", "cache_info", "__wrapped__"):
-        assert not hasattr(_load_registry_snapshot, attribute), (
+        assert not hasattr(load_registry_snapshot, attribute), (
             f"_load_registry_snapshot exposes {attribute!r}, so it is memoized above the registry "
             "loader; such a cache is keyed without the registry-tree fingerprint and can serve a "
             "snapshot from before a registry change"

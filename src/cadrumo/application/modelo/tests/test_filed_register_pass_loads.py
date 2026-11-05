@@ -15,9 +15,9 @@ import pytest
 
 from cadrumo.application.aggregation.tests.usage_ratio_support import no_stored_usage_ratios
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -50,7 +50,7 @@ from ...aggregation.tests.ledger_source_mesh_support import (
     resolve_m100,
 )
 from .. import filed_register_reader as reader_module
-from ..calculation_bucket_actions import _source_provenance_refs
+from ..calculation_bucket_actions import source_provenance_refs
 from ..filed_register_reader import filed_register_reader
 from ..work_profile import ModeloWorkProfile
 from .empty_borrador_revision_support import empty_borrador_revision
@@ -123,7 +123,7 @@ def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, ro
             created_at=_AT,
             updated_at=_AT,
         )
-        provenance = _source_provenance_refs(resolve_m100(history, rows=rows, year=year))
+        provenance = source_provenance_refs(resolve_m100(history, rows=rows, year=year))
         draft = empty_borrador_revision(unit, snapshot.snapshot_ref, provenance, at=_AT)
         units[unit.work_unit_id] = unit
         filed = draft.model_copy(update={"state": CalculationRevisionState.PRESENTADO})
@@ -161,11 +161,11 @@ def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
     )
     register = ActivityAssetHistory(revisions=assets, claims=claims)
     profile = ModeloWorkProfile(
-        record=_create_profile_record_for_test(
+        record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),
     )

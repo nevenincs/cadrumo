@@ -78,11 +78,11 @@ from ...calculations.actividad_asset_schedule import forecast_activity_asset_cha
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
-    _m130_binding_id,
-    _renta_expense_binding_id,
-    _revision,
+    ledger_source_mesh_revision,
+    m130_binding_id,
     machine_acquisition_transaction,
     reasons,
+    renta_expense_binding_id,
     resolve_m100,
     resolve_m130,
 )
@@ -253,10 +253,10 @@ def _claim(register: _Register, asset_id: str, start: date, end: date) -> Schedu
 def _m100(register: _Register) -> tuple[Decimal, Decimal, CalculationSourceResolution]:
     """Return casillas 0208 and 0227 of Modelo 100 for 2025, and the resolution behind them."""
     resolution = resolve_m100(register.history, rows=register.rows)
-    revision = _revision("100", "2025")
+    revision = ledger_source_mesh_revision("100", "2025")
     return (
-        resolution.binding_values.get(_renta_expense_binding_id(revision, "0208"), _ZERO),
-        resolution.binding_values.get(_renta_expense_binding_id(revision, "0227"), _ZERO),
+        resolution.binding_values.get(renta_expense_binding_id(revision, "0208"), _ZERO),
+        resolution.binding_values.get(renta_expense_binding_id(revision, "0227"), _ZERO),
         resolution,
     )
 
@@ -265,7 +265,7 @@ def _m130(register: _Register, quarter: str) -> tuple[Decimal, CalculationSource
     """Return casilla 02 of the cumulative Modelo 130 of ``quarter``, and the resolution behind it."""
     resolution = resolve_m130(register.history, quarter, rows=register.rows)
     return (
-        resolution.binding_values.get(_m130_binding_id(_revision("130", "2019-y-siguientes")), _ZERO),
+        resolution.binding_values.get(m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes")), _ZERO),
         resolution,
     )
 

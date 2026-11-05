@@ -79,7 +79,7 @@ from ..foreign_asset_thresholds import (
     foreign_asset_declaration_thresholds_for_revision,
 )
 from ..foreign_assets.valuation import value_modelo_720_rows
-from ._grouping import assert_rollup_totals_match, group_observations
+from .grouping import assert_rollup_totals_match, group_observations
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -87,7 +87,7 @@ from .source_mesh import (
     CalculationSourceResolution,
 )
 
-_CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.LEDGER_TRANSACTION,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -111,8 +111,8 @@ def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
             raise ValueError(f"foreign asset source_kind {value!r} is not a BindingSourceKind") from exc
     else:
         raise ValueError("foreign asset source_kind must be a BindingSourceKind or source-kind string")
-    if source_kind not in _CANONICAL_SOURCE_KINDS:
-        allowed = ", ".join(kind.value for kind in _CANONICAL_SOURCE_KINDS)
+    if source_kind not in CANONICAL_SOURCE_KINDS:
+        allowed = ", ".join(kind.value for kind in CANONICAL_SOURCE_KINDS)
         raise ValueError(
             f"unsupported source_kind {source_kind.value!r}; use one of {allowed}",
         )
@@ -372,7 +372,7 @@ def _valued_ingest_observations(
 ) -> tuple[tuple[ForeignAssetIngestObservation, Modelo720ValuedRow], ...]:
     ingested = tuple(observations)
     valued = value_modelo_720_rows(
-        (_registry_observation_from_foreign_asset(observation) for observation in ingested),
+        (registry_observation_from_foreign_asset(observation) for observation in ingested),
         filing_year=period.filing_year,
         rate_provider=rate_provider,
     )
@@ -417,7 +417,7 @@ class ForeignAssetsAggregationSourceResolver:
         if not _foreign_asset_source_for_revision(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        ledger_rows = tuple(_registry_observation_from_foreign_asset(observation) for observation in self._observations)
+        ledger_rows = tuple(registry_observation_from_foreign_asset(observation) for observation in self._observations)
         _refuse_ledger_worksheet_collision(ledger_rows, self._row_observations)
         valued = value_modelo_720_rows(
             (*ledger_rows, *self._row_observations),
@@ -538,7 +538,7 @@ def _declaration_advisories(
     )
 
 
-def _registry_observation_from_foreign_asset(
+def registry_observation_from_foreign_asset(
     observation: ForeignAssetIngestObservation,
 ) -> Modelo720RowObservation:
     # Already admitted by the same authority at observation construction; this

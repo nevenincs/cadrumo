@@ -10,8 +10,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period, PeriodError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva_compensation import balance as _balance_module
-from ....domain.iva_compensation import carry_forward as _carry_forward_module
+from ....domain.iva_compensation import balance, carry_forward
 from ....domain.iva_compensation.balance import build_iva_wallet_balance_report
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -21,7 +20,7 @@ from ....domain.iva_compensation.carry_forward import (
     iva_compensation_year_opening_balance,
 )
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, reconcile_iva_compensation_wallet
-from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet, m303_registry_snapshot_ref
+from .iva_compensation_history_support import TAXPAYER_REF, m303_registry_snapshot_ref, state, wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -51,9 +50,9 @@ def test_iva_compensation_carry_forward_report_tracks_source_age_application_and
 ) -> None:
     report = build_iva_compensation_carry_forward_report(
         (
-            _state(filing_year=2022, period="4T", generated=Decimal("113.00")),
-            _state(filing_year=2023, period="2T", applied=Decimal("31.00")),
-            _state(filing_year=2024, period="1T", generated=Decimal("47.00")),
+            state(filing_year=2022, period="4T", generated=Decimal("113.00")),
+            state(filing_year=2023, period="2T", applied=Decimal("31.00")),
+            state(filing_year=2024, period="1T", generated=Decimal("47.00")),
         ),
         as_of_year=2026,
         operation=operation,
@@ -79,7 +78,7 @@ def test_iva_compensation_carry_forward_report_marks_expired_review_required(
     operation: PinnedAuthorityOperation,
 ) -> None:
     report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2022, period="4T", generated=Decimal("100.00")),),
+        (state(filing_year=2022, period="4T", generated=Decimal("100.00")),),
         as_of_year=2027,
         operation=operation,
     )
@@ -92,7 +91,7 @@ def test_iva_compensation_carry_forward_report_preserves_unallocated_application
     operation: PinnedAuthorityOperation,
 ) -> None:
     report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2025, period="2T", applied=Decimal("25.00")),),
+        (state(filing_year=2025, period="2T", applied=Decimal("25.00")),),
         as_of_year=2026,
         operation=operation,
     )
@@ -107,10 +106,10 @@ def _year_with_opening_credit() -> tuple[IvaCompensationPeriodState, ...]:
     1T and 2T apply 105 and 630, 3T generates 420 and 4T applies 630.
     """
     return (
-        _state(filing_year=2025, period="1T", applied=Decimal("105.00")),
-        _state(filing_year=2025, period="2T", applied=Decimal("630.00")),
-        _state(filing_year=2025, period="3T", generated=Decimal("420.00")),
-        _state(filing_year=2025, period="4T", applied=Decimal("630.00")),
+        state(filing_year=2025, period="1T", applied=Decimal("105.00")),
+        state(filing_year=2025, period="2T", applied=Decimal("630.00")),
+        state(filing_year=2025, period="3T", generated=Decimal("420.00")),
+        state(filing_year=2025, period="4T", applied=Decimal("630.00")),
     )
 
 
@@ -159,7 +158,7 @@ def test_carry_forward_report_leaves_an_unconsumed_opening_balance_out_of_the_ap
     operation: PinnedAuthorityOperation,
 ) -> None:
     report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2025, period="1T", applied=Decimal("105.00")),),
+        (state(filing_year=2025, period="1T", applied=Decimal("105.00")),),
         as_of_year=2025,
         operation=operation,
         opening_balance=Decimal("1000.00"),
@@ -171,22 +170,22 @@ def test_carry_forward_report_leaves_an_unconsumed_opening_balance_out_of_the_ap
 
 def test_year_opening_balance_reads_the_first_periods_pending_credit() -> None:
     states = (
-        _state(filing_year=2024, period="4T", generated=Decimal("300.00")),
-        _state(filing_year=2025, period="2T", applied=Decimal("50.00")),
-        _state(filing_year=2025, period="1T", applied=Decimal("105.00"), prior_pending=Decimal("1000.00")),
+        state(filing_year=2024, period="4T", generated=Decimal("300.00")),
+        state(filing_year=2025, period="2T", applied=Decimal("50.00")),
+        state(filing_year=2025, period="1T", applied=Decimal("105.00"), prior_pending=Decimal("1000.00")),
     )
 
     assert iva_compensation_year_opening_balance(states, filing_year=2025) == Decimal("1000.00")
 
 
 def test_year_opening_balance_rebuilds_box_110_from_boxes_87_and_78() -> None:
-    first = _state(filing_year=2025, period="1T", applied=Decimal("105.00"), pending_for_later=Decimal("895.00"))
+    first = state(filing_year=2025, period="1T", applied=Decimal("105.00"), pending_for_later=Decimal("895.00"))
 
     assert iva_compensation_year_opening_balance((first,), filing_year=2025) == Decimal("1000.00")
 
 
 def test_year_opening_balance_is_a_proven_zero_when_the_first_period_had_no_credit() -> None:
-    first = _state(filing_year=2025, period="01", prior_pending=Decimal("0.00"))
+    first = state(filing_year=2025, period="01", prior_pending=Decimal("0.00"))
 
     assert iva_compensation_year_opening_balance((first,), filing_year=2025) == Decimal("0.00")
 
@@ -205,7 +204,7 @@ def test_year_opening_balance_is_unknown_rather_than_zero(
     prior_pending: Decimal | None,
 ) -> None:
     states = (
-        () if first_period is None else (_state(filing_year=2025, period=first_period, prior_pending=prior_pending),)
+        () if first_period is None else (state(filing_year=2025, period=first_period, prior_pending=prior_pending),)
     )
 
     assert iva_compensation_year_opening_balance(states, filing_year=2025) is None
@@ -216,8 +215,8 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
 ) -> None:
     report = build_iva_compensation_carry_forward_report(
         (
-            _state(filing_year=2022, period="4T", generated=Decimal("100.00")),
-            _state(filing_year=2024, period="2T", applied=Decimal("40.00")),
+            state(filing_year=2022, period="4T", generated=Decimal("100.00")),
+            state(filing_year=2024, period="2T", applied=Decimal("40.00")),
         ),
         as_of_year=2026,
         operation=operation,
@@ -229,11 +228,11 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     assert source_lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRY_REVIEW_DUE
 
     divergent = reconcile_iva_compensation_wallet(
-        taxpayer_nif=_TAXPAYER_REF,
+        taxpayer_nif=TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
         target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
-        wallet=_wallet(Decimal("80.00")),
+        wallet=wallet(Decimal("80.00")),
         local_recurrence_amount=source_lot.remaining_amount,
         local_recurrence_source=_local_recurrence_source_for_test(
             source_lot.remaining_amount,
@@ -246,7 +245,7 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     assert divergent.blocked is True
 
     fallback = reconcile_iva_compensation_wallet(
-        taxpayer_nif=_TAXPAYER_REF,
+        taxpayer_nif=TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
         target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
@@ -269,7 +268,7 @@ def test_carry_review_resolves_each_source_period_end_through_the_held_published
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The date-axis plumbing delegates each real source coordinate to authority."""
-    source_resolver = _carry_forward_module.resolve_iva_compensation_carry_window_years
+    source_resolver = carry_forward.resolve_iva_compensation_carry_window_years
     observed: list[tuple[date, PinnedAuthorityOperation]] = []
 
     def observe_resolution(
@@ -280,11 +279,11 @@ def test_carry_review_resolves_each_source_period_end_through_the_held_published
         observed.append((effective_date, operation))
         return source_resolver(effective_date=effective_date, operation=operation)
 
-    monkeypatch.setattr(_carry_forward_module, "resolve_iva_compensation_carry_window_years", observe_resolution)
+    monkeypatch.setattr(carry_forward, "resolve_iva_compensation_carry_window_years", observe_resolution)
     report = build_iva_compensation_carry_forward_report(
         (
-            _state(filing_year=2024, period="4T", generated=Decimal("100.00")),
-            _state(filing_year=2025, period="2T", generated=Decimal("200.00")),
+            state(filing_year=2024, period="4T", generated=Decimal("100.00")),
+            state(filing_year=2025, period="2T", generated=Decimal("200.00")),
         ),
         as_of_year=2028,
         operation=operation,
@@ -302,7 +301,7 @@ def test_wallet_next_expiry_resolves_each_active_lots_own_period_end(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Each active cohort contributes its own published period-end window."""
-    source_resolver = _balance_module.resolve_iva_compensation_carry_window_years
+    source_resolver = balance.resolve_iva_compensation_carry_window_years
     observed: list[tuple[date, PinnedAuthorityOperation]] = []
 
     def observe_resolution(
@@ -315,13 +314,13 @@ def test_wallet_next_expiry_resolves_each_active_lots_own_period_end(
 
     carry_forward = build_iva_compensation_carry_forward_report(
         (
-            _state(filing_year=2024, period="4T", generated=Decimal("100.00")),
-            _state(filing_year=2025, period="2T", generated=Decimal("200.00")),
+            state(filing_year=2024, period="4T", generated=Decimal("100.00")),
+            state(filing_year=2025, period="2T", generated=Decimal("200.00")),
         ),
         as_of_year=2027,
         operation=operation,
     )
-    monkeypatch.setattr(_balance_module, "resolve_iva_compensation_carry_window_years", observe_resolution)
+    monkeypatch.setattr(balance, "resolve_iva_compensation_carry_window_years", observe_resolution)
 
     report = build_iva_wallet_balance_report(carry_forward, operation=operation)
 
@@ -335,7 +334,7 @@ def test_carry_forward_refuses_source_period_without_calendar_span(
 ) -> None:
     """A filing-event key cannot be assigned a fabricated date for authority lookup."""
     with pytest.raises(PeriodError, match="no calendar date span"):
-        _carry_forward_module._expiry_review_state(
+        carry_forward._expiry_review_state(
             source_filing_year=2025,
             source_period=Period.from_year_and_code(2025, "1P"),
             as_of_year=2025,
@@ -346,7 +345,7 @@ def test_carry_forward_refuses_source_period_without_calendar_span(
 def test_iva_compensation_carry_forward_lot_rejects_unbalanced_amounts() -> None:
     with pytest.raises(ValidationError, match="must equal generated_amount"):
         IvaCompensationCarryForwardLot(
-            taxpayer_nif=_TAXPAYER_REF,
+            taxpayer_nif=TAXPAYER_REF,
             source_filing_year=2026,
             source_period=Period.from_year_and_code(2026, "1T"),
             generated_amount=Decimal("100.00"),

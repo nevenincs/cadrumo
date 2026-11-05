@@ -90,7 +90,7 @@ class WorkbenchGenerationExecutor:
 
             def project() -> WorkbenchGenerationOperationProjection:
                 projection = project_workbench_generation(request.payload.profile_id, generation)
-                _require_pageable_result(projection)
+                require_pageable_result(projection)
                 return projection
 
             # Mirroring and validating the full workspace can be CPU-heavy.
@@ -110,7 +110,7 @@ def _result_contract() -> OperationPublicDefinitionContractV1:
     return build_workbench_generation_operation_registration(definition).contract
 
 
-def _require_pageable_result(projection: WorkbenchGenerationOperationProjection) -> None:
+def require_pageable_result(projection: WorkbenchGenerationOperationProjection) -> None:
     """Reject a result that the canonical paged release cannot return."""
     contract = _result_contract()
     if contract.result_schema is None:

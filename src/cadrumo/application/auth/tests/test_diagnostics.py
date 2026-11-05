@@ -13,10 +13,10 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
-    _DiagnosticPayload,
-    _summary_from_payload,
+    DiagnosticPayload,
     diagnostic_payload,
     prepare_auth_diagnostic_phone_state,
+    summary_from_payload,
 )
 from ..errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
@@ -66,9 +66,9 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
         "phone_state": "",
     }
 
-    payload_a = _DiagnosticPayload.model_validate(raw)
+    payload_a = DiagnosticPayload.model_validate(raw)
     serialised = payload_a.model_dump(mode="json")
-    payload_b = _DiagnosticPayload.model_validate(serialised)
+    payload_b = DiagnosticPayload.model_validate(serialised)
 
     assert payload_a == payload_b
     assert payload_a.diagnostic_id == "diag-rt-001"
@@ -78,14 +78,14 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
     assert payload_a.operator_report["phone_state"] == "app_did_not_prompt"
 
     serialised["diagnostic_id"] = "diag-rt-MUTATED"
-    payload_mutated = _DiagnosticPayload.model_validate(serialised)
+    payload_mutated = DiagnosticPayload.model_validate(serialised)
     assert payload_mutated != payload_a
 
 
 def test_diagnostic_payload_refuses_an_undeclared_key() -> None:
     """An unknown key is refused rather than silently carried."""
     with pytest.raises(ValidationError):
-        _DiagnosticPayload.model_validate({"diagnostic_id": "diag-x", "future_extension": "value"})
+        DiagnosticPayload.model_validate({"diagnostic_id": "diag-x", "future_extension": "value"})
 
 
 def test_diagnostic_payload_rejects_non_object_json() -> None:
@@ -170,9 +170,9 @@ def test_diagnostic_payload_refusals_author_no_sentence(
     """Structural payload refusals use the registered key and rule facts."""
     from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
-    payload = _DiagnosticPayload.model_validate(build_payload())
+    payload = DiagnosticPayload.model_validate(build_payload())
     with pytest.raises(AuthDiagnosticPayloadError) as raised:
-        _summary_from_payload(payload)
+        summary_from_payload(payload)
 
     error = raised.value
     assert error.translated_message == "errors.refused.refused_auth_diagnostic_payload"

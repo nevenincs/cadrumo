@@ -25,7 +25,7 @@ from ...core.operations import (
 )
 from ...core.time.utc import validate_utc_aware
 from ...core.type_guards import is_object_collection
-from ._model_contract import require_strict_frozen_operation_model_graph
+from .model_contract import require_strict_frozen_operation_model_graph
 
 if TYPE_CHECKING:
     from .provenance import OperationAdmissionProvenance

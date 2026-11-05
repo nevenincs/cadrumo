@@ -19,13 +19,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.config import override_settings
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
@@ -42,11 +42,11 @@ _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 def _record() -> UserProfileRecord:
     """A minimal record; the walk is schema-driven so facts are incidental."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

@@ -11,7 +11,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...aggregation.tests.ledger_transaction_support import iva_transaction
-from .._m349_ledger_guard import _is_active_guarded_transaction_in_period
+from ..m349_ledger_guard import is_active_guarded_transaction_in_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,4 +44,4 @@ def test_only_a_row_of_the_activity_makes_the_m349_guard_refuse(
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("0.00"),
     ).model_copy(update={"iva_category": category, **updates})
-    assert _is_active_guarded_transaction_in_period(row, _Q1, frozenset({category})) is guarded
+    assert is_active_guarded_transaction_in_period(row, _Q1, frozenset({category})) is guarded

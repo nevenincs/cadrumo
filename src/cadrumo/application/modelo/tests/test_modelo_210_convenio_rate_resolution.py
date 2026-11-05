@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from ._m210_snapshot_fixture import m210_snapshot
+from .m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
@@ -46,11 +46,11 @@ from ....domain.calculations.registry.schema_verification import VerificationPre
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
-from .._m210_convenio_facts import resolve_m210_convenio_override
-from .._m210_rate import resolve_m210_rate
 from ..action_errors import ModeloApplicabilityFilterError
+from ..m210_convenio_facts import resolve_m210_convenio_override
+from ..m210_rate import resolve_m210_rate
 from ..verification_predicates import (
-    _evaluate_applicability_filter,
+    evaluate_applicability_filter,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
 )
@@ -516,4 +516,4 @@ def test_applicability_filter_unknown_name_raises_value_error() -> None:
 
     profile = _irnr_profile("AR")
     with pytest.raises(ModeloApplicabilityFilterError, match="Unknown applicability filter"):
-        _evaluate_applicability_filter("non_resident_irnr_eea_only", profile)
+        evaluate_applicability_filter("non_resident_irnr_eea_only", profile)

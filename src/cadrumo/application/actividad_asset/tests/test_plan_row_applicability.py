@@ -24,8 +24,8 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_baja_correction import _low_value_forecast, _low_value_revision
-from .test_register import _ACQUISITION, _NAME, _operations, _revision
+from .test_baja_correction import low_value_forecast, low_value_revision
+from .test_register import ACQUISITION, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,12 +35,12 @@ _ASSET = "laptop-1"
 def _free_register() -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_low_value_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2026, 12, 31)),
     )
-    operations.create(_low_value_revision(), _NAME)
+    operations.create(low_value_revision(), NAME)
     return operations
 
 
@@ -54,8 +54,8 @@ def test_an_open_free_method_year_reads_as_applicable() -> None:
 
 
 def test_a_year_after_the_basis_is_spent_does_not_apply() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     last = operations.plan(_ASSET)[-1]
 
@@ -66,11 +66,11 @@ def test_a_year_after_the_basis_is_spent_does_not_apply() -> None:
 
 
 def test_an_unknown_opening_history_serves_the_field_that_settles_it() -> None:
-    base = _revision(in_service=date(2020, 1, 1))
+    base = register_revision(in_service=date(2020, 1, 1))
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["opening_history"] = OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)
-    operations, _ = _operations()
-    operations.create(ActivityAssetRevision(**facts), _NAME)
+    operations, _ = register_operations()
+    operations.create(ActivityAssetRevision(**facts), NAME)
 
     row = operations.plan(_ASSET)[0]
 
@@ -89,11 +89,11 @@ def test_a_reason_that_is_not_about_opening_data_serves_no_remedy_and_the_served
 
 
 def _unknown_opening_register() -> ActivityAssetOperations:
-    base = _revision(in_service=date(2020, 1, 1))
+    base = register_revision(in_service=date(2020, 1, 1))
     facts = {name: getattr(base, name) for name in type(base).model_fields}
     facts["opening_history"] = OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)
-    operations, _ = _operations()
-    operations.create(ActivityAssetRevision(**facts), _NAME)
+    operations, _ = register_operations()
+    operations.create(ActivityAssetRevision(**facts), NAME)
     return operations
 
 
@@ -108,8 +108,8 @@ def test_a_list_row_with_an_unknown_opening_amount_serves_the_same_remedy_as_the
 
 
 def test_a_list_row_with_a_known_opening_amount_serves_no_opening_remedy() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
 
     (listed,) = operations.list_elements()
 

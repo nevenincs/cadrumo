@@ -300,7 +300,7 @@ class _LedgerAttachmentExecutor:
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
-                projection = _operation_projection(
+                projection = operation_projection(
                     payload.profile_id,
                     self._operation_id,
                     result,
@@ -433,7 +433,7 @@ def _require_attachment_payload(
     return payload
 
 
-def _operation_projection(
+def operation_projection(
     profile_id: UUID,
     operation_id: LedgerAttachmentOperationId,
     result: ManualLedgerTransactionResult,

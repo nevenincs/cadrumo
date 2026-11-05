@@ -50,7 +50,7 @@ from ...aggregation.ledger_filing_snapshot import (
 )
 from ...aggregation.ledger_membership import LedgerSourceMembership
 from ...aggregation.tests.ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
-from .._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
+from ..ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

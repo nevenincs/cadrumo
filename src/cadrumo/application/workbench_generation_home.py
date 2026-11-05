@@ -73,7 +73,7 @@ from .workbench_generation_contracts import (
 )
 
 
-def _secure_profile_home_input(
+def secure_profile_home_input(
     *,
     observed_at: UtcInstant,
     account_session: HomeAccountSession,
@@ -111,8 +111,8 @@ def _secure_profile_home_input(
         if declarations is not None
         else unavailable("workbench.home.declarations_resume_projector_unavailable")
     )
-    addressed = _home_declaration_actions(declarations, blocked_revision_ids)
-    cross_cutting = _home_ledger_actions(ledger)
+    addressed = home_declaration_actions(declarations, blocked_revision_ids)
+    cross_cutting = home_ledger_actions(ledger)
     actions = (
         None
         if cross_cutting is None
@@ -126,7 +126,7 @@ def _secure_profile_home_input(
         if actions is not None
         else unavailable("workbench.home.actions_projector_unavailable")
     )
-    readiness = _home_ledger_readiness(ledger)
+    readiness = home_ledger_readiness(ledger)
     ledger_state = (
         HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
         if readiness is not None
@@ -168,7 +168,7 @@ _HOME_LEDGER_AREAS: Final = (
 )
 
 
-def _home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLedgerReadiness | None:
+def home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLedgerReadiness | None:
     """Home's four Ledger counts, or nothing when any of them was not measured.
 
     `item_count` is always an integer, so a zero alone cannot be trusted: an
@@ -190,7 +190,7 @@ def _home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLe
     return HomeLedgerReadiness(**counts)
 
 
-_HOME_DECLARATION_STATES: Final[dict[CalculationRevisionState, HomeDeclarationState]] = {
+HOME_DECLARATION_STATES: Final[dict[CalculationRevisionState, HomeDeclarationState]] = {
     # Read from the domain's own vocabulary, not invented for Home.
     # `VERIFICADO_COMPLETO` says verified and complete, which is the only thing
     # READY can honestly mean; `BORRADOR` is a calculation that exists and has
@@ -240,7 +240,7 @@ def _home_declarations(
             # No calculation exists yet, so there is nothing to review or file.
             state = HomeDeclarationState.DRAFT
         else:
-            state = _HOME_DECLARATION_STATES[revision.state]
+            state = HOME_DECLARATION_STATES[revision.state]
         resumes.append(
             HomeDeclarationResume(
                 work_unit_id=ref.work_unit_id,
@@ -264,7 +264,7 @@ _HOME_LEDGER_ACTIONS: Final = (
 """Cross-cutting Ledger work Home can offer, in the order it is offered."""
 
 
-def _dependency_blocked_revisions(
+def dependency_blocked_revisions(
     verification: VerificationReportCatalogue | None,
 ) -> frozenset[str]:
     """Calculation revisions blocked by an unclean cross-period dependency.
@@ -296,7 +296,7 @@ def _dependency_blocked_revisions(
     )
 
 
-def _home_declaration_actions(
+def home_declaration_actions(
     resumes: tuple[HomeDeclarationResume, ...] | None,
     blocked_revision_ids: frozenset[str] = frozenset(),
 ) -> tuple[HomeNextAction, ...]:
@@ -336,7 +336,7 @@ def _home_declaration_actions(
     return tuple(offered)
 
 
-def _home_ledger_actions(ledger: LedgerWorkspaceProjectionV1 | None) -> tuple[HomeNextAction, ...] | None:
+def home_ledger_actions(ledger: LedgerWorkspaceProjectionV1 | None) -> tuple[HomeNextAction, ...] | None:
     """Offer the Ledger work that is outstanding, or nothing when unmeasured.
 
     An UNMEASURED area yields no action rather than an action for zero items:
@@ -416,14 +416,14 @@ def build_workbench_generation_inputs(
     return WorkbenchGenerationInputsV1(
         assembled_at=observed_at,
         home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(
-            _secure_profile_home_input(
+            secure_profile_home_input(
                 observed_at=observed_at,
                 account_session=account_session,
                 agenda=calendar_inputs.agenda,
                 agenda_evidence_state=calendar_inputs.agenda_evidence_state,
                 ledger=ledger,
                 declarations=_home_declarations(declarations, work_units),
-                blocked_revision_ids=_dependency_blocked_revisions(verification),
+                blocked_revision_ids=dependency_blocked_revisions(verification),
                 agenda_refusal=calendar_inputs.agenda_refusal,
             ),
             observed_at=observed_at,

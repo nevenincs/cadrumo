@@ -30,9 +30,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -55,7 +53,7 @@ from ..counterparty_establishment import (
     resolve_confirmed_counterparty_facts,
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from ._ledger_value_fixtures import repository
+from .ledger_value_fixtures import repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -450,7 +448,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
     category it derives is ``DOMESTIC_NOT_SUBJECT`` -- the Canarian outcome a
     mainland default would have replaced with a subject-to-IVA one.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from datetime import date
 
         from ....domain.iva.schema import InvoiceKind, IvaCategory

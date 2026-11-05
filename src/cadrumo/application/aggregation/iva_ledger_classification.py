@@ -417,7 +417,7 @@ def validate_iva_ledger_deduction_classification(
     """
     if transaction.deduction_fact_kind is None and transaction.deduction_provenance is None:
         return None
-    from ._iva_transaction import iva_transaction_gate_issue
+    from .iva_transaction import iva_transaction_gate_issue
 
     issue = iva_transaction_gate_issue(transaction, resolved_period=period, operation=operation)
     if issue is None or issue.reason not in IVA_LEDGER_DEDUCTION_GATE_REASONS:

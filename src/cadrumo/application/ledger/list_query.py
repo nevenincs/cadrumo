@@ -173,7 +173,7 @@ _SORT_FIELD_PROJECTORS: Final[dict[LedgerSortField, Callable[[Transaction], str]
 }
 
 
-def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
+def sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
     """Project one sort axis to a string so ordering can never raise."""
     return _SORT_FIELD_PROJECTORS.get(field, _classification_sort_value)(transaction)
 
@@ -193,7 +193,7 @@ def sort_ledger_results(
     descending = sort_order is LedgerSortOrder.DESC
 
     def composite_key(result: ManualLedgerTransactionResult) -> tuple[bool, object, str]:
-        value = _sort_field_value(result.transaction, sort_by)
+        value = sort_field_value(result.transaction, sort_by)
         primary: object = _DescendingKey(value) if descending else value
         return (not value, primary, result.transaction.transaction_id)
 

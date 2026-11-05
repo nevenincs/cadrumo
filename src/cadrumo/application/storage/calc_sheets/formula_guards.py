@@ -5,9 +5,9 @@ from collections.abc import Mapping
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_formula import FormulaExpression
-from ._translator import translate_formula
 from .errors import CalcSheetsEngineError
 from .layout import SheetLayout
+from .translator import translate_formula
 
 
 def conditional_missing_input_guard(

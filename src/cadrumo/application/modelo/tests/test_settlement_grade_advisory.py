@@ -19,8 +19,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from .._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from ..settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
+from ..settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

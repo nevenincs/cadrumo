@@ -36,13 +36,13 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ...invoices.source_observations import M347Filer, invoice_observation
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_income_evidence import (
+    SalesInvoiceEvidencePayload,
     SalesInvoiceEvidenceRefusal,
-    _SalesInvoiceEvidencePayload,
     sales_invoice_evidence_payload,
 )
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
-from .renta_income_aggregation_support import _period, catalogue_read_ports
+from .renta_income_aggregation_support import catalogue_read_ports, renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -164,7 +164,7 @@ def _linked(invoice: Invoice, *receipts: Transaction) -> tuple[TransactionCatalo
 
 def _evidence(
     invoice: Invoice, movement: Transaction
-) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
+) -> tuple[SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     transactions, invoices = _linked(invoice, movement)
     linked = transactions.get(movement.transaction_id)
     assert linked is not None
@@ -191,7 +191,7 @@ def _resolve(
             bucket_id=_BUCKET,
             modelo=modelo,
             filing_year=_YEAR,
-            period=_period(_YEAR, period_code),
+            period=renta_income_aggregation_period(_YEAR, period_code),
             revision=revision,
             profile=cash_criterion_profile(_YEAR),
         ),
@@ -388,7 +388,7 @@ def test_modelo_347_reads_a_cash_accounting_invoice_the_same_with_or_without_a_l
         bucket_id=_BUCKET,
         modelo="347",
         filing_year=_YEAR,
-        period=_period(_YEAR, "0A"),
+        period=renta_income_aggregation_period(_YEAR, "0A"),
         revision=revision,
         profile=cash_criterion_profile(_YEAR),
     )

@@ -29,7 +29,7 @@ from ....domain.user_profile.setup_answers import (
 from ..imputation_election import YEAR_QUESTION_ID
 from ..models import WizardQuestion
 from ..persistence import project_answers
-from ..widgets import _POSTCODE_QUESTION_IDS
+from ..widgets import POSTCODE_QUESTION_IDS
 
 pytestmark = [
     pytest.mark.usefixtures("operation"),
@@ -156,6 +156,6 @@ def _non_default_token(question: WizardQuestion) -> str:
         return "false" if question.default == "true" else "true"
     if question.choices:
         return next(choice.value for choice in question.choices if choice.value != question.default)
-    if question.id in _POSTCODE_QUESTION_IDS:
+    if question.id in POSTCODE_QUESTION_IDS:
         return "28001"
     return "sample"

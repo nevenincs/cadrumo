@@ -56,17 +56,17 @@ from ..flows.definition import (
     FlowRepeatingGroup,
     FlowSection,
     FlowVisibility,
+    locale_copy_ref,
 )
-from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
-from ._format_hints import (
+from .catalogue import FAMILIA_SECTION_ID
+from .format_hints import (
     FORMAT_AMOUNT_LOCALE_KEY,
     FORMAT_DATE_LOCALE_KEY,
     FORMAT_TAX_ID_LOCALE_KEY,
     FORMAT_UNITS_LOCALE_KEY,
     NIF_INVALID_LOCALE_KEY,
 )
-from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
 if TYPE_CHECKING:
     from datetime import date
@@ -215,14 +215,14 @@ _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 # sign, and entry-event refusals). Reused generic keys were checked
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
-_MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
-_ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
-_RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
-_GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
-_GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
-_GASTOS_BOTH_DECLARED_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.both_declared"
-_ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
-_ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
+MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
+ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
+RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
+GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
+GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
+GASTOS_BOTH_DECLARED_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.both_declared"
+ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
+ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
 _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.relacion_mismatch"
 
 # Format hints reuse the shared wizard.setup.format.* keys already shipped
@@ -236,7 +236,7 @@ _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.re
 # (`domain.contribuyente._descendant_facts`). Two keys for one refusal would
 # drift, and the operator would meet different words depending on which door
 # they came through.
-_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
+RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
 
 
 def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdict:
@@ -284,7 +284,7 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
         parse_meses_trabajo(canonical, field=page.id)
     except ProfileAnswerTypeError:
         return ValidationVerdict.failed(
-            _MESES_INVALID_RANGE_LOCALE_KEY,
+            MESES_INVALID_RANGE_LOCALE_KEY,
             page_id=page.id,
             minimum=_MESES_MIN,
             maximum=_MESES_MAX,
@@ -299,7 +299,7 @@ def _validate_alta_posterior_month(page: FlowPage, canonical: str) -> Validation
     if is_calendar_month(int(canonical)):
         return ValidationVerdict.passed()
     return ValidationVerdict.failed(
-        _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
+        ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
         page_id=page.id,
         minimum=CALENDAR_MONTH_MIN,
         maximum=CALENDAR_MONTH_MAX,
@@ -315,7 +315,7 @@ def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     if not canonical:
         return ValidationVerdict.passed()
     if int(canonical) < 0:
-        return ValidationVerdict.failed(_GASTOS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(GASTOS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -345,9 +345,9 @@ def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
         return ValidationVerdict.passed()
     value = try_parse_canonical_decimal(canonical, max_fraction_digits=2)
     if value is None:
-        return ValidationVerdict.failed(_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY, page_id=page.id)
     if value < 0:
-        return ValidationVerdict.failed(_RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -375,7 +375,7 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
     try:
         parse_guarderia_mensual(canonical, field=page.id)
     except ProfileAnswerTypeError:
-        return ValidationVerdict.failed(_GASTOS_MENSUALES_INVALID_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(GASTOS_MENSUALES_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -403,7 +403,7 @@ def _validate_descendant_guarderia_spend(answers: Mapping[str, str]) -> tuple[Va
     prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
     verdicts = [
         ValidationVerdict.failed(
-            _GASTOS_BOTH_DECLARED_LOCALE_KEY,
+            GASTOS_BOTH_DECLARED_LOCALE_KEY,
             instance=instance,
             page=_GASTOS_GUARDERIA_PAGE_ID,
         )
@@ -492,9 +492,9 @@ def _entry_event_page_verdicts(
     # against the birth, so the operator is told the one thing wrong with the
     # value rather than two overlapping refusals.
     if entry > today:
-        verdicts.append(ValidationVerdict.failed(_ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
+        verdicts.append(ValidationVerdict.failed(ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
     elif birth is not None and entry < birth:
-        verdicts.append(ValidationVerdict.failed(_ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
+        verdicts.append(ValidationVerdict.failed(ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
     # An UNSTATED relación is not judged: an inscription date alone reads as
     # an adoption (the canonical record infers it), so refusing here would
     # block the shape the model accepts.
@@ -549,8 +549,8 @@ register_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, _validate_de
 #: yes can assimilate. An explicit no is offered so the operator can record that
 #: the question was put and declined.
 _DEPENDENCIA_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="true", label=_locale_ref(_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY)),
-    FlowChoice(value="false", label=_locale_ref(_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY)),
+    FlowChoice(value="true", label=locale_copy_ref(_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=locale_copy_ref(_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY)),
 )
 
 
@@ -559,7 +559,7 @@ def _discapacidad_choices(operation: PinnedAuthorityOperation) -> tuple[FlowChoi
     return tuple(
         FlowChoice(
             value=str(grade),
-            label=_locale_ref(f"wizard.setup.descendientes.discapacidad.choices.{grade}.label"),
+            label=locale_copy_ref(f"wizard.setup.descendientes.discapacidad.choices.{grade}.label"),
         )
         for grade in sorted(accepted_descendant_disability_grades(authority=operation))
     )
@@ -569,8 +569,8 @@ def _discapacidad_choices(operation: PinnedAuthorityOperation) -> tuple[FlowChoi
 #: from marital status, spouse record and declaration type, and raises a
 #: visible advisory saying so; an explicit answer always wins over that.
 _PRORRATA_MINIMO_CHOICES: tuple[FlowChoice, ...] = (
-    FlowChoice(value="true", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY)),
-    FlowChoice(value="false", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY)),
+    FlowChoice(value="true", label=locale_copy_ref(_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=locale_copy_ref(_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY)),
 )
 
 
@@ -582,7 +582,7 @@ def _build_descendant_pages(operation: PinnedAuthorityOperation) -> tuple[FlowPa
     relation_choices = tuple(
         FlowChoice(
             value=token.value,
-            label=_locale_ref(f"wizard.setup.descendientes.relacion.choices.{token.value}.label"),
+            label=locale_copy_ref(f"wizard.setup.descendientes.relacion.choices.{token.value}.label"),
         )
         for token in relation_tokens
     )
@@ -605,9 +605,9 @@ def build_descendant_count_page(operation: PinnedAuthorityOperation) -> FlowPage
     return FlowPage(
         id=DESCENDANTS_COUNT_PAGE_ID,
         widget=FlowWidgetKind.INTEGER,
-        prompt=_locale_ref(_COUNT_PROMPT_LOCALE_KEY),
-        help=_locale_ref(_COUNT_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
+        prompt=locale_copy_ref(_COUNT_PROMPT_LOCALE_KEY),
+        help=locale_copy_ref(_COUNT_HELP_LOCALE_KEY),
+        format_hint=locale_copy_ref(FORMAT_UNITS_LOCALE_KEY),
         # Optional with an explicit zero default: a natural-person walk that never
         # mentions descendants declares zero (the correct tax semantics and the
         # interactive prefill), and the scripted driver fills the page from this
@@ -623,7 +623,7 @@ def build_descendant_group(operation: PinnedAuthorityOperation) -> FlowRepeating
     """Build the relationship-aware descendant group under a pinned operation."""
     return FlowRepeatingGroup(
         id=DESCENDANTS_GROUP_ID,
-        title=_locale_ref(_GROUP_TITLE_LOCALE_KEY),
+        title=locale_copy_ref(_GROUP_TITLE_LOCALE_KEY),
         count_from=DESCENDANTS_COUNT_PAGE_ID,
         pages=_build_descendant_pages(operation),
     )
@@ -650,7 +650,7 @@ def attach_descendant_group(
     sections: list[FlowSection] = []
     attached = False
     for section in definition.sections:
-        if section.id == _FAMILIA_SECTION_ID:
+        if section.id == FAMILIA_SECTION_ID:
             sections.append(
                 section.model_copy(
                     update={"items": (*section.items, count_page, descendant_group)},
@@ -661,7 +661,7 @@ def attach_descendant_group(
             sections.append(section)
     if not attached:
         raise ValueError(
-            f"attach_descendant_group: definition {definition.id!r} has no {_FAMILIA_SECTION_ID!r} section",
+            f"attach_descendant_group: definition {definition.id!r} has no {FAMILIA_SECTION_ID!r} section",
         )
     flow_validator_ids = definition.flow_validator_ids
     for validator_id in (DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID):
@@ -695,16 +695,16 @@ def _descendant_identity_pages(
         FlowPage(
             id=_BIRTH_DATE_PAGE_ID,
             widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_BIRTH_DATE_PROMPT_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
+            prompt=locale_copy_ref(_BIRTH_DATE_PROMPT_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
             required=True,
             answer_type=str,
         ),
         FlowPage(
             id=_RELACION_PAGE_ID,
             widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_RELACION_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_RELACION_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_RELACION_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_RELACION_HELP_LOCALE_KEY),
             choices=relation_choices,
             # Optional with no default: leaving it unanswered means an ordinary
             # descendant, which is both the record's own default and the
@@ -723,9 +723,9 @@ def _descendant_identity_pages(
         FlowPage(
             id=_INSCRIPCION_PAGE_ID,
             widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_INSCRIPCION_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
+            prompt=locale_copy_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_INSCRIPCION_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
             required=False,
             answer_type=str,
             visible_when=FlowCondition(
@@ -736,9 +736,9 @@ def _descendant_identity_pages(
         FlowPage(
             id=_ACOGIMIENTO_PAGE_ID,
             widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
+            prompt=locale_copy_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
             required=False,
             answer_type=str,
             # Shown for an adoptado record too, and that is the cap-not-restart rule
@@ -756,7 +756,7 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
         FlowPage(
             id=_DISCAPACIDAD_PAGE_ID,
             widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_DISCAPACIDAD_PROMPT_LOCALE_KEY),
+            prompt=locale_copy_ref(_DISCAPACIDAD_PROMPT_LOCALE_KEY),
             choices=_discapacidad_choices(operation),
             required=False,
             answer_type=str,
@@ -764,16 +764,16 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
         FlowPage(
             id=_FALLECIMIENTO_PAGE_ID,
             widget=FlowWidgetKind.DATE,
-            prompt=_locale_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_DATE_LOCALE_KEY),
+            prompt=locale_copy_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_DATE_LOCALE_KEY),
             required=False,
             answer_type=str,
         ),
         FlowPage(
             id=_CONVIVENCIA_PAGE_ID,
             widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_CONVIVENCIA_PROMPT_LOCALE_KEY),
+            prompt=locale_copy_ref(_CONVIVENCIA_PROMPT_LOCALE_KEY),
             default="true",
             required=False,
             answer_type=bool,
@@ -787,8 +787,8 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
             # answer that changes nothing.
             id=_DEPENDENCIA_PAGE_ID,
             widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_DEPENDENCIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_DEPENDENCIA_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_DEPENDENCIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_DEPENDENCIA_HELP_LOCALE_KEY),
             choices=_DEPENDENCIA_CHOICES,
             required=False,
             answer_type=str,
@@ -797,7 +797,7 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
         FlowPage(
             id=_CUSTODIA_COMPARTIDA_PAGE_ID,
             widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY),
+            prompt=locale_copy_ref(_CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY),
             default="false",
             required=False,
             answer_type=bool,
@@ -813,9 +813,9 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
             # invoice wizard's `_validate_taxable_base`).
             id=_RENTAS_ANUALES_PAGE_ID,
             widget=FlowWidgetKind.DECIMAL,
-            prompt=_locale_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
+            prompt=locale_copy_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_AMOUNT_LOCALE_KEY),
             required=False,
             answer_type=str,
             answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
@@ -823,8 +823,8 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
         FlowPage(
             id=_DECLARACION_PROPIA_PAGE_ID,
             widget=FlowWidgetKind.CONFIRM,
-            prompt=_locale_ref(_DECLARACION_PROPIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_DECLARACION_PROPIA_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_DECLARACION_PROPIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_DECLARACION_PROPIA_HELP_LOCALE_KEY),
             default="false",
             required=False,
             answer_type=bool,
@@ -832,8 +832,8 @@ def _descendant_circumstance_pages(operation: PinnedAuthorityOperation) -> tuple
         FlowPage(
             id=_PRORRATA_MINIMO_PAGE_ID,
             widget=FlowWidgetKind.SELECT,
-            prompt=_locale_ref(_PRORRATA_MINIMO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_PRORRATA_MINIMO_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_PRORRATA_MINIMO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_PRORRATA_MINIMO_HELP_LOCALE_KEY),
             choices=_PRORRATA_MINIMO_CHOICES,
             required=False,
             answer_type=str,
@@ -848,8 +848,8 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
             # TEXT rather than INTEGER: the answer names WHICH months qualified, so
             # the same month grammar the guarderia map below uses carries it.
             widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_MESES_MADRE_TRABAJO_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_MESES_MADRE_TRABAJO_HELP_LOCALE_KEY),
             required=False,
             answer_type=str,
             answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
@@ -857,9 +857,9 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
         FlowPage(
             id=_ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID,
             widget=FlowWidgetKind.INTEGER,
-            prompt=_locale_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_UNITS_LOCALE_KEY),
+            prompt=locale_copy_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_UNITS_LOCALE_KEY),
             required=False,
             answer_type=int,
             answer_validator_ids=(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID,),
@@ -867,9 +867,9 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
         FlowPage(
             id=_GASTOS_GUARDERIA_PAGE_ID,
             widget=FlowWidgetKind.INTEGER,
-            prompt=_locale_ref(_GASTOS_GUARDERIA_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_GASTOS_GUARDERIA_HELP_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_AMOUNT_LOCALE_KEY),
+            prompt=locale_copy_ref(_GASTOS_GUARDERIA_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_GASTOS_GUARDERIA_HELP_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_AMOUNT_LOCALE_KEY),
             required=False,
             answer_type=int,
             answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
@@ -891,8 +891,8 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
             # does not apply to them in a year where it does.
             id=_GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
             widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_GASTOS_MENSUALES_PROMPT_LOCALE_KEY),
-            help=_locale_ref(_GASTOS_MENSUALES_HELP_LOCALE_KEY),
+            prompt=locale_copy_ref(_GASTOS_MENSUALES_PROMPT_LOCALE_KEY),
+            help=locale_copy_ref(_GASTOS_MENSUALES_HELP_LOCALE_KEY),
             required=False,
             answer_type=str,
             answer_validator_ids=(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID,),
@@ -900,8 +900,8 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
         FlowPage(
             id=_NIF_PAGE_ID,
             widget=FlowWidgetKind.TEXT,
-            prompt=_locale_ref(_NIF_PROMPT_LOCALE_KEY),
-            format_hint=_locale_ref(FORMAT_TAX_ID_LOCALE_KEY),
+            prompt=locale_copy_ref(_NIF_PROMPT_LOCALE_KEY),
+            format_hint=locale_copy_ref(FORMAT_TAX_ID_LOCALE_KEY),
             required=False,
             answer_type=str,
             answer_validator_ids=(DESCENDANT_NIF_VALIDATOR_ID,),

@@ -67,7 +67,7 @@ def _filing_record_matches_request(
     )
 
 
-def _capture(
+def capture(
     payload: ModeloFilingRecordListRequest,
     bundle: VerificationRepositoryBundle,
 ) -> ModeloFilingRecordListProjection:
@@ -120,7 +120,7 @@ class ModeloFilingRecordListExecutor:
 
         def read() -> ModeloFilingRecordListProjection:
             bundle = self._factory(str(payload.profile_id), operation=context.authority_operation)
-            return _capture(payload, bundle)
+            return capture(payload, bundle)
 
         return await capture_read_result(context, read, task_name="modelo-filing-record-list")
 

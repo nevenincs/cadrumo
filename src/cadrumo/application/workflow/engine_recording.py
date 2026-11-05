@@ -10,7 +10,7 @@ from ...core.errors.error_codes import build_error_envelope
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.logging import get_logger
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.time.clock import now as _utcnow
+from ...core.time.clock import now
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
@@ -53,7 +53,7 @@ def record_unhandled(
         WorkflowStep(
             stage=stage,
             started_at=started,
-            ended_at=_utcnow(),
+            ended_at=now(),
             success=False,
             summary_locale_key="application.workflow.steps.workflow_failure",
             details=WorkflowFailureDetails(
@@ -80,7 +80,7 @@ def record_site_unavailable(
         WorkflowStep(
             stage=stage,
             started_at=started,
-            ended_at=_utcnow(),
+            ended_at=now(),
             success=False,
             summary_locale_key="application.workflow.steps.site_unavailable",
             details=WorkflowFailureDetails(

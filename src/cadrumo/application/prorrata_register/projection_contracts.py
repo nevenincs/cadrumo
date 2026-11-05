@@ -18,7 +18,7 @@ from ...domain.prorrata_register.register import (
 )
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.public_scalar import PublicDecimal
-from . import operation_requests as _requests
+from . import operation_requests
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
 
 type ProrrataRefusalReason = Literal[
@@ -53,7 +53,9 @@ PRORRATA_WHOLE_SEED_REFUSAL_CODE = "REFUSED_PROFILE_PRORRATA_WHOLE_SEED"
 
 PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE = "REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE"
 
-GROSS_DECLARATION_OPERATION_IDS: frozenset[_requests.ProrrataOperationId] = frozenset({"declare_gross", "remove_gross"})
+GROSS_DECLARATION_OPERATION_IDS: frozenset[operation_requests.ProrrataOperationId] = frozenset(
+    {"declare_gross", "remove_gross"}
+)
 """Operations whose result arm is one operator gross declaration."""
 
 
@@ -302,7 +304,7 @@ class ProrrataMutationProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    operation_id: _requests.ProrrataOperationId
+    operation_id: operation_requests.ProrrataOperationId
     profile_id: UUID
     outcome: Literal["success", "refused"]
     entry: ProrrataEntryProjection | None = None

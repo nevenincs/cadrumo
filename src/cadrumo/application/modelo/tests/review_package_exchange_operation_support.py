@@ -27,10 +27,10 @@ from ..review_package_recipient_encryption import RecipientDecryptionError
 from ..review_package_recipient_registry import RecipientFingerprintRecord, RecipientFingerprintRegister
 from ..review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 from ..review_package_signing import ReviewPackageSigningKeypair
-from ._review_package_bytes_support import build_package_path, review_package_revision, review_package_work_unit
-from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 from .m036_operation_support import INSTANT, PROFILE_ID, CommitFence, Events, Operands
-from .test_m036_lifecycle_service import _EventRepository
+from .review_package_bytes_support import build_package_path, review_package_revision, review_package_work_unit
+from .review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
+from .test_m036_lifecycle_service import M036LifecycleServiceEventRepository
 
 
 class Signing:
@@ -148,7 +148,7 @@ class Recipients:
         raise AssertionError("exchange must not mutate trusted recipient policy")
 
 
-class History(_EventRepository):
+class History(M036LifecycleServiceEventRepository):
     """Canonical domain event builder uses the established inward catalogue fixture."""
 
     def __init__(self, fence: CommitFence) -> None:

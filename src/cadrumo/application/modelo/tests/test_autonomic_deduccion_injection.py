@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
@@ -49,7 +49,7 @@ def _facts(**overrides: UserProfileFactValue) -> dict[str, UserProfileFactValue]
 
 
 def test_madrid_single_individual_filer_injects_weighted_count() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts()
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -59,7 +59,7 @@ def test_madrid_single_individual_filer_injects_weighted_count() -> None:
 
 
 def test_shared_custody_child_injects_prorrateo_weighted_half() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"renta_family.descendiente.0.custodia_compartida": "true"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -68,7 +68,7 @@ def test_shared_custody_child_injects_prorrateo_weighted_half() -> None:
 
 
 def test_out_of_window_child_leaves_count_at_zero_default() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"renta_family.descendiente.0.birth_date": f"{_REVIEWED_EDITION - 6}-01-01"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -77,7 +77,7 @@ def test_out_of_window_child_leaves_count_at_zero_default() -> None:
 
 
 def test_conjunta_declaration_is_fail_closed_no_auto_claim() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"renta_filing.declaration_type": "2"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -87,7 +87,7 @@ def test_conjunta_declaration_is_fail_closed_no_auto_claim() -> None:
 
 
 def test_married_filer_is_fail_closed_no_auto_claim() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"renta_taxpayer.marital_status": "2"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -96,7 +96,7 @@ def test_married_filer_is_fail_closed_no_auto_claim() -> None:
 
 
 def test_non_madrid_resident_leaves_count_at_zero_default() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"tax_residence.ccaa": "cataluna"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test
@@ -107,7 +107,7 @@ def test_non_madrid_resident_leaves_count_at_zero_default() -> None:
 
 
 def test_filing_year_before_the_reviewed_edition_injects_nothing() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts()
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION - 1, authored_year=_REVIEWED_EDITION - 1, operation=_authority_operation_for_test
@@ -118,7 +118,7 @@ def test_filing_year_before_the_reviewed_edition_injects_nothing() -> None:
 
 def test_projected_filing_year_supplies_the_defaults_through_its_authored_edition() -> None:
     """A year projected from the reviewed edition reads the same revision, so its bindings are supplied too."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"tax_residence.ccaa": "cataluna"})
         inject_derived_autonomic_deduccion_facts(
             facts,
@@ -131,7 +131,7 @@ def test_projected_filing_year_supplies_the_defaults_through_its_authored_editio
 
 
 def test_non_cohabiting_child_leaves_count_at_zero() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         facts = _facts(**{"renta_family.descendiente.0.convivencia": "false"})
         inject_derived_autonomic_deduccion_facts(
             facts, _REVIEWED_EDITION, authored_year=_REVIEWED_EDITION, operation=_authority_operation_for_test

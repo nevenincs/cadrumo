@@ -53,10 +53,9 @@ from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.hex import HEX_PATTERN_64, HEX_PATTERN_128
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .review_package_signing import ReviewPackageSigningKeypair, SignedReviewPackage, verify_review_package_signature
 from .review_package_text import ReviewPackageNote
@@ -83,13 +82,13 @@ class CounterSignedReceipt(BaseModel):
     ``signature_hex`` bytes and would need a fresh counter-signature.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     envelope_version: int = Field(default=_COUNTER_SIGNATURE_ENVELOPE_VERSION, ge=1)
     original_signature: SignedReviewPackage
     note: ReviewPackageNote = ""
-    counter_signature_hex: str = Field(pattern=_HEX_PATTERN_128)
-    counter_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    counter_signature_hex: str = Field(pattern=HEX_PATTERN_128)
+    counter_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     counter_signed_at: UtcInstant
 
 
@@ -146,7 +145,7 @@ def counter_sign_review_package(
         note=note,
         counter_signature_hex=counter_signature.hex(),
         counter_public_key_hex=counter_signer_keypair.public_key_hex,
-        counter_signed_at=counter_signed_at or _utc_now(),
+        counter_signed_at=counter_signed_at or now(),
     )
 
 

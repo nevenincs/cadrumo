@@ -13,7 +13,7 @@ from enum import StrEnum
 import pytest
 
 from ....domain.transactions.enums import BusinessClassification
-from .. import _shared_issue_reasons
+from .. import shared_issue_reasons
 from ..impatriado_income_ledger import ImpatriadoIncomeLedgerAggregationIssueReason
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssueReason
@@ -35,7 +35,7 @@ def test_both_ledgers_emit_same_string_for_shared_reason() -> None:
     for name in names:
         iva_value = IvaLedgerAggregationIssueReason[name].value
         renta_value = RentaLedgerAggregationIssueReason[name].value
-        shared = getattr(_shared_issue_reasons, name)
+        shared = getattr(shared_issue_reasons, name)
         assert iva_value == renta_value == shared, name
 
 
@@ -57,7 +57,7 @@ def test_every_classification_names_one_rejection_every_lane_can_carry(
         "personal_transaction" if classification is BusinessClassification.PERSONAL else "unclassified_business_state"
     )
 
-    assert lane(_shared_issue_reasons.business_state_issue_reason(classification)).value == expected
+    assert lane(shared_issue_reasons.business_state_issue_reason(classification)).value == expected
 
 
 def test_iva_ledger_carries_its_domain_specific_reasons() -> None:
@@ -98,7 +98,7 @@ def test_annual_and_quarterly_expense_ledgers_spell_category_rule_refusals_alike
     for name in names:
         annual_value = RentaLedgerAggregationIssueReason[name].value
         quarterly_value = RentaGastoLedgerAggregationIssueReason[name].value
-        shared = getattr(_shared_issue_reasons, name)
+        shared = getattr(shared_issue_reasons, name)
         assert annual_value == quarterly_value == shared, name
 
 

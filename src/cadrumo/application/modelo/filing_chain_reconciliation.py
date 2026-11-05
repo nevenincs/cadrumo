@@ -67,7 +67,6 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol, ObservationSourceKind
-from ._registry_helpers import reject_unknown_import_casillas
 from .action_errors import ExternalModeloImportError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .external_import_actions import (
@@ -83,6 +82,7 @@ from .filing_revision_persistence import supersede_prior_current_filing
 from .modelo_bucket_events import build_modelo_bucket_event
 from .reconcile_casilla import detect_casilla_divergences
 from .reconciliation_comparison import reconcile_receipt_totals
+from .registry_helpers import reject_unknown_import_casillas
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import WorkLifecyclePorts
 

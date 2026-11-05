@@ -28,7 +28,7 @@ from typing import Annotated, Literal, Self, TypeAliasType, Union, get_args, get
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ._dataclass_fields import dataclass_type_fields, dataclass_type_hints
+from .dataclass_fields import dataclass_type_fields, dataclass_type_hints
 
 
 class PublicFactEntryV1(BaseModel):
@@ -258,7 +258,7 @@ def project_public_mirror(
     ``omitted`` names, per public mirror, canonical fields it deliberately does
     not carry; every other field must exist on both sides.
     """
-    from ._public_mirror_projection import project_public_value
+    from .public_mirror_projection import project_public_value
 
     return project_public_value(value, canonical, public, omitted or {})
 
@@ -276,7 +276,7 @@ def restore_public_mirror(
     ``withheld`` names canonical fields not restored from their mirror; the
     ``complete`` hook fills them from the restored siblings before validation.
     """
-    from ._public_mirror_restoration import restore_public_value
+    from .public_mirror_restoration import restore_public_value
 
     return restore_public_value(value, canonical, public, withheld, complete)
 

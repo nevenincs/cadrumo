@@ -59,8 +59,7 @@ from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 from pydantic import BaseModel, ValidationError
 
 from ...core.aggregation import IntracomOperationType
-from ...core.config import Settings
-from ...core.config import load_settings as _load_settings
+from ...core.config import Settings, load_settings
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.hex import Hex16Str
@@ -206,7 +205,7 @@ class InvoiceConfirmationResult(BaseModel):
     establishment: ConfirmedEstablishment | None = None
 
 
-def _with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> InvoiceDraft:
+def with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> InvoiceDraft:
     """Return *draft* carrying a finding when the document contradicts *kind*.
 
     The consuming half of :func:`derive_invoice_kind_from_filer_role`. The
@@ -330,7 +329,7 @@ def _only_a_reading_the_record_predates(
     )
 
 
-def _written_confirmation_record(
+def written_confirmation_record(
     *,
     bucket_id: str,
     invoice_id: str,
@@ -387,12 +386,12 @@ def _confirmed_extractor(draft: InvoiceDraft) -> str:
     return "+".join(origins) if origins else "unrecorded"
 
 
-def _record_confirmed_summary_on_evidence(
+def record_confirmed_summary_on_evidence(
     *,
     bucket_id: str,
     evidence_id: str | None,
     invoice: Invoice,
-    preparation: _InvoiceConfirmationPreparation,
+    preparation: InvoiceConfirmationPreparation,
     evidence_ports: LedgerEvidencePorts,
 ) -> None:
     """Show the confirmed figures on the evidence record they were read from.
@@ -580,7 +579,7 @@ def _refuse_a_divergent_reconfirm(
     )
 
 
-class _InvoiceConfirmationPreparation(NamedTuple):
+class InvoiceConfirmationPreparation(NamedTuple):
     """Validated draft state carried from extraction to catalogue persistence."""
 
     settings: Settings
@@ -592,7 +591,7 @@ class _InvoiceConfirmationPreparation(NamedTuple):
     operator_restated_amounts: bool
 
 
-def _prepare_invoice_confirmation(
+def prepare_invoice_confirmation(
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -618,7 +617,7 @@ def _prepare_invoice_confirmation(
     extraction_ports: InvoiceDraftExtractionPorts,
     operation: PinnedAuthorityOperation,
     legends: tuple[RegimeLegend, ...],
-) -> _InvoiceConfirmationPreparation:
+) -> InvoiceConfirmationPreparation:
     """Extract, gate, and resolve the document-side confirmation authorities."""
     from .confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from .confirmation_gate import resolved_blockers
@@ -626,7 +625,7 @@ def _prepare_invoice_confirmation(
     # The result's establishment annotation is a forward reference because the
     # review gate imports this module. Rebuild it at the same deferred boundary.
     InvoiceConfirmationResult.model_rebuild(_types_namespace={"ConfirmedEstablishment": ConfirmedEstablishment})
-    resolved_settings = settings or _load_settings()
+    resolved_settings = settings or load_settings()
     draft = extract_invoice_draft_from_evidence(
         bucket_id=bucket_id,
         evidence_id=evidence_id,
@@ -637,7 +636,7 @@ def _prepare_invoice_confirmation(
         legends=legends,
     )
     # A contradiction is a normal blocker, so it must be stamped before the gate.
-    draft = _with_direction_contradiction(draft, kind=kind)
+    draft = with_direction_contradiction(draft, kind=kind)
     blockers = resolved_blockers(draft=draft, resolutions=resolutions)
     resolved_attachment_id = _resolve_evidence_attachment_id(
         bucket_id=bucket_id,
@@ -680,7 +679,7 @@ def _prepare_invoice_confirmation(
         "retencion_rate": retention_rate,
         "retencion_amount": retention_amount,
     }
-    return _InvoiceConfirmationPreparation(
+    return InvoiceConfirmationPreparation(
         settings=resolved_settings,
         draft=draft,
         blockers=blockers,
@@ -691,7 +690,7 @@ def _prepare_invoice_confirmation(
     )
 
 
-def _build_confirmed_invoice_candidate(
+def build_confirmed_invoice_candidate(
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -716,7 +715,7 @@ def _build_confirmed_invoice_candidate(
     rectifies_invoice_number: str | None,
     notes: str,
     catalogue_creation_ports: CatalogueCreationPorts,
-    preparation: _InvoiceConfirmationPreparation,
+    preparation: InvoiceConfirmationPreparation,
 ) -> Invoice:
     """Resolve operator/document fields and build the exact catalogue candidate."""
     draft = preparation.draft
@@ -823,10 +822,10 @@ def _retention_figure_refusal(error: ValidationError) -> InvoiceRetentionFigureE
     return None
 
 
-def _persist_confirmed_invoice(
+def persist_confirmed_invoice(
     *,
     candidate: Invoice,
-    preparation: _InvoiceConfirmationPreparation,
+    preparation: InvoiceConfirmationPreparation,
     bucket_id: str,
     evidence_id: str | None,
     confirmed_by: str,
@@ -881,14 +880,14 @@ def _persist_confirmed_invoice(
             attachment_id=preparation.attachment_id,
             invoice_id=existing.invoice_id,
         )
-        _record_confirmed_summary_on_evidence(
+        record_confirmed_summary_on_evidence(
             bucket_id=bucket_id,
             evidence_id=evidence_id,
             invoice=existing,
             preparation=preparation,
             evidence_ports=evidence_ports,
         )
-        existing_record = _written_confirmation_record(
+        existing_record = written_confirmation_record(
             bucket_id=bucket_id,
             invoice_id=existing.invoice_id,
             evidence_id=evidence_id,
@@ -921,14 +920,14 @@ def _persist_confirmed_invoice(
         attachment_id=preparation.attachment_id,
         invoice_id=result.invoice.invoice_id,
     )
-    _record_confirmed_summary_on_evidence(
+    record_confirmed_summary_on_evidence(
         bucket_id=bucket_id,
         evidence_id=evidence_id,
         invoice=result.invoice,
         preparation=preparation,
         evidence_ports=evidence_ports,
     )
-    confirmation_record = _written_confirmation_record(
+    confirmation_record = written_confirmation_record(
         bucket_id=bucket_id,
         invoice_id=result.invoice.invoice_id,
         evidence_id=evidence_id,
@@ -966,7 +965,7 @@ class PreparedInvoiceConfirmation(NamedTuple):
     """
 
     candidate: Invoice
-    preparation: _InvoiceConfirmationPreparation
+    preparation: InvoiceConfirmationPreparation
     bucket_id: str
     evidence_id: str | None
     resolutions: tuple[FindingResolution, ...]
@@ -1034,7 +1033,7 @@ def prepare_invoice_confirmation_from_evidence(
     legends: tuple[RegimeLegend, ...],
 ) -> PreparedInvoiceConfirmation:
     """Re-read, resolve and validate an invoice without a durable write."""
-    preparation = _prepare_invoice_confirmation(
+    preparation = prepare_invoice_confirmation(
         bucket_id=bucket_id,
         kind=kind,
         evidence_id=evidence_id,
@@ -1075,7 +1074,7 @@ def prepare_invoice_confirmation_from_evidence(
             invoice_class = resolve_invoice_legal_classification_catalogue(
                 effective_date=classification_date,
             ).require_invoice_class(invoice_class_token)
-    candidate = _build_confirmed_invoice_candidate(
+    candidate = build_confirmed_invoice_candidate(
         bucket_id=bucket_id,
         kind=kind,
         counterparty_country=counterparty_country,
@@ -1124,7 +1123,7 @@ def persist_prepared_invoice_confirmation(
     guarded catalogue replay. Runtime callers therefore report UPDATED even
     when the returned ``created`` flag is false.
     """
-    return _persist_confirmed_invoice(
+    return persist_confirmed_invoice(
         candidate=prepared.candidate,
         preparation=prepared.preparation,
         bucket_id=prepared.bucket_id,

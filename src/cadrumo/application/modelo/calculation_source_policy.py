@@ -17,8 +17,7 @@ See Also:
 from __future__ import annotations
 
 from ...core.aggregation import BindingSourceKind
-from ..aggregation.source_precedence import CallerOverrideDisposition as _CallerOverrideDisposition
-from ..aggregation.source_precedence import precedence_ladder_sources as _precedence_ladder_sources
+from ..aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 
 # Caller-override lock / carry sets, DERIVED from the ordered precedence-ladder
 # declaration (``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in the aggregation package)
@@ -28,12 +27,12 @@ from ..aggregation.source_precedence import precedence_ladder_sources as _preced
 # so legitimate fallback overrides can still reach the engine. The conformance
 # gate ``test_precedence_ladder_conformance`` binds these to the declaration so
 # the guard and the ladder cannot silently diverge.
-BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = _precedence_ladder_sources(
-    _CallerOverrideDisposition.LOCK,
+BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = precedence_ladder_sources(
+    CallerOverrideDisposition.LOCK,
 )
 
-CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = _precedence_ladder_sources(
-    _CallerOverrideDisposition.CARRY,
+CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = precedence_ladder_sources(
+    CallerOverrideDisposition.CARRY,
 )
 
 __all__ = [

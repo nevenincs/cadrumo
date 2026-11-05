@@ -47,9 +47,9 @@ from ..revision_selection_operation import (
     ModeloWorkRevisionExecutor,
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
-    _filed_external_without_report,
     build_modelo_work_revision_definition,
     build_modelo_work_revision_registration,
+    revision_selection_operation_filed_external_without_report,
 )
 from ..verification_repository_ports import VerificationRepositoryBundle
 
@@ -171,15 +171,15 @@ def test_external_import_revision_requires_matching_confirmed_filing_receipt() -
 
     repository = FilingRepository(ModeloRecordCatalogue(records={filing_id: record}))
     bundle = cast(VerificationRepositoryBundle, cast(object, SimpleNamespace(filing=repository)))
-    assert _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+    assert revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
 
     repository.catalogue = ModeloRecordCatalogue()
-    assert not _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+    assert not revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
 
     repository.catalogue = ModeloRecordCatalogue(records={filing_id: record})
     repository.bucket_id = str(_OTHER_PROFILE)
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+        revision_selection_operation_filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 

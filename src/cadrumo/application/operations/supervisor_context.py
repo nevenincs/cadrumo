@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationInteractionKind
-from ._execution_context import DefinitionBoundContext
+from .execution_context import DefinitionBoundContext
 from .interactions import OperationInteractionRequest, OperationPendingInteraction
 from .models import OperationIdentity
 from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore

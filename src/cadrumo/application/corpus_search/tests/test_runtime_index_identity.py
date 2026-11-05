@@ -102,7 +102,7 @@ def test_index_without_identity_metadata_is_rebuilt(
     monkeypatch.setattr(runtime, "build_lexical_index", counted_build)
     runtime.ensure_corpus_index()
     assert calls == 1
-    assert runtime._stored_identity(database_path) == runtime._corpus_identity(corpus_root)
+    assert runtime.stored_identity(database_path) == runtime.corpus_identity(corpus_root)
 
 
 def test_interrupted_rebuild_never_partially_publishes(

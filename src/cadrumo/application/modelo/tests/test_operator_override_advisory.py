@@ -20,11 +20,11 @@ import pytest
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..calculation_source_policy import CALLER_OVERRIDABLE_CARRY_SOURCES
+from ..operator_override_advisory import collect_operator_override_divergence_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

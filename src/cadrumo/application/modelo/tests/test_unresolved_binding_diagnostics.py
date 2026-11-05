@@ -38,7 +38,7 @@ from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
-from .._calculation_source_staging import expected_but_missing_binding_ids
+from ..calculation_source_staging import expected_but_missing_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

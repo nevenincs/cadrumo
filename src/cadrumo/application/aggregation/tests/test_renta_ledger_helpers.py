@@ -26,10 +26,10 @@ from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..business_proportion import business_proportion
 from ..errors import AggregationPeriodError
-from ..renta_ledger import _resolve_annual_period
+from ..renta_ledger import resolve_annual_period
 from ..renta_ledger_classification import business_fact_amount, renta_direction_for
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,18 +40,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_resolve_annual_period_accepts_annual_period_instance() -> None:
-    period = _period(2025, "0A")
+    period = renta_income_aggregation_period(2025, "0A")
 
-    resolved = _resolve_annual_period(period)
+    resolved = resolve_annual_period(period)
 
     assert resolved is period
 
 
 def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> None:
-    quarterly = _period(2025, "2T")
+    quarterly = renta_income_aggregation_period(2025, "2T")
 
     with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly"):
-        _resolve_annual_period(quarterly)
+        resolve_annual_period(quarterly)
 
 
 # ---------------------------------------------------------------------------

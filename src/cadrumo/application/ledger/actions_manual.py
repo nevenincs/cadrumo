@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
@@ -75,7 +75,7 @@ from .actions_common import (
     verify_evidence_references,
     verify_usage_ratio_reference,
 )
-from .actions_import import apply_fx_conversion as _apply_fx_conversion
+from .actions_import import apply_fx_conversion
 from .evidence import PurchaseInvoiceEvidence
 from .fx_value_consistency import require_consistent_fx_value
 from .models import (
@@ -98,7 +98,7 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
+SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
     {"accrual_date", "investment_asset_id", "iva_vehicle_use", "operation_date", "own_account_id"}
 )
 
@@ -325,7 +325,7 @@ def link_manual_transaction_invoice(
 def record_attachment_back_references(
     transaction: Transaction,
     *,
-    attachment_store: _AttachmentStoreProtocol | None,
+    attachment_store: AttachmentStoreProtocol | None,
     attachment_ids: tuple[str, ...] | None = None,
 ) -> None:
     """Record the transaction on selected attachment manifests it cites.
@@ -469,7 +469,7 @@ def transaction_from_command(
         description=command.description,
         provenance=RawProvenance(
             source_path=Path.cwd() / ".cadrumo-manual-ledger",
-            source_sha256=_source_sha256(command, occurred_at=occurred_at),
+            source_sha256=source_sha256(command, occurred_at=occurred_at),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
             ingested_at=occurred_at,
@@ -562,7 +562,7 @@ def _fx_conversion_fields(
     currency_normalizer: CurrencyNormalizationService | None,
 ) -> dict[str, object]:
     """Project the converted foreign-currency fields, empty when no rate resolves."""
-    fx_rate, value_in_eur, rate_source, rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
+    fx_rate, value_in_eur, rate_source, rate_date_iso = apply_fx_conversion(raw, currency_normalizer)
     if fx_rate is None or value_in_eur is None:
         return {}
     return {"fx_rate": fx_rate, "value_in_eur": value_in_eur, "rate_source": rate_source, "rate_date": rate_date_iso}
@@ -674,14 +674,14 @@ def _evidence_provenance(
 def _provider_transaction_id(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
     if command.idempotency_key is not None:
         return f"manual:{command.bucket_id}:{command.idempotency_key}"
-    return f"manual:{command.bucket_id}:{occurred_at.isoformat()}:{_source_sha256(command, occurred_at=occurred_at)}"
+    return f"manual:{command.bucket_id}:{occurred_at.isoformat()}:{source_sha256(command, occurred_at=occurred_at)}"
 
 
-def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
+def source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
     payload = {
         name: value
         for name, value in command.model_dump(mode="json").items()
-        if value is not None or name not in _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT
+        if value is not None or name not in SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT
     }
     payload["occurred_at"] = occurred_at.isoformat()
     return content_hash_hex(payload)

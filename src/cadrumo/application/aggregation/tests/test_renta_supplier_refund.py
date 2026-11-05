@@ -30,7 +30,7 @@ from ....domain.transactions.models import Transaction
 from ...actividad_asset.history import ActivityAssetHistory
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
-    _InMemoryInvoiceCatalogueRepository,
+    InMemoryInvoiceCatalogueRepository,
     m130_box,
     reasons,
     resolve_m100,
@@ -38,18 +38,18 @@ from .ledger_source_mesh_support import (
 )
 from .ledger_transaction_support import ledger_raw_transaction
 from .test_renta_imputation_criterion import (
-    _CASH,
-    _DEVENGO,
-    _INCOME_0171,
-    _INCOME_M130_01,
-    _declared,
-    _expense_row,
-    _profile,
-    _received,
-    _unresolved_bindings,
+    CASH,
+    DEVENGO,
+    INCOME_0171,
+    INCOME_M130_01,
+    declared,
+    expense_row,
+    received,
+    renta_imputation_criterion_profile,
+    unresolved_bindings,
 )
-from .test_renta_rectificativa_expense import _correction
-from .test_renta_rectificativa_income import _resolve as _resolve_income
+from .test_renta_rectificativa_expense import renta_rectificativa_expense_correction
+from .test_renta_rectificativa_income import resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -88,35 +88,37 @@ def _supplier_refund(
 
 def _refund_invoice(number: str, linked: str) -> Invoice:
     """Return a plain received invoice of 100,00 + 21,00 carrying the refund as its only link."""
-    return _received(_REFUNDED_ON, linked=(linked,)).model_copy(update={"invoice_number": number})
+    return received(_REFUNDED_ON, linked=(linked,)).model_copy(update={"invoice_number": number})
 
 
-def _repository(*invoices: Invoice) -> _InMemoryInvoiceCatalogueRepository:
-    repository = _InMemoryInvoiceCatalogueRepository()
+def _repository(*invoices: Invoice) -> InMemoryInvoiceCatalogueRepository:
+    repository = InMemoryInvoiceCatalogueRepository()
     repository.save(build_invoice_catalogue(invoices))
     return repository
 
 
 def _case_a() -> tuple[tuple[Transaction, Transaction], tuple[Invoice, Invoice]]:
     """Paid on R-1, refunded with the only link on R-2."""
-    paid_unlinked = _expense_row(_PAID_ON, evidence_id=None)
+    paid_unlinked = expense_row(_PAID_ON, evidence_id=None)
     refund_unlinked = _supplier_refund(_REFUNDED_ON, evidence_id=None)
-    first = _received(_PAID_ON, linked=(paid_unlinked.transaction_id,))
+    first = received(_PAID_ON, linked=(paid_unlinked.transaction_id,))
     second = _refund_invoice("R-2", refund_unlinked.transaction_id)
     return (
-        _expense_row(_PAID_ON, evidence_id=first.invoice_id),
+        expense_row(_PAID_ON, evidence_id=first.invoice_id),
         _supplier_refund(_REFUNDED_ON, evidence_id=second.invoice_id),
     ), (first, second)
 
 
 def _case_b(*, accrual_date: date | None) -> tuple[tuple[Transaction, Transaction], tuple[Invoice, Invoice]]:
     """Paid on R-1, a 100,00 correction naming R-1, the refund linked to the correction."""
-    paid_unlinked = _expense_row(_PAID_ON, evidence_id=None)
+    paid_unlinked = expense_row(_PAID_ON, evidence_id=None)
     refund_unlinked = _supplier_refund(_REFUNDED_ON, evidence_id=None, accrual_date=accrual_date)
-    first = _received(_PAID_ON, linked=(paid_unlinked.transaction_id,))
-    correction = _correction(_REFUNDED_ON, base=_HUNDRED, linked=(refund_unlinked.transaction_id,))
+    first = received(_PAID_ON, linked=(paid_unlinked.transaction_id,))
+    correction = renta_rectificativa_expense_correction(
+        _REFUNDED_ON, base=_HUNDRED, linked=(refund_unlinked.transaction_id,)
+    )
     return (
-        _expense_row(_PAID_ON, evidence_id=first.invoice_id),
+        expense_row(_PAID_ON, evidence_id=first.invoice_id),
         _supplier_refund(_REFUNDED_ON, evidence_id=correction.invoice_id, accrual_date=accrual_date),
     ), (first, correction)
 
@@ -130,7 +132,7 @@ def _income(
     modelo: str = "100",
     period: str = "0A",
 ) -> CalculationSourceResolution:
-    return _resolve_income(
+    return resolve(
         operation, ((_YEAR, criterion),), rows=rows, invoices=invoices, year=_YEAR, modelo=modelo, period=period
     )
 
@@ -145,32 +147,32 @@ def _blocked(resolution: CalculationSourceResolution) -> list[str]:
 
 def test_a_refund_of_a_cash_expense_nets_to_nothing_in_the_annual_return(operation: PinnedAuthorityOperation) -> None:
     rows, invoices = _case_a()
-    income = _income(operation, _CASH, rows, invoices)
+    income = _income(operation, CASH, rows, invoices)
     expense = resolve_m100(
         ActivityAssetHistory(),
         rows=rows,
-        profile=_profile(operation, _declared((_YEAR, _CASH))),
+        profile=renta_imputation_criterion_profile(operation, declared((_YEAR, CASH))),
         invoices=_repository(*invoices),
     )
-    assert income.binding_values[_INCOME_0171] == _ZERO
-    assert _INCOME_0171 not in _unresolved_bindings(income)
+    assert income.binding_values[INCOME_0171] == _ZERO
+    assert INCOME_0171 not in unresolved_bindings(income)
     assert _m100_expense(expense) == _ZERO
     assert _blocked(expense) == []
 
 
 def test_the_instalment_reads_a_cash_refund_as_the_annual_return_does(operation: PinnedAuthorityOperation) -> None:
     rows, invoices = _case_a()
-    profile = _profile(operation, _declared((_YEAR, _CASH)))
-    income = _income(operation, _CASH, rows, invoices, modelo="130", period="2T")
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, CASH)))
+    income = _income(operation, CASH, rows, invoices, modelo="130", period="2T")
     expense = resolve_m130(ActivityAssetHistory(), "2T", rows=rows, profile=profile, invoices=_repository(*invoices))
-    assert income.binding_values[_INCOME_M130_01] == _ZERO
+    assert income.binding_values[INCOME_M130_01] == _ZERO
     assert m130_box(expense) == _ZERO
     assert _blocked(expense) == []
 
 
 def test_the_instalment_before_the_refund_keeps_the_whole_expense(operation: PinnedAuthorityOperation) -> None:
     rows, invoices = _case_a()
-    profile = _profile(operation, _declared((_YEAR, _CASH)))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, CASH)))
     expense = resolve_m130(ActivityAssetHistory(), "1T", rows=rows, profile=profile, invoices=_repository(*invoices))
     assert m130_box(expense) == _HUNDRED
 
@@ -180,12 +182,12 @@ def test_a_refund_on_a_correction_is_left_to_the_netting_in_both_returns(
     operation: PinnedAuthorityOperation, accrual_date: date | None
 ) -> None:
     rows, invoices = _case_b(accrual_date=accrual_date)
-    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
-    income = _income(operation, _DEVENGO, rows, invoices)
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, DEVENGO)))
+    income = _income(operation, DEVENGO, rows, invoices)
     annual = resolve_m100(ActivityAssetHistory(), rows=rows, profile=profile, invoices=_repository(*invoices))
     instalment = resolve_m130(ActivityAssetHistory(), "2T", rows=rows, profile=profile, invoices=_repository(*invoices))
-    assert income.binding_values[_INCOME_0171] == _ZERO
-    assert _INCOME_0171 not in _unresolved_bindings(income)
+    assert income.binding_values[INCOME_0171] == _ZERO
+    assert INCOME_0171 not in unresolved_bindings(income)
     assert _m100_expense(annual) == _ZERO
     assert m130_box(instalment) == _ZERO
     assert _blocked(annual) == []
@@ -196,14 +198,14 @@ def test_a_refund_on_a_correction_is_left_to_the_netting_in_both_returns(
 
 def _premium(on: date, *, direction: TransactionDirection, evidence_id: str | None) -> Transaction:
     """Return a 400,00 health premium, or its refund, capped together with the others."""
-    return _expense_row(on, evidence_id=evidence_id, amount=_PREMIUM + _PREMIUM_IVA, base=_PREMIUM).model_copy(
+    return expense_row(on, evidence_id=evidence_id, amount=_PREMIUM + _PREMIUM_IVA, base=_PREMIUM).model_copy(
         update={"direction": direction, "category_id": SpendingCategory.from_registry("seguros_salud_autonomo").value}
     )
 
 
 def _premium_invoice(number: str, on: date, linked: str) -> Invoice:
     line = (
-        _received(on, linked=(linked,))
+        received(on, linked=(linked,))
         .lines[0]
         .model_copy(
             update={
@@ -213,7 +215,7 @@ def _premium_invoice(number: str, on: date, linked: str) -> Invoice:
             }
         )
     )
-    return _received(on, linked=(linked,)).model_copy(
+    return received(on, linked=(linked,)).model_copy(
         update={
             "invoice_number": number,
             "base_total": _PREMIUM,
@@ -246,7 +248,7 @@ def test_a_refund_counts_against_the_shared_cap_of_the_instalment(
     refund_invoice = _premium_invoice("P-R", refund_on, unlinked.transaction_id)
     invoices.append(refund_invoice)
     rows.append(_premium(refund_on, direction=TransactionDirection.INCOMING, evidence_id=refund_invoice.invoice_id))
-    profile = _profile(operation, _declared((_YEAR, _CASH)))
+    profile = renta_imputation_criterion_profile(operation, declared((_YEAR, CASH)))
     expense = resolve_m130(
         ActivityAssetHistory(), "2T", rows=tuple(rows), profile=profile, invoices=_repository(*invoices)
     )

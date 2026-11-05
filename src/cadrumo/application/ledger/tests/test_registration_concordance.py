@@ -39,7 +39,7 @@ from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.iva.schema import IvaTerritorialScope
-from ._ledger_value_fixtures import repository
+from .ledger_value_fixtures import repository
 
 __all__ = ["repository"]
 

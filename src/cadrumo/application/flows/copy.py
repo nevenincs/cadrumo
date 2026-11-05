@@ -32,7 +32,7 @@ type CopySourceResolver = Callable[[str], "str | None"]
 
 _UNRESOLVED_SENTINEL = "\x00cadrumo-flows-copy-unresolved\x00"
 
-_SOURCE_RESOLVERS: dict[CopyRefKind, list[CopySourceResolver]] = {}
+SOURCE_RESOLVERS: dict[CopyRefKind, list[CopySourceResolver]] = {}
 
 
 PAGE_REQUIREMENT_LOCALE_KEYS: Final[Mapping[bool, str]] = {
@@ -69,7 +69,7 @@ def register_copy_source(kind: CopyRefKind, resolver: CopySourceResolver) -> Non
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_locale_builtin",
         )
-    resolvers = _SOURCE_RESOLVERS.setdefault(kind, [])
+    resolvers = SOURCE_RESOLVERS.setdefault(kind, [])
     if any(existing is resolver for existing in resolvers):
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_duplicate",
@@ -91,7 +91,7 @@ def resolve_copy(ref: CopyRef) -> str:
                 context={"ref": ref.ref},
             )
         return rendered
-    resolvers = _SOURCE_RESOLVERS.get(ref.kind)
+    resolvers = SOURCE_RESOLVERS.get(ref.kind)
     if not (resolvers is not None and resolvers):
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_unregistered",

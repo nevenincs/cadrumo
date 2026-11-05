@@ -29,7 +29,7 @@ from ..evidence_textlayer import (
     text_layer_transcriber_identity,
     transcribe_text_layer,
 )
-from ._evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
+from .evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

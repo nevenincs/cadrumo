@@ -35,8 +35,8 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._calculation_source_staging import (
-    _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
+from ..calculation_source_staging import (
+    PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
     materialise_registry_values_for_source_resolution,
 )
 
@@ -123,10 +123,10 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0.00")},
         filing_period_date=snapshot.filing_period.end_date,
     )
-    materialised = engine_values.select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
+    materialised = engine_values.select(PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
     cuota_deducible = engine_values.select((_CUOTA_DEDUCIBLE_TOTAL_ID,))
 
-    assert tuple(materialised.values) == _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS
+    assert tuple(materialised.values) == PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS
     assert materialised.missing_casilla_ids == ()
     assert materialised.unresolved_casilla_ids == ()
     assert materialised.values[_VOLUMEN_CON_DERECHO_ID] == _MANUAL_CURRENT_YEAR_CON_DERECHO

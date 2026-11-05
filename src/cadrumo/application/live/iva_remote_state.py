@@ -12,20 +12,18 @@ from pathlib import Path
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 
-from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
+from ...core.access_gate.gate import AeatAccessGate
 from ...core.async_cleanup import has_async_cleanup_failure
-from ...core.config import Settings as _Settings
-from ...core.config import load_settings as _load_settings
-from ...core.errors.hierarchy import CadrumoError as _CadrumoError
-from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.config import Settings, load_settings
+from ...core.errors.hierarchy import CadrumoError
+from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location as _storage_location
-from ...core.storage_taxonomy_locations import storage_path
+from ...core.storage_taxonomy_locations import storage_location, storage_path
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
+from ..auth.sessions import AuthenticatedAeatSessionResult
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError, raise_if_aeat_session_ended
 from .filed_data_ports import FiledEffectGuard, LocalEffectTracker
@@ -40,16 +38,14 @@ from .remote_state_models import (
     LiveIvaReadOutcome,
     LiveIvaReadSurface,
 )
-from .remote_state_outcomes import auth_outcome as _auth_outcome
-from .remote_state_outcomes import evidence_ref as _evidence_ref
-from .remote_state_outcomes import surface_outcome as _surface_outcome
+from .remote_state_outcomes import auth_outcome, evidence_ref, surface_outcome
 from .session import SessionWriteReporter
 
 _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
-    _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY).subpath
+    storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY).subpath
 ).name
 _IVA_REMOTE_STATE_WALLET_DIRNAME = Path(
-    _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET).subpath
+    storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET).subpath
 ).name
 
 
@@ -203,14 +199,14 @@ async def capture_iva_remote_state(
 
 @dataclass(frozen=True, slots=True)
 class _RemoteStateAuthentication:
-    result: _AuthenticatedAeatSessionResult | None
+    result: AuthenticatedAeatSessionResult | None
     error: BaseException | None
 
 
 async def _authenticate_remote_state(
     *,
     ports: IvaRemoteStatePort,
-    settings: _Settings,
+    settings: Settings,
     effect_guard: FiledEffectGuard | None,
     on_session_write: SessionWriteReporter | None,
     authority_operation: PinnedAuthorityOperation | None,
@@ -235,7 +231,7 @@ async def _authenticate_remote_state(
             )
     except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
-    except (TimeoutError, _CadrumoError, OSError) as error:
+    except (TimeoutError, CadrumoError, OSError) as error:
         if has_async_cleanup_failure(error):
             raise
         return _RemoteStateAuthentication(result=None, error=error)
@@ -250,8 +246,8 @@ def _raise_unsettled_surface_cleanup(error: BaseException, tracker: LocalEffectT
 async def _capture_filed_history_surface(
     *,
     ports: IvaRemoteStatePort,
-    auth_result: _AuthenticatedAeatSessionResult,
-    settings: _Settings,
+    auth_result: AuthenticatedAeatSessionResult,
+    settings: Settings,
     year_from: int,
     year_to: int,
     output_root: Path,
@@ -294,7 +290,7 @@ async def _capture_filed_history_surface(
         )
     except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
-    except (TimeoutError, _CadrumoError, OSError) as error:
+    except (TimeoutError, CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)
         raise_if_aeat_session_ended(error)
         return None, error
@@ -304,8 +300,8 @@ async def _capture_filed_history_surface(
 async def _capture_wallet_surface(
     *,
     ports: IvaRemoteStatePort,
-    auth_result: _AuthenticatedAeatSessionResult,
-    settings: _Settings,
+    auth_result: AuthenticatedAeatSessionResult,
+    settings: Settings,
     target_year: int,
     target_period: Period,
     taxpayer_nif: str | None,
@@ -350,7 +346,7 @@ async def _capture_wallet_surface(
         )
     except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
-    except (TimeoutError, _CadrumoError, OSError) as error:
+    except (TimeoutError, CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)
         raise_if_aeat_session_ended(error)
         return None, error
@@ -370,14 +366,14 @@ async def _capture_iva_remote_state_for_active_storage(
     on_session_write: SessionWriteReporter | None,
     authority_operation: PinnedAuthorityOperation | None,
 ) -> IvaRemoteStateAcquisitionReport:
-    settings = _load_settings()
+    settings = load_settings()
     async with suppress_live_iva_playwright_cancellation_noise(
         drain_ms=settings.cadrumo_live_iva_cancellation_drain_ms,
         restore_on_exit=effect_guard is not None,
     ):
         if year_from > year_to:
             raise LiveApplicationInputError(translated_message="live.errors.year_range_invalid")
-        _AeatAccessGate(settings).require_live_read()
+        AeatAccessGate(settings).require_live_read()
         store_root = output_root or storage_path(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE, settings=settings)
         authentication = await _authenticate_remote_state(
             ports=ports,
@@ -452,7 +448,7 @@ def _persist_report(
     return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
 
 
-def filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
+def filed_history_surface_timeout_ms(settings: Settings, *, year_from: int, year_to: int) -> int:
     """Return the timeout budget for the requested filed-history year span."""
     return settings.cadrumo_live_iva_surface_timeout_ms * max(1, year_to - year_from + 1)
 
@@ -518,7 +514,7 @@ def build_iva_remote_state_acquisition_report(
     target_year: int,
     target_period: Period,
     acquisition_manifest_id: str | None = None,
-    auth_result: _AuthenticatedAeatSessionResult | None = None,
+    auth_result: AuthenticatedAeatSessionResult | None = None,
     auth_error: BaseException | None = None,
     filed_history: IvaCompensationHistoryCaptureReport | None = None,
     wallet: IvaWalletCaptureReport | None = None,
@@ -526,10 +522,10 @@ def build_iva_remote_state_acquisition_report(
     wallet_error: BaseException | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Build an acquisition report from authentication and surface outcomes."""
-    auth = _auth_outcome(auth_result=auth_result, error=auth_error)
+    auth = auth_outcome(auth_result=auth_result, error=auth_error)
     outcomes = (
-        _surface_outcome(LiveIvaReadSurface.FILED_HISTORY, report=filed_history, error=filed_history_error, auth=auth),
-        _surface_outcome(LiveIvaReadSurface.WALLET_CARTERA, report=wallet, error=wallet_error, auth=auth),
+        surface_outcome(LiveIvaReadSurface.FILED_HISTORY, report=filed_history, error=filed_history_error, auth=auth),
+        surface_outcome(LiveIvaReadSurface.WALLET_CARTERA, report=wallet, error=wallet_error, auth=auth),
     )
     return IvaRemoteStateAcquisitionReport(
         acquisition_manifest_id=acquisition_manifest_id,
@@ -572,7 +568,7 @@ def _iva_remote_state_acquisition_manifest(
             *(surface.model_dump_json() for surface in surfaces),
         )
     )
-    digest = _sha256_hex(seed.encode("utf-8"))
+    digest = sha256_hex(seed.encode("utf-8"))
     timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     return IvaRemoteStateAcquisitionManifest(
         acquisition_id=f"live-iva-acquisition:{report.target_year}:{report.target_period.registry_token}:{timestamp}:{digest}",
@@ -615,7 +611,7 @@ def _iva_remote_state_surface_manifest(
         captured_count=outcome.captured_count,
         calculation_observation_count=outcome.calculation_observation_count,
         wallet_row_count=wallet.row_count if wallet is not None else None,
-        decision_ref=_evidence_ref(wallet.decision_key) if wallet is not None else None,
+        decision_ref=evidence_ref(wallet.decision_key) if wallet is not None else None,
         selected_authority=wallet.selected_authority if wallet is not None else None,
         divergence=wallet.divergence if wallet is not None else None,
         blocked=wallet.blocked if wallet is not None else None,

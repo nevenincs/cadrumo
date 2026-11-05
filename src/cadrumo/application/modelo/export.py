@@ -50,7 +50,7 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
@@ -96,10 +96,6 @@ from ..filing.producer_snapshot import (
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 from ..filing.shared_owner_refusal import is_shared_owner_refusal
-from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
-from ._required_binding_gate import (
-    require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
-)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
@@ -150,18 +146,22 @@ from .export_preparation import (
 from .export_settlement import DeclaredSettlement, declared_settlement, settlement_dictionary_values
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
 )
-from .modelo_bucket_events import emit_modelo_bucket_event as _emit_bucket_event
+from .modelo_bucket_events import emit_modelo_bucket_event
 from .preconditions import (
     build_modelo_precondition_failure,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
 from .profile_export_binding import (
     taxpayer_identity_profile_facts,
+)
+from .required_binding_gate import (
+    require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
@@ -549,7 +549,7 @@ def _write_export_staging(
         # whose registry snapshot declares no export layout (e.g. Modelo 202 has
         # no Diseño de Registros authored, so a verified-complete revision cannot
         # be written to fichero-BOE), which reads as a misleading disk/IO failure.
-        raise _export_write_failure(command, exc) from exc
+        raise export_write_failure(command, exc) from exc
 
 
 def _consume_export_payload(
@@ -575,10 +575,10 @@ def _consume_export_payload(
             states_whole_return=True,
         )
     except FilingExportError as exc:
-        raise _export_write_failure(command, exc) from exc
+        raise export_write_failure(command, exc) from exc
 
 
-def _export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
+def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
@@ -682,7 +682,7 @@ def _emit_export_event(
                 "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
             },
         )
-    return _emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=bucket_event_repository,
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_EXPORTED,
@@ -823,7 +823,7 @@ def _prepare_modelo_export_schema(
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
-    _require_persisted_required_bindings_resolved(
+    require_persisted_revision_required_bindings_resolved(
         work_unit=work_unit,
         revision=revision,
         action="export",
@@ -1067,7 +1067,7 @@ def export_modelo_revision(
     if payload_consumer is None:
         export_sink(command).require_writable()
 
-    now = clock or _utc_now()
+    now = clock or clock_utc_now()
     prepared = _prepare_modelo_export(
         command,
         active_bucket_id=active_bucket_id,

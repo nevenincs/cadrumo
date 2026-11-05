@@ -189,7 +189,7 @@ async def test_attach_marks_unknown_then_updated_and_publishes_outside_commit(
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "attach_manual_transaction_evidence", attach)
-    monkeypatch.setattr(operation_module, "_operation_projection", lambda *_args: _projection())
+    monkeypatch.setattr(operation_module, "operation_projection", lambda *_args: _projection())
 
     executor = LedgerAttachExecutor(_ports_factory_for(context))
     completed = await executor.execute(_request(), context)
@@ -263,7 +263,7 @@ async def test_detach_marks_unknown_then_updated_and_publishes_outside_commit(
     monkeypatch.setattr(operation_module, "detach_manual_transaction_attachments", detach)
     monkeypatch.setattr(
         operation_module,
-        "_operation_projection",
+        "operation_projection",
         lambda profile_id, operation_id, _result: _projection(
             operation_id=operation_id,
             attachment_ids=(),

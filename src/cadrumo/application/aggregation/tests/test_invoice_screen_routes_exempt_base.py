@@ -34,7 +34,7 @@ from ....domain.calculations.registry.governed_fact_scope import governed_facts_
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
+from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 from .invoice_screen_resolution_support import resolved_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -262,7 +262,7 @@ def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None
     rated_iva_amount_eur = rated.line_amount_eur(rated_line.iva_amount)
     assert rated_base_amount_eur is not None
     assert rated_iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
+    observation = invoice_line_iva_observation(
         invoice=rated,
         line=rated_line,
         line_index=0,

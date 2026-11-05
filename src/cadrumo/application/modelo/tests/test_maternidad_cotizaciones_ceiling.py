@@ -32,15 +32,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
+    leased_profile_create_context,
     published_snapshot,
     published_supported_filing_years,
-)
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -79,13 +77,13 @@ _UNSUPPORTED_CEILINGED_YEARS = tuple(
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     """A profile with one clearly-eligible descendant declaring a full year of months."""
     child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET,
         facts=tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list((child,))),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

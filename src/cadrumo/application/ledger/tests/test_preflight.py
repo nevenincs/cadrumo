@@ -18,18 +18,18 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import TransactionCatalogue
 from ...aggregation.iva_ledger import IvaLedgerAggregationIssueReason
 from ..preflight import (
-    _PREFLIGHT_DETAIL_BY_IVA_ISSUE,
-    _PREFLIGHT_REASON_BY_IVA_ISSUE,
+    PREFLIGHT_DETAIL_BY_IVA_ISSUE,
+    PREFLIGHT_REASON_BY_IVA_ISSUE,
     LedgerPreflightIssueReason,
-    _preflight_detail_for_iva_issue,
-    _preflight_reason_for_iva_issue,
+    preflight_detail_for_iva_issue,
+    preflight_reason_for_iva_issue,
     preflight_transaction_catalogue,
 )
-from ._preflight_test_support import (
-    _BUCKET_ID,
-    _EVENT_2026,
-    _Q2_2026,
-    _transaction,
+from .preflight_test_support import (
+    BUCKET_ID,
+    EVENT_2026,
+    Q2_2026,
+    preflight_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -37,8 +37,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_EVENT_2026,
+        bucket_id=BUCKET_ID,
+        period=EVENT_2026,
         transactions=TransactionCatalogue.from_transactions(()),
         operation=operation,
     )
@@ -51,9 +51,9 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: 
 
 def test_preflight_refuses_non_span_period_before_touching_transactions(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_EVENT_2026,
-        transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
+        bucket_id=BUCKET_ID,
+        period=EVENT_2026,
+        transactions=TransactionCatalogue.from_transactions((preflight_transaction("row-ready"),)),
         operation=operation,
     )
 
@@ -63,7 +63,7 @@ def test_preflight_refuses_non_span_period_before_touching_transactions(operatio
 
 
 def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedAuthorityOperation) -> None:
-    unclassified = _transaction(
+    unclassified = preflight_transaction(
         "row-unclassified",
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
         category_id=None,
@@ -71,14 +71,14 @@ def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedA
         iva_rate=None,
         iva_amount=None,
     )
-    missing_business_facts = _transaction(
+    missing_business_facts = preflight_transaction(
         "row-missing-facts",
         category_id=None,
         taxable_base=None,
         iva_rate=None,
         iva_amount=None,
     )
-    mixed_missing_ratio = _transaction(
+    mixed_missing_ratio = preflight_transaction(
         "row-mixed",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.40"),
@@ -87,8 +87,8 @@ def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedA
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions(
             (unclassified, missing_business_facts, mixed_missing_ratio),
         ),
@@ -112,7 +112,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedA
 def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    personal = _transaction(
+    personal = preflight_transaction(
         "row-personal",
         business_classification=BusinessClassification.PERSONAL,
         category_id=None,
@@ -120,7 +120,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
         iva_rate=None,
         iva_amount=None,
     )
-    transfer = _transaction(
+    transfer = preflight_transaction(
         "row-transfer",
         direction=TransactionDirection.INTERNAL_TRANSFER,
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
@@ -129,7 +129,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
         iva_rate=None,
         iva_amount=None,
     )
-    old = _transaction(
+    old = preflight_transaction(
         "row-old",
         booked_date=date(2026, 1, 5),
         category_id=None,
@@ -139,8 +139,8 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
         operation=operation,
     )
@@ -151,8 +151,8 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
 
 
 def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityOperation) -> None:
-    ready = _transaction("row-ready")
-    archived_missing_facts = _transaction(
+    ready = preflight_transaction("row-ready")
+    archived_missing_facts = preflight_transaction(
         "row-archived",
         category_id=None,
         taxable_base=None,
@@ -160,7 +160,7 @@ def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityO
         iva_amount=None,
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
-    stashed_missing_facts = _transaction(
+    stashed_missing_facts = preflight_transaction(
         "row-stashed",
         category_id=None,
         taxable_base=None,
@@ -170,8 +170,8 @@ def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityO
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
         operation=operation,
     )
@@ -184,11 +184,11 @@ def test_preflight_ignores_archived_and_stashed_rows(operation: PinnedAuthorityO
 def test_preflight_reports_unsupported_currency_before_modelo_aggregation(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    usd = _transaction("row-usd", currency="USD")
+    usd = preflight_transaction("row-usd", currency="USD")
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
         operation=operation,
     )
@@ -200,7 +200,7 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation(
 def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggregation(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    transaction = _transaction(
+    transaction = preflight_transaction(
         "row-intracom-es",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1000.00"),
@@ -213,8 +213,8 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),
         operation=operation,
     )
@@ -229,7 +229,7 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
 def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    transaction = _transaction(
+    transaction = preflight_transaction(
         "row-intracom-es-hu",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("1000.00"),
@@ -244,8 +244,8 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
     with override_settings(cadrumo_output_language="hu"):
         clear_output_language_cache()
         report = preflight_transaction_catalogue(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
+            bucket_id=BUCKET_ID,
+            period=Q2_2026,
             transactions=TransactionCatalogue.from_transactions((transaction,)),
             operation=operation,
         )
@@ -263,7 +263,7 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
 def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    transaction = _transaction(
+    transaction = preflight_transaction(
         "row-export-de",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("800.00"),
@@ -275,8 +275,8 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation(
     )
 
     report = preflight_transaction_catalogue(
-        bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
         transactions=TransactionCatalogue.from_transactions((transaction,)),
         operation=operation,
     )
@@ -302,20 +302,20 @@ class TestEveryMappedIvaReasonResolves:
 
     def test_every_mapped_reason_resolves_without_raising(self) -> None:
         """Exhaustive over the mapping's own keys, so a stale member cannot hide."""
-        for reason in _PREFLIGHT_REASON_BY_IVA_ISSUE:
-            resolved = _preflight_reason_for_iva_issue(reason)
+        for reason in PREFLIGHT_REASON_BY_IVA_ISSUE:
+            resolved = preflight_reason_for_iva_issue(reason)
 
             assert isinstance(resolved, LedgerPreflightIssueReason), reason
 
     def test_a_missing_taxable_base_resolves(self) -> None:
         """The non-intra-community case whose absence let a whole-surface outage hide."""
-        resolved = _preflight_reason_for_iva_issue(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)
+        resolved = preflight_reason_for_iva_issue(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)
 
         assert resolved is LedgerPreflightIssueReason.MISSING_TAXABLE_BASE
 
     def test_every_missing_fact_reason_has_a_detail_sentence(self) -> None:
         """The detail map is a second literal with the same exposure."""
-        for reason in _PREFLIGHT_DETAIL_BY_IVA_ISSUE:
-            detail = _preflight_detail_for_iva_issue(reason)
+        for reason in PREFLIGHT_DETAIL_BY_IVA_ISSUE:
+            detail = preflight_detail_for_iva_issue(reason)
 
             assert detail and not detail.startswith("aggregation."), reason

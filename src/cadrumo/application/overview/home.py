@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.ids import ModeloId, RevisionId
 from ..operator_actions.models import DeclaredNextAction
@@ -107,7 +107,7 @@ class HomeTargetKind(StrEnum):
 class HomeZoneState(BaseModel):
     """Authority and freshness state shared by every Home zone."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     availability: HomeAvailability
     observed_at: datetime | None = None
@@ -151,7 +151,7 @@ def _validate_observation_matches_availability(state: HomeZoneState) -> None:
 class HomeAccountSession(BaseModel):
     """Non-secret account identity and local custody posture for the header."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     posture: HomeSessionPosture
     profile_label: str | None = Field(default=None, min_length=1, max_length=256)
@@ -172,7 +172,7 @@ class HomeAccountSession(BaseModel):
 class HomeNextAction(BaseModel):
     """Application-ranked action shown without frontend-owned urgency logic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rank: NonNegativeInt
     action: DeclaredNextAction
@@ -195,7 +195,7 @@ class HomeNextAction(BaseModel):
 class HomeDeclarationResume(BaseModel):
     """Natural declaration address and current revision state for resumption."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     modelo: ModeloId
@@ -216,7 +216,7 @@ class HomeDeclarationResume(BaseModel):
 class HomeLedgerReadiness(BaseModel):
     """Ledger quality counts; zone availability decides whether zero is known."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: NonNegativeInt
     requiring_review: NonNegativeInt
@@ -234,7 +234,7 @@ class HomeLedgerReadiness(BaseModel):
 class HomeAgendaEntry(BaseModel):
     """One legal filing date with independent local and observed-AEAT axes."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloId
     filing_year: FilingYear
@@ -248,7 +248,7 @@ class HomeAgendaEntry(BaseModel):
 class HomeProjectionV1(BaseModel):
     """Complete immutable input rendered by Home; it performs no reads itself."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generated_at: datetime
     account: HomeAccountSession
@@ -341,7 +341,7 @@ def _validate_agenda_evidence_claim(
 class HomeProjectionInput(BaseModel):
     """Already-local reader results and explicit authority state for Home."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generated_at: datetime
     account: HomeAccountSession

@@ -36,13 +36,11 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._calculation_helpers import (
-    amendment_observations as _amendment_observations,
-)
-from .._calculation_helpers import (
-    build_typed_observations as _build_typed_observations,
-)
 from ..action_errors import CasillaProvenanceMissingError
+from ..calculation_helpers import (
+    amendment_observations,
+    build_typed_observations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ORPHAN_CASILLA: CasillaId = validated_casilla_id("9999999", surface="_ORPHAN_CASILLA")
@@ -106,7 +104,7 @@ def test_typed_observations_built_for_real_snapshot_carry_provenance() -> None:
     snapshot = _modelo_100_snapshot()
     engine_result = _engine_result(snapshot)
 
-    observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
+    observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)
 
     assert len(observations) == len(engine_result.values)
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
@@ -138,7 +136,7 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     polluted_result = engine_result.model_copy(update={"observations": polluted_observations})
 
     with pytest.raises(CasillaProvenanceMissingError) as raised_1:
-        _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
+        build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
 
     # The orphan casilla is a machine fact now, not part of a sentence.
     assert raised_1.value.context is not None
@@ -208,7 +206,7 @@ def test_amendment_override_orphan_casilla_raises_instead_of_emitting_empty_prov
     corrected_values = {registry_casilla.id: baseline_value, orphan_casilla: Decimal("123")}
 
     with pytest.raises(CasillaProvenanceMissingError) as raised_2:
-        _amendment_observations(
+        amendment_observations(
             corrected_values=corrected_values,
             overrides={orphan_casilla: Decimal("123")},
             baseline_revision=baseline,

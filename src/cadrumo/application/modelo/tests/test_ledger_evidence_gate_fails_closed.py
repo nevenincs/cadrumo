@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
-from .._ledger_evidence_gate import ledger_evidence_row_missing_deductible_iva_evidence
+from ..ledger_evidence_gate import ledger_evidence_row_missing_deductible_iva_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

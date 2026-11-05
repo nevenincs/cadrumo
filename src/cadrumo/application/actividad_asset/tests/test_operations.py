@@ -44,8 +44,7 @@ from cadrumo.domain.transactions.models import Transaction
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_support import MemoryLedger, acquisition_transaction
-from .register_support import MemoryRepository as _MemoryRepository
-from .register_support import describing, memory_register_authority
+from .register_support import MemoryRepository, describing, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,11 +68,11 @@ def _acquisition() -> Transaction:
     return acquisition_transaction()
 
 
-def _ledger() -> MemoryLedger:
+def ledger() -> MemoryLedger:
     return MemoryLedger(_acquisition())
 
 
-def _simplified() -> DirectEstimationRegime:
+def simplified() -> DirectEstimationRegime:
     return DirectEstimationRegime.SIMPLIFIED
 
 
@@ -81,7 +80,7 @@ def _normal() -> DirectEstimationRegime:
     return DirectEstimationRegime.NORMAL
 
 
-def _revision(
+def operations_revision(
     *,
     asset_id: str = "laptop-1",
     basis_amount: Decimal = Decimal("2000"),
@@ -115,7 +114,7 @@ def _revision(
     )
 
 
-def _linear_forecast(
+def linear_forecast(
     revision: ActivityAssetRevision,
     *,
     covered_from: date,
@@ -143,15 +142,15 @@ def _linear_forecast(
 
 
 def test_frontend_operations_share_one_create_forecast_claim_and_projection_path() -> None:
-    repository = _MemoryRepository()
+    repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=_ledger(),
-        forecast_operation=_linear_forecast,
-        taxpayer_modality=_simplified,
+        ledger=ledger(),
+        forecast_operation=linear_forecast,
+        taxpayer_modality=simplified,
         register_authority=memory_register_authority(),
     )
-    revision = _revision()
+    revision = operations_revision()
 
     operations.create(revision, describing(revision))
     forecast = operations.forecast(
@@ -185,7 +184,7 @@ def test_frontend_operations_share_one_create_forecast_claim_and_projection_path
 
 
 def test_forecast_passes_effective_history_split_at_the_tax_year() -> None:
-    repository = _MemoryRepository()
+    repository = MemoryRepository()
     seen: list[AssetScheduleHistory] = []
 
     def recording_forecast(
@@ -197,7 +196,7 @@ def test_forecast_passes_effective_history_split_at_the_tax_year() -> None:
         requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
         seen.append(history)
-        return _linear_forecast(
+        return linear_forecast(
             revision,
             covered_from=covered_from,
             covered_until=covered_until,
@@ -207,12 +206,12 @@ def test_forecast_passes_effective_history_split_at_the_tax_year() -> None:
 
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=_ledger(),
+        ledger=ledger(),
         forecast_operation=recording_forecast,
-        taxpayer_modality=_simplified,
+        taxpayer_modality=simplified,
         register_authority=memory_register_authority(),
     )
-    revision = _revision()
+    revision = operations_revision()
     operations.create(revision, describing(revision))
     first_quarter = operations.forecast(
         asset_id=revision.asset_id, covered_from=date(2025, 1, 1), covered_until=date(2025, 4, 1)
@@ -227,26 +226,26 @@ def test_forecast_passes_effective_history_split_at_the_tax_year() -> None:
 
 def test_correction_must_supersede_the_current_revision() -> None:
     operations = ActivityAssetOperations(
-        repository=_MemoryRepository(),
-        ledger=_ledger(),
-        forecast_operation=_linear_forecast,
-        taxpayer_modality=_simplified,
+        repository=MemoryRepository(),
+        ledger=ledger(),
+        forecast_operation=linear_forecast,
+        taxpayer_modality=simplified,
         register_authority=memory_register_authority(),
     )
-    first = _revision()
+    first = operations_revision()
     operations.create(first, describing(first))
 
     with pytest.raises(ActividadAssetValidationError, match="correction_must_supersede_current"):
-        operations.correct(_revision(number=2, supersedes="c" * 64))
+        operations.correct(operations_revision(number=2, supersedes="c" * 64))
 
-    corrected = _revision(number=2, supersedes=first.revision_id)
+    corrected = operations_revision(number=2, supersedes=first.revision_id)
     history = operations.correct(corrected)
     assert operations.inspect(first.asset_id) == (first, corrected)
     assert history.revisions[-1] == corrected
 
 
 def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_without_forecast_consumption() -> None:
-    repository = _MemoryRepository()
+    repository = MemoryRepository()
 
     def free_forecast(
         revision: ActivityAssetRevision,
@@ -276,7 +275,7 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
         )
 
     def low_value(asset_id: str) -> ActivityAssetRevision:
-        return _revision(
+        return operations_revision(
             asset_id=asset_id,
             basis_amount=Decimal("300.00"),
             election=ActivityAssetAmortizationElection(
@@ -292,7 +291,7 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
 
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=_ledger(),
+        ledger=ledger(),
         forecast_operation=free_forecast,
         taxpayer_modality=_normal,
         register_authority=memory_register_authority(),
@@ -330,13 +329,13 @@ def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_
 
 def test_forecast_refuses_an_election_the_taxpayer_modality_does_not_declare() -> None:
     operations = ActivityAssetOperations(
-        repository=_MemoryRepository(),
-        ledger=_ledger(),
-        forecast_operation=_linear_forecast,
+        repository=MemoryRepository(),
+        ledger=ledger(),
+        forecast_operation=linear_forecast,
         taxpayer_modality=_normal,
         register_authority=memory_register_authority(),
     )
-    revision = _revision()
+    revision = operations_revision()
     operations.create(revision, describing(revision))
 
     with pytest.raises(ActividadAssetValidationError, match="profile_modality_mismatch"):
@@ -375,10 +374,10 @@ def test_absent_or_objective_profile_regime_refuses(
 
 def _operations(*transactions: Transaction) -> ActivityAssetOperations:
     return ActivityAssetOperations(
-        repository=_MemoryRepository(),
+        repository=MemoryRepository(),
         ledger=MemoryLedger(*transactions),
-        forecast_operation=_linear_forecast,
-        taxpayer_modality=_simplified,
+        forecast_operation=linear_forecast,
+        taxpayer_modality=simplified,
         register_authority=memory_register_authority(),
     )
 
@@ -387,7 +386,7 @@ def test_creation_refuses_an_acquisition_the_ledger_does_not_hold() -> None:
     operations = _operations()
 
     with pytest.raises(ActividadAssetValidationError, match="acquisition_transaction_missing"):
-        operations.create(_revision(), describing(_revision()))
+        operations.create(operations_revision(), describing(operations_revision()))
     with pytest.raises(ActividadAssetValidationError, match="asset_not_found"):
         operations.inspect("laptop-1")
 
@@ -396,29 +395,31 @@ def test_creation_refuses_an_acquisition_that_is_not_a_payment() -> None:
     received = acquisition_transaction(provider_id="refund-1", direction=TransactionDirection.INCOMING)
 
     with pytest.raises(ActividadAssetValidationError, match="acquisition_transaction_not_payment"):
-        _operations(received).create(_revision(acquisition_id=received.transaction_id), describing())
+        _operations(received).create(operations_revision(acquisition_id=received.transaction_id), describing())
 
 
 def test_price_and_non_deductible_iva_are_bounded_by_what_the_transaction_paid() -> None:
     operations = _operations(_acquisition())
 
     # The row paid 2,420.00 = 2,000.00 base + 420.00 IVA, so 2,000.00 + 420.00 is exactly admissible.
-    exact = _revision(non_deductible_iva=Decimal("420.00"))
+    exact = operations_revision(non_deductible_iva=Decimal("420.00"))
     assert operations.create(exact, describing(exact)).revisions == (exact,)
 
     with pytest.raises(ActividadAssetValidationError, match="acquisition_cost_exceeds_payment"):
         _operations(_acquisition()).create(
-            _revision(asset_id="over-paid", non_deductible_iva=Decimal("500.00")),
+            operations_revision(asset_id="over-paid", non_deductible_iva=Decimal("500.00")),
             describing(),
         )
     with pytest.raises(ActividadAssetValidationError, match="acquisition_price_exceeds_base"):
         _operations(_acquisition()).create(
-            _revision(asset_id="over-base", basis_amount=Decimal("2000.01")),
+            operations_revision(asset_id="over-base", basis_amount=Decimal("2000.01")),
             describing(),
         )
     with pytest.raises(ActividadAssetValidationError, match="acquisition_iva_exceeds_transaction_iva"):
         _operations(_acquisition()).create(
-            _revision(asset_id="over-iva", basis_amount=Decimal("1500.00"), non_deductible_iva=Decimal("421.00")),
+            operations_revision(
+                asset_id="over-iva", basis_amount=Decimal("1500.00"), non_deductible_iva=Decimal("421.00")
+            ),
             describing(),
         )
 
@@ -440,38 +441,38 @@ def test_a_foreign_currency_acquisition_is_compared_by_its_euro_value() -> None:
         currency="USD",
     )
 
-    accepted = _revision(basis_amount=Decimal("92.00"), acquisition_id=dollars.transaction_id)
+    accepted = operations_revision(basis_amount=Decimal("92.00"), acquisition_id=dollars.transaction_id)
     assert _operations(dollars).create(accepted, describing()).revisions == (accepted,)
     with pytest.raises(ActividadAssetValidationError, match="acquisition_cost_exceeds_payment"):
         _operations(dollars).create(
-            _revision(basis_amount=Decimal("92.01"), acquisition_id=dollars.transaction_id),
+            operations_revision(basis_amount=Decimal("92.01"), acquisition_id=dollars.transaction_id),
             describing(),
         )
     with pytest.raises(ActividadAssetValidationError, match="acquisition_currency_unconverted"):
         _operations(unconverted).create(
-            _revision(basis_amount=Decimal("92.00"), acquisition_id=unconverted.transaction_id),
+            operations_revision(basis_amount=Decimal("92.00"), acquisition_id=unconverted.transaction_id),
             describing(),
         )
 
 
 def test_a_correction_is_checked_against_the_ledger_like_a_creation() -> None:
     operations = _operations(_acquisition())
-    first = _revision()
+    first = operations_revision()
     operations.create(first, describing(first))
 
     with pytest.raises(ActividadAssetValidationError, match="acquisition_transaction_missing"):
-        operations.correct(_revision(number=2, supersedes=first.revision_id, acquisition_id="d" * 64))
+        operations.correct(operations_revision(number=2, supersedes=first.revision_id, acquisition_id="d" * 64))
     with pytest.raises(ActividadAssetValidationError, match="acquisition_cost_exceeds_payment"):
         operations.correct(
-            _revision(number=2, supersedes=first.revision_id, non_deductible_iva=Decimal("500.00")),
+            operations_revision(number=2, supersedes=first.revision_id, non_deductible_iva=Decimal("500.00")),
         )
-    corrected = _revision(number=2, supersedes=first.revision_id, non_deductible_iva=Decimal("100.00"))
+    corrected = operations_revision(number=2, supersedes=first.revision_id, non_deductible_iva=Decimal("100.00"))
     assert operations.correct(corrected).revisions == (first, corrected)
 
 
 def test_a_refused_cost_names_the_exact_figures_in_its_context() -> None:
     with pytest.raises(ActividadAssetValidationError) as refused:
-        _operations(_acquisition()).create(_revision(non_deductible_iva=Decimal("500.00")), describing())
+        _operations(_acquisition()).create(operations_revision(non_deductible_iva=Decimal("500.00")), describing())
 
     assert refused.value.context == {
         "cost": Decimal("2500.00"),

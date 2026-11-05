@@ -30,7 +30,7 @@ class ReconciliationDeclaracionSourceUnsupportedError(CadrumoError):
 
     Casilla-level declaración reconciliation is enrolled one modelo at a time
     through the registry role
-    :data:`cadrumo.application.modelo.reconciliation._DECLARATION_RECONCILE_ROLE`; an unenrolled modelo
+    :data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE`; an unenrolled modelo
     refuses cleanly rather than silently degrading to a header-only compare.
     """
 
@@ -160,7 +160,7 @@ def _total_targets_for_work_unit(
     so a revision that repeats a total across expectations resolves
     deterministically to one target casilla.
     """
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
     # Deliberately NOT folded through fold_reconciliation_total_casilla_ids.
@@ -184,13 +184,13 @@ def _total_targets_for_work_unit(
     return targets
 
 
-def _declaracion_registry_context(
+def declaracion_registry_context(
     work_unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[RegistrySnapshot, RegistryVerificationPolicy] | None:
     """Resolve the registry snapshot and folded policy for a declaration compare."""
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
         snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
@@ -326,7 +326,7 @@ def reconcile_casilla_values(
     Takes ``revision`` as a :class:`CalculationRevision`.
     """
     modelo = str(work_unit.modelo)
-    registry_context = _declaracion_registry_context(work_unit, operation=operation)
+    registry_context = declaracion_registry_context(work_unit, operation=operation)
     if registry_context is None:
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
     snapshot, policy = registry_context

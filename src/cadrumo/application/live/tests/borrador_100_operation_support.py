@@ -32,9 +32,9 @@ from ..borrador_100_operation_ports import (
     Borrador100OperationPorts,
     Borrador100PrintedValue,
 )
-from .test_borrador_100 import _BUCKET_ID, _InMemoryBorradorRepository
+from .test_borrador_100 import BUCKET_ID, InMemoryBorradorRepository
 
-PROFILE_ID = UUID(_BUCKET_ID)
+PROFILE_ID = UUID(BUCKET_ID)
 PROFILE_TAX_ID = "12345678Z"
 OTHER_TAX_ID = "00000001R"
 CAPTURED_AT = datetime(2026, 10, 1, 12, tzinfo=UTC)
@@ -60,7 +60,7 @@ class SnapshotFence:
             self.active = False
 
 
-class SnapshotRepository(_InMemoryBorradorRepository):
+class SnapshotRepository(InMemoryBorradorRepository):
     """Canonical repository fixture with concrete writer boundary observations."""
 
     def __init__(self, fence: SnapshotFence) -> None:

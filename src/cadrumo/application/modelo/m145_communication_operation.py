@@ -53,7 +53,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
@@ -75,6 +74,7 @@ from .m145_communication_projection import (
     project_m145_communication_result,
 )
 from .m145_communication_records_ports import M145CommunicationRecordsPortsFactory
+from .ports import FicheroBoeRecordRenderer
 
 
 def _resolve_access(

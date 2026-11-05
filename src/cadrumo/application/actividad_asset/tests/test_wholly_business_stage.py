@@ -15,14 +15,14 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AssetKind,
 )
 
-from .test_form_options_stage_facts import _options
-from .test_register import _NAME, _operations, _revision
+from .test_form_options_stage_facts import form_options_stage_facts_options
+from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_exactly_one_stage_serves_the_facts_that_state_a_wholly_business_purchase() -> None:
-    options = _options()
+    options = form_options_stage_facts_options()
 
     served = {item.stage: item.wholly_business_facts for item in options.basis_stages if item.wholly_business_facts}
     assert set(served) == set(WHOLLY_BUSINESS_STAGE_FACTS)
@@ -36,9 +36,9 @@ def test_exactly_one_stage_serves_the_facts_that_state_a_wholly_business_purchas
 
 
 def test_an_element_stated_from_the_served_facts_registers_and_amortizes_its_whole_cost() -> None:
-    options = _options()
+    options = form_options_stage_facts_options()
     option = next(item for item in options.basis_stages if item.wholly_business_facts)
-    base = _revision(basis="2000")
+    base = register_revision(basis="2000")
     basis = ActivityAssetBasisSnapshot.from_domain(base.basis).model_dump(mode="python")
     basis.update(
         stage=option.stage,
@@ -47,9 +47,9 @@ def test_an_element_stated_from_the_served_facts_registers_and_amortizes_its_who
     )
     facts: dict[str, Any] = {name: getattr(base, name) for name in type(base).model_fields}
     facts["basis"] = ActivityAssetBasisSnapshot.model_validate(basis).to_domain()
-    operations, _ = _operations()
+    operations, _ = register_operations()
 
-    operations.create(ActivityAssetRevision(**facts), _NAME)
+    operations.create(ActivityAssetRevision(**facts), NAME)
 
     (listed,) = operations.list_elements()
     assert listed.basis.decimal == "2000.00"

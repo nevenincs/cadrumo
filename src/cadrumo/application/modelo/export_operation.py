@@ -26,7 +26,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..operations.access_port import OperationAccessResolver
@@ -240,7 +240,7 @@ class ModeloExportExecutor:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 settled = await asyncio.to_thread(export)
                 await context.events.effect(OperationEffect.UPDATED)
-                return await context.operands.put(settled, written_at=_utc_now())
+                return await context.operands.put(settled, written_at=now())
 
         return await await_cancellation_complete(publish(), task_name="modelo-export-publication")
 

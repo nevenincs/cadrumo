@@ -31,7 +31,7 @@ def test_sign_in_chrome_does_not_load_calendar_execution_or_installation_forms()
                 assert OverviewAgenda.model_json_schema()['properties']['next_due']
                 forbidden = (
                     'cadrumo.application.overview.calendar',
-                    'cadrumo.application.overview._calendar_evidence_sources',
+                    'cadrumo.application.overview.calendar_evidence_sources',
                     'cadrumo.entrypoints.tui.installation.act_screen',
                 )
                 assert not [name for name in forbidden if name in sys.modules]

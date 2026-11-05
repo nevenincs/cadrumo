@@ -14,7 +14,7 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ...aggregation.atribucion_member import AtribucionMemberSourceResolver
-from ..data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
+from ..data_inventory import LIVE_OBSERVATION_SOURCE_KINDS, profile_keys_for_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,7 +41,7 @@ def test_the_registry_declares_a_profile_binding_that_names_profile_keys() -> No
 def test_unresolved_binding_ids_map_to_the_profile_keys_they_consume() -> None:
     binding, revision, keys = _a_committed_profile_binding()
 
-    assert _profile_keys_for_bindings(revision, (binding.id,)) == keys
+    assert profile_keys_for_bindings(revision, (binding.id,)) == keys
 
 
 def test_an_empty_binding_set_maps_to_no_keys() -> None:
@@ -52,10 +52,10 @@ def test_an_empty_binding_set_maps_to_no_keys() -> None:
     """
     _binding, revision, _keys = _a_committed_profile_binding()
 
-    assert _profile_keys_for_bindings(revision, ()) == ()
+    assert profile_keys_for_bindings(revision, ()) == ()
 
 
 def test_profile_backed_atribucion_resolver_is_not_a_live_observation_source() -> None:
     """The real M184 resolver ownership must stay out of the local-observation bucket."""
     assert AtribucionMemberSourceResolver.owned_sources == (BindingSourceKind.ATRIBUCION_MEMBER,)
-    assert set(AtribucionMemberSourceResolver.owned_sources).isdisjoint(_LIVE_OBSERVATION_SOURCE_KINDS)
+    assert set(AtribucionMemberSourceResolver.owned_sources).isdisjoint(LIVE_OBSERVATION_SOURCE_KINDS)

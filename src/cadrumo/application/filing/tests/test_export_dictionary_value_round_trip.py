@@ -17,8 +17,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_source_reference,
 )
-from .._export_xml_dictionary import _set_xml_dictionary_path
-from .._export_xml_dictionary_values import format_xml_dictionary_value
+from ..export_xml_dictionary import set_xml_dictionary_path
+from ..export_xml_dictionary_values import format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -55,7 +55,7 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
                     else:
                         value = "A"
                     raw = format_xml_dictionary_value(entry.data_type, value)
-                    _set_xml_dictionary_path(root, entry.path, raw, element_order={})
+                    set_xml_dictionary_path(root, entry.path, raw, element_order={})
                     expected[entry.field_id] = raw
                     checked.add((str(modelo.id), str(revision.id), entry.field_id))
                 parsed = parse_export_payload(

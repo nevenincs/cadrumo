@@ -8,17 +8,17 @@ import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetRegisterState
 
-from .test_baja_correction import _ASSET, _sale
-from .test_register import _NAME, _operations, _revision
+from .test_baja_correction import ASSET, sale
+from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _listed(*, today: date, baja_on: date | None):
-    operations, _ = _operations(today=today)
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations(today=today)
+    operations.create(register_revision(), NAME)
     if baja_on is not None:
-        operations.dispose(_ASSET, _sale(baja_on))
+        operations.dispose(ASSET, sale(baja_on))
     (row,) = operations.list_elements()
     return row
 

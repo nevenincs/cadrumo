@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 __all__ = ["export_modelo_to_sheets"]
 
 
-class _SingleExportCoverage:
+class SingleExportCoverage:
     """Coverage source for one calc-sheets export: the unit is the whole write.
 
     Unlike the filed sweep, which walks many declarations and can genuinely
@@ -78,7 +78,7 @@ class _CalcSheetsApplyResult(Protocol):
     tab_count: int
 
 
-def _export_scope_description(plan: SheetExportPlan) -> str:
+def export_scope_description(plan: SheetExportPlan) -> str:
     metadata = plan.metadata
     return bounded_scope_description(
         (f"{metadata.modelo_id}-{metadata.period.registry_token}-{metadata.filing_year}",),
@@ -122,7 +122,7 @@ def export_modelo_to_sheets(
             after the failed run's provenance has been persisted.
     """
     bucket_id = require_active_bucket_id()
-    scope = _export_scope_description(plan)
+    scope = export_scope_description(plan)
 
     try:
         result = apply_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
@@ -132,7 +132,7 @@ def export_modelo_to_sheets(
             surface=SyncSurface.CALC_SHEETS_EXPORT,
             resolved_scope=scope,
             succeeded=False,
-            coverage=coverage_of(_SingleExportCoverage(reached=False)),
+            coverage=coverage_of(SingleExportCoverage(reached=False)),
             completed_at=now(),
             repository=sync_run_repository,
         )
@@ -143,7 +143,7 @@ def export_modelo_to_sheets(
         surface=SyncSurface.CALC_SHEETS_EXPORT,
         resolved_scope=scope,
         succeeded=True,
-        coverage=coverage_of(_SingleExportCoverage(reached=True)),
+        coverage=coverage_of(SingleExportCoverage(reached=True)),
         completed_at=now(),
         repository=sync_run_repository,
     )

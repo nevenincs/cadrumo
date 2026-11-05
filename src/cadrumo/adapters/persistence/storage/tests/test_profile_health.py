@@ -83,11 +83,11 @@ def test_discovery_only_health_never_probes_private_record_even_when_session_is_
                 monkeypatch.context() as local_patch,
             ):
                 local_patch.setattr(
-                    "cadrumo.application.workflow.profile_health._profile_record_session_is_missing",
+                    "cadrumo.application.workflow.profile_health.profile_record_session_is_missing",
                     forbidden_private_read,
                 )
                 local_patch.setattr(
-                    "cadrumo.application.workflow.profile_health._load_workflow_state_for_health",
+                    "cadrumo.application.workflow.profile_health.load_workflow_state_for_health",
                     forbidden_private_read,
                 )
                 local_patch.setattr(
@@ -123,11 +123,11 @@ def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_p
             monkeypatch.context() as local_patch,
         ):
             local_patch.setattr(
-                "cadrumo.application.workflow.profile_health._profile_record_session_is_missing",
+                "cadrumo.application.workflow.profile_health.profile_record_session_is_missing",
                 forbidden_private_read,
             )
             local_patch.setattr(
-                "cadrumo.application.workflow.profile_health._load_workflow_state_for_health",
+                "cadrumo.application.workflow.profile_health.load_workflow_state_for_health",
                 forbidden_private_read,
             )
             local_patch.setattr(

@@ -39,14 +39,14 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from ..renta_ledger import aggregate_renta_ledger_expenses
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 _FILING_YEAR = 2025
-_ANNUAL = _period(_FILING_YEAR, "0A")
+_ANNUAL = renta_income_aggregation_period(_FILING_YEAR, "0A")
 
 #: Well above any limb the article grants, so the deducted amount is always the
 #: cap rather than the premium. A premium under the cap would pass whatever the

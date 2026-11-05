@@ -28,7 +28,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.directory_scan import scan_directory
-from .._retencion_rate_advisory import (
+from ..retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
 )
@@ -156,9 +156,9 @@ def test_advisory_fires_once_per_divergent_administrador_row() -> None:
 
 def test_the_art95_grounding_is_read_from_the_registry_parameters() -> None:
     """The refs come from the parameters the rate set is loaded from."""
-    from .._retencion_rate_advisory import _art95_refs
+    from ..retencion_rate_advisory import art95_refs
 
-    assert _art95_refs(effective_date=_EFFECTIVE_DATE) == ("rd-439-2007:art-95",)
+    assert art95_refs(effective_date=_EFFECTIVE_DATE) == ("rd-439-2007:art-95",)
 
 
 def test_the_administrador_grounding_is_read_from_the_registry() -> None:
@@ -167,9 +167,9 @@ def test_the_administrador_grounding_is_read_from_the_registry() -> None:
     Read from the dated registry-backed parameter set, not from a core-level
     closed catalogue or structural fallback.
     """
-    from .._retencion_rate_advisory import _administrador_refs
+    from ..retencion_rate_advisory import administrador_refs
 
-    assert _administrador_refs(effective_date=_EFFECTIVE_DATE) == ("ley-35-2006:art-101",)
+    assert administrador_refs(effective_date=_EFFECTIVE_DATE) == ("ley-35-2006:art-101",)
 
 
 def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
@@ -180,7 +180,7 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     close, one indirection further along.
     """
     from ....core.resources.bundled_data import bundled_path
-    from .._retencion_rate_advisory import _administrador_refs, _art95_refs
+    from ..retencion_rate_advisory import administrador_refs, art95_refs
 
     # Through the shipped resolver rather than a hand-counted relative path,
     # which is off by one the moment this file moves.
@@ -188,8 +188,8 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     declared = "".join(path.read_text(encoding="utf-8") for path in scan_directory(legal_root, pattern="*.toml"))
 
     for reference in (
-        *_art95_refs(effective_date=_EFFECTIVE_DATE),
-        *_administrador_refs(effective_date=_EFFECTIVE_DATE),
+        *art95_refs(effective_date=_EFFECTIVE_DATE),
+        *administrador_refs(effective_date=_EFFECTIVE_DATE),
     ):
         assert f'[legal."{reference}"]' in declared, (
             f"{reference} is cited by an advisory but not defined in the legal catalogue"

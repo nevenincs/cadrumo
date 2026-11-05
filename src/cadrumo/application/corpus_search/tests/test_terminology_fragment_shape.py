@@ -21,7 +21,7 @@ import pytest
 
 from ....core.toml import parse_toml
 from ..errors import CorpusSearchInputError
-from ..terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN, _project_concept
+from ..terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN, project_concept
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -87,7 +87,7 @@ def test_a_fragment_with_no_language_section_is_refused() -> None:
     """A fragment with no [language.*] table at all is refused, not fabricated."""
     payload = parse_toml(_MISSING_LANGUAGE_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as raised:
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
 
     assert raised.value.reason == "concept_declares_no_language_sections"
 
@@ -96,7 +96,7 @@ def test_a_malformed_concept_id_is_refused() -> None:
     """A concept_id outside the canonical kebab-case shape is refused."""
     payload = parse_toml(_MALFORMED_CONCEPT_ID_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
     assert excinfo.value.context is not None
     assert excinfo.value.context["concept_id"] == "A"
 
@@ -110,14 +110,14 @@ def test_malformed_fragment_is_refused_not_fabricated() -> None:
     payload = parse_toml(_MALFORMED_FRAGMENT)
 
     with pytest.raises(CorpusSearchInputError):
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
 
 
 def test_a_well_formed_fragment_still_projects_cleanly() -> None:
     """The validation does not reject a genuinely well-formed concept."""
     payload = parse_toml(_WELL_FORMED_FRAGMENT)
 
-    projected = _project_concept(payload, locale="es")
+    projected = project_concept(payload, locale="es")
 
     assert projected is not None
     assert projected.concept_id == "prorrata-especial"

@@ -30,10 +30,10 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import InputClassification
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..errors import AggregationValidationError
 from ..iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -108,7 +108,7 @@ def _screen_observation(authority: IvaLedgerObservation) -> IvaLedgerObservation
     cuota = invoice.line_amount_eur(line.iva_amount)
     assert base is not None
     assert cuota is not None
-    observation = _invoice_line_iva_observation(
+    observation = invoice_line_iva_observation(
         invoice=invoice,
         line=line,
         line_index=0,

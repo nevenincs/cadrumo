@@ -162,17 +162,17 @@ def _refuse_while_login_state_unknown(run: _DeleteRun, wire: VerifiedConnection,
 
 
 def _retry_after_cleanup_refusal(run: _DeleteRun, wire: VerifiedConnection, request: ProfileDelete) -> None:
-    original_cleanup = login_session._revoke_profile_session_artefacts
+    original_cleanup = login_session.revoke_profile_session_artefacts
 
     def unavailable(**_coordinates: object) -> None:
         raise KeyringUnavailableError("synthetic keychain refusal")
 
-    run.monkeypatch.setattr(login_session, "_revoke_profile_session_artefacts", unavailable)
+    run.monkeypatch.setattr(login_session, "revoke_profile_session_artefacts", unavailable)
     refused = wire.delete_profile(request, deadline=time.monotonic() + 30)
     assert isinstance(refused, ProfileDeleteRefused)
     assert refused.transaction_id == request.confirmation.transaction_id
     assert run.capsule.exists()
-    run.monkeypatch.setattr(login_session, "_revoke_profile_session_artefacts", original_cleanup)
+    run.monkeypatch.setattr(login_session, "revoke_profile_session_artefacts", original_cleanup)
 
 
 def _delete_through_disconnect(

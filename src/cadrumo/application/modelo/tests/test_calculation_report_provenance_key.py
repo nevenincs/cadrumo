@@ -20,7 +20,7 @@ from ..calculation_report_provenance_key import (
     derive_calculation_report_provenance_key,
 )
 from ..review_package_signing import ensure_review_package_signing_keypair
-from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
+from .review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

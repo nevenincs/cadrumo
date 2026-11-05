@@ -49,7 +49,7 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.period import Period as _Period
+from ...core.period import Period
 from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -75,7 +75,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
-from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
+from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import prior_period_carry_evidence
 from .iva_wallet_values import revision_iva_compensation_amount, taxpayer_nif_from_path_values
@@ -109,7 +109,7 @@ class _WalletBindingTarget(NamedTuple):
     bucket_id: str
     modelo: str
     filing_year: int
-    period: _Period
+    period: Period
     revision: ModeloRevision
 
 
@@ -599,7 +599,7 @@ def _apply_wallet_resolution(
 def apply_iva_compensation_decision_binding(
     modelo: str,
     filing_year: int,
-    period: _Period,
+    period: Period,
     *,
     bucket_id: str,
     revision: ModeloRevision,
@@ -866,7 +866,7 @@ def _decision_is_missing_local_authority(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "missing" and getattr(decision, "selected_amount", None) is None
 
 
-def _source_periods(source: object) -> tuple[_Period, ...]:
+def _source_periods(source: object) -> tuple[Period, ...]:
     """Return the canonical periods one evidence source names.
 
     A carrier whose periods are not canonical cannot ground a zero, and reading
@@ -877,9 +877,9 @@ def _source_periods(source: object) -> tuple[_Period, ...]:
         return ()
     if not is_object_collection(raw_periods):
         raise InternalInvariantError("iva wallet evidence source periods are not a collection")
-    periods: list[_Period] = []
+    periods: list[Period] = []
     for period in raw_periods:
-        if not isinstance(period, _Period):
+        if not isinstance(period, Period):
             raise InternalInvariantError("iva wallet evidence source names a non-canonical period")
         periods.append(period)
     return tuple(periods)
@@ -1006,7 +1006,7 @@ class _PersistedWalletEvidence:
 
     taxpayer_nif: str
     target_year: int
-    target_period: _Period
+    target_period: Period
     total_pending: Decimal
     source_url: str
     captured_at: datetime
@@ -1125,7 +1125,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
     """
     if work_unit.modelo != form_for_role("iva.periodic"):
         return None
-    profile_values = _profile_path_values_for_bucket(work_unit.bucket_id)
+    profile_values = profile_path_values_for_bucket(work_unit.bucket_id)
     decision = _persisted_decision_for_calculation(
         work_unit,
         snapshot=_registry_snapshot_for_work_unit(work_unit, subject_leaf_key=subject_leaf_key, operation=operation),

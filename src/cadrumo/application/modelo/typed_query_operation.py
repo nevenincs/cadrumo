@@ -52,7 +52,7 @@ from .typed_query_contracts import (
 )
 
 
-def _readiness_summary(
+def readiness_summary(
     payload: ModeloReadinessOperationRequest,
     factory: ModeloQueryReadPortsFactory,
     operation: PinnedAuthorityOperation,
@@ -187,7 +187,7 @@ class ModeloReadinessSummaryExecutor:
 
         async def capture() -> str:
             result = await asyncio.to_thread(
-                _readiness_summary, request.payload, self._factory, context.authority_operation
+                readiness_summary, request.payload, self._factory, context.authority_operation
             )
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)

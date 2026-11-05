@@ -646,7 +646,7 @@ def resolve_profile_sourced_bindings(
         unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
-            *_derived_binding_diagnostics(
+            *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,
                 resolved_schema,
@@ -742,7 +742,7 @@ def _unanswered_text_binding_diagnostics(
     return tuple(diagnostics)
 
 
-def _derived_binding_diagnostics(
+def derived_binding_diagnostics(
     bindings: tuple[BindingDefinition, ...],
     fact_index: Mapping[str, UserProfileFactValue],
     schema: ProfileSchemaDefinition,

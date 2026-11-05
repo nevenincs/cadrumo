@@ -31,14 +31,14 @@ from ...live.borrador_100 import (
     BorradorSnapshotNotFoundError,
 )
 from ...live.snapshot_base import SnapshotLifecycleState
-from .._registry_helpers import validate_casilla_input_ids
 from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,
-    _decimal_value,
+    decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
+from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -595,7 +595,7 @@ def test_borrador_resolution_accepts_finite_string_and_decimal_values(
     raw_value: Decimal | str,
     expected: Decimal,
 ) -> None:
-    assert _decimal_value(_DECIMAL_BINDING, raw_value) == expected
+    assert decimal_value(_DECIMAL_BINDING, raw_value) == expected
 
 
 @pytest.mark.parametrize(
@@ -613,7 +613,7 @@ def test_borrador_resolution_rejects_non_finite_string_and_decimal_values(
     raw_value: Decimal | str,
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
-        _decimal_value(_DECIMAL_BINDING, raw_value)
+        decimal_value(_DECIMAL_BINDING, raw_value)
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}

@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 
 from ....core.json_contract import NoticeSeverity
@@ -78,7 +78,7 @@ def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
 
 def test_advisory_fires_when_general_exceeds_especial_by_more_than_ten_percent() -> None:
     """A >10% general-over-especial spread makes especial obligatory (art. 103.Dos.2)."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=Decimal("111.00"),
             deduction_under_especial=Decimal("100.00"),
@@ -108,7 +108,7 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_in_every_supported_ejerc
     margin, so the advisory must fire. The paired below-margin case keeps the
     assertion from passing on a predicate that always fires.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=Decimal("110.00"),
             deduction_under_especial=Decimal("100.00"),
@@ -151,7 +151,7 @@ def test_the_advisory_envelope_reports_the_margin_it_was_handed() -> None:
     advisory that reinstated a hardcoded figure would fail rather than pass by
     coincidence.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         arbitrary = ProrrataEspecialMandatoryParameters(
             margin_percentage=Decimal("37"),
             comparison=ThresholdComparison.EXCLUSIVE,
@@ -199,7 +199,7 @@ def test_an_ejercicio_before_the_current_redaction_is_refused_at_the_resolver() 
 
 def test_advisory_silent_when_general_does_not_exceed_especial() -> None:
     """A general deduction at or below the especial deduction never fires."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=Decimal("95.00"),
             deduction_under_especial=Decimal("100.00"),
@@ -213,7 +213,7 @@ def test_advisory_silent_when_general_does_not_exceed_especial() -> None:
 
 def test_advisory_fires_when_especial_is_zero_and_general_is_positive() -> None:
     """A zero especial deduction with any positive general deduction is obligatory."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=Decimal("0.01"),
             deduction_under_especial=Decimal("0.00"),

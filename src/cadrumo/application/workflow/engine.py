@@ -17,10 +17,9 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.parsing.utils import enum_value as _enum_value
+from ...core.parsing.utils import enum_value
 from ...core.period import Period
-from ...core.time.clock import now as _utcnow
-from ...core.time.clock import today_madrid
+from ...core.time.clock import now, today_madrid
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.filing.errors import ModeloBuilderError
 from ...domain.filing.protocols import ModeloInputs
@@ -28,7 +27,6 @@ from ...domain.submission.errors import SubmissionPreflightError
 from ...domain.submission.models import ModeloDraftStatus
 from ..filing.runtime import build_runtime_schema_provider
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from ._deadline_stage import resolve_deadline_stage_obligation
 from .abort import WorkflowAbortReason
 from .deadline_decisions import (
     WorkflowDeadlineTarget,
@@ -36,15 +34,12 @@ from .deadline_decisions import (
     no_recovery_verdict,
     persisted_obligation,
 )
+from .deadline_stage import resolve_deadline_stage_obligation
 from .draft_findings import draft_blocking_finding_codes
 from .engine_helpers import (
     CertificateSeverityValue,
-)
-from .engine_helpers import (
-    classify_cert_expiry as _classify_cert_expiry,
-)
-from .engine_helpers import (
-    registry_filing_year as _registry_filing_year,
+    classify_cert_expiry,
+    registry_filing_year,
 )
 from .engine_recording import record_site_unavailable, record_unhandled
 from .errors import WorkflowAbortSignalError, WorkflowInputMismatchError
@@ -250,7 +245,7 @@ class WorkflowEngine:
         purpose: WorkflowPurpose = WorkflowPurpose.FILE,
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
-        started_at = _utcnow()
+        started_at = now()
         reference_today = today or today_madrid()
 
         # Record run context so ``_record_site_unavailable`` can lazily
@@ -273,7 +268,7 @@ class WorkflowEngine:
             purpose=purpose,
         )
 
-        ended_at = _utcnow()
+        ended_at = now()
         self._run_tax_id = None
         self._run_started_at = None
         self._run_target_modelo = None
@@ -407,12 +402,12 @@ class WorkflowEngine:
         is mostly an audit log. It still exists as a distinct step so
         the workflow contract is visible in every result.
         """
-        started = _utcnow()
+        started = now()
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.profile_loaded",
             ),
@@ -452,7 +447,7 @@ class WorkflowEngine:
         synthesised purely so the downstream draft/validation stages
         have the ``(modelo, period)`` to build against.
         """
-        started = _utcnow()
+        started = now()
         try:
             obligation = resolve_deadline_stage_obligation(
                 self._deadline_engine,
@@ -502,13 +497,13 @@ class WorkflowEngine:
         ``concepto`` carries the free-text subject line of the row.
         """
         del profile  # session identity is implicit; tax_id no longer crosses the boundary.
-        started = _utcnow()
+        started = now()
         if self.session is None or self.notifications_source is None:
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=True,
                     summary_locale_key="application.workflow.steps.inbox_skipped",
                     details=WorkflowInboxSkippedDetails(
@@ -540,7 +535,7 @@ class WorkflowEngine:
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=False,
                     summary_locale_key="application.workflow.steps.inbox_blocked",
                     details=WorkflowInboxBlockedDetails(
@@ -562,7 +557,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.CHECKING_INBOX,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.inbox_clear",
             ),
@@ -584,7 +579,7 @@ class WorkflowEngine:
         builder refuses to promote the draft to ``READY_TO_SUBMIT``.
         Any unexpected exception lands as ``UNHANDLED_EXCEPTION``.
         """
-        started = _utcnow()
+        started = now()
         await self._abort_if_already_filed(obligation=obligation, started=started, steps=steps)
         draft = self._load_and_build_draft(
             profile=profile,
@@ -606,7 +601,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.BUILDING_DRAFT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.draft_built",
                 details=WorkflowDraftBuiltDetails(kind="draft_built", draft_id=draft.draft_id),
@@ -639,7 +634,7 @@ class WorkflowEngine:
                     exc=exc,
                     steps=steps,
                 )
-            target_year = _registry_filing_year(obligation.period)
+            target_year = registry_filing_year(obligation.period)
             already = tuple(e for e in expedientes if e.modelo == obligation.modelo and e.ejercicio == target_year)
             if already:
                 _logger.debug(
@@ -652,7 +647,7 @@ class WorkflowEngine:
                     WorkflowStep(
                         stage=WorkflowStage.BUILDING_DRAFT,
                         started_at=started,
-                        ended_at=_utcnow(),
+                        ended_at=now(),
                         success=False,
                         summary_locale_key="application.workflow.steps.already_filed",
                         details=WorkflowAlreadyFiledDetails(
@@ -733,7 +728,7 @@ class WorkflowEngine:
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=False,
                     summary_locale_key="application.workflow.steps.draft_build_failed",
                     details=WorkflowFailureDetails(
@@ -772,14 +767,14 @@ class WorkflowEngine:
             ModeloDraftStatus.LISTO_PARA_PRESENTAR.value,
             ModeloDraftStatus.APROBADO.value,
         }
-        if _enum_value(draft.status) not in ready_statuses:
-            status_value = _enum_value(draft.status)
+        if enum_value(draft.status) not in ready_statuses:
+            status_value = enum_value(draft.status)
             blocking_finding_codes = draft_blocking_finding_codes(draft)
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=False,
                     summary_locale_key="application.workflow.steps.draft_not_ready",
                     details=WorkflowDraftNotReadyDetails(
@@ -830,7 +825,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.BUILDING_DRAFT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.draft_identity_mismatch",
                 details=WorkflowDraftMismatchDetails(kind="draft_mismatch", draft_id=draft.draft_id),
@@ -870,14 +865,14 @@ class WorkflowEngine:
         success — the same fail-open this file's sibling gate carried in
         ``domain/submission/preflight.py``.
         """
-        started = _utcnow()
+        started = now()
         error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)
         if error_findings:
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.VALIDATING_DRAFT,
                     started_at=started,
-                    ended_at=_utcnow(),
+                    ended_at=now(),
                     success=False,
                     summary_locale_key="application.workflow.steps.validation_failed",
                     details=WorkflowValidationFailedDetails(
@@ -899,7 +894,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.VALIDATING_DRAFT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.validation_clean",
             ),
@@ -927,7 +922,7 @@ class WorkflowEngine:
         auth-provider gates still run, so an unsound calculation is still
         refused.
         """
-        started = _utcnow()
+        started = now()
         cert_details = self._resolve_certificate_preflight(today=today, started=started, steps=steps)
         self._run_submission_preflight(
             draft=draft,
@@ -941,7 +936,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=True,
                 summary_locale_key="application.workflow.steps.preflight_completed",
                 details=cert_details,
@@ -1013,7 +1008,7 @@ class WorkflowEngine:
     ) -> tuple[WorkflowAuthCheckDetails, CertificateSeverityValue | None, int | None]:
         if certificate.expires_on is None:
             return cert_details, None, None
-        cert_severity, days_until_expiry = _classify_cert_expiry(
+        cert_severity, days_until_expiry = classify_cert_expiry(
             not_after=certificate.expires_on,
             today=today,
             warn_days=self._settings.cadrumo_cert_warn_days,
@@ -1037,7 +1032,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.auth_certificate_load_failed",
                 details=WorkflowFailureDetails(
@@ -1069,7 +1064,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.auth_provider_unavailable",
                 details=cert_details,
@@ -1100,7 +1095,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.auth_certificate_invalid",
                 details=cert_details,
@@ -1177,7 +1172,7 @@ class WorkflowEngine:
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
-                ended_at=_utcnow(),
+                ended_at=now(),
                 success=False,
                 summary_locale_key="application.workflow.steps.preflight_failed",
                 details=WorkflowPreflightFailedDetails(

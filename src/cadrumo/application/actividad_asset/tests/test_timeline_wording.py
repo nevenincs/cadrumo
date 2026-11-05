@@ -45,9 +45,9 @@ from cadrumo.domain.renta.actividad_asset.register_records import (
     ActivityAssetEventKind,
 )
 
-from ..register_timeline import _flatten
-from .register_support import _published_class_labels
-from .test_register import _NAME, _operations, _revision
+from ..register_timeline import flatten
+from .register_support import published_class_labels
+from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -85,7 +85,7 @@ def test_a_repeated_row_is_found_by_its_step_path_whatever_its_position() -> Non
 
 
 def test_a_dumped_row_is_flattened_by_position_and_a_flag_reads_as_a_token() -> None:
-    flat = _flatten({"rows": [{"shape": "ancillary_cost"}, {"shape": "primary_purchase"}], "none": [], "flag": True})
+    flat = flatten({"rows": [{"shape": "ancillary_cost"}, {"shape": "primary_purchase"}], "none": [], "flag": True})
 
     assert flat == {
         "rows[0].shape": "ancillary_cost",
@@ -132,11 +132,11 @@ def test_a_share_reads_as_a_percentage() -> None:
 
 
 def test_the_timeline_words_a_changed_class_share_method_order_and_opening_method() -> None:
-    labels = _published_class_labels(DirectEstimationRegime.SIMPLIFIED, 2025)
+    labels = published_class_labels(DirectEstimationRegime.SIMPLIFIED, 2025)
     before_class = "equipo-informacion-software"
     after_class = next(key for key in sorted(labels) if key != before_class)
-    operations, _ = _operations()
-    first_data = _revision().model_dump()
+    operations, _ = register_operations()
+    first_data = register_revision().model_dump()
     first_data["basis"] = ActivityAssetBasis(
         stage=AssetBasisStage.TAXPAYER_OWNED,
         basis_amount=Decimal("2000"),
@@ -144,7 +144,7 @@ def test_the_timeline_words_a_changed_class_share_method_order_and_opening_metho
         business_use_share=Decimal("0.5"),
     ).model_dump()
     first = ActivityAssetRevision.model_validate(first_data)
-    operations.create(first, _NAME)
+    operations.create(first, NAME)
     second_data = first.model_dump()
     second_data.update(
         revision_number=2,

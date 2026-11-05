@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field
 
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now, today_madrid
 from ...core.type_guards import is_object_set_or_frozenset
 from ...domain.calculations.registry.applicability import derive_modelo_applicability, iter_modelo_applicability_rules
@@ -47,7 +47,7 @@ from ...domain.calculations.registry.applicability_models import (
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys, profile_path_value
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
@@ -76,7 +76,7 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
 
-_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
+_UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in UNMODELED_OBLIGATIONS.items()}
 """Recognized-but-unmodeled obligations keyed by bare modelo code.
 
 Derived once from
@@ -142,7 +142,7 @@ class OverviewExplain(BaseModel):
         generated_at: UTC timestamp of when the aggregator ran.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     year: FilingYear
@@ -494,7 +494,7 @@ def build_overview_explain(
         year=resolved_year,
         engine=engine,
     )
-    out_of_plazo_warning = _out_of_plazo_warning(
+    out_of_plazo_warning = explain_out_of_plazo_warning(
         profile,
         modelo=modelo_id,
         year=resolved_year,
@@ -553,7 +553,7 @@ def _scheduling_rationale(
         ) from exc
 
 
-def _out_of_plazo_warning(
+def explain_out_of_plazo_warning(
     profile: TaxpayerProfile,
     *,
     modelo: str,

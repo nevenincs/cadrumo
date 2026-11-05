@@ -51,7 +51,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_binding_values import PERSISTED_BOOLEAN_BINDING_TOKENS
 from ...domain.modelos.calculation_revision_sources import (
     CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT,
@@ -732,7 +732,7 @@ def _bound_text_casilla_inputs(
             continue
         value, _binding_ids = resolve_bound_casilla_binding_value(casilla, resolved_bindings)
         if value is not None:
-            projected[casilla.id] = _canonical_decimal_str(value)
+            projected[casilla.id] = canonical_decimal_string(value)
     return projected
 
 
@@ -745,7 +745,7 @@ def _binding_replay_overrides(
     """Serialize admitted decimal, enum, date and boolean channels before relation de-duplication."""
     binding_overrides = dict(
         sorted(
-            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
+            [(k.strip(), canonical_decimal_string(v)) for k, v in resolved_bindings.items()]
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
             + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
             + [(k.strip(), PERSISTED_BOOLEAN_BINDING_TOKENS[v]) for k, v in (resolved_boolean_bindings or {}).items()],
@@ -786,7 +786,9 @@ def build_calculation_replay_payloads(
     )
     relation_overrides = {
         relation_id: value
-        for relation_id, value in sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items())
+        for relation_id, value in sorted(
+            (k.strip(), canonical_decimal_string(v)) for k, v in resolved_relations.items()
+        )
         if binding_overrides.get(relation_id) != value
     }
     return CalculationReplayPayloads(
@@ -794,7 +796,7 @@ def build_calculation_replay_payloads(
             sorted(
                 (
                     validated_casilla_id(k, surface="calculation_replay.input_values_by_casilla_id"),
-                    _canonical_decimal_str(v),
+                    canonical_decimal_string(v),
                 )
                 for k, v in resolved_inputs.items()
             ),
@@ -818,11 +820,11 @@ def _row_binding_replay_values(
             # matches the boolean-to-Decimal("1")/Decimal("0") convention
             # already established for engine-facing binding channels (see
             # ``profile_binding._decimal_value``).
-            canonical = _canonical_decimal_str(Decimal("1") if value else Decimal("0"))
+            canonical = canonical_decimal_string(Decimal("1") if value else Decimal("0"))
         elif isinstance(value, Decimal):
-            canonical = _canonical_decimal_str(value)
+            canonical = canonical_decimal_string(value)
         elif isinstance(value, int):
-            canonical = _canonical_decimal_str(Decimal(value))
+            canonical = canonical_decimal_string(Decimal(value))
         else:
             canonical = value.strip()
         row_values[str(row_index)] = canonical

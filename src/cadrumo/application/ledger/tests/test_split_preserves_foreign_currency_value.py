@@ -26,7 +26,7 @@ from ....core.money.rounding import round_to_cents
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
 from ...aggregation.currency_predicates import is_non_eur_without_conversion
-from ..actions_split_merge import _split_child_eur_values
+from ..actions_split_merge import split_child_eur_values
 from .iva_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -61,7 +61,7 @@ def test_the_children_of_a_converted_parent_resum_to_its_stored_euro_value() -> 
     parent = _converted_parent()
     assert parent.value_in_eur == Decimal("121.00")
 
-    values = _split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
+    values = split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
 
     assert values is not None
     assert sum(values, start=Decimal("0")) == parent.value_in_eur
@@ -73,7 +73,7 @@ def test_the_last_child_absorbs_the_residual_rather_than_the_ledger_losing_it() 
     naive = [round_to_cents(amount * _RATE) for amount in _CHILD_AMOUNTS]
     assert sum(naive, start=Decimal("0")) == Decimal("120.99"), "the fixture must actually have a residual"
 
-    values = _split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
+    values = split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
 
     assert values is not None
     assert list(values[:-1]) == naive[:-1]
@@ -87,7 +87,7 @@ def test_every_child_is_valued_at_the_parents_rate_not_one_fitted_to_itself() ->
     rate = parent.fx_rate
     assert rate is not None, "a converted parent must carry the rate its children inherit"
 
-    values = _split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
+    values = split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
 
     assert values is not None
     for amount, value in zip(_CHILD_AMOUNTS[:-1], values[:-1], strict=True):
@@ -98,14 +98,14 @@ def test_a_single_child_receives_the_whole_parent_value() -> None:
     """The degenerate split still conserves the total exactly."""
     parent = _converted_parent()
 
-    values = _split_child_eur_values(parent=parent, child_amounts=(parent.raw.amount,))
+    values = split_child_eur_values(parent=parent, child_amounts=(parent.raw.amount,))
 
     assert values == (parent.value_in_eur,)
 
 
 def test_an_unconverted_parent_has_no_conversion_to_distribute() -> None:
     """A domestic row carries no rate, so its children carry none either."""
-    assert _split_child_eur_values(parent=_domestic_parent(), child_amounts=_CHILD_AMOUNTS) is None
+    assert split_child_eur_values(parent=_domestic_parent(), child_amounts=_CHILD_AMOUNTS) is None
 
 
 def test_a_child_built_from_a_converted_parent_is_not_an_unconverted_row() -> None:
@@ -116,7 +116,7 @@ def test_a_child_built_from_a_converted_parent_is_not_an_unconverted_row() -> No
     ever stops satisfying what those callers actually ask.
     """
     parent = _converted_parent()
-    values = _split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
+    values = split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
     assert values is not None
 
     child = iva_transaction("split-fx-child", direction=TransactionDirection.OUTGOING, taxable_base=Decimal("300.00"))

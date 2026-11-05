@@ -21,7 +21,6 @@ from ....domain.iva.schema import InvoiceKind as IvaInvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from .._preconditions import AggregationPreconditionCondition
 from ..errors import (
     AggregationValidationError,
 )
@@ -30,6 +29,7 @@ from ..iva_ledger import (
 )
 from ..oss_ioss import OssIossLedgerCandidate, aggregate_oss_ioss_bindings
 from ..oss_ioss_resolver import OssIossLedgerSourceResolver
+from ..preconditions import AggregationPreconditionCondition
 from ..source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -38,18 +38,18 @@ from ..source_mesh import (
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .ledger_source_mesh_support import (
     BUCKET_ID,
+    InMemoryInvoiceCatalogueRepository,
+    InMemoryProrrataRegisterRepository,
     InMemoryTransactionCatalogueRepository,
-    _domestic_iva_invoice,
-    _empty_catalogue_read_ports,
-    _exempt_intracommunity_invoice,
-    _InMemoryInvoiceCatalogueRepository,
-    _InMemoryProrrataRegisterRepository,
-    _ledger_iva_resolver,
-    _m303_revision,
-    _prior_m303_snapshot_ref,
-    _revision,
+    domestic_iva_invoice,
+    empty_catalogue_read_ports,
     empty_invoice_repository,
     empty_prorrata_repository,
+    exempt_intracommunity_invoice,
+    ledger_iva_resolver,
+    ledger_source_mesh_revision,
+    m303_revision,
+    prior_m303_snapshot_ref,
 )
 from .ledger_transaction_support import (
     iva_transaction,
@@ -66,7 +66,7 @@ def _apart_from_the_bank_date_advisory(
 
 
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -86,7 +86,7 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
     )
     tx_repo.save(TransactionCatalogue.from_transactions((incoming, outgoing)))
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -113,9 +113,9 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
 
 
 def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() -> None:
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    prorrata_repo = _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
+    prorrata_repo = InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
     outgoing = iva_transaction(
         "purchase-prorrata-general",
         direction=TransactionDirection.OUTGOING,
@@ -134,13 +134,13 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
-                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
+                    source_registry_snapshot_refs=(prior_m303_snapshot_ref(),),
                 ),
             ),
         ),
     )
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=prorrata_repo,
@@ -170,10 +170,10 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
 
 
 def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger() -> None:
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    invoice = _domestic_iva_invoice(
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
+    invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
         kind=CatalogueInvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
@@ -183,7 +183,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     with pytest.raises(AggregationValidationError) as exc_info:
-        _ledger_iva_resolver(
+        ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             prorrata_register_repository=empty_prorrata_repository(),
@@ -210,10 +210,10 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
 
 def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority() -> None:
     """A received invoice reaches no SOPORTADO row until classified authority exists."""
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    invoice = _domestic_iva_invoice(
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
+    invoice = domestic_iva_invoice(
         "PURCHASE-WITHOUT-DEDUCTION-AUTHORITY",
         kind=CatalogueInvoiceKind.RECEIVED,
         issued_at=date(2025, 2, 10),
@@ -223,7 +223,7 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     with pytest.raises(AggregationValidationError) as refusal:
-        _ledger_iva_resolver(
+        ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             prorrata_register_repository=empty_prorrata_repository(),
@@ -255,10 +255,10 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     because a change that moved every invoice one quarter earlier would satisfy
     the Q1 half alone.
     """
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    invoice = _domestic_iva_invoice(
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
+    invoice = domestic_iva_invoice(
         "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
         kind=CatalogueInvoiceKind.ISSUED,
         issued_at=date(2025, 4, 10),
@@ -269,7 +269,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     def _resolve(code: str) -> CalculationSourceResolution:
-        return _ledger_iva_resolver(
+        return ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             prorrata_register_repository=empty_prorrata_repository(),
@@ -302,9 +302,9 @@ def _resolve_laura_first_quarter_sale(
     *, operation_date: date | None = None
 ) -> tuple[Transaction, CalculationSourceResolution]:
     """Resolve the one issued sale, optionally declaring its operation date."""
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
     transaction = iva_transaction(
         "laura-1t-sale",
         direction=TransactionDirection.INCOMING,
@@ -313,7 +313,7 @@ def _resolve_laura_first_quarter_sale(
         iva_amount=Decimal("2100.00"),
         booked_date=date(2025, 2, 10),
     )
-    invoice = _domestic_iva_invoice(
+    invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
         kind=CatalogueInvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
@@ -325,7 +325,7 @@ def _resolve_laura_first_quarter_sale(
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    return transaction, _ledger_iva_resolver(
+    return transaction, ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         prorrata_register_repository=empty_prorrata_repository(),
@@ -384,7 +384,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     consume it (each resolves the 42.00 self-assessed cuota), so the pair nets
     to zero in the M303 resultado and the advisory no longer fires.
     """
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -418,7 +418,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, reverse_charge)))
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -463,7 +463,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
     cuota-less by law. This guards against the false-positive that surfaced an
     unactionable "modelling gap" for a category that simply has no cuota.
     """
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -485,7 +485,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, exempt_supply)))
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -515,7 +515,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     binding selects produce the diagnostic. A domestic sale matched by the
     repercutido-general binding must leave ``diagnostics`` empty.
     """
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -528,7 +528,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale,)))
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -547,7 +547,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 
 
 def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic() -> None:
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -565,7 +565,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
     raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
     assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD]
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -592,7 +592,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
 
 
 def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> None:
-    revision = _revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -609,7 +609,7 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
     raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
     assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.MISSING_IVA_RATE]
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -629,7 +629,7 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
 
 
 def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> None:
-    revision = _revision("369", "esquema-union")
+    revision = ledger_source_mesh_revision("369", "esquema-union")
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-ledger-1",
@@ -646,7 +646,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
 
     aggregated = aggregate_oss_ioss_bindings(revision, candidates)
     resolution = OssIossLedgerSourceResolver(
-        ports=_empty_catalogue_read_ports(),
+        ports=empty_catalogue_read_ports(),
         candidates=candidates,
     ).resolve(
         CalculationSourceContext(
@@ -672,7 +672,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     silently vanish from the M369, so the resolver MUST emit an
     ``unrouted_observation`` advisory rather than drop it (no-silent-under-declaration).
     """
-    revision = _revision("369", "esquema-union")
+    revision = ledger_source_mesh_revision("369", "esquema-union")
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-it-unrouted",
@@ -688,7 +688,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     )
 
     resolution = OssIossLedgerSourceResolver(
-        ports=_empty_catalogue_read_ports(),
+        ports=empty_catalogue_read_ports(),
         candidates=candidates,
     ).resolve(
         CalculationSourceContext(
@@ -727,10 +727,10 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
     country differs. Before this, changing that one field was enough to walk
     the invoice past the guard.
     """
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    invoice = _domestic_iva_invoice(
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
+    invoice = domestic_iva_invoice(
         "DE-1T-SALE",
         kind=CatalogueInvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
@@ -742,7 +742,7 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     with pytest.raises(AggregationValidationError) as exc_info:
-        _ledger_iva_resolver(
+        ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             prorrata_register_repository=empty_prorrata_repository(),
@@ -774,10 +774,10 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     the country proxy widens WHICH invoices are considered without widening
     what is actually compared.
     """
-    revision = _m303_revision()
+    revision = m303_revision()
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    exempt = _exempt_intracommunity_invoice(
+    invoice_repo = InMemoryInvoiceCatalogueRepository()
+    exempt = exempt_intracommunity_invoice(
         "DE-1T-EXEMPT",
         kind=CatalogueInvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
@@ -785,7 +785,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     )
     invoice_repo.save(build_invoice_catalogue((exempt,)))
 
-    resolution = _ledger_iva_resolver(
+    resolution = ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         prorrata_register_repository=empty_prorrata_repository(),

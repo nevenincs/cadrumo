@@ -39,8 +39,8 @@ from ....domain.renta.ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-from ..renta_ledger import _casilla_aggregation
-from .renta_income_aggregation_support import _period
+from ..renta_ledger import renta_ledger_casilla_aggregation
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -81,7 +81,7 @@ def _observation(
     return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-_PERIOD_2025 = _period(2025, "0A")
+_PERIOD_2025 = renta_income_aggregation_period(2025, "0A")
 
 
 _M100_AUTONOMOS_SS_CASILLA: CasillaId = validated_casilla_id("0186")
@@ -94,7 +94,7 @@ _M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199")
 
 
 def test_casilla_aggregation_empty_observations_yields_empty_totals_and_provenance() -> None:
-    result = _casilla_aggregation(_PERIOD_2025, (), modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, (), modelo="100")
 
     assert result.modelo == "100"
     assert result.period == _PERIOD_2025
@@ -111,7 +111,7 @@ def test_casilla_aggregation_modelo_propagates_to_output(operation: PinnedAuthor
         gross_amount=Decimal("300.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert result.modelo == "100"
 
@@ -124,8 +124,8 @@ def test_casilla_aggregation_preserves_period_argument(operation: PinnedAuthorit
         gross_amount=Decimal("300.00"),
     )
 
-    other_period = _period(2024, "0A")
-    result = _casilla_aggregation(other_period, [obs], modelo="100")
+    other_period = renta_income_aggregation_period(2024, "0A")
+    result = renta_ledger_casilla_aggregation(other_period, [obs], modelo="100")
 
     assert result.period == other_period
 
@@ -145,7 +145,7 @@ def test_casilla_aggregation_single_observation_produces_one_total_and_one_prove
         gross_amount=Decimal("300.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
     assert len(result.provenance) == 1
@@ -172,7 +172,7 @@ def test_casilla_aggregation_groups_observations_same_casilla_same_category_into
         gross_amount=Decimal("200.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
     assert len(result.provenance) == 1
     assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
@@ -199,7 +199,7 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
         gross_amount=Decimal("79.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     # Both observations contribute to the same casilla key.
     assert set(result.casilla_values.keys()) == {_M100_ASESORIA_CASILLA}
@@ -241,7 +241,7 @@ def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category
     )
 
     # Feed observations in random-ish order.
-    result = _casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186], modelo="100")
 
     keys = [(row.casilla_id, row.category_id) for row in result.provenance]
     assert keys == sorted(keys)
@@ -272,7 +272,7 @@ def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted(
         gross_amount=Decimal("300.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
 
     fed_order = (_tx_id("tx-z"), _tx_id("tx-a"), _tx_id("tx-m"))
     # The claim below is only a claim about sorting if the order the
@@ -310,7 +310,7 @@ def test_casilla_aggregation_subtotal_equals_sum_of_member_observations(
         gross_amount=Decimal("200.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
     expected_subtotal = obs_a.deductible_amount + obs_b.deductible_amount
     assert result.provenance[0].subtotal == expected_subtotal
@@ -336,7 +336,7 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
         gross_amount=Decimal("79.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     expected_total = obs_contable.deductible_amount + obs_fiscal.deductible_amount
     assert result.casilla_values[_M100_ASESORIA_CASILLA] == expected_total
@@ -374,7 +374,7 @@ def test_casilla_aggregation_category_id_is_typed_spending_category_instance(
         gross_amount=Decimal("300.00"),
     )
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
+    result = renta_ledger_casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert len(result.provenance) == 1
     row = result.provenance[0]

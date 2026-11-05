@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.deadlines.plazo import resolve_filing_window
@@ -67,7 +67,7 @@ def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
 
 def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
     """A past deadline yields posture plus advisory rate, never an assessment."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit, period, closes_on, reference_on = _overdue_context()
 
         posture = modelo_work_deadline_posture(work_unit, reference_on=reference_on)
@@ -96,7 +96,7 @@ def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
 
 def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment() -> None:
     """The governed 12-month band remains correct while status stays unassessed."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit, period, closes_on, _reference_on = _overdue_context()
         anniversary = closes_on.replace(year=closes_on.year + 1)
         day_after = anniversary + timedelta(days=1)

@@ -425,7 +425,7 @@ def _reads_without_a_model(
     return False
 
 
-def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
+def reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
     """Return the reader role these bytes will reach first, or ``None`` for neither.
 
     Read off the same shape probe the deterministic test uses, so the two agree
@@ -677,13 +677,13 @@ def run_evidence_batch(
     Returns:
         :class:`BatchRunResult`: Every row, ordered by content address.
     """
-    from ...core.config import load_settings as _load_settings
+    from ...core.config import load_settings
     from ...core.hashing import sha256_hex
     from .evidence import PurchaseInvoiceEvidenceService
     from .extraction_draft_store import read_extraction_draft, write_extraction_draft
     from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 
-    resolved_settings = settings or _load_settings()
+    resolved_settings = settings or load_settings()
     service = PurchaseInvoiceEvidenceService(ports=evidence_ports)
     addressed, deterministic, roles, unresolved = _plan_batch_inputs(
         sources=sources,
@@ -792,7 +792,7 @@ def _record_batch_source(
     content_address = sha256(data)
     if _reads_without_a_model(data, document_shape_probe=probe, text_layer_ports=text_layer_ports, operation=operation):
         deterministic.add(content_address)
-    role = _reader_role_for(data, document_shape_probe=probe)
+    role = reader_role_for(data, document_shape_probe=probe)
     if role is not None:
         roles[content_address] = role
     addressed[(content_address, str(path))] = path

@@ -33,7 +33,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.transactions.enums import TransactionDirection
-from ..actions_common import _command_idempotency_fields, _transaction_idempotency_fields
+from ..actions_common import command_idempotency_fields, transaction_idempotency_fields
 from ..actions_manual import transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
@@ -82,8 +82,8 @@ def test_the_two_projections_share_one_ordered_key_sequence() -> None:
     command = _a_command()
     transaction = transaction_from_command(command, occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC))
 
-    command_keys = tuple(_command_idempotency_fields(command))
-    transaction_keys = tuple(_transaction_idempotency_fields(transaction))
+    command_keys = tuple(command_idempotency_fields(command))
+    transaction_keys = tuple(transaction_idempotency_fields(transaction))
 
     assert command_keys == transaction_keys, (
         "the two idempotency projections have drifted; the positional fold will compare "
@@ -101,7 +101,7 @@ def test_every_command_field_is_compared_or_deliberately_excluded() -> None:
     the tree noticed.
     """
     model_fields = set(ManualLedgerTransactionCommand.model_fields)
-    projected = set(_command_idempotency_fields(_a_command()))
+    projected = set(command_idempotency_fields(_a_command()))
 
     # Undo the one deliberate rename so the comparison is against model names.
     assert _RENAMED_KEY in projected, f"the {_RENAMED_FIELD} projection key was renamed again"

@@ -23,29 +23,29 @@ from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from . import _shared_issue_reasons
-from ._grouping import fold_casilla_observations
-from ._models import CasillaAggregation, LedgerAggregationResultBase
+from . import shared_issue_reasons
 from .business_proportion import business_proportion
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError, AggregationValidationError
+from .grouping import fold_casilla_observations
+from .models import CasillaAggregation, LedgerAggregationResultBase
 
 
 class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not fold into the impatriado base."""
 
-    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
-    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    UNSUPPORTED_DIRECTION = shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = shared_issue_reasons.PERSONAL_TRANSACTION
+    OUTSIDE_PERIOD = shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
     # A source-jurisdiction row outside the selected registry scope, or with
     # unresolved provenance, is segregated rather than silently admitted.
@@ -63,7 +63,7 @@ class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
 class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating impatriado income ledger rows."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     reason: ImpatriadoIncomeLedgerAggregationIssueReason
@@ -87,7 +87,7 @@ class ImpatriadoIncomeObservation(BaseModel):
     membership has been resolved by the selected registry revision.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     target_casilla_id: CasillaId
@@ -215,7 +215,7 @@ def aggregate_impatriado_income_ledger(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        outcome = _classify_impatriado_income_transaction(
+        outcome = classify_impatriado_income_transaction(
             transaction,
             window_start=window_start,
             window_end=window_end,
@@ -240,7 +240,7 @@ def aggregate_impatriado_income_ledger(
     )
 
 
-def _classify_impatriado_income_transaction(
+def classify_impatriado_income_transaction(
     transaction: Transaction,
     *,
     window_start: date,
@@ -364,7 +364,7 @@ def _impatriado_business_issue(
 ) -> ImpatriadoIncomeLedgerAggregationIssue:
     """Return the typed issue for an income row without business attribution."""
     reason = ImpatriadoIncomeLedgerAggregationIssueReason(
-        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
+        shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return ImpatriadoIncomeLedgerAggregationIssue(
         transaction_id=transaction_id,

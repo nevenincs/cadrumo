@@ -238,7 +238,7 @@ def _require_refusal_receipt(receipt: OperationTerminalReceipt) -> None:
         raise ValueError("CSV classification validation refusal has an incompatible terminal receipt")
 
 
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     projection = _require_matching_result_identity(result, receipt)
     if projection.outcome == "classified":
         expected_effect = (
@@ -287,6 +287,6 @@ def build_ledger_bulk_classify_registration(definition: OperationDefinition) -> 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerBulkClassifyProjection,
-        result_projector=_project_result,
+        result_projector=project_result,
         access_resolver=resolve_ledger_bulk_classify_access,
     )

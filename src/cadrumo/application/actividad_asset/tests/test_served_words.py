@@ -18,7 +18,10 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetOperationPorts,
     ActivityAssetPlanRequest,
 )
-from cadrumo.application.actividad_asset.activity_asset_executors import ActivityAssetPlanExecutor, _refusal
+from cadrumo.application.actividad_asset.activity_asset_executors import (
+    ActivityAssetPlanExecutor,
+    activity_asset_executors_refusal,
+)
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     PLAN_ADVISORY_FAMILY,
     ActivityAssetHandoffLeftOutReason,
@@ -51,9 +54,9 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_support import MemoryLedger
 from .operations_support import build_operations
 from .register_support import MemoryRepository, memory_register_authority
-from .test_baja_correction import _low_value_forecast, _low_value_revision
-from .test_method_without_table_minimum import _KEY as _NO_TABLE_KEY
-from .test_register import _ACQUISITION, _NAME, _operations, _revision
+from .test_baja_correction import low_value_forecast, low_value_revision
+from .test_method_without_table_minimum import KEY
+from .test_register import ACQUISITION, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -117,12 +120,12 @@ def test_a_reason_lacking_a_fact_it_needs_is_not_served_half_filled() -> None:
 def test_the_plan_serves_the_no_table_minimum_as_a_flag_and_a_sentence(language: OutputLanguage) -> None:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_low_value_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(today=date(2026, 12, 31)),
     )
-    operations.create(_low_value_revision(), _NAME)
+    operations.create(low_value_revision(), NAME)
     executor = ActivityAssetPlanExecutor(_no_ports)
 
     served = executor._read(
@@ -132,15 +135,15 @@ def test_the_plan_serves_the_no_table_minimum_as_a_flag_and_a_sentence(language:
     assert isinstance(rows, tuple)
     row = rows[0]
     assert isinstance(row, ActivityAssetPlanRow)
-    assert row.minimum_reason_key == _NO_TABLE_KEY
+    assert row.minimum_reason_key == KEY
     assert row.minimum_has_no_table is True
     assert row.words_language is language
     _finished(row.minimum_reason_words)
 
 
 def test_a_table_method_minimum_is_not_flagged_and_has_no_sentence() -> None:
-    operations, _ = _operations()
-    operations.create(_revision(), _NAME)
+    operations, _ = register_operations()
+    operations.create(register_revision(), NAME)
     row = operations.plan("laptop-1")[0]
     assert row.minimum_has_no_table is False
     assert row.minimum_reason_words is None
@@ -229,7 +232,7 @@ def test_a_refusal_is_served_as_a_sentence_in_the_language_the_request_asked(lan
     with pytest.raises(ActividadAssetValidationError) as caught:
         operations.filing_handoff(tax_year=2025, language=language)
 
-    refusal = _refusal(caught.value, language)
+    refusal = activity_asset_executors_refusal(caught.value, language)
 
     assert refusal is not None
     assert refusal.refusal_words_language is language
@@ -237,7 +240,7 @@ def test_a_refusal_is_served_as_a_sentence_in_the_language_the_request_asked(lan
 
 
 def test_a_refusal_with_no_reason_of_its_own_is_worded_as_the_operation_error_detail_words_it() -> None:
-    refusal = _refusal(ActividadAssetValidationError(), OutputLanguage.ES)
+    refusal = activity_asset_executors_refusal(ActividadAssetValidationError(), OutputLanguage.ES)
 
     assert refusal is not None
     assert refusal.refusal_words is not None

@@ -11,7 +11,7 @@ from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry import authority as authority_module
 from ....domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
-from .._registry_helpers import absent_authority_file, reject_unknown_override_casillas
+from ..registry_helpers import absent_authority_file, reject_unknown_override_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

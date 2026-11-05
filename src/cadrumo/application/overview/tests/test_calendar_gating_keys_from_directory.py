@@ -14,9 +14,9 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ..calendar_warnings import (
-    _deadline_window_profile_keys_by_modelo,
-    _derive_gating_fields,
     calendar_applicability_profile_keys_for_modelo,
+    deadline_window_profile_keys_by_modelo,
+    derive_gating_fields,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -38,11 +38,11 @@ def _hydrated_inventory(operation: PinnedAuthorityOperation) -> tuple[tuple[str,
 
 def test_directory_gating_fields_equal_the_hydrated_inventory(operation: PinnedAuthorityOperation) -> None:
     inventory = _hydrated_inventory(operation)
-    from_revisions = _derive_gating_fields(operation=operation, revision_inventory=inventory)
-    from_directory = _derive_gating_fields(operation=operation)
+    from_revisions = derive_gating_fields(operation=operation, revision_inventory=inventory)
+    from_directory = derive_gating_fields(operation=operation)
 
     assert from_directory == from_revisions
-    assert _deadline_window_profile_keys_by_modelo(operation=operation, revision_inventory=inventory), (
+    assert deadline_window_profile_keys_by_modelo(operation=operation, revision_inventory=inventory), (
         "the bundled registry must gate some deadline window on a profile field, or equality proves nothing"
     )
 

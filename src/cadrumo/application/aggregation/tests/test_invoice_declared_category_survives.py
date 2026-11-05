@@ -48,14 +48,14 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from .._modelo_bindings_invoice_iva import (
-    _invoice_line_iva_observation,
-    _reverse_charge_cuota_not_derivable,
-    _screened_invoice_iva_result,
-)
-from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_cuota
 from ..errors import AggregationValidationError
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from ..modelo_bindings_invoice_iva import (
+    invoice_line_iva_observation,
+    reverse_charge_cuota_not_derivable,
+    screened_invoice_iva_result,
+)
+from ..modelo_bindings_invoice_iva_refusal import uncovered_withheld_invoice_cuota
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -114,7 +114,7 @@ def _observation_for(invoice: Invoice):
     iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
     assert base_amount_eur is not None
     assert iva_amount_eur is not None
-    return _invoice_line_iva_observation(
+    return invoice_line_iva_observation(
         invoice=invoice,
         line=line,
         line_index=0,
@@ -204,7 +204,7 @@ def test_an_underivable_self_assessment_is_reported_not_silent() -> None:
     is a legitimate refusal to invent a figure -- and it stops being acceptable
     the moment nobody is told.
     """
-    assert _reverse_charge_cuota_not_derivable(_received_reverse_charge()) is True
+    assert reverse_charge_cuota_not_derivable(_received_reverse_charge()) is True
 
 
 def test_a_rated_reverse_charge_line_is_not_reported() -> None:
@@ -216,7 +216,7 @@ def test_a_rated_reverse_charge_line_is_not_reported() -> None:
     """
     rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
-    assert _reverse_charge_cuota_not_derivable(rated) is False
+    assert reverse_charge_cuota_not_derivable(rated) is False
 
 
 def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_is_linked(
@@ -239,7 +239,7 @@ def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_i
     """
     rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
-    screened = _screened_invoice_iva_result(rated, ledger_observations=(), operation=operation)
+    screened = screened_invoice_iva_result(rated, ledger_observations=(), operation=operation)
 
     assert screened.deduction_authority_missing is True
     assert screened.observations == ()
@@ -261,7 +261,7 @@ def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented(
         update={"linked_transaction_ids": (authority.ledger_id,)},
     )
 
-    screened = _screened_invoice_iva_result(linked, ledger_observations=(authority,), operation=operation)
+    screened = screened_invoice_iva_result(linked, ledger_observations=(authority,), operation=operation)
 
     assert screened.deduction_authority_missing is False
     (observation,) = screened.observations
@@ -321,7 +321,7 @@ def test_a_withheld_invoice_the_ledger_already_carries_is_not_counted_as_uncover
     """
     rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
-    uncovered = _uncovered_withheld_invoice_cuota(
+    uncovered = uncovered_withheld_invoice_cuota(
         (rated,),
         screen_bindings=_screen_bindings(),
         transaction_binding_values={_INPUT_CUOTA: Decimal("420.00")},
@@ -341,7 +341,7 @@ def test_a_withheld_invoice_absent_from_the_ledger_is_counted_as_uncovered() -> 
     """
     rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
-    uncovered = _uncovered_withheld_invoice_cuota(
+    uncovered = uncovered_withheld_invoice_cuota(
         (rated,),
         screen_bindings=_screen_bindings(),
         transaction_binding_values={_INPUT_CUOTA: Decimal("100.00")},
@@ -357,7 +357,7 @@ def test_output_iva_cannot_cover_a_missing_purchase_cuota() -> None:
     the 420.00 purchase cuota is entirely uncovered. Summing every slot would
     have judged it covered (1000.00 >= 420.00).
     """
-    uncovered = _uncovered_withheld_invoice_cuota(
+    uncovered = uncovered_withheld_invoice_cuota(
         (_unlinked_purchase(),),
         screen_bindings=_screen_bindings(),
         transaction_binding_values={_OUTPUT_GENERAL_CUOTA: Decimal("1000.00")},
@@ -369,7 +369,7 @@ def test_output_iva_cannot_cover_a_missing_purchase_cuota() -> None:
 def test_an_unconverted_foreign_invoice_refuses_instead_of_being_compared() -> None:
     """USD 420.00 without a rate has no EUR value; comparing it would be a currency mix."""
     with pytest.raises(AggregationValidationError) as exc_info:
-        _uncovered_withheld_invoice_cuota(
+        uncovered_withheld_invoice_cuota(
             (_unlinked_purchase(currency="USD"),),
             screen_bindings=_screen_bindings(),
             transaction_binding_values={_INPUT_CUOTA: Decimal("420.00")},
@@ -391,12 +391,12 @@ def test_a_converted_foreign_invoice_is_compared_in_euro() -> None:
     invoice = _unlinked_purchase(currency="USD", fx_rate="0.80")
     bindings = _screen_bindings()
 
-    covered = _uncovered_withheld_invoice_cuota(
+    covered = uncovered_withheld_invoice_cuota(
         (invoice,),
         screen_bindings=bindings,
         transaction_binding_values={_INPUT_CUOTA: Decimal("400.00")},
     )
-    short = _uncovered_withheld_invoice_cuota(
+    short = uncovered_withheld_invoice_cuota(
         (invoice,),
         screen_bindings=bindings,
         transaction_binding_values={_INPUT_CUOTA: Decimal("300.00")},

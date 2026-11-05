@@ -75,7 +75,7 @@ class CapabilityDecision(BaseModel):
     reason: str
 
 
-def _parse_bool_fact(value: str | None) -> bool | None:
+def parse_bool_fact(value: str | None) -> bool | None:
     """Parse a string-rendered boolean profile fact, or ``None`` when unset/unknown.
 
     Delegates to the canonical parser the profile WRITE door already validates
@@ -140,7 +140,7 @@ def resolve_capability_from_values(
     # safety-floor bar: llm_vision does not decide where a read runs (an off-host
     # read is gated by cloud_evidence_upload and consent), and google export is
     # non-sensitive.
-    fact = _parse_bool_fact(profile_values.get(capability.schema_path))
+    fact = parse_bool_fact(profile_values.get(capability.schema_path))
     if fact is not None:
         return CapabilityDecision(
             capability=capability,

@@ -71,7 +71,7 @@ from ....domain.contribuyente.inventory.records import (
 )
 from ....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ....domain.filing_evidence import FilingEvidenceReference
-from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
+from ..inventory import VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
@@ -280,7 +280,7 @@ def test_inventory_operation_adapter_tracks_the_canonical_row_field_vocabulary()
     annotation = InventoryProvider.model_fields["row_field"].annotation
     operations = set(get_args(getattr(annotation, "__value__", annotation)))
 
-    assert operations == set(_VALUE_ATTRIBUTE_BY_OPERATION)
+    assert operations == set(VALUE_ATTRIBUTE_BY_OPERATION)
     assert operations == {
         "complete_acquisition_cost",
         "closing_minus_opening_positive",

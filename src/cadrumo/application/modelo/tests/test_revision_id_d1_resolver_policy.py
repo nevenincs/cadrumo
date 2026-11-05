@@ -19,9 +19,9 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-from .._calculation_helpers import resolve_registry_snapshot_for_work_unit
 from ..action_errors import WorkUnitRevisionDivergenceError
-from ..calculate_input import _revision_for_work_unit
+from ..calculate_input import revision_for_work_unit
+from ..calculation_helpers import resolve_registry_snapshot_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,7 +89,7 @@ class TestRevisionForWorkUnitAssertion:
         stale_unit = _work_unit(revision_id="2022")
 
         with pytest.raises(WorkUnitRevisionDivergenceError) as exc_info:
-            _revision_for_work_unit(stale_unit, operation=authority_operation)
+            revision_for_work_unit(stale_unit, operation=authority_operation)
 
         with override_settings(cadrumo_output_language="en"):
             msg = resolve_error_message(exc_info.value)
@@ -106,6 +106,6 @@ class TestRevisionForWorkUnitAssertion:
         correct_revision_id = "2026-hasta-01-y-1t"
         correct_unit = _work_unit(revision_id=correct_revision_id)
 
-        revision = _revision_for_work_unit(correct_unit, operation=authority_operation)
+        revision = revision_for_work_unit(correct_unit, operation=authority_operation)
 
         assert revision.id == correct_revision_id

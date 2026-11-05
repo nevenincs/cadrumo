@@ -38,11 +38,11 @@ from ....domain.retention.floor import retention_floor_years
 from ..errors import OverviewExplainError
 from ..explain import (
     OverviewExplain,
-    _out_of_plazo_warning,
     applicability_profile_fact_keys,
     build_overview_explain,
+    explain_out_of_plazo_warning,
 )
-from .calendar_test_support import profile as _autonomo_profile
+from .calendar_test_support import profile as calendar_autonomo_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -57,7 +57,7 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
     """A modelo the autónomo's taxpayer model triggers yields
     applicable=True, an APPLICABLE verdict, and grounded legal_refs."""
 
-    result = build_overview_explain(_autonomo_profile(), modelo="303", year=2026)
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="303", year=2026)
 
     assert isinstance(result, OverviewExplain)
     assert result.modelo == "303"
@@ -74,7 +74,7 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
 def test_explain_rejects_blank_legal_ref_payload() -> None:
     """OverviewExplain keeps applicability grounding on the typed registry-id contract."""
 
-    result = build_overview_explain(_autonomo_profile(), modelo="303", year=2026)
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="303", year=2026)
     payload = result.model_dump(mode="json")
     payload["legal_refs"] = [" "]
 
@@ -87,14 +87,14 @@ def test_explain_refuses_unknown_modelo() -> None:
     OverviewExplainError rather than an undeclared-profile case."""
 
     with pytest.raises(OverviewExplainError):
-        build_overview_explain(_autonomo_profile(), modelo="999999", year=2026)
+        build_overview_explain(calendar_autonomo_profile(), modelo="999999", year=2026)
 
 
 def test_explain_refuses_blank_modelo() -> None:
     """A blank modelo identifier is refused at the service boundary."""
 
     with pytest.raises(OverviewExplainError) as excinfo:
-        build_overview_explain(_autonomo_profile(), modelo="  ", year=2026)
+        build_overview_explain(calendar_autonomo_profile(), modelo="  ", year=2026)
     assert excinfo.value.translated_message == "application.overview.explain.errors.modelo_blank"
 
 
@@ -102,7 +102,7 @@ def test_explain_profile_facts_surface_taxpayer_model_axes() -> None:
     """The profile_facts dict must include every taxpayer-model axis the
     applicability answer depends on, so the operator can audit them."""
 
-    result = build_overview_explain(_autonomo_profile(), modelo="303", year=2026)
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="303", year=2026)
 
     for field in (
         "tax_id",
@@ -149,7 +149,7 @@ def test_explain_degrades_gracefully_for_modelo_without_deadline_windows() -> No
     Renta regardless of whether the deadline window is registered.
     """
 
-    result = build_overview_explain(_autonomo_profile(), modelo="100", year=2026)
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="100", year=2026)
 
     assert isinstance(result, OverviewExplain)
     assert result.modelo == "100"
@@ -170,7 +170,7 @@ def test_explain_historical_modelo_100_carries_out_of_plazo_warning() -> None:
     is derived from the real registered Modelo 100 2022 deadline window.
     """
 
-    result = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=date(2026, 7, 7))
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="100", year=2022, today=date(2026, 7, 7))
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.applicable is True
@@ -185,8 +185,10 @@ def test_explain_historical_warning_uses_the_recargo_anniversary_with_its_inclus
     closes_on = date(2023, 6, 30)
     anniversary = twelve_month_anniversary(closes_on)
 
-    before = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=anniversary - timedelta(days=1))
-    on_anniversary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=anniversary)
+    before = build_overview_explain(
+        calendar_autonomo_profile(), modelo="100", year=2022, today=anniversary - timedelta(days=1)
+    )
+    on_anniversary = build_overview_explain(calendar_autonomo_profile(), modelo="100", year=2022, today=anniversary)
 
     assert anniversary == date(2024, 6, 30)
     assert before.out_of_plazo_warning is None
@@ -198,9 +200,11 @@ def test_explain_historical_warning_uses_the_retention_prescription_boundary() -
     floor_years = retention_floor_years(effective_date=date.today())
     prescription_boundary = shift_by_calendar_years(closes_on, floor_years)
 
-    on_boundary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary)
+    on_boundary = build_overview_explain(
+        calendar_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary
+    )
     after_boundary = build_overview_explain(
-        _autonomo_profile(),
+        calendar_autonomo_profile(),
         modelo="100",
         year=2022,
         today=prescription_boundary + timedelta(days=1),
@@ -214,7 +218,7 @@ def test_explain_historical_warning_uses_the_retention_prescription_boundary() -
 def test_explain_recent_modelo_100_does_not_emit_out_of_plazo_warning() -> None:
     """A just-closed M100 window is not the historical stale-year case."""
 
-    result = build_overview_explain(_autonomo_profile(), modelo="100", year=2025, today=date(2026, 7, 7))
+    result = build_overview_explain(calendar_autonomo_profile(), modelo="100", year=2025, today=date(2026, 7, 7))
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.out_of_plazo_warning is None
@@ -226,7 +230,7 @@ def test_explain_unknown_modelo_still_raises_not_degrades() -> None:
     only to known modelos missing deadline-window data."""
 
     with pytest.raises(OverviewExplainError):
-        build_overview_explain(_autonomo_profile(), modelo="999999", year=2026)
+        build_overview_explain(calendar_autonomo_profile(), modelo="999999", year=2026)
 
 
 def test_explain_applicable_flag_matches_derived_verdict() -> None:
@@ -236,7 +240,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
     from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
-    profile = _autonomo_profile()
+    profile = calendar_autonomo_profile()
     result = build_overview_explain(profile, modelo="303", year=2026)
     derived = derive_modelo_applicability(profile, "303")
 
@@ -276,7 +280,7 @@ def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
     The compiled name references can. A restated implementation names its own
     local helper and neither canonical one.
     """
-    referenced = _out_of_plazo_warning.__code__.co_names
+    referenced = explain_out_of_plazo_warning.__code__.co_names
 
     assert "twelve_month_anniversary" in referenced, (
         "the twelve-month boundary must come from domain.deadlines."

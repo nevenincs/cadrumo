@@ -39,7 +39,7 @@ from ...core.directory_scan import (
     scan_directory,
 )
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
 from ...core.text_fold import fold_for_matching
 from ...core.toml import parse_toml
@@ -69,7 +69,7 @@ _DEFAULT_LIMIT = 8
 class TerminologyConcept(BaseModel):
     """One Handbook concept projected for a single locale."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     concept_id: _Text
     domain: _Text
@@ -86,7 +86,7 @@ class TerminologyConcept(BaseModel):
 class TerminologyHit(BaseModel):
     """One ranked terminology search result."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     concept_id: _Text
     preferred_label: _Text
@@ -99,7 +99,7 @@ def _fold(text: str) -> str:
     return fold_for_matching(text)
 
 
-def _terminology_root() -> Path:
+def terminology_root() -> Path:
     return bundled_path(*_TERMINOLOGY_PARTS)
 
 
@@ -219,7 +219,7 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
         ) from exc
 
 
-def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyConcept | None:
+def project_concept(payload: dict[str, object], *, locale: str) -> TerminologyConcept | None:
     concept = _as_str_object_dict(payload.get("concept"))
     if concept is None:
         return None
@@ -268,11 +268,11 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     Returns:
         A :class:`TerminologyConcept`.
     """
-    root = _terminology_root()
+    root = terminology_root()
     concepts: list[TerminologyConcept] = []
     for path in scan_directory(root, pattern="*.toml"):
         payload = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
-        projected = _project_concept(payload, locale=locale)
+        projected = project_concept(payload, locale=locale)
         if projected is not None:
             concepts.append(projected)
     return tuple(concepts)

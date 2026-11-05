@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
@@ -289,7 +289,7 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
     casilla at all. Derived from the registry rather than restated, so adding a
     rate to the table without giving it a rung reds this.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         revision = _revision()
         # ``None`` is the rate-blind marker -- that tier's rung covers everything it
         # admits, which is not the same as covering nothing. Declared in the type so

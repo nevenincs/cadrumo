@@ -93,7 +93,7 @@ class _InventoryProfileScopedRequest(Protocol):
     profile_id: UUID
 
 
-_SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
+SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
     "application.inventory.service.errors.invalid_valuation_method": "invalid_valuation_method",
     "application.inventory.service.errors.duplicate_movement_id": "duplicate_movement_id",
     "application.inventory.service.errors.closing_authority_conflict": "closing_authority_conflict",
@@ -274,7 +274,7 @@ class InventoryOperationExecutor:
                     )
                 )
             except InventoryActividadNotFoundError as error:
-                refusal = _refusal_for_error(request=request, error=error)
+                refusal = refusal_for_error(request=request, error=error)
                 if refusal is None:
                     raise
                 execution = InventoryOperationExecutionResult(
@@ -508,7 +508,7 @@ class InventoryOperationExecutor:
                 try:
                     result = await asyncio.to_thread(work)
                 except Exception as error:
-                    refusal = _refusal_for_error(request=request, error=error)
+                    refusal = refusal_for_error(request=request, error=error)
                     if refusal is None:
                         raise
                     execution = InventoryOperationExecutionResult(
@@ -620,7 +620,7 @@ def _movement_command(
     )
 
 
-def _refusal_for_error(
+def refusal_for_error(
     *,
     request: BaseModel,
     error: Exception,
@@ -650,7 +650,7 @@ def _refusal_identity_for_error(error: Exception) -> tuple[InventoryRefusalReaso
 def _service_input_refusal_identity(
     error: InventoryServiceInputError,
 ) -> tuple[InventoryRefusalReason, InventoryRefusalCode] | None:
-    service_reason = _SERVICE_INPUT_REASONS.get(error.translated_message or "")
+    service_reason = SERVICE_INPUT_REASONS.get(error.translated_message or "")
     if service_reason is None:
         return None
     reason = service_reason

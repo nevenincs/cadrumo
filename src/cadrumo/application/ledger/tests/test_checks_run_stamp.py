@@ -32,7 +32,7 @@ from importlib import import_module
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ....tests.attribute_scope import scoped_attribute
@@ -92,7 +92,7 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     truthfully naming checks that never executed, which is worse than the gap it
     replaced because it reads as evidence.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ....core.draft_discrepancy import DraftDiscrepancyKind
         from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 

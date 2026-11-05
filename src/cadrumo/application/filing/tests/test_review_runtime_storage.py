@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.filing.draft_review import _transaction_catalogue_fingerprint
+from cadrumo.application.filing.draft_review import transaction_catalogue_fingerprint
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
@@ -27,4 +27,4 @@ def test_transaction_catalogue_fingerprint_has_core_canonical_digest_parity() ->
         },
     ]
 
-    assert _transaction_catalogue_fingerprint(catalogue) == content_hash_hex(payload)
+    assert transaction_catalogue_fingerprint(catalogue) == content_hash_hex(payload)

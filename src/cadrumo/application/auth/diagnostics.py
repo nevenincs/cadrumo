@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, prefixed_digest
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -70,7 +70,7 @@ AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = tuple(state.value for state in A
 class AuthDiagnosticSummary(BaseModel):
     """Redacted summary of one encrypted auth diagnostic artefact."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     diagnostic_id: str | None
     reason: str
@@ -123,7 +123,7 @@ class AuthDiagnosticSummary(BaseModel):
 class AuthDiagnosticListReport(BaseModel):
     """All readable encrypted auth diagnostics for the active profile."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     row_count: int
     rows: tuple[AuthDiagnosticSummary, ...]
@@ -144,14 +144,14 @@ class AuthDiagnosticDetail(AuthDiagnosticSummary):
 class AuthDiagnosticReportResult(BaseModel):
     """Result of recording an operator phone-state report for an auth diagnostic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     diagnostic_id: str = Field(min_length=1)
     phone_state: AuthDiagnosticPhoneState
     reported_at: datetime
 
 
-class _DiagnosticPayload(BaseModel):
+class DiagnosticPayload(BaseModel):
     """Typed envelope for a raw encrypted auth diagnostic JSON blob.
 
     Replaces the internal ``Mapping[str, object]`` boundary to give callers
@@ -159,7 +159,7 @@ class _DiagnosticPayload(BaseModel):
     so validation does not reject payloads written by older schema versions.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     diagnostic_id: str | None = None
     reason: str = ""
@@ -190,7 +190,7 @@ def list_auth_diagnostics(*, persistence: AuthDiagnosticPersistencePort) -> Auth
     """
     rows = tuple(
         sorted(
-            (_summary_from_payload(diagnostic_payload(record.payload)) for record in _diagnostic_records(persistence)),
+            (summary_from_payload(diagnostic_payload(record.payload)) for record in _diagnostic_records(persistence)),
             key=lambda row: row.captured_at,
             reverse=True,
         ),
@@ -213,7 +213,7 @@ def load_auth_diagnostic(
     if record is None:
         return None
     payload = diagnostic_payload(record.payload)
-    summary = _summary_from_payload(payload)
+    summary = summary_from_payload(payload)
     html = payload.html
     excerpt = None
     if (html is not None and html) and html.strip():
@@ -326,7 +326,7 @@ def _diagnostic_records(persistence: AuthDiagnosticPersistencePort):
     return persistence.list_records()
 
 
-def diagnostic_payload(raw: bytes) -> _DiagnosticPayload:
+def diagnostic_payload(raw: bytes) -> DiagnosticPayload:
     """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
     data = json.loads(raw.decode(UTF_8_ENCODING))
     if not isinstance(data, dict):
@@ -334,7 +334,7 @@ def diagnostic_payload(raw: bytes) -> _DiagnosticPayload:
             translated_message=_PAYLOAD_MESSAGE_KEY,
             context={"validation_rule": "json_root_object", "json_root_type": type(data).__name__},
         )
-    return _DiagnosticPayload.model_validate(data)
+    return DiagnosticPayload.model_validate(data)
 
 
 def _validated_utc_instant(raw: str, *, field: str) -> datetime:
@@ -398,7 +398,7 @@ def _validated_phone_state(raw: object) -> AuthDiagnosticPhoneState | None:
         ) from exc
 
 
-def _phone_state_projection(payload: _DiagnosticPayload) -> _DiagnosticPhoneStateProjection:
+def _phone_state_projection(payload: DiagnosticPayload) -> _DiagnosticPhoneStateProjection:
     browser_phone_state = _validated_phone_state(payload.phone_state)
     operator_report = payload.operator_report
     phone_state_reported_at = None
@@ -436,7 +436,7 @@ def _phone_state_projection(payload: _DiagnosticPayload) -> _DiagnosticPhoneStat
     )
 
 
-def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
+def summary_from_payload(payload: DiagnosticPayload) -> AuthDiagnosticSummary:
     captured_at = payload.captured_at
     if not captured_at:
         raise AuthDiagnosticPayloadError(
@@ -501,7 +501,7 @@ def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-def _detail_fingerprints_from_payload(payload: _DiagnosticPayload) -> dict[str, str]:
+def _detail_fingerprints_from_payload(payload: DiagnosticPayload) -> dict[str, str]:
     auth_attempt = payload.auth_attempt
     keys = (
         "profile_tax_id_fingerprint",

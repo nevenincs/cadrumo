@@ -33,7 +33,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...filing.draft_review_ports import DraftReviewPorts
-from .._aggregator import ReviewQueue
+from ..aggregator import ReviewQueue
 from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .draft_review_test_support import draft_review_ports
 

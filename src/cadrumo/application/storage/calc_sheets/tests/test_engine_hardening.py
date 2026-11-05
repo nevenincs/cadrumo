@@ -20,7 +20,7 @@ from .....domain.calculations.registry.relations import (
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
-from ..engine import _rounding_rule_for, build_export_plan
+from ..engine import build_export_plan, rounding_rule_for
 from ..errors import CalcSheetsEngineError
 from ..records import RelationValues, TabName
 
@@ -120,7 +120,7 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
     formula = FormulaDefinition.model_construct(id="formula-sensitive", rounding="private-rounding-token")
 
     with pytest.raises(CalcSheetsEngineError) as raised:
-        _rounding_rule_for(formula)
+        rounding_rule_for(formula)
 
     error = raised.value
     # The refusal renders from its key alone now; the English sentence it used

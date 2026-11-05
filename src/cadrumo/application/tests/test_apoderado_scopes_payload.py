@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ...core.json_contract import strict_round_trip
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
-from ...domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..reference_catalogue_contracts import ApoderadoScopesListResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_apoderado_scopes_list_result_projects_real_catalogue() -> None:
     """The real shipped catalogue round-trips through the typed payload."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         catalogue = load_default_catalogue(operation=_authority_operation_for_test)
 
         result = strict_round_trip(ApoderadoScopesListResult, catalogue)

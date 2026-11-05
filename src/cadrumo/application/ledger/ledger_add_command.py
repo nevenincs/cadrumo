@@ -77,7 +77,7 @@ def prepare_ledger_add_command(
         booked_date=booked_date,
     )
     source_jurisdiction = _resolve_ledger_add_jurisdiction(payload, operation=operation)
-    classification, direction = _resolve_ledger_add_flow(payload)
+    classification, direction = resolve_ledger_add_flow(payload)
     registry_facts = _resolve_ledger_add_registry_facts(payload, booked_date=booked_date, operation=operation)
     return ManualLedgerTransactionCommand(
         bucket_id=str(payload.profile_id),
@@ -105,7 +105,7 @@ def prepare_ledger_add_command(
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
         recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),
-        irpf_category=_resolve_ledger_add_irpf_category(payload, operation=operation),
+        irpf_category=resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,
         prorrata_reference=payload.prorrata_reference,
         art_104_tres_exclusion=registry_facts.exclusion,
@@ -209,7 +209,7 @@ def _resolve_ledger_add_jurisdiction(
     return jurisdiction.jurisdiction
 
 
-def _resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:
+def resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:
     try:
         classification = BusinessClassification(payload.business_classification)
         direction = TransactionDirection(payload.direction)
@@ -220,7 +220,7 @@ def _resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassif
     return classification, direction
 
 
-def _resolve_ledger_add_irpf_category(
+def resolve_ledger_add_irpf_category(
     payload: LedgerAddRequest,
     *,
     operation: PinnedAuthorityOperation,

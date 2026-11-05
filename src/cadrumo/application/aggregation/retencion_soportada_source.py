@@ -58,7 +58,7 @@ from ...domain.renta.retencion_soportada_applicability import (
     RetencionSoportadaApplicability,
     retencion_soportada_applicability,
 )
-from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS, empty_source_resolution
+from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS, empty_source_resolution
 from .retencion_soportada_absence_repository import retencion_soportada_absence_key
 from .retencion_soportada_repository import (
     RetencionSoportadaPersistenceError,

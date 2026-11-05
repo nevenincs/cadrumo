@@ -25,7 +25,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ..draft_construction import _string_inputs_for_ids, filing_binding_values
+from ..draft_construction import filing_binding_values, string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -92,7 +92,7 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
     }
     snap = _m200_snapshot()
     enum_ids = enum_consumed_binding_ids(snap.revision)
-    result = _string_inputs_for_ids(inputs, enum_ids)
+    result = string_inputs_for_ids(inputs, enum_ids)
 
     assert result == {"modelo-200-profile-legal-entity-form": "sl"}
 

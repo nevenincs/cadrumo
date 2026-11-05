@@ -193,12 +193,12 @@ class ModeloWorkspaceFieldManifestV1(_ManifestModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_reproducible_digest(self) -> ModeloWorkspaceFieldManifestV1:
-        if self.manifest_digest != _manifest_digest(self.traversal_roots, self.entries):
+        if self.manifest_digest != manifest_digest(self.traversal_roots, self.entries):
             raise ValueError("workspace field manifest digest does not reproduce")
         return self
 
 
-type _Node = tuple[_SchemaType, _NodeKind]
+type Node = tuple[_SchemaType, _NodeKind]
 type _Root = tuple[_Path, type[BaseModel]]
 type _RootClassificationRule = tuple[str, frozenset[str], _Owner, _Reason, str]
 _ROOT_CLASSIFICATION_RULES: tuple[_RootClassificationRule, ...] = (
@@ -268,9 +268,9 @@ def generate_modelo_workspace_field_manifest_for_inspection(
 def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFieldManifestV1:
     # The walk reads only the root types, which never change in a process, and
     # its manifest is frozen: one walk serves every capture and coordinate read.
-    nodes: dict[str, _Node] = {}
+    nodes: dict[str, Node] = {}
     for root_path, root_model in roots:
-        _walk_annotation(
+        walk_annotation(
             annotation=root_model,
             path=root_path,
             nodes=nodes,
@@ -285,7 +285,7 @@ def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFi
     return ModeloWorkspaceFieldManifestV1(
         traversal_roots=root_paths,
         entries=entries,
-        manifest_digest=_manifest_digest(root_paths, entries),
+        manifest_digest=manifest_digest(root_paths, entries),
     )
 
 
@@ -321,11 +321,11 @@ def _manifest_roots(snapshot: RegistrySnapshot) -> tuple[_Root, ...]:
     return _sorted_unique_roots(roots)
 
 
-def _walk_annotation(
+def walk_annotation(
     *,
     annotation: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
     discriminator: str | None,
@@ -392,7 +392,7 @@ def _walk_type_alias(
     *,
     annotation: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
     discriminator: str | None,
@@ -400,7 +400,7 @@ def _walk_type_alias(
 ) -> bool:
     if not isinstance(annotation, TypeAliasType) or not _is_traversable_type_alias(annotation):
         return False
-    _walk_annotation(
+    walk_annotation(
         annotation=annotation.__value__,
         path=path,
         nodes=nodes,
@@ -416,7 +416,7 @@ def _walk_model_annotation(
     *,
     unwrapped: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
 ) -> bool:
@@ -427,13 +427,13 @@ def _walk_model_annotation(
     if pair in visited or model_type in active:
         return True
     visited.add(pair)
-    annotations = _model_annotations(model_type)
+    annotations = model_annotations(model_type)
     # ``model_fields`` is already ``dict[str, FieldInfo]`` on a pydantic model,
     # so the three narrowing asserts this replaced could never fire.
     fields: dict[str, FieldInfo] = dict(model_type.model_fields)
     for field_name, field in fields.items():
         field_annotation = annotations.get(field_name, field.annotation)
-        _walk_annotation(
+        walk_annotation(
             annotation=field_annotation,
             path=f"{path}.{field_name}",
             nodes=nodes,
@@ -449,7 +449,7 @@ def _walk_mapping_annotation(
     unwrapped: object,
     origin: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
 ) -> bool:
@@ -458,7 +458,7 @@ def _walk_mapping_annotation(
     arguments = get_args(unwrapped)
     if len(arguments) != 2:
         raise ValueError(f"workspace field manifest cannot classify mapping at {path}")
-    _walk_annotation(
+    walk_annotation(
         annotation=arguments[1],
         path=f"{path}.mapping_value",
         nodes=nodes,
@@ -474,7 +474,7 @@ def _walk_collection_annotation(
     unwrapped: object,
     origin: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
 ) -> bool:
@@ -494,7 +494,7 @@ def _walk_union(
     *,
     annotation: object,
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
     discriminator: str | None,
@@ -508,7 +508,7 @@ def _walk_union(
         arm_path = f"{path}.variant={coordinate}"
         _record_node(nodes, arm_path, _schema_type_label(arm), "union_branch")
         if _unwrap_annotated(arm) is not NoneType:
-            _walk_annotation(
+            walk_annotation(
                 annotation=arm,
                 path=arm_path,
                 nodes=nodes,
@@ -523,7 +523,7 @@ def _walk_collection(
     *,
     arguments: tuple[object, ...],
     path: _Path,
-    nodes: dict[str, _Node],
+    nodes: dict[str, Node],
     visited: set[tuple[type[BaseModel], str]],
     active: tuple[type[BaseModel], ...],
 ) -> None:
@@ -532,7 +532,7 @@ def _walk_collection(
         raise ValueError(f"workspace field manifest cannot classify collection at {path}")
     for index, element_type in enumerate(element_types):
         item_suffix = "collection_item" if len(element_types) == 1 else f"collection_item{index}"
-        _walk_annotation(
+        walk_annotation(
             annotation=element_type,
             path=f"{path}.{item_suffix}",
             nodes=nodes,
@@ -542,7 +542,7 @@ def _walk_collection(
         )
 
 
-def _record_node(nodes: dict[str, _Node], path: _Path, schema_type: _SchemaType, node_kind: _NodeKind) -> None:
+def _record_node(nodes: dict[str, Node], path: _Path, schema_type: _SchemaType, node_kind: _NodeKind) -> None:
     current = nodes.get(path)
     node = (schema_type, node_kind)
     if current is not None:
@@ -665,7 +665,7 @@ def _owned_entry(
 
 
 @cache
-def _model_annotations(model_type: type[BaseModel]) -> dict[str, object]:
+def model_annotations(model_type: type[BaseModel]) -> dict[str, object]:
     """Resolve model annotations through the public typing/Pydantic contract.
 
     ``from __future__ import annotations`` deliberately stores source
@@ -749,7 +749,7 @@ def _union_coordinate(annotation: object, discriminator: str | None) -> str:
     unwrapped = _unwrap_annotated(annotation)
     if not _is_model_type(unwrapped):
         raise ValueError("workspace discriminated union arm must be a Pydantic model")
-    discriminator_annotation = _model_annotations(unwrapped).get(discriminator)
+    discriminator_annotation = model_annotations(unwrapped).get(discriminator)
     if discriminator_annotation is None or get_origin(_unwrap_annotated(discriminator_annotation)) is not Literal:
         raise ValueError("workspace discriminated union arm must declare a Literal discriminator")
     values = get_args(_unwrap_annotated(discriminator_annotation))
@@ -808,7 +808,7 @@ def _root_type_coordinate(model_type: type[BaseModel]) -> str:
     return coordinate[0].lower() + coordinate[1:]
 
 
-def _manifest_digest(
+def manifest_digest(
     roots: tuple[_Path, ...],
     entries: tuple[ModeloWorkspaceFieldManifestEntryV1, ...],
 ) -> ContentDigest:

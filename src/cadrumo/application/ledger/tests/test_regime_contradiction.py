@@ -40,7 +40,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def registry_legends() -> tuple[RegimeLegend, ...]:
     """Resolve the registry vocabulary on one pinned authority lease."""
     period = default_invoice_extraction_period()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 

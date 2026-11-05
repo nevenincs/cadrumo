@@ -8,13 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period, PeriodError, PeriodKind
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_period_constructs_quarter_from_year_and_code_and_is_frozen() -> None:
-    period = _period(2025, "1T")
+    period = renta_income_aggregation_period(2025, "1T")
 
     assert period.filing_year == 2025
     assert period.kind is PeriodKind.QUARTERLY

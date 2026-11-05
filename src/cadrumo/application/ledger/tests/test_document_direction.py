@@ -32,9 +32,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -241,7 +239,7 @@ def test_a_document_with_no_party_headings_settles_nothing() -> None:
     The fail-safe direction, and the case that separates this from a slot
     comparison: the slots still name the filer, and the answer is still withheld.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = ground_draft_against_transcription(
             draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
             transcription=_transcription(_ISSUED_PAGE),

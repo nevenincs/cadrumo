@@ -62,10 +62,10 @@ from pydantic import BaseModel
 
 from ...core.aggregation import InvoiceDevengoRank
 from ...core.i18n.translatable import Translatable as tr
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.enums import PaymentStatus, advance_payment_received_role
-from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .errors import AggregationValidationError
+from .preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
@@ -105,7 +105,7 @@ class InvoiceDevengo(BaseModel):
         rank: Which source produced it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     devengo_date: date
     rank: InvoiceDevengoRank
