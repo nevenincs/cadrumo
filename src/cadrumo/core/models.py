@@ -51,13 +51,17 @@ STRICT_FROZEN_CONFIG: ConfigDict = ConfigDict(
 
 #: Canonical strict, frozen, no-extra-fields configuration that also prevents
 #: Pydantic from echoing rejected input in validation errors. Use it for models
-#: whose values can contain opaque or sensitive source identifiers.
+#: whose values can contain opaque or sensitive source identifiers. Like
+#: :data:`STRICT_FROZEN_CONFIG` it defers schema construction to first use, so a
+#: process pays for the validators it actually runs rather than for every
+#: record it imports.
 STRICT_FROZEN_HIDDEN_INPUT_CONFIG: ConfigDict = ConfigDict(
     strict=True,
     frozen=True,
     extra="forbid",
     validate_default=True,
     hide_input_in_errors=True,
+    defer_build=True,
 )
 
 __all__ = ["STRICT_FROZEN_CONFIG", "STRICT_FROZEN_HIDDEN_INPUT_CONFIG"]

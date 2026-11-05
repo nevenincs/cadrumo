@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from .....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .. import _invoice_row_materialization as materialization
+from .. import invoice_row_materialization as materialization
 from ..invoice_bindings import M347ThirdPartyOperationProvider
 from ..nif_iva_catalogue import NifIvaCatalogue, NifIvaDefinition
 
@@ -66,7 +66,7 @@ def test_nonresident_identification_uses_only_the_declared_country_format(
     expected_number: str,
 ) -> None:
     """Foreign rows leave the Spanish NIF blank and never guess a mismatched prefix."""
-    row = materialization._m347_declarado_identification(identifier, country)
+    row = materialization.m347_declarado_identification(identifier, country)
 
     assert row == {
         "declarado_tax_id": "",
@@ -84,7 +84,7 @@ def test_domestic_identification_does_not_require_a_foreign_format_fact(monkeypa
 
     monkeypatch.setattr(materialization, "resolve_nif_iva_catalogue", unexpected_catalogue)
 
-    assert materialization._m347_declarado_identification("B11111112", "ES") == {
+    assert materialization.m347_declarado_identification("B11111112", "ES") == {
         "declarado_tax_id": "B11111112",
         "residence_country_code": "",
         "community_iva_number": "",
