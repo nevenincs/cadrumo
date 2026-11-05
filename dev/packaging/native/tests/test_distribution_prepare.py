@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.distribution_paths import REPO_ROOT
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.packaging.tests.test_native_installation import payload_fixture
 
