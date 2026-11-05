@@ -26,7 +26,7 @@ from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .. import modelo_work_runs_cli as cli
+from .. import modelo_work_runs_cli
 from .. import operation_workflow_runs as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -206,9 +206,9 @@ def test_run_presentation_failure_retains_terminal_receipt(
     inventory: bool,
     failure_stage: str,
 ) -> None:
-    monkeypatch.setattr(cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(modelo_work_runs_cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
-        cli,
+        modelo_work_runs_cli,
         "read_workflow_runs" if inventory else "read_workflow_run",
         (lambda *_args, **_kwargs: _runs_completion())
         if inventory
@@ -219,10 +219,10 @@ def test_run_presentation_failure_retains_terminal_receipt(
         raise RuntimeError("presentation failure")
 
     if failure_stage == "render":
-        monkeypatch.setattr(cli, "workflow_run_projection", fail_presentation)
+        monkeypatch.setattr(modelo_work_runs_cli, "workflow_run_projection", fail_presentation)
     else:
         monkeypatch.setattr(
-            cli,
+            modelo_work_runs_cli,
             "workflow_run_projection",
             lambda *_args, **_kwargs: SimpleNamespace(
                 modelo="303",
@@ -234,10 +234,10 @@ def test_run_presentation_failure_retains_terminal_receipt(
                 action=None,
             ),
         )
-        monkeypatch.setattr(cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
-        monkeypatch.setattr(cli, "emit_envelope", fail_presentation)
+        monkeypatch.setattr(modelo_work_runs_cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
+        monkeypatch.setattr(modelo_work_runs_cli, "emit_envelope", fail_presentation)
 
-    handler = getattr(cli, handler_name)
+    handler = getattr(modelo_work_runs_cli, handler_name)
     context = cast(typer.Context, cast(object, None))
     with pytest.raises(CliRefusedBoundaryError) as refused:
         handler(context) if inventory else handler(context, run_id="b" * 16)
@@ -254,11 +254,11 @@ def test_run_presentation_preserves_typer_exit(
     monkeypatch: pytest.MonkeyPatch,
     handler_name: str,
 ) -> None:
-    monkeypatch.setattr(cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(cli, "read_workflow_run", lambda _ctx, *, run_id: _read_completion(run_id))
-    monkeypatch.setattr(cli, "read_workflow_runs", lambda *_args, **_kwargs: _runs_completion())
+    monkeypatch.setattr(modelo_work_runs_cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(modelo_work_runs_cli, "read_workflow_run", lambda _ctx, *, run_id: _read_completion(run_id))
+    monkeypatch.setattr(modelo_work_runs_cli, "read_workflow_runs", lambda *_args, **_kwargs: _runs_completion())
     monkeypatch.setattr(
-        cli,
+        modelo_work_runs_cli,
         "workflow_run_projection",
         lambda *_args, **_kwargs: SimpleNamespace(
             modelo="303",
@@ -270,11 +270,13 @@ def test_run_presentation_preserves_typer_exit(
             action=None,
         ),
     )
-    monkeypatch.setattr(cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
+    monkeypatch.setattr(modelo_work_runs_cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
     expected = typer.Exit(code=0)
-    monkeypatch.setattr(cli, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected))
+    monkeypatch.setattr(
+        modelo_work_runs_cli, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected)
+    )
 
-    handler = getattr(cli, handler_name)
+    handler = getattr(modelo_work_runs_cli, handler_name)
     context = cast(typer.Context, cast(object, None))
     with pytest.raises(typer.Exit) as raised:
         handler(context) if handler_name == "work_runs" else handler(context, run_id="b" * 16)

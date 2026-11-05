@@ -10,7 +10,7 @@ import pytest
 import typer
 from click.testing import Result
 
-from cadrumo.entrypoints.cli import profile_authentication_gate as gate
+from cadrumo.entrypoints.cli import profile_authentication_gate
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileSecretSourceOptions
@@ -82,9 +82,11 @@ def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
         "cadrumo.application.cli_provisioning.provision_cli_storage",
         lambda **_kwargs: pytest.fail("refusal provisioned storage"),
     )
-    monkeypatch.setattr(gate, "read_and_stage_leaf", lambda **_kwargs: pytest.fail("refusal read a leaf secret"))
+    monkeypatch.setattr(
+        profile_authentication_gate, "read_and_stage_leaf", lambda **_kwargs: pytest.fail("refusal read a leaf secret")
+    )
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        gate.preflight_parsed_leaf(
+        profile_authentication_gate.preflight_parsed_leaf(
             _context(source),
             graph=COMMAND_GRAPH,
             spec=COMMAND_GRAPH.node(key).spec,
@@ -101,10 +103,12 @@ def test_reference_routes_only_one_exact_migrated_profile_without_root_secret(
     profile_id, reference = uuid4(), uuid4()
     observed: list[dict[str, object]] = []
     monkeypatch.setattr("cadrumo.application.cli_provisioning.provision_cli_storage", lambda **_kwargs: None)
-    monkeypatch.setattr(gate, "resolve_profile_targets", lambda *_args, **_kwargs: (str(profile_id), "exact"))
-    monkeypatch.setattr(gate, "diagnose_unregistered_profile", lambda **_kwargs: False)
+    monkeypatch.setattr(
+        profile_authentication_gate, "resolve_profile_targets", lambda *_args, **_kwargs: (str(profile_id), "exact")
+    )
+    monkeypatch.setattr(profile_authentication_gate, "diagnose_unregistered_profile", lambda **_kwargs: False)
     source = ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=reference)
-    gate.preflight_parsed_leaf(
+    profile_authentication_gate.preflight_parsed_leaf(
         _context(source),
         graph=COMMAND_GRAPH,
         spec=COMMAND_GRAPH.node("config_profile_view").spec,

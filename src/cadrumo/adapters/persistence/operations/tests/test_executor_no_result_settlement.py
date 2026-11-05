@@ -60,9 +60,7 @@ from .supervisor_test_support import (
     supervisor_response,
 )
 from .test_censal_operation_executor import (
-    NOW as CENSAL_OPERATION_EXECUTOR_CENSAL_NOW,
-)
-from .test_censal_operation_executor import (
+    NOW,
     OPERATOR_SCOPE_PORTS,
     censal_request_payload,
     censal_supervisor,
@@ -342,7 +340,7 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
                 executor=executor,
                 owner="4" * 64,
                 token="5" * 64,
-                now=CENSAL_OPERATION_EXECUTOR_CENSAL_NOW + timedelta(minutes=2),
+                now=NOW + timedelta(minutes=2),
             )
             # Recovery re-enters the executor with the still-unanswered
             # checkpoint; it returns nothing and the review stays open.
@@ -357,7 +355,7 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
                     subject_ref=profile_id,
                 ),
                 "3" * 64,
-                observed_at=CENSAL_OPERATION_EXECUTOR_CENSAL_NOW + timedelta(minutes=2),
+                observed_at=NOW + timedelta(minutes=2),
             )
         )
 

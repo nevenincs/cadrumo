@@ -68,13 +68,13 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
     from .modelo_100_properties import build_outputs as build_modelo_100_properties
     from .normatives_html import build_outputs as build_html
     from .normatives_html import build_xml_outputs as build_xml
-    from .pdf import build_outputs as build_pdf
+    from .pdf import build_outputs
     from .terminology import build_outputs as build_terminology
     from .workbook import build_outputs as build_workbook
 
     return {
         ".html": build_html,
-        ".pdf": build_pdf,
+        ".pdf": build_outputs,
         ".properties": build_modelo_100_properties,
         ".xls": build_workbook,
         ".xlsm": build_workbook,

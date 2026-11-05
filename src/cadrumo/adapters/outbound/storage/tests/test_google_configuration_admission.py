@@ -22,7 +22,7 @@ from ...google.oauth_flow import credentials_to_records
 from ...google.records import REQUIRED_SCOPES
 from ...google.root_folder import ensure_root_folder
 from ...google.tests.drive_files_server import drive_files_endpoint
-from .. import google_drive as drive
+from .. import google_drive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -56,7 +56,7 @@ def test_probe_has_fresh_identity_admission_and_balanced_actual_acknowledgements
     ):
         receipts = GoogleArtifactReceiptStore(profile.repository, profile_id=profile_id)
         root_id = ensure_root_folder(endpoint.service, profile=str(profile_id), receipts=receipts)
-        provider = drive.GoogleDriveProvider(
+        provider = google_drive.GoogleDriveProvider(
             credentials=unused_google_credentials(),
             root_folder_id=root_id,
             vault_folder_name="vault",

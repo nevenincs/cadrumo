@@ -20,7 +20,7 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from .. import workbench_generation_calendar as calendar_module
+from .. import workbench_generation_calendar
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.action_ports import LedgerActionPorts
@@ -322,4 +322,4 @@ def stub_empty_calendar(monkeypatch: pytest.MonkeyPatch) -> None:
     def empty_calendar(_profile: object, calendar_range: OverviewCalendarRange, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=NOW, evaluated_on=NOW.date())
 
-    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(workbench_generation_calendar, "build_overview_calendar", empty_calendar)

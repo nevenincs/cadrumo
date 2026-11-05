@@ -12,14 +12,14 @@ import pytest
 from .. import app_diagnostics_commands as diagnostics_module
 from .. import app_live_commands as live_module
 from .. import app_live_period as live_period_module
-from .. import log_levels as log_levels_module
+from .. import log_levels
 from ..config import archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 _MODULES: tuple[ModuleType, ...] = (
-    log_levels_module,
+    log_levels,
     diagnostics_module,
     maintenance_module,
     live_module,
@@ -136,7 +136,7 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
 
     log_level_calls = {
         (function.name, _call_name(call.func))
-        for function in _functions(log_levels_module)
+        for function in _functions(log_levels)
         for call in ast.walk(function)
         if isinstance(call, ast.Call)
         and _call_name(call.func) in {"LogLevelResolutionError", "_invalid_environment_log_level_error"}

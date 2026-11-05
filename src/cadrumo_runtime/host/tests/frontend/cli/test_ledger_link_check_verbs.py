@@ -18,11 +18,11 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from .cli_runner import invoke_cached_cli
 from .isolated_profile_storage_fixtures import (
-    active_profile_isolated_backend as isolated_backend,
+    active_profile_isolated_backend,
 )
 from .test_runtime_invoice_add import native_invoice_runtime_session, password_profile_session
 
-__all__ = ["isolated_backend"]
+__all__ = ["active_profile_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -88,7 +88,7 @@ class RentaLedgerExpenseAggregation(
     Carries no ``out_of_window_summary``: this annual first-slice aggregation
     has no repository-backed date partition, unlike the base's four other
     known subclasses -- deliberately not declared here (see
-    :class:`~._models.LedgerAggregationResultBase`).
+    :class:`~.models.LedgerAggregationResultBase`).
     """
 
     profile_year: FilingYear

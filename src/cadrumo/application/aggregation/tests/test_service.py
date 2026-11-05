@@ -304,13 +304,13 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
-    """_foreign_assets._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
+    """_foreign_assets.CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
     from ..foreign_assets import CANONICAL_SOURCE_KINDS
 
     assert len(CANONICAL_SOURCE_KINDS) == 4
     for kind in CANONICAL_SOURCE_KINDS:
         assert isinstance(kind, BindingSourceKind), (
-            f"_foreign_assets._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+            f"_foreign_assets.CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
         )
 
 

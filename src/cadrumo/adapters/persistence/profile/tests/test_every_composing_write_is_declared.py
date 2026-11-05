@@ -113,7 +113,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_and_events",
-    ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
+    ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by commit_with_guarded_events",
     (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_invoices_and_events",

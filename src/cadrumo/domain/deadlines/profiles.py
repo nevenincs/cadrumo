@@ -23,7 +23,7 @@ from typing import TypedDict
 
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
-from ...core.parsing.dates import parse_date as dates_parse_date_canonical
+from ...core.parsing.dates import parse_date
 from ...core.period import Period
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import (
@@ -554,7 +554,7 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
 def profiles_parse_date(raw: str | None) -> date | None:
     """Parse an ISO date from the censo or refuse with a profile error."""
     try:
-        return dates_parse_date_canonical(raw, fmt="iso8601", on_error="raise")
+        return parse_date(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:
         raise ProfileError(f"invalid censo date {raw!r}; expected ISO-8601") from exc
 

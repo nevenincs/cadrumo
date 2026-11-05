@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from dev.registry.compiler import loader as loader_module
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 
-from .. import registry_scanner as scanner_module
+from .. import registry_scanner
 from ..casilla_keys import is_delta_keyed_leaf
 from ..registry_scanner import LocaleRegistryEnumerationError, scan_modelo_schema_keys
 
@@ -112,7 +112,7 @@ def test_scanner_wraps_projection_failures_as_blocking_discovery_errors(
     def fail(_root: Path) -> frozenset[str]:
         raise OSError("registry source disappeared")
 
-    monkeypatch.setattr(scanner_module, "load_modelo_locale_key_projection", fail)
+    monkeypatch.setattr(registry_scanner, "load_modelo_locale_key_projection", fail)
     scan_modelo_schema_keys.cache_clear()
     try:
         with pytest.raises(LocaleRegistryEnumerationError, match="cannot enumerate Modelo schema locale keys"):

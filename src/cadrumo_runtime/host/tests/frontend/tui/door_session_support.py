@@ -152,7 +152,7 @@ def install_scripted_controller(
     monkeypatch: pytest.MonkeyPatch, client: SessionClient, controller: ScriptedController
 ) -> list[dict[str, object]]:
     """Route the session bridge and controller submission to the scripted fakes; return the submissions."""
-    from ....frontend.tui.operations import runtime_profile_session as bridge
+    from ....frontend.tui.operations import runtime_profile_session
 
     def read_session(
         _client: FrontendClient,
@@ -167,7 +167,7 @@ def install_scripted_controller(
             raise AccountSessionExpiredError()
         return object()
 
-    monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
+    monkeypatch.setattr(runtime_profile_session, "read_runtime_account_session", read_session)
     submissions: list[dict[str, object]] = []
 
     async def submit(

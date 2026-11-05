@@ -23,8 +23,7 @@ from ......core.config import Settings, override_settings
 from ......core.pid_liveness import pid_is_alive
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
-from .. import kdf_supervision
-from .. import kdf_worker_supervision as worker_supervision
+from .. import kdf_supervision, kdf_worker_supervision
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -563,7 +562,7 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
     """Two phases over the old 15s limit either prove the real key or exhaust one owner timeout."""
     clock = _ElapsedClock()
     monkeypatch.setattr(kdf_supervision, "time", clock)
-    monkeypatch.setattr(worker_supervision, "time", clock)
+    monkeypatch.setattr(kdf_worker_supervision, "time", clock)
     lease = kdf_supervision.profile_kdf_lease
     verify = SupervisedKdfWorker.verify_ready_attestation
     workers: list[SupervisedKdfWorker] = []

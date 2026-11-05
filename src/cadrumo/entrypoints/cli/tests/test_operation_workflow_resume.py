@@ -29,7 +29,7 @@ from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .. import modelo_work_runs_cli as cli
+from .. import modelo_work_runs_cli
 from .. import operation_workflow_resume as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -141,9 +141,9 @@ def test_resume_bridge_returns_context_bound_to_matching_operation_receipt(
 
 
 def _install_resume(monkeypatch: pytest.MonkeyPatch, completion: bridge.WorkflowResumeCompletion) -> None:
-    monkeypatch.setattr(cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(cli, "resolve_optional_cli_period", lambda **_kwargs: None)
-    monkeypatch.setattr(cli, "read_workflow_resume_context", lambda *_args, **_kwargs: completion)
+    monkeypatch.setattr(modelo_work_runs_cli, "activate_subcommand_output_language", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(modelo_work_runs_cli, "resolve_optional_cli_period", lambda **_kwargs: None)
+    monkeypatch.setattr(modelo_work_runs_cli, "read_workflow_resume_context", lambda *_args, **_kwargs: completion)
 
 
 def test_resume_presentation_failure_preserves_known_terminal_receipt(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -153,9 +153,9 @@ def test_resume_presentation_failure_preserves_known_terminal_receipt(monkeypatc
     def fail_presentation(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("presentation failure")
 
-    monkeypatch.setattr(cli, "emit_work_resume", fail_presentation)
+    monkeypatch.setattr(modelo_work_runs_cli, "emit_work_resume", fail_presentation)
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        cli.work_resume(cast(typer.Context, cast(object, None)))
+        modelo_work_runs_cli.work_resume(cast(typer.Context, cast(object, None)))
 
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
@@ -168,8 +168,10 @@ def test_resume_presentation_reraises_typer_exit(monkeypatch: pytest.MonkeyPatch
     completion = _completion()
     _install_resume(monkeypatch, completion)
     expected = typer.Exit(code=0)
-    monkeypatch.setattr(cli, "emit_work_resume", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected))
+    monkeypatch.setattr(
+        modelo_work_runs_cli, "emit_work_resume", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected)
+    )
 
     with pytest.raises(typer.Exit) as raised:
-        cli.work_resume(cast(typer.Context, cast(object, None)))
+        modelo_work_runs_cli.work_resume(cast(typer.Context, cast(object, None)))
     assert raised.value is expected

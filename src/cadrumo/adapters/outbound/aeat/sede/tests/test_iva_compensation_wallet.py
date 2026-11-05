@@ -841,7 +841,7 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
 
 
 def test_parse_spanish_decimal_empty_cell_raises_with_translated_message() -> None:
-    """_parse_spanish_decimal raises SedeParseError with a rendered translated_message.
+    """parse_spanish_decimal raises SedeParseError with a rendered translated_message.
 
     The translated_message must be set (not None) and must be a rendered locale
     string (not the raw key) so the CLI error boundary can surface a localised
@@ -859,7 +859,7 @@ def test_parse_spanish_decimal_empty_cell_raises_with_translated_message() -> No
 
 
 def test_wallet_row_from_cells_empty_period_raises_with_translated_message() -> None:
-    """_wallet_row_from_cells raises SedeParseError with a rendered translated_message.
+    """wallet_row_from_cells raises SedeParseError with a rendered translated_message.
 
     A row where cells[1] (the period) is blank must carry a non-None
     translated_message that is a rendered locale string (not the raw key)

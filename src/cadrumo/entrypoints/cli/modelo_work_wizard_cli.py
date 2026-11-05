@@ -31,8 +31,7 @@ from ...application.modelo.work_wizard import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
-from ...core.i18n.render import output_language as current_output_language
-from ...core.i18n.render import tr
+from ...core.i18n.render import output_language, tr
 from ...core.json_contract import Notice
 from ...core.operations import OperationTerminalCondition
 from .common import attach_cli_policy_verdict, emit_envelope
@@ -214,7 +213,7 @@ def work_wizard(
         revision=revision,
         bucket_id=bucket_id,
     )
-    language = OutputLanguage(current_output_language())
+    language = OutputLanguage(output_language())
     discovered = read_modelo_work_wizard_context(
         ctx,
         profile_id=UUID(selected.bucket_id),

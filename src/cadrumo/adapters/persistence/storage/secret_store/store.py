@@ -196,7 +196,7 @@ class SecretIndexEntry(BaseModel):
         and the blob layout was then routed from that value.
         """
         try:
-            return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
+            return _validated_secret_class(value, subject="SecretIndexEntry.classification")
         except StorageValidationError as exc:
             raise ValueError(str(exc)) from exc
 
@@ -212,7 +212,7 @@ class _SecretIndex(BaseModel):
             so the gate below reads a value the writer never wrote and passes.
             Every mutation rewrites the whole index, so that misread would then
             be written back over the file it misread.
-        entries: Map of digest hex string to :class:`_SecretIndexEntry`.
+        entries: Map of digest hex string to :class:`SecretIndexEntry`.
     """
 
     model_config = STRICT_FROZEN_CONFIG

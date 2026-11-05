@@ -18,8 +18,7 @@ from ......core.config import Settings
 from ......core.diagnostic_log import DiagnosticFormatter, diagnostic_scope
 from ......core.logging import LOG_FILE_FORMAT
 from ......tests.log_records import delivered_records
-from .. import kdf_worker_observation as observation
-from .. import kdf_worker_supervision as supervision
+from .. import kdf_worker_observation, kdf_worker_supervision
 from ..errors import ProfileCustodyRefusedError
 from ..kdf_codec import KDF_FAILED_FRAME, KDF_FRAME_CONTROL, calibration_frame_bytes
 from ..kdf_worker_supervision import SupervisedKdfWorker
@@ -61,7 +60,9 @@ def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Supervi
 def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[str, object]]:
     delivered = delivered_records(caplog)
     records = [
-        record for record in delivered if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
+        record
+        for record in delivered
+        if record.name == kdf_worker_supervision.__name__ and record.msg == "kdf_worker_lifecycle"
     ]
     assert len(records) == 1, [(r.name, r.msg) for r in delivered]
     record = records[0]
@@ -78,9 +79,9 @@ def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[
 def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scope(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     ticks = count(step=1_000_000)
-    monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: next(ticks))
+    monkeypatch.setattr(kdf_worker_supervision.time, "monotonic_ns", lambda: next(ticks))
     cleanup_complete = False
     original_close = SupervisedKdfWorker._close
 
@@ -112,9 +113,9 @@ def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scop
 def test_prewarmed_worker_reports_request_time_separately_from_idle_lifetime(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     now = [1_000_000_000]
-    monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: now[0])
+    monkeypatch.setattr(kdf_worker_supervision.time, "monotonic_ns", lambda: now[0])
     monkeypatch.setattr(SupervisedKdfWorker, "_close", lambda _self, *, failed: None)
     with simulated_worker as worker:
         process = SimpleNamespace(poll=lambda: None, returncode=0)
@@ -139,7 +140,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     primary = TimeoutError(_PRIVATE) if stage in {"ready_wait", "result_wait", "clean_exit"} else ValueError(_PRIVATE)
 
     def fail(*_args: object, **_kwargs: object) -> None:
@@ -180,7 +181,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
 def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_sequence(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     monkeypatch.setattr(
         SupervisedKdfWorker, "read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
     )
@@ -195,7 +196,7 @@ def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_seq
 def test_refused_result_does_not_disclose_secret_or_associated_data(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     wrapped = ProfileCustodyWrappedDek(
         nonce_b64=base64.b64encode(b"n" * 12).decode(),
         ciphertext_b64=base64.b64encode(b"c" * 32).decode(),
@@ -223,7 +224,7 @@ def test_cleanup_failure_still_escapes_and_records_original_failure_separately(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
     primary = TimeoutError(_PRIVATE)
     cleanup = OSError(_PRIVATE)
 
@@ -264,7 +265,7 @@ def test_sink_cannot_replace_either_original_or_escaping_cleanup_failure(
         assert failed
         raise cleanup
 
-    monkeypatch.setattr(observation.logger, "log", log)
+    monkeypatch.setattr(kdf_worker_observation.logger, "log", log)
     if cleanup_fails:
         monkeypatch.setattr(SupervisedKdfWorker, "_close", close)
     expected = cleanup if cleanup_fails else primary
@@ -283,7 +284,7 @@ def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
         calls += 1
         raise OSError(_PRIVATE)
 
-    monkeypatch.setattr(observation.logger, "log", log)
+    monkeypatch.setattr(kdf_worker_observation.logger, "log", log)
     with simulated_worker as worker:
         assert worker.calibrate(_kdf()) == 0.000000125
     assert calls == 1
@@ -292,7 +293,7 @@ def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
 def test_returned_cleanup_without_confirmed_child_exit_is_unconfirmed(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
 
     class UnconfirmedProcess:
         returncode = None

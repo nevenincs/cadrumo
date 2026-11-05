@@ -7,7 +7,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from .errors import ModeloApplicationError as FilingExportError
+from .errors import ModeloApplicationError
 from .producer_snapshot import (
     FilingProducerSnapshot,
     M303FilingFacts,
@@ -38,7 +38,7 @@ def _validate_producer_snapshot_shape(period: Period, producer_snapshot: FilingP
     try:
         FilingProducerSnapshot.model_validate(dict(producer_snapshot))
     except ValueError as exc:
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_incomplete",
             context={
                 "modelo": Modelo("303").value,
@@ -51,7 +51,7 @@ def _validate_producer_snapshot_shape(period: Period, producer_snapshot: FilingP
 
 def _require_m303_producer_snapshot(producer_snapshot: FilingProducerSnapshot) -> None:
     if producer_snapshot.modelo != form_for_role("iva.periodic"):
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_wrong_modelo",
             context={
                 "expected_modelo": Modelo("303").value,
@@ -63,7 +63,7 @@ def _require_m303_producer_snapshot(producer_snapshot: FilingProducerSnapshot) -
 def _require_m303_filing_facts(period: Period, producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:
     filing_facts = producer_snapshot.m303_filing_facts
     if filing_facts is None:
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.filing_facts_absent",
             context={
                 "modelo": Modelo("303").value,
@@ -72,7 +72,7 @@ def _require_m303_filing_facts(period: Period, producer_snapshot: FilingProducer
             },
         )
     if filing_facts.period != period:
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.filing_facts_period_mismatch",
             context={
                 "modelo": Modelo("303").value,
@@ -94,7 +94,7 @@ def _validate_snapshot_selection(
         or registry_snapshot.filing_year != period.filing_year
         or registry_snapshot.period != period.registry_token
     ):
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.snapshot_period_mismatch",
             context={
                 "expected_modelo": Modelo("303").value,
@@ -106,7 +106,7 @@ def _validate_snapshot_selection(
             },
         )
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.layout_not_snapshot_owned",
             context={
                 "modelo": Modelo("303").value,
@@ -124,7 +124,7 @@ def _validate_m303_regularisation(period: Period, filing_facts: M303FilingFacts)
             parameters=filing_facts.bienes_parameters,
         )
     except ValueError as exc:
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_export_applicability.errors.regularisation_result_not_canonical",
             context={
                 "modelo": Modelo("303").value,

@@ -25,7 +25,7 @@ from ....domain.deadlines.errors import ScheduleComputationError
 from ....domain.deadlines.models import TaxpayerProfile
 from ...state_projection import build_pending_obligations
 from .. import deadline_decisions as deadline_decisions_module
-from .. import deadline_stage as deadline_stage_module
+from .. import deadline_stage
 from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module
 from ..errors import UnhandledWorkflowError
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _WORKFLOW_PRODUCER_MODULES = (
     engine_module,
-    deadline_stage_module,
+    deadline_stage,
     deadline_decisions_module,
     engine_recording_module,
 )
@@ -230,7 +230,7 @@ def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -
     duplicate_schedule = schedule.model_copy(update={"obligations": (*schedule.obligations, obligation)})
 
     with pytest.raises(ScheduleComputationError) as raised:
-        deadline_stage_module.target_obligation_from_schedule(
+        deadline_stage.target_obligation_from_schedule(
             duplicate_schedule,
             target_modelo=obligation.modelo,
             target_period=obligation.period,

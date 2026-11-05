@@ -14,8 +14,7 @@ from threading import Event
 import pytest
 
 from ......application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
-from .. import kdf_file_lease as file_lease
-from .. import kdf_supervision
+from .. import kdf_file_lease, kdf_supervision
 from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 from .test_kdf_file_lease import old_lock
@@ -90,7 +89,7 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
 
     monkeypatch.setattr(SupervisedKdfWorker, "unwrap", derive)
     if sys.platform == "win32":
-        kernel = file_lease.kernel32()
+        kernel = kdf_file_lease.kernel32()
         wait = kernel.WaitForMultipleObjects
 
         def wait_for_capacity(count: int, handles: object, all_objects: bool, milliseconds: int) -> int:
@@ -98,9 +97,9 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
             return int(wait(count, handles, all_objects, milliseconds))
 
         monkeypatch.setattr(kernel, "WaitForMultipleObjects", wait_for_capacity)
-        monkeypatch.setattr(file_lease, "kernel32", lambda: kernel)
+        monkeypatch.setattr(kdf_file_lease, "kernel32", lambda: kernel)
     else:
-        launch = file_lease.launch_lease_worker
+        launch = kdf_file_lease.launch_lease_worker
 
         def launching(*, neutral_root: Path, lease_fd: int, owner_fd: int, result_fd: int) -> subprocess.Popen[bytes]:
             helper = launch(neutral_root=neutral_root, lease_fd=lease_fd, owner_fd=owner_fd, result_fd=result_fd)
@@ -108,7 +107,7 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
             waiting.set()
             return helper
 
-        monkeypatch.setattr(file_lease, "launch_lease_worker", launching)
+        monkeypatch.setattr(kdf_file_lease, "launch_lease_worker", launching)
 
     with ExitStack() as cleanup:
         pool = ThreadPoolExecutor(max_workers=1)

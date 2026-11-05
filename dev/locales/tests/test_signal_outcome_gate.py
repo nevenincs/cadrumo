@@ -10,7 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 from .. import cli as cli_module
-from .. import signal as signal_module
+from .. import signal
 from .. import signal_discovery as discovery_module
 from ..cli import app
 from ..manager import LocaleManager
@@ -72,11 +72,9 @@ def clean_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> LocaleMana
     monkeypatch.setattr(discovery_module, "dynamic_key_families", lambda markers: ({}, ()))
     # The environment-bound producers (document tree, pinned dictionaries) are held at
     # their clean state so the classification gate is the only variable under test.
-    monkeypatch.setattr(signal_module, "parallel_localization_inventory", _clean_parallel_inventory)
-    monkeypatch.setattr(signal_module, "spellcheck_catalogues", _clean_spelling)
-    monkeypatch.setattr(
-        cli_module, "locale_signal", lambda manager: signal_module.locale_signal(manager, repository=tmp_path)
-    )
+    monkeypatch.setattr(signal, "parallel_localization_inventory", _clean_parallel_inventory)
+    monkeypatch.setattr(signal, "spellcheck_catalogues", _clean_spelling)
+    monkeypatch.setattr(cli_module, "locale_signal", lambda manager: signal.locale_signal(manager, repository=tmp_path))
     return manager
 
 
@@ -89,7 +87,7 @@ def _inject_parallel_findings(monkeypatch: pytest.MonkeyPatch, findings: list[di
         counts, real = _clean_parallel_inventory(repository, spelling_values=spelling_values)
         return counts, [*real, *findings]
 
-    monkeypatch.setattr(signal_module, "parallel_localization_inventory", inventory)
+    monkeypatch.setattr(signal, "parallel_localization_inventory", inventory)
 
 
 def _section(payload: Mapping[str, object], key: str) -> dict[str, object]:
@@ -115,7 +113,7 @@ def _status_exit(manager: LocaleManager, *, check: bool) -> tuple[int, dict[str,
 
 
 def test_clean_audit_is_complete_and_passes(clean_manager: LocaleManager, tmp_path: Path) -> None:
-    payload = signal_module.locale_signal(clean_manager, repository=tmp_path)
+    payload = signal.locale_signal(clean_manager, repository=tmp_path)
 
     assert payload["outcome"] == "complete"
     assert payload["details"]["findings"] == []
@@ -217,7 +215,7 @@ def test_unready_cells_gate_through_the_real_matrix(
     (tmp_path / "locales" / "en.yml").write_text("{}\n", encoding="utf-8")
     monkeypatch.setattr(clean_manager, "get_codebase_keys", lambda: {"cli.save"})
 
-    payload = signal_module.locale_signal(clean_manager, repository=tmp_path)
+    payload = signal.locale_signal(clean_manager, repository=tmp_path)
 
     assert payload["outcome"] == "backlog"
     assert payload["details"]["backlog"]

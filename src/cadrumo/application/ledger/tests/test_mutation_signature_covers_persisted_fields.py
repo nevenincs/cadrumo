@@ -65,7 +65,7 @@ def _persisted_fields() -> set[str]:
             return {
                 key.value for key in node.value.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
             }
-    raise AssertionError("_transaction_idempotency_fields no longer returns a dict literal")
+    raise AssertionError("transaction_idempotency_fields no longer returns a dict literal")
 
 
 def test_no_persisted_field_is_invisible_to_the_no_op_guard() -> None:

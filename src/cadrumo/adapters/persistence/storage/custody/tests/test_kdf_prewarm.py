@@ -13,8 +13,7 @@ import pytest
 
 from ......application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from ......core.config import Settings, override_settings
-from .. import kdf_process as process_boundary
-from .. import kdf_supervision
+from .. import kdf_process, kdf_supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_supervision import ProfileKdfPrewarm
 from ..kdf_worker_supervision import SupervisedKdfWorker
@@ -46,7 +45,7 @@ def launches(monkeypatch: pytest.MonkeyPatch) -> list[subprocess.Popen[bytes]]:
     """Record every real child the supervisor launches, unchanged."""
     launched: list[subprocess.Popen[bytes]] = []
     lock = threading.Lock()
-    launch_process = process_boundary.launch_worker_process
+    launch_process = kdf_process.launch_worker_process
 
     def observe(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
         process = launch_process(command, launch_kwargs)
@@ -54,7 +53,7 @@ def launches(monkeypatch: pytest.MonkeyPatch) -> list[subprocess.Popen[bytes]]:
             launched.append(process)
         return process
 
-    monkeypatch.setattr(process_boundary, "launch_worker_process", observe)
+    monkeypatch.setattr(kdf_process, "launch_worker_process", observe)
     return launched
 
 

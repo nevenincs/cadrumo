@@ -151,7 +151,7 @@ def _assert_read_landing(page: Page) -> None:
 def assert_query_browser_action(action: str) -> None:
     """Assert that ``action`` is permitted under the GROI read-only guard policy.
 
-    Thin delegator to :func:`~._adapter_utils.assert_query_browser_action_for`
+    Thin delegator to :func:`~.adapter_utils.assert_query_browser_action_for`
     with the GROI module-level ``READ_GUARD_POLICY`` pre-bound.
     """
     assert_query_browser_action_for(READ_GUARD_POLICY, action)

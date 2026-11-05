@@ -36,10 +36,8 @@ from ....domain.iva.schema import (
 )
 from ....tests.terminal_precondition_ast import call_name, fact_expressions
 from .. import errors as errors_module
-from .. import modelo_bindings_invoice_iva as modelo_bindings_module
-from .. import modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
+from .. import modelo_bindings_invoice_iva, modelo_bindings_invoice_iva_refusal, preconditions
 from .. import modelo_bindings_retenciones as modelo_bindings_retenciones_module
-from .. import preconditions as preconditions_module
 from .. import service as service_module
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from ..modelo_bindings_invoice_iva_refusal import raise_if_screened_invoice_iva_would_be_silent
@@ -148,8 +146,8 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 
 _ATTACHMENT_MODULES: tuple[ModuleType, ...] = (
     service_module,
-    modelo_bindings_module,
-    modelo_bindings_refusal_module,
+    modelo_bindings_invoice_iva,
+    modelo_bindings_invoice_iva_refusal,
     modelo_bindings_retenciones_module,
 )
 
@@ -236,7 +234,7 @@ def _normalized_outcome(precondition: ast.Call) -> NoRecoveryOutcome:
 
 
 def _helper_provenance() -> ActionEvidenceProvenance:
-    tree = ast.parse(inspect.getsource(preconditions_module))
+    tree = ast.parse(inspect.getsource(preconditions))
     calls = [
         node
         for node in ast.walk(tree)
@@ -287,7 +285,7 @@ def test_aggregation_terminal_attachment_totality_is_exact_and_mutation_sensitiv
 
 def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_constructor() -> None:
     assert issubclass(AggregationError, TerminalPreconditionErrorMixin)
-    modules = (*_ATTACHMENT_MODULES, preconditions_module, errors_module)
+    modules = (*_ATTACHMENT_MODULES, preconditions, errors_module)
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
@@ -303,7 +301,7 @@ def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_con
         for node in ast.walk(ast.parse(inspect.getsource(module)))
         if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
-    assert delegates == [preconditions_module.__name__]
+    assert delegates == [preconditions.__name__]
 
 
 def test_unsupported_modelo_has_an_exact_application_state_operator_decision_verdict() -> None:
@@ -359,7 +357,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
                 "payment_status": PaymentStatus.PAID,
             },
         )
-        screened = modelo_bindings_module.ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
+        screened = modelo_bindings_invoice_iva.ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
         expected_facts = {
             "modelo": "303",
             "filing_year": "2025",
@@ -369,7 +367,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             "missing_binding_count": 0,
         }
     else:
-        screened = modelo_bindings_module.ScreenedInvoiceIva(
+        screened = modelo_bindings_invoice_iva.ScreenedInvoiceIva(
             observations=(
                 IvaLedgerObservation(
                     ledger_id="invoice-unmatched",

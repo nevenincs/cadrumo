@@ -89,5 +89,5 @@ def test_a_listed_node_that_now_defers_must_be_removed(name: str) -> None:
 
     assert loaded != {}, (
         f"`aeat {name.replace('/', ' ')}` now resolves without loading any capability family, "
-        f"so its _RESOLUTION_LOADERS entry is stale and must be removed: {RESOLUTION_LOADERS[name]}"
+        f"so its RESOLUTION_LOADERS entry is stale and must be removed: {RESOLUTION_LOADERS[name]}"
     )

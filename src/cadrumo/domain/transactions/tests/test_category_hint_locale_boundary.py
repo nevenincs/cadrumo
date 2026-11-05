@@ -1,6 +1,6 @@
 """The classifier's category hints are pinned to Spanish, not the operator locale.
 
-``_category_hint`` feeds :class:`CategoryChoice.hint`, which is spliced into the
+``category_hint`` feeds :class:`CategoryChoice.hint`, which is spliced into the
 LLM prompt body by ``_render_choices``. Its only consumer is the model, so it is
 deliberately NOT localized: the classifier reasons over Spanish AEAT invoices,
 and handing it Hungarian category names would silently degrade classification
@@ -66,7 +66,7 @@ def test_category_hints_do_not_follow_the_operator_language(operation: PinnedAut
 
     assert under_spanish == under_hungarian, (
         "category hints changed with the operator language; the prompt pin at "
-        "_llm.py's _category_hint has been lost, and the classifier would be fed "
+        "_llm.py's category_hint has been lost, and the classifier would be fed "
         "the operator's display language instead of AEAT Spanish"
     )
     assert under_spanish == under_english

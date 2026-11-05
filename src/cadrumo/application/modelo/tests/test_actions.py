@@ -931,7 +931,7 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
 class TestWorkflowInputMismatchError:
     """Real-behavior tests for WorkflowInputMismatchError.
 
-    _RevisionInputsProvider.load_inputs raises WorkflowInputMismatchError when
+    RevisionInputsProvider.load_inputs raises WorkflowInputMismatchError when
     the requested (modelo, period) pair does not match the revision's stored
     work-unit axes. The error must be a CoreValidationError (ValueError) subclass
     and must carry structured context.

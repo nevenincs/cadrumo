@@ -17,9 +17,7 @@ from typing import cast
 import pytest
 
 from ......core.config import Settings
-from .. import kdf_process as process_boundary
-from .. import kdf_worker_cleanup as cleanup_boundary
-from .. import kdf_worker_supervision as supervision
+from .. import kdf_process, kdf_worker_cleanup, kdf_worker_supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_codec import KDF_FRAME_CONTROL, close_fd
 from ..kdf_operations import KdfOperation
@@ -36,7 +34,7 @@ def running_worker(
 ) -> Generator[tuple[SupervisedKdfWorker, subprocess.Popen[bytes], WindowsJob | None]]:
     """Keep independent exact-child ownership even if the regression clears its fields."""
     worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
-    terminate = cleanup_boundary.terminate_process_tree
+    terminate = kdf_worker_cleanup.terminate_process_tree
     cleanup = worker._cleanup_neutral_directory
     process: subprocess.Popen[bytes] | None = None
     job: WindowsJob | None = None
@@ -87,7 +85,7 @@ def test_partial_no_process_cleanup_closes_descriptors_once_and_can_repeat(
             closes[descriptor] += 1
         close_fd(descriptor)
 
-    monkeypatch.setattr(cleanup_boundary, "close_fd", observe_close)
+    monkeypatch.setattr(kdf_worker_cleanup, "close_fd", observe_close)
     descriptors = (partial_worker._request_fd, partial_worker._result_fd)
     partial_worker._close(failed=True)
     partial_worker._close(failed=True)
@@ -137,7 +135,7 @@ def test_termination_failure_retains_real_ownership_until_a_later_close(
         raise primary
 
     with monkeypatch.context() as patch:
-        patch.setattr(cleanup_boundary, "terminate_process_tree", refuse_termination)
+        patch.setattr(kdf_worker_cleanup, "terminate_process_tree", refuse_termination)
         with pytest.raises(type(primary)) as escaped:
             worker._close(failed=True)
         assert escaped.value is primary
@@ -173,7 +171,7 @@ def test_unconfirmed_existing_termination_attempts_refuse_without_closing_pipes(
         raise subprocess.TimeoutExpired("synthetic child", timeout)
 
     with monkeypatch.context() as patch:
-        patch.setattr(cleanup_boundary, "terminate_process_tree", unconfirmed_termination)
+        patch.setattr(kdf_worker_cleanup, "terminate_process_tree", unconfirmed_termination)
         patch.setattr(process, "wait", wait)
         with pytest.raises(ProfileCustodyRefusedError) as refused:
             worker._close(failed=True)
@@ -209,7 +207,7 @@ _PAUSED_WRITER_CHILD_SOURCE = (
 
 def _launch_paused_writer_child(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make the worker launch a child that answers one frame and then blocks forever."""
-    launch_process = process_boundary.launch_worker_process
+    launch_process = kdf_process.launch_worker_process
 
     def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
         entry = command.index("-m")
@@ -217,7 +215,7 @@ def _launch_paused_writer_child(monkeypatch: pytest.MonkeyPatch) -> None:
             [*command[:entry], "-c", _PAUSED_WRITER_CHILD_SOURCE, *command[entry + 2 :]], launch_kwargs
         )
 
-    monkeypatch.setattr(process_boundary, "launch_worker_process", launch)
+    monkeypatch.setattr(kdf_process, "launch_worker_process", launch)
 
 
 class _BlockedReaderCleanup:
@@ -238,9 +236,9 @@ class _BlockedReaderCleanup:
         self.rescued = threading.Event()
         self.close_exit_codes: list[int | None] = []
         self.cleanup_errors: list[BaseException] = []
-        self.original_reader = supervision.read_kdf_frame_to_queue
-        self.original_close = cleanup_boundary.close_fd
-        self.terminate = cleanup_boundary.terminate_process_tree
+        self.original_reader = kdf_worker_supervision.read_kdf_frame_to_queue
+        self.original_close = kdf_worker_cleanup.close_fd
+        self.terminate = kdf_worker_cleanup.terminate_process_tree
         self.cleanup_started = 0.0
         self.cleanup_elapsed = 0.0
 
@@ -298,8 +296,8 @@ class _BlockedReaderCleanup:
             self.process.wait(timeout=5)
 
     def block_reader_past_the_deadline(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(supervision, "read_kdf_frame_to_queue", self.observe_reader)
-        monkeypatch.setattr(cleanup_boundary, "close_fd", self.observe_close)
+        monkeypatch.setattr(kdf_worker_supervision, "read_kdf_frame_to_queue", self.observe_reader)
+        monkeypatch.setattr(kdf_worker_cleanup, "close_fd", self.observe_close)
         self.worker._deadline = time.monotonic() + 0.05
         with pytest.raises(TimeoutError):
             self.worker.read_response_frame()

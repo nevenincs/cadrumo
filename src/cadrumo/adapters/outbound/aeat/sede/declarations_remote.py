@@ -1,6 +1,6 @@
 """Remote-read guard and CSV-extraction helpers for the declarations fetch adapter.
 
-``extract_csv_from_url`` is shared by ``_declarations.py``, ``_declarations_fetch.py``
+``extract_csv_from_url`` is shared by ``_declarations.py``, ``declarations_fetch.py``
 and ``_parse.py``. External consumers import it from this defining module.
 """
 

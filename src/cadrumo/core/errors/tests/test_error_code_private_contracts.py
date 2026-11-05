@@ -32,7 +32,7 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
     """bind_error_code defers silently when _DECLARED_CODE_BY_QUALNAME is unavailable.
 
     Simulates the circular-import window by manually placing a registered
-    class into _DEFERRED_BIND, clearing its .code attribute, then verifying
+    class into DEFERRED_BIND, clearing its .code attribute, then verifying
     that get_registered_error_code rebinds it correctly.  This is the path
     that prevents the ValueError crash seen by Inés / Diego when parallel
     automation __pycache__ writes produced a stale pyc for registry/_core.py.
@@ -53,8 +53,8 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
     try:
         # _flush_deferred_binds should rebind the class without raising.
         flush_deferred_binds()
-        assert UnmatchedPlaceholderError not in DEFERRED_BIND, "class should have been flushed out of _DEFERRED_BIND"
-        assert UnmatchedPlaceholderError in CLASS_CODE_REGISTRY, "class should have been added to _CLASS_CODE_REGISTRY"
+        assert UnmatchedPlaceholderError not in DEFERRED_BIND, "class should have been flushed out of DEFERRED_BIND"
+        assert UnmatchedPlaceholderError in CLASS_CODE_REGISTRY, "class should have been added to CLASS_CODE_REGISTRY"
         rebound = get_registered_error_code(UnmatchedPlaceholderError)
         assert rebound.code == "INTERNAL_I18N_UNMATCHED_PLACEHOLDER"
     finally:

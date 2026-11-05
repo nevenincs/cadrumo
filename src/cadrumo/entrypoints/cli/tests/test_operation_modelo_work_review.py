@@ -24,7 +24,7 @@ from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .. import modelo_work_review_cli as handler
+from .. import modelo_work_review_cli
 from .. import operation_modelo_work_review as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -131,21 +131,25 @@ def test_post_submission_render_failure_retains_receipt(monkeypatch: pytest.Monk
     completion = RegisteredOperationCompletion(
         operation_id=_OPERATION_ID, projection=_projection(unit), effect=OperationEffect.NONE
     )
-    monkeypatch.setattr(handler, "activate_subcommand_output_language", lambda *_args: None)
-    monkeypatch.setattr(handler, "read_modelo_work_unit", lambda *_args, **_kwargs: unit)
+    monkeypatch.setattr(modelo_work_review_cli, "activate_subcommand_output_language", lambda *_args: None)
+    monkeypatch.setattr(modelo_work_review_cli, "read_modelo_work_unit", lambda *_args, **_kwargs: unit)
     monkeypatch.setattr(
-        handler,
+        modelo_work_review_cli,
         "read_modelo_work_review",
         lambda *_args, **_kwargs: bridge.ModeloWorkReviewed(completion=completion, review=completion.projection.review),
     )
     if failure_point == "lines":
-        monkeypatch.setattr(handler, "review_lines", lambda _result: (_ for _ in ()).throw(ValueError("private")))
+        monkeypatch.setattr(
+            modelo_work_review_cli, "review_lines", lambda _result: (_ for _ in ()).throw(ValueError("private"))
+        )
     else:
         monkeypatch.setattr(
-            handler, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private"))
+            modelo_work_review_cli,
+            "emit_envelope",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private")),
         )
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        handler.work_review(cast(typer.Context, cast(object, None)), work_unit_id=unit.work_unit_id)
+        modelo_work_review_cli.work_review(cast(typer.Context, cast(object, None)), work_unit_id=unit.work_unit_id)
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["effect"] == OperationEffect.NONE.value

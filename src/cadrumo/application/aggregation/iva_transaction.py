@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ...core.i18n.render import tr as render_tr
+from ...core.i18n.render import tr
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
@@ -221,7 +221,7 @@ def _unaccepted_registry_value_issue(
     return IvaLedgerAggregationIssue(
         transaction_id=transaction_id,
         reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
-        detail=render_tr(
+        detail=tr(
             "aggregation.iva_ledger.errors.unaccepted_registry_value",
             field=field,
             value=value,
@@ -280,7 +280,7 @@ def _cash_accounting_evidence_issue(
         return IvaLedgerAggregationIssue(
             transaction_id=transaction.transaction_id,
             reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
-            detail=render_tr(
+            detail=tr(
                 "aggregation.iva_ledger.errors.cash_accounting_evidence_incoherent",
                 refusal=str(exc),
             ),
@@ -373,7 +373,7 @@ def _unaccepted_exemption_article_issue(
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
-            detail=render_tr(
+            detail=tr(
                 "aggregation.iva_ledger.errors.exemption_article_outside_domestic_exempt",
                 value=str(exemption_article),
                 category=effective_category.value,
@@ -406,7 +406,7 @@ def _unaccepted_art_104_tres_exclusion_issue(
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
-            detail=render_tr(
+            detail=tr(
                 "aggregation.iva_ledger.errors.art_104_tres_exclusion_not_operator_declared",
                 value=str(declared),
             ),
@@ -640,7 +640,7 @@ def _canonical_iva_rate_kind(
                     transaction_id=transaction.transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                     detail=(
-                        render_tr(
+                        tr(
                             "aggregation.iva_ledger.errors.unsupported_iva_rate_on_movement_date",
                             rate=str(iva_rate),
                             date=operation_date.isoformat(),
@@ -659,7 +659,7 @@ def _canonical_iva_rate_kind(
                 transaction_id=transaction.transaction_id,
                 reason=IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
                 detail=(
-                    render_tr(
+                    tr(
                         "aggregation.iva_ledger.errors.iva_rate_date_outside_table_coverage_on_movement_date",
                         date=operation_date.isoformat(),
                     )
@@ -982,7 +982,7 @@ def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggre
     return IvaLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,
         reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
-        detail=render_tr(
+        detail=tr(
             "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
             base=_eur_figure(disagreement.base),
             rate=_percent_figure(disagreement.rate),

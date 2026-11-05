@@ -332,7 +332,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     Equality rather than a superset, because a floor cannot see an ADDITION.
     ``>=`` held for every member the enum could ever gain, so a sixth kind
     would land in a remainder no gate measures: not required by
-    ``_require_search_index``, not held out by name, and so free to be absent
+    ``require_search_index``, not held out by name, and so free to be absent
     from a published index while the preflight stayed green -- the pages-only
     shape this set exists to reject, one surface narrower.
     """
@@ -341,7 +341,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     held_out = {SearchRecordKind.PAGE.value}
     assert {kind.value for kind in SearchRecordKind} == DECIDED_INJECTED_RECORD_KINDS | held_out, (
         "every SearchRecordKind member must be either required in a published index or held out by "
-        "name here. A member in neither set is measured by nothing: _require_search_index would not "
+        "name here. A member in neither set is measured by nothing: require_search_index would not "
         "demand it, so a site carrying no record of that kind publishes green. Add the kind to "
         "DECIDED_INJECTED_RECORD_KINDS, or hold it out above with the reason it cannot be required."
     )

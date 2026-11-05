@@ -365,9 +365,9 @@ def test_the_namespace_divergence_stays_permitted_and_stated() -> None:
     contract-level value both were answering differently.
     """
     from ..google_drive_validation import validate_namespace as drive_namespace
-    from ..local import validate_namespace as local_namespace
+    from ..local import validate_namespace
 
     with pytest.raises(OutboundStorageValidationError):
-        local_namespace(".hidden")
+        validate_namespace(".hidden")
 
     assert drive_namespace(".hidden") == ".hidden"

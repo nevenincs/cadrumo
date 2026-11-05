@@ -97,7 +97,7 @@ def declared_period_tokens(modelo: str | None, *, operation: PinnedAuthorityOper
         return ()
     except Exception:
         log.debug(
-            "_declared_period_tokens: unexpected non-CadrumoError suppressed for modelo=%r",
+            "declared_period_tokens: unexpected non-CadrumoError suppressed for modelo=%r",
             modelo,
             exc_info=True,
         )

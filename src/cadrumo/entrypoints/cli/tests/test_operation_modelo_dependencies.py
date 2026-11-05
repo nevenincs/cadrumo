@@ -18,7 +18,7 @@ from ....application.modelo.dependency_operation import (
     ModeloDependencySnapshot,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from .. import modelo_work_verification_cli as handler
+from .. import modelo_work_verification_cli
 from .. import operation_modelo_dependencies as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -114,19 +114,21 @@ def test_presentation_error_retains_completed_operation(monkeypatch: pytest.Monk
     completion = RegisteredOperationCompletion(
         operation_id=_OPERATION_ID, projection=_projection(), effect=OperationEffect.NONE
     )
-    monkeypatch.setattr(handler, "activate_subcommand_output_language", lambda *_args: None)
+    monkeypatch.setattr(modelo_work_verification_cli, "activate_subcommand_output_language", lambda *_args: None)
     monkeypatch.setattr(
-        handler,
+        modelo_work_verification_cli,
         "read_modelo_dependencies",
         lambda *_args, **_kwargs: bridge.ModeloDependenciesRead(
             completion=completion, snapshot=completion.projection.snapshot
         ),
     )
     monkeypatch.setattr(
-        handler, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private"))
+        modelo_work_verification_cli,
+        "emit_envelope",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private")),
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        handler.work_dependencies(cast(typer.Context, cast(object, None)), year=2025)
+        modelo_work_verification_cli.work_dependencies(cast(typer.Context, cast(object, None)), year=2025)
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["effect"] == OperationEffect.NONE.value

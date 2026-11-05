@@ -13,7 +13,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from .. import secure_object_writes as writes_module
+from .. import secure_object_writes
 from ..secure_object_records import SecureObjectRevisionAssertion
 from ..secure_objects import SecureObjectRepository
 from .secure_objects_support import repo_at
@@ -42,7 +42,7 @@ def test_encryption_precedes_admission_and_sql_commit_finishes_inside_it(
     active = False
     commits: list[bool] = []
     encrypted: list[bytes] = []
-    original_encrypt = writes_module.encrypt_secure_object_payload
+    original_encrypt = secure_object_writes.encrypt_secure_object_payload
 
     def encrypt(payload: bytes, *, associated_data: bytes) -> bytes:
         assert not active, "encryption and AAD preparation must precede the short writer fence"
@@ -61,7 +61,7 @@ def test_encryption_precedes_admission_and_sql_commit_finishes_inside_it(
     def committed(_connection: Connection) -> None:
         commits.append(active)
 
-    monkeypatch.setattr(writes_module, "encrypt_secure_object_payload", encrypt)
+    monkeypatch.setattr(secure_object_writes, "encrypt_secure_object_payload", encrypt)
     with EphemeralBucketSession(), repo_at(tmp_path / "prepared.db") as base:
         repository = SecureObjectRepository(engine=base.engine, mutation_writer=admitted)
         event.listen(base.engine, "commit", committed)

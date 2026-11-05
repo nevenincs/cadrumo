@@ -121,7 +121,7 @@ def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
 
 
 def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> None:
-    """LedgerAddResult is a _LedgerMutationResult and carries review_status."""
+    """LedgerAddResult is a LedgerMutationResult and carries review_status."""
     assert issubclass(LedgerAddResult, LedgerMutationResult)
     result = LedgerAddResult.model_validate(
         {

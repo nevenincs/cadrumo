@@ -414,7 +414,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Used by the archive restore pipeline when the natural key was
         not present in the source bundle. Same
         master-key constraint as
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:

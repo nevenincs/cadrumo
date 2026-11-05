@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .. import runner as runner_module
+from .. import runner
 from ..caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
 from ..field_mapping import expand_document_slots, slots_unavailable_at
 from ..key import CorpusKey, CorpusKeyError, IngestCorpusDocument
@@ -466,7 +466,7 @@ def test_the_decimal_sanity_probe_refuses_when_the_probe_is_not_exact(
     reassurance was unfalsifiable. Degrading the probe to binary floats is the
     real failure shape: the same arithmetic the header claims is exact.
     """
-    monkeypatch.setattr(runner_module, "FLOAT_SANITY_PROBE", (0.1, 0.2, 0.3))
+    monkeypatch.setattr(runner, "FLOAT_SANITY_PROBE", (0.1, 0.2, 0.3))
 
     with pytest.raises(HarnessRefusalError, match=r"decimal comparison path is not exact"):
         verify_decimal_comparison_path()

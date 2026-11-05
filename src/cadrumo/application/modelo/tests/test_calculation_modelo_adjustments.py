@@ -194,18 +194,18 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
 
 def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
     """Gate: a row kind added to the union without an identity entry regresses the double-count fix silently."""
-    from .. import calculation_modelo_adjustments as adjustments_module
+    from .. import calculation_modelo_adjustments
 
-    assert set(get_args(ModeloDetailRow)) == set(adjustments_module.ROW_IDENTITY_FIELDS)
+    assert set(get_args(ModeloDetailRow)) == set(calculation_modelo_adjustments.ROW_IDENTITY_FIELDS)
 
 
 def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> None:
     """Prove the gate is real: removing one real kind from the table is detected."""
     from ....domain.modelos.row_models import Modelo184MemberRow
-    from .. import calculation_modelo_adjustments as adjustments_module
+    from .. import calculation_modelo_adjustments
 
     row_kinds = set(get_args(ModeloDetailRow))
-    real_table = set(adjustments_module.ROW_IDENTITY_FIELDS)
+    real_table = set(calculation_modelo_adjustments.ROW_IDENTITY_FIELDS)
     incomplete_table = real_table - {Modelo184MemberRow}
 
     assert row_kinds - incomplete_table == {Modelo184MemberRow}

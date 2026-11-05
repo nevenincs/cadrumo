@@ -47,7 +47,7 @@ from ..schema_surfaces import (
     CasillaDefinition,
 )
 from ..schema_verification import VerificationExpectationDefinition, WorkbookParityReference
-from ..snapshot import build_validated_snapshot as build_snapshot_at_grade
+from ..snapshot import build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -98,7 +98,7 @@ def _snapshot_for_revision(
     # binding definition -- and carry no export layout, so a filing-grade
     # snapshot refuses on the missing filing capability before any reference is
     # ever checked. The integrity checks themselves are grade-independent.
-    return build_snapshot_at_grade(
+    return build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=filing_year,

@@ -12,9 +12,8 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .. import factory as factory_module
-from .. import google_drive as drive_module
+from .. import google_drive, key_validation
 from .. import google_drive_validation as drive_validation_module
-from .. import key_validation as key_module
 from .. import local as local_module
 from ..errors import OutboundStorageValidationError
 from ..key_validation import assert_admissible_object_key_hmac
@@ -138,7 +137,7 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
     ),
 }
 
-_SOURCE_MODULES = (key_module, factory_module, local_module, drive_module, drive_validation_module)
+_SOURCE_MODULES = (key_validation, factory_module, local_module, google_drive, drive_validation_module)
 
 
 def _call_name(node: ast.expr) -> str | None:

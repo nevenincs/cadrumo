@@ -14,7 +14,7 @@ from ...domain.calculations.registry.m303_exonerado_390_projection import (
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
-from .errors import ModeloApplicationError as FilingExportError
+from .errors import ModeloApplicationError
 
 type _ExoneradoProjectionRef = M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef
 
@@ -33,7 +33,7 @@ def project_m303_exonerado_390_value_arrival(
     """
     snapshot_source = registry_snapshot.sources.get(record_design.id)
     if snapshot_source is None or snapshot_source.kind != "record_design":
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_exonerado_390.errors.record_design_source_not_snapshot_owned",
             context={
                 "modelo": Modelo("303").value,
@@ -43,7 +43,7 @@ def project_m303_exonerado_390_value_arrival(
             },
         )
     if snapshot_source != record_design:
-        raise FilingExportError(
+        raise ModeloApplicationError(
             translated_message="application.filing.m303_exonerado_390.errors.record_design_snapshot_mismatch",
             context={
                 "modelo": Modelo("303").value,

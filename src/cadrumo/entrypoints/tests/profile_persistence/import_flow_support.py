@@ -143,7 +143,7 @@ def seed_work_unit(
 
 @dataclass(frozen=True, slots=True)
 class _ImportOutcome:
-    """Bundle returned by _drive_import_persists_filing."""
+    """Bundle returned by drive_import_persists_filing."""
 
     work_unit: WorkUnit
     filing: ModeloRecord

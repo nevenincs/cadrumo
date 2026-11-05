@@ -173,7 +173,7 @@ def test_live_schema_generator_override_uses_the_installed_framework_contract() 
     definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
 
     assert not contracts[module.name]["UnambiguousDefinitionsSchemaGenerator"].pydantic
-    assert "_UnambiguousDefinitionsSchemaGenerator._build_definitions_remapping" not in definitions
+    assert "UnambiguousDefinitionsSchemaGenerator._build_definitions_remapping" not in definitions
 
 
 def test_live_checkbox_override_is_bound_and_a_renamed_member_is_reported() -> None:

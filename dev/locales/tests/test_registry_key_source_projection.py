@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.domain.categories import registry as category_registry
 
-from .. import registry_scanner as scanner_module
+from .. import registry_scanner
 from ..registry_scanner import LocaleRegistryEnumerationError, scan_registry_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,7 +42,7 @@ def test_category_projection_reads_committed_fact_without_published_authority(
     tmp_path: Path,
 ) -> None:
     source = _write_category_fact(tmp_path)
-    monkeypatch.setattr(scanner_module, "bundled_path", lambda *_parts: source)
+    monkeypatch.setattr(registry_scanner, "bundled_path", lambda *_parts: source)
 
     def fail(*_args: object, **_kwargs: object) -> object:
         raise AssertionError("locale discovery must not load the published category authority")
@@ -61,7 +61,7 @@ def test_category_projection_fails_closed_on_ambiguous_localized_entry(
     tmp_path: Path,
 ) -> None:
     source = _write_category_fact(tmp_path, localized_value="not-a-locale-key")
-    monkeypatch.setattr(scanner_module, "bundled_path", lambda *_parts: source)
+    monkeypatch.setattr(registry_scanner, "bundled_path", lambda *_parts: source)
 
     with pytest.raises(LocaleRegistryEnumerationError, match="ambiguous locale key"):
         scan_registry_keys()
@@ -78,7 +78,7 @@ def test_category_projection_fails_closed_on_unknown_cap_variant_field(
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(scanner_module, "bundled_path", lambda *_parts: source)
+    monkeypatch.setattr(registry_scanner, "bundled_path", lambda *_parts: source)
 
     with pytest.raises(LocaleRegistryEnumerationError, match="ambiguous cap-variant shape"):
         scan_registry_keys()
@@ -90,7 +90,7 @@ def test_category_projection_fails_closed_on_unreadable_toml(
 ) -> None:
     source = tmp_path / "0064-categories-profile.toml"
     source.write_text("[fact\n", encoding="utf-8")
-    monkeypatch.setattr(scanner_module, "bundled_path", lambda *_parts: source)
+    monkeypatch.setattr(registry_scanner, "bundled_path", lambda *_parts: source)
 
     with pytest.raises(LocaleRegistryEnumerationError, match="cannot enumerate category profile locale keys"):
         scan_registry_keys()

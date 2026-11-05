@@ -15,9 +15,7 @@ from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.path_safety import safe_repository_id
 from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
-)
-from ..percepciones_observations import (
-    translate_storage_failure as translate_percepcion_failure,
+    translate_storage_failure,
 )
 from ..retencion_observations import (
     RetencionObservationRepositoryAdapter,
@@ -81,7 +79,7 @@ def replace_observation_window[ObservationT, PayloadT: BaseModel](
             "retencion_validate_observation_window_modelo", lambda: safe_repository_id(modelo, context="modelo")
         )
     elif isinstance(repository, PercepcionObservationRepositoryAdapter):
-        translate_percepcion_failure(
+        translate_storage_failure(
             "percepcion_validate_observation_window_modelo", lambda: safe_repository_id(modelo, context="modelo")
         )
     else:

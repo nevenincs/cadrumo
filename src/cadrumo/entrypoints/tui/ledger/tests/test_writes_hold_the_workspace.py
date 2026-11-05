@@ -112,10 +112,9 @@ from .invoices_fixtures import (
 from .invoices_fixtures import transaction_projection as synthetic_transaction
 from .own_account_fixtures import SYNTHETIC_ES_IBAN, MemoryOwnAccountDoor
 from .registers_fixtures import MemoryCapitalGoodsDoor
-from .test_categorisation_review import categorisation_review_ask as ask_for_review
-from .test_categorisation_review import decide as decide_review
+from .test_categorisation_review import categorisation_review_ask, decide
 from .test_invoices_import import review as review_invoice_import
-from .test_invoices_wizard import fill_and_review as review_invoice_wizard
+from .test_invoices_wizard import fill_and_review
 from .test_ledger_flows import ImportDoor, ledger_flows_preview
 from .test_ledger_ingestion_surfaces import EvidenceDoor, ExclusionDoor, InvoiceDoor
 from .test_ledger_slice3 import TX, LinkDoor, link_action
@@ -774,7 +773,7 @@ def _invoice_wizard(gate: Gate, _tmp_path: Path) -> _Flow:
     body = LedgerInvoiceWizardScreen(controller, door)
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
-        await review_invoice_wizard(pilot, body)
+        await fill_and_review(pilot, body)
         await click(pilot, body, "ledger-invoices-wizard-confirm")
         return body
 
@@ -998,8 +997,8 @@ async def test_a_review_that_settles_failed_with_an_effect_is_said_to_be_unknown
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
-            await ask_for_review(pilot, screen, "categorisation-review-ask")
-            await decide_review(pilot, "btn-operation-apply")
+            await categorisation_review_ask(pilot, screen, "categorisation-review-ask")
+            await decide(pilot, "btn-operation-apply")
             assert status(screen) == tr("tui.ledger.flow.outcome_unknown")
             unknown = OperationOutcomeUnknownError(operation_id=door.controllers[0].operation_id, effect=None)
             assert resolve_error_message(unknown) in text(screen, "#ledger-refusal")

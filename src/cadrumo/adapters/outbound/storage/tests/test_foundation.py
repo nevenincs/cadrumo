@@ -2,7 +2,7 @@
 
 Covers the Protocol contract, the pydantic records, the `ProviderKind`
 enum, and the typed `OutboundStorageError` hierarchy. Concrete backend
-(`_local.py`, `_google_drive.py`) tests live in their own colocated test
+(`_local.py`, `google_drive.py`) tests live in their own colocated test
 modules.
 """
 

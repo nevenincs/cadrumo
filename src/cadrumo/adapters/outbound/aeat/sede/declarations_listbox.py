@@ -157,7 +157,7 @@ def _parse_listbox_row(
 ) -> ExpedientesDeclaration | None:
     """Decode one row, skipping malformed shapes and wrapping bad timestamps."""
     if len(cell_texts) < 7:
-        log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
+        log.debug("parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
         return None
 
     # A shifted grid can put taxpayer text in this column, so neither refusal

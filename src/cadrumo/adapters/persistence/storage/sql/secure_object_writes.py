@@ -138,7 +138,7 @@ class SecureObjectWriteOperations:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`
         instead.
 
         Args:
@@ -318,7 +318,7 @@ class SecureObjectWriteOperations:
         Backs
         :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
         and
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._enforce_registered_write_policy(
             namespace=namespace,

@@ -18,8 +18,7 @@ import pytest
 
 from ......core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures
 from ......core.config import Settings
-from .. import kdf_worker_observation as observation
-from .. import kdf_worker_supervision as supervision
+from .. import kdf_worker_observation, kdf_worker_supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_supervision import ProfileKdfPrewarm
 from ..kdf_worker_supervision import SupervisedKdfWorker
@@ -60,11 +59,11 @@ def real_pipe_closes(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[list[in
             closes[descriptor] += 1
         close(descriptor)
 
-    monkeypatch.setattr(supervision.os, "pipe", tracked_pipe)
-    monkeypatch.setattr(supervision.os, "close", tracked_close)
+    monkeypatch.setattr(kdf_worker_supervision.os, "pipe", tracked_pipe)
+    monkeypatch.setattr(kdf_worker_supervision.os, "close", tracked_close)
     # Avoid unrelated logger file opens reusing the pipe descriptor numbers.
     # Diagnostic behavior is independently exercised by test_kdf_worker_diagnostics.
-    monkeypatch.setattr(observation, "diagnostic_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(kdf_worker_observation, "diagnostic_event", lambda *_args, **_kwargs: None)
     try:
         yield allocated, closes
     finally:
@@ -112,12 +111,12 @@ def test_partial_start_closes_every_acquired_descriptor_once(
         launch_calls += 1
         raise primary
 
-    monkeypatch.setattr(supervision.os, "pipe", pipe)
+    monkeypatch.setattr(kdf_worker_supervision.os, "pipe", pipe)
     if point == "mkdir":
         monkeypatch.setattr(Path, "mkdir", root_mkdir)
     elif point == "temporary_directory":
-        monkeypatch.setattr(supervision.tempfile, "TemporaryDirectory", temporary_directory)
-    monkeypatch.setattr(supervision, "launch_worker", launch)
+        monkeypatch.setattr(kdf_worker_supervision.tempfile, "TemporaryDirectory", temporary_directory)
+    monkeypatch.setattr(kdf_worker_supervision, "launch_worker", launch)
 
     translated = point == "launch" and not interrupted
     with pytest.raises(ProfileCustodyRefusedError if translated else type(primary)) as escaped, worker:

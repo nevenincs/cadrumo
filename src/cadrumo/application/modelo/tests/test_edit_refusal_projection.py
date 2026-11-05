@@ -33,7 +33,7 @@ from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
 from ..edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
-from .test_edit_models import edit_models_baseline as admitted_baseline
+from .test_edit_models import edit_models_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,7 +137,7 @@ def test_the_store_forgets_the_oldest_prerequisite_beyond_its_bound() -> None:
 async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    baseline = admitted_baseline().model_copy(update={"bucket_id": "13000000-0000-4000-8000-000000000730"})
+    baseline = edit_models_baseline().model_copy(update={"bucket_id": "13000000-0000-4000-8000-000000000730"})
     submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,

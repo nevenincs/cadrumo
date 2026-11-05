@@ -98,7 +98,7 @@ def test_both_layers_are_wired_to_the_one_shared_normaliser() -> None:
         "domain Transaction.validate_source_jurisdiction must call the shared core normaliser"
     )
     assert helper_name in inspect.unwrap(validate_iso_3166_jurisdiction).__code__.co_names, (
-        "application _validate_iso_3166_jurisdiction must call the shared core normaliser"
+        "application validate_iso_3166_jurisdiction must call the shared core normaliser"
     )
 
 

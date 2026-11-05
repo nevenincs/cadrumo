@@ -151,8 +151,8 @@ _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
     "draft_construction.py": "ModeloApplicationError",
     "export_parity.py": "FilingExportError",
     "export_xml_value_limits.py": "ModeloApplicationError",
-    "m303_exonerado_390.py": "FilingExportError",
-    "m303_export_applicability.py": "FilingExportError",
+    "m303_exonerado_390.py": "ModeloApplicationError",
+    "m303_export_applicability.py": "ModeloApplicationError",
     "runtime.py": "ModeloBuilderError",
 }
 

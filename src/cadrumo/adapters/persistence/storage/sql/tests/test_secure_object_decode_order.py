@@ -181,9 +181,12 @@ def test_both_read_surfaces_route_through_the_one_decode_core() -> None:
     surface reproduces every behavioural result above, because it computes the
     same answers twice. This is what notices the copy.
     """
-    from .. import secure_object_row_codec as codec
+    from .. import secure_object_row_codec
 
-    for surface in (codec.secure_object_record_from_row, codec.secure_object_list_item_from_raw_row):
+    for surface in (
+        secure_object_row_codec.secure_object_record_from_row,
+        secure_object_row_codec.secure_object_list_item_from_raw_row,
+    ):
         source = inspect.getsource(surface)
         assert source_calls(source, "decode_secure_object_row"), (
             f"{surface.__name__} does not route through the decode core"
@@ -207,9 +210,9 @@ def test_the_decode_core_checks_lineage_before_it_decrypts() -> None:
     mark a row readable, skip a later check, or select a decode branch would be
     exploitable, so the source is pinned rather than inferred.
     """
-    from .. import secure_object_row_codec as codec
+    from .. import secure_object_row_codec
 
-    source = inspect.getsource(codec.decode_secure_object_row)
+    source = inspect.getsource(secure_object_row_codec.decode_secure_object_row)
     lineage_at = source.index("verify_revision_self_consistency(")
     decrypt_at = source.index("decrypt_secure_object_payload(")
     assert lineage_at < decrypt_at, "the decode core decrypts before verifying revision lineage"

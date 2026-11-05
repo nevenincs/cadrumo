@@ -444,7 +444,7 @@ def test_dynamic_key_families_use_registered_concrete_values() -> None:
 
 
 def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_path, monkeypatch) -> None:
-    from .. import signal as signal_module
+    from .. import signal
     from .. import signal_discovery as discovery_module
 
     source = tmp_path / "source"
@@ -464,7 +464,7 @@ def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_p
         lambda markers: ({"wizard.setup.*": ("wizard.setup.status.ready",)}, ("profile.keys.*",)),
     )
 
-    payload = signal_module.locale_signal(manager, repository=tmp_path)
+    payload = signal.locale_signal(manager, repository=tmp_path)
 
     assert "wizard.setup.status.ready" in payload["details"]["required_keys"]
     assert "wizard.setup.status.stale" in payload["details"]["required_keys"]

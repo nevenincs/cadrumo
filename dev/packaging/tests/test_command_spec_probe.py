@@ -15,8 +15,7 @@ from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..command_spec_attestation import probe_installed_command_specs
-from .test_command_spec_distribution_lanes import PROBE as DISTRIBUTION_PROBE
-from .test_command_spec_distribution_lanes import assert_probe
+from .test_command_spec_distribution_lanes import PROBE, assert_probe
 from .test_command_spec_source_lanes import assert_complete_projection, run_probe
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -44,7 +43,7 @@ def test_current_command_contracts_execute_in_every_packaging_probe(tmp_path: Pa
     else:
         dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
         result = run_command(
-            [sys.executable, "-S", "-c", DISTRIBUTION_PROBE],
+            [sys.executable, "-S", "-c", PROBE],
             cwd=tmp_path,
             environment={
                 **os.environ,

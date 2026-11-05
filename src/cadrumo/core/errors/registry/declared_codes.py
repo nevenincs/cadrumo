@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .adapters import DECLARED_ERROR_CODES as ADAPTERS_ADAPTERS_CODES
+from .adapters import DECLARED_ERROR_CODES
 from .application import DECLARED_ERROR_CODES as APPLICATION_APPLICATION_CODES
 from .client import DECLARED_ERROR_CODES as CLIENT_CLIENT_CODES
 from .core import DECLARED_ERROR_CODES as CORE_CORE_CODES
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 ALL_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     *DOMAIN_DOMAIN_CODES,
-    *ADAPTERS_ADAPTERS_CODES,
+    *DECLARED_ERROR_CODES,
     *CLIENT_CLIENT_CODES,
     *ENTRYPOINTS_ENTRYPOINTS_CODES,
     *CORE_CORE_CODES,

@@ -36,7 +36,7 @@ from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from . import modelo_discovery_rendering as discovery_rendering
+from . import modelo_discovery_rendering
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .date_parsing import parse_iso_date
 from .modelo_behavior_support import bare_period_error, resolve_year_period
@@ -220,7 +220,7 @@ def casillas(
         ),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
-    lines = discovery_rendering.casillas_lines(result, explain=explain)
+    lines = modelo_discovery_rendering.casillas_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
@@ -289,31 +289,31 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         filing_year=checklist.filing_year,
         period=checklist.period,
         required_manual=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.required_manual
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.required_manual
         ],
         optional_manual=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.optional_manual
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.optional_manual
         ],
         detail_row_fields=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.detail_row_fields
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.detail_row_fields
         ],
         ledger_derivable=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable
         ],
         profile_derivable=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable
         ],
         previous_filing=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.previous_filing
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.previous_filing
         ],
         relation_prefill=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill
         ],
         live_observation=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.live_observation
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.live_observation
         ],
         unbucketed_sources=[
-            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources
+            modelo_discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources
         ],
         unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
         unresolved_profile_keys=list(checklist.unresolved_profile_keys),
@@ -325,38 +325,38 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         f"revision\t{checklist.revision_id}",
         f"filing_year\t{checklist.filing_year}",
         f"period\t{checklist.period}",
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_required",
             ),
             checklist.required_manual,
         ),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_optional",
             ),
             checklist.optional_manual,
         ),
-        *discovery_rendering.data_inventory_section_lines("detail_row_fields", checklist.detail_row_fields),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines("detail_row_fields", checklist.detail_row_fields),
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_ledger",
             ),
             checklist.ledger_derivable,
         ),
-        *discovery_rendering.data_inventory_section_lines(
+        *modelo_discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_profile",
             ),
             checklist.profile_derivable,
         ),
-        *discovery_rendering.data_inventory_section_lines("previous_filing", checklist.previous_filing),
-        *discovery_rendering.data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
-        *discovery_rendering.data_inventory_section_lines("live_observation", checklist.live_observation),
-        *discovery_rendering.data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
+        *modelo_discovery_rendering.data_inventory_section_lines("previous_filing", checklist.previous_filing),
+        *modelo_discovery_rendering.data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
+        *modelo_discovery_rendering.data_inventory_section_lines("live_observation", checklist.live_observation),
+        *modelo_discovery_rendering.data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
     ]
-    notices = discovery_rendering.requires_notices(checklist, operation=operation)
-    lines.extend(discovery_rendering.notice_text_lines(notices))
+    notices = modelo_discovery_rendering.requires_notices(checklist, operation=operation)
+    lines.extend(modelo_discovery_rendering.notice_text_lines(notices))
     emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
@@ -398,7 +398,7 @@ def bindings_list(
     for row in projection.bindings:
         _append_binding_list_row(row, merged_rows, text_rows)
     if missing:
-        text_rows.extend(discovery_rendering.binding_relation_guidance_lines(projection.bindings))
+        text_rows.extend(modelo_discovery_rendering.binding_relation_guidance_lines(projection.bindings))
     result = ModeloBindingsListResult(
         authority_generation=projection.authority_generation,
         modelo_filter=modelo,
@@ -418,8 +418,8 @@ def bindings_list(
         f"binding_count\t{len(merged_rows)}",
         "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
     ]
-    notices = discovery_rendering.bindings_list_scope_notices(modelo=modelo, year=year, period=period)
-    lines.extend(discovery_rendering.notice_text_lines(notices))
+    notices = modelo_discovery_rendering.bindings_list_scope_notices(modelo=modelo, year=year, period=period)
+    lines.extend(modelo_discovery_rendering.notice_text_lines(notices))
     lines.extend(text_rows)
     emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
 
@@ -502,7 +502,7 @@ def formulas(
         ),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
-    lines = discovery_rendering.formula_lines(result, explain=explain)
+    lines = modelo_discovery_rendering.formula_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
@@ -516,11 +516,11 @@ def support_matrix(ctx: typer.Context) -> None:
     for entry in result.entries:
         lines.append(
             f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
-            f"{discovery_rendering.mark(entry.calc_grade):>4}  "
-            f"{discovery_rendering.mark(entry.has_completeness_manifest):>8}  "
-            f"{discovery_rendering.mark(entry.has_fixed_width_export):>3}  "
-            f"{discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  "
-            f"{discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
+            f"{modelo_discovery_rendering.mark(entry.calc_grade):>4}  "
+            f"{modelo_discovery_rendering.mark(entry.has_completeness_manifest):>8}  "
+            f"{modelo_discovery_rendering.mark(entry.has_fixed_width_export):>3}  "
+            f"{modelo_discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  "
+            f"{modelo_discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
     emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
 

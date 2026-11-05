@@ -716,7 +716,7 @@ class ClaveMovilPageFlowMixin(abc.ABC):
         """Dismiss the visible Pre303 alert modal before submitting own-name access.
 
         Delegates to the canonical implementation in
-        :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present`.
+        :func:`~adapters.outbound.aeat.representation_gate.dismiss_pre303_alert_modal_if_present`.
         This caller declines silently when the modal is present but not shown.
         """
         pre303 = self._settings.external_constants().aeat.pre303

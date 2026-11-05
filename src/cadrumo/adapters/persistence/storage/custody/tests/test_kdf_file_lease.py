@@ -14,7 +14,7 @@ from threading import Event
 import pytest
 
 from ......core.config import Settings
-from .. import kdf_file_lease as lease
+from .. import kdf_file_lease
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_codec import close_fd
 from ..kdf_lease_worker import KDF_LEASE_WAITING
@@ -61,10 +61,10 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
     path = tmp_path / "profile-kdf.v1.lock"
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
     os.write(old, b"\0")
-    current = lease.open_kdf_file_lease(path)
+    current = kdf_file_lease.open_kdf_file_lease(path)
     started = Event()
     if sys.platform == "win32":
-        kernel = lease.kernel32()
+        kernel = kdf_file_lease.kernel32()
         wait = kernel.WaitForSingleObject
 
         def waiting(handle: int, milliseconds: int) -> int:
@@ -72,21 +72,21 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
             return int(wait(handle, milliseconds))
 
         monkeypatch.setattr(kernel, "WaitForSingleObject", waiting)
-        monkeypatch.setattr(lease, "kernel32", lambda: kernel)
+        monkeypatch.setattr(kdf_file_lease, "kernel32", lambda: kernel)
     else:
-        launch = lease.launch_lease_worker
+        launch = kdf_file_lease.launch_lease_worker
 
         def launching(*, neutral_root: Path, lease_fd: int, owner_fd: int, result_fd: int) -> subprocess.Popen[bytes]:
             process = launch(neutral_root=neutral_root, lease_fd=lease_fd, owner_fd=owner_fd, result_fd=result_fd)
             started.set()
             return process
 
-        monkeypatch.setattr(lease, "launch_lease_worker", launching)
+        monkeypatch.setattr(kdf_file_lease, "launch_lease_worker", launching)
     old_lock(old, acquire=True)
     try:
 
         def acquire() -> None:
-            lease.acquire_kdf_file_lease(
+            kdf_file_lease.acquire_kdf_file_lease(
                 current, deadline=time.monotonic() + 10, settings=Settings(cadrumo_storage_root=tmp_path)
             )
 
@@ -111,7 +111,7 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
                 old_lock(probe, acquire=True)
         finally:
             os.close(probe)
-        lease.release_kdf_file_lease(current)
+        kdf_file_lease.release_kdf_file_lease(current)
         old_lock(old, acquire=True)
         old_lock(old, acquire=False)
     finally:
@@ -123,11 +123,11 @@ def test_timeout_settles_pending_kernel_lock_and_releases_no_late_lease(tmp_path
     path = tmp_path / "profile-kdf.v1.lock"
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
     os.write(old, b"\0")
-    current = lease.open_kdf_file_lease(path)
+    current = kdf_file_lease.open_kdf_file_lease(path)
     old_lock(old, acquire=True)
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
-            lease.acquire_kdf_file_lease(
+            kdf_file_lease.acquire_kdf_file_lease(
                 current, deadline=time.monotonic() + 0.1, settings=Settings(cadrumo_storage_root=tmp_path)
             )
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
@@ -154,9 +154,9 @@ def test_windows_capacity_granted_as_timeout_wins_is_explicitly_unlocked(
     path = tmp_path / "profile-kdf.v1.lock"
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
     os.write(old, b"\0")
-    current = lease.open_kdf_file_lease(path)
+    current = kdf_file_lease.open_kdf_file_lease(path)
     old_lock(old, acquire=True)
-    kernel = lease.kernel32()
+    kernel = kdf_file_lease.kernel32()
     wait = kernel.WaitForSingleObject
 
     def grant_at_timeout(handle: int, milliseconds: int) -> int:
@@ -167,10 +167,10 @@ def test_windows_capacity_granted_as_timeout_wins_is_explicitly_unlocked(
         return 258
 
     monkeypatch.setattr(kernel, "WaitForSingleObject", grant_at_timeout)
-    monkeypatch.setattr(lease, "kernel32", lambda: kernel)
+    monkeypatch.setattr(kdf_file_lease, "kernel32", lambda: kernel)
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
-            lease.acquire_kdf_file_lease(current, deadline=time.monotonic() + 5)
+            kdf_file_lease.acquire_kdf_file_lease(current, deadline=time.monotonic() + 5)
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
         old_lock(old, acquire=True)
         old_lock(old, acquire=False)
@@ -188,7 +188,7 @@ def test_posix_helper_exits_when_its_only_owner_pipe_closes_while_capacity_is_he
 
     path = tmp_path / "profile-kdf.v1.lock"
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    current = lease.open_kdf_file_lease(path)
+    current = kdf_file_lease.open_kdf_file_lease(path)
     owner_read, owner_write = os.pipe()
     result_read, result_write = os.pipe()
     helper: subprocess.Popen[bytes] | None = None

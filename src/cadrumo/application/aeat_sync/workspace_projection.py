@@ -627,7 +627,7 @@ def _project_notification_rows(
     facts: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...],
 ) -> tuple[AeatSyncWorkspaceNotificationRowV1, ...]:
     """Project notification rows with opaque keys and protected-value-free ordering."""
-    from . import workspace as workspace_contracts
+    from . import workspace
 
     keyed: list[
         tuple[AeatSyncNotificationSelectionKey, AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1]]
@@ -635,9 +635,9 @@ def _project_notification_rows(
     for fact in facts:
         if fact.private_identity is None:
             raise AeatSyncWorkspaceProjectionError("notification requires private identity")
-        keyed.append((workspace_contracts.notification_selection_key(fact.private_identity), fact))
+        keyed.append((workspace.notification_selection_key(fact.private_identity), fact))
     _unique((key for key, _ in keyed), "notification selection identities")
     return tuple(
-        workspace_contracts.public_notification_row(fact.row, key)
+        workspace.public_notification_row(fact.row, key)
         for key, fact in sorted(keyed, key=lambda item: (item[1].row.issued_on, item[0]))
     )

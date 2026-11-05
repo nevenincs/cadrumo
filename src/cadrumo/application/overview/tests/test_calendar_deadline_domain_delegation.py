@@ -80,8 +80,8 @@ def test_overview_window_lookup_goes_through_the_domain_resolver() -> None:
     """
     _work_unit()
     referenced = registry_window_for_work_unit.__code__.co_names
-    assert "_resolve_filing_window" in referenced, (
-        "overview._registry_window_for_work_unit must delegate to "
+    assert "resolve_filing_window" in referenced, (
+        "overview.registry_window_for_work_unit must delegate to "
         "domain.deadlines.resolve_filing_window; referenced names were "
         f"{referenced}"
     )
@@ -138,8 +138,8 @@ def test_overview_status_calls_the_canonical_classifier() -> None:
     """
     referenced = local_work_unit_status.__code__.co_names
 
-    assert "_classify_obligation_status" in referenced, (
-        "overview._local_work_unit_status must delegate to "
+    assert "classify_obligation_status" in referenced, (
+        "overview.local_work_unit_status must delegate to "
         "domain.deadlines.classify_obligation_status; referenced names were "
         f"{referenced}"
     )

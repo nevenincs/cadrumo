@@ -12,8 +12,7 @@ import pytest
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
 from .....tests.terminal_precondition_ast import call_name, fact_expressions
-from .. import google_drive as drive_module
-from .. import google_drive_metadata as drive_metadata_module
+from .. import google_drive, google_drive_metadata
 from .. import google_drive_requests as drive_requests_module
 from ..errors import (
     OutboundStorageConflictError,
@@ -157,37 +156,37 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "component",
         "client_available",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": _contract(
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": _contract(
         DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
         "valid",
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": _contract(
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": _contract(
         DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
         NoRecoveryOutcome.SAFETY,
         "field",
@@ -279,27 +278,27 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("component", _literal("media_upload")),
         ("client_available", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object metadata carries no usable size": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is not an integer": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": (
+    "parse_drive_size:OutboundStorageIntegrityError:drive object size is negative": (
         ("field", _literal("size")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object metadata carries no modifiedTime": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime is not an RFC 3339 instant": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
-    "_parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": (
+    "parse_drive_modified_time:OutboundStorageIntegrityError:drive object modifiedTime carries no timezone": (
         ("field", _literal("modifiedTime")),
         ("valid", _literal(False)),
     ),
@@ -370,7 +369,7 @@ def _fact_keys_from_precondition(call: ast.Call) -> frozenset[str]:
 
 def _external_failure_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
-    for module in (drive_module, drive_metadata_module, drive_requests_module):
+    for module in (google_drive, google_drive_metadata, drive_requests_module):
         tree = ast.parse(inspect.getsource(module))
 
         class Visitor(ast.NodeVisitor):
@@ -457,7 +456,7 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
         assert fact_expressions(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
 
     source = "\n".join(
-        inspect.getsource(module) for module in (drive_module, drive_metadata_module, drive_requests_module)
+        inspect.getsource(module) for module in (google_drive, google_drive_metadata, drive_requests_module)
     )
     assert "PreconditionVerdict(" not in source
     assert "ConditionEvidence(" not in source

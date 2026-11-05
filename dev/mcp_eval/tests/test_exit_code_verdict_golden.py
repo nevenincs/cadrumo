@@ -28,7 +28,7 @@ from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-from .. import runner as evaluation_runner
+from .. import runner
 from ..action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from ..models import ExitCodeScenario
 from ..runner import check_exit_code_scenario
@@ -49,10 +49,10 @@ def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> I
             label="Exit-code golden-eval test profile",
         ) as profile,
     ):
-        original_invoker = evaluation_runner.invoke_canonical_cli
+        original_invoker = runner.invoke_canonical_cli
 
         def invoke_as_operator(argv: Sequence[str]) -> object:
-            program, path = evaluation_runner.command_program_path(tuple(argv))
+            program, path = runner.command_program_path(tuple(argv))
             if program is CommandProgram.AEAT:
                 return invoke_cached_cli(["--format", "json", *path])
             return original_invoker(argv)
@@ -60,7 +60,7 @@ def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> I
         # The evaluator still chooses and validates every command. Only this
         # fixture's Tax invocations inherit its real enrolled operator context.
         with pytest.MonkeyPatch.context() as invocation_context:
-            invocation_context.setattr(evaluation_runner, "invoke_canonical_cli", invoke_as_operator)
+            invocation_context.setattr(runner, "invoke_canonical_cli", invoke_as_operator)
             yield profile
 
 

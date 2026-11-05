@@ -47,7 +47,7 @@ from ....domain.user_profile.values import (
     UserProfileFactValue,
     create_user_profile_record,
 )
-from .. import autonomic_deduccion_advisory as advisory_module
+from .. import autonomic_deduccion_advisory
 from ..autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
@@ -94,7 +94,7 @@ def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     """Yield a bucket id backed by an inward fake profile-fact reader."""
     _FACT_INDEXES.clear()
     monkeypatch.setattr(
-        advisory_module,
+        autonomic_deduccion_advisory,
         "load_fact_index",
         lambda bucket_id, *, operation, profile: _FACT_INDEXES.get(bucket_id),
     )

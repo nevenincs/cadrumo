@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings
-from .. import kdf_process as process_boundary
+from .. import kdf_process
 from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters
 
@@ -35,7 +35,7 @@ def _kdf() -> ProfileCustodyKdfParameters:
 def test_a_child_whose_creation_outlasts_the_deadline_still_attests_and_derives_within_the_bound(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    launch_process = process_boundary.launch_worker_process
+    launch_process = kdf_process.launch_worker_process
     launch_returned: list[float] = []
 
     def blocked_create(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
@@ -46,7 +46,7 @@ def test_a_child_whose_creation_outlasts_the_deadline_still_attests_and_derives_
         launch_returned.append(time.monotonic())
         return process
 
-    monkeypatch.setattr(process_boundary, "launch_worker_process", blocked_create)
+    monkeypatch.setattr(kdf_process, "launch_worker_process", blocked_create)
     worker = SupervisedKdfWorker(
         deadline=time.monotonic() + _BUDGET_SECONDS,
         settings=Settings(cadrumo_storage_root=tmp_path),

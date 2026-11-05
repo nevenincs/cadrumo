@@ -47,12 +47,12 @@ def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
     times again. This assertion is what notices, and it is therefore the one
     that proves the deduplication rather than merely the behaviour.
     """
-    from .. import secure_object_integrity as integrity_module
+    from .. import secure_object_integrity
 
     surfaces = (
-        integrity_module.quarantine_unreadable_rows,
-        integrity_module.probe_namespace_integrity,
-        integrity_module.iter_namespace_decryptability,
+        secure_object_integrity.quarantine_unreadable_rows,
+        secure_object_integrity.probe_namespace_integrity,
+        secure_object_integrity.iter_namespace_decryptability,
     )
 
     for surface in surfaces:
@@ -68,7 +68,7 @@ def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
         )
 
     # The probe itself is the one place that may do those things.
-    probe_source = inspect.getsource(integrity_module.probe_row_decryptability)
+    probe_source = inspect.getsource(secure_object_integrity.probe_row_decryptability)
     assert "decrypt_secure_object_payload(" in probe_source
     assert "secure_object_payload_aad(" in probe_source
 

@@ -46,9 +46,9 @@ from ..censal_datos import (
     censal_datos_url,
     censal_landing_url,
     forbidden_censal_landing_marker,
+    navigate_and_parse,
     parse_censal_datos,
 )
-from ..censal_datos import navigate_and_parse as read_censal
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import fetch_iva_compensation_wallet
 from .censal_consultation_fixtures import consultation_documents
@@ -410,7 +410,7 @@ def _bouncing_to(location: str, landing_html: str) -> Callable[[str], _Reply]:
 
 
 async def _read(boundary: _SedeDocuments, profile: str) -> CensalObservation:
-    return await read_censal(
+    return await navigate_and_parse(
         {},
         taxpayer_nif=_TAXPAYER,
         settings=Settings(),

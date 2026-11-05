@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 class TestParseListboxTranslation:
-    """_parse_listbox raises carry operator-facing translated_message."""
+    """parse_listbox raises carry operator-facing translated_message."""
 
     def test_listbox_missing_sets_translated_message(self) -> None:
         # HTML with no .z-listbox element triggers the listbox_missing raise.

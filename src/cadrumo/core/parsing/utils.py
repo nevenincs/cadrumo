@@ -62,7 +62,7 @@ def utils_parse_bool(raw: str | None) -> bool | None:
         return True
     if token in _FALSY:
         return False
-    _log.debug("_parse_bool: unrecognised token %r — returning None", token)
+    _log.debug("parse_bool: unrecognised token %r — returning None", token)
     return None
 
 
