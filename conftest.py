@@ -141,9 +141,9 @@ tempfile.tempdir = str(_TEMP_BASE)
 
 # Importing the dev logger is safe before Cadrumo runtime imports. Its run and
 # scratch outputs now resolve under the configured storage root.
-from dev.test_runs import logging as _run_logging  # noqa: E402
+from dev.test_runs import logging  # noqa: E402
 
-_run_logging.prepare_environment(_TEST_LOG_ROOT)
+logging.prepare_environment(_TEST_LOG_ROOT)
 # Keep collection-time product data process-private under this run's scratch.
 # This value is set before importing any module that may resolve Settings.
 _PURE_STDLIB_COLLECTION_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
@@ -545,29 +545,29 @@ def pytest_configure(config: pytest.Config) -> None:
     # runs finalisers promptly on CPython, so the sweep is skipped, as pytester
     # itself does.
     config.stash[gc_collect_iterations_key] = 0
-    _run_logging.configure(config)
+    logging.configure(config)
 
 
 def pytest_runtest_logstart(nodeid: str, location: tuple[str, int | None, str]) -> None:
     """Record the test identity before execution begins."""
     del location
-    _run_logging.log_start(nodeid)
+    logging.log_start(nodeid)
 
 
 def pytest_runtest_logreport(report: pytest.TestReport) -> None:
     """Persist each test verdict and immediate failure detail."""
-    _run_logging.log_report(report)
+    logging.log_report(report)
 
 
 def pytest_collectreport(report: pytest.CollectReport) -> None:
     """Persist collection failures immediately."""
-    _run_logging.log_collection_report(report)
+    logging.log_collection_report(report)
 
 
 def pytest_internalerror(excrepr: object, excinfo: object) -> None:
     """Persist pytest internal errors that have no test or collection report."""
     del excinfo
-    _run_logging.log_internal_error(excrepr)
+    logging.log_internal_error(excrepr)
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
@@ -576,7 +576,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
     marker_hook.fail_session_on_held_serials(session)
     marker_hook.fail_session_on_marker_violations(session)
     fixture_resolution_hook.fail_session_on_refused_requests(session)
-    _run_logging.finish(session.config, session.exitstatus)
+    logging.finish(session.config, session.exitstatus)
 
 
 def pytest_testnodedown(node: object, error: object | None) -> None:
@@ -623,7 +623,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     """
     if not hasattr(config, "workerinput"):
         _release_shared_registry_authority()
-    _run_logging.restate(config)
+    logging.restate(config)
 
 
 @pytest.fixture

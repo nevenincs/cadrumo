@@ -58,8 +58,7 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
 )
 from dev.paths import REPO_ROOT
 
-from .._ast_scanner import scan_source_text
-from .._paths import LOCALES_DIR, SRC_DIR
+from ..ast_scanner import scan_source_text
 from ..desktop_assets_keys import (
     ASSET_ENUM_FAMILIES,
     ASSET_FAMILIES,
@@ -75,6 +74,7 @@ from ..desktop_chrome import (
     desktop_chrome_strings,
     shell_key_references,
 )
+from ..paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

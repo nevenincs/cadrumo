@@ -58,7 +58,7 @@ from dev.paths import AUTHORITY_ROOT_ENV
 from dev.product_environment import ambient_product_settings_removed
 from dev.temporary_output import prepare_temp_root
 
-from ._locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
+from .locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
 
 if TYPE_CHECKING:
     from cadrumo_client.commands.spec import CommandSpecNode
@@ -161,7 +161,7 @@ def cli_reference_page_for_command(command_path: tuple[str, ...]) -> str:
     return _verb_group_page_stem(family, command_path[2])
 
 
-def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
+def reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     """Return a clean environment for an ``aeat`` CLI-reference subprocess.
 
     Cadrumo language and local-storage settings are pinned after ambient
@@ -212,7 +212,7 @@ def _rst_heading(text: str, char: str) -> str:
 _CLI_INLINE_CODE = re.compile(r"(?<![\w:`\\=])`(?P<code>[^`\s](?:[^`\r\n]*?[^`\s])?)`(?![\w`_])")
 
 
-def _cli_help_as_rst(value: str) -> str:
+def cli_help_as_rst(value: str) -> str:
     """Render authored Markdown code spans as RST inline literals.
 
     RST roles, links, already doubled literals, and unclosed markup retain
@@ -221,7 +221,7 @@ def _cli_help_as_rst(value: str) -> str:
     return _CLI_INLINE_CODE.sub(lambda match: f"``{match.group('code')}``", value)
 
 
-def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
+def render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
     from cadrumo_client.commands.parameters import ArgumentSpec
@@ -236,7 +236,7 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
     parts = [
         _rst_heading(" ".join(path), "-"),
         "\n",
-        same_wording(_cli_help_as_rst(tr(spec.help_key.value)), language),
+        same_wording(cli_help_as_rst(tr(spec.help_key.value)), language),
         "\n\n",
     ]
     if spec.parameters:
@@ -250,7 +250,7 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
         # the key put dotted identifiers such as ``cli.ledger.add.description_help`` on
         # every parameter of every page of the published reference.
         described = (
-            same_wording(_cli_help_as_rst(tr(parameter.help_key.value)), language)
+            same_wording(cli_help_as_rst(tr(parameter.help_key.value)), language)
             if parameter.help_key
             else docs_chrome("docs.cli.command.no_description", language)
         )
@@ -544,7 +544,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         _render_family_reference(family, leaves, language, output_dir, rendered)
     # Each page's chrome is authored as that page's own markup, so it is
     # resolved against the page it is written to; see
-    # :func:`~dev.docs._locale_chrome.markup_page`.
+    # :func:`~dev.docs.locale_chrome.markup_page`.
     with markup_page("cli/index"):
         index = _render_index_page(language, family_names=families, total_leaf_count=len(leaves))
     rendered["cli/index.rst"] = index
@@ -614,7 +614,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
-            env=_reference_subprocess_environment(Path(storage_root)),
+            env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
             text=True,
             timeout=300,
@@ -665,7 +665,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
-            env=_reference_subprocess_environment(Path(storage_root)),
+            env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
             text=True,
             timeout=120,
@@ -717,12 +717,12 @@ def _render_family_reference(
                 _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
             )
             family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
-        family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+        family_parts.extend(render_graph_command(language, node.path, node.spec) for node in direct)
         if groups:
             family_parts.append(chrome_anchor("docs.cli.family.choose_group_heading"))
             family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
         for group in groups:
-            _render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)
+            render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)
         if groups:
             family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
             family_parts.extend(f"   {family}/{group}\n" for group in groups)
@@ -743,7 +743,7 @@ def _family_graph_nodes(
     return family_nodes, groups, direct
 
 
-def _render_group_reference(
+def render_group_reference(
     family: str,
     group: str,
     family_nodes: tuple[CommandSpecNode, ...],
@@ -758,7 +758,7 @@ def _render_group_reference(
         content = (
             _rst_heading(f"``{family} {group}``", "=")
             + "\n"
-            + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
+            + "".join(render_graph_command(language, node.path, node.spec) for node in group_nodes)
         )
     rel = f"cli/{family}/{group}.rst"
     rendered[rel] = content

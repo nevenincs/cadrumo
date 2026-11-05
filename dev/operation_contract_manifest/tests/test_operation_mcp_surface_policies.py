@@ -48,7 +48,7 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
-from dev.operation_contract_manifest.tests.test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
+from dev.operation_contract_manifest.tests.test_operation_frontend_parity import PROBE_PROFILE, probe_requests
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
     ALLOWED_OPERATION_ACCESS,
     TEST_CLIENT_INSTANCE_ID,
@@ -104,8 +104,8 @@ def _schema_resolutions(
 ) -> list[ResolvedOperationAccess]:
     """Every access the resolver produces for a request built from the registered schema alone."""
     resolutions = (
-        _resolve_submission(registry, request, profile_id=_PROBE_PROFILE, operation=operation)
-        for request in _probe_requests(definition_id)
+        _resolve_submission(registry, request, profile_id=PROBE_PROFILE, operation=operation)
+        for request in probe_requests(definition_id)
     )
     return [resolved for resolved in resolutions if resolved is not None]
 

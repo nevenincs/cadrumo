@@ -281,7 +281,7 @@ def publish_after_worker_drain(recorder: JournalRecorder) -> Generator[None]:
         yield
 
 
-def _worker_script(output: Path) -> Path:
+def worker_script(output: Path) -> Path:
     from dev.docs.sequences import runtime_fixture
 
     source = Path(runtime_fixture.__file__).read_text(encoding=UTF_8)
@@ -422,7 +422,7 @@ def benchmark(output: Path, page: str, authority_root: Path) -> None:
         encoding=UTF_8,
     )
     recorder = JournalRecorder(output, "parent")
-    worker = _worker_script(output)
+    worker = worker_script(output)
     with (
         derived_storage_settings(output / "storage-base"),
         override_settings(cadrumo_authority_root=authority_root.resolve()),

@@ -8,13 +8,13 @@ from typing import Literal
 from dev.acceptance.income_tax.cli_journey import ArtifactEvidence
 from dev.acceptance.installed_cli import CommandEvidence
 
-_SCHEMA_VERSION = "retenciones-01-installed-cli-journey-v1"
+SCHEMA_VERSION = "retenciones-01-installed-cli-journey-v1"
 
 
-_ANNUAL_SCHEMA_VERSION = "retenciones-01-installed-annual-cli-journey-v1"
+ANNUAL_SCHEMA_VERSION = "retenciones-01-installed-annual-cli-journey-v1"
 
 
-_ACTOR = "retenciones-acceptance"
+ACTOR = "retenciones-acceptance"
 
 
 class RetencionesInstalledCliError(RuntimeError):

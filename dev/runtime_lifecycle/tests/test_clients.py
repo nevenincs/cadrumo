@@ -15,10 +15,10 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 
 from ..client_probes import (
-    _private_request,
-    _refused,
-    _tui,
     issue_key,
+    private_request,
+    refused,
+    tui,
 )
 from ..harness import LifecycleHarness, Profile
 from ..mcp_client_probes import attend_mcp, call_mcp, mcp_edit_profile, mcp_read, mcp_refuse_profile
@@ -41,7 +41,7 @@ async def _signed_in_reads(harness: LifecycleHarness, profile: Profile, label: s
     """The command line and the TUI read the profile the person just signed in to."""
     view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=profile.password))["result"]
     assert view["display_name"] == label
-    await asyncio.to_thread(_tui, harness, profile, admitted=True)
+    await asyncio.to_thread(tui, harness, profile, admitted=True)
 
 
 def test_packaged_password_rotation_retires_old_authority_and_resumes_new_receipt(harness: LifecycleHarness) -> None:
@@ -72,7 +72,7 @@ def test_packaged_password_rotation_retires_old_authority_and_resumes_new_receip
     assert result["dek_epoch_preserved"] is True
     rendered = json.dumps(changed)
     assert profile.password not in rendered and replacement not in rendered
-    _refused(_private_request(original, original_session))
+    refused(private_request(original, original_session))
     harness.cli("login", "Packaged rotation", "--secrets-stdin", secret={"passphrase": replacement})
     resumed = harness.connect(profile.profile_id)
     resumed.client.resume_receipt()
@@ -91,7 +91,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
     first = await asyncio.to_thread(harness.create_profile, "Client A")
     second = await asyncio.to_thread(harness.create_profile, "Client B")
     await asyncio.to_thread(harness.cli, "profile", "view", expect_success=False)
-    await asyncio.to_thread(_tui, harness, first, admitted=False)
+    await asyncio.to_thread(tui, harness, first, admitted=False)
     environment = child_environment(ChildEnvironmentProfile.STRICT, harness.root)
     parameters = StdioServerParameters(
         command=str(harness.package / "bin/cadrumo-mcp.exe"),
@@ -209,7 +209,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             assert recovered.wire.hello.boot_id != boot
             view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=second.password))["result"]
             assert view["display_name"] == "Client B"
-            await asyncio.to_thread(_tui, harness, second, admitted=True)
+            await asyncio.to_thread(tui, harness, second, admitted=True)
             await second_holder.close()
             second_holder = await AsyncRuntimeSessionHolder.start(
                 harness.runtime_image, profile_id=second.profile_id, environment=environment, frontend="cli"
@@ -228,7 +228,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             # No key was issued for B, so signing B out leaves no agent access to it.
             assert signed_out["result"]["automation_access_remains"] is False
             await asyncio.to_thread(harness.cli, "profile", "view", expect_success=False)
-            await asyncio.to_thread(_tui, harness, second, admitted=False)
+            await asyncio.to_thread(tui, harness, second, admitted=False)
             await call_mcp(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
             await mcp_read(key_mcp, first)
             await mcp_refuse_profile(key_mcp, second)
@@ -237,6 +237,6 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
                 harness.cli, "profile", "view", profile_secret=second.password, expect_success=False
             )
             assert unavailable["error"]["code"] in {"REFUSED_LOCAL_RUNTIME", "REFUSED_RUNTIME_FRONTEND"}
-            await asyncio.to_thread(_tui, harness, first, admitted=False)
+            await asyncio.to_thread(tui, harness, first, admitted=False)
             await call_mcp(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
             await call_mcp(key_mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)

@@ -12,8 +12,8 @@ from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from .caller_owned_root import AcceptanceError, require
 
 _STARTUP_SECONDS = 30.0
-_CLOSE_SECONDS = 10.0
-_REAP_SECONDS = 10.0
+CLOSE_SECONDS = 10.0
+REAP_SECONDS = 10.0
 _STDERR_CHUNK_BYTES = 4096
 
 
@@ -119,7 +119,7 @@ class AsyncPipeOwner:
                     failures.append(error)
             if stream.is_closing():
                 try:
-                    await asyncio.wait_for(stream.wait_closed(), timeout=_CLOSE_SECONDS)
+                    await asyncio.wait_for(stream.wait_closed(), timeout=CLOSE_SECONDS)
                 except (BrokenPipeError, ConnectionResetError):
                     stdin_settled = True
                 except TimeoutError as error:
@@ -135,7 +135,7 @@ class AsyncPipeOwner:
 
     async def _settle_process(self, failures: list[BaseException]) -> bool:
         """Give the child grace, terminate, kill and reap in that order."""
-        settled = await self._wait_retaining_failure(_CLOSE_SECONDS, failures)
+        settled = await self._wait_retaining_failure(CLOSE_SECONDS, failures)
         if not settled:
             try:
                 self.process.terminate()
@@ -143,7 +143,7 @@ class AsyncPipeOwner:
                 pass
             except BaseException as error:
                 failures.append(error)
-            settled = await self._wait_retaining_failure(_REAP_SECONDS, failures)
+            settled = await self._wait_retaining_failure(REAP_SECONDS, failures)
         if not settled:
             try:
                 self.process.kill()
@@ -151,7 +151,7 @@ class AsyncPipeOwner:
                 pass
             except BaseException as error:
                 failures.append(error)
-            settled = await self._wait_retaining_failure(_REAP_SECONDS, failures)
+            settled = await self._wait_retaining_failure(REAP_SECONDS, failures)
         if not settled:
             failures.append(AcceptanceError("runtime holder process could not be reaped"))
 
@@ -179,7 +179,7 @@ class AsyncPipeOwner:
                     failures.append(stderr_error)
         else:
             try:
-                await asyncio.wait_for(asyncio.shield(self._stderr_task), timeout=_REAP_SECONDS)
+                await asyncio.wait_for(asyncio.shield(self._stderr_task), timeout=REAP_SECONDS)
             except TimeoutError as error:
                 failure = AcceptanceError("runtime holder stderr drainer did not stop")
                 failure.__cause__ = error

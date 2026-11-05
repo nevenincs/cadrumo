@@ -20,8 +20,8 @@ from ..signal_report import signal_catalogue_only_cells
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text, human_translation_text
 from ..signal_translation_matrix import translation_matrix
-from ._signal_support import (
-    _list,
+from .signal_support import (
+    signal_list,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -178,8 +178,8 @@ def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -
     assert inventory["docs_translation_source_echo_ca"] == 2
     assert inventory["docs_translation_source_echo_es"] == 1
     assert inventory["docs_translation_near_echo_ca"] == 1
-    assert len(_list(inventory["docs_translation_source_echo_samples"])) == 3
-    assert len(_list(inventory["docs_translation_near_echo_samples"])) == 1
+    assert len(signal_list(inventory["docs_translation_source_echo_samples"])) == 3
+    assert len(signal_list(inventory["docs_translation_near_echo_samples"])) == 1
     exact = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
     near = [finding for finding in findings if finding["kind"] == "docs_translation_near_echo"]
     assert len(exact) == 3
@@ -569,11 +569,11 @@ def test_intentionally_open_reason_copy_is_optional_but_unknown_family_blocks(tm
 
 
 def test_signal_catalogue_reads_cross_owner_desktop_projection(tmp_path, monkeypatch) -> None:
-    from .. import _paths, desktop_chrome, signal_discovery
+    from .. import desktop_chrome, paths, signal_discovery
 
     (tmp_path / "en.yml").write_text("cli:\n  save: Save\n", encoding="utf-8")
     manager = LocaleManager(tmp_path, tmp_path)
-    monkeypatch.setattr(_paths, "LOCALES_DIR", tmp_path)
+    monkeypatch.setattr(paths, "LOCALES_DIR", tmp_path)
     monkeypatch.setattr(desktop_chrome, "DESKTOP_CHROME_KEYS", frozenset({"desktop.attendance.title", "desktop.other"}))
     monkeypatch.setattr(
         desktop_chrome,

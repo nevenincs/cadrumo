@@ -105,7 +105,7 @@ class _Tee:
         self._stream.flush()
 
 
-def _run_lane(lane: str, env: dict[str, str]) -> LaneResult:
+def run_lane(lane: str, env: dict[str, str]) -> LaneResult:
     """Run one lane and time it.
 
     Args:
@@ -192,7 +192,7 @@ def _run_all(
                 ),
                 flush=True,
             )
-        result = _run_lane(lane, env)
+        result = run_lane(lane, env)
         results.append(result)
         if json_events:
             print(

@@ -64,7 +64,7 @@ _SOURCE_ROOTS: Final[tuple[Path, ...]] = tuple(Path(package) for package in SOUR
 #: `importlib.resources`, and the `errors`/`encoding` kwargs on `Popen`) can
 #: never fire on a real regression here -- every one of them is a false
 #: positive by construction, not a judgement call per finding.
-_PYTHON_LEGACY_COMPATIBILITY_RULE_IDS: Final[tuple[str, ...]] = (
+PYTHON_LEGACY_COMPATIBILITY_RULE_IDS: Final[tuple[str, ...]] = (
     "python.lang.compatibility.python37.python37-compatibility-importlib2",
     "python.lang.compatibility.python36.python36-compatibility-Popen1",
     "python.lang.compatibility.python36.python36-compatibility-Popen2",
@@ -254,7 +254,7 @@ def semgrep_command(uvx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> l
         "--config",
         "auto",
     ]
-    for rule_id in _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS:
+    for rule_id in PYTHON_LEGACY_COMPATIBILITY_RULE_IDS:
         command += ["--exclude-rule", rule_id]
     command += ["--json", *(source_root.as_posix() for source_root in source_roots)]
     return command
@@ -343,7 +343,7 @@ def run_security_scan(
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
-            environment=_semgrep_environment(),
+            environment=semgrep_environment(),
         )
     except subprocess.TimeoutExpired:
         return SecurityResult.unavailable(f"semgrep exceeded its {timeout:g}s timeout")
@@ -358,7 +358,7 @@ def run_security_scan(
     return classify_semgrep_output(completed.stdout)
 
 
-def _semgrep_environment() -> dict[str, str]:
+def semgrep_environment() -> dict[str, str]:
     """Bind scanner state explicitly; Semgrep ignores XDG roots that do not exist."""
     from dev.temporary_output import prepare_temp_root
     from dev.tool_storage import tool_storage_environment

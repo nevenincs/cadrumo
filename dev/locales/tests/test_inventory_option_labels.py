@@ -19,7 +19,7 @@ from cadrumo.domain.contribuyente.inventory.records import (
     load_inventory_acquisition_cost,
 )
 
-from .._paths import LOCALES_DIR
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -16,10 +16,10 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     modelo_localization_source,
 )
 
-from .._paths import LOCALES_DIR, SRC_DIR
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
+from ..paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -181,7 +181,7 @@ def _blank_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     return sorted(key for key, value in flat_leaves.items() if isinstance(value, str) and not value.strip())
 
 
-def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
+def reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """Return keys whose value carries a token tr() can never interpolate.
 
     ``tr()`` consumes ``locale`` and ``default`` as rendering directives and
@@ -190,7 +190,7 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """
     from cadrumo.core.i18n.render import extract_placeholders
 
-    from .._status import RESERVED_INTERPOLATION_TOKENS
+    from ..status import RESERVED_INTERPOLATION_TOKENS
 
     return sorted(
         key
@@ -210,7 +210,7 @@ def test_no_catalogue_value_carries_a_reserved_interpolation_token() -> None:
     failures: list[str] = []
     for locale_code in ("ca", "en", "es", "hu"):
         leaves = _catalogue_leaves(locale_code)
-        offenders = _reserved_token_offenders(leaves)
+        offenders = reserved_token_offenders(leaves)
         if offenders:
             failures.append(
                 f"{locale_code}.yml carries {len(offenders)} value(s) with a reserved interpolation "

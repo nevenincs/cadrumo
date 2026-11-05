@@ -77,8 +77,8 @@ from dev.paths import REPO_ROOT
 from ..build import docs_build_language, pagefind_index_mode, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, SHARED_INDEX_LANGUAGE, build_shared_search_index
 from ..pagefind_inject import InjectionStats
-from ._http_serve_support import serve_directory
 from .built_site import built_documentation_site
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -595,9 +595,9 @@ def _probe_record() -> tuple[str, tuple[str, ...]]:
     declared term RECALLS the record, not that the content holds some string the
     test also chose.
     """
-    from ..pagefind_inject import _bounded_to_sample, _materialise_records
+    from ..pagefind_inject import bounded_to_sample, materialise_records
 
-    bounded = _bounded_to_sample(_materialise_records(), _SAMPLE_PER_KIND)
+    bounded = bounded_to_sample(materialise_records(), _SAMPLE_PER_KIND)
     for record in bounded.records:
         if record.kind.value == "concept" and record.search_aliases:
             return record.target, (record.title, *record.search_aliases)
@@ -613,9 +613,9 @@ def _probe_casilla_record() -> tuple[str, tuple[str, ...]]:
     vocabulary and the localized definition content without inventing a
     search phrase or selecting a hand-curated fixture.
     """
-    from ..pagefind_inject import _bounded_to_sample, _materialise_records
+    from ..pagefind_inject import bounded_to_sample, materialise_records
 
-    bounded = _bounded_to_sample(_materialise_records(), _SAMPLE_PER_KIND)
+    bounded = bounded_to_sample(materialise_records(), _SAMPLE_PER_KIND)
     for record in bounded.records:
         if record.kind.value != "casilla" or not all(language in record.descriptions for language in OutputLanguage):
             continue

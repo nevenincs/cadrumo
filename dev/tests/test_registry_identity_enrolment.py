@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.inventory import python_files_under
-from dev.paths import REPO_ROOT as _REPOSITORY_ROOT
+from dev.paths import REPO_ROOT
 from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,
@@ -49,7 +49,7 @@ def _first_party_modules() -> tuple[Path, ...]:
     """Return every first-party Python module across the scanned trees."""
     modules: list[Path] = []
     for tree in _SCANNED_TREES:
-        root = _REPOSITORY_ROOT / tree
+        root = REPO_ROOT / tree
         assert root.is_dir(), f"scanned tree {root} is missing; this gate would pass vacuously"
         modules.extend(python_files_under(root))
     return tuple(modules)

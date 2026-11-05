@@ -12,7 +12,7 @@ survivors; ``_MINIMUM_READ_CATALOGUES`` is 38 against 57 live pages, so
 nineteen pages could leave the surface with every gate still green.
 
 The last filter in that chain is a content sniff: a page whose opening bytes
-contain the :data:`~dev.docs.i18n._GENERATED_MARKER` banner is treated as
+contain the :data:`~dev.docs.i18n.GENERATED_MARKER` banner is treated as
 generator-owned and English-only. Reading the artefact rather than a list of
 page names is the right design - it is why there is no second registry to fall
 out of step - but the predicate is a substring test, so it cannot distinguish a
@@ -39,11 +39,11 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev.paths import REPO_ROOT
 
 from ..i18n import (
-    _DOC_SUFFIXES,
-    _EXCLUDED_FILES,
-    _EXCLUDED_TOP_DIRS,
-    _GENERATED_MARKER,
-    _GENERATED_MARKER_SCAN_BYTES,
+    DOC_SUFFIXES,
+    EXCLUDED_FILES,
+    EXCLUDED_TOP_DIRS,
+    GENERATED_MARKER,
+    GENERATED_MARKER_SCAN_BYTES,
     user_scope_source_pages,
 )
 
@@ -72,12 +72,12 @@ def _candidate_pages(docs_root: Path) -> frozenset[str]:
     """
     candidates: set[str] = set()
     for source in scan_directory(docs_root, recursive=True, select=DirectoryEntryKind.FILES):
-        if source.suffix not in _DOC_SUFFIXES:
+        if source.suffix not in DOC_SUFFIXES:
             continue
         relative = source.relative_to(docs_root)
-        if relative.parts[0] in _EXCLUDED_TOP_DIRS:
+        if relative.parts[0] in EXCLUDED_TOP_DIRS:
             continue
-        if relative.name in _EXCLUDED_FILES or relative.name.startswith(("test_", "_test_")):
+        if relative.name in EXCLUDED_FILES or relative.name.startswith(("test_", "_test_")):
             continue
         candidates.add(relative.as_posix())
     return frozenset(candidates)
@@ -121,10 +121,10 @@ def test_every_declared_exclusion_still_carries_the_banner() -> None:
     for page in sorted(_DECLARED_GENERATED_PAGES):
         source = _DOCS / page
         assert source.is_file(), f"declared generator-owned page {page} does not exist under {_DOCS}"
-        head = source.read_bytes()[:_GENERATED_MARKER_SCAN_BYTES]
-        assert _GENERATED_MARKER.encode() in head, (
+        head = source.read_bytes()[:GENERATED_MARKER_SCAN_BYTES]
+        assert GENERATED_MARKER.encode() in head, (
             f"{page} no longer carries the generated banner within the first "
-            f"{_GENERATED_MARKER_SCAN_BYTES} bytes; it is being excluded for a reason nobody declared"
+            f"{GENERATED_MARKER_SCAN_BYTES} bytes; it is being excluded for a reason nobody declared"
         )
 
 
@@ -145,11 +145,11 @@ def test_a_prose_mention_in_the_opening_bytes_leaves_the_surface(tmp_path: Path)
     plain.write_text("# Plain page\n\nOrdinary authored prose.\n", encoding="utf-8")
     discusses = docs_root / "discusses.md"
     discusses.write_text(
-        f"# Editing the reference\n\nA page whose banner reads {_GENERATED_MARKER} is regenerated,\n"
+        f"# Editing the reference\n\nA page whose banner reads {GENERATED_MARKER} is regenerated,\n"
         "so edit the generator instead of the page.\n",
         encoding="utf-8",
     )
-    assert _GENERATED_MARKER.encode() in discusses.read_bytes()[:_GENERATED_MARKER_SCAN_BYTES], (
+    assert GENERATED_MARKER.encode() in discusses.read_bytes()[:GENERATED_MARKER_SCAN_BYTES], (
         "fixture no longer places the phrase inside the bounded read window"
     )
 
@@ -173,7 +173,7 @@ def test_an_undeclared_drop_is_detected(tmp_path: Path) -> None:
     docs_root.mkdir()
     (docs_root / "index.md").write_text("# Index\n\nAuthored prose.\n", encoding="utf-8")
     smuggled = docs_root / "smuggled.md"
-    smuggled.write_text(f"# Notes\n\nThe banner {_GENERATED_MARKER} appears here.\n", encoding="utf-8")
+    smuggled.write_text(f"# Notes\n\nThe banner {GENERATED_MARKER} appears here.\n", encoding="utf-8")
 
     excluded = _marker_excluded_pages(docs_root)
     assert sorted(excluded - _DECLARED_GENERATED_PAGES) == ["smuggled.md"], (

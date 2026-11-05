@@ -167,7 +167,7 @@ def find_mismatches(
     return found
 
 
-def _modelo_refs_from_registry() -> dict[str, tuple[str, ...]]:
+def modelo_refs_from_registry() -> dict[str, tuple[str, ...]]:
     """Return every citation each registry modelo makes, at both levels.
 
     Reads BOTH the modelo definition's own ``legal_refs`` and those of each of
@@ -221,7 +221,7 @@ def main() -> int:
         raise SystemExit("read zero legal entries; the result would be meaningless")
 
     approving = {k: v for k, v in entries.items() if approved_modelo_numbers(v)}
-    mismatches = find_mismatches(_modelo_refs_from_registry(), entries)
+    mismatches = find_mismatches(modelo_refs_from_registry(), entries)
 
     print(f"legal entries read: {len(entries)}; of those, approving a named modelo: {len(approving)}")
     print(f"citations whose approving provision names a DIFFERENT modelo: {len(mismatches)}\n")

@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from ..casilla_catalogue_install import resume_install
 from ..casilla_catalogue_models import CasillaOccurrence, CollapseVerificationError
 from ..casilla_source_inventory import load_casilla_values
-from ..casilla_text_comparison import _segments
+from ..casilla_text_comparison import segments
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -500,7 +500,7 @@ def test_a_translation_that_ignored_a_spanish_change_is_stale() -> None:
 )
 def test_a_label_splits_into_segments_only_where_it_composes_them(text: str, expected: tuple[str, ...]) -> None:
     """Subtraction of one box from another is arithmetic, not a composed segment."""
-    assert _segments(text) == expected
+    assert segments(text) == expected
 
 
 def test_one_spanish_segment_rendered_two_ways_is_reported() -> None:

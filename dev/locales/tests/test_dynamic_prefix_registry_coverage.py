@@ -52,14 +52,14 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from dev.docs.terminology_handbook.topics import load_topic_catalogue
 
-from .. import _registry_scanner
-from .._ast_scanner import scan_namespace_markers, scan_source_tree
-from .._paths import PRODUCT_SOURCE_DIRS, SRC_DIR
-from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
+from .. import registry_scanner
+from ..ast_scanner import scan_namespace_markers, scan_source_tree
 from ..fstring_registry import get_registered_keys
 from ..locale_nodes import LocaleNode
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..paths import PRODUCT_SOURCE_DIRS, SRC_DIR
+from ..registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..signal_policy import OPEN_ENDED_NAMESPACES
 from ..wizard_translation_audit import wizard_descriptor_keys
 
@@ -350,7 +350,7 @@ def test_registry_row_field_enumeration_reports_invalid_source(monkeypatch: pyte
     """A malformed registry source is a discovery failure, never an empty set."""
     bad_source = tmp_path / "broken.toml"
     bad_source.write_text("[broken\n", encoding="utf-8")
-    monkeypatch.setattr(_registry_scanner, "bundled_path", lambda *_parts: tmp_path)
+    monkeypatch.setattr(registry_scanner, "bundled_path", lambda *_parts: tmp_path)
     scan_detail_row_fields.cache_clear()
     try:
         with pytest.raises(LocaleRegistryEnumerationError, match="cannot enumerate"):

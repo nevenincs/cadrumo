@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager
+from ..paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 
 
 @pytest.fixture(scope="session")

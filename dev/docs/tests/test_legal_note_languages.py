@@ -15,10 +15,10 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
 from dev.paths import REPO_ROOT
 
-from ..compile_slots import _educated, activate, deactivate
+from ..compile_slots import activate, compile_slots_educated, deactivate
 from ..legal_catalogue import load_legal_provisions
-from ..legal_catalogue_fields import _record_from_table
-from ..legal_page_rendering import _catalogue_note_projection
+from ..legal_catalogue_fields import record_from_table
+from ..legal_page_rendering import catalogue_note_projection
 from ..legal_reference import render_legal_reference
 from ..legal_reference_models import LegalNoteLanguageSpan, LegalProvisionRecord, LegalReferenceError
 
@@ -102,7 +102,7 @@ def test_unsupported_language_and_unknown_annotation_fields_are_refused() -> Non
 
 def test_catalogue_loader_refuses_docs_metadata() -> None:
     with pytest.raises(LegalReferenceError, match="unknown field"):
-        _record_from_table(
+        record_from_table(
             Path("example.toml"),
             "ley-example:art-1",
             {
@@ -160,14 +160,14 @@ def test_quoted_note_projection_preserves_page_typography_and_exact_language_spa
     spanish = 'Artículo "primero" y letra a\''
     note = f"English note: {spanish}. A & B and :doc:`literal` stay text."
     record = _record(note, LegalNoteLanguageSpan(text=spanish, language="es"))
-    rendered = "\n".join(_catalogue_note_projection(record, language, tmp_path, {}))
+    rendered = "\n".join(catalogue_note_projection(record, language, tmp_path, {}))
     paragraph = BeautifulSoup(rendered, "html.parser").find("p")
     assert paragraph is not None
-    assert paragraph.get_text() == _educated(note, language.value)
+    assert paragraph.get_text() == compile_slots_educated(note, language.value)
     span = paragraph.find("span", lang="es")
     assert span is not None
     start = note.index(spanish)
-    assert span.get_text() == _educated(note, language.value)[start : start + len(spanish)]
+    assert span.get_text() == compile_slots_educated(note, language.value)[start : start + len(spanish)]
     assert paragraph.find("a") is None and paragraph.find("script") is None
     assert record.notes == note
 
@@ -179,11 +179,11 @@ def test_quoted_note_projection_keeps_each_compiled_language_typography(tmp_path
     languages = [language.value for language in OutputLanguage]
     slots = activate(languages)
     try:
-        rendered = "\n".join(_catalogue_note_projection(record, OutputLanguage.EN, tmp_path, {}))
+        rendered = "\n".join(catalogue_note_projection(record, OutputLanguage.EN, tmp_path, {}))
         for index, language in enumerate(languages):
             paragraph = BeautifulSoup(slots.resolved(rendered, index), "html.parser").find("p")
             assert paragraph is not None
-            assert paragraph.get_text() == _educated(note, language)
+            assert paragraph.get_text() == compile_slots_educated(note, language)
             assert paragraph.find("span", lang="es") is not None
     finally:
         deactivate()
@@ -197,7 +197,7 @@ def test_quoted_note_matches_the_legacy_docutils_rendering(tmp_path: Path, langu
     annotated = _record(note, LegalNoteLanguageSpan(text=spanish, language="es"))
 
     def paragraph(record: LegalProvisionRecord) -> str:
-        projection = "\n".join(_catalogue_note_projection(record, language, tmp_path, {}))
+        projection = "\n".join(catalogue_note_projection(record, language, tmp_path, {}))
         source = ".. container::\n\n" + projection + "\n"
         parts = publish_parts(
             source,
@@ -238,7 +238,7 @@ def test_quoted_note_inventory_checks_span_and_surrounding_prose_in_their_langua
 def test_quoted_note_projection_keeps_existing_markup_and_offset_refusals(tmp_path: Path, note: str) -> None:
     record = _record(note, LegalNoteLanguageSpan(text=note, language="es"))
     with pytest.raises(LegalReferenceError, match="plain inline text"):
-        _catalogue_note_projection(record, OutputLanguage.EN, tmp_path, {})
+        catalogue_note_projection(record, OutputLanguage.EN, tmp_path, {})
 
 
 def test_reviewed_madrid_batch_marks_only_the_three_reviewed_notes() -> None:

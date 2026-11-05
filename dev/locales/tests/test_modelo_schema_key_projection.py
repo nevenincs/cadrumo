@@ -21,9 +21,9 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from dev.registry.compiler import loader as loader_module
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 
-from .. import _registry_scanner as scanner_module
-from .._casilla_keys import is_delta_keyed_leaf
-from .._registry_scanner import LocaleRegistryEnumerationError, scan_modelo_schema_keys
+from .. import registry_scanner as scanner_module
+from ..casilla_keys import is_delta_keyed_leaf
+from ..registry_scanner import LocaleRegistryEnumerationError, scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

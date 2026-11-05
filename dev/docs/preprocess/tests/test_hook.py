@@ -215,7 +215,7 @@ def test_manual_runtime_sidecars_are_excluded_without_excluding_pdf_hook_sources
 
 def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:
     """The explicit route feeds a real Handbook fragment without retargeting it."""
-    from .._terminology import TERMINOLOGY_EXTRACTOR_ID
+    from ..terminology import TERMINOLOGY_EXTRACTOR_ID
 
     source = _TERMINOLOGY / "prorrata-especial.toml"
     outputs = build_for_source(source, repo_root=_REPO_ROOT)

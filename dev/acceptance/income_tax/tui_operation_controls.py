@@ -6,21 +6,21 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from .scenario import AcceptanceOutcome
-from .tui_checkbox import _tick
-from .tui_contracts import TuiJourneyError, TuiOperationBinding, TuiTerminalEvidence, _TuiScreen
-from .tui_lifecycle_contract import _require_operation_binding
+from .tui_checkbox import tui_checkbox_tick
+from .tui_contracts import TuiJourneyError, TuiOperationBinding, TuiScreen, TuiTerminalEvidence
+from .tui_lifecycle_contract import require_operation_binding
 from .tui_navigation import (
-    _offered_line,
-    _require_fresh_notice,
-    _require_offered_step,
-    _wait_for_visible_tui_control,
+    offered_line,
     open_review_ready_to_apply,
+    require_fresh_notice,
+    require_offered_step,
     wait_for_tui_refresh,
+    wait_for_visible_tui_control,
     workbench_offers,
 )
-from .tui_readback import _query_visible_tui_control, _stack_text, workbench_notice
-from .tui_selectors import _BULK_CONFIRM, _BULK_TICK, _NEXT_STEP_KEY
-from .tui_terminal_observation import _observe_operation_terminal, settled_notice_terminal
+from .tui_readback import query_visible_tui_control, stack_text, workbench_notice
+from .tui_selectors import BULK_CONFIRM, BULK_TICK, NEXT_STEP_KEY
+from .tui_terminal_observation import observe_operation_terminal, settled_notice_terminal
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -42,19 +42,19 @@ async def activate_tui_operation(
     before activation, so a notice left by an earlier operation can never be
     read as this operation's result.
     """
-    _require_operation_binding(binding)
-    _require_fresh_notice(pilot, label=binding.operation_id, selector=binding.refusal_notice_id)
+    require_operation_binding(binding)
+    require_fresh_notice(pilot, label=binding.operation_id, selector=binding.refusal_notice_id)
     if binding.activation_key is not None:
         if binding.offered_step is not None:
-            _require_offered_step(pilot, step=binding.offered_step)
+            require_offered_step(pilot, step=binding.offered_step)
         await pilot.press(binding.activation_key)
     elif binding.activation_id is not None:
-        activation = _query_visible_tui_control(pilot, binding.activation_id)
+        activation = query_visible_tui_control(pilot, binding.activation_id)
         activation.focus()
         await pilot.press("enter")
     await pilot.pause()
     if binding.confirmation_id is not None:
-        confirmation = await _wait_for_visible_tui_control(pilot, binding.confirmation_id, maximum_polls=maximum_polls)
+        confirmation = await wait_for_visible_tui_control(pilot, binding.confirmation_id, maximum_polls=maximum_polls)
         confirmation.focus()
         await pilot.press("enter")
         await pilot.pause()
@@ -64,7 +64,7 @@ async def activate_tui_operation(
         maximum_polls=maximum_polls,
     )
     if modal is None:
-        notice = _stack_text(pilot, binding.refusal_notice_id or "")
+        notice = stack_text(pilot, binding.refusal_notice_id or "")
         settled = settled_notice_terminal(notice)
         if settled is not None:
             condition, outcome = settled
@@ -82,7 +82,7 @@ async def activate_tui_operation(
             receipt_present=False,
             diagnostic_present=True,
         )
-    return await _observe_operation_terminal(
+    return await observe_operation_terminal(
         pilot,
         modal=modal,
         binding=binding,
@@ -114,20 +114,18 @@ async def confirm_assumed_values(
 
     if not workbench_offers(pilot, "confirm"):
         return None
-    _require_fresh_notice(pilot, label="confirming the assumed values")
-    await pilot.press(_NEXT_STEP_KEY)
-    tick = await _wait_for_dialog_control(
-        pilot, _BULK_TICK, seconds=seconds, label="its confirmation of assumed values"
-    )
+    require_fresh_notice(pilot, label="confirming the assumed values")
+    await pilot.press(NEXT_STEP_KEY)
+    tick = await _wait_for_dialog_control(pilot, BULK_TICK, seconds=seconds, label="its confirmation of assumed values")
     if not isinstance(tick, Checkbox):
-        raise TuiJourneyError(f"{_BULK_TICK} is not a checkbox ({type(tick).__name__})")
+        raise TuiJourneyError(f"{BULK_TICK} is not a checkbox ({type(tick).__name__})")
     if tick.disabled:
         raise TuiJourneyError(
             "the workbench offered to confirm assumed values but its dialog lists none it can confirm"
         )
-    if not await _tick(pilot, tick):
+    if not await tui_checkbox_tick(pilot, tick):
         raise TuiJourneyError("the confirmation of assumed values did not take the tick")
-    confirm = pilot.app.screen.query_one(_BULK_CONFIRM, Button)
+    confirm = pilot.app.screen.query_one(BULK_CONFIRM, Button)
     if confirm.disabled:
         raise TuiJourneyError("the confirmation of assumed values kept Confirm unavailable once ticked")
     confirm.focus()
@@ -139,7 +137,7 @@ async def confirm_assumed_values(
             raise TuiJourneyError(f"the workbench did not keep the confirmed values (notice {notice[:240]!r})")
         if time.monotonic() > deadline:
             raise TuiJourneyError(
-                f"the workbench did not offer to apply the confirmed values (it offers {_offered_line(pilot)[:200]!r})"
+                f"the workbench did not offer to apply the confirmed values (it offers {offered_line(pilot)[:200]!r})"
             )
         await pilot.pause()
     await open_review_ready_to_apply(pilot, seconds=seconds)
@@ -156,7 +154,7 @@ async def _wait_for_dialog_control(pilot: Pilot[Any], selector: str, *, seconds:
     deadline = time.monotonic() + seconds
     while True:
         try:
-            return _query_visible_tui_control(pilot, selector)
+            return query_visible_tui_control(pilot, selector)
         except NoMatches:
             notice = workbench_notice(pilot)
             if notice:
@@ -173,7 +171,7 @@ async def _proceed_past_at_risk_confirmation(pilot: Pilot[Any], selector: str | 
     if selector is None:
         return False
     try:
-        proceed = _query_visible_tui_control(pilot, selector)
+        proceed = query_visible_tui_control(pilot, selector)
     except NoMatches:
         return False
     proceed.focus()
@@ -187,7 +185,7 @@ async def _wait_for_operation_modal_or_refusal(
     *,
     binding: TuiOperationBinding,
     maximum_polls: int,
-) -> _TuiScreen | None:
+) -> TuiScreen | None:
     """Wait for the standard modal or a visible typed pre-submit refusal."""
     from cadrumo.entrypoints.tui.operations.modal import OperationModal
 
@@ -200,7 +198,7 @@ async def _wait_for_operation_modal_or_refusal(
             return current
         if await _proceed_past_at_risk_confirmation(pilot, binding.at_risk_proceed_id):
             continue
-        if _stack_text(pilot, refusal_notice_id):
+        if stack_text(pilot, refusal_notice_id):
             return None
         await pilot.pause()
     raise TuiJourneyError(f"{binding.operation_id} did not open an operation modal or visible refusal")

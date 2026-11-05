@@ -12,15 +12,15 @@ from .scenario import (
 )
 
 
-def _money(value: Decimal) -> str:
+def money(value: Decimal) -> str:
     return f"{value:.2f}"
 
 
-def _rate(value: Decimal) -> str:
+def rate(value: Decimal) -> str:
     return f"{value.normalize():f}"
 
 
-def _m303_opening_balance_args(year: int, period: str) -> tuple[str, ...]:
+def m303_opening_balance_args(year: int, period: str) -> tuple[str, ...]:
     """The IVA wallet opening balance a Modelo 303 filed outside the store left for later periods."""
     return (
         "app",
@@ -32,35 +32,35 @@ def _m303_opening_balance_args(year: int, period: str) -> tuple[str, ...]:
         "--period",
         period,
         "--amount",
-        _money(m303_compensation_pending_after(year, period)),
+        money(m303_compensation_pending_after(year, period)),
         "--confirm",
     )
 
 
-def _is_investment_good(item: ReceivedInvoice) -> bool:
+def is_investment_good(item: ReceivedInvoice) -> bool:
     return any(asset.asset_id == item.asset_id and asset.is_iva_investment_good for asset in ASSETS)
 
 
-def _investment_asset_args(item: ReceivedInvoice) -> tuple[str, ...]:
+def investment_asset_args(item: ReceivedInvoice) -> tuple[str, ...]:
     """Name the bienes-inversion record an investment deduction must reciprocate."""
-    if item.asset_id is None or not _is_investment_good(item):
+    if item.asset_id is None or not is_investment_good(item):
         return ()
     return ("--investment-asset-id", item.asset_id)
 
 
-def _binding_ids(document: object) -> Iterator[str]:
+def binding_ids(document: object) -> Iterator[str]:
     if isinstance(document, dict):
         for key, value in document.items():
             if key == "binding_id" and isinstance(value, str):
                 yield value
             else:
-                yield from _binding_ids(value)
+                yield from binding_ids(value)
     elif isinstance(document, list):
         for item in document:
-            yield from _binding_ids(item)
+            yield from binding_ids(item)
 
 
-def _modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dict[str, object]:
+def modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dict[str, object]:
     zero = "0.00"
     return {
         "source_id": request["invoice_id"],
@@ -72,8 +72,8 @@ def _modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dic
         "subclave": "01",
         "province_code": "28",
         "territorial_deduction_clave": 0,
-        "percibido_dinerario": _money(item.base),
-        "retencion_practicada": _money(item.withholding),
+        "percibido_dinerario": money(item.base),
+        "retencion_practicada": money(item.withholding),
         "incapacity_cash_perception": zero,
         "incapacity_cash_withholding": zero,
         "incapacity_kind_value": zero,
@@ -84,12 +84,12 @@ def _modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dic
         "foral_retention_araba": zero,
         "foral_retention_gipuzkoa": zero,
         "foral_retention_bizkaia": zero,
-        "base_retenciones": _money(item.base),
+        "base_retenciones": money(item.base),
         "porcentaje_retencion": "15.00",
     }
 
 
-def _modelo_180_property(year: int) -> dict[str, object]:
+def modelo_180_property(year: int) -> dict[str, object]:
     return {
         "property_key": "office-madrid",
         "situation": "1",

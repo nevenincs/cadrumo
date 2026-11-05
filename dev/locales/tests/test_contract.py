@@ -46,7 +46,7 @@ from ..manager import LocaleManager
 __all__ = ["pin_english_locale"]
 
 from cadrumo.application import operator_surface
-from cadrumo.application.operator_surface import help as _help_module
+from cadrumo.application.operator_surface import help as operator_surface_help_module
 from cadrumo.application.operator_surface.contract import (
     get_operator_surface_contract,
 )
@@ -402,7 +402,7 @@ def _capped_translation_keys() -> tuple[tuple[str, int], ...]:
     always literal Python strings in ``_help.py`` (never translated), so they never
     match a ``tr(...)`` value and are correctly absent from the returned set.
     """
-    tree = ast.parse(inspect.getsource(_help_module))
+    tree = ast.parse(inspect.getsource(operator_surface_help_module))
     found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):

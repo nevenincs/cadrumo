@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from .. import _streams
+from .. import streams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -22,10 +22,10 @@ _OPERATOR_BULLET = re.compile(r"^\* ``(.+?)``", re.MULTILINE)
 
 def _documented_operators() -> frozenset[str]:
     """The operator tokens the module docstring lists as handled."""
-    assert _streams.__doc__ is not None, "the module docstring is the documentation under test"
+    assert streams.__doc__ is not None, "the module docstring is the documentation under test"
     # `findall` is typed `list[Any]`; one capture group means every element
     # is the `str` this frozenset is declared to hold.
-    return frozenset(str(token) for token in _OPERATOR_BULLET.findall(_streams.__doc__))
+    return frozenset(str(token) for token in _OPERATOR_BULLET.findall(streams.__doc__))
 
 
 def _walked_operators() -> frozenset[str]:
@@ -35,7 +35,7 @@ def _walked_operators() -> frozenset[str]:
     them, so an operator added to or dropped from the set moves this side
     without anybody remembering to.
     """
-    return frozenset(str(operator) for operator in _streams._TEXT_OPERATORS)
+    return frozenset(str(operator) for operator in streams.TEXT_OPERATORS)
 
 
 def test_the_docstring_lists_every_text_show_operator_the_walk_handles() -> None:

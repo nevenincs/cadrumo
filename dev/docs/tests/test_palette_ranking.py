@@ -36,7 +36,7 @@ from dev.paths import REPO_ROOT
 
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records, _Materialised
+from ..pagefind_inject import Materialised, inject_records
 from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import (
@@ -46,7 +46,7 @@ from ..terminology.unified_record import (
     normalise_display_class_weight,
     to_search_record,
 )
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -55,7 +55,7 @@ _DOCS = _REPO_ROOT / "docs"
 
 # A page carrying the palette trigger + the real palette JS, dropped at the
 # build root so the palette resolves /pagefind/ against the document base.
-_TRIGGER_PAGE = """<!doctype html>
+TRIGGER_PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>palette</title></head>
 <body>
 <button data-cadrumo-search data-cadrumo-search-url="search.html">Search</button>
@@ -71,7 +71,7 @@ _TRIGGER_PAGE = """<!doctype html>
 _MIXED_QUERY_TERM = "zzqcasclitest"
 
 
-def _casilla_and_cli_records() -> _Materialised:
+def _casilla_and_cli_records() -> Materialised:
     """A casilla card + a CLI card sharing one query token (D8 ordering fixture).
 
     Built directly as unified records with the same display-class base weights
@@ -106,7 +106,7 @@ def _casilla_and_cli_records() -> _Materialised:
         ranking_weight=normalise_display_class_weight(ResultDisplayClass.CLI),
         metadata=SearchRecordMetadata(command_path="aeat app modelo calculate"),
     )
-    return _Materialised(records=[casilla, cli], casillas=1, cli_commands=1)
+    return Materialised(records=[casilla, cli], casillas=1, cli_commands=1)
 
 
 #: Floor for the approved concept fixture. Live the projector emits 165 cards
@@ -116,7 +116,7 @@ def _casilla_and_cli_records() -> _Materialised:
 _MINIMUM_APPROVED_CONCEPT_CARDS = 30
 
 
-def _approved_concept_records() -> _Materialised:
+def approved_concept_records() -> Materialised:
     """The approved concept cards, selected as the fixture for the palette tests.
 
     The projector emits EVERY lifecycle, so this selection is a fixture choice
@@ -137,10 +137,10 @@ def _approved_concept_records() -> _Materialised:
         "ranking below would be measured against a fraction of the concept surface"
     )
     records = [to_search_record(c) for c in approved]
-    return _Materialised(records=records, concepts=len(records))
+    return Materialised(records=records, concepts=len(records))
 
 
-def _build_glossary_site(out: Path) -> Path:
+def build_glossary_site(out: Path) -> Path:
     """Build the generated-glossary subset and return the built-HTML root."""
     src = out / "src"
     build = out / "html"
@@ -177,18 +177,18 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
     """Ctrl-K + "iva" -> the IVA concept is the first row, ahead of VIES."""
     out = tmp_path / "site"
     out.mkdir()
-    build = _build_glossary_site(out)
+    build = build_glossary_site(out)
 
     static = build / "_static"
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
+    (build / "palette.html").write_text(TRIGGER_PAGE, encoding="utf-8")
 
-    materialised = _approved_concept_records()
+    materialised = approved_concept_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(build, inject=inject)
 
@@ -240,18 +240,18 @@ def test_palette_casilla_outranks_cli_and_renders_class_icon(tmp_path: Path) -> 
     """
     out = tmp_path / "site"
     out.mkdir()
-    build = _build_glossary_site(out)
+    build = build_glossary_site(out)
 
     static = build / "_static"
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
+    (build / "palette.html").write_text(TRIGGER_PAGE, encoding="utf-8")
 
     materialised = _casilla_and_cli_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(build, inject=inject)
 

@@ -39,14 +39,14 @@ class LedgerCliReceipt:
     commands: tuple[CommandEvidence, ...]
 
 
-def _result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
+def result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
     value = document.get("result")
     if not isinstance(value, dict):
         raise LedgerJourneyError(f"{stage}: result is not an object")
     return value
 
 
-def _equal_decimal(actual: object, expected: Decimal, *, stage: str) -> None:
+def equal_decimal(actual: object, expected: Decimal, *, stage: str) -> None:
     try:
         matches = Decimal(str(actual)) == expected
     except (ValueError, ArithmeticError):
@@ -55,12 +55,12 @@ def _equal_decimal(actual: object, expected: Decimal, *, stage: str) -> None:
         raise LedgerJourneyError(f"{stage}: monetary meaning differs")
 
 
-def _expect(condition: bool, *, stage: str) -> None:
+def expect(condition: bool, *, stage: str) -> None:
     if not condition:
         raise LedgerJourneyError(f"{stage}: canonical readback differs")
 
 
-class _LedgerRun(Protocol):
+class LedgerRun(Protocol):
     """Installed command callable retaining the explicit refusal switch."""
 
     def __call__(self, args: Sequence[str], *, allow_error: bool = False) -> dict[str, Any]: ...

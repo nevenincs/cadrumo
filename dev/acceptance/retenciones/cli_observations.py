@@ -14,7 +14,7 @@ from .scenario import (
 )
 
 
-def _require_result(cli: InstalledCli, args: Sequence[str], *, stage: str) -> dict[str, Any]:
+def require_result(cli: InstalledCli, args: Sequence[str], *, stage: str) -> dict[str, Any]:
     """Run one fresh installed command without leaking raw diagnostics."""
     try:
         document = cli.run(args, allow_error=True)
@@ -37,7 +37,7 @@ def _require_result(cli: InstalledCli, args: Sequence[str], *, stage: str) -> di
     return cast(dict[str, Any], result)
 
 
-def _required_text(result: Mapping[str, Any], *, key: str, stage: str) -> str:
+def required_text(result: Mapping[str, Any], *, key: str, stage: str) -> str:
     """Read a stable CLI result identity without retaining the result object."""
     value = result.get(key)
     if not isinstance(value, str) or not value:
@@ -45,7 +45,7 @@ def _required_text(result: Mapping[str, Any], *, key: str, stage: str) -> str:
     return value
 
 
-def _required_nonnegative_int(result: Mapping[str, Any], *, key: str, stage: str) -> int:
+def required_nonnegative_int(result: Mapping[str, Any], *, key: str, stage: str) -> int:
     """Read an aggregate readback count from a public result envelope."""
     value: object = result.get(key)
     if isinstance(value, bool):
@@ -61,26 +61,26 @@ def _required_nonnegative_int(result: Mapping[str, Any], *, key: str, stage: str
     return number
 
 
-def _as_decimal(value: object) -> Decimal:
+def as_decimal(value: object) -> Decimal:
     """Read numeric public/parser values without accepting booleans."""
     if isinstance(value, bool) or value is None:
         raise ValueError("expected a decimal value")
     return Decimal(str(value))
 
 
-def _money_text(value: Decimal) -> str:
+def money_text(value: Decimal) -> str:
     """Render an independently authored money fact for a public request."""
     return f"{money(value):.2f}"
 
 
-def _money_or_integer_text(value: Decimal) -> str:
+def money_or_integer_text(value: Decimal) -> str:
     """Keep count casillas compact and monetary values to their cent precision."""
     if value == value.to_integral_value():
         return str(value.quantize(Decimal("1")))
-    return _money_text(value)
+    return money_text(value)
 
 
-def _percentage_text(rate: Decimal) -> str:
+def percentage_text(rate: Decimal) -> str:
     """Render the invoice's supplied IVA rate in the CLI's percent unit."""
     percentage = rate * Decimal("100")
     return str(percentage.quantize(Decimal("1")))

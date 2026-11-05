@@ -17,8 +17,8 @@ import pytest
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 
-from .._paths import LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

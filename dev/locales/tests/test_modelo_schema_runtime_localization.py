@@ -27,8 +27,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_registry_tree
 
-from .._casilla_keys import is_delta_keyed_leaf
-from .._registry_scanner import scan_modelo_schema_keys
+from ..casilla_keys import is_delta_keyed_leaf
+from ..registry_scanner import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

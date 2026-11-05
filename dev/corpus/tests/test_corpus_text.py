@@ -12,11 +12,11 @@ from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.tests.audited_process import run_audited_process
 from dev.corpus.text import resolve_anchored_extracted_unit
-from dev.paths import REPO_ROOT as _REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html"
+_NORMATIVES = REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html"
 
 
 def test_corpus_text_imports_resolve_to_the_defining_module_owner() -> None:

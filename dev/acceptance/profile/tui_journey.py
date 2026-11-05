@@ -29,7 +29,7 @@ from .cli_journey import (
     ProfileArchiveConsumerEvidence,
     ProfileCliAcceptanceError,
     ProfileInstalledCli,
-    _require_empty_directory,
+    require_empty_directory,
     run_cli_only_lifecycle,
 )
 from .scenario import (
@@ -158,7 +158,7 @@ def run_profile_installed_acceptance(
     """Prove all four authorized frontend directions against isolated secure stores."""
     _require_identity(source_identity, label="source_identity")
     _require_identity(package_identity, label="package_identity")
-    _require_empty_directory(run_root, label="PROFILE-01 run root")
+    require_empty_directory(run_root, label="PROFILE-01 run root")
     scenario = build_profile_row_lifecycle_scenario()
     progress = completed_paths if completed_paths is not None else []
     journeys: list[ProfileJourneyEvidence] = []
@@ -286,7 +286,7 @@ def _run_tui_only(
 ) -> ProfileJourneyEvidence:
     """Create/edit/clear/remove through visible TUI only, with fresh child reopenings."""
     storage = root / "storage"
-    _require_empty_directory(storage, label="TUI-only storage root")
+    require_empty_directory(storage, label="TUI-only storage root")
     passphrase = secrets.token_urlsafe(32)
     label = "profiletuionly"
     receipts = root / "tui-receipts"
@@ -413,7 +413,7 @@ def _run_cli_to_tui(
 ) -> ProfileJourneyEvidence:
     """Create through CLI, then modify/clear/remove that exact row through TUI."""
     storage = root / "storage"
-    _require_empty_directory(storage, label="CLI-to-TUI storage root")
+    require_empty_directory(storage, label="CLI-to-TUI storage root")
     passphrase = secrets.token_urlsafe(32)
     cli = _profile_cli(
         executable=cli_executable,
@@ -527,7 +527,7 @@ def _run_tui_to_cli(
 ) -> ProfileJourneyEvidence:
     """Create through TUI, then modify/clear/remove that exact row through CLI."""
     storage = root / "storage"
-    _require_empty_directory(storage, label="TUI-to-CLI storage root")
+    require_empty_directory(storage, label="TUI-to-CLI storage root")
     passphrase = secrets.token_urlsafe(32)
     label = "profiletuitocli"
     receipts = root / "tui-receipts"
@@ -653,7 +653,7 @@ def _run_tui_child(
         raise ProfileInstalledAcceptanceError(
             stage=f"tui_{operation}", diagnostic_code=f"TUI_CHILD_{type(exc).__name__}"
         ) from exc
-    return _parse_tui_child_evidence(outer=outer, receipt_path=receipt_path, operation=operation)
+    return parse_tui_child_evidence(outer=outer, receipt_path=receipt_path, operation=operation)
 
 
 def _child_row_key_is_valid(value: object) -> bool:
@@ -661,7 +661,7 @@ def _child_row_key_is_valid(value: object) -> bool:
     return value is None or (isinstance(value, str) and value.isdecimal())
 
 
-def _parse_tui_child_evidence(
+def parse_tui_child_evidence(
     *,
     outer: InstalledTuiChildProcessEvidence,
     receipt_path: Path,

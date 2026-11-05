@@ -5,7 +5,7 @@
 integrity. This module reads that lock, downloads each tarball over HTTPS,
 verifies the digest before a single byte is unpacked, and publishes the package
 under ``node_modules/<package>/`` in the layout
-:func:`dev.locales._spelling.load_dictionaries` accepts. It is the only
+:func:`dev.locales.spelling.load_dictionaries` accepts. It is the only
 provisioner for those packages: ``just setup`` and
 ``just setup-locale-spelling`` both run it, so a machine with no Node reaches
 the same state as one with ``npm ci``.

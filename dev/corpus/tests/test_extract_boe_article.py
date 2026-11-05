@@ -24,7 +24,7 @@ from dev.docs.preprocess.schema import PreprocessOutput
 from dev.paths import REPO_ROOT
 
 from ..extract_boe_article import (
-    _DIV_OPEN_OR_CLOSE,
+    DIV_OPEN_OR_CLOSE,
     ArticleExtractionError,
     extract_article,
     write_article_excerpt,
@@ -60,7 +60,7 @@ _SIMPLE_DOCUMENT = """\
 def _is_balanced(markup: str) -> bool:
     """Every ``<div>`` in ``markup`` closes, and no ``</div>`` is unmatched."""
     depth = 0
-    for tag in _DIV_OPEN_OR_CLOSE.finditer(markup):
+    for tag in DIV_OPEN_OR_CLOSE.finditer(markup):
         depth += 1 if tag.group(0).startswith("<div") else -1
         if depth < 0:
             return False

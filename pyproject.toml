@@ -873,9 +873,9 @@ convention = "google"
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.
-"dev/env/_install.py" = ["S603"]
-"dev/env/_venv.py" = ["S603", "S607"]
-"dev/env/_workstation.py" = ["S603", "S607"]
+"dev/env/install.py" = ["S603"]
+"dev/env/venv.py" = ["S603", "S607"]
+"dev/env/workstation.py" = ["S603", "S607"]
 "dev/test_runs/lanes.py" = ["S603", "S607"]
 "dev/release/preview.py" = ["S603", "S607"]
 "dev/ci/python_runtime_sweep.py" = ["S603", "S607"]

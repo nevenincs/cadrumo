@@ -12,9 +12,9 @@ from dev.paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.authority_state import compiler_generation
 
-from .casilla_display import _display_language
-from .casilla_legal_grounding import _legal_links
-from .casilla_page_rendering import _render_index, _render_modelo_page
+from .casilla_display import display_language
+from .casilla_legal_grounding import casilla_legal_grounding_legal_links
+from .casilla_page_rendering import render_index, render_modelo_page
 from .casilla_reference_models import CasillaPage, CasillaReferenceError, CasillaReferenceResult, CompiledSchema
 from .casilla_schema_compilation import compile_schema
 from .terminology.casilla_anchor import CASILLA_REFERENCE_DIR
@@ -54,8 +54,8 @@ def render_casilla_reference(
         A :class:`CasillaReferenceResult` with one :class:`CasillaPage` per
         modelo, the index page path, and the render counts.
     """
-    resolved_language = language if language is not None else _display_language()
-    links = _legal_links(repo_root.resolve(), resolved_language)
+    resolved_language = language if language is not None else display_language()
+    links = casilla_legal_grounding_legal_links(repo_root.resolve(), resolved_language)
     resolved = records if records is not None else project_casilla_search_records()[0]
     resolved_schema = schema if schema is not None else compile_schema(resolved, resolved_language)
 
@@ -67,7 +67,7 @@ def render_casilla_reference(
     legal_links = 0
     casilla_count = 0
     for modelo in sorted(by_modelo):
-        page, page_legal_links = _render_modelo_page(
+        page, page_legal_links = render_modelo_page(
             modelo,
             tuple(by_modelo[modelo]),
             links,
@@ -110,7 +110,7 @@ def generate_casilla_reference(docs_root: Path, *, repo_root: Path | None = None
         A :class:`CasillaReferenceResult` summarising the render.
     """
     repo_root = (repo_root if repo_root is not None else _repo_root()).resolve()
-    language = _display_language()
+    language = display_language()
     # Compile first, then read the generation: compiling is what advances it, so
     # reading it first would file this render under the previous generation.
     compiled_bundled_authority()
@@ -156,7 +156,7 @@ def _bundled_reference(
     records = project_casilla_search_records()[0]
     schema = compile_schema(records, language)
     result = render_casilla_reference(repo_root, records=records, language=language, schema=schema)
-    return result, _render_index(result.pages, schema, language)
+    return result, render_index(result.pages, schema, language)
 
 
 def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:

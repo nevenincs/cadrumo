@@ -64,8 +64,8 @@ from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-from .._models import UnderDeclarationScenario
-from .._runner import check_under_declaration_scenario
+from ..models import UnderDeclarationScenario
+from ..runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

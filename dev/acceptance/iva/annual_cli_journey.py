@@ -9,45 +9,45 @@ from pathlib import Path
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from dev.acceptance.installed_cli import InstalledCli, authority_generation
 
-from .annual_capture import _add_documented_ledger_facts, _add_issued_invoice
+from .annual_capture import add_documented_ledger_facts, add_issued_invoice
 from .annual_contracts import (
-    _ANNUAL_PERIOD,
-    _FOUNDATION_EXPECTED_RESULT,
-    _FOUNDATION_PERIOD,
-    _FOUNDATION_SALE_IVA,
-    _M390_COORDINATES,
-    _PRIVATE_ARTIFACT_PLACEHOLDER,
-    _QUARTERS,
+    ANNUAL_PERIOD,
+    FOUNDATION_EXPECTED_RESULT,
+    FOUNDATION_PERIOD,
+    FOUNDATION_SALE_IVA,
+    M390_COORDINATES,
+    PRIVATE_ARTIFACT_PLACEHOLDER,
+    QUARTERS,
     IvaAnnualFoundationCliJourneyReceipt,
     IvaAnnualM390CliJourneyReceipt,
 )
-from .annual_m390 import _calculate_and_verify_m390
-from .annual_projection import _decimal_casilla
+from .annual_m390 import calculate_and_verify_m390
+from .annual_projection import decimal_casilla
 from .annual_quarter_work import (
-    _assert_fresh_process_filing_readback,
-    _assert_local_quarter_chain,
-    _file_quarter,
-    _require_foundation_filing_identity,
-    _seed_first_period,
+    assert_fresh_process_filing_readback,
+    assert_local_quarter_chain,
+    file_quarter,
+    require_foundation_filing_identity,
+    seed_first_period,
 )
-from .annual_runtime import _reopen, _start
+from .annual_runtime import reopen, start
 from .cli_journey import (
     IvaCliJourneyError,
     SanitizedCommandReceipt,
-    _checkout_source_identity,
-    _installed_package_identity,
-    _required_id,
-    _required_text,
-    _result,
-    _run,
-    _sha256_path,
+    checkout_source_identity,
+    installed_package_identity,
+    required_id,
+    required_text,
+    result,
+    run,
+    sha256_path,
 )
 from .filing_year import IvaJourneyYear, require_journey_year
 from .multirate_cli_journey import (
-    _add_purchase_evidence,
-    _add_purchase_invoice,
-    _add_purchase_transaction,
-    _add_transaction,
+    add_purchase_evidence,
+    add_purchase_invoice,
+    add_purchase_transaction,
+    add_transaction,
 )
 
 
@@ -67,10 +67,10 @@ def run_iva_annual_foundation_cli_journey(
             authority has no Modelo 303 1T revision authored for ``year``.
     """
     journey_year = require_journey_year(
-        authority_root=authority_root, year=year, coordinates=(("303", _FOUNDATION_PERIOD),)
+        authority_root=authority_root, year=year, coordinates=(("303", FOUNDATION_PERIOD),)
     )
     with ExitStack() as resources:
-        cli, receipts, artifact = _start(
+        cli, receipts, artifact = start(
             executable,
             authority_root,
             storage_root,
@@ -79,8 +79,8 @@ def run_iva_annual_foundation_cli_journey(
             resources=resources,
             runtime_scope=runtime_scope,
         )
-        evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
-        sale_transaction_id = _add_transaction(
+        evidence_id = add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
+        sale_transaction_id = add_transaction(
             cli=cli,
             receipts=receipts,
             artifact=artifact,
@@ -89,25 +89,25 @@ def run_iva_annual_foundation_cli_journey(
             description="Synthetic annual-foundation IVA sale",
             taxable_base=Decimal("100.00"),
             iva_rate="0.21",
-            iva_amount=_FOUNDATION_SALE_IVA,
+            iva_amount=FOUNDATION_SALE_IVA,
             iva_category="domestic_general",
             idempotency_key=f"iva-01-annual-foundation-sale-{year}-1t",
         )
-        sale_invoice_id = _add_issued_invoice(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
-        _run(
+        sale_invoice_id = add_issued_invoice(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        run(
             cli,
             receipts,
             artifact,
             ("app", "ledger", "link", sale_transaction_id, "--invoice-id", sale_invoice_id),
             result_keys=(),
         )
-        purchase_transaction_id = _add_purchase_transaction(
+        purchase_transaction_id = add_purchase_transaction(
             cli=cli, receipts=receipts, artifact=artifact, evidence_id=evidence_id, journey_year=journey_year
         )
-        purchase_invoice_id = _add_purchase_invoice(
+        purchase_invoice_id = add_purchase_invoice(
             cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
         )
-        _run(
+        run(
             cli,
             receipts,
             artifact,
@@ -115,7 +115,7 @@ def run_iva_annual_foundation_cli_journey(
             result_keys=(),
         )
 
-        work_cli = _reopen(cli, authority_root, storage_root)
+        work_cli = reopen(cli, authority_root, storage_root)
         work_unit_id, calculation_revision_id, iva_resultado = _calculate_foundation_quarter(
             work_cli, receipts, artifact, journey_year, year
         )
@@ -123,8 +123,8 @@ def run_iva_annual_foundation_cli_journey(
         verification_report_id, verification_status = _verify_foundation_quarter(
             work_cli, receipts, artifact, calculation_revision_id
         )
-        filed = _result(
-            _run(
+        filed = result(
+            run(
                 work_cli,
                 receipts,
                 artifact,
@@ -140,16 +140,14 @@ def run_iva_annual_foundation_cli_journey(
                 result_keys=("filing_record_id", "calculation_revision_id", "work_unit_id"),
             )
         )
-        filing_record_id, filing_origin, filing_confirmation = _require_foundation_filing_identity(
+        filing_record_id, filing_origin, filing_confirmation = require_foundation_filing_identity(
             filed, work_unit_id, calculation_revision_id
         )
 
-        readback_cli = _reopen(cli, authority_root, storage_root)
-        work_listing = _result(
-            _run(readback_cli, receipts, artifact, ("app", "modelo", "work", "list"), result_keys=())
-        )
-        filing_listing = _result(
-            _run(
+        readback_cli = reopen(cli, authority_root, storage_root)
+        work_listing = result(run(readback_cli, receipts, artifact, ("app", "modelo", "work", "list"), result_keys=()))
+        filing_listing = result(
+            run(
                 readback_cli,
                 receipts,
                 artifact,
@@ -157,7 +155,7 @@ def run_iva_annual_foundation_cli_journey(
                 result_keys=(),
             )
         )
-        _assert_fresh_process_filing_readback(
+        assert_fresh_process_filing_readback(
             work_listing=work_listing,
             filing_listing=filing_listing,
             work_unit_id=work_unit_id,
@@ -170,13 +168,13 @@ def run_iva_annual_foundation_cli_journey(
             acceptance_ids=(f"IVA-01-ANNUAL-FOUNDATION-{year}-1T",),
             filing_year=year,
             executable=str(cli.executable),
-            executable_sha256=_sha256_path(cli.executable),
-            source_identity=_checkout_source_identity(),
-            package_identity=_installed_package_identity(),
+            executable_sha256=sha256_path(cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
             authority_generation=authority_generation(authority_root),
-            authority_descriptor_sha256=_sha256_path(descriptor),
+            authority_descriptor_sha256=sha256_path(descriptor),
             storage_root=str(storage_root.resolve()),
-            purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
+            purchase_artifact=PRIVATE_ARTIFACT_PLACEHOLDER,
             transaction_ids=(sale_transaction_id, purchase_transaction_id),
             invoice_ids=(sale_invoice_id, purchase_invoice_id),
             evidence_id=evidence_id,
@@ -201,8 +199,8 @@ def _verify_foundation_quarter(
     calculation_revision_id: str,
 ) -> tuple[str, str]:
     """Require complete verification of the same saved foundation revision."""
-    verification = _result(
-        _run(
+    verification = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -210,8 +208,8 @@ def _verify_foundation_quarter(
             result_keys=("verification_report_id", "calculation_revision_id"),
         )
     )
-    verification_report_id = _required_id(verification, "verification_report_id")
-    verification_status = _required_text(verification, "completeness_status")
+    verification_report_id = required_id(verification, "verification_report_id")
+    verification_status = required_text(verification, "completeness_status")
     if verification.get("calculation_revision_id") != calculation_revision_id:
         raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
     if verification.get("granted_verificado_completo") is not True:
@@ -227,7 +225,7 @@ def _calculate_foundation_quarter(
     year: int,
 ) -> tuple[str, str, Decimal]:
     """Execute this acceptance phase in order through its existing command boundary."""
-    _run(
+    run(
         work_cli,
         receipts,
         artifact,
@@ -239,15 +237,15 @@ def _calculate_foundation_quarter(
             "--filing-year",
             str(year),
             "--period",
-            _FOUNDATION_PERIOD,
+            FOUNDATION_PERIOD,
             "--amount",
             "0.00",
             "--confirm",
         ),
         result_keys=(),
     )
-    created = _result(
-        _run(
+    created = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -261,14 +259,14 @@ def _calculate_foundation_quarter(
                 "--year",
                 str(year),
                 "--period",
-                _FOUNDATION_PERIOD,
+                FOUNDATION_PERIOD,
             ),
             result_keys=("work_unit_id",),
         )
     )
-    work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
+    work_unit_id = required_id(created, "work_unit_id")
+    calculated = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -285,11 +283,11 @@ def _calculate_foundation_quarter(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
-    iva_resultado = _decimal_casilla(calculated, "iva.resultado")
-    if iva_resultado != _FOUNDATION_EXPECTED_RESULT:
+    calculation_revision_id = required_id(calculated, "calculation_revision_id")
+    iva_resultado = decimal_casilla(calculated, "iva.resultado")
+    if iva_resultado != FOUNDATION_EXPECTED_RESULT:
         raise IvaCliJourneyError(
-            f"independent IVA oracle mismatch: expected {_FOUNDATION_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+            f"independent IVA oracle mismatch: expected {FOUNDATION_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
         )
     return work_unit_id, calculation_revision_id, iva_resultado
 
@@ -310,9 +308,9 @@ def run_iva_annual_m390_cli_journey(
             authority lacks a revision authored for ``year`` for any Modelo 303
             quarter or for the Modelo 390 annual period.
     """
-    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=_M390_COORDINATES)
+    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=M390_COORDINATES)
     with ExitStack() as resources:
-        cli, receipts, artifact = _start(
+        cli, receipts, artifact = start(
             executable,
             authority_root,
             storage_root,
@@ -321,15 +319,15 @@ def run_iva_annual_m390_cli_journey(
             resources=resources,
             runtime_scope=runtime_scope,
         )
-        evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
-        transaction_ids = _add_documented_ledger_facts(
+        evidence_id = add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
+        transaction_ids = add_documented_ledger_facts(
             cli=cli, receipts=receipts, artifact=artifact, purchase_evidence_id=evidence_id, journey_year=journey_year
         )
-        work_cli = _reopen(cli, authority_root, storage_root)
-        _seed_first_period(cli=work_cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        work_cli = reopen(cli, authority_root, storage_root)
+        seed_first_period(cli=work_cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
         expected = {"1T": Decimal("315.00"), "2T": Decimal("315.00"), "3T": Decimal("210.00"), "4T": Decimal("525.00")}
         filings = tuple(
-            _file_quarter(
+            file_quarter(
                 cli=work_cli,
                 receipts=receipts,
                 artifact=artifact,
@@ -337,28 +335,28 @@ def run_iva_annual_m390_cli_journey(
                 period=period,
                 expected=expected[period],
             )
-            for period in _QUARTERS
+            for period in QUARTERS
         )
-        annual_work_id, annual_revision_id, annual_report_id, annual_status, annual_values = _calculate_and_verify_m390(
+        annual_work_id, annual_revision_id, annual_report_id, annual_status, annual_values = calculate_and_verify_m390(
             cli=work_cli, receipts=receipts, artifact=artifact, journey_year=journey_year
         )
-        readback = _reopen(cli, authority_root, storage_root)
-        _assert_local_quarter_chain(
+        readback = reopen(cli, authority_root, storage_root)
+        assert_local_quarter_chain(
             cli=readback, receipts=receipts, artifact=artifact, filings=filings, journey_year=journey_year
         )
         descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
         return IvaAnnualM390CliJourneyReceipt(
             schema_version="iva-01-annual-m390-installed-cli-journey-v2",
-            acceptance_ids=(f"IVA-01-ANNUAL-M390-{year}-{_ANNUAL_PERIOD}",),
+            acceptance_ids=(f"IVA-01-ANNUAL-M390-{year}-{ANNUAL_PERIOD}",),
             filing_year=year,
             executable=str(cli.executable),
-            executable_sha256=_sha256_path(cli.executable),
-            source_identity=_checkout_source_identity(),
-            package_identity=_installed_package_identity(),
+            executable_sha256=sha256_path(cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
             authority_generation=authority_generation(authority_root),
-            authority_descriptor_sha256=_sha256_path(descriptor),
+            authority_descriptor_sha256=sha256_path(descriptor),
             storage_root=str(storage_root.resolve()),
-            purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
+            purchase_artifact=PRIVATE_ARTIFACT_PLACEHOLDER,
             transaction_ids=transaction_ids,
             evidence_id=evidence_id,
             quarterly_filings=filings,

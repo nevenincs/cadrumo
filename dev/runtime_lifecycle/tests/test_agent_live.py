@@ -18,10 +18,10 @@ import pytest
 
 from ..agent_live import (
     Exchange,
-    _attending,
-    _driver_process_start_identity,
-    _driver_profile_evidence,
     answer_for,
+    attending,
+    driver_process_start_identity,
+    driver_profile_evidence,
     is_announced_relay,
     owner_binding,
     read_document,
@@ -36,13 +36,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_driver_owner_start_identity_is_stable_and_fails_closed() -> None:
-    identity = _driver_process_start_identity(os.getpid())
+    identity = driver_process_start_identity(os.getpid())
     if sys.platform == "win32" or sys.platform.startswith("linux"):
         assert identity is not None and identity != ""
-        assert _driver_process_start_identity(os.getpid()) == identity
+        assert driver_process_start_identity(os.getpid()) == identity
     else:
         assert identity is None
-    assert _driver_process_start_identity(0) is None
+    assert driver_process_start_identity(0) is None
 
 
 def _request(tool: str | None, *kinds: str, server: str | None = "cadrumo") -> dict[str, object]:
@@ -151,7 +151,7 @@ def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_sess
         "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
     }
 
-    evidence = _driver_profile_evidence(
+    evidence = driver_profile_evidence(
         profile,
         session,
         storage_root=tmp_path / "storage",
@@ -181,7 +181,7 @@ def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile(t
         ),
     )
     with pytest.raises(AcceptanceError, match="exactly the active synthetic profile"):
-        _driver_profile_evidence(
+        driver_profile_evidence(
             profile,
             {
                 "profile_id": profile_id,
@@ -218,7 +218,7 @@ def test_the_written_driver_profile_holds_no_credential_custody_or_bearer(tmp_pa
 
     write_whole(
         path,
-        _driver_profile_evidence(
+        driver_profile_evidence(
             profile,
             session,
             storage_root=storage_root,
@@ -331,7 +331,7 @@ async def test_attendance_task_finishes_correlated_decisions_before_stopping(
     holder = FakeHolder()
     gateway: dict[str, ProcessIdentity | None] = {"identity": None}
 
-    async with _attending(cast("AsyncRuntimeSessionHolder", holder), Path("cadrumo-mcp.exe"), gateway) as approved:
+    async with attending(cast("AsyncRuntimeSessionHolder", holder), Path("cadrumo-mcp.exe"), gateway) as approved:
         await asyncio.wait_for(completed.wait(), timeout=2)
 
     assert approved == [42]

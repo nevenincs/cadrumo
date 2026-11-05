@@ -27,28 +27,28 @@ WORKBENCH_NEXT: Final = "#wb-next"
 WORKBENCH_AT_RISK_PROCEED: Final = "#btn-confirm-accept"
 
 
-_EXPORT_PATH: Final = "#export-path"
+EXPORT_PATH: Final = "#export-path"
 
 
-_EXPORT_RESULT_CLOSE: Final = "#modelo-export-result-close"
+EXPORT_RESULT_CLOSE: Final = "#modelo-export-result-close"
 
 
 #: The close control of the statement of which boxes a recalculation changed.
-_RESULT_STATEMENT_CLOSE: Final = "#result-close"
+RESULT_STATEMENT_CLOSE: Final = "#result-close"
 
 
 #: The workbench key that runs the step it offers next.
-_NEXT_STEP_KEY: Final = "f8"
+NEXT_STEP_KEY: Final = "f8"
 
 
 #: The workbench key that opens the review of the staged changes.
-_REVIEW_KEY: Final = "R"
+REVIEW_KEY: Final = "R"
 
 
 #: The key the next-step line shows beside each step a journey waits on.  A
 #: verified declaration is offered its export file first, and recording the
 #: filing with the next-step key after it.
-_OFFERED_STEP_KEYS: Final[Mapping[str, str]] = {
+OFFERED_STEP_KEYS: Final[Mapping[str, str]] = {
     "apply": "R",
     "confirm": "n",
     "export": "e",
@@ -58,31 +58,31 @@ _OFFERED_STEP_KEYS: Final[Mapping[str, str]] = {
 
 
 #: The catalogue action that names a step on the next-step line, where it differs from the step's name.
-_OFFERED_STEP_ACTIONS: Final[Mapping[str, str]] = {"record": "record_after_file"}
+OFFERED_STEP_ACTIONS: Final[Mapping[str, str]] = {"record": "record_after_file"}
 
 
 #: Stands in for a count while the next-step line is turned into a pattern.
-_COUNT_PLACEHOLDER: Final = "\ue000"
+COUNT_PLACEHOLDER: Final = "\ue000"
 
 
 #: Stands in for a date while the next-step line is turned into a pattern.
-_DATE_PLACEHOLDER: Final = "\ue001"
+DATE_PLACEHOLDER: Final = "\ue001"
 
 
-_BULK_TICK: Final = "#bulk-tick"
+BULK_TICK: Final = "#bulk-tick"
 
 
-_BULK_CONFIRM: Final = "#bulk-confirm"
+BULK_CONFIRM: Final = "#bulk-confirm"
 
 
-_REVIEW_APPLY: Final = "#review-apply"
+REVIEW_APPLY: Final = "#review-apply"
 
 
-_REVIEW_ACKNOWLEDGE: Final = "#review-acknowledge"
+REVIEW_ACKNOWLEDGE: Final = "#review-acknowledge"
 
 
-_REVIEW_FINDINGS: Final = "#review-findings"
+REVIEW_FINDINGS: Final = "#review-findings"
 
 
 #: The greeting the first workbench of a session shows on its notice line.
-_FIRST_OPEN_GREETING: Final = "tui.modelo.legend.first_open"
+FIRST_OPEN_GREETING: Final = "tui.modelo.legend.first_open"

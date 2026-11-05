@@ -23,7 +23,7 @@ from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceIn
 from cadrumo.entrypoints.tui.tests.settling import settle
 
 from .. import iva_tui_import
-from ..iva_tui_scenario import _synthetic_rows
+from ..iva_tui_scenario import iva_tui_scenario_synthetic_rows
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -46,7 +46,7 @@ async def test_classification_waits_for_public_overview_after_refresh_replaces_i
     async def already_in_ledger(_pilot: Any) -> None:
         return None
 
-    monkeypatch.setattr(iva_tui_import, "_open_ledger", already_in_ledger)
+    monkeypatch.setattr(iva_tui_import, "open_ledger", already_in_ledger)
     controller = LedgerWorkspaceController(
         ledger_context(),
         projection,
@@ -69,10 +69,10 @@ async def test_classification_waits_for_public_overview_after_refresh_replaces_i
 
         completion = asyncio.create_task(finish_refresh())
         try:
-            await iva_tui_import._classify_transaction(
+            await iva_tui_import.classify_transaction(
                 pilot,
                 transaction_id=str(projection.entries[0].transaction_id),
-                scenario_row=_synthetic_rows(2025)[0],
+                scenario_row=iva_tui_scenario_synthetic_rows(2025)[0],
             )
             assert isinstance(app.screen, LedgerOverviewScreen)
             assert app.screen.query_one("#ledger-quality", DataTable).row_count > 0

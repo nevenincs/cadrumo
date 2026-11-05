@@ -6,9 +6,9 @@ from pathlib import Path
 
 from dev.paths import REPO_ROOT
 
-from ._paths import LOCALES_DIR
 from .locale_nodes import LocaleNode
-from .locale_yaml import _parse_locale, _rewrite_locale_mapping
+from .locale_yaml import parse_locale, rewrite_locale_mapping
+from .paths import LOCALES_DIR
 from .write_guard import catalogue_write_guard
 
 SERVICE_LOCALES_DIR = REPO_ROOT / "src/cadrumo_agent_service/locales"
@@ -22,17 +22,17 @@ def transfer_service_catalogues(source: Path = LOCALES_DIR, destination: Path = 
         for locale in ("en", "es", "ca", "hu"):
             target = destination / f"{locale}.yml"
             service: dict[str, LocaleNode] = (
-                _parse_locale(destination_guard.read_text(target)) if target.exists() else {}
+                parse_locale(destination_guard.read_text(target)) if target.exists() else {}
             )
             if not target.exists():
                 destination_guard.observe(target)
             for shard in sorted((source / locale).rglob("*.yml")):
-                document = _parse_locale(source_guard.read_text(shard))
+                document = parse_locale(source_guard.read_text(shard))
                 changed = _transfer_families(document, service, locale)
                 changed = _transfer_keys(document, service, locale) or changed
                 if changed:
-                    _rewrite_locale_mapping(source_guard, shard, document)
-            _rewrite_locale_mapping(destination_guard, target, service)
+                    rewrite_locale_mapping(source_guard, shard, document)
+            rewrite_locale_mapping(destination_guard, target, service)
 
 
 def _transfer_families(document: dict[str, LocaleNode], service: dict[str, LocaleNode], locale: str) -> bool:

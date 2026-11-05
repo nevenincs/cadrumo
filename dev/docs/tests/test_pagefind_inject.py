@@ -22,25 +22,25 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pagefind_inject import (
     InjectionStats,
+    Materialised,
     SearchInjectionError,
     SearchRecordProjection,
-    _bounded_to_sample,
-    _content_for,
-    _effective_weight,
-    _filters_for,
-    _group_content,
-    _group_filters,
-    _index_entries,
-    _Materialised,
-    _meta_for,
-    _sort_key,
+    bounded_to_sample,
     build_record_injector,
+    content_for,
+    effective_weight,
+    filters_for,
+    group_content,
+    group_filters,
+    index_entries,
     load_relevance_weights,
+    meta_for,
+    sort_key,
 )
 from ..terminology.casilla_projection import project_casilla_search_records
 from ..terminology.cli_projection import project_cli_search_records
 from ..terminology.unified_record import SearchRecord, to_search_record
-from ._pagefind_inject_support import concept_records
+from .pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -60,32 +60,32 @@ def test_concept_records_funnel_into_search_records() -> None:
 def test_meta_filters_and_sort_carry_the_card_payload() -> None:
     """The Pagefind meta/filters/sort carry the typed term-card payload."""
     record = next(r for r in concept_records().records if r.metadata.concept_id == "prorrata")
-    meta = _meta_for(record, record.ranking_weight)
+    meta = meta_for(record, record.ranking_weight)
     assert meta["kind"] == "concept"
     assert meta["concept_id"] == "prorrata"
     assert meta["domain"]  # the concept domain
     assert "weight" in meta
 
-    filters = _filters_for(record)
+    filters = filters_for(record)
     assert filters["kind"] == ["concept"]
     assert "domain" in filters
 
     # The sort key is a fixed-width descending-orderable string.
-    assert _sort_key(1.0) > _sort_key(0.5)
+    assert sort_key(1.0) > sort_key(0.5)
 
 
 def test_relevance_boost_applies_when_present_else_base() -> None:
     """A present relevance weight boosts a record; absence keeps the base."""
     record = next(r for r in concept_records().records if r.metadata.concept_id == "prorrata")
     # Base weight stands with no relevance map.
-    assert _effective_weight(record, {}) == record.ranking_weight
+    assert effective_weight(record, {}) == record.ranking_weight
     # A weaker relevance does not lower the base (max).
-    assert _effective_weight(record, {record.id: 0.1}) == record.ranking_weight
+    assert effective_weight(record, {record.id: 0.1}) == record.ranking_weight
     # A casilla (lower base) is boosted by a strong relevance weight.
     casilla = next(
         (r for r in concept_records().records if r.kind.value == "concept"),
     )
-    assert _effective_weight(casilla, {casilla.id: 1.0}) >= casilla.ranking_weight
+    assert effective_weight(casilla, {casilla.id: 1.0}) >= casilla.ranking_weight
 
 
 def test_relevance_file_absent_yields_empty_map(tmp_path: Path) -> None:
@@ -180,13 +180,13 @@ def test_the_bounded_sample_reports_exactly_the_records_it_carries() -> None:
     """
     commands, options, _stats = project_cli_search_records()
     assert commands and options
-    materialised = _Materialised(
+    materialised = Materialised(
         records=[to_search_record(record) for record in (*commands, *options)],
         cli_commands=len(commands),
         cli_options=len(options),
     )
 
-    bounded = _bounded_to_sample(materialised, 4)
+    bounded = bounded_to_sample(materialised, 4)
 
     assert bounded.cli_commands == 4
     assert bounded.cli_options == 4
@@ -220,7 +220,7 @@ def test_records_sharing_a_destination_collapse_into_one_lossless_entry() -> Non
     members = [record for record in records if record.target == target]
     assert len(members) > 1
 
-    entries = _index_entries(records, {})
+    entries = index_entries(records, {})
 
     assert len({record.target for record in records}) == len(entries)
     entry = next(item for item in entries if item.primary.target == target)
@@ -232,13 +232,13 @@ def test_records_sharing_a_destination_collapse_into_one_lossless_entry() -> Non
     assert {record.id for record in entry.members} == {record.id for record in members}
     assert entry.weight == max(record.ranking_weight for record in members)
 
-    content = _group_content(entry.members)
+    content = group_content(entry.members)
     for member in members:
-        for line in _content_for(member).splitlines():
+        for line in content_for(member).splitlines():
             assert line in content, f"record {member.id!r} lost its searchable line {line!r} in the merge"
-    merged_filters = _group_filters(entry.members)
+    merged_filters = group_filters(entry.members)
     for member in members:
-        for axis, values in _filters_for(member).items():
+        for axis, values in filters_for(member).items():
             assert set(values) <= set(merged_filters[axis])
 
 

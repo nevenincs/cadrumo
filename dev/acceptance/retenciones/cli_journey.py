@@ -11,19 +11,19 @@ from pathlib import Path
 
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
-from .cli_annual import _is_full_annual_campaign, _run_annual_slice, _select_annual_slices
+from .cli_annual import is_full_annual_campaign, run_annual_slice, select_annual_slices
 from .cli_contracts import (
-    _ANNUAL_SCHEMA_VERSION,
-    _SCHEMA_VERSION,
+    ANNUAL_SCHEMA_VERSION,
+    SCHEMA_VERSION,
     RetencionesAnnualCliJourneyEvidence,
     RetencionesCliFailureEvidence,
     RetencionesCliJourneyEvidence,
     RetencionesInstalledCliError,
 )
-from .cli_layout_selection import _selected_annual_layouts, _selected_layouts
-from .cli_periodic import _is_full_campaign, _run_periodic_slice, _select_slices
-from .cli_preflight import _fresh_directory, _require_nonempty_identity, _sha256_file
-from .cli_profile import _create_withholding_profile
+from .cli_layout_selection import selected_annual_layouts, selected_layouts
+from .cli_periodic import is_full_campaign, run_periodic_slice, select_slices
+from .cli_preflight import fresh_directory, require_nonempty_identity, sha256_file
+from .cli_profile import create_withholding_profile
 from .scenario import (
     BRIEF_ID,
     BRIEF_REVISION,
@@ -56,12 +56,12 @@ def run_retenciones_cli_journey(
     not infer a source commit from an installed package.
     """
     available_slices = build_installed_periodic_cli_slices(year)
-    slices = _select_slices(available_slices, requested_ids=slice_ids)
-    _require_nonempty_identity(source_identity, label="source_identity")
-    _require_nonempty_identity(package_identity, label="package_identity")
-    storage = _fresh_directory(storage_root, label="scenario storage root")
-    outputs = _fresh_directory(output_dir, label="scenario output directory")
-    authority_generation, layouts = _selected_layouts(authority_root=authority_root, slices=slices, year=year)
+    slices = select_slices(available_slices, requested_ids=slice_ids)
+    require_nonempty_identity(source_identity, label="source_identity")
+    require_nonempty_identity(package_identity, label="package_identity")
+    storage = fresh_directory(storage_root, label="scenario storage root")
+    outputs = fresh_directory(output_dir, label="scenario output directory")
+    authority_generation, layouts = selected_layouts(authority_root=authority_root, slices=slices, year=year)
     cli = InstalledCli(
         executable,
         storage_root=storage,
@@ -69,9 +69,9 @@ def run_retenciones_cli_journey(
         passphrase=secrets.token_urlsafe(32),
     )
     try:
-        _create_withholding_profile(cli, year=year)
+        create_withholding_profile(cli, year=year)
         evidence = tuple(
-            _run_periodic_slice(cli=cli, slice_=slice_, layouts=layouts, year=year, output_dir=outputs)
+            run_periodic_slice(cli=cli, slice_=slice_, layouts=layouts, year=year, output_dir=outputs)
             for slice_ in slices
         )
     except RetencionesInstalledCliError as exc:
@@ -85,9 +85,9 @@ def run_retenciones_cli_journey(
             commands=tuple(cli.commands),
         ) from exc
     return RetencionesCliJourneyEvidence(
-        schema_version=_SCHEMA_VERSION,
-        status="proven" if _is_full_campaign(slices, available=available_slices) else "partial",
-        campaign_scope="full_campaign" if _is_full_campaign(slices, available=available_slices) else "selected_slices",
+        schema_version=SCHEMA_VERSION,
+        status="proven" if is_full_campaign(slices, available=available_slices) else "partial",
+        campaign_scope="full_campaign" if is_full_campaign(slices, available=available_slices) else "selected_slices",
         pattern_id=PATTERN_ID,
         pattern_revision=PATTERN_REVISION,
         brief_id=BRIEF_ID,
@@ -99,7 +99,7 @@ def run_retenciones_cli_journey(
         source_identity=source_identity,
         package_identity=package_identity,
         executable=str(cli.executable),
-        executable_sha256=_sha256_file(cli.executable),
+        executable_sha256=sha256_file(cli.executable),
         storage_root=str(storage),
         executed_slice_ids=tuple(slice_.slice_id for slice_ in slices),
         slices=evidence,
@@ -131,12 +131,12 @@ def run_retenciones_annual_cli_journey(
     result for each supported annual return.
     """
     available_slices = build_installed_annual_cli_slices(year)
-    slices = _select_annual_slices(available_slices, requested_ids=slice_ids)
-    _require_nonempty_identity(source_identity, label="source_identity")
-    _require_nonempty_identity(package_identity, label="package_identity")
-    storage = _fresh_directory(storage_root, label="annual scenario storage root")
-    outputs = _fresh_directory(output_dir, label="annual scenario output directory")
-    authority_generation, layouts = _selected_annual_layouts(authority_root=authority_root, slices=slices, year=year)
+    slices = select_annual_slices(available_slices, requested_ids=slice_ids)
+    require_nonempty_identity(source_identity, label="source_identity")
+    require_nonempty_identity(package_identity, label="package_identity")
+    storage = fresh_directory(storage_root, label="annual scenario storage root")
+    outputs = fresh_directory(output_dir, label="annual scenario output directory")
+    authority_generation, layouts = selected_annual_layouts(authority_root=authority_root, slices=slices, year=year)
     cli = InstalledCli(
         executable,
         storage_root=storage,
@@ -144,9 +144,9 @@ def run_retenciones_annual_cli_journey(
         passphrase=secrets.token_urlsafe(32),
     )
     try:
-        _create_withholding_profile(cli, year=year)
+        create_withholding_profile(cli, year=year)
         evidence = tuple(
-            _run_annual_slice(cli=cli, slice_=slice_, layouts=layouts, year=year, output_dir=outputs)
+            run_annual_slice(cli=cli, slice_=slice_, layouts=layouts, year=year, output_dir=outputs)
             for slice_ in slices
         )
     except RetencionesInstalledCliError as exc:
@@ -159,9 +159,9 @@ def run_retenciones_annual_cli_journey(
             diagnostic_code=f"unexpected_{type(exc).__name__}",
             commands=tuple(cli.commands),
         ) from exc
-    full_campaign = _is_full_annual_campaign(slices, available=available_slices)
+    full_campaign = is_full_annual_campaign(slices, available=available_slices)
     return RetencionesAnnualCliJourneyEvidence(
-        schema_version=_ANNUAL_SCHEMA_VERSION,
+        schema_version=ANNUAL_SCHEMA_VERSION,
         status="proven" if full_campaign else "partial",
         campaign_scope="full_annual_campaign" if full_campaign else "selected_annual_slices",
         pattern_id=PATTERN_ID,
@@ -175,7 +175,7 @@ def run_retenciones_annual_cli_journey(
         source_identity=source_identity,
         package_identity=package_identity,
         executable=str(cli.executable),
-        executable_sha256=_sha256_file(cli.executable),
+        executable_sha256=sha256_file(cli.executable),
         storage_root=str(storage),
         executed_slice_ids=tuple(slice_.slice_id for slice_ in slices),
         slices=evidence,
@@ -184,7 +184,7 @@ def run_retenciones_annual_cli_journey(
     )
 
 
-def _failure_evidence(
+def failure_evidence(
     *,
     error: RetencionesInstalledCliError,
     executable: Path,
@@ -194,7 +194,7 @@ def _failure_evidence(
     storage_root: Path | None = None,
     output_dir: Path | None = None,
     commands: tuple[CommandEvidence, ...] = (),
-    schema_version: str = _SCHEMA_VERSION,
+    schema_version: str = SCHEMA_VERSION,
     scenario: str = INSTALLED_CLI_SCENARIO_VERSION,
 ) -> RetencionesCliFailureEvidence:
     """Render a complete failure receipt without exception or stream contents."""
@@ -210,7 +210,7 @@ def _failure_evidence(
         source_identity=source_identity,
         package_identity=package_identity,
         executable=str(executable),
-        executable_sha256=_sha256_file(executable) if executable.is_file() else None,
+        executable_sha256=sha256_file(executable) if executable.is_file() else None,
         storage_root=None if storage_root is None else str(storage_root),
         output_dir=None if output_dir is None else str(output_dir),
         stage=error.stage,
@@ -291,12 +291,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not args.annual and args.annual_slice_ids:
         parser.error("--annual-slice requires --annual")
     is_annual = bool(args.annual)
-    failure_schema_version = _ANNUAL_SCHEMA_VERSION if is_annual else _SCHEMA_VERSION
+    failure_schema_version = ANNUAL_SCHEMA_VERSION if is_annual else SCHEMA_VERSION
     failure_scenario = INSTALLED_ANNUAL_CLI_SCENARIO_VERSION if is_annual else INSTALLED_CLI_SCENARIO_VERSION
     try:
         evidence = _run_requested_journey(args, is_annual)
     except RetencionesInstalledCliError as exc:
-        rendered = _failure_evidence(
+        rendered = failure_evidence(
             error=exc,
             executable=args.cli,
             year=args.year,
@@ -310,7 +310,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ).to_dict()
         status = 2
     except Exception as exc:
-        rendered = _failure_evidence(
+        rendered = failure_evidence(
             error=RetencionesInstalledCliError(
                 stage="driver",
                 diagnostic_code=f"unexpected_{type(exc).__name__}",

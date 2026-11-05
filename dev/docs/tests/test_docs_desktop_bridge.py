@@ -35,7 +35,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records, _Materialised
+from ..pagefind_inject import Materialised, inject_records
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import (
     RankingTier,
@@ -43,14 +43,14 @@ from ..terminology.unified_record import (
     SearchRecordMetadata,
     normalise_display_class_weight,
 )
-from ._docs_desktop_support import (
+from .docs_desktop_support import (
     EXTERNAL_URL,
     SEARCH_TERM,
     SIDEBAR_EXTERNAL_URL,
     SIDEBAR_TERM,
     build_fixture_site,
 )
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -137,7 +137,7 @@ _SIBLING_PAGE = """<!doctype html>
 """
 
 
-def _search_records() -> _Materialised:
+def _search_records() -> Materialised:
     """One term, one casilla and one command card, each carrying the search token.
 
     Built as unified records with the display-class weights the injection seam
@@ -178,7 +178,7 @@ def _search_records() -> _Materialised:
         ranking_weight=normalise_display_class_weight(ResultDisplayClass.CLI),
         metadata=SearchRecordMetadata(command_path="aeat app modelo calculate"),
     )
-    return _Materialised(records=[concept, casilla, cli], concepts=1, casillas=1, cli_commands=1)
+    return Materialised(records=[concept, casilla, cli], concepts=1, casillas=1, cli_commands=1)
 
 
 def _index_fixture_site(html: Path) -> None:
@@ -186,7 +186,7 @@ def _index_fixture_site(html: Path) -> None:
     materialised = _search_records()
 
     async def inject(index: PagefindIndex) -> None:
-        await _inject_records(index, materialised, {})
+        await inject_records(index, materialised, {})
 
     build_search_index(html, inject=inject)
 

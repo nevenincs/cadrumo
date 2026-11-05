@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
-from cadrumo.core import logging as _logging_mod
+from cadrumo.core import logging as core_logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import configure_logging, flush_logging, register_first_party_logger
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
@@ -66,10 +66,10 @@ def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """Configure the real logging stack against a temp log directory."""
     storage_root = tmp_path / "containment-storage"
     log_dir = storage_root / "logs"
-    original_configured = _logging_mod._configured
-    monkeypatch.setattr(_logging_mod, "_FIRST_PARTY_LOGGER_ROOTS", set(_logging_mod._FIRST_PARTY_LOGGER_ROOTS))
+    original_configured = core_logging_mod._configured
+    monkeypatch.setattr(core_logging_mod, "_FIRST_PARTY_LOGGER_ROOTS", set(core_logging_mod._FIRST_PARTY_LOGGER_ROOTS))
     try:
-        _logging_mod._configured = False
+        core_logging_mod._configured = False
         with override_settings(
             cadrumo_storage_root=storage_root,
             cadrumo_log_root_level="DEBUG",
@@ -80,12 +80,12 @@ def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
             assert flush_logging(timeout=HANG_GUARD_SECONDS)
             yield log_dir / "cadrumo.log"
     finally:
-        _logging_mod._configured = False
+        core_logging_mod._configured = False
         try:
             configure_logging()
             assert flush_logging(timeout=HANG_GUARD_SECONDS)
         finally:
-            _logging_mod._configured = original_configured or True
+            core_logging_mod._configured = original_configured or True
 
 
 def _written_log_text(log_file: Path) -> str:

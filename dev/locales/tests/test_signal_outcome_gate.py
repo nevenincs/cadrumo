@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .. import _signal as signal_module
 from .. import cli as cli_module
+from .. import signal as signal_module
 from .. import signal_discovery as discovery_module
 from ..cli import app
 from ..manager import LocaleManager

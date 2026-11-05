@@ -34,13 +34,13 @@ from .compile_slots import (
     MARK_OPEN,
     CompileSlots,
     Rendering,
+    cache_key_slots,
     read_escaped_marks,
     refuse_encoded_marks,
     refuse_escaped_marks,
     refuse_stray_delimiters,
 )
-from .compile_slots import cache_key_slots as _cache_key_slots
-from .compile_slots import factor_page as _factor_compiled_page
+from .compile_slots import factor_page as compile_slots_factor_compiled_page
 from .shared_structure import SLOT_CLOSE, SLOT_OPEN, LanguageText, compose_page, factor_page
 
 STRUCTURE_DIRECTORY: Final[str] = "structure"
@@ -408,8 +408,8 @@ def _store_compiled_pages(
         page = read_escaped_marks(_without_terminators(text_of_page))
         refuse_encoded_marks(page, path)
         factored: list[str | tuple[str, ...]] = []
-        for part in _factor_compiled_page(page, slots, path=path):
-            factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])
+        for part in compile_slots_factor_compiled_page(page, slots, path=path):
+            factored.extend(cache_key_slots(part, keys) if isinstance(part, str) else [part])
         if not any(isinstance(part, tuple) for part in factored):
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), page.encode(_UTF_8))
             shared.append(path)

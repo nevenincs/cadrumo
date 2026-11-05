@@ -286,7 +286,7 @@ def _announce(config: pytest.Config, message: str) -> None:
         print(message, flush=True)
 
 
-def _redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
+def redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
     """Send the collect-only listing to the persistent run transcript.
 
     The listing is the bulk of a collect-only run and belongs with the other
@@ -329,7 +329,7 @@ def configure(config: pytest.Config) -> None:
         run_log = RunLog(test_log_root(), scratch=own_scratch)
         _ACTIVE = run_log
     config.stash[_STATE_KEY] = run_log
-    silent_collection = _redirect_collection_output(config, run_log)
+    silent_collection = redirect_collection_output(config, run_log)
     config.stash[_SILENT_COLLECTION_KEY] = silent_collection
     notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={scratch})"
     if silent_collection:

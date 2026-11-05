@@ -15,7 +15,7 @@ import pytest
 
 from dev.quality.import_check_models import Finding, ImportOccurrence
 
-from ._planted_package_support import check_planted_package
+from .planted_package_support import check_planted_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

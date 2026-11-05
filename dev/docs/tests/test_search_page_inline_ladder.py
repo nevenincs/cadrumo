@@ -38,10 +38,10 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev.paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records
+from ..pagefind_inject import inject_records
 from ..site_chrome import site_chrome
-from ._http_serve_support import serve_directory
-from .test_palette_ranking import _approved_concept_records
+from .http_serve_support import serve_directory
+from .test_palette_ranking import approved_concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -120,10 +120,10 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
     out.mkdir()
     build = _build_search_site(out)
 
-    materialised = _approved_concept_records()
+    materialised = approved_concept_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(build, inject=inject)
 

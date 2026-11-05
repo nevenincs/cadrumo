@@ -12,9 +12,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.modelo_localization import construct_lineage_locale_key
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 
-from .._paths import LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
+from ..paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

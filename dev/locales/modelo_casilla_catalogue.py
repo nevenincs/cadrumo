@@ -15,16 +15,14 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
 )
 
-from ._casilla_keys import is_lineage_key
-from ._paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 from .casilla_authoring_verification import (
-    _add_declared_casilla_label_link,
-    _apply_authored_casilla_locale,
-    _record_authored_casilla_change,
-    _record_introduced_casilla_segment_drift,
-    _refuse_unknown_authored_casilla_keys,
+    add_declared_casilla_label_link,
+    apply_authored_casilla_locale,
+    record_authored_casilla_change,
+    record_introduced_casilla_segment_drift,
+    refuse_unknown_authored_casilla_keys,
 )
-from .casilla_catalogue_install import _discard, resume_install
+from .casilla_catalogue_install import discard, resume_install
 from .casilla_catalogue_models import (
     CasillaOccurrence,
     CatalogueFindings,
@@ -34,46 +32,48 @@ from .casilla_catalogue_models import (
     Coordinate,
     Values,
 )
-from .casilla_collapse_stages import _lift_casilla_lineage_key, _remove_casilla_structural_leaf
+from .casilla_collapse_stages import lift_casilla_lineage_key, remove_casilla_structural_leaf
 from .casilla_content_analysis import (
-    _record_casilla_lineage_locale_drift,
-    _record_casilla_rendering_segments,
-    _record_casilla_segment_renderings,
-    _record_dropped_casilla_content,
-    _record_stale_casilla_translation,
+    record_casilla_lineage_locale_drift,
+    record_casilla_rendering_segments,
+    record_casilla_segment_renderings,
+    record_dropped_casilla_content,
+    record_stale_casilla_translation,
 )
 from .casilla_findings import (
-    _record_casilla_content_and_segment_drift,
-    _record_casilla_fallback_translations,
-    _record_casilla_glossary_artifacts,
-    _record_casilla_key_findings,
-    _record_casilla_lineage_translation_drift,
-    _record_casilla_placeholders,
-    _record_casilla_plan_findings,
-    _record_casilla_truncation,
-    _record_casilla_unresolved_spanish,
-    _record_casilla_whitespace,
-    _record_derived_casilla_help,
+    record_casilla_content_and_segment_drift,
+    record_casilla_fallback_translations,
+    record_casilla_glossary_artifacts,
+    record_casilla_key_findings,
+    record_casilla_lineage_translation_drift,
+    record_casilla_placeholders,
+    record_casilla_plan_findings,
+    record_casilla_truncation,
+    record_casilla_unresolved_spanish,
+    record_casilla_whitespace,
+    record_derived_casilla_help,
 )
-from .casilla_resolution import _served_locale
+from .casilla_keys import is_lineage_key
+from .casilla_resolution import served_locale
 from .casilla_reviewed_wording import (
     REVIEWED_EQUIVALENT_SPANISH,
     REVIEWED_SEGMENT_RENDERINGS,
     REVIEWED_SHARED_SEGMENTS,
     REVIEWED_SHARED_TRANSLATIONS,
 )
-from .casilla_source_inventory import _published_surface, load_casilla_values
+from .casilla_source_inventory import load_casilla_values, published_surface
 from .casilla_text_comparison import (
-    _abbreviated_wording,
-    _normalised,
-    _plain_wording,
+    abbreviated_wording,
+    normalised,
+    plain_wording,
 )
 from .casilla_text_policy import (
-    _FIELDS,
-    _REVISION_SCOPED,
+    FIELDS,
+    REVISION_SCOPED,
     SOURCE_LOCALE,
 )
 from .manager import LocaleManager
+from .paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 
 
 class ModeloCasillaCatalogue:
@@ -99,14 +99,14 @@ class ModeloCasillaCatalogue:
             for occurrence in occurrences
         )
         for index, occurrence in enumerate(occurrences):
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 for key in occurrence.chain(field_name):
                     self.dependents[key].append((index, field_name))
 
     @classmethod
     def published(cls, locales_dir: Path = LOCALES_DIR) -> ModeloCasillaCatalogue:
         """Build the view from the published generation and the on-disk catalogue."""
-        occurrences, evolutions, binding_keys = _published_surface()
+        occurrences, evolutions, binding_keys = published_surface()
         return cls(
             occurrences,
             load_casilla_values(locales_dir),
@@ -136,7 +136,7 @@ class ModeloCasillaCatalogue:
         return {
             (index, field_name, locale): self.resolve(index, field_name, locale, values)
             for index in range(len(self.occurrences))
-            for field_name in _FIELDS
+            for field_name in FIELDS
             for locale in self.locales
         }
 
@@ -148,17 +148,17 @@ class ModeloCasillaCatalogue:
         plan = self.collapse_plan(include_redundant=True)
         for locale in self.locales:
             leaves = self.values[locale]
-            _record_casilla_key_findings(self, locale, found, leaves)
-            _record_derived_casilla_help(self, locale, found, leaves)
-            _record_casilla_placeholders(self, locale, found, leaves)
-            _record_casilla_glossary_artifacts(self, locale, found, leaves)
-            _record_casilla_truncation(self, locale, found, leaves)
-            _record_casilla_whitespace(self, locale, found, leaves)
-            _record_casilla_plan_findings(self, locale, found, plan)
-        _record_casilla_unresolved_spanish(self, found)
-        _record_casilla_fallback_translations(self, found)
-        _record_casilla_content_and_segment_drift(self, found)
-        _record_casilla_lineage_translation_drift(self, found)
+            record_casilla_key_findings(self, locale, found, leaves)
+            record_derived_casilla_help(self, locale, found, leaves)
+            record_casilla_placeholders(self, locale, found, leaves)
+            record_casilla_glossary_artifacts(self, locale, found, leaves)
+            record_casilla_truncation(self, locale, found, leaves)
+            record_casilla_whitespace(self, locale, found, leaves)
+            record_casilla_plan_findings(self, locale, found, plan)
+        record_casilla_unresolved_spanish(self, found)
+        record_casilla_fallback_translations(self, found)
+        record_casilla_content_and_segment_drift(self, found)
+        record_casilla_lineage_translation_drift(self, found)
         return found
 
     def dropped_source_content(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
@@ -174,8 +174,8 @@ class ModeloCasillaCatalogue:
         lookup = self.lookup_for(self.values if values is None else values)
         dropped: dict[str, tuple[str, ...]] = {}
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
-                _record_dropped_casilla_content(self, index, occurrence, field_name, locale, values, lookup, dropped)
+            for field_name in FIELDS:
+                record_dropped_casilla_content(self, index, occurrence, field_name, locale, values, lookup, dropped)
         return dropped
 
     def shared_translations(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
@@ -189,17 +189,17 @@ class ModeloCasillaCatalogue:
         """
         grouped: dict[tuple[str, str], set[str]] = defaultdict(set)
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
                 text = self.resolve(index, field_name, locale, values)
                 if spanish is None or text is None:
                     continue
-                if _served_locale(self, index, field_name, locale, values) != locale:
+                if served_locale(self, index, field_name, locale, values) != locale:
                     continue
                 grouped[(occurrence.modelo, text)].add(spanish)
         shared: dict[str, tuple[str, ...]] = {}
         for (modelo, text), spanish_texts in grouped.items():
-            if len({_plain_wording(spanish) for spanish in spanish_texts}) < 2:
+            if len({plain_wording(spanish) for spanish in spanish_texts}) < 2:
                 continue
             if (locale, modelo, text) in REVIEWED_SHARED_TRANSLATIONS:
                 continue
@@ -222,7 +222,7 @@ class ModeloCasillaCatalogue:
         view = self.values if values is None else values
         rendered: dict[str, set[str]] = defaultdict(set)
         for key, spanish_texts in self.served_sources(locale).items():
-            _record_casilla_segment_renderings(key, spanish_texts, locale, view, rendered)
+            record_casilla_segment_renderings(key, spanish_texts, locale, view, rendered)
         return {
             segment: tuple(sorted(renderings))
             for segment, renderings in rendered.items()
@@ -243,12 +243,12 @@ class ModeloCasillaCatalogue:
         view = self.values if values is None else values
         rendered: dict[str, set[str]] = defaultdict(set)
         for key, spanish_texts in self.served_sources(locale).items():
-            _record_casilla_rendering_segments(key, spanish_texts, locale, view, rendered)
+            record_casilla_rendering_segments(key, spanish_texts, locale, view, rendered)
         reviewed = REVIEWED_SHARED_SEGMENTS.get(locale, {})
         return {
             rendering: tuple(sorted(sources))
             for rendering, sources in rendered.items()
-            if len({_abbreviated_wording(source) for source in sources}) > 1 and rendering not in reviewed
+            if len({abbreviated_wording(source) for source in sources}) > 1 and rendering not in reviewed
         }
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
@@ -261,13 +261,13 @@ class ModeloCasillaCatalogue:
         groups: dict[tuple[str, str, str, str], list[int]] = defaultdict(list)
         for index, occurrence in enumerate(self.occurrences):
             lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
                 if spanish is not None:
                     groups[(occurrence.modelo, lineage, field_name, spanish)].append(index)
         drift: dict[str, tuple[str, ...]] = {}
         for locale in self.locales:
-            _record_casilla_lineage_locale_drift(self, locale, groups, values, drift)
+            record_casilla_lineage_locale_drift(self, locale, groups, values, drift)
         return drift
 
     def copied_translations(self, locale: str) -> dict[str, str]:
@@ -275,7 +275,7 @@ class ModeloCasillaCatalogue:
         copied: dict[str, str] = {}
         lookup = self.lookup_for(self.values)
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
                 if source is None or source[1] != locale:
                     continue
@@ -297,8 +297,8 @@ class ModeloCasillaCatalogue:
         lookup = self.lookup_for(self.values)
         spanish_by_translation: dict[tuple[str, str, str], set[str]] = defaultdict(set)
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
-                _record_stale_casilla_translation(
+            for field_name in FIELDS:
+                record_stale_casilla_translation(
                     self, index, occurrence, field_name, locale, lookup, spanish_by_translation
                 )
         return tuple(
@@ -306,7 +306,7 @@ class ModeloCasillaCatalogue:
                 {
                     f"{modelo}/{lineage}"
                     for (modelo, lineage, _translation), spanish in spanish_by_translation.items()
-                    if len({_normalised(text) for text in spanish}) > 1 and (locale, modelo, lineage) not in excused
+                    if len({normalised(text) for text in spanish}) > 1 and (locale, modelo, lineage) not in excused
                 }
             )
         )
@@ -321,7 +321,7 @@ class ModeloCasillaCatalogue:
         translated: set[tuple[str, str, str, str]] = set()
         untranslated: list[tuple[tuple[str, str, str, str], str]] = []
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 spanish = self.resolve(index, field_name, SOURCE_LOCALE)
                 if spanish is None:
                     continue
@@ -339,7 +339,7 @@ class ModeloCasillaCatalogue:
         lookup = self.lookup_for(self.values)
         sources: dict[str, set[str]] = defaultdict(set)
         for index, occurrence in enumerate(self.occurrences):
-            for field_name in _FIELDS:
+            for field_name in FIELDS:
                 source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
                 spanish = self.resolve(index, field_name, SOURCE_LOCALE)
                 if source is not None and source[1] == locale and spanish is not None:
@@ -362,7 +362,7 @@ class ModeloCasillaCatalogue:
         plan = CollapsePlan()
         for locale in self.locales:
             for key, value in list(working[locale].items()):
-                _remove_casilla_structural_leaf(self, locale, key, value, working, plan)
+                remove_casilla_structural_leaf(self, locale, key, value, working, plan)
         baseline = self.resolution(working)
         # A stale lineage value blocks a lift until the redundancy pass removes
         # it, and a lift makes more occurrence values redundant, so the two
@@ -404,7 +404,7 @@ class ModeloCasillaCatalogue:
 
     def _undeclared_revision(self, key: str) -> bool:
         """Return whether ``key`` sits under a revision id no occurrence declares."""
-        match = _REVISION_SCOPED.match(key)
+        match = REVISION_SCOPED.match(key)
         return match is not None and (match["modelo"], match["revision"]) not in self.declared_revisions
 
     def _affected_locales(self, locale: str) -> tuple[str, ...]:
@@ -433,7 +433,7 @@ class ModeloCasillaCatalogue:
         lineage_keys = sorted(key for key in self.dependents if is_lineage_key(key))
         for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
             for key in lineage_keys:
-                lifted += _lift_casilla_lineage_key(self, working, baseline, plan, lifted_keys, locale, key)
+                lifted += lift_casilla_lineage_key(self, working, baseline, plan, lifted_keys, locale, key)
         return lifted
 
     # -- application ------------------------------------------------------
@@ -471,10 +471,10 @@ class ModeloCasillaCatalogue:
             )
             changed = sum(1 for coordinate, text in proof.resolution().items() if result.baseline[coordinate] != text)
         except BaseException:
-            _discard(pending_dir)
+            discard(pending_dir)
             raise
         if changed:
-            _discard(pending_dir)
+            discard(pending_dir)
             raise CollapseVerificationError(f"the staged catalogue resolves {changed} texts differently")
         resume_install(locales_dir, pending_dir)
         return written
@@ -501,7 +501,7 @@ class ModeloCasillaCatalogue:
             CollapseVerificationError: An install is pending, a key is not a
                 casilla key any chain reads, or a change is not attributable.
         """
-        _refuse_unknown_authored_casilla_keys(self, manifest)
+        refuse_unknown_authored_casilla_keys(self, manifest)
         if pending_dir.exists():
             raise CollapseVerificationError(f"an install is pending at {pending_dir}; resume it first")
         before = self.resolution()
@@ -510,7 +510,7 @@ class ModeloCasillaCatalogue:
         try:
             manager = LocaleManager(src_dir=staged, locales_dir=staged)
             for locale, values in sorted(manifest.items()):
-                _apply_authored_casilla_locale(manager, locale, values)
+                apply_authored_casilla_locale(manager, locale, values)
             proof = ModeloCasillaCatalogue(
                 self.occurrences,
                 load_casilla_values(staged),
@@ -520,24 +520,24 @@ class ModeloCasillaCatalogue:
             changed: dict[str, int] = defaultdict(int)
             unattributed: list[Coordinate] = []
             for coordinate, text in after.items():
-                _record_authored_casilla_change(self, proof, before, manifest, coordinate, text, changed, unattributed)
+                record_authored_casilla_change(self, proof, before, manifest, coordinate, text, changed, unattributed)
             affected_locales = self.locales if SOURCE_LOCALE in manifest else tuple(manifest)
             introduced_drift: list[tuple[str, str, tuple[str, ...]]] = []
             for locale in affected_locales:
-                _record_introduced_casilla_segment_drift(self, proof, locale, introduced_drift)
+                record_introduced_casilla_segment_drift(self, proof, locale, introduced_drift)
             if introduced_drift:
                 raise CollapseVerificationError(
                     f"authored values introduce inconsistent composed-segment renderings: {introduced_drift[:5]}"
                 )
         except BaseException:
-            _discard(pending_dir)
+            discard(pending_dir)
             raise
         if unattributed:
-            _discard(pending_dir)
+            discard(pending_dir)
             raise CollapseVerificationError(f"{len(unattributed)} changed texts are not served by the manifest")
         split = self._continuity_splits(before, after)
         if split:
-            _discard(pending_dir)
+            discard(pending_dir)
             raise CollapseVerificationError(
                 "Spanish text would diverge between editions that render one text today, which the registry "
                 f"refuses without a continuity evolution: {split[:5]}"
@@ -585,7 +585,7 @@ class ModeloCasillaCatalogue:
         occurrences = {self.occurrences[index].revision: index for index in members}
         links: dict[str | None, set[str | None]] = defaultdict(set)
         for evolution in self.label_evolutions.get(modelo, ()):
-            _add_declared_casilla_label_link(self, evolution, occurrences, after, links)
+            add_declared_casilla_label_link(self, evolution, occurrences, after, links)
         pending = [next(iter(texts))]
         reached: set[str | None] = set()
         while pending:

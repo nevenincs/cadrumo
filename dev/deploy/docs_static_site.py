@@ -12,16 +12,21 @@ from dev.deploy.cloudflare_api import (
 )
 from dev.deploy.docs_delivery_settings import configure_delivery, prepare_storage
 
-from .docs_delivery_activation import _activate_existing, _provision, _publish, _rollback
+from .docs_delivery_activation import (
+    activate_existing,
+    docs_delivery_activation_provision,
+    docs_delivery_activation_publish,
+    docs_delivery_activation_rollback,
+)
 from .docs_delivery_contracts import DOCS_ZONE
-from .docs_delivery_policy import _delivery_credentials, _require_local_session
+from .docs_delivery_policy import delivery_credentials, require_local_session
 from .docs_site_build import build_site_roots
-from .docs_site_commands import _repo_root
+from .docs_site_commands import docs_site_commands_repo_root
 from .docs_site_languages import localized_languages
-from .docs_site_preflight import _validate_built_site
+from .docs_site_preflight import validate_built_site
 
 
-def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = build_site_roots) -> int:
+def dry_run(repo_root: Path, *, build: Callable[[Path], Path] = build_site_roots) -> int:
     """Build every site root and validate it exactly as a publish would, uploading nothing.
 
     Without this verb the whole build-and-validate prefix was reachable only
@@ -41,7 +46,7 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = build_site_root
             Sphinx builds.
     """
     html_root = build(repo_root)
-    _validate_built_site(html_root)
+    validate_built_site(html_root)
     print(
         f"Verified the built docs site at {html_root}: apex entry plus the "
         f"{', '.join(localized_languages())} roots. Uploaded nothing.",
@@ -94,22 +99,22 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("dry-run", help="Build and validate every site root without uploading.")
     args = parser.parse_args(argv)
 
-    repo_root = _repo_root()
+    repo_root = docs_site_commands_repo_root()
     if args.command == "dry-run":
-        return _dry_run(repo_root)
+        return dry_run(repo_root)
     if args.command == "configure":
-        _require_local_session("configure", environment=os.environ)
-        credentials = _delivery_credentials(os.environ)
+        require_local_session("configure", environment=os.environ)
+        credentials = delivery_credentials(os.environ)
         prepare_storage(credentials.account)
         configure_delivery(credentials.account, zone_id(credentials.account, DOCS_ZONE), args.snapshot)
         return 0
     if args.command == "provision":
-        return _provision()
+        return docs_delivery_activation_provision()
     if args.command == "rollback":
-        return _rollback(args.release)
+        return docs_delivery_activation_rollback(args.release)
     if args.command == "activate":
-        return _activate_existing(args.release, args.directory)
-    return _publish(repo_root, release_label=args.release_label, cutover=args.cutover)
+        return activate_existing(args.release, args.directory)
+    return docs_delivery_activation_publish(repo_root, release_label=args.release_label, cutover=args.cutover)
 
 
 if __name__ == "__main__":

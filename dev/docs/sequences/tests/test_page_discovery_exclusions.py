@@ -1,7 +1,7 @@
 """Census gate for the pages the cli-sequence engine never opens.
 
-:data:`~dev.docs.sequences.checks._SKIPPED_DOC_DIRS` bounds
-:func:`~dev.docs.sequences.checks._page_files`, and every consumer of the
+:data:`~dev.docs.sequences.checks.SKIPPED_DOC_DIRS` bounds
+:func:`~dev.docs.sequences.checks.checks_page_files`, and every consumer of the
 committed sequence corpus reads through it: the goldens gate, the Sphinx build
 gate, the refresh CLI, and the enrolment floor in
 ``test_committed_enrolment.py``. One predicate therefore bounds both the work -
@@ -43,7 +43,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
-from ..checks import _SKIPPED_DOC_DIRS, _page_files, default_docs_root
+from ..checks import SKIPPED_DOC_DIRS, checks_page_files, default_docs_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -84,7 +84,7 @@ def _residue(candidates: frozenset[str], docs_root: Path) -> frozenset[str]:
     beside it. ``candidates`` is injected because the live population comes from
     the git index while the teeth run over an isolated tree that has none.
     """
-    opened = frozenset(path.relative_to(docs_root).as_posix() for path in _page_files(docs_root))
+    opened = frozenset(path.relative_to(docs_root).as_posix() for path in checks_page_files(docs_root))
     assert opened <= candidates, (
         f"the sequence engine opened {sorted(opened - candidates)[:5]}, which the candidate "
         "enumeration does not contain; this gate no longer models the filter it audits"
@@ -99,7 +99,7 @@ def test_the_committed_page_census_is_not_empty() -> None:
         f"only {len(candidates)} committed markdown page(s) enumerated under docs/; "
         "the index walk has stopped matching and every assertion here would compare empty sets"
     )
-    assert _page_files(_DOCS), f"the sequence engine opened no pages under {_DOCS}; this gate measures nothing"
+    assert checks_page_files(_DOCS), f"the sequence engine opened no pages under {_DOCS}; this gate measures nothing"
 
 
 def test_no_committed_page_is_removed_from_sequence_discovery() -> None:
@@ -131,7 +131,7 @@ def test_every_declared_skip_directory_still_holds_no_page() -> None:
     committed = _committed_markdown_pages()
     populated = {
         directory: pages
-        for directory in sorted(_SKIPPED_DOC_DIRS)
+        for directory in sorted(SKIPPED_DOC_DIRS)
         if (pages := sorted(page for page in committed if page.startswith(f"{directory}/")))
     }
 
@@ -151,7 +151,7 @@ def test_a_skipped_subtree_is_named(tmp_path: Path) -> None:
     failing rather than merely observed passing.
     """
     docs_root = tmp_path / "docs"
-    skipped_dir = sorted(_SKIPPED_DOC_DIRS)[0]
+    skipped_dir = sorted(SKIPPED_DOC_DIRS)[0]
     (docs_root / "how-to").mkdir(parents=True)
     (docs_root / skipped_dir).mkdir()
     (docs_root / "how-to" / "visible.md").write_text("# Visible page\n", encoding="utf-8")

@@ -77,7 +77,7 @@ def _compile_modelo_overviews(
     """
     slots = active()
     carried = slots.languages if slots is not None else (language.value,)
-    definitions = {tag: _handbook_definitions(OutputLanguage(tag)) for tag in carried}
+    definitions = {tag: handbook_definitions(OutputLanguage(tag)) for tag in carried}
     overviews: dict[str, ModeloOverview] = {}
     for modelo_id in sorted(modelo_ids):
         modelo = modelos.get(modelo_id)
@@ -95,7 +95,7 @@ def _compile_modelo_overviews(
     return overviews
 
 
-def _handbook_definitions(language: OutputLanguage) -> dict[str, str]:
+def handbook_definitions(language: OutputLanguage) -> dict[str, str]:
     """``modelo id -> curated definition`` for approved concepts, in ONE language.
 
     Only an ``approved`` concept that authored a definition in the build language

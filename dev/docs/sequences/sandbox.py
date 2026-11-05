@@ -226,7 +226,7 @@ def _publish_sandbox_profile(*, profile_id: str, label: str) -> None:
         session.close()
 
 
-def _publish_replacement_sandbox_profile() -> None:
+def publish_replacement_sandbox_profile() -> None:
     """Publish the replacement, then restore the original documented login target."""
     _publish_sandbox_profile(profile_id=SANDBOX_REPLACEMENT_PROFILE_ID, label=SANDBOX_REPLACEMENT_PROFILE_LABEL)
     # Canonical capsule creation selects its new capsule. The first documented
@@ -336,7 +336,7 @@ def _reap_orphaned_scratch(root: Path, prefix: str) -> None:
         shutil.rmtree(candidate, ignore_errors=True)
 
 
-def _sandbox_template() -> Path:
+def sandbox_template() -> Path:
     """Return a sandbox state directory with the profile already published.
 
     Publishing the sandbox profile (capsule, facts, setup, retention and
@@ -368,7 +368,7 @@ def _sandbox_template() -> Path:
             ),
             isolated_profile_storage_root(tmp_path=template),
             composed_profile_persistence_ports(),
-            _isolated_diagnostic_log(),
+            isolated_diagnostic_log(),
             frozen_clock(SANDBOX_INSTANT),
             _provisioned_sandbox_profile(),
         ):
@@ -459,7 +459,7 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
 
 
 @contextmanager
-def _isolated_diagnostic_log() -> Generator[None]:
+def isolated_diagnostic_log() -> Generator[None]:
     """Bind diagnostic file logging to THIS sequence's own storage root.
 
     Every sequence sharing a process (a full docs build, or a multi-sequence
@@ -596,7 +596,7 @@ def sequence_sandbox(
     if fixtures.is_dir():
         shutil.copytree(fixtures, workdir / "fixtures", dirs_exist_ok=True)
     _seed_m303_filing_evidence(workdir / "fixtures")
-    copy_sealed_tree(_sandbox_template(), sandbox_root)
+    copy_sealed_tree(sandbox_template(), sandbox_root)
 
     dispose_engine()
     # A login frame binds its BucketSession UNSCOPED (``bind_active_bucket_session``)
@@ -630,14 +630,14 @@ def sequence_sandbox(
         # console script binds: a sandbox that reached the network would make
         # every golden depend on the day's reference rates.
         bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
-        _isolated_diagnostic_log(),
+        isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
         sequence_receipt_store(Path(load_settings().cadrumo_storage_root), enabled=persistent_sign_in),
     ):
         if enrolled_sequence_ids is None and sequence_id == "profile-setup-delete":
-            _publish_replacement_sandbox_profile()
+            publish_replacement_sandbox_profile()
         with sequence_runtime(
             Path(load_settings().cadrumo_storage_root),
             signed_in_profile=UUID(SANDBOX_PROFILE_ID) if persistent_sign_in else None,

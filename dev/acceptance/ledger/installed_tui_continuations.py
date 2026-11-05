@@ -13,28 +13,28 @@ from .frontend_contract import (
     assert_unlinked_detail_continuation,
 )
 from .installed_tui_cli_observations import (
-    _assert_tui_only_cli_oracle,
-    _find_invoice_by_number,
-    _read_invoice,
-    _read_transaction,
+    assert_tui_only_cli_oracle,
+    find_invoice_by_number,
+    read_invoice,
+    read_transaction,
 )
-from .installed_tui_cli_transport import _cli_command, _create_profile, _result
-from .installed_tui_cli_writes import _add_invoice, _add_transaction, _assert_linked_identity_refused, _link_transaction
+from .installed_tui_cli_transport import cli_command, create_profile, installed_tui_cli_transport_result
+from .installed_tui_cli_writes import add_invoice, add_transaction, assert_linked_identity_refused, link_transaction
 from .installed_tui_contracts import (
-    _INVOICE_TOTAL,
-    _SCHEMA_VERSION,
+    INVOICE_TOTAL,
+    SCHEMA_VERSION,
     LedgerContinuationReceipt,
     LedgerInstalledTuiError,
     LedgerTuiChildReceipt,
-    _TuiOnlyRun,
+    TuiOnlyRun,
 )
-from .installed_tui_controls import _tui_only_transaction_descriptions
-from .installed_tui_export import _compare_export
-from .installed_tui_process import _run_child
-from .installed_tui_storage import _require_empty_directory
+from .installed_tui_controls import tui_only_transaction_descriptions
+from .installed_tui_export import compare_export
+from .installed_tui_process import run_child
+from .installed_tui_storage import require_empty_directory
 
 
-def _run_tui_only(
+def run_tui_only(
     *,
     python_executable: Path,
     workspace_root: Path,
@@ -42,15 +42,15 @@ def _run_tui_only(
     output_root: Path,
     year: int,
     cli_executable: Path | None = None,
-) -> _TuiOnlyRun:
+) -> TuiOnlyRun:
     """Prove capture, detail update, and fresh-process readback using only installed TUI controls."""
-    store = _require_empty_directory(output_root / "secure-store", label="TUI-only Ledger store")
+    store = require_empty_directory(output_root / "secure-store", label="TUI-only Ledger store")
     passphrase = secrets.token_urlsafe(32)
     invoice_number = f"LEDGER-TUI-{year}-001"
     initial_notes = "ledger-tui-initial"
     updated_notes = "ledger-tui-updated"
-    _initial_description, updated_description = _tui_only_transaction_descriptions(year)
-    capture = _run_child(
+    _initial_description, updated_description = tui_only_transaction_descriptions(year)
+    capture = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,
@@ -63,7 +63,7 @@ def _run_tui_only(
         initial_notes=initial_notes,
         updated_notes=updated_notes,
     )
-    reopened = _run_child(
+    reopened = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,
@@ -79,7 +79,7 @@ def _run_tui_only(
     if capture.product_init_sha256 != reopened.product_init_sha256:
         raise LedgerInstalledTuiError("TUI-only fresh child imported a different installed product")
     receipt = LedgerTuiChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode="tui_only_reopen",
         product_origin="site-packages",
@@ -87,11 +87,11 @@ def _run_tui_only(
         observations=(*capture.observations, *reopened.observations),
     )
     if cli_executable is None:
-        return _TuiOnlyRun(receipt=receipt, cli_oracle_observations=(), cli_command_count=0)
+        return TuiOnlyRun(receipt=receipt, cli_oracle_observations=(), cli_command_count=0)
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
-    return _TuiOnlyRun(
+    return TuiOnlyRun(
         receipt=receipt,
-        cli_oracle_observations=_assert_tui_only_cli_oracle(
+        cli_oracle_observations=assert_tui_only_cli_oracle(
             cli,
             invoice_number=invoice_number,
             updated_notes=updated_notes,
@@ -101,7 +101,7 @@ def _run_tui_only(
     )
 
 
-def _run_cli_to_tui(
+def run_cli_to_tui(
     *,
     cli_executable: Path,
     python_executable: Path,
@@ -111,14 +111,14 @@ def _run_cli_to_tui(
     year: int,
 ) -> tuple[LedgerContinuationReceipt, LedgerTuiChildReceipt]:
     """Continue public CLI capture through TUI edits, refusal readback, and export parity."""
-    store = _require_empty_directory(output_root / "secure-store", label="CLI-to-TUI Ledger store")
+    store = require_empty_directory(output_root / "secure-store", label="CLI-to-TUI Ledger store")
     passphrase = secrets.token_urlsafe(32)
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
-    _create_profile(cli, year=year, stage="CLI-to-TUI profile creation")
+    create_profile(cli, year=year, stage="CLI-to-TUI profile creation")
     invoice_number = f"LEDGER-CLI-TUI-{year}-001"
     initial_notes = "ledger-cli-initial"
     updated_notes = "ledger-tui-followup"
-    invoice = _add_invoice(
+    invoice = add_invoice(
         cli,
         invoice_number=invoice_number,
         notes=initial_notes,
@@ -126,28 +126,28 @@ def _run_cli_to_tui(
         stage="CLI-to-TUI invoice capture",
     )
     linked_description = "ledger-linked-refusal-row"
-    linked = _add_transaction(
+    linked = add_transaction(
         cli,
         description=linked_description,
-        amount=_INVOICE_TOTAL,
+        amount=INVOICE_TOTAL,
         idempotency_key="ledger-cli-tui-linked",
         year=year,
         stage="CLI-to-TUI linked transaction capture",
     )
-    _link_transaction(cli, linked.transaction_id, invoice.invoice_id, stage="CLI-to-TUI public link")
+    link_transaction(cli, linked.transaction_id, invoice.invoice_id, stage="CLI-to-TUI public link")
     unlinked_description = "ledger-unlinked-detail-row"
-    unlinked = _add_transaction(
+    unlinked = add_transaction(
         cli,
         description=unlinked_description,
-        amount=_INVOICE_TOTAL,
+        amount=INVOICE_TOTAL,
         idempotency_key="ledger-cli-tui-unlinked",
         year=year,
         stage="CLI-to-TUI unlinked transaction capture",
     )
-    before_invoice = _read_invoice(cli, invoice.invoice_id, stage="CLI-to-TUI invoice before TUI edit")
-    before_unlinked = _read_transaction(cli, unlinked.transaction_id, stage="CLI-to-TUI transaction before TUI edit")
+    before_invoice = read_invoice(cli, invoice.invoice_id, stage="CLI-to-TUI invoice before TUI edit")
+    before_unlinked = read_transaction(cli, unlinked.transaction_id, stage="CLI-to-TUI transaction before TUI edit")
     edited_description = "ledger-unlinked-detail-updated"
-    continuation_child = _run_child(
+    continuation_child = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,
@@ -162,15 +162,15 @@ def _run_cli_to_tui(
         transaction_description=unlinked_description,
         updated_description=edited_description,
     )
-    after_invoice = _read_invoice(cli, invoice.invoice_id, stage="CLI-to-TUI invoice after TUI edit")
-    after_unlinked = _read_transaction(cli, unlinked.transaction_id, stage="CLI-to-TUI transaction after TUI edit")
+    after_invoice = read_invoice(cli, invoice.invoice_id, stage="CLI-to-TUI invoice after TUI edit")
+    after_unlinked = read_transaction(cli, unlinked.transaction_id, stage="CLI-to-TUI transaction after TUI edit")
     assert_invoice_metadata_continuation(before_invoice, after_invoice, expected_notes=updated_notes)
     assert_unlinked_detail_continuation(before_unlinked, after_unlinked, expected_description=edited_description)
 
-    before_linked_invoice = _read_invoice(cli, invoice.invoice_id, stage="linked refusal invoice before")
-    before_linked_transaction = _read_transaction(cli, linked.transaction_id, stage="linked refusal transaction before")
-    _assert_linked_identity_refused(cli, linked.transaction_id)
-    refusal_child = _run_child(
+    before_linked_invoice = read_invoice(cli, invoice.invoice_id, stage="linked refusal invoice before")
+    before_linked_transaction = read_transaction(cli, linked.transaction_id, stage="linked refusal transaction before")
+    assert_linked_identity_refused(cli, linked.transaction_id)
+    refusal_child = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,
@@ -183,15 +183,15 @@ def _run_cli_to_tui(
         initial_notes=updated_notes,
         transaction_description=linked_description,
     )
-    after_linked_invoice = _read_invoice(cli, invoice.invoice_id, stage="linked refusal invoice after")
-    after_linked_transaction = _read_transaction(cli, linked.transaction_id, stage="linked refusal transaction after")
+    after_linked_invoice = read_invoice(cli, invoice.invoice_id, stage="linked refusal invoice after")
+    after_linked_transaction = read_transaction(cli, linked.transaction_id, stage="linked refusal transaction after")
     assert_linked_identity_refusal(
         before_linked_invoice,
         after_linked_invoice,
         before_linked_transaction,
         after_linked_transaction,
     )
-    export_rows, export_sha256 = _compare_export(
+    export_rows, export_sha256 = compare_export(
         cli,
         output_path=output_root / "ledger.jsonl",
         stage="CLI-to-TUI export comparison",
@@ -209,7 +209,7 @@ def _run_cli_to_tui(
     )
 
 
-def _run_tui_to_cli(
+def run_tui_to_cli(
     *,
     cli_executable: Path,
     python_executable: Path,
@@ -219,13 +219,13 @@ def _run_tui_to_cli(
     year: int,
 ) -> tuple[LedgerContinuationReceipt, LedgerTuiChildReceipt]:
     """Continue installed TUI capture through CLI metadata update and a new TUI readback."""
-    store = _require_empty_directory(output_root / "secure-store", label="TUI-to-CLI Ledger store")
+    store = require_empty_directory(output_root / "secure-store", label="TUI-to-CLI Ledger store")
     passphrase = secrets.token_urlsafe(32)
     invoice_number = f"LEDGER-TUI-CLI-{year}-001"
     initial_notes = "ledger-tui-origin"
     tui_updated_notes = "ledger-tui-captured"
     cli_updated_notes = "ledger-cli-followup"
-    capture_child = _run_child(
+    capture_child = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,
@@ -239,11 +239,11 @@ def _run_tui_to_cli(
         updated_notes=tui_updated_notes,
     )
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
-    before_invoice = _find_invoice_by_number(cli, invoice_number, stage="TUI-to-CLI public invoice discovery")
+    before_invoice = find_invoice_by_number(cli, invoice_number, stage="TUI-to-CLI public invoice discovery")
     if before_invoice.notes != tui_updated_notes:
         raise LedgerInstalledTuiError("TUI-to-CLI capture did not commit its visible invoice metadata update")
-    _result(
-        _cli_command(
+    installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "invoice", "update", before_invoice.invoice_id, "--notes", cli_updated_notes),
             stage="TUI-to-CLI public invoice update",
@@ -251,23 +251,23 @@ def _run_tui_to_cli(
         ),
         stage="TUI-to-CLI public invoice update",
     )
-    after_invoice = _read_invoice(cli, before_invoice.invoice_id, stage="TUI-to-CLI invoice after CLI edit")
+    after_invoice = read_invoice(cli, before_invoice.invoice_id, stage="TUI-to-CLI invoice after CLI edit")
     assert_invoice_metadata_continuation(before_invoice, after_invoice, expected_notes=cli_updated_notes)
-    linked = _add_transaction(
+    linked = add_transaction(
         cli,
         description="ledger-tui-cli-linked-export-row",
-        amount=_INVOICE_TOTAL,
+        amount=INVOICE_TOTAL,
         idempotency_key="ledger-tui-cli-linked",
         year=year,
         stage="TUI-to-CLI linked transaction capture",
     )
-    _link_transaction(cli, linked.transaction_id, before_invoice.invoice_id, stage="TUI-to-CLI public link")
-    export_rows, export_sha256 = _compare_export(
+    link_transaction(cli, linked.transaction_id, before_invoice.invoice_id, stage="TUI-to-CLI public link")
+    export_rows, export_sha256 = compare_export(
         cli,
         output_path=output_root / "ledger.jsonl",
         stage="TUI-to-CLI export comparison",
     )
-    reopen_child = _run_child(
+    reopen_child = run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
         authority_root=authority_root,

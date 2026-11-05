@@ -19,20 +19,20 @@ from dev.deploy.docs_asset_delivery import (
 )
 
 from .docs_delivery_contracts import (
-    _APEX_DEEP_LINK,
-    _ENDPOINT_TIMEOUT_SECONDS,
-    _MISSING_DOCS_PATH,
-    _RELEASE_POLL_SECONDS,
-    _RELEASE_WAIT_SECONDS,
+    APEX_DEEP_LINK,
     CANONICAL_DOCS_BASE_URL,
     CANONICAL_SITE_DOMAIN,
+    ENDPOINT_TIMEOUT_SECONDS,
     MIRROR_DOCS_BASE_URL,
+    MISSING_DOCS_PATH,
     RELEASE_HEADER,
+    RELEASE_POLL_SECONDS,
+    RELEASE_WAIT_SECONDS,
 )
 from .docs_site_languages import localized_languages
 
 
-def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
+def endpoint_response(url: str) -> tuple[int, dict[str, str]]:
     """Return one public endpoint's unredirected HTTP status and headers."""
     parsed = urlsplit(url)
     if parsed.scheme != "https" or parsed.hostname is None:
@@ -40,7 +40,7 @@ def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
     path = parsed.path or "/"
     if parsed.query:
         path = f"{path}?{parsed.query}"
-    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
+    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=ENDPOINT_TIMEOUT_SECONDS)
     try:
         connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
         response = connection.getresponse()
@@ -65,10 +65,10 @@ def public_delivery_checks() -> tuple[tuple[str, int], ...]:
     for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
         checks.append((f"{base_url}/", 200))
         checks.extend((f"{base_url}/{language}/", 200) for language in localized_languages())
-        checks.append((f"{base_url}/{_MISSING_DOCS_PATH}", 404))
+        checks.append((f"{base_url}/{MISSING_DOCS_PATH}", 404))
         checks.append((base_url, 301))
         checks.append((f"{base_url}?cadrumo_delivery_check=1", 301))
-        checks.append((f"{base_url}/{_APEX_DEEP_LINK}", 301))
+        checks.append((f"{base_url}/{APEX_DEEP_LINK}", 301))
     return tuple(checks)
 
 
@@ -81,9 +81,9 @@ def expected_redirect(url: str) -> str:
     parsed = urlsplit(url)
     path = parsed.path
     query = f"?{parsed.query}" if parsed.query else ""
-    if path.endswith(f"/{_APEX_DEEP_LINK}"):
-        mount = path[: -len(_APEX_DEEP_LINK) - 1]
-        return f"{mount}/{OutputLanguage.EN.value}/{_APEX_DEEP_LINK}{query}"
+    if path.endswith(f"/{APEX_DEEP_LINK}"):
+        mount = path[: -len(APEX_DEEP_LINK) - 1]
+        return f"{mount}/{OutputLanguage.EN.value}/{APEX_DEEP_LINK}{query}"
     return f"{path}/{query}"
 
 
@@ -97,7 +97,7 @@ def _published_body(url: str) -> bytes:
     if parsed.scheme != "https" or parsed.hostname is None:
         raise SystemExit(f"Endpoint check requires a complete HTTPS URL: {url}")
     path = parsed.path or "/"
-    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
+    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=ENDPOINT_TIMEOUT_SECONDS)
     try:
         connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
         response = connection.getresponse()
@@ -123,7 +123,7 @@ def _indexed_entry_counts(payload: bytes, *, origin: str) -> dict[str, int]:
     return {str(name): int(split["page_count"]) for name, split in languages.items()}
 
 
-def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str) -> None:
+def assert_served_index_matches_build(*, built: Path, served: bytes, label: str) -> None:
     """Require the served index to carry exactly what the validated build carried.
 
     The preflight has already refused a record-free build, so the local entry is
@@ -149,7 +149,7 @@ def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str
         )
 
 
-def _verify_published_search_index(
+def verify_published_search_index(
     html_root: Path,
     *,
     base_url: str = CANONICAL_DOCS_BASE_URL,
@@ -171,20 +171,20 @@ def _verify_published_search_index(
             against real built artefacts without standing up a TLS endpoint.
     """
     served = fetch(f"{base_url}/pagefind/pagefind-entry.json")
-    _assert_served_index_matches_build(
+    assert_served_index_matches_build(
         built=html_root / "pagefind" / "pagefind-entry.json",
         served=served,
         label="the documentation site",
     )
 
 
-def _await_release_served(release: str) -> None:
+def await_release_served(release: str) -> None:
     """Wait until both mounts answer with ``release`` after a Worker deploy."""
-    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    deadline = time.monotonic() + RELEASE_WAIT_SECONDS
     pending = {f"{CANONICAL_DOCS_BASE_URL}/", f"{MIRROR_DOCS_BASE_URL}/"}
     while True:
         for url in sorted(pending):
-            _status, headers = _endpoint_response(url)
+            _status, headers = endpoint_response(url)
             if headers.get(RELEASE_HEADER) == release:
                 pending.discard(url)
         if not pending:
@@ -192,15 +192,15 @@ def _await_release_served(release: str) -> None:
         if time.monotonic() > deadline:
             raise SystemExit(
                 f"Release {release} was deployed but {', '.join(sorted(pending))} did not serve it within "
-                f"{_RELEASE_WAIT_SECONDS}s. Check the Worker routes, the DNS proxy on {CANONICAL_SITE_DOMAIN} "
+                f"{RELEASE_WAIT_SECONDS}s. Check the Worker routes, the DNS proxy on {CANONICAL_SITE_DOMAIN} "
                 "and any redirect rule ahead of the Worker.",
             )
-        time.sleep(_RELEASE_POLL_SECONDS)
+        time.sleep(RELEASE_POLL_SECONDS)
 
 
 def _delivery_mismatch(url: str, expected_status: int, release: str) -> str | None:
     """Return why ``url`` does not yet answer as declared from ``release``, or ``None``."""
-    actual_status, headers = _endpoint_response(url)
+    actual_status, headers = endpoint_response(url)
     if actual_status != expected_status:
         return f"expected HTTP {expected_status}, received HTTP {actual_status}"
     if expected_status != 301 and headers.get(RELEASE_HEADER) != release:
@@ -210,7 +210,7 @@ def _delivery_mismatch(url: str, expected_status: int, release: str) -> str | No
     return None
 
 
-def _verify_public_delivery(release: str) -> None:
+def verify_public_delivery(release: str) -> None:
     """Require every checked URL on both mounts to answer as declared, from ``release``.
 
     A deploy reaches Cloudflare's edge progressively, so one request can meet an
@@ -218,37 +218,37 @@ def _verify_public_delivery(release: str) -> None:
     holds or the wait expires; a check still failing at the deadline is a
     delivery failure, never a pass.
     """
-    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    deadline = time.monotonic() + RELEASE_WAIT_SECONDS
     for url, expected_status in public_delivery_checks():
         while (mismatch := _delivery_mismatch(url, expected_status, release)) is not None:
             if time.monotonic() > deadline:
                 raise SystemExit(f"Endpoint check failed for {url}: {mismatch}.")
-            time.sleep(_RELEASE_POLL_SECONDS)
-    landing_status, _ = _endpoint_response(f"https://{CANONICAL_SITE_DOMAIN}/")
+            time.sleep(RELEASE_POLL_SECONDS)
+    landing_status, _ = endpoint_response(f"https://{CANONICAL_SITE_DOMAIN}/")
     if landing_status != 200:
         raise SystemExit(f"The {CANONICAL_SITE_DOMAIN} landing page answered HTTP {landing_status} after the deploy.")
 
 
-def _verify_candidate(account: CloudflareAccount, release: str) -> None:
+def verify_candidate(account: CloudflareAccount, release: str) -> None:
     """Exercise both mount layouts on the unpublished candidate service."""
     subdomain = cloudflare_call(account, "GET", f"/accounts/{account.account_id}/workers/subdomain")["subdomain"]
     host = f"https://{CANDIDATE_SCRIPT}.{subdomain}.workers.dev"
-    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    deadline = time.monotonic() + RELEASE_WAIT_SECONDS
     for url, expected in public_delivery_checks():
         parsed = urlsplit(url)
         candidate = host + parsed.path + (f"?{parsed.query}" if parsed.query else "")
         while (mismatch := _delivery_mismatch(candidate, expected, release)) is not None:
             if time.monotonic() > deadline:
                 raise ValueError(f"Candidate verification failed for {candidate}: {mismatch}")
-            time.sleep(_RELEASE_POLL_SECONDS)
+            time.sleep(RELEASE_POLL_SECONDS)
 
 
-def _await_static_delivery(release: str) -> None:
+def await_static_delivery(release: str) -> None:
     """Distinguish a static cutover from the same release on the preceding proxy."""
-    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    deadline = time.monotonic() + RELEASE_WAIT_SECONDS
     for base in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
         while True:
-            status, headers = _endpoint_response(base + "/")
+            status, headers = endpoint_response(base + "/")
             if (
                 status == 200
                 and headers.get(RELEASE_HEADER) == release
@@ -257,4 +257,4 @@ def _await_static_delivery(release: str) -> None:
                 break
             if time.monotonic() > deadline:
                 raise ValueError(f"Native static delivery did not become active at {base}")
-            time.sleep(_RELEASE_POLL_SECONDS)
+            time.sleep(RELEASE_POLL_SECONDS)

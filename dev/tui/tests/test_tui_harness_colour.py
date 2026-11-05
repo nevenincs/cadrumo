@@ -20,8 +20,8 @@ import pytest
 from dev.packaging.command_execution import run_command
 from dev.paths import REPO_ROOT, UTF_8
 
-from .. import _harness, _viewports
-from .._artifacts import ThemeName
+from .. import harness_support, viewports
+from ..artifacts import ThemeName
 
 _SURFACE = "aeat-sync-overview--blocked"
 _FILL = re.compile(r'fill[:=]\s*"?(#[0-9a-fA-F]{6})')
@@ -49,14 +49,14 @@ def test_a_render_started_under_no_color_still_paints_the_colour_roles(
     monochrome = tmp_path / "inherited.svg"
     opening = ("open", _SURFACE, "--size", "120x40", "--shot", str(monochrome))
     inherited = run_command(
-        [sys.executable, "-m", _harness.HARNESS_MODULE, *opening],
+        [sys.executable, "-m", harness_support.HARNESS_MODULE, *opening],
         cwd=REPO_ROOT,
         environment={**os.environ, "PYTHONIOENCODING": UTF_8},
     )
 
-    captured = _harness.capture(
+    captured = harness_support.capture(
         _SURFACE,
-        _viewports.resolve("medium"),
+        viewports.resolve("medium"),
         theme=ThemeName.DARK,
         svg_path=tmp_path / "driven.svg",
         workspace="colour-check",

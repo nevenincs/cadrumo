@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_by": "dev.docs.terminology._synonym_mining",
+  "generated_by": "dev.docs.terminology.synonym_mining",
   "thresholds": {
     "minimum_cosine": 0.78,
     "minimum_margin": 0.05,

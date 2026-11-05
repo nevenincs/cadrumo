@@ -15,12 +15,12 @@ from cadrumo.core.product_identity import (
 )
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._paths import LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
-from ..locale_tree import _flatten_leaf_values
+from ..locale_tree import flatten_leaf_values
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR, SRC_DIR
 from ..service_catalogues import SERVICE_LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -36,11 +36,11 @@ def _catalogue_source(locale: str) -> Path:
 
 def _committed_leaf_values(manager: LocaleManager, locale: str) -> dict[str, str | None]:
     """Read tax and service resources independently, preserving their distinct ownership."""
-    leaves = _flatten_leaf_values(manager.load_locale(_catalogue_source(locale)))
+    leaves = flatten_leaf_values(manager.load_locale(_catalogue_source(locale)))
     service_source = locale_catalogue_source(SERVICE_LOCALES_DIR, locale)
     assert service_source is not None, f"no service catalogue found for locale {locale!r}"
     service_manager = LocaleManager(src_dir=SERVICE_LOCALES_DIR.parent, locales_dir=SERVICE_LOCALES_DIR)
-    service_leaves = _flatten_leaf_values(service_manager.load_locale(service_source))
+    service_leaves = flatten_leaf_values(service_manager.load_locale(service_source))
     assert not leaves.keys() & service_leaves.keys(), f"{locale}: tax and service catalogue keys overlap"
     leaves.update(service_leaves)
     return leaves

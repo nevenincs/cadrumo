@@ -25,7 +25,7 @@ _RESOLVER_ENVIRONMENT: Final[tuple[str, ...]] = (
 )
 
 
-def _isolated_environment(work_dir: Path, executable_dir: Path) -> dict[str, str]:
+def isolated_environment(work_dir: Path, executable_dir: Path) -> dict[str, str]:
     """Construct a child environment with checkout imports and ambient commands removed."""
     environment = clean_product_env()
     for name in (
@@ -45,7 +45,7 @@ def _isolated_environment(work_dir: Path, executable_dir: Path) -> dict[str, str
     return environment
 
 
-def _binary_environment() -> dict[str, str]:
+def binary_environment() -> dict[str, str]:
     """Return an installer environment with every ambient resolver input removed.
 
     The command-line ``--offline --no-index`` switches are the authoritative

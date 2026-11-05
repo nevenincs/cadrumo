@@ -41,14 +41,14 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
 from dev.paths import REPO_ROOT
 
-from .._locale_chrome import DocsChromeError, docs_chrome
-from ..casilla_display import _display_language, display_locale_keys
-from ..casilla_legal_grounding import _legal_provision_display
+from ..casilla_display import display_language, display_locale_keys
+from ..casilla_legal_grounding import legal_provision_display
 from ..casilla_reference import render_casilla_reference
 from ..casilla_reference_models import EMPTY_SCHEMA, CasillaFacts, CompiledSchema, ModeloOverview
-from ..casilla_schema_compilation import _handbook_definitions
+from ..casilla_schema_compilation import handbook_definitions
 from ..legal_catalogue import load_legal_provisions
 from ..legal_reference_routing import legal_reference_target
+from ..locale_chrome import DocsChromeError, docs_chrome
 from ..terminology.casilla_anchor import casilla_page_anchor
 from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.search_record import CasillaSearchRecord
@@ -183,7 +183,7 @@ def test_an_element_only_some_languages_carry_stays_inside_the_raw_html_block() 
 
     They are elements a language has or has not, so each is written at the end of
     the preceding line with its own line break
-    (:func:`~dev.docs._locale_chrome.docs_line`). A continuation line that lost
+    (:func:`~dev.docs.locale_chrome.docs_line`). A continuation line that lost
     the three-space indent would end the ``raw`` directive and put the card's
     markup on the page as text.
     """
@@ -224,7 +224,7 @@ def test_unlabelled_entry_keeps_its_number_and_its_grounding() -> None:
     provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
     assert spanish_only.legal_refs, "the reference casilla must carry grounding to assert on"
     for ref in spanish_only.legal_refs:
-        instrument, article = _legal_provision_display(ref, provisions[ref], OutputLanguage.HU)
+        instrument, article = legal_provision_display(ref, provisions[ref], OutputLanguage.HU)
         assert instrument in rst
         assert article in rst
 
@@ -235,7 +235,7 @@ def test_default_language_is_the_shared_build_signal() -> None:
 
     from ..build import docs_build_language
 
-    assert _display_language() == docs_build_language(os.environ)
+    assert display_language() == docs_build_language(os.environ)
 
 
 def test_handbook_definitions_are_read_per_language_and_never_shared() -> None:
@@ -245,7 +245,7 @@ def test_handbook_definitions_are_read_per_language_and_never_shared() -> None:
     string in both (that would be one language's prose serving another), and the
     per-language maps are independently derived rather than one copied map.
     """
-    per_language = {language: _handbook_definitions(language) for language in OutputLanguage}
+    per_language = {language: handbook_definitions(language) for language in OutputLanguage}
     spanish = per_language[OutputLanguage.ES]
     assert spanish, "no approved modelo concept authored a Spanish definition"
     for language, definitions in per_language.items():
@@ -505,7 +505,7 @@ def test_provision_display_reads_the_official_instrument_name(
     """
     provisions = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
     for language in OutputLanguage:
-        assert _legal_provision_display(legal_id, provisions[legal_id], language) == (instrument, provision)
+        assert legal_provision_display(legal_id, provisions[legal_id], language) == (instrument, provision)
 
 
 @pytest.mark.parametrize(
@@ -528,7 +528,7 @@ def test_a_resolution_or_parliamentary_agreement_is_named_as_the_instrument_it_i
     """
     provisions = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
     for language in OutputLanguage:
-        instrument, _provision = _legal_provision_display(legal_id, provisions[legal_id], language)
+        instrument, _provision = legal_provision_display(legal_id, provisions[legal_id], language)
         assert instrument.split(" ", 1)[0] == instrument_name, (language, instrument)
 
 
@@ -598,12 +598,12 @@ def test_non_numeric_registry_section_with_no_slug_still_refuses() -> None:
 
 def test_colliding_section_anchors_are_a_build_failure() -> None:
     """Two section paths folding to one jump target are refused, never merged."""
-    from ..casilla_display import _section_anchor
+    from ..casilla_display import section_anchor
     from ..casilla_reference_models import CasillaReferenceError
 
     underscored = ("irpf", "resultado_final")
     hyphenated = ("irpf", "resultado-final")
-    assert _section_anchor(underscored) == _section_anchor(hyphenated)
+    assert section_anchor(underscored) == section_anchor(hyphenated)
 
     records = (
         _record(section=underscored),
@@ -651,12 +651,12 @@ def test_a_closed_family_that_cannot_be_read_raises_rather_than_emptying() -> No
     """
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-    from ..casilla_display import _closed_values
+    from ..casilla_display import closed_values
 
     with pytest.raises(LookupError, match="declares no field"):
-        _closed_values(CasillaDefinition, "missing_display_family")
+        closed_values(CasillaDefinition, "missing_display_family")
     with pytest.raises(LookupError, match="neither an Enum nor a Literal"):
-        _closed_values(CasillaDefinition, "number")
+        closed_values(CasillaDefinition, "number")
     assert CasillaDefinition.model_fields.get("data_type") is not None, (
         "the field this gate reasons about must still exist, or the gate is asserting nothing"
     )

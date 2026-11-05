@@ -31,9 +31,9 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from dev.first_party_source import is_test_source
 from dev.quality.source_import_analysis import module_name_for, resolve_relative_import
 
-from ._paths import SRC_DIR
+from .paths import SRC_DIR
 
-_FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
+FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
 
 
 @contextmanager
@@ -43,7 +43,7 @@ def _wizard_flows() -> Generator[tuple[WizardFlow, ...]]:
         yield (build_setup_flow(operation),)
 
 
-def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
+def walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
     """Return every translation key referenced by ``flows``."""
     keys: list[str] = []
     for flow in flows:
@@ -54,7 +54,7 @@ def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
             for question in section.questions:
                 keys.extend(_question_translation_keys(question, flow_id=flow.id))
         keys.append(f"cli.config.{flow.id}.help")
-    keys.extend(_FIXED_RUNTIME_KEYS)
+    keys.extend(FIXED_RUNTIME_KEYS)
     return tuple(keys)
 
 
@@ -80,7 +80,7 @@ def _question_translation_keys(question: WizardQuestion, *, flow_id: str) -> tup
 _UNRESOLVED_SENTINEL = "\x00aeat-wizard-translation-unresolved\x00"
 
 
-def _resolves_in(locale: str, key: str) -> bool:
+def resolves_in(locale: str, key: str) -> bool:
     """Return True when ``key`` resolves to a real translation.
 
     ``tr`` falls back to a humanised form of the key (not the raw
@@ -100,7 +100,7 @@ def wizard_descriptor_keys() -> frozenset[str]:
     cannot see them; the descriptors are their only declaration.
     """
     with _wizard_flows() as flows:
-        return frozenset(_walk_keys(flows))
+        return frozenset(walk_keys(flows))
 
 
 def audit_wizard_translations() -> tuple[str, ...]:
@@ -111,11 +111,11 @@ def audit_wizard_translations() -> tuple[str, ...]:
     fallback behaviour).
     """
     with _wizard_flows() as flows:
-        keys = _walk_keys(flows)
+        keys = walk_keys(flows)
     missing: list[str] = []
     for key in keys:
         for locale in SUPPORTED_OUTPUT_LANGUAGES:
-            if not _resolves_in(locale, key):
+            if not resolves_in(locale, key):
                 missing.append(f"{locale}:{key}")
     return tuple(missing)
 
@@ -127,7 +127,7 @@ _CLI_KEY_PATTERN = re.compile(r"cli\.\w+(?:\.\w+)+", re.UNICODE)
 _CANONICAL_TRANSLATION_MODULES = frozenset({"cadrumo.core.i18n", "cadrumo.core.i18n.render"})
 
 
-def _cli_entrypoints_root() -> Path:
+def cli_entrypoints_root() -> Path:
     return SRC_DIR / "entrypoints" / "cli"
 
 
@@ -142,17 +142,17 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     wizard descriptor catalogue instead.
     """
     keys: set[str] = set()
-    for module in scan_directory(_cli_entrypoints_root(), pattern="*.py", recursive=True):
+    for module in scan_directory(cli_entrypoints_root(), pattern="*.py", recursive=True):
         # Test modules cite translation-key prefixes in assertions
         # (e.g. `"cli.app.live.iva_wallet.acquisition.outcome"` used as a
         # leak-detection sentinel in `not in label` checks). Those are
         # introspection literals, not `tr()` call sites; auditing them
         # as required catalogue entries would fabricate dead translations.
-        if is_test_source(module, root=_cli_entrypoints_root()):
+        if is_test_source(module, root=cli_entrypoints_root()):
             continue
         source = module.read_text(encoding=UTF_8_ENCODING)
         tree = ast.parse(source, filename=str(module))
-        call_names = _translation_call_names(
+        call_names = translation_call_names(
             tree,
             importer_mod=module_name_for(module, src_root=SRC_DIR.parent),
             importer_is_pkg=module.name == "__init__.py",
@@ -166,7 +166,7 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     return tuple(sorted(keys))
 
 
-def _translation_call_names(tree: ast.AST, *, importer_mod: str, importer_is_pkg: bool) -> frozenset[str]:
+def translation_call_names(tree: ast.AST, *, importer_mod: str, importer_is_pkg: bool) -> frozenset[str]:
     """Return local names bound to the project translation function in ``tree``.
 
     Relative imports are resolved from the importing module's actual package
@@ -202,7 +202,7 @@ def audit_cli_translations() -> tuple[str, ...]:
     missing: list[str] = []
     for key in cli_keys_referenced_in_source():
         for locale in SUPPORTED_OUTPUT_LANGUAGES:
-            if not _resolves_in(locale, key):
+            if not resolves_in(locale, key):
                 missing.append(f"{locale}:{key}")
     return tuple(missing)
 

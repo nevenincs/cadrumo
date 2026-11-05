@@ -13,7 +13,7 @@ from dev.paths import UTF_8
 from .locale_mutation_contracts import DocumentationLocaleMutationError
 
 
-def _parse_catalogue(text: str, locale: str, path: Path) -> Catalog:
+def parse_catalogue(text: str, locale: str, path: Path) -> Catalog:
     """Parse one PO/POT file with Babel and normalize parser failures."""
     try:
         return read_po(io.StringIO(text), locale=locale, abort_invalid=True)
@@ -21,7 +21,7 @@ def _parse_catalogue(text: str, locale: str, path: Path) -> Catalog:
         raise DocumentationLocaleMutationError(f"cannot parse gettext catalogue {path}: {exc}") from exc
 
 
-def _message_key(message: Message) -> tuple[str, str]:
+def message_key(message: Message) -> tuple[str, str]:
     """Return a context-aware stable identity for a Babel message."""
     message_id = message.id
     if isinstance(message_id, str):
@@ -36,27 +36,27 @@ def _message_key(message: Message) -> tuple[str, str]:
     return context, identity
 
 
-def _manifest_stale_key(context: str | None, msgid: str, msgid_plural: str | None) -> tuple[str, str]:
+def manifest_stale_key(context: str | None, msgid: str, msgid_plural: str | None) -> tuple[str, str]:
     """Return the catalogue identity represented by a stale manifest item."""
     identity = msgid if msgid_plural is None else "\x04".join((msgid, msgid_plural))
     return context or "", identity
 
 
-def _catalogue_messages(catalogue: Catalog) -> dict[tuple[str, str], Message]:
+def catalogue_messages(catalogue: Catalog) -> dict[tuple[str, str], Message]:
     """Index active non-header Babel messages by gettext identity."""
-    return {_message_key(message): message for message in catalogue if message.id}
+    return {message_key(message): message for message in catalogue if message.id}
 
 
 def _all_message_keys(catalogue: Catalog) -> set[tuple[str, str]]:
     """Return active and obsolete non-header message identities."""
-    keys = set(_catalogue_messages(catalogue))
+    keys = set(catalogue_messages(catalogue))
     obsolete = getattr(catalogue, "obsolete", {})
     if isinstance(obsolete, dict):
-        keys.update(_message_key(message) for message in obsolete.values() if message.id)
+        keys.update(message_key(message) for message in obsolete.values() if message.id)
     return keys
 
 
-def _render_catalogue(catalogue: Catalog) -> str:
+def render_catalogue(catalogue: Catalog) -> str:
     """Render a Babel catalogue while retaining its existing order and header."""
     output = io.BytesIO()
     write_po(output, catalogue, sort_output=False, sort_by_file=False, ignore_obsolete=False)

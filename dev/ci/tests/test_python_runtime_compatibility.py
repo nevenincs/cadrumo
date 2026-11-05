@@ -169,7 +169,7 @@ def test_binary_missing_wheel_is_a_failed_attributable_outcome(tmp_path: Path, m
     monkeypatch.setenv("UV_INDEX_URL", "https://attacker.invalid/simple")
     monkeypatch.setenv("PIP_FIND_LINKS", "https://attacker.invalid/wheels")
 
-    commands, status, detail = runtime_probe_installation._install(
+    commands, status, detail = runtime_probe_installation.install(
         "uv",
         repo_root=tmp_path,
         work_dir=tmp_path,
@@ -204,7 +204,7 @@ def test_binary_install_refuses_to_run_without_a_sealed_wheelhouse(tmp_path: Pat
     artifact.write_bytes(b"wheel fixture")
 
     with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="extracted sealed runtime wheelhouse"):
-        runtime_probe_installation._install(
+        runtime_probe_installation.install(
             "uv",
             repo_root=tmp_path,
             work_dir=tmp_path,
@@ -220,7 +220,7 @@ def test_binary_install_refuses_drifted_wheelhouse_bytes(tmp_path: Path) -> None
     (wheelhouse / "native_dependency-1.0.0-py3-none-any.whl").write_bytes(b"substituted")
 
     with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="wheel bytes drifted"):
-        runtime_probe_installation._binary_wheel_targets(
+        runtime_probe_installation.binary_wheel_targets(
             wheelhouse,
             manifest,
             platform_target="windows-x86-64",
@@ -233,7 +233,7 @@ def test_binary_selection_uses_observed_runtime_minor() -> None:
     fourteen = {"python": "3.14", "status": "ready"}
     manifest = {"runtimes": {"3.13": thirteen, "3.14": fourteen}}
 
-    selected_minor, selected = runtime_probe_installation._select_runtime_wheelhouse(
+    selected_minor, selected = runtime_probe_installation.select_runtime_wheelhouse(
         manifest,
         {"python": "3.14.7"},
     )
@@ -262,7 +262,7 @@ def test_binary_selection_attributes_advisory_missing_wheels() -> None:
     }
 
     with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="pydantic-core") as failure:
-        runtime_probe_installation._select_runtime_wheelhouse(manifest, {"python": "3.15.0b4"})
+        runtime_probe_installation.select_runtime_wheelhouse(manifest, {"python": "3.15.0b4"})
 
     assert failure.value.category == "missing-wheel"
 
@@ -298,9 +298,9 @@ def test_binary_install_failure_taxonomy_is_not_triggered_by_the_word_wheel(
         "run_command",
         lambda *_args, **_kwargs: _command_result(returncode=1, stderr=stderr),
     )
-    monkeypatch.setattr(runtime_probe_installation, "_binary_wheel_targets", lambda *_args, **_kwargs: ())
+    monkeypatch.setattr(runtime_probe_installation, "binary_wheel_targets", lambda *_args, **_kwargs: ())
 
-    _commands, status, _detail = runtime_probe_installation._install(
+    _commands, status, _detail = runtime_probe_installation.install(
         "uv",
         repo_root=tmp_path,
         work_dir=tmp_path,
@@ -324,7 +324,7 @@ def test_focused_runtime_tests_are_target_interpreter_commands(tmp_path: Path, m
         return _command_result(returncode=0, stdout="usage: cadrumo-mcp\n")
 
     monkeypatch.setattr(runtime_probe_checks, "run_command", fake_run)
-    tests, commands, failure = runtime_probe_checks._focused_runtime_tests(tmp_path / "venv", work_dir=tmp_path)
+    tests, commands, failure = runtime_probe_checks.focused_runtime_tests(tmp_path / "venv", work_dir=tmp_path)
 
     assert failure is None
     assert [test.name for test in tests] == ["installed-cadrumo-mcp-help"]

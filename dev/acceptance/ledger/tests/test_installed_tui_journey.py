@@ -12,12 +12,12 @@ import pytest
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from ..installed_tui_cli_observations import _assert_tui_only_cli_oracle, _invoice_observation, _transaction_observation
-from ..installed_tui_cli_writes import _assert_linked_identity_refused
+from ..installed_tui_cli_observations import assert_tui_only_cli_oracle, invoice_observation, transaction_observation
+from ..installed_tui_cli_writes import assert_linked_identity_refused
 from ..installed_tui_contracts import LedgerInstalledTuiError
-from ..installed_tui_export import _optional_link_id
-from ..installed_tui_process import _parse_child_receipt
-from ..installed_tui_storage import _require_empty_directory
+from ..installed_tui_export import optional_link_id
+from ..installed_tui_process import parse_child_receipt
+from ..installed_tui_storage import require_empty_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -47,7 +47,7 @@ class _OracleCli:
 
 
 def test_public_invoice_observation_carries_the_canonical_linked_metadata() -> None:
-    observation = _invoice_observation(
+    observation = invoice_observation(
         {
             "bucket_id": "bucket-1",
             "invoice_id": "invoice-1",
@@ -66,7 +66,7 @@ def test_public_invoice_observation_carries_the_canonical_linked_metadata() -> N
 
 
 def test_public_transaction_observation_keeps_edit_lineage_for_replacement_identity() -> None:
-    observation = _transaction_observation(
+    observation = transaction_observation(
         {
             "bucket_id": "bucket-1",
             "transaction": {
@@ -100,7 +100,7 @@ def test_child_receipt_requires_installed_origin_and_nonempty_public_observation
         encoding="utf-8",
     )
 
-    parsed = _parse_child_receipt(receipt, expected_mode="tui_only_reopen")
+    parsed = parse_child_receipt(receipt, expected_mode="tui_only_reopen")
 
     assert parsed.product_origin == "site-packages"
     assert parsed.observations == ("fresh_process",)
@@ -113,7 +113,7 @@ def test_nonempty_acceptance_output_root_refuses_without_touching_prior_evidence
     marker.write_text("synthetic", encoding="utf-8")
 
     with pytest.raises(LedgerInstalledTuiError, match="fresh and empty"):
-        _require_empty_directory(root, label="Ledger test output")
+        require_empty_directory(root, label="Ledger test output")
 
     assert marker.read_text(encoding="utf-8") == "synthetic"
 
@@ -128,7 +128,7 @@ def test_linked_identity_refusal_requires_the_public_guard_code_and_message() ->
             },
         }
     )
-    _assert_linked_identity_refused(cast("InstalledCli", accepted), "transaction-1")
+    assert_linked_identity_refused(cast("InstalledCli", accepted), "transaction-1")
 
     generic = _RefusalCli(
         {
@@ -137,14 +137,14 @@ def test_linked_identity_refusal_requires_the_public_guard_code_and_message() ->
         }
     )
     with pytest.raises(LedgerInstalledTuiError, match="did not refuse"):
-        _assert_linked_identity_refused(cast("InstalledCli", generic), "transaction-1")
+        assert_linked_identity_refused(cast("InstalledCli", generic), "transaction-1")
 
 
 def test_optional_link_normalization_does_not_treat_a_blank_identifier_as_a_link() -> None:
-    assert _optional_link_id(None, stage="test") is None
-    assert _optional_link_id("invoice-1", stage="test") == "invoice-1"
+    assert optional_link_id(None, stage="test") is None
+    assert optional_link_id("invoice-1", stage="test") == "invoice-1"
     with pytest.raises(LedgerInstalledTuiError, match="required public identifier"):
-        _optional_link_id("", stage="test")
+        optional_link_id("", stage="test")
 
 
 def test_tui_only_cli_oracle_reads_canonical_totals_unlinked_import_and_edit_lineage() -> None:
@@ -208,7 +208,7 @@ def test_tui_only_cli_oracle_reads_canonical_totals_unlinked_import_and_edit_lin
         ]
     )
 
-    observations = _assert_tui_only_cli_oracle(
+    observations = assert_tui_only_cli_oracle(
         cast("InstalledCli", cli),
         invoice_number="LEDGER-TUI-2025-001",
         updated_notes="ledger-tui-updated",

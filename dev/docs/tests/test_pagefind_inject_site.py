@@ -23,13 +23,13 @@ from dev.paths import REPO_ROOT
 from ..pagefind_index import SHARED_INDEX_LANGUAGE, build_search_index
 from ..pagefind_inject import (
     InjectionStats,
-    _inject_records,
-    _materialise_records,
+    inject_records,
+    materialise_records,
 )
 from ..terminology.concept_card_projection import project_concept_cards
-from ._http_serve_support import serve_directory
-from ._pagefind_inject_support import concept_records
 from .built_site import built_documentation_site
+from .http_serve_support import serve_directory
+from .pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -80,7 +80,7 @@ def test_injection_lands_one_record_per_concept_reachable_from_every_language(
     captured: list[InjectionStats] = []
 
     async def inject(index: object) -> None:
-        stats = await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        stats = await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
         captured.append(stats)
 
     result = build_search_index(site, inject=inject)
@@ -115,7 +115,7 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     materialised = concept_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(site, inject=inject)
 
@@ -159,7 +159,7 @@ def test_materialises_every_kind_with_graceful_cli() -> None:
     injection of the records is proven by the per-language integration tests
     above, so the slow full 7k-record Pagefind write is not repeated here.
     """
-    materialised = _materialise_records()
+    materialised = materialise_records()
 
     assert materialised.concepts > 0
     assert materialised.casillas > 1000  # thousands of deduped casillas
@@ -195,7 +195,7 @@ def test_compile_search_index_wires_the_real_injector_over_built_html(
     materialised = concept_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     compile_search_index(site, _REPO_ROOT, injector=inject)
 
@@ -224,7 +224,7 @@ def test_materialise_injects_approved_concepts_only_no_drafts() -> None:
     drafts = sum(1 for c in cards if c.lifecycle is not ConceptLifecycle.APPROVED)
     assert drafts > 0  # the Handbook carries a draft backlog that must be excluded
 
-    materialised = _materialise_records()
+    materialised = materialise_records()
     concept_records = [r for r in materialised.records if r.kind.value == "concept"]
 
     assert materialised.concepts == approved

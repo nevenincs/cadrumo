@@ -47,7 +47,7 @@ import sys
 from pathlib import Path
 
 from dev.exit_codes import INIT_HOST_TOOL_MISSING, INIT_STALE, OK
-from dev.paths import REPO_ROOT as _DEV_REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from . import plan
 from .contract import (
@@ -128,7 +128,7 @@ def _repo_root() -> Path:
     Returns:
         The directory two levels above this file, which is the repository root.
     """
-    return _DEV_REPO_ROOT
+    return REPO_ROOT
 
 
 def _truthy(name: str) -> bool:

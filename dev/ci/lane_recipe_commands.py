@@ -34,7 +34,7 @@ _RECIPE_HEADER: Final = re.compile(r"^(?P<name>_?[a-z][\w-]*)\b[^:\n]*:(?![=])")
 
 
 #: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
-_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)")
+JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)")
 
 
 #: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
@@ -48,7 +48,7 @@ _JUST_VARIABLE_REF: Final = re.compile(r"\{\{\s*(?P<name>[A-Za-z_]\w*)\s*\}\}")
 _JUST_EVALUATE_LINE: Final = re.compile(r'^(?P<name>\S+)\s*:=\s*"(?P<value>.*)"\s*$')
 
 
-def _marker_expression_of(tokens: list[str]) -> str | None:
+def marker_expression_of(tokens: list[str]) -> str | None:
     """Return the ``-m`` value from a pytest argv, or None when absent."""
     marker_flag = "-m"  # a pytest selector, not a credential
     for index, token in enumerate(tokens):
@@ -59,7 +59,7 @@ def _marker_expression_of(tokens: list[str]) -> str | None:
     return None
 
 
-def _paths_of(tokens: list[str]) -> tuple[str, ...]:
+def paths_of(tokens: list[str]) -> tuple[str, ...]:
     """Return positional path arguments from a pytest argv."""
     paths: list[str] = []
     skip_next = False
@@ -79,7 +79,7 @@ def _paths_of(tokens: list[str]) -> tuple[str, ...]:
     return tuple(paths)
 
 
-def _exclusions_of(tokens: list[str]) -> tuple[str, ...]:
+def exclusions_of(tokens: list[str]) -> tuple[str, ...]:
     """Return every path a pytest argv's ``--ignore`` flags exclude.
 
     Pytest accepts two spellings for the same flag -- ``--ignore=PATH`` as one
@@ -103,7 +103,7 @@ def _exclusions_of(tokens: list[str]) -> tuple[str, ...]:
     return tuple(excluded)
 
 
-def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...]) -> list[Lane]:
+def pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...]) -> list[Lane]:
     """Return one lane per pytest invocation in ``text``.
 
     Only invocations, never every ``-m`` in the file: git's message flag shares
@@ -121,19 +121,19 @@ def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...
             continue
         if "pytest" not in tokens and not any(token.endswith("pytest") for token in tokens):
             continue
-        paths = _paths_of(tokens) or default_paths
+        paths = paths_of(tokens) or default_paths
         lanes.append(
             Lane(
                 source=source,
                 paths=paths,
-                marker_expression=_marker_expression_of(tokens),
-                exclusions=_exclusions_of(tokens),
+                marker_expression=marker_expression_of(tokens),
+                exclusions=exclusions_of(tokens),
             )
         )
     return lanes
 
 
-def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
+def justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     """Return the justfile's pytest lanes, each attributed to its recipe.
 
     Attribution is what lets a caller ask whether CI reaches a lane. A recipe
@@ -156,7 +156,7 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
         # header sits at column zero without interrupting anything.
         if raw[:1] not in {" ", "\t", "@"} and raw.strip() and not raw.lstrip().startswith("#"):
             current = None
-        for lane in _pytest_invocations(raw, source="justfile", default_paths=default_paths):
+        for lane in pytest_invocations(raw, source="justfile", default_paths=default_paths):
             lanes.append(
                 Lane(
                     source=lane.source,
@@ -169,7 +169,7 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     return lanes
 
 
-def _recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -> set[str]:
+def recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -> set[str]:
     """Return every recipe name an EXECUTED ``just <recipe>`` call in ``text`` names.
 
     Executed, because this reads justfile recipe BODIES as well as workflow
@@ -191,7 +191,7 @@ def _recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) 
     invoked: set[str] = set()
     for line in executed_lines(text):
         invoked.update(_lane_transport_recipes(line))
-        for match in _JUST_CALL.finditer(line):
+        for match in JUST_CALL.finditer(line):
             recipe = match.group("recipe")
             invoked.add(recipe)
             # `just a b` runs both when `a` takes no parameters; otherwise `b`
@@ -236,7 +236,7 @@ def _lane_transport_recipes(line: str) -> set[str]:
     return recipes
 
 
-def _parameterless_recipes(text: str) -> frozenset[str]:
+def parameterless_recipes(text: str) -> frozenset[str]:
     """Return the justfile recipes whose header declares no parameter."""
     names: set[str] = set()
     for raw in text.splitlines():
@@ -246,7 +246,7 @@ def _parameterless_recipes(text: str) -> frozenset[str]:
     return frozenset(names)
 
 
-def _recipe_bodies(text: str) -> dict[str, str]:
+def recipe_bodies(text: str) -> dict[str, str]:
     """Return each justfile recipe's body, keyed by recipe name."""
     bodies: dict[str, list[str]] = {}
     current: str | None = None
@@ -351,7 +351,7 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     matching the moment a recipe's paths move into a variable -- exactly the
     shape that broke when the harness recipe's member paths did.
     """
-    body = _recipe_bodies(resolved_justfile_text(root)).get(recipe, "")
+    body = recipe_bodies(resolved_justfile_text(root)).get(recipe, "")
     # `_recipe_bodies` does not treat an unindented comment as ending a body (a
     # doc comment can sit between a header and its own body without splitting
     # it), so a trailing comment block belonging to the NEXT recipe reads as
@@ -361,14 +361,14 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     return tuple(line.removeprefix("@") for line in executed_lines(body))
 
 
-def _recipe_closure(command: str, bodies: dict[str, str], parameterless: frozenset[str]) -> set[str]:
+def recipe_closure(command: str, bodies: dict[str, str], parameterless: frozenset[str]) -> set[str]:
     """Close over all recipe calls while retaining already reached names."""
-    reached = _recipes_invoked_by(command, parameterless)
+    reached = recipes_invoked_by(command, parameterless)
     frontier = set(reached)
     while frontier:
         nxt: set[str] = set()
         for name in frontier:
-            for called in _recipes_invoked_by(bodies.get(name, ""), parameterless):
+            for called in recipes_invoked_by(bodies.get(name, ""), parameterless):
                 if called not in reached:
                     reached.add(called)
                     nxt.add(called)

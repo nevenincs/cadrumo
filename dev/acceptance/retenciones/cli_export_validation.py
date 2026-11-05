@@ -11,10 +11,10 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from .cli_contracts import ExportValidationEvidence, RetencionesInstalledCliError
-from .cli_observations import _as_decimal, _money_or_integer_text
+from .cli_observations import as_decimal, money_or_integer_text
 
 
-def _validate_export(
+def validate_export(
     *,
     layout: ExportLayoutDefinition,
     payload: bytes,
@@ -42,7 +42,7 @@ def _validate_parsed_casillas(
         if field.casilla_id is None:
             continue
         try:
-            value = _as_decimal(field.value)
+            value = as_decimal(field.value)
         except (InvalidOperation, TypeError, ValueError) as exc:
             raise RetencionesInstalledCliError(
                 stage=stage,
@@ -58,12 +58,12 @@ def _validate_parsed_casillas(
             raise RetencionesInstalledCliError(stage=stage, diagnostic_code="export_casilla_mismatch")
     return ExportValidationEvidence(
         layout_id=str(parsed.layout_id),
-        parsed_casillas={key: _money_or_integer_text(actual[key]) for key in expected_by_id},
-        expected_casillas={key: _money_or_integer_text(value) for key, value in expected_by_id.items()},
+        parsed_casillas={key: money_or_integer_text(actual[key]) for key in expected_by_id},
+        expected_casillas={key: money_or_integer_text(value) for key, value in expected_by_id.items()},
     )
 
 
-def _expected_casillas_from_result(
+def expected_casillas_from_result(
     result: Mapping[str, Any],
     *,
     expected: tuple[tuple[str, Decimal], ...],
@@ -77,10 +77,10 @@ def _expected_casillas_from_result(
     observed: dict[str, str] = {}
     for casilla_id, expected_value in expected:
         try:
-            value = _as_decimal(casilla_values.get(casilla_id))
+            value = as_decimal(casilla_values.get(casilla_id))
         except (InvalidOperation, TypeError, ValueError) as exc:
             raise RetencionesInstalledCliError(stage=stage, diagnostic_code="calculation_casilla_invalid") from exc
         if value != expected_value:
             raise RetencionesInstalledCliError(stage=stage, diagnostic_code="calculation_casilla_mismatch")
-        observed[casilla_id] = _money_or_integer_text(value)
+        observed[casilla_id] = money_or_integer_text(value)
     return observed

@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from .iva_tui_contracts import _STATEMENT_CSV_HEADER
+from .iva_tui_contracts import STATEMENT_CSV_HEADER
 
 
 @dataclass(frozen=True, slots=True)
-class _SyntheticIvaRow:
+class SyntheticIvaRow:
     """One transient ordinary IVA input row, used by every journey assertion."""
 
     entry_date: str
@@ -22,10 +22,10 @@ class _SyntheticIvaRow:
     deduction_fact_kind: str
 
 
-def _synthetic_rows(year: int) -> tuple[_SyntheticIvaRow, _SyntheticIvaRow]:
+def iva_tui_scenario_synthetic_rows(year: int) -> tuple[SyntheticIvaRow, SyntheticIvaRow]:
     """Return the two transient rows, dated inside the first quarter of ``year``."""
     return (
-        _SyntheticIvaRow(
+        SyntheticIvaRow(
             entry_date=date(year, 2, 15).isoformat(),
             counterparty="IVA TUI sale",
             payment_reference="iva-tui-sale",
@@ -34,7 +34,7 @@ def _synthetic_rows(year: int) -> tuple[_SyntheticIvaRow, _SyntheticIvaRow]:
             iva_amount="21.00",
             deduction_fact_kind="",
         ),
-        _SyntheticIvaRow(
+        SyntheticIvaRow(
             entry_date=date(year, 2, 18).isoformat(),
             counterparty="IVA TUI purchase",
             payment_reference="iva-tui-purchase",
@@ -46,11 +46,11 @@ def _synthetic_rows(year: int) -> tuple[_SyntheticIvaRow, _SyntheticIvaRow]:
     )
 
 
-def _write_synthetic_statement(scratch: Path, synthetic_rows: tuple[_SyntheticIvaRow, ...]) -> Path:
+def write_synthetic_statement(scratch: Path, synthetic_rows: tuple[SyntheticIvaRow, ...]) -> Path:
     """Create the private, transient two-row synthetic bank statement."""
     scratch.mkdir(parents=True, exist_ok=True)
     statement = scratch / "iva-installed-tui.csv"
-    rows = [_STATEMENT_CSV_HEADER]
+    rows = [STATEMENT_CSV_HEADER]
     for item in synthetic_rows:
         rows.append(
             ",".join(

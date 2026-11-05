@@ -12,7 +12,7 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from ...terminology_handbook.loader import load_terminology_handbook
-from .._query_aliases import (
+from ..query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
     QueryAliasAuthority,
     QueryAliasAuthorityError,

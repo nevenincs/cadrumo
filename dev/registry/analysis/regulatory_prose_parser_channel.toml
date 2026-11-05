@@ -120,7 +120,7 @@ corpus = "AEAT record-design transcriptions"
 reason = "Resolves a Contenido footnote pointer to the note text the design states beneath the table, so a reviewer authoring a representation rule can read what the pointer defers to. Enrolment authorises reading that prose and no value: the screen reports the note and derives nothing, and any scale or sign a note establishes still lands in the authoring tree with its provision. The design is located from the source reference's own corpus path rather than by globbing its directory, because one modelo bundles fifteen designs and a note resolved against the wrong year is worse evidence than none."
 
 [[parser]]
-module = "dev/locales/_casilla_keys.py"
+module = "dev/locales/casilla_keys.py"
 corpus = "AEAT casilla label and help text, as the registry stores it"
 reason = """Reads the edition-keyed chains a casilla's own AEAT label and help resolve through, so an inherited row shows the text its edition states. It reads key spellings over that prose; it establishes no value."""
 

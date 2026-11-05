@@ -353,7 +353,7 @@ def _refresh_readiness_fixture(
             events.append("retire")
 
     monkeypatch.setattr(checks, "require_current_authority", current_authority)
-    monkeypatch.setattr(checks, "_execute_in_fresh_sandbox", execute_fresh)
+    monkeypatch.setattr(checks, "execute_in_fresh_sandbox", execute_fresh)
     return docs_root, valid, events
 
 

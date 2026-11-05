@@ -582,7 +582,7 @@ def test_main_cli_json_contract_blocks_without_distribution_evidence(tmp_path: P
 
 def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
     """Sanity check against the ACTUAL repository: version surfaces agree today."""
-    root = readiness._repo_root()
+    root = readiness.readiness_repo_root()
     assert (root / "pyproject.toml").is_file()
     assert (root / ".release-please-manifest.json").is_file()
 

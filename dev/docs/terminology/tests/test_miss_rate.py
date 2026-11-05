@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._miss_rate import (
+from ..miss_rate_support import (
     HeldOutCaseKind,
     HeldOutQueryCase,
     HeldOutQuerySet,

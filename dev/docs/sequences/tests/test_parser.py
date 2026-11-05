@@ -465,7 +465,7 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
 
     from pydantic import StringConstraints
 
-    from ..parser import _IDENTIFIER_RE, _JSON_PATH_RE, _SEQUENCE_ID_RE
+    from ..parser import IDENTIFIER_RE, JSON_PATH_RE, SEQUENCE_ID_RE
     from ..schema import Identifier, JsonPath, SequenceId
 
     def _pattern(alias: object) -> str:
@@ -473,9 +473,9 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
         assert isinstance(pattern, str)
         return pattern
 
-    assert _SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
-    assert _IDENTIFIER_RE.pattern == _pattern(Identifier)
-    assert _JSON_PATH_RE.pattern == _pattern(JsonPath)
+    assert SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
+    assert IDENTIFIER_RE.pattern == _pattern(Identifier)
+    assert JSON_PATH_RE.pattern == _pattern(JsonPath)
 
 
 # --- @step frame descriptions ------------------------------------------------

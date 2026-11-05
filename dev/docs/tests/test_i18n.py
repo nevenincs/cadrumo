@@ -12,7 +12,7 @@ from babel.messages.pofile import read_po, write_po
 from dev.paths import REPO_ROOT
 
 from .. import i18n
-from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues, relocate_template_locations, sync_catalogue_locations
+from ..i18n import EXCLUDED_FILES, prune_orphan_catalogues, relocate_template_locations, sync_catalogue_locations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -87,7 +87,7 @@ def test_full_update_stages_only_authored_templates(tmp_path: Path, monkeypatch:
     def capture(_repo: Path, _docs: Path, staged: Path, _languages: tuple[str, ...]) -> None:
         observed.extend(path.relative_to(staged).as_posix() for path in staged.rglob("*.pot"))
 
-    monkeypatch.setattr(i18n, "_run_catalogue_update", capture)
+    monkeypatch.setattr(i18n, "run_catalogue_update", capture)
     i18n.update_catalogues(tmp_path, ("es",))
 
     assert observed == ["index.pot"]
@@ -133,7 +133,7 @@ def test_every_declared_file_exclusion_names_a_page_that_exists() -> None:
     docs_root = REPO_ROOT / "docs"
     assert docs_root.is_dir(), f"no docs tree at {docs_root}; this gate would prove nothing"
 
-    missing = sorted(name for name in _EXCLUDED_FILES if not any(docs_root.rglob(name)))
+    missing = sorted(name for name in EXCLUDED_FILES if not any(docs_root.rglob(name)))
 
     assert not missing, (
         "these files are excluded from the localized surface but no longer exist, so the "

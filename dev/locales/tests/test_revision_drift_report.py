@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import pytest
 
-from .._revision_drift import classify_revision_moves
-from ..cli import _echo_file_audit
-from ..locale_audit import _audit_locale_file
+from ..cli import echo_file_audit
+from ..locale_audit import audit_locale_file
+from ..revision_drift import classify_revision_moves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,7 +88,7 @@ def test_the_rendered_report_prints_the_move_once_instead_of_two_key_rows(
     """The operator reads one relocation row, not the same key twice as unrelated work."""
     codebase_keys = {f"{_NEW}.label", "cli.config.profile.help"}
     catalogue_keys = {f"{_OLD}.label", "cli.config.retired.help"}
-    file_result = _audit_locale_file(
+    file_result = audit_locale_file(
         "es.yml",
         dict.fromkeys(catalogue_keys, "value"),
         set(catalogue_keys),
@@ -97,7 +97,7 @@ def test_the_rendered_report_prints_the_move_once_instead_of_two_key_rows(
         namespace_prefixes=(),
     )
 
-    _echo_file_audit(file_result)
+    echo_file_audit(file_result)
     printed = capsys.readouterr().out
 
     assert "moves=1" in printed
@@ -115,7 +115,7 @@ def test_a_rename_still_leaves_the_catalogue_not_ok() -> None:
     verdict to green would retire the only signal that the keys have not been
     carried yet.
     """
-    file_result = _audit_locale_file(
+    file_result = audit_locale_file(
         "es.yml",
         {f"{_OLD}.label": "value"},
         {f"{_OLD}.label"},

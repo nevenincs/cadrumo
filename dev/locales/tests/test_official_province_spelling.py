@@ -8,7 +8,7 @@ import yaml
 from cadrumo.core.spanish_postcode import SPANISH_PROVINCE_CODES
 
 from ..signal_spelling import spellcheck_catalogues
-from ..signal_spelling_segments import _official_province_labels_from_table, is_known_official_province_label
+from ..signal_spelling_segments import is_known_official_province_label, official_province_labels_from_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,10 +34,10 @@ def test_incomplete_or_ambiguous_official_source_is_refused() -> None:
         .joinpath("_data", "corpus", "normatives", "html", "orden-eha-3481-2008.html.extracted.md")
         .read_text(encoding="utf-8")
     )
-    assert len(_official_province_labels_from_table(source)) == len(SPANISH_PROVINCE_CODES)
+    assert len(official_province_labels_from_table(source)) == len(SPANISH_PROVINCE_CODES)
     for malformed in (source.replace("Albacete\n02\n", "", 1), source + source):
         with pytest.raises(ValueError):
-            _official_province_labels_from_table(malformed)
+            official_province_labels_from_table(malformed)
 
 
 def test_spelling_exempts_only_the_verified_complete_choice(monkeypatch, tmp_path) -> None:

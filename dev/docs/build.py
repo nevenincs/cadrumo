@@ -29,8 +29,7 @@ from dev.temporary_output import prepare_temp_root
 from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root
 from .cli_reference import generate_cli_reference
-from .download_matrix import descriptor_path as _download_descriptor_path
-from .download_matrix import inject_download_matrix
+from .download_matrix import descriptor_path, inject_download_matrix
 from .output_cleanup import remove_noncanonical_build_entries, remove_orphan_pages
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .sitemap import write_deployment_sitemap
@@ -142,7 +141,7 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
     docs_root = repo_root / "docs"
     docs_api = docs_root / "api"
     selection = _DocTargetSelection(targets=[], source_modules=[])
-    download_descriptor_rel = _download_descriptor_path(repo_root).relative_to(repo_root)
+    download_descriptor_rel = descriptor_path(repo_root).relative_to(repo_root)
     download_page = docs_root / "download.md"
 
     for rel_path in paths:
@@ -274,7 +273,7 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
 
 
 @contextlib.contextmanager
-def _full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
+def full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
     """Yield the source tree a full build reads, a private copy when ``isolated``.
 
     A build writes its generated sources -- the CLI reference, glossary, casilla
@@ -321,7 +320,7 @@ def resolved_storage_root_pin() -> Path:
     return root
 
 
-def _targets_for_docs_root(
+def targets_for_docs_root(
     original_docs_root: Path,
     copied_docs_root: Path,
     targets: list[Path],
@@ -349,7 +348,7 @@ def _targets_for_docs_root(
     return mapped
 
 
-def _generated_api_stub_names(repo_root: Path) -> frozenset[str]:
+def generated_api_stub_names(repo_root: Path) -> frozenset[str]:
     """Return the filenames of every stub a full-scope build generates."""
     manager = ApiStubManager.for_repository(repo_root, docs_api=repo_root / "docs" / "api")
     return frozenset(stub_filename(name) for name, _ in manager.discover_modules())
@@ -727,11 +726,11 @@ def update_rag_index(repo_root: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for documentation builds."""
-    args = _docs_build_arguments(argv)
+    args = docs_build_arguments(argv)
     repo_root = _repo_root()
     output_root = _docs_output_root(args)
     scope = _docs_language_scope(args)
-    flavor = _docs_flavor(args)
+    flavor = docs_flavor(args)
     plan = _docs_invocation_plan(repo_root, args)
     if not plan.full_build_required and not plan.targets:
         print("No documentation targets resolved from the given paths.", flush=True)
@@ -879,7 +878,7 @@ def _build_full_docs(
     if output_root is None:
         remove_noncanonical_build_entries(html_output_root.parent)
     html_output_root.mkdir(parents=True, exist_ok=True)
-    with _full_build_source(docs_root, isolated=isolated_source) as source_root:
+    with full_build_source(docs_root, isolated=isolated_source) as source_root:
         result = subprocess.run(
             [*command, str(source_root), str(html_output_root)],
             cwd=repo_root,
@@ -916,7 +915,7 @@ def _build_changed_docs(
     repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
 ) -> subprocess.CompletedProcess[bytes] | None:
     generated_api_stubs = (
-        _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
+        generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temp_root()) as tmp:
         temp_root = Path(tmp)
@@ -926,7 +925,7 @@ def _build_changed_docs(
             generate_cli_reference(temp_docs_root)
         if plan.download_matrix_required:
             inject_download_matrix(temp_docs_root)
-        temp_targets = _targets_for_docs_root(
+        temp_targets = targets_for_docs_root(
             docs_root,
             temp_docs_root,
             plan.targets,
@@ -941,7 +940,7 @@ def _build_changed_docs(
     return result
 
 
-def _docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
+def docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths",
@@ -1067,7 +1066,7 @@ def docs_build_flavor(env: Mapping[str, str]) -> str:
     return raw
 
 
-def _docs_flavor(args: argparse.Namespace) -> str:
+def docs_flavor(args: argparse.Namespace) -> str:
     # Precedence: explicit --flavor flag, then the CADRUMO_DOCS_FLAVOR env, then web.
     if args.flavor is not None:
         os.environ[DOCS_FLAVOR_ENV] = args.flavor

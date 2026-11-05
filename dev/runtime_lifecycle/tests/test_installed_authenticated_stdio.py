@@ -61,7 +61,7 @@ pytestmark = [
 _AUTH_READ = AUTH_READ_OPERATION_DEFINITION_ID
 
 
-def _scope_for_auth_read(client_id: UUID) -> AccessScope:
+def scope_for_auth_read(client_id: UUID) -> AccessScope:
     return AccessScope(
         operations=frozenset({_AUTH_READ}),
         actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT}),
@@ -85,7 +85,7 @@ def _scope_for_auth_read(client_id: UUID) -> AccessScope:
     )
 
 
-def _unused_reference(store: NativeClientCredentialStore) -> UUID:
+def unused_reference(store: NativeClientCredentialStore) -> UUID:
     """Choose a random exact reference after a canonical metadata-only read."""
     for _ in range(8):
         reference = uuid4()
@@ -105,7 +105,7 @@ def _prepare_empty_profile(_profile_id: UUID, _root: Path) -> None:
     """The auth status read needs no private domain records."""
 
 
-def _native_backend_for_current_platform() -> NativeSecretBackend:
+def native_backend_for_current_platform() -> NativeSecretBackend:
     if sys.platform == "win32":
         return NativeSecretBackend.WINDOWS_CREDENTIAL_MANAGER
     if sys.platform == "linux":
@@ -113,7 +113,7 @@ def _native_backend_for_current_platform() -> NativeSecretBackend:
     pytest.skip("installed native admission is covered on Windows/Linux")
 
 
-def _installed_mcp_executable() -> Path:
+def installed_mcp_executable() -> Path:
     launcher = "cadrumo-mcp.exe" if sys.platform == "win32" else "cadrumo-mcp"
     return Path(sysconfig.get_path("scripts")) / launcher
 
@@ -296,13 +296,13 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
     tmp_path: Path, run_cadrumo_cli: Callable[..., Result]
 ) -> None:
     require_os_credential_store()
-    backend = _native_backend_for_current_platform()
+    backend = native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend
     with native_api_cli_session(
         tmp_path,
         invoke_cli=run_cadrumo_cli,
-        scope_for_destination=_scope_for_auth_read,
+        scope_for_destination=scope_for_auth_read,
         prepare_profile=_prepare_empty_profile,
         server_native_store=native_store,
     ) as profile:
@@ -322,7 +322,7 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
             client_id=source_metadata.client_id,
             destination_id=source_metadata.destination_id,
         )
-        reference = _unused_reference(protected_store)
+        reference = unused_reference(protected_store)
         primary: BaseException | None = None
 
         try:
@@ -342,7 +342,7 @@ async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(
             # The canonical handle verifies the exact native bytes and key id.
             assert readback.read()
 
-            executable = _installed_mcp_executable()
+            executable = installed_mcp_executable()
             assert executable.is_file(), "the installed cadrumo-mcp executable is required"
             parameters = StdioServerParameters(
                 command=str(executable),

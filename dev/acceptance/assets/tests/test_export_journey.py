@@ -6,14 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from dev.acceptance.assets.export_journey import _asset_overlay_oracle
+from dev.acceptance.assets.export_journey import asset_overlay_oracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_export_oracle_overlays_one_asset_claim_on_the_proven_income_control() -> None:
     """The fixture preserves control facts and asserts only the €300 asset delta."""
-    oracle = _asset_overlay_oracle()
+    oracle = asset_overlay_oracle()
 
     assert oracle.control.annual_oracle.activity_income == Decimal("12000.00")
     assert oracle.control.annual_oracle.deductible_expenses == Decimal("2400.00")
@@ -28,7 +28,7 @@ def test_export_oracle_overlays_one_asset_claim_on_the_proven_income_control() -
 
 def test_export_oracle_accrues_the_element_by_days_to_each_quarter_end() -> None:
     """Hand-worked: 300.00 x 90, 181, 273 and 365 days over 365, rounded to cents."""
-    oracle = _asset_overlay_oracle()
+    oracle = asset_overlay_oracle()
 
     assert oracle.m130_asset_accrual_by_period == (
         ("1T", "73.97"),

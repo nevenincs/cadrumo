@@ -36,10 +36,10 @@ def test_ready_event_uses_the_services_integer_hosting_contract(contract: object
         "workspace_root": "synthetic-workspace",
     }
     if type(contract) is int and contract == 1:
-        session_module._validate_agent_event(event)
+        session_module.validate_agent_event(event)
     else:
         with pytest.raises(session_module.AcceptanceError, match="hosting contract"):
-            session_module._validate_agent_event(event)
+            session_module.validate_agent_event(event)
 
 
 def test_service_shutdown_drains_pending_events_before_the_stop_acknowledgement() -> None:
@@ -429,7 +429,7 @@ def test_admin_never_extends_its_budget_for_a_busy_read(monkeypatch: pytest.Monk
         def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
             return {"kind": "refused", "code": "busy"}
 
-    monkeypatch.setattr(process_module, "_ADMIN_EXCHANGE_SECONDS", 0.15)
+    monkeypatch.setattr(process_module, "ADMIN_EXCHANGE_SECONDS", 0.15)
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(BusyRead(), bearer=bearer)
     process = object.__new__(PackagedServiceProcess)
@@ -469,7 +469,7 @@ def test_service_lease_mismatch_is_rejected_before_exposing_session() -> None:
     ).model_dump(mode="json")
 
     with pytest.raises(session_module.AcceptanceError, match="service lease connection differs"):
-        session_module._validate_service_lease(
+        session_module.validate_service_lease(
             reply,
             holder,
             {"connection_id": str(_SERVICE_CONNECTION_ID)},

@@ -140,7 +140,7 @@ def _call_name(call: ast.Call) -> str | None:
     return None
 
 
-def _is_tax_base_target(target: ast.expr) -> bool:
+def is_tax_base_target(target: ast.expr) -> bool:
     """Whether an assignment target names the tax-base value under audit."""
     if isinstance(target, ast.Name):
         name = target.id
@@ -151,7 +151,7 @@ def _is_tax_base_target(target: ast.expr) -> bool:
     return name.lower() in {"tax_base", "taxable_base"}
 
 
-def _is_transcribed_value(value: ast.expr) -> bool:
+def is_transcribed_value(value: ast.expr) -> bool:
     """Whether an expression reads an already-stated structured-document value."""
     if isinstance(value, ast.Attribute):
         return value.attr in {"text", "value"}
@@ -161,11 +161,11 @@ def _is_transcribed_value(value: ast.expr) -> bool:
     if name in {"_first_text", "findtext", "get"}:
         return True
     if name in {"_decimal", "coerce_decimal", "Decimal"}:
-        return any(_is_transcribed_value(argument) for argument in value.args)
+        return any(is_transcribed_value(argument) for argument in value.args)
     return False
 
 
-def _name_words(name: str) -> set[str]:
+def name_words(name: str) -> set[str]:
     """Split an identifier into its lowercase word components.
 
     Handles snake_case and camelCase, so ``resumeSession`` and
@@ -188,7 +188,7 @@ def _name_words(name: str) -> set[str]:
     return set(words)
 
 
-def _is_calculation(value: ast.expr) -> bool:
+def is_calculation(value: ast.expr) -> bool:
     """Whether an expression performs arithmetic or invokes a calculation primitive.
 
     ``sum`` is matched as a WORD, not a substring. Matched as a substring it
@@ -210,9 +210,9 @@ def _is_calculation(value: ast.expr) -> bool:
         lowered = name.lower()
         if any(token in lowered for token in ("calculate", "compute", "derive")):
             return True
-        if _name_words(name) & {"sum", "sums"}:
+        if name_words(name) & {"sum", "sums"}:
             return True
-    return any(_is_calculation(argument) for argument in value.args)
+    return any(is_calculation(argument) for argument in value.args)
 
 
 def _calculation_function_name(result: dict[str, object]) -> str | None:
@@ -310,9 +310,7 @@ def _tax_base_evidence(tree: ast.Module, result: dict[str, object]) -> str | Non
             return evidence
 
     function_name = _calculation_function_name(result)
-    if function_name is not None and any(
-        _is_calculation(node) for node in ast.walk(tree) if isinstance(node, ast.expr)
-    ):
+    if function_name is not None and any(is_calculation(node) for node in ast.walk(tree) if isinstance(node, ast.expr)):
         return f"tax-base arithmetic in {function_name}"
     return None
 
@@ -332,10 +330,10 @@ def _currency_rounding_evidence(tree: ast.Module) -> str | None:
 
 def _tax_base_assignment_evidence(node: ast.AST) -> str | None:
     """Distinguish arithmetic assignments from transcribed invoice fields."""
-    if isinstance(node, ast.Assign) and any(_is_tax_base_target(target) for target in node.targets):
-        if _is_transcribed_value(node.value):
+    if isinstance(node, ast.Assign) and any(is_tax_base_target(target) for target in node.targets):
+        if is_transcribed_value(node.value):
             return None
-        if _is_calculation(node.value):
+        if is_calculation(node.value):
             return "tax-base arithmetic assignment"
     return _annotated_tax_base_evidence(node)
 
@@ -344,10 +342,10 @@ def _annotated_tax_base_evidence(node: ast.AST) -> str | None:
     """Require an annotated tax-base assignment with arithmetic rather than transcription."""
     if (
         isinstance(node, ast.AnnAssign)
-        and _is_tax_base_target(node.target)
+        and is_tax_base_target(node.target)
         and node.value is not None
-        and not _is_transcribed_value(node.value)
-        and _is_calculation(node.value)
+        and not is_transcribed_value(node.value)
+        and is_calculation(node.value)
     ):
         return "tax-base arithmetic assignment"
     return None

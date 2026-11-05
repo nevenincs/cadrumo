@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from ._installed_tui_fixture_support import parse_receipt_path
+from .installed_tui_fixture_support import parse_receipt_path
 
 
 def main() -> int:

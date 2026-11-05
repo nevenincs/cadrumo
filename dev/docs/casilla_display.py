@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Final
 
 from dev.paths import REPO_ROOT
 
-from ._locale_chrome import docs_chrome
 from .legal_catalogue import load_legal_provisions
+from .locale_chrome import docs_chrome
 
 if TYPE_CHECKING:
     from cadrumo.core.external_constants import OutputLanguage
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 #: Nothing user-visible is authored as a Python literal: the vocabulary lives in
 #: the four shared catalogues, Spanish first as the authoritative source, and is
 #: resolved per build language through the shared
-#: :func:`~dev.docs._locale_chrome.docs_chrome` resolver the sibling generated
+#: :func:`~dev.docs.locale_chrome.docs_chrome` resolver the sibling generated
 #: surfaces use, so all three read chrome through one authority.
 _DISPLAY_PREFIX: Final[str] = "docs.casilla"
 
@@ -32,7 +32,7 @@ _DISPLAY_PREFIX: Final[str] = "docs.casilla"
 #: stays Spanish, so translating them would name a norm that does not exist. The
 #: DESCRIPTIVE kinds - AEAT's own dictionaries, manuals, record designs - are
 #: not instrument names and live in the catalogue under ``legal_kind.*``.
-_LEGAL_INSTRUMENT_NAMES: Final[dict[str, str]] = {
+LEGAL_INSTRUMENT_NAMES: Final[dict[str, str]] = {
     "acuerdo_internacional": "Convenio",
     "acuerdo_parlamentario": "Acuerdo",
     "ley": "Ley",
@@ -113,7 +113,7 @@ def display_locale_keys() -> tuple[str, ...]:
     keys.extend(f"{_DISPLAY_PREFIX}.binding_source.{member.value}" for member in BindingSourceKind)
     keys.extend(_schema_display_keys())
     kinds = {provision.kind for provision in load_legal_provisions(REPO_ROOT)}
-    keys.extend(f"{_DISPLAY_PREFIX}.legal_kind.{kind}" for kind in sorted(kinds) if kind not in _LEGAL_INSTRUMENT_NAMES)
+    keys.extend(f"{_DISPLAY_PREFIX}.legal_kind.{kind}" for kind in sorted(kinds) if kind not in LEGAL_INSTRUMENT_NAMES)
     return tuple(dict.fromkeys(keys))
 
 
@@ -121,49 +121,49 @@ def _schema_display_keys() -> tuple[str, ...]:
     from cadrumo.domain.calculations.registry.schema import ModeloDefinition
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
-    keys = [f"{_DISPLAY_PREFIX}.data_type.{value}" for value in _closed_values(CasillaDefinition, "data_type")]
-    keys.extend(f"{_DISPLAY_PREFIX}.cadence.{value}" for value in _closed_values(ModeloDefinition, "cadence"))
+    keys = [f"{_DISPLAY_PREFIX}.data_type.{value}" for value in closed_values(CasillaDefinition, "data_type")]
+    keys.extend(f"{_DISPLAY_PREFIX}.cadence.{value}" for value in closed_values(ModeloDefinition, "cadence"))
     keys.extend(
         f"{_DISPLAY_PREFIX}.value_range.{value}"
-        for value in _closed_values(CasillaConstraints, "sign")
+        for value in closed_values(CasillaConstraints, "sign")
         if value != "any"
     )
     return tuple(keys)
 
 
-def _humanise_token(token: str) -> str:
+def humanise_token(token: str) -> str:
     """Read a snake_case registry token as prose (``rdto_trabajo`` -> ``Rdto trabajo``)."""
     words = token.replace("_", " ").replace("-", " ").strip()
     return words[:1].upper() + words[1:] if words else ""
 
 
-def _token_display(token: str) -> str:
+def token_display(token: str) -> str:
     """Render a registry token, preserving AEAT acronyms in upper case."""
-    return token.upper() if token.lower() in _ACRONYMS else _humanise_token(token)
+    return token.upper() if token.lower() in _ACRONYMS else humanise_token(token)
 
 
 def section_display(section: tuple[str, ...], language: OutputLanguage) -> str:
     """The human display for a registry section path, token by token."""
-    return " › ".join(_token_display(part) for part in section if part) or docs_chrome(
+    return " › ".join(token_display(part) for part in section if part) or docs_chrome(
         "docs.casilla.chrome.general_section", language
     )
 
 
-def _section_anchor(section: tuple[str, ...]) -> str:
+def section_anchor(section: tuple[str, ...]) -> str:
     """A page-local id for one section group, distinct from the casilla ids."""
     joined = "-".join(part for part in section if part) or "general"
     slug = re.sub(r"[^a-z0-9]+", "-", joined.lower()).strip("-")
     return f"section-{slug or 'general'}"
 
 
-def _display_language() -> OutputLanguage:
+def display_language() -> OutputLanguage:
     """The one language this build renders, read from the shared build signal."""
     from .build import docs_build_language
 
     return docs_build_language(os.environ)
 
 
-def _closed_values(
+def closed_values(
     model: type[CasillaDefinition | ModeloDefinition | CasillaConstraints],
     field: str,
 ) -> tuple[str, ...]:

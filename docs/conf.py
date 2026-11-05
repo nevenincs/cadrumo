@@ -1785,9 +1785,9 @@ def setup(app):
     # Sphinx's own words come from one translator the build language settles.
     # They are replaced here, before the builder captures one for its
     # templates, so the one compile can answer them for every language.
-    from dev.docs.sphinx_messages import register as _register_sphinx_messages
+    from dev.docs.sphinx_messages import register
 
-    _register_sphinx_messages(app)
+    register(app)
 
     def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
         """Keep private/generated typing objects out of public object indexing."""
@@ -2230,32 +2230,32 @@ def setup(app):
 
     # Register the cli-sequence directive: server-rendered executed-CLI frames
     # plus one inline JSON payload per sequence.
-    from dev.docs.sequence_directive import register as _register_cli_sequence
+    from dev.docs.sequence_directive import register
 
-    _register_cli_sequence(app)
+    register(app)
 
     # Each page's sidebar is the collapsed toctree rather than the whole site
     # tree, which the theme would otherwise recompute and embed on every page.
-    from dev.docs.navigation import register as _register_collapsed_navigation
+    from dev.docs.navigation import register
 
-    _register_collapsed_navigation(app)
+    register(app)
 
     # A generated page's heading is written in the reader's language, so the
     # anchor its section would be named after is too. Each such heading names
     # its own anchor instead, the same one in every language root.
-    from dev.docs.section_anchors import register as _register_section_anchors
+    from dev.docs.section_anchors import register
 
-    _register_section_anchors(app)
+    register(app)
 
     # The theme variables and the chrome strings are one file per site root
     # rather than a block in every page's head.
-    from dev.docs.shared_page_assets import register as _register_shared_page_assets
+    from dev.docs.shared_page_assets import register
 
-    _register_shared_page_assets(app)
+    register(app)
 
     # Sphinx's own interface strings are one script per language, which the one
     # compile writes for every language rather than for the build's own.
-    from dev.docs.translations_js import register as _register_translations_js
+    from dev.docs.translations_js import register
 
-    _register_translations_js(app)
+    register(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

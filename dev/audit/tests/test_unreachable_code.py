@@ -1036,7 +1036,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     candidates. The lenient decode was worse than the skip - a replaced byte can
     split a token so it never matches, with nothing said either way.
     """
-    from ..unreachable_references import _data_tokens
+    from ..unreachable_references import unreachable_references_data_tokens
     from ..unreachable_tree import ShippedTreeSpec
 
     package = tmp_path / "src" / "cadrumo" / "_data" / "registry"
@@ -1052,7 +1052,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
         data_globs=("_data/registry/**/*.json",),
     )
     with pytest.raises(OSError, match=r"undecodable\.json") as failure:
-        _data_tokens(spec)
+        unreachable_references_data_tokens(spec)
     assert "coverage is unproven" in str(failure.value)
 
 

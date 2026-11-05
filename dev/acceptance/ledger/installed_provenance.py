@@ -48,15 +48,15 @@ from dev.acceptance.installed_cli import (
 )
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
-from .installed_tui_cli_transport import _result, _text
+from .installed_tui_cli_transport import installed_tui_cli_transport_result, text
 from .installed_tui_contracts import LedgerInstalledTuiError
 from .installed_tui_controls import (
-    _activate_button,
-    _open_invoice_detail,
-    _open_ledger_destination,
-    _open_transaction_detail,
+    activate_button,
+    open_invoice_detail,
+    open_ledger_destination,
+    open_transaction_detail,
 )
-from .installed_tui_storage import _require_empty_directory
+from .installed_tui_storage import require_empty_directory
 from .provenance_fixtures import ProvenanceCase, provenance_cases
 
 _SCHEMA = "ledger-01-installed-provenance-v2"
@@ -87,7 +87,7 @@ def _import_cli_provenance_cases(
     for case in cli_cases:
         _import_through_cli(cli, case, paths[case.case_id])
     # Before any TUI login the CLI authenticates with the stdin secret.
-    cli_surfaces = _cli_readback(cli, cli_cases)
+    cli_surfaces = cli_readback(cli, cli_cases)
     return cli_surfaces, tui_cases
 
 
@@ -140,7 +140,9 @@ def _cli(
 ) -> dict[str, Any]:
     """Run one public JSON command and name the failed stage without retaining payloads."""
     try:
-        return _result(cli.run(arguments, command=command, authenticated=authenticated), stage=stage)
+        return installed_tui_cli_transport_result(
+            cli.run(arguments, command=command, authenticated=authenticated), stage=stage
+        )
     except InstalledCliError as error:
         # The shared runner's message names the static command and the public
         # error code only; identifiers and payloads never reach it.
@@ -219,7 +221,7 @@ def _host_free_memory_gb() -> float | None:
     return round(status.available_physical / 2**30, 1)
 
 
-def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase]) -> dict[str, list[str]]:
+def cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase]) -> dict[str, list[str]]:
     """Read every imported target using fresh stdin proof and return per-case surfaces."""
     transactions = _public_rows(
         cli, ("app", "ledger", "list"), command="ledger.list", key="description", authenticated=True
@@ -238,7 +240,7 @@ def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase]) -> dict[st
             row = transactions.get(case.target_key)
             if row is None:
                 raise LedgerInstalledTuiError(f"{stage} did not find the imported transaction")
-            transaction_id = _text(row.get("transaction_id"), stage=stage)
+            transaction_id = text(row.get("transaction_id"), stage=stage)
             tracked = _cli(
                 cli,
                 ("app", "ledger", "track", transaction_id),
@@ -257,7 +259,7 @@ def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase]) -> dict[st
             row = invoices.get(case.target_key)
             if row is None:
                 raise LedgerInstalledTuiError(f"{stage} did not find the imported invoice")
-            invoice_id = _text(row.get("invoice_id"), stage=stage)
+            invoice_id = text(row.get("invoice_id"), stage=stage)
             viewed = _cli(
                 cli,
                 ("app", "ledger", "invoice", "view", invoice_id),
@@ -277,7 +279,7 @@ async def _import_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
     from textual.widgets import Button, Input, Select, Static
 
     case_id = entry["case_id"]
-    await _open_ledger_destination(pilot)
+    await open_ledger_destination(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="import")
     await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
     if entry["record"] == "transaction":
@@ -289,17 +291,17 @@ async def _import_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
         await pilot.pause()
         query_public_selector(pilot, "#ledger-import-country", Input).value = "ES"
     query_public_selector(pilot, "#ledger-import-path", Input).value = entry["path"]
-    await _activate_button(pilot, "#ledger-import-preview-button")
+    await activate_button(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     if refusal or query_public_selector(pilot, "#ledger-import-confirm", Button).disabled:
         raise LedgerInstalledTuiError(f"{case_id} TUI import did not reach public confirmation")
-    await _activate_button(pilot, "#ledger-import-confirm")
+    await activate_button(pilot, "#ledger-import-confirm")
     await pilot.app.workers.wait_for_complete()
     if str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip():
         raise LedgerInstalledTuiError(f"{case_id} TUI import visibly refused persistence")
-    await _activate_button(pilot, "#ledger-import-again")
+    await activate_button(pilot, "#ledger-import-again")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
@@ -307,10 +309,10 @@ async def _import_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
 async def _inspect_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
     """Open one record's installed TUI detail and require its provenance token."""
     if entry["record"] == "invoice":
-        await _open_invoice_detail(pilot, invoice_number=entry["target_key"])
+        await open_invoice_detail(pilot, invoice_number=entry["target_key"])
         stage = f"{entry['case_id']} installed TUI invoice detail"
     else:
-        await _open_transaction_detail(pilot, description=entry["target_key"])
+        await open_transaction_detail(pilot, description=entry["target_key"])
         stage = f"{entry['case_id']} installed TUI transaction detail"
     assert_detail_provenance(
         await _opened_record_detail(pilot, entry, stage=stage),
@@ -345,7 +347,7 @@ async def _opened_record_detail(pilot: Any, entry: Mapping[str, Any], *, stage: 
         await pilot.pause(0.2)
 
 
-async def _wait_with_deadline(
+async def wait_with_deadline(
     pilot: Any, selectors: tuple[str, ...], *, seconds: float = _ADMISSION_SURFACE_SECONDS
 ) -> str:
     """Wait for one public admission surface for up to ``seconds``."""
@@ -369,7 +371,7 @@ async def _wait_with_deadline(
 async def _admit_installed_session(pilot: Any, *, passphrase: str) -> bool:
     """Drive the runtime login/root Apps within the existing admission bound."""
     deadline = asyncio.get_running_loop().time() + _ADMISSION_SURFACE_SECONDS
-    await _wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda", SETUP_WALK_SURFACE))
+    await wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda", SETUP_WALK_SURFACE))
     return await admit_installed_session(
         pilot=pilot,
         passphrase=passphrase,
@@ -462,7 +464,7 @@ def _provenance_child_product_matches(document: dict[str, Any]) -> bool:
     )
 
 
-def _parse_child_receipt(path: Path, *, mode: ChildMode, expected: Sequence[str]) -> dict[str, Any]:
+def parse_child_receipt(path: Path, *, mode: ChildMode, expected: Sequence[str]) -> dict[str, Any]:
     """Read one child's value-free receipt and require installed origin plus every expected observation."""
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
@@ -521,7 +523,7 @@ def _run_tui_child(
         cause = (failure.get("error") or failure.get("diagnostic")) if isinstance(failure, dict) else None
         cause = cause or "no sanitized cause"
         raise LedgerInstalledTuiError(f"installed TUI provenance {mode} child exited unsuccessfully: {cause}")
-    return _parse_child_receipt(receipt, mode=mode, expected=expected)
+    return parse_child_receipt(receipt, mode=mode, expected=expected)
 
 
 def _run_outer(args: argparse.Namespace) -> dict[str, object]:
@@ -532,9 +534,9 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     wheel_sha256 = sha256_file(args.wheel)
     authority_root = args.authority_root.resolve(strict=True)
-    root = _require_empty_directory(args.output_root, label="Ledger provenance output root")
-    store = _require_empty_directory(root / "secure-store", label="Ledger provenance secure store")
-    sources = _require_empty_directory(root / "sources", label="Ledger provenance synthetic sources")
+    root = require_empty_directory(args.output_root, label="Ledger provenance output root")
+    store = require_empty_directory(root / "secure-store", label="Ledger provenance secure store")
+    sources = require_empty_directory(root / "sources", label="Ledger provenance synthetic sources")
     cases = provenance_cases()
     paths = {case.case_id: case.write(sources) for case in cases}
     manifest = root / "manifest.json"
@@ -558,7 +560,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         passphrase=passphrase,
         expected=[f"tui_import:{case.case_id}" for case in tui_cases],
     )
-    cli_surfaces.update(_cli_readback(cli, tui_cases))
+    cli_surfaces.update(cli_readback(cli, tui_cases))
     inspected = _run_tui_child(
         args,
         mode="inspect",

@@ -20,7 +20,7 @@ from typing import Any
 import pydantic
 import pytest
 
-from cadrumo.core import logging as _logging_mod
+from cadrumo.core import logging as core_logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.log_extra import LogExtra
 from cadrumo.core.log_scrubbing import SecretScrubbingFilter
@@ -78,14 +78,14 @@ def _render_info(message: str, *args: object) -> str:
 
 
 def _force_configure_logging() -> None:
-    original_configured = _logging_mod._configured
-    _logging_mod._configured = False
+    original_configured = core_logging_mod._configured
+    core_logging_mod._configured = False
     try:
-        _logging_mod.configure_logging()
+        core_logging_mod.configure_logging()
         # Configuration runs on the dispatch thread: restoring the latch first would make it a no-op.
         assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
-        _logging_mod._configured = original_configured or True
+        core_logging_mod._configured = original_configured or True
 
 
 def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -108,7 +108,7 @@ def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, caps
 
     marker = "warning-route-marker-7f6a3c"
     try:
-        _logging_mod._configured = False
+        core_logging_mod._configured = False
         with override_settings(cadrumo_storage_root=tmp_path):
             configure_logging()
             logger = get_logger("aeat-test_logging.default_route")
@@ -152,7 +152,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
 
     failed_before = diagnostic_delivery_status()["records"].failed
     try:
-        _logging_mod._configured = False
+        core_logging_mod._configured = False
         with override_settings(cadrumo_storage_root=blocker):
             configure_logging()
 

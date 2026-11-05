@@ -7,37 +7,37 @@ from pathlib import Path
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from .annual_contracts import _ANNUAL_PERIOD
-from .annual_projection import _decimal_casilla
+from .annual_contracts import ANNUAL_PERIOD
+from .annual_projection import decimal_casilla
 from .cli_journey import (
     IvaCliJourneyError,
     SanitizedCommandReceipt,
-    _required_id,
-    _required_text,
-    _result,
-    _run,
+    required_id,
+    required_text,
+    result,
+    run,
 )
 from .filing_year import IvaJourneyYear
 
 
-def _calculate_and_verify_m390(
+def calculate_and_verify_m390(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> tuple[str, str, str, str, dict[str, Decimal]]:
-    created = _result(
-        _run(
+    created = result(
+        run(
             cli,
             receipts,
             artifact,
             (
                 *("app", "modelo", "work", "create", "--modelo", "390"),
-                *("--year", str(journey_year.year), "--period", _ANNUAL_PERIOD),
+                *("--year", str(journey_year.year), "--period", ANNUAL_PERIOD),
             ),
             result_keys=("work_unit_id",),
         )
     )
-    work_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
+    work_id = required_id(created, "work_unit_id")
+    calculated = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -47,14 +47,14 @@ def _calculate_and_verify_m390(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError("Modelo 390 calculate did not confirm a saved revision")
-    revision_id = _required_id(calculated, "calculation_revision_id")
+    revision_id = required_id(calculated, "calculation_revision_id")
     values = {
-        "devengada": _decimal_casilla(calculated, "iva.anual.cuota-devengada-total"),
-        "deducible": _decimal_casilla(calculated, "iva.anual.cuota-deducible-total"),
-        "resultado": _decimal_casilla(calculated, "iva.anual.resultado-regimen-general"),
-        "reconciled_devengada": _decimal_casilla(calculated, "iva.anual.reconciliacion.devengada-303"),
-        "reconciled_deducible": _decimal_casilla(calculated, "iva.anual.reconciliacion.deducible-303"),
-        "reconciled_resultado": _decimal_casilla(calculated, "iva.anual.reconciliacion.resultado-303"),
+        "devengada": decimal_casilla(calculated, "iva.anual.cuota-devengada-total"),
+        "deducible": decimal_casilla(calculated, "iva.anual.cuota-deducible-total"),
+        "resultado": decimal_casilla(calculated, "iva.anual.resultado-regimen-general"),
+        "reconciled_devengada": decimal_casilla(calculated, "iva.anual.reconciliacion.devengada-303"),
+        "reconciled_deducible": decimal_casilla(calculated, "iva.anual.reconciliacion.deducible-303"),
+        "reconciled_resultado": decimal_casilla(calculated, "iva.anual.reconciliacion.resultado-303"),
     }
     expected = {
         "devengada": Decimal("1470.00"),
@@ -66,8 +66,8 @@ def _calculate_and_verify_m390(
     }
     if values != expected:
         raise IvaCliJourneyError(f"independent Modelo 390 oracle mismatch: expected {expected}, got {values}")
-    verified = _result(
-        _run(
+    verified = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -76,8 +76,8 @@ def _calculate_and_verify_m390(
         )
     )
     report_id, status = (
-        _required_id(verified, "verification_report_id"),
-        _required_text(verified, "completeness_status"),
+        required_id(verified, "verification_report_id"),
+        required_text(verified, "completeness_status"),
     )
     if (
         verified.get("calculation_revision_id") != revision_id

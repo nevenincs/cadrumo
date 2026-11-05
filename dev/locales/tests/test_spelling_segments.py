@@ -7,17 +7,17 @@ import pytest
 from ..signal_command_paths import filter_detail_row_examples
 from ..signal_document_prose import visible_document_prose
 from ..signal_spelling_segments import (
-    _CATALAN_HYPHENATED_CLITIC_RE,
+    CATALAN_HYPHENATED_CLITIC_RE,
     hungarian_suffix_spelling_text,
     locale_spelling_words,
     spanish_word_context,
     translation_spelling_segments,
 )
 from ..signal_tokens import (
-    _DESCENDANT_BOOL_CHOICES_RE,
-    _REVIEW_FILTER_LIST_RE,
+    DESCENDANT_BOOL_CHOICES_RE,
     DESCENDANT_RELATION_CHOICES,
     DESCENDANT_RELATION_CHOICES_RE,
+    REVIEW_FILTER_LIST_RE,
     filtered_translation_text,
     translation_words,
 )
@@ -68,7 +68,7 @@ def test_catalan_reviewed_clitics_keep_verbs_and_reject_malformed_hosts() -> Non
         words, _excluded = locale_spelling_words(value, "ca")
         assert "lo" in words or "loo" in words
     for value in ("xmantén-lo", "mantén-loo", "traçarr-lo", "mantén-lo2", "traçar-lo_foo"):
-        assert _CATALAN_HYPHENATED_CLITIC_RE.search(value) is None
+        assert CATALAN_HYPHENATED_CLITIC_RE.search(value) is None
 
 
 def test_binary_percent_formula_is_structural_but_bad_calls_remain_visible() -> None:
@@ -106,7 +106,7 @@ def test_descendant_boolean_choices_match_only_actual_field_and_complete_values(
         assert prose == "typo"
         assert excluded == 1
     for value in ("UNKNOWN=true|false", "CONVIVENCIA=true|falsx", "CONVIVENCIA=true|false|extra"):
-        assert _DESCENDANT_BOOL_CHOICES_RE.search(value) is None
+        assert DESCENDANT_BOOL_CHOICES_RE.search(value) is None
     words = words_by_language("PRORRATA=true|false hibásszó", "hu")
     assert "hibásszó" in words["hu"]
     assert not {"true", "false"}.intersection(words["hu"])
@@ -138,11 +138,11 @@ def test_complete_review_filter_keys_preserve_glosses_and_reject_malformed_lists
         f"status, period (gloss typo) {joiner} year (more prose), issue, import, classification, "
         f"text, direction {last} account"
     ).replace("direction , or", "direction, or")
-    assert _REVIEW_FILTER_LIST_RE.search(value)
+    assert REVIEW_FILTER_LIST_RE.search(value)
     prose, _excluded = filtered_translation_text(value)
     assert "gloss typo" in prose and "more prose" in prose
     for bad in (value.replace("classification", "classificaton"), value.replace("issue, ", "issue, extra, ")):
-        assert _REVIEW_FILTER_LIST_RE.search(bad) is None
+        assert REVIEW_FILTER_LIST_RE.search(bad) is None
 
 
 def test_detail_row_examples_require_actual_wire_fields_and_preserve_prose() -> None:

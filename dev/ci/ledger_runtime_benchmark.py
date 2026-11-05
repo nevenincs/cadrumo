@@ -24,7 +24,7 @@ from dev.ci.modelo_runtime_benchmark import (
 from dev.ci.modelo_runtime_benchmark import (
     observe_runtime_boundaries as observe_modelo_boundaries,
 )
-from dev.ci.profile_wizard_benchmark import _observe, observe_worker, summarize
+from dev.ci.profile_wizard_benchmark import observe, observe_worker, summarize
 
 
 @contextmanager
@@ -36,7 +36,7 @@ def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[N
     from cadrumo_client.transport.frontend_client import FrontendClient
 
     with pytest.MonkeyPatch.context() as patch, observe_modelo_boundaries(recorder), observe_worker(recorder):
-        observe_kdf_startup(partial(_observe, patch, recorder))
+        observe_kdf_startup(partial(observe, patch, recorder))
         for owner, method, label in (
             (FrontendClient, "operation", "frontend.operation"),
             (FrontendClient, "contract", "frontend.contract"),
@@ -45,7 +45,7 @@ def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[N
             (TransactionCatalogueRepository, "load", "ledger.load"),
             (TransactionCatalogueRepository, "load_revisioned", "ledger.load_revisioned"),
         ):
-            _observe(patch, recorder, owner, method, label)
+            observe(patch, recorder, owner, method, label)
         try:
             yield
         finally:

@@ -30,46 +30,46 @@ from dev.corpus.artifact_catalogue import (  # noqa: E402
     record_design_manifest_identities,
 )
 from dev.corpus.record_design_inventory import (  # noqa: E402
-    _CURRENT_PAGE_KEYS,
-    _HISTORICAL_PAGE_KEYS,
-    _PAGES,
-    _REQUIRED,
-    _RETRIEVED_AT,
-    _RequiredArtifact,
+    CURRENT_PAGE_KEYS,
+    HISTORICAL_PAGE_KEYS,
+    PAGES,
+    REQUIRED,
+    RETRIEVED_AT,
+    RequiredArtifact,
 )
 from dev.packaging.hashing import sha256_path  # noqa: E402
 
-from .record_design_acquisition import _pull_required_artifact, _sha256_bytes  # noqa: E402
-from .record_design_index import _index_links, _raw_artifact_for_url, _supported_index_urls  # noqa: E402
+from .record_design_acquisition import pull_required_artifact, sha256_bytes  # noqa: E402
+from .record_design_index import index_links, raw_artifact_for_url, supported_index_urls  # noqa: E402
 from .record_design_manifests import (  # noqa: E402
-    _Artifact,
-    _artifact_urls,
-    _HistoricalExclusions,
-    _Manifest,
-    _ModeloRow,
-    _represented_urls,
-    _root_aggregate,
-    _RootAggregate,
+    Artifact,
+    HistoricalExclusions,
+    Manifest,
+    ModeloRow,
+    RootAggregate,
+    artifact_urls,
+    record_design_manifests_represented_urls,
+    root_aggregate,
 )
 from .record_design_policy import (  # noqa: E402
-    _CORRECTION_SUFFIX,
-    _DECLARATION_NAMES,
-    _DERIVED_SUFFIXES,
-    _EXTRACTION_SIDECAR_DERIVATIONS,
-    _MANIFEST_NAME,
+    CORRECTION_SUFFIX,
+    DECLARATION_NAMES,
+    DERIVED_SUFFIXES,
+    EXTRACTION_SIDECAR_DERIVATIONS,
+    MANIFEST_NAME,
     UNATTESTED_CORPUS_FILES,
 )
 
 _UTF_8: Final[str] = "utf-8"
 
 
-_CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
+CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 
 
-_HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
+HISTORICAL_EXCLUSIONS_PATH = CORPUS / "historical_exclusions.json"
 
 
-def _check_root_model_counts(root: _RootAggregate, expected_rows: list[_ModeloRow], failures: list[str]) -> None:
+def _check_root_model_counts(root: RootAggregate, expected_rows: list[ModeloRow], failures: list[str]) -> None:
     """Check root model counts."""
     if root.get("modelos") != expected_rows:
         recorded_counts = {row["modelo"]: row["artefact_count"] for row in root.get("modelos") or []}
@@ -87,27 +87,27 @@ def _correction_annotations(corpus_root: Path) -> tuple[SemanticAnnotation, ...]
     annotations = tuple(
         SemanticAnnotation(
             path=PurePosixPath(path.relative_to(corpus_root).as_posix()),
-            target_path=PurePosixPath(path.relative_to(corpus_root).as_posix().removesuffix(_CORRECTION_SUFFIX)),
+            target_path=PurePosixPath(path.relative_to(corpus_root).as_posix().removesuffix(CORRECTION_SUFFIX)),
         )
         for model_dir in scan_directory(corpus_root, pattern="modelo_*")
-        for path in sorted(model_dir.rglob(f"*{_CORRECTION_SUFFIX}"))
+        for path in sorted(model_dir.rglob(f"*{CORRECTION_SUFFIX}"))
         if path.is_file()
     )
     return annotations
 
 
-def _check_required_urls(manifests: dict[str, _Manifest], failures: list[str]) -> None:
+def _check_required_urls(manifests: dict[str, Manifest], failures: list[str]) -> None:
     """Check required urls."""
-    for required in _REQUIRED:
+    for required in REQUIRED:
         manifest = manifests.get(required.modelo)
-        if manifest is None or not any(required.url in _artifact_urls(artifact) for artifact in manifest["artefacts"]):
+        if manifest is None or not any(required.url in artifact_urls(artifact) for artifact in manifest["artefacts"]):
             failures.append(f"missing official URL: M{required.modelo} {required.url}")
 
 
-def _check_manifest_bytes(manifests: dict[str, _Manifest], failures: list[str]) -> None:
+def _check_manifest_bytes(manifests: dict[str, Manifest], failures: list[str]) -> None:
     """Check manifest bytes."""
     for modelo, manifest in manifests.items():
-        model_dir = _CORPUS / f"modelo_{modelo}"
+        model_dir = CORPUS / f"modelo_{modelo}"
         for artifact in manifest["artefacts"]:
             path = model_dir / artifact["stored_path"]
             if not path.is_file():
@@ -119,10 +119,10 @@ def _check_manifest_bytes(manifests: dict[str, _Manifest], failures: list[str]) 
                 failures.append(f"sha256 mismatch: {path}")
 
 
-def _check_root_census(manifests: dict[str, _Manifest], failures: list[str]) -> None:
+def _check_root_census(manifests: dict[str, Manifest], failures: list[str]) -> None:
     """Check root census."""
-    root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))
-    aggregate = _root_aggregate(manifests)
+    root = json.loads((CORPUS / "manifest.json").read_text(encoding=_UTF_8))
+    aggregate = root_aggregate(manifests)
     expected_models = aggregate["supported_corpus_modelos"]
     expected_artifact_count = aggregate["artefact_count"]
     expected_rows = aggregate["modelos"]
@@ -151,11 +151,11 @@ def _check_root_census(manifests: dict[str, _Manifest], failures: list[str]) -> 
 
 
 def _check_historical_exclusions(
-    historical_exclusions: _HistoricalExclusions, manifests: dict[str, _Manifest], failures: list[str]
+    historical_exclusions: HistoricalExclusions, manifests: dict[str, Manifest], failures: list[str]
 ) -> list[str]:
     """Check historical exclusions."""
     exclusion_urls = historical_exclusions.get("urls", [])
-    expected_historical_pages = [_PAGES[key] for key in _HISTORICAL_PAGE_KEYS]
+    expected_historical_pages = [PAGES[key] for key in HISTORICAL_PAGE_KEYS]
     if historical_exclusions.get("schema_version") != 1:
         failures.append("historical exclusion schema_version is stale")
     if historical_exclusions.get("disposition") != "outside-supported-window-or-superseded":
@@ -164,7 +164,7 @@ def _check_historical_exclusions(
         failures.append("historical exclusion source_pages are stale")
     if len(exclusion_urls) != len(set(exclusion_urls)):
         failures.append("historical exclusion URLs are not unique")
-    represented_urls = _represented_urls(manifests)
+    represented_urls = record_design_manifests_represented_urls(manifests)
     conflicting_exclusions = sorted(set(exclusion_urls) & represented_urls)
     if conflicting_exclusions:
         failures.append(f"historical exclusions are already represented: {conflicting_exclusions[:5]!r}")
@@ -180,7 +180,7 @@ def _check_unattested_files(catalogue: ArtifactCatalogue | None, failures: list[
             if diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE and diagnostic.path is not None
         )
         if catalogue is not None
-        else unattested_corpus_files(_CORPUS)
+        else unattested_corpus_files(CORPUS)
     )
     if observed_unattested != UNATTESTED_CORPUS_FILES:
         appeared = sorted(set(observed_unattested) - set(UNATTESTED_CORPUS_FILES))
@@ -193,22 +193,22 @@ def _check_unattested_files(catalogue: ArtifactCatalogue | None, failures: list[
 
 def _check_required_exclusions(exclusion_urls: list[str], failures: list[str]) -> None:
     """Check required exclusions."""
-    required_urls = {required.url for required in _REQUIRED}
+    required_urls = {required.url for required in REQUIRED}
     required_exclusions = sorted(set(exclusion_urls) & required_urls)
     if required_exclusions:
         failures.append(f"required URLs are classified as historical exclusions: {required_exclusions[:5]!r}")
 
 
-def _load_manifests() -> dict[str, _Manifest]:
-    manifests: dict[str, _Manifest] = {}
-    for model_dir in scan_directory(_CORPUS, pattern="modelo_*"):
+def load_manifests() -> dict[str, Manifest]:
+    manifests: dict[str, Manifest] = {}
+    for model_dir in scan_directory(CORPUS, pattern="modelo_*"):
         path = model_dir / "manifest.json"
         if path.exists():
             manifests[model_dir.name.removeprefix("modelo_")] = json.loads(path.read_text(encoding=_UTF_8))
     return manifests
 
 
-def _payload_paths(corpus_root: Path) -> tuple[PurePosixPath, ...]:
+def sync_aeat_record_design_corpus_payload_paths(corpus_root: Path) -> tuple[PurePosixPath, ...]:
     """Return the bounded payload candidates owned by this synchronizer.
 
     Project declarations and extractor outputs are intentionally outside this
@@ -222,8 +222,8 @@ def _payload_paths(corpus_root: Path) -> tuple[PurePosixPath, ...]:
         for candidate in sorted(model_dir.rglob("*")):
             if (
                 not candidate.is_file()
-                or candidate.name in _DECLARATION_NAMES
-                or candidate.name.endswith(_DERIVED_SUFFIXES)
+                or candidate.name in DECLARATION_NAMES
+                or candidate.name.endswith(DERIVED_SUFFIXES)
             ):
                 continue
             paths.append(PurePosixPath(candidate.relative_to(corpus_root).as_posix()))
@@ -236,8 +236,8 @@ def _catalogue_diagnostic_message(diagnostic: ArtifactDiagnostic) -> str:
     return f"artifact catalog {diagnostic.kind.value}: {path}: {diagnostic.message}"
 
 
-def _record_design_catalogue(
-    manifests: dict[str, _Manifest],
+def record_design_catalogue(
+    manifests: dict[str, Manifest],
     corpus_root: Path,
 ) -> tuple[ArtifactCatalogue | None, list[str]]:
     """Compile payload identities and the targets of their correction annotations.
@@ -249,11 +249,11 @@ def _record_design_catalogue(
     their correction content is validated by the record-design reader.
     Production ``check`` always fails closed on an incomplete identity row.
     """
-    derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
+    derived_paths = {derivative.path for derivative in EXTRACTION_SIDECAR_DERIVATIONS}
     identities = []
     failures: list[str] = []
     for modelo, manifest in sorted(manifests.items()):
-        manifest_path = PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}")
+        manifest_path = PurePosixPath(f"modelo_{modelo}/{MANIFEST_NAME}")
         try:
             identities.extend(
                 identity
@@ -266,9 +266,12 @@ def _record_design_catalogue(
         return None, failures
     annotations = _correction_annotations(corpus_root)
     catalogue = compile_artifact_catalogue(
-        known_paths=(*_payload_paths(corpus_root), *(annotation.path for annotation in annotations)),
+        known_paths=(
+            *sync_aeat_record_design_corpus_payload_paths(corpus_root),
+            *(annotation.path for annotation in annotations),
+        ),
         official_identities=identities,
-        derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
+        derived_artifacts=EXTRACTION_SIDECAR_DERIVATIONS,
         semantic_annotations=annotations,
     )
     return catalogue, []
@@ -298,22 +301,22 @@ def unattested_corpus_files(corpus_root: Path) -> tuple[str, ...]:
     """
     unattested: list[str] = []
     for model_dir in scan_directory(corpus_root, pattern="modelo_*"):
-        manifest_path = model_dir / _MANIFEST_NAME
+        manifest_path = model_dir / MANIFEST_NAME
         if not manifest_path.exists():
             continue
         manifest = json.loads(manifest_path.read_text(encoding=_UTF_8))
         declared = {model_dir / artifact["stored_path"] for artifact in manifest["artefacts"]}
         for candidate in sorted(model_dir.rglob("*")):
-            if not candidate.is_file() or candidate.name in _DECLARATION_NAMES:
+            if not candidate.is_file() or candidate.name in DECLARATION_NAMES:
                 continue
-            if candidate.name.endswith(_DERIVED_SUFFIXES):
+            if candidate.name.endswith(DERIVED_SUFFIXES):
                 continue
             if candidate not in declared:
                 unattested.append(candidate.relative_to(corpus_root).as_posix())
     return tuple(sorted(unattested))
 
 
-def _load_historical_exclusions() -> _HistoricalExclusions:
+def load_historical_exclusions() -> HistoricalExclusions:
     """Read the classified historical-URL exclusions.
 
     The exclusion ledger is intentionally URL-based.  A product support-year
@@ -326,13 +329,13 @@ def _load_historical_exclusions() -> _HistoricalExclusions:
     # `json.loads` is typed `Any`; the cast states the shape this endpoint
     # is documented to return, in one place instead of at every use.
     return cast(
-        "_HistoricalExclusions",
-        json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8)),
+        "HistoricalExclusions",
+        json.loads(HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8)),
     )
 
 
 def _write_root_manifest(root: dict[str, object]) -> None:
-    (_CORPUS / "manifest.json").write_bytes((json.dumps(root, ensure_ascii=False, indent=2) + "\n").encode())
+    (CORPUS / "manifest.json").write_bytes((json.dumps(root, ensure_ascii=False, indent=2) + "\n").encode())
 
 
 def _regenerate_root_aggregate() -> None:
@@ -347,9 +350,9 @@ def _regenerate_root_aggregate() -> None:
     advancing a retrieval date to record a recount would assert a freshness
     this run did not establish.
     """
-    manifests = _load_manifests()
-    root = cast("dict[str, object]", json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8)))
-    aggregate = _root_aggregate(manifests)
+    manifests = load_manifests()
+    root = cast("dict[str, object]", json.loads((CORPUS / "manifest.json").read_text(encoding=_UTF_8)))
+    aggregate = root_aggregate(manifests)
     drifted = sorted(field for field, value in aggregate.items() if root.get(field) != value)
     if not drifted:
         print("OK: root manifest census already agrees with the per-modelo manifests")
@@ -359,33 +362,33 @@ def _regenerate_root_aggregate() -> None:
     print(f"REGENERATED root manifest census: {', '.join(drifted)}")
 
 
-def _write_manifests(manifests: dict[str, _Manifest]) -> None:
+def _write_manifests(manifests: dict[str, Manifest]) -> None:
     for modelo, manifest in manifests.items():
         artifacts = manifest["artefacts"]
         manifest["artefact_count"] = len(artifacts)
-        path = _CORPUS / f"modelo_{modelo}" / "manifest.json"
+        path = CORPUS / f"modelo_{modelo}" / "manifest.json"
         path.write_bytes((json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode())
 
-    root = cast("dict[str, object]", json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8)))
-    root["retrieved_at"] = _RETRIEVED_AT
-    root.update(_root_aggregate(manifests))
+    root = cast("dict[str, object]", json.loads((CORPUS / "manifest.json").read_text(encoding=_UTF_8)))
+    root["retrieved_at"] = RETRIEVED_AT
+    root.update(root_aggregate(manifests))
     _write_root_manifest(root)
 
 
 def _pull() -> None:
-    manifests = _load_manifests()
+    manifests = load_manifests()
     with httpx.Client(
         follow_redirects=True,
         timeout=90,
         headers={"User-Agent": "cadrumo-corpus-hydration/1.0"},
     ) as client:
-        for index, required in enumerate(_REQUIRED, 1):
-            _pull_required_artifact(index, required, manifests, client, _CORPUS, len(_REQUIRED))
+        for index, required in enumerate(REQUIRED, 1):
+            pull_required_artifact(index, required, manifests, client, CORPUS, len(REQUIRED))
     _write_manifests(manifests)
 
 
-def _authority_failures(
-    manifests: dict[str, _Manifest],
+def authority_failures(
+    manifests: dict[str, Manifest],
     catalogue: ArtifactCatalogue | None = None,
 ) -> list[str]:
     """Report manifest artefacts that lack one official catalog identity.
@@ -408,10 +411,10 @@ def _authority_failures(
 
 def check() -> None:
     """Verify required official URLs, manifests, and local artifact bytes offline."""
-    manifests = _load_manifests()
-    historical_exclusions = _load_historical_exclusions()
+    manifests = load_manifests()
+    historical_exclusions = load_historical_exclusions()
     failures = []
-    catalogue, catalogue_failures = _record_design_catalogue(manifests, _CORPUS)
+    catalogue, catalogue_failures = record_design_catalogue(manifests, CORPUS)
     failures.extend(catalogue_failures)
     if catalogue is not None:
         failures.extend(
@@ -426,14 +429,14 @@ def check() -> None:
     _check_unattested_files(catalogue, failures)
     _check_required_exclusions(exclusion_urls, failures)
     failures.extend(
-        _authority_failures(
+        authority_failures(
             manifests,
             catalogue,
         )
     )
     if failures:
         raise SystemExit("\n".join(failures))
-    print(f"OK: {len(_REQUIRED)} required official URLs and {len(manifests)} manifests")
+    print(f"OK: {len(REQUIRED)} required official URLs and {len(manifests)} manifests")
 
 
 #: Exit status for "the question could not be asked", as distinct from a pass or
@@ -470,9 +473,9 @@ def _live_check() -> None:
 
 
 def _live_check_against_official_pages() -> None:
-    manifests = _load_manifests()
-    historical_exclusions = _load_historical_exclusions()
-    root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))
+    manifests = load_manifests()
+    historical_exclusions = load_historical_exclusions()
+    root = json.loads((CORPUS / "manifest.json").read_text(encoding=_UTF_8))
     supported_modelos = {str(modelo) for modelo in root["supported_corpus_modelos"]}
     links_by_page: dict[str, dict[str, str]] = {}
     failures: list[str] = []
@@ -482,10 +485,10 @@ def _live_check_against_official_pages() -> None:
         timeout=90,
         headers={"User-Agent": "cadrumo-corpus-currentness/1.0"},
     ) as client:
-        for source_page in _PAGES.values():
+        for source_page in PAGES.values():
             response = client.get(source_page)
             response.raise_for_status()
-            links_by_page[source_page] = {url: title for title, url in _index_links(response.text, source_page)}
+            links_by_page[source_page] = {url: title for title, url in index_links(response.text, source_page)}
 
         # A declaration with no established index page cannot be asked whether
         # it is still indexed: there is no page to look on. Reporting that as a
@@ -501,9 +504,9 @@ def _live_check_against_official_pages() -> None:
     if failures:
         raise SystemExit("\n".join(failures))
     print(
-        f"OK live: {len(current_urls)} current raw URLs and {len(_REQUIRED) - len(unadjudicated)} "
+        f"OK live: {len(current_urls)} current raw URLs and {len(REQUIRED) - len(unadjudicated)} "
         f"required indexed URLs plus {len(historical_urls)} classified historical URLs "
-        f"across {len(_PAGES)} pages",
+        f"across {len(PAGES)} pages",
     )
     if unadjudicated:
         print(
@@ -534,7 +537,7 @@ def main() -> None:
 
 
 def _check_artifact_identity(
-    artifact: _Artifact, modelo: str, catalogue: ArtifactCatalogue, failures: list[str]
+    artifact: Artifact, modelo: str, catalogue: ArtifactCatalogue, failures: list[str]
 ) -> None:
     """Check artifact identity."""
     path = f"modelo_{modelo}/{artifact['stored_path']}"
@@ -558,24 +561,24 @@ def _check_artifact_identity(
 
 
 def _check_live_artifact_bytes(
-    url: str, modelo: str, manifests: dict[str, _Manifest], client: httpx.Client, failures: list[str]
+    url: str, modelo: str, manifests: dict[str, Manifest], client: httpx.Client, failures: list[str]
 ) -> None:
     """Check live artifact bytes."""
     manifest = manifests[modelo]
-    artifact = _raw_artifact_for_url(manifest, url)
+    artifact = raw_artifact_for_url(manifest, url)
     if artifact is None:
         failures.append(f"unrepresented current official URL: M{modelo} {url}")
         return
     response = client.get(url)
     response.raise_for_status()
     data = response.content
-    if len(data) != artifact["bytes"] or _sha256_bytes(data) != artifact["sha256"]:
+    if len(data) != artifact["bytes"] or sha256_bytes(data) != artifact["sha256"]:
         failures.append(f"current official bytes drifted: M{modelo} {url}")
 
 
-def _local_artifact_catalogue(manifests: dict[str, _Manifest], failures: list[str]) -> ArtifactCatalogue:
+def _local_artifact_catalogue(manifests: dict[str, Manifest], failures: list[str]) -> ArtifactCatalogue:
     """Compile the local identity boundary before comparing manifest roles."""
-    derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
+    derived_paths = {derivative.path for derivative in EXTRACTION_SIDECAR_DERIVATIONS}
     identities = []
     for modelo, manifest in sorted(manifests.items()):
         try:
@@ -583,7 +586,7 @@ def _local_artifact_catalogue(manifests: dict[str, _Manifest], failures: list[st
                 identity
                 for identity in record_design_manifest_identities(
                     manifest,
-                    manifest_path=PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}"),
+                    manifest_path=PurePosixPath(f"modelo_{modelo}/{MANIFEST_NAME}"),
                 )
                 if identity.path not in derived_paths
             )
@@ -591,9 +594,9 @@ def _local_artifact_catalogue(manifests: dict[str, _Manifest], failures: list[st
             failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
     catalogue = compile_artifact_catalogue(
         known_paths=tuple(identity.path for identity in identities)
-        + tuple(derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS),
+        + tuple(derivative.path for derivative in EXTRACTION_SIDECAR_DERIVATIONS),
         official_identities=identities,
-        derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
+        derived_artifacts=EXTRACTION_SIDECAR_DERIVATIONS,
     )
     return catalogue
 
@@ -601,21 +604,21 @@ def _local_artifact_catalogue(manifests: dict[str, _Manifest], failures: list[st
 def _compare_index_inventory(
     links_by_page: dict[str, dict[str, str]],
     supported_modelos: set[str],
-    manifests: dict[str, _Manifest],
-    historical_exclusions: _HistoricalExclusions,
+    manifests: dict[str, Manifest],
+    historical_exclusions: HistoricalExclusions,
     failures: list[str],
-) -> tuple[dict[str, str], dict[str, str], list[_RequiredArtifact]]:
+) -> tuple[dict[str, str], dict[str, str], list[RequiredArtifact]]:
     """Compare required, current, and historical official index inventories."""
-    unadjudicated = [required for required in _REQUIRED if required.source_page is None]
-    for required in _REQUIRED:
+    unadjudicated = [required for required in REQUIRED if required.source_page is None]
+    for required in REQUIRED:
         if required.source_page is None:
             continue
         if required.url not in links_by_page[required.source_page]:
             failures.append(f"required URL no longer indexed: M{required.modelo} {required.url}")
 
-    current_urls = _supported_index_urls(links_by_page, _CURRENT_PAGE_KEYS, supported_modelos)
-    historical_urls = _supported_index_urls(links_by_page, _HISTORICAL_PAGE_KEYS, supported_modelos)
-    represented_urls = _represented_urls(manifests)
+    current_urls = supported_index_urls(links_by_page, CURRENT_PAGE_KEYS, supported_modelos)
+    historical_urls = supported_index_urls(links_by_page, HISTORICAL_PAGE_KEYS, supported_modelos)
+    represented_urls = record_design_manifests_represented_urls(manifests)
     expected_exclusions = set(historical_exclusions["urls"])
     actual_exclusions = set(historical_urls) - represented_urls
     for url in sorted(actual_exclusions - expected_exclusions):

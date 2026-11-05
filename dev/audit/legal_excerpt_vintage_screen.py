@@ -330,7 +330,7 @@ def _excerpt_verdict(
     """Excerpt verdict."""
     if not absent and not extra:
         verdict = Verdict.MATCHES
-    elif _is_vintaged(stem):
+    elif is_vintaged(stem):
         # Consulted before either direction is read: a declared vintage
         # legitimately holds text current law dropped, which is the whole
         # shape ``excerpt_carries_more`` names. Ordering it second would
@@ -764,7 +764,7 @@ def _screen_entry(
     if isinstance(identity, Finding):
         return identity
     anchor = next((unit["anchor"] for unit in oracle_units if unit["text"] == current_text.strip()), "")
-    return _classify(
+    return classify(
         entry_id,
         body,
         stem,
@@ -829,7 +829,7 @@ def _screen_via_article_payload(
     identity = _confirm_identity(entry_id, excerpt_unit["title"], current_title, "article payload reached")
     if isinstance(identity, Finding):
         return identity
-    return _classify(
+    return classify(
         entry_id,
         body,
         stem,
@@ -904,7 +904,7 @@ def _confirm_identity(entry_id: str, excerpt_title: str, current_title: str, rea
     return True
 
 
-def _classify(
+def classify(
     entry_id: str,
     body: dict[str, object],
     stem: str,
@@ -957,7 +957,7 @@ def _classify(
     )
 
 
-def _is_vintaged(stem: str) -> bool:
+def is_vintaged(stem: str) -> bool:
     """Return whether the excerpt declares a historical vintage in its stem.
 
     A trailing year alone does not say so, and reading it that way is a FALSE

@@ -12,17 +12,17 @@ from dev.acceptance.income_tax.installed_tui_child import (
     register_profile_through_installed_tui,
 )
 
-from .installed_tui_contracts import _SCHEMA_VERSION, ChildMode, LedgerInstalledTuiError, LedgerTuiChildReceipt
+from .installed_tui_contracts import SCHEMA_VERSION, ChildMode, LedgerInstalledTuiError, LedgerTuiChildReceipt
 from .installed_tui_controls import (
-    _capture_invoice_via_tui,
-    _capture_transaction_via_tui,
-    _edit_unlinked_transaction,
-    _inspect_invoice,
-    _inspect_transaction,
-    _refuse_linked_transaction_edit,
-    _tui_only_transaction_descriptions,
-    _update_invoice_notes,
-    _write_tui_only_statement,
+    capture_invoice_via_tui,
+    capture_transaction_via_tui,
+    edit_unlinked_transaction,
+    inspect_invoice,
+    inspect_transaction,
+    refuse_linked_transaction_edit,
+    tui_only_transaction_descriptions,
+    update_invoice_notes,
+    write_tui_only_statement,
 )
 
 
@@ -42,7 +42,7 @@ def _child_receipt(*, workspace_root: Path, mode: ChildMode, observations: tuple
     """Build a value-free receipt after public controls have completed."""
     product = installed_product_evidence(workspace_root=workspace_root)
     return LedgerTuiChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode=mode,
         product_origin=product.product_origin,
@@ -69,27 +69,27 @@ def _run_tui_only_capture_update_child(
         asyncio.run(register_profile_through_installed_tui(profile_label="ledger-tui-only", passphrase=passphrase))
 
     observations: list[str] = []
-    initial_description, updated_description = _tui_only_transaction_descriptions(year)
-    statement = _write_tui_only_statement(scratch=scratch, year=year, description=initial_description)
+    initial_description, updated_description = tui_only_transaction_descriptions(year)
+    statement = write_tui_only_statement(scratch=scratch, year=year, description=initial_description)
 
     async def drive(pilot: Any) -> None:
-        await _capture_invoice_via_tui(
+        await capture_invoice_via_tui(
             pilot,
             invoice_number=invoice_number,
             notes=initial_notes,
             year=year,
         )
         observations.append("invoice_capture")
-        await _capture_transaction_via_tui(pilot, statement=statement)
+        await capture_transaction_via_tui(pilot, statement=statement)
         observations.append("transaction_capture")
-        await _update_invoice_notes(
+        await update_invoice_notes(
             pilot,
             invoice_number=invoice_number,
             initial_notes=initial_notes,
             updated_notes=updated_notes,
         )
         observations.extend(("invoice_catalogue", "invoice_detail", "invoice_metadata_update"))
-        await _edit_unlinked_transaction(
+        await edit_unlinked_transaction(
             pilot,
             description=initial_description,
             updated_description=updated_description,
@@ -134,19 +134,19 @@ def _run_existing_profile_child(
         if mode == "tui_only_reopen":
             if transaction_description is None:
                 raise LedgerInstalledTuiError("TUI-only reopen child is missing its captured transaction description")
-            await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
-            await _inspect_transaction(pilot, description=transaction_description)
+            await inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
+            await inspect_transaction(pilot, description=transaction_description)
             observations.extend(("fresh_process", "invoice_catalogue", "invoice_detail", "transaction_detail"))
         elif mode == "cli_to_tui":
             if updated_notes is None or transaction_description is None or updated_description is None:
                 raise LedgerInstalledTuiError("CLI-to-TUI child is missing its public continuation input")
-            await _update_invoice_notes(
+            await update_invoice_notes(
                 pilot,
                 invoice_number=invoice_number,
                 initial_notes=initial_notes,
                 updated_notes=updated_notes,
             )
-            await _edit_unlinked_transaction(
+            await edit_unlinked_transaction(
                 pilot,
                 description=transaction_description,
                 updated_description=updated_description,
@@ -155,13 +155,13 @@ def _run_existing_profile_child(
         elif mode == "linked_refusal_readback":
             if transaction_description is None:
                 raise LedgerInstalledTuiError("linked refusal child is missing its public transaction description")
-            await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
-            await _refuse_linked_transaction_edit(pilot, description=transaction_description)
+            await inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
+            await refuse_linked_transaction_edit(pilot, description=transaction_description)
             observations.extend(
                 ("invoice_detail", "linked_transaction_detail", "linked_transaction_edit_refusal", "refusal_readback")
             )
         elif mode == "tui_to_cli_reopen":
-            await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
+            await inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
             observations.extend(("fresh_process", "invoice_catalogue", "cli_updated_invoice_detail"))
         else:  # pragma: no cover - parser and outer runner constrain this closed mode set
             raise LedgerInstalledTuiError("installed Ledger TUI child received an unsupported existing-profile mode")

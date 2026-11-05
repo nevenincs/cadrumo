@@ -10,11 +10,11 @@ from typing import Any
 
 from dev.acceptance.installed_cli import authority_generation
 
-from .continuation_contracts import _SCHEMA_VERSION, _Direction
+from .continuation_contracts import SCHEMA_VERSION, Direction
 from .continuation_tui_stages import (
-    _complete_visible_workflow,
-    _prepare_visible_partial_workflow,
-    _resume_visible_partial_workflow,
+    complete_visible_workflow,
+    prepare_visible_partial_workflow,
+    resume_visible_partial_workflow,
 )
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -27,7 +27,7 @@ from .tui_contracts import ContinuationStateEvidence
 
 
 def run_tui_continuation_child(
-    *, direction: _Direction, workspace_root: Path, profile_label: str, passphrase: str, year: int, scratch: Path
+    *, direction: Direction, workspace_root: Path, profile_label: str, passphrase: str, year: int, scratch: Path
 ) -> dict[str, object]:
     """Run the TUI side of one continuation through an installed launcher."""
     product = installed_product_evidence(workspace_root=workspace_root)
@@ -52,14 +52,14 @@ def run_tui_continuation_child(
     async def drive(pilot: Any) -> None:
         nonlocal handoff, completion, validation, readback_error
         if direction == "cli_to_tui":
-            handoff, readback_error = await _resume_visible_partial_workflow(pilot, scenario, scratch, generation, year)
+            handoff, readback_error = await resume_visible_partial_workflow(pilot, scenario, scratch, generation, year)
             if readback_error is not None:
                 return
         else:
-            handoff = await _prepare_visible_partial_workflow(pilot, scenario, scratch, generation, year)
+            handoff = await prepare_visible_partial_workflow(pilot, scenario, scratch, generation, year)
             pilot.app.exit()
             return
-        completion, validation = await _complete_visible_workflow(
+        completion, validation = await complete_visible_workflow(
             pilot, scenario, scratch, generation, year, workspace_root
         )
         pilot.app.exit()
@@ -87,7 +87,7 @@ def run_tui_continuation_child(
             f"(exit_code={exit_code}, callback_entered={callback_entered})"
         )
     document: dict[str, object] = {
-        "schema_version": _SCHEMA_VERSION,
+        "schema_version": SCHEMA_VERSION,
         "status": "proven",
         "direction": direction,
         "product_origin": product.product_origin,

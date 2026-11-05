@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from .continuation_contracts import InstalledContinuationError
-from .financial_lifecycle import _m130_expected
+from .financial_lifecycle import m130_expected
 from .scenario import build_scenario
 from .tui_continuation_evidence import (
     canonical_financial_value_fingerprint,
@@ -13,12 +13,12 @@ from .tui_continuation_evidence import (
 from .tui_contracts import ContinuationStateEvidence
 
 
-def _oracle_fingerprint(year: int) -> str:
+def oracle_fingerprint(year: int) -> str:
     """Fingerprint the independent scenario oracle, never a frontend readback."""
     scenario = build_scenario(year)
     values: dict[str, str] = {}
     for oracle in scenario.quarter_oracle:
-        values.update({f"130.{oracle.period}.{key}": value for key, value in _m130_expected(oracle).items()})
+        values.update({f"130.{oracle.period}.{key}": value for key, value in m130_expected(oracle).items()})
     annual = scenario.annual_oracle
     values.update(
         {
@@ -31,7 +31,7 @@ def _oracle_fingerprint(year: int) -> str:
     return canonical_financial_value_fingerprint(values=values)
 
 
-def _state(
+def continuation_state(
     *, generation: str, year: int, periods: Sequence[str], filed: Sequence[str], annual_exported: bool
 ) -> ContinuationStateEvidence:
     quarter_periods = tuple(sorted(set(periods)))
@@ -51,11 +51,11 @@ def _state(
         # The shared continuation contract currently carries one fingerprint.
         # This is explicitly an oracle guard; the receipt labels it as such and
         # keeps cross-frontend observed-value equality unexercised.
-        canonical_value_fingerprint=_oracle_fingerprint(year),
+        canonical_value_fingerprint=oracle_fingerprint(year),
     )
 
 
-def _parse_child_state(document: dict[str, object], key: str) -> ContinuationStateEvidence:
+def parse_child_state(document: dict[str, object], key: str) -> ContinuationStateEvidence:
     raw = document.get(key)
     if not isinstance(raw, dict):
         raise InstalledContinuationError(f"TUI continuation receipt has no {key}")

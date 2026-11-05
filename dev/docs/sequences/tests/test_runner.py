@@ -300,7 +300,7 @@ def test_delete_preserves_the_authenticated_replacement_selection(
     """Real login changes selection before destruction of the original capsule."""
     from .. import runner as sequence_runner
 
-    invoke = sequence_runner._invoke_frame
+    invoke = sequence_runner.invoke_frame
     observations: list[bool] = []
 
     def observe_first_logout(args: tuple[str, ...], *, program: CommandProgram) -> Result:
@@ -311,7 +311,7 @@ def test_delete_preserves_the_authenticated_replacement_selection(
             observations.append(True)
         return invoke(args, program=program)
 
-    monkeypatch.setattr(sequence_runner, "_invoke_frame", observe_first_logout)
+    monkeypatch.setattr(sequence_runner, "invoke_frame", observe_first_logout)
     sequence = _result_sequence(
         "aeat --format json config logout\n"
         '@expect status == "success"\n'
@@ -354,19 +354,19 @@ def test_sandbox_template_respects_temporary_root_lifetime(
 
     monkeypatch.setattr(sequence_sandbox_module, "scratch_base", prepare_temp_root)
     with override_settings(cadrumo_authority_root=authority_root):
-        first = sequence_sandbox_module._sandbox_template()
+        first = sequence_sandbox_module.sandbox_template()
         assert first.is_relative_to(first_root.resolve())
-        assert sequence_sandbox_module._sandbox_template() == first
+        assert sequence_sandbox_module.sandbox_template() == first
     if lifetime_change == "template_removed":
         assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
         shutil.rmtree(first)
     temporary_root[0] = second_root
     with override_settings(cadrumo_authority_root=authority_root):
-        second = sequence_sandbox_module._sandbox_template()
+        second = sequence_sandbox_module.sandbox_template()
         assert second != first
         assert second.is_relative_to(second_root.resolve())
         assert (second / "cadrumo-storage" / "buckets" / SANDBOX_PROFILE_ID).is_dir()
-        assert sequence_sandbox_module._sandbox_template() == second
+        assert sequence_sandbox_module.sandbox_template() == second
 
 
 @pytest.mark.parametrize("attempt_other_login", [False, True])
@@ -383,13 +383,13 @@ def test_logout_and_failed_login_preserve_deletion_preflight_and_require_unlocke
     from cadrumo_client.contracts.access_vocabulary import Availability
 
     from .. import runner as sequence_runner
-    from ..runtime_fixture import _SequenceLoginObservation
+    from ..runtime_fixture import SequenceLoginObservation
 
-    invoke = sequence_runner._invoke_frame
-    observe = _SequenceLoginObservation.observe
+    invoke = sequence_runner.invoke_frame
+    observe = SequenceLoginObservation.observe
     locked = False
 
-    def observe_login(self: _SequenceLoginObservation, *, credential_facilities: Availability) -> OsLoginContext:
+    def observe_login(self: SequenceLoginObservation, *, credential_facilities: Availability) -> OsLoginContext:
         observation = observe(self, credential_facilities=credential_facilities)
         return observation.model_copy(update={"lock_state": OsLockState.LOCKED}) if locked else observation
 
@@ -401,8 +401,8 @@ def test_logout_and_failed_login_preserve_deletion_preflight_and_require_unlocke
             locked = True
         return result
 
-    monkeypatch.setattr(_SequenceLoginObservation, "observe", observe_login)
-    monkeypatch.setattr(sequence_runner, "_invoke_frame", lock_after_preflight)
+    monkeypatch.setattr(SequenceLoginObservation, "observe", observe_login)
+    monkeypatch.setattr(sequence_runner, "invoke_frame", lock_after_preflight)
     login = "aeat --format json config login missing-profile\n@expect exit_code == 2\n" if attempt_other_login else ""
     sequence = _result_sequence(
         "aeat --format json config logout\n"

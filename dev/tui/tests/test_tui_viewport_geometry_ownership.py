@@ -13,8 +13,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._artifacts import FailedFrame, FrameFailureKind, Manifest, RenderedFrame, SkippedFrame
-from .._viewports import VIEWPORTS, Orientation, ViewportName
+from ..artifacts import FailedFrame, FrameFailureKind, Manifest, RenderedFrame, SkippedFrame
+from ..viewports import VIEWPORTS, Orientation, ViewportName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

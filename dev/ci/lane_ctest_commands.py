@@ -11,7 +11,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev.paths import UTF_8
 
 from .lane_contracts import Lane
-from .lane_recipe_commands import _exclusions_of, _marker_expression_of, _paths_of
+from .lane_recipe_commands import exclusions_of, marker_expression_of, paths_of
 
 #: The CMake modules that declare CTest tests.
 CTEST_MODULE_DIR: Final = "native/cmake"
@@ -46,7 +46,7 @@ def ctest_lanes(text: str, *, source: str) -> list[Lane]:
         if "pytest" not in tokens:
             continue
         argv = tokens[tokens.index("pytest") :]
-        paths = tuple(path for path in _paths_of(argv) if "$" not in path)
+        paths = tuple(path for path in paths_of(argv) if "$" not in path)
         if not paths:
             continue
         test_name = tokens[1] if len(tokens) > 1 and tokens[0] == "NAME" else ""
@@ -59,9 +59,9 @@ def ctest_lanes(text: str, *, source: str) -> list[Lane]:
             Lane(
                 source=source,
                 paths=paths,
-                marker_expression=_marker_expression_of(argv),
+                marker_expression=marker_expression_of(argv),
                 recipe=recipe,
-                exclusions=_exclusions_of(argv),
+                exclusions=exclusions_of(argv),
             )
         )
     return lanes

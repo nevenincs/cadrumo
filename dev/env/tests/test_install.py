@@ -8,7 +8,7 @@ import pytest
 
 from dev.paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
 
-from .._install import sync_command, sync_environment
+from ..install import sync_command, sync_environment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -41,36 +41,36 @@ from dev.deploy.r2_objects import deployment_lock, list_keys, object_inventory, 
 from dev.temporary_output import prepare_temp_root
 
 from .docs_delivery_contracts import (
-    _CACHE_CONTROL,
-    _DOCTREE_EXCLUDES,
-    _RELEASE_ID_RE,
+    CACHE_CONTROL,
     CANONICAL_DOCS_BASE_URL,
     CANONICAL_SITE_DOMAIN,
     DELIVERY_ROUTES,
     DOCS_ZONE,
+    DOCTREE_EXCLUDES,
     MIRROR_DOCS_BASE_URL,
     MIRROR_SITE_DOMAIN,
+    RELEASE_ID_RE,
     RELEASE_PREFIX,
     WORKER_SCRIPT,
     DeliveryCredentials,
 )
 from .docs_delivery_policy import (
-    _delivery_credentials,
-    _local_release_label,
-    _require_authorized_publish_environment,
-    _require_local_session,
+    delivery_credentials,
+    local_release_label,
     release_id,
+    require_authorized_publish_environment,
+    require_local_session,
 )
 from .docs_delivery_probe import (
-    _await_release_served,
-    _await_static_delivery,
-    _verify_candidate,
-    _verify_public_delivery,
-    _verify_published_search_index,
+    await_release_served,
+    await_static_delivery,
+    verify_candidate,
+    verify_public_delivery,
+    verify_published_search_index,
 )
 from .docs_site_build import build_site_roots
-from .docs_site_download import _refresh_download_latest
-from .docs_site_preflight import _validate_built_site
+from .docs_site_download import refresh_download_latest
+from .docs_site_preflight import validate_built_site
 
 
 def _snapshot_documentation_routes(account: CloudflareAccount, zone: str) -> tuple[list[dict[str, Any]], set[str], str]:
@@ -98,8 +98,8 @@ def _upload_release(credentials: DeliveryCredentials, html_root: Path, release: 
         credentials.bucket,
         html_root,
         prefix=prefix,
-        cache_control=_CACHE_CONTROL,
-        excludes=_DOCTREE_EXCLUDES,
+        cache_control=CACHE_CONTROL,
+        excludes=DOCTREE_EXCLUDES,
         report=report,
     )
     landed = list_keys(credentials.bucket, prefix)
@@ -122,7 +122,7 @@ def _wire_zone(credentials: DeliveryCredentials, zone: str) -> None:
     disable_redirect_rules(credentials.account, zone, source_prefix=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs")
 
 
-def _provision(*, environment: Mapping[str, str] | None = None) -> int:
+def docs_delivery_activation_provision(*, environment: Mapping[str, str] | None = None) -> int:
     """Route both docs mounts to the Worker: one-time zone wiring, local only.
 
     Run it once a release is live on the Worker routes (``publish --cutover``
@@ -130,14 +130,14 @@ def _provision(*, environment: Mapping[str, str] | None = None) -> int:
     mirror mount with nothing behind it.
     """
     env = environment if environment is not None else os.environ
-    _require_local_session("provision", environment=env)
-    credentials = _delivery_credentials(env)
+    require_local_session("provision", environment=env)
+    credentials = delivery_credentials(env)
     _wire_zone(credentials, zone_id(credentials.account, DOCS_ZONE))
     print("Zone wiring is in place for both documentation mounts.", flush=True)
     return 0
 
 
-def _restore_routes(account: CloudflareAccount, zone: str, before: list[dict[str, Any]]) -> None:
+def restore_routes(account: CloudflareAccount, zone: str, before: list[dict[str, Any]]) -> None:
     """Restore only the documentation route set after an unsuccessful activation."""
     base = f"/zones/{zone}/workers/routes"
     patterns = {route.pattern for route in DELIVERY_ROUTES}
@@ -151,7 +151,7 @@ def _restore_routes(account: CloudflareAccount, zone: str, before: list[dict[str
         _restore_documentation_route(account, base, pattern, row, current)
 
 
-def _activate_static_release(
+def activate_static_release(
     credentials: DeliveryCredentials,
     document: dict[str, Any],
     root: Path,
@@ -161,7 +161,7 @@ def _activate_static_release(
     account = credentials.account
     release = document["release"]
     deploy_assets(account, document, root, script=CANDIDATE_SCRIPT)
-    _verify_candidate(account, release)
+    verify_candidate(account, release)
     before, legacy, route_base = _snapshot_documentation_routes(account, zone)
     previous = None
     if "delivery/active.json" in list_keys(credentials.bucket, "delivery/active.json"):
@@ -170,11 +170,11 @@ def _activate_static_release(
     try:
         version = deploy_assets(account, document, root, script=STATIC_SCRIPT)
         ensure_routes(account, zone, DELIVERY_ROUTES)
-        _await_release_served(release)
-        _await_static_delivery(release)
-        _verify_public_delivery(release)
+        await_release_served(release)
+        await_static_delivery(release)
+        verify_public_delivery(release)
         for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
-            _verify_published_search_index(root, base_url=base_url)
+            verify_published_search_index(root, base_url=base_url)
         for row in before:
             if row["pattern"] in legacy:
                 cloudflare_call(account, "DELETE", f"{route_base}/{row['id']}")
@@ -184,7 +184,7 @@ def _activate_static_release(
         raise
 
 
-def _publish(
+def docs_delivery_activation_publish(
     repo_root: Path,
     *,
     release_label: str | None = None,
@@ -205,49 +205,49 @@ def _publish(
             (production) reads the real process environment.
     """
     env = environment if environment is not None else os.environ
-    _require_authorized_publish_environment(environment=env)
+    require_authorized_publish_environment(environment=env)
     if cutover:
-        _require_local_session("publish --cutover", environment=env)
-    credentials = _delivery_credentials(env)
+        require_local_session("publish --cutover", environment=env)
+    credentials = delivery_credentials(env)
     zone = zone_id(credentials.account, DOCS_ZONE)
-    release = release_id(release_label or _local_release_label(repo_root), now=datetime.now(UTC))
-    _refresh_download_latest(repo_root)
+    release = release_id(release_label or local_release_label(repo_root), now=datetime.now(UTC))
+    refresh_download_latest(repo_root)
     html_root = build_site_roots(repo_root)
-    _validate_built_site(html_root)
+    validate_built_site(html_root)
     with deployment_lock(credentials.bucket):
         _upload_release(credentials, html_root, release)
         document = seal_release(credentials.bucket, html_root, release)
         if cutover:
             _wire_zone(credentials, zone)
-        _activate_static_release(credentials, document, html_root, zone)
+        activate_static_release(credentials, document, html_root, zone)
     print(f"Published release {release} at {CANONICAL_DOCS_BASE_URL}/ and {MIRROR_DOCS_BASE_URL}/", flush=True)
     return 0
 
 
-def _rollback(release: str, *, environment: Mapping[str, str] | None = None) -> int:
+def docs_delivery_activation_rollback(release: str, *, environment: Mapping[str, str] | None = None) -> int:
     """Verify and restore an earlier completed release, preserving the current one on failure."""
     env = environment if environment is not None else os.environ
-    _require_authorized_publish_environment(environment=env)
-    if _RELEASE_ID_RE.fullmatch(release) is None:
+    require_authorized_publish_environment(environment=env)
+    if RELEASE_ID_RE.fullmatch(release) is None:
         raise SystemExit(f"{release!r} is not a release id.")
-    credentials = _delivery_credentials(env)
+    credentials = delivery_credentials(env)
     with (
         deployment_lock(credentials.bucket),
         tempfile.TemporaryDirectory(prefix="cadrumo-docs-rollback-", dir=prepare_temp_root()) as directory,
     ):
         root = Path(directory)
         document = load_release(credentials.bucket, release, root)
-        _activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
+        activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
     print(f"Rolled back to release {release}", flush=True)
     return 0
 
 
-def _activate_existing(release: str, root: Path) -> int:
+def activate_existing(release: str, root: Path) -> int:
     """Activate an already sealed release from locally verified static bytes."""
-    _require_local_session("activate", environment=os.environ)
-    if _RELEASE_ID_RE.fullmatch(release) is None:
+    require_local_session("activate", environment=os.environ)
+    if RELEASE_ID_RE.fullmatch(release) is None:
         raise ValueError("Invalid release identity")
-    credentials = _delivery_credentials(os.environ)
+    credentials = delivery_credentials(os.environ)
     with deployment_lock(credentials.bucket):
         document = validate_manifest(json.loads(read_object(credentials.bucket, f"delivery/{release}/{MANIFEST_NAME}")))
         if document["release"] != release:
@@ -260,7 +260,7 @@ def _activate_existing(release: str, root: Path) -> int:
         for key, row in document["objects"].items():
             if not search_payload(key):
                 verify_bytes((root / key).read_bytes(), row, key)
-        _activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
+        activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
     return 0
 
 
@@ -285,7 +285,7 @@ def _restore_failed_activation(
     """Restore the prior version and routes before reraising an activation failure."""
     if previous_version is not None and previous_version:
         restore_version(account, previous_version)
-    _restore_routes(account, zone, before)
+    restore_routes(account, zone, before)
     if previous is not None and previous:
-        _await_release_served(previous["release"])
-        _verify_public_delivery(previous["release"])
+        await_release_served(previous["release"])
+        verify_public_delivery(previous["release"])

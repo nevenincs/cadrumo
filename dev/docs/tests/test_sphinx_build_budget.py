@@ -14,7 +14,7 @@ from ..compile_comparison import compare
 from ..compile_once import WITNESS_LANGUAGE
 from ..i18n import SITE_ROOT_LANGUAGES
 from . import built_site
-from ._sphinx_build_harness import gate_build_jobs
+from .sphinx_build_harness import gate_build_jobs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -100,8 +100,8 @@ def test_the_real_build_pair_keeps_both_commands_and_their_refusals(
 
     monkeypatch.setattr(built_site, "ThreadPoolExecutor", executor)
     monkeypatch.setattr(built_site, "run_command", command)
-    built_site._publish(tmp_path, "test-digest")
-    built = built_site._read(tmp_path, "test-digest")
+    built_site.publish(tmp_path, "test-digest")
+    built = built_site.read(tmp_path, "test-digest")
     assert built is not None
     for role, outcome in (("dev.docs.build", built.witness_build), ("dev.docs.compile_once", built.compile)):
         assert outcome.returncode == int(role == refused)

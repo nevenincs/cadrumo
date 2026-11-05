@@ -54,7 +54,7 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from ..lane_recipe_commands import _recipes_invoked_by
+from ..lane_recipe_commands import recipes_invoked_by
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -137,7 +137,7 @@ def _meaning(body: str) -> dict[str, frozenset[str]]:
             match.group("status") for match in _EXIT_COMPARISON.finditer(body) if match.group("status") != "0"
         ),
         "pytest options": frozenset(match.group(1) for match in _PYTEST_OPTION.finditer(body)),
-        "invoked recipes": frozenset(_recipes_invoked_by(body)),
+        "invoked recipes": frozenset(recipes_invoked_by(body)),
     }
 
 

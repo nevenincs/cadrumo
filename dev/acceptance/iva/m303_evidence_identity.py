@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     pass
 
 
-def _installed_identity(python: Path) -> tuple[str, str, str, str]:
+def installed_identity(python: Path) -> tuple[str, str, str, str]:
     """Return (package version, __init__ path, __init__ sha256, bundled authority generation)."""
     probe = (
         "import json, importlib.metadata as m, importlib.resources as r, cadrumo;"
@@ -40,7 +40,7 @@ def _installed_identity(python: Path) -> tuple[str, str, str, str]:
     return payload["v"], str(init_path), sha256_hex(init_path.read_bytes()), payload["gen"]
 
 
-def _authority(authority_root: Path) -> tuple[str, str]:
+def authority(authority_root: Path) -> tuple[str, str]:
     descriptor_path = authority_root / AUTHORITY_DESCRIPTOR_FILENAME
     try:
         descriptor = AuthorityDescriptor.read(descriptor_path)

@@ -37,7 +37,6 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo_client.contracts.navigation import load_navigation_register
 
-from ._paths import LOCALES_DIR
 from .chrome_projection import project_catalogue_strings
 from .desktop_assets_keys import (
     ASSET_FAMILIES,
@@ -61,6 +60,7 @@ from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KE
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
+from .paths import LOCALES_DIR
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")

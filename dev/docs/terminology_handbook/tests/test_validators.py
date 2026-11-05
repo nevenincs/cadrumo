@@ -17,15 +17,15 @@ import pytest
 from ..errors import TerminologyValidationError
 from ..loader import TerminologyHandbook, load_bundled_terminology_handbook, load_terminology_handbook
 from ..validators import (
-    _bundled_legal_ref_ids,
     approved_completeness_validator,
+    bundled_legal_ref_ids,
     default_handbook_validators,
     id_uniqueness_validator,
     legal_refs_resolve_validator,
     lifecycle_replaced_by_validator,
     relation_integrity_validator,
 )
-from ._support import write_concept_fragment
+from .support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -323,7 +323,7 @@ def test_bundled_exemplars_pass_every_gate_against_real_catalogue() -> None:
     ran.
     """
     handbook = load_bundled_terminology_handbook()
-    legal_ids = _bundled_legal_ref_ids()
+    legal_ids = bundled_legal_ref_ids()
     for validate in default_handbook_validators(legal_ids):
         validate(handbook)
 

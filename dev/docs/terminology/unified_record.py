@@ -96,7 +96,7 @@ class RankingTier(StrEnum):
 #: coarse axis keeps full-text pages below the term/navigation cards, so term
 #: cards still lead). The sweep score, when present, modulates within a class's
 #: band via :func:`normalise_display_class_weight`.
-_DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
+DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
     ResultDisplayClass.DOC: 1.0,
     ResultDisplayClass.MODELO: 0.9,
     ResultDisplayClass.CASILLA: 0.8,
@@ -115,7 +115,7 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
 #: provisions carry their own ``LEGAL`` band beneath casilla, and a
 #: full-text PAGE hit collapses to the ``TECHNICAL`` floor. Derived so the
 #: per-kind values can never drift from the one declared table.
-_KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
+KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
     SearchRecordKind.CONCEPT: ResultDisplayClass.DOC,
     SearchRecordKind.CASILLA: ResultDisplayClass.CASILLA,
     SearchRecordKind.CLI: ResultDisplayClass.CLI,
@@ -124,7 +124,7 @@ _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
 }
 
 _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
-    kind: _DISPLAY_CLASS_BASE_WEIGHT[display_class] for kind, display_class in _KIND_TO_DISPLAY_CLASS.items()
+    kind: DISPLAY_CLASS_BASE_WEIGHT[display_class] for kind, display_class in KIND_TO_DISPLAY_CLASS.items()
 }
 
 #: Exclusive upper bound of the highest band. The declared weights are already
@@ -140,7 +140,7 @@ _BAND_HEADROOM_RESERVE: float = 0.9
 
 def display_class_base_weight(display_class: ResultDisplayClass) -> float:
     """Return the declared base ranking weight for a display class."""
-    return _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+    return DISPLAY_CLASS_BASE_WEIGHT[display_class]
 
 
 def display_class_band_ceiling(display_class: ResultDisplayClass) -> float:
@@ -151,8 +151,8 @@ def display_class_band_ceiling(display_class: ResultDisplayClass) -> float:
     declared table by sorting it, so a reordered or extended table cannot leave
     a hand-listed ceiling behind.
     """
-    floor = _DISPLAY_CLASS_BASE_WEIGHT[display_class]
-    higher = [weight for weight in _DISPLAY_CLASS_BASE_WEIGHT.values() if weight > floor]
+    floor = DISPLAY_CLASS_BASE_WEIGHT[display_class]
+    higher = [weight for weight in DISPLAY_CLASS_BASE_WEIGHT.values() if weight > floor]
     return min(higher) if higher else _TOP_BAND_CEILING
 
 
@@ -173,7 +173,7 @@ def contain_boost_in_band(display_class: ResultDisplayClass, boost: float) -> fl
     sit at the ceiling and order by the engine's own lexical score. That class
     is already first, so it needs no promotion.
     """
-    floor = _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+    floor = DISPLAY_CLASS_BASE_WEIGHT[display_class]
     headroom = display_class_band_ceiling(display_class) - floor
     clamped = min(1.0, max(0.0, boost))
     return round(floor + clamped * headroom * _BAND_HEADROOM_RESERVE, 6)
@@ -221,7 +221,7 @@ def normalise_display_class_weight(
     Returns:
         A ranking weight in ``[0, 1]``, comparable across all display classes.
     """
-    return _modulate(_DISPLAY_CLASS_BASE_WEIGHT[display_class], sweep_score)
+    return _modulate(DISPLAY_CLASS_BASE_WEIGHT[display_class], sweep_score)
 
 
 def normalise_ranking_weight(kind: SearchRecordKind, sweep_score: float | None = None) -> float:
@@ -242,7 +242,7 @@ def normalise_ranking_weight(kind: SearchRecordKind, sweep_score: float | None =
     return _modulate(_KIND_BASE_WEIGHT[kind], sweep_score)
 
 
-def _display_class_for(
+def display_class_for(
     kind: SearchRecordKind,
     domain: str | None,
     target: str,
@@ -284,7 +284,7 @@ def derive_display_class(record: SearchRecord) -> ResultDisplayClass:
     class -- so the injection seam can ship exactly one class per record and the
     coverage gate can prove it.
     """
-    return _display_class_for(record.kind, record.metadata.domain, record.target)
+    return display_class_for(record.kind, record.metadata.domain, record.target)
 
 
 class SearchRecordMetadata(BaseModel):
@@ -457,7 +457,7 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
         # general-fact card (régimen, período, legal, concepto, ...) ranks in
         # the top general-fact ``DOC`` band.
         ranking_weight=normalise_display_class_weight(
-            _display_class_for(SearchRecordKind.CONCEPT, record.domain.value, target),
+            display_class_for(SearchRecordKind.CONCEPT, record.domain.value, target),
             sweep_score,
         ),
         search_aliases=tuple(aliases),

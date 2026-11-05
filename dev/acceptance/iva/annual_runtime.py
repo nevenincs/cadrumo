@@ -14,11 +14,11 @@ from .cli_journey import (
 )
 from .filing_year import IvaJourneyYear
 from .multirate_cli_journey import (
-    _create_profile,
+    create_profile,
 )
 
 
-def _start(
+def start(
     executable: Path,
     authority_root: Path,
     storage_root: Path,
@@ -41,13 +41,13 @@ def _start(
     )
     receipts: list[SanitizedCommandReceipt] = []
     try:
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     return cli, receipts, artifact
 
 
-def _reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> InstalledCli:
+def reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> InstalledCli:
     return InstalledCli(
         cli.executable, storage_root=storage_root, authority_root=authority_root, passphrase=cli.passphrase
     )

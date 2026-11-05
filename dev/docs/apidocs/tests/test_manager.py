@@ -13,9 +13,9 @@ from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
 from dev.paths import REPO_ROOT
 
 from ..manager import (
-    _NON_OWNER_GENERIC_IMPORTS,
     API_SOURCE_PACKAGE,
     API_SOURCE_ROOTS,
+    NON_OWNER_GENERIC_IMPORTS,
     ApiDocsError,
     ApiStubManager,
     DriftResult,
@@ -92,10 +92,10 @@ def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> Non
     public class from the generated reference, with no drift the generator could
     report against its own output).
     """
-    assert _NON_OWNER_GENERIC_IMPORTS, "the exclusion table is empty; every claim below is vacuous"
+    assert NON_OWNER_GENERIC_IMPORTS, "the exclusion table is empty; every claim below is vacuous"
     unresolved: list[str] = []
     owned_here: list[str] = []
-    for module_name, excluded in sorted(_NON_OWNER_GENERIC_IMPORTS.items()):
+    for module_name, excluded in sorted(NON_OWNER_GENERIC_IMPORTS.items()):
         assert excluded, f"{module_name!r} excludes no member at all"
         tree = _module_tree(module_name)
         for name in excluded:

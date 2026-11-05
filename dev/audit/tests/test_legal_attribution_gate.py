@@ -36,7 +36,7 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from ..legal_attribution_screen import _modelo_refs_from_registry, approved_modelo_numbers, find_mismatches
+from ..legal_attribution_screen import approved_modelo_numbers, find_mismatches, modelo_refs_from_registry
 from ..legal_catalogue import load_legal_entries, required_text_by_entry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -53,7 +53,7 @@ def test_no_modelo_cites_a_provision_that_approves_another_form() -> None:
         "vacuously; the approval vocabulary or the catalogue shape has changed"
     )
 
-    mismatches = find_mismatches(_modelo_refs_from_registry(), entries)
+    mismatches = find_mismatches(modelo_refs_from_registry(), entries)
 
     assert not mismatches, (
         "modelos citing a provision whose own approving text names a different "

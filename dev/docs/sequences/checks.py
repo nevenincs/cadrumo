@@ -20,7 +20,7 @@ from typing import Annotated, Final, cast
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.tests.golden_comparison import canonicalise
 from dev.packaging.command_execution import run_command
 from dev.paths import REPO_ROOT, UTF_8
@@ -39,11 +39,11 @@ from .golden_store import (
 )
 from .parser import parse_sequence
 from .runner import (
-    _PROGRESS_JOURNAL_ENV,
+    PROGRESS_JOURNAL_ENV,
     SequenceTranscript,
-    _sequence_progress_scope,
     execute_page_sequences,
     execute_sequence,
+    sequence_progress_scope,
 )
 from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
@@ -72,7 +72,7 @@ _FENCE_OPEN_RE = re.compile(r"^(?P<fence>`{3,})\{cli-sequence\}\s+(?P<id>\S+)\s*
 
 _OPTION_RE = re.compile(r"^:(?P<key>[a-z][a-z0-9_-]*):\s*(?P<value>.*)$")
 
-_SKIPPED_DOC_DIRS = frozenset({"_build", "_sequences", "_static", "_templates"})
+SKIPPED_DOC_DIRS = frozenset({"_build", "_sequences", "_static", "_templates"})
 
 _PROFILE_COMMAND_MENTION: str = "aeat config profile"
 
@@ -93,7 +93,7 @@ READER_FRAME_OUTPUT_ADVISORY_BYTES: Final[int] = 64 * 1024
 class DiscoveredSequence(BaseModel):
     """One ``cli-sequence`` directive found on an enrolled docs page."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     page: str
     sequence_id: SequenceId
@@ -104,7 +104,7 @@ class DiscoveredSequence(BaseModel):
 class _SequenceProgressRecord(BaseModel):
     """Strict child-to-parent receipt for the last executing sequence frame."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     page: _NonEmptyText
     sequence_id: SequenceId
@@ -124,12 +124,12 @@ def default_docs_root() -> Path:
     return repo_root / "docs"
 
 
-def _page_files(docs_root: Path) -> list[Path]:
+def checks_page_files(docs_root: Path) -> list[Path]:
     """Return every markdown page under ``docs_root``, skipping non-page trees."""
     pages: list[Path] = []
     for path in scan_directory(docs_root, pattern="*.md", recursive=True):
         relative = path.relative_to(docs_root)
-        if relative.parts and relative.parts[0] in _SKIPPED_DOC_DIRS:
+        if relative.parts and relative.parts[0] in SKIPPED_DOC_DIRS:
             continue
         pages.append(path)
     return pages
@@ -245,7 +245,7 @@ def discover_sequences(
     problems: list[str] = []
     seen_ids: dict[str, str] = {}
 
-    page_files = _page_files(root)
+    page_files = checks_page_files(root)
     if page is not None:
         wanted = root / f"{page}.md"
         page_files = [path for path in page_files if path == wanted]
@@ -336,7 +336,7 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+            with sequence_progress_scope(item.page), execute_in_fresh_sandbox(item.sequence) as transcript:
                 expectation_problems = evaluate_expectations(item.sequence, transcript, page=item.page)
                 if expectation_problems:
                     all_problems.extend(expectation_problems)
@@ -348,7 +348,7 @@ def refresh_sequences(
                 written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
                 advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
+            all_problems.append(f"page {item.page!r}: {with_notes(exc)}")
             continue
     return tuple(written), tuple(all_problems), tuple(advisories)
 
@@ -394,10 +394,10 @@ def check_sequences(
             continue
         advisories.extend(oversized_frame_advisories(item.page, golden))
         try:
-            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+            with sequence_progress_scope(item.page), execute_in_fresh_sandbox(item.sequence) as transcript:
                 all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
         except SequenceEngineError as exc:
-            all_problems.append(f"page {item.page!r}: {_with_notes(exc)}")
+            all_problems.append(f"page {item.page!r}: {with_notes(exc)}")
             continue
     return tuple(all_problems), tuple(advisories)
 
@@ -422,7 +422,7 @@ def english_pinned_environment() -> dict[str, str]:
     return environment
 
 
-def _timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
+def timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
     """Render the last frame recorded by a timed-out check child.
 
     The runner writes only runtime-derived data immediately before each actual
@@ -461,7 +461,7 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
     with owned_scratch_directory("cli-sequence-progress-") as tmp:
         journal = tmp / "last-frame.json"
         environment = english_pinned_environment()
-        environment[_PROGRESS_JOURNAL_ENV] = str(journal)
+        environment[PROGRESS_JOURNAL_ENV] = str(journal)
         try:
             result = run_command(
                 command,
@@ -472,7 +472,7 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
         except subprocess.TimeoutExpired as exc:
             if timeout is None:
                 raise
-            raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
+            raise SequenceEngineError(timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
     report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
@@ -648,7 +648,7 @@ def check_page_coherence_in_subprocess(
 
 
 @contextmanager
-def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
+def execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
     with owned_scratch_directory("seq-") as tmp:
         yield execute_sequence(sequence, sandbox_root=tmp)
@@ -698,7 +698,7 @@ def check_page_coherence(
     return tuple(all_problems)
 
 
-def _build_argument_parser() -> argparse.ArgumentParser:
+def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m dev.docs.sequences",
         description="Refresh or check the committed cli-sequence goldens.",
@@ -738,7 +738,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | None:
+def checks_owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | None:
     """Return the docname of the page enrolling ``sequence_id``, or ``None``.
 
     Used only to make the single-sequence advisory name the exact page-level
@@ -845,7 +845,7 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     executable = [item for item in items if item.sequence.executed_frames]
     try:
         with owned_scratch_directory("page-") as tmp:
-            with _sequence_progress_scope(docname):
+            with sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],
                     label=docname,
@@ -858,11 +858,11 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
                 )
     except SequenceEngineError as exc:
         all_problems.append(
-            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {_with_notes(exc)}",
+            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {with_notes(exc)}",
         )
 
 
-def _with_notes(error: BaseException) -> str:
+def with_notes(error: BaseException) -> str:
     """Render an execution failure with the notes the runner attached, such as where its logs were kept."""
     notes: object = getattr(error, "__notes__", ())
     lines = [str(error)]

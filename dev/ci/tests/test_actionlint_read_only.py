@@ -36,4 +36,4 @@ def test_actionlint_cache_uses_cadrumo_storage_override(tmp_path: Path, monkeypa
     monkeypatch.setenv("CADRUMO_ACTIONLINT_DIR", "tools/actionlint")
     monkeypatch.setenv("RUNNER_TOOL_CACHE", str(tmp_path / "runner-tool-cache"))
 
-    assert actionlint._cache_root() == storage / "tools" / "actionlint" / actionlint.VERSION
+    assert actionlint.cache_root() == storage / "tools" / "actionlint" / actionlint.VERSION

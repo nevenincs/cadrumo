@@ -23,8 +23,9 @@ import typer
 
 from dev.paths import UTF_8
 
-from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
-from ._artifacts import (
+from . import coverage, diff, harness_support, inventory, viewports
+from . import raster as raster_module
+from .artifacts import (
     DEFAULT_RUN_NAME,
     RUNS_DIR,
     FailedFrame,
@@ -49,14 +50,14 @@ from ._artifacts import (
     write_index,
     write_manifest,
 )
-from ._console import _echo
-from ._render import _render_scenario, _render_surface, _RenderProgress, _report_render_result, _require_complete_render
-from ._review_catalogue import ReviewCatalogue, RunView
-from ._review_network import TailnetUnavailableError, is_wildcard_host, tailnet_node
-from ._review_server import ReviewHTTPServer, serve
-from ._review_server_contracts import DEFAULT_REVIEW_PORT
-from ._review_state import ReviewState
-from ._review_store import Note, NoteImageState, ReviewStore, ReviewStoreVersionError, image_state
+from .console import echo
+from .render import RenderProgress, render_scenario, render_surface, report_render_result, require_complete_render
+from .review_catalogue import ReviewCatalogue, RunView
+from .review_network import TailnetUnavailableError, is_wildcard_host, tailnet_node
+from .review_server import ReviewHTTPServer, serve
+from .review_server_contracts import DEFAULT_REVIEW_PORT
+from .review_state import ReviewState
+from .review_store import Note, NoteImageState, ReviewStore, ReviewStoreVersionError, image_state
 
 app = typer.Typer(
     name="tui",
@@ -81,9 +82,9 @@ DEFAULT_RUN = DEFAULT_RUN_NAME
 def _choose_render_subjects(
     surface: list[str] | None,
     sequence: list[str] | None,
-    available: tuple[_harness.Surface, ...],
-    available_scenarios: tuple[_harness.Scenario, ...],
-) -> tuple[tuple[str, ...], tuple[_harness.Scenario, ...]]:
+    available: tuple[harness_support.Surface, ...],
+    available_scenarios: tuple[harness_support.Scenario, ...],
+) -> tuple[tuple[str, ...], tuple[harness_support.Scenario, ...]]:
     """Choose render subjects."""
     chosen_surfaces = (
         _resolve_surfaces(surface, available)
@@ -119,9 +120,9 @@ def _note_readings(
 @app.command("viewports")
 def viewports_command() -> None:
     """List the terminal geometries a render can cover."""
-    for viewport in _viewports.VIEWPORTS.values():
-        default = " (default)" if viewport.name in _viewports.DEFAULT_VIEWPORTS else ""
-        _echo(f"{viewport.name:<10} {viewport.label:>8}  {viewport.orientation:<9} {viewport.summary}{default}")
+    for viewport in viewports.VIEWPORTS.values():
+        default = " (default)" if viewport.name in viewports.DEFAULT_VIEWPORTS else ""
+        echo(f"{viewport.name:<10} {viewport.label:>8}  {viewport.orientation:<9} {viewport.summary}{default}")
 
 
 @app.command("runs")
@@ -134,7 +135,7 @@ def runs_command() -> None:
     """
     entries = known_runs()
     if not entries:
-        _echo(f"no runs yet; render one with `python -m dev.tui render` -> runs/{DEFAULT_RUN_NAME}/")
+        echo(f"no runs yet; render one with `python -m dev.tui render` -> runs/{DEFAULT_RUN_NAME}/")
         return
     rows = []
     for directory in entries:
@@ -149,7 +150,7 @@ def runs_command() -> None:
         marker = "  <- default" if directory.name == DEFAULT_RUN_NAME else ""
         rows.append((directory.name, manifest.generated_at, f"{len(manifest.frames):3} frames  {state}{marker}"))
     for name, stamp, detail in sorted(rows, key=lambda row: row[1], reverse=True):
-        _echo(f"{name:<16} {stamp:<26} {detail}")
+        echo(f"{name:<16} {stamp:<26} {detail}")
 
 
 @app.command("inventory")
@@ -163,25 +164,25 @@ def inventory_command(
     named run's manifest when one exists, and from the coverage table alone
     when it does not.
     """
-    interfaces = _inventory.scan()
-    surfaces = _harness.reviewable_surface_names(_harness.surfaces(), _harness.scenarios())
-    table = _harness.coverage()
-    _coverage.check(interfaces, surfaces, rendered_table=table)
-    resolved_notes = _coverage.notes(interfaces, surfaces, rendered_table=table)
+    interfaces = inventory.scan()
+    surfaces = harness_support.reviewable_surface_names(harness_support.surfaces(), harness_support.scenarios())
+    table = harness_support.coverage()
+    coverage.check(interfaces, surfaces, rendered_table=table)
+    resolved_notes = coverage.notes(interfaces, surfaces, rendered_table=table)
 
     directory = run_directory(run)
     rendered: dict[str, tuple[str, ...]] = {}
     if (directory / "manifest.json").is_file():
         manifest = _load_manifest(run)
         rendered = {record.qualname: record.rendered_by for record in manifest.interfaces}
-        _echo(f"coverage from run {run!r} ({manifest.generated_at})")
+        echo(f"coverage from run {run!r} ({manifest.generated_at})")
     else:
         rendered = {
-            interface.qualname: _coverage.rendered_by(interface.qualname, surfaces, rendered_table=table)
+            interface.qualname: coverage.rendered_by(interface.qualname, surfaces, rendered_table=table)
             for interface in interfaces
         }
-        _echo(f"no run named {run!r}; showing what the coverage table claims")
-    _echo("")
+        echo(f"no run named {run!r}; showing what the coverage table claims")
+    echo("")
 
     uncovered = 0
     for interface in interfaces:
@@ -196,11 +197,11 @@ def inventory_command(
         note = resolved_notes.get(interface.qualname, "")
         suffix = f"  [{note}]" if note else ""
         locator = f"{interface.path.as_posix()}:{interface.line}"
-        _echo(f"{interface.kind:<6} {interface.qualname}")
-        _echo(f"       {locator}")
-        _echo(f"       {mark}{suffix}")
-    _echo("")
-    _echo(f"{len(interfaces)} interfaces, {uncovered} not rendered")
+        echo(f"{interface.kind:<6} {interface.qualname}")
+        echo(f"       {locator}")
+        echo(f"       {mark}{suffix}")
+    echo("")
+    echo(f"{len(interfaces)} interfaces, {uncovered} not rendered")
 
 
 def _load_manifest(name: str) -> Manifest:
@@ -212,18 +213,18 @@ def _load_manifest(name: str) -> Manifest:
     try:
         return read_manifest(run_directory(name))
     except (FileNotFoundError, ManifestVersionError) as refusal:
-        _echo(str(refusal))
+        echo(str(refusal))
         raise typer.Exit(code=1) from None
 
 
-def _resolve_viewports(names: list[str] | None) -> tuple[_viewports.Viewport, ...]:
-    chosen = tuple(names) if (names is not None and names) else _viewports.DEFAULT_VIEWPORTS
+def _resolve_viewports(names: list[str] | None) -> tuple[viewports.Viewport, ...]:
+    chosen = tuple(names) if (names is not None and names) else viewports.DEFAULT_VIEWPORTS
     if len(chosen) == 1 and chosen[0] == "all":
-        chosen = tuple(_viewports.VIEWPORTS)
-    return tuple(_viewports.resolve(name) for name in chosen)
+        chosen = tuple(viewports.VIEWPORTS)
+    return tuple(viewports.resolve(name) for name in chosen)
 
 
-def _resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
+def resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
     if not (names is not None and names):
         return THEMES
     chosen: list[ThemeName] = []
@@ -236,7 +237,9 @@ def _resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
     return tuple(chosen)
 
 
-def _resolve_scenarios(names: list[str], available: tuple[_harness.Scenario, ...]) -> tuple[_harness.Scenario, ...]:
+def _resolve_scenarios(
+    names: list[str], available: tuple[harness_support.Scenario, ...]
+) -> tuple[harness_support.Scenario, ...]:
     if names == ["all"]:
         return available
     known = {scenario.name: scenario for scenario in available}
@@ -247,7 +250,7 @@ def _resolve_scenarios(names: list[str], available: tuple[_harness.Scenario, ...
     return tuple(known[name] for name in names)
 
 
-def _resolve_surfaces(names: list[str] | None, available: tuple[_harness.Surface, ...]) -> tuple[str, ...]:
+def _resolve_surfaces(names: list[str] | None, available: tuple[harness_support.Surface, ...]) -> tuple[str, ...]:
     known = {surface.name for surface in available}
     if not (names is not None and names):
         return tuple(sorted(known))
@@ -284,7 +287,7 @@ def render_command(
     cell_height: Annotated[
         int,
         typer.Option("--cell-height", help="Pixel height of one terminal cell; raises the output resolution."),
-    ] = _raster.DEFAULT_CELL_HEIGHT,
+    ] = raster_module.DEFAULT_CELL_HEIGHT,
     locale: Annotated[
         str | None,
         typer.Option("--locale", help="Force an output language; omit to resolve ambiently."),
@@ -316,18 +319,18 @@ def render_command(
     to what they name; with neither, both kinds render.
     """
     run = DEFAULT_RUN_NAME
-    available = _harness.surfaces()
-    available_scenarios = _harness.scenarios()
-    interfaces = _inventory.scan()
-    coverage_table = _harness.coverage()
-    available_names = _harness.reviewable_surface_names(available, available_scenarios)
-    coverage_notes = _coverage.notes(interfaces, available_names, rendered_table=coverage_table)
+    available = harness_support.surfaces()
+    available_scenarios = harness_support.scenarios()
+    interfaces = inventory.scan()
+    coverage_table = harness_support.coverage()
+    available_names = harness_support.reviewable_surface_names(available, available_scenarios)
+    coverage_notes = coverage.notes(interfaces, available_names, rendered_table=coverage_table)
 
     # Naming either kind narrows the render to what was named; naming neither
     # renders everything, surfaces and scenarios alike.
     chosen_surfaces, chosen_scenarios = _choose_render_subjects(surface, sequence, available, available_scenarios)
     chosen_viewports = _resolve_viewports(viewport)
-    chosen_themes = _resolve_themes(theme)
+    chosen_themes = resolve_themes(theme)
 
     directory = run_directory(run)
     directory.mkdir(parents=True, exist_ok=True)
@@ -343,10 +346,10 @@ def render_command(
     skipped: list[SkippedFrame] = []
     total = len(chosen_surfaces) * len(chosen_viewports) * len(chosen_themes)
     scenario_surfaces = tuple(page for scenario in chosen_scenarios for page in scenario.pages.values())
-    progress = _RenderProgress(total=total)
+    progress = RenderProgress(total=total)
 
     for name in chosen_surfaces:
-        _render_surface(
+        render_surface(
             name,
             chosen_viewports,
             chosen_themes,
@@ -363,7 +366,7 @@ def render_command(
         )
 
     for scenario in chosen_scenarios:
-        _render_scenario(
+        render_scenario(
             scenario,
             directory,
             viewports=chosen_viewports,
@@ -387,7 +390,7 @@ def render_command(
                 qualname=item.qualname,
                 kind=item.kind,
                 locator=f"{item.path.as_posix()}:{item.line}",
-                rendered_by=_coverage.rendered_by(item.qualname, rendered_surfaces, rendered_table=coverage_table),
+                rendered_by=coverage.rendered_by(item.qualname, rendered_surfaces, rendered_table=coverage_table),
                 note=coverage_notes.get(item.qualname, ""),
             )
             for item in interfaces
@@ -395,7 +398,7 @@ def render_command(
         failures=tuple(failures),
         skipped=tuple(skipped),
     )
-    _require_complete_render(manifest, chosen_surfaces, scenario_surfaces, chosen_viewports, chosen_themes)
+    require_complete_render(manifest, chosen_surfaces, scenario_surfaces, chosen_viewports, chosen_themes)
     # Written BEFORE the sweep, not after. The sweep is the only destructive
     # step in a command that takes tens of minutes, and running it
     # first meant any refusal or filesystem error inside it discarded the
@@ -405,7 +408,7 @@ def render_command(
 
     discarded, purge_refusal = _purge_render_artifacts(directory, manifest)
 
-    _report_render_result(directory, manifest, frames, failures, skipped, discarded, purge_refusal)
+    report_render_result(directory, manifest, frames, failures, skipped, discarded, purge_refusal)
 
 
 def _purge_render_artifacts(directory: Path, manifest: Manifest) -> tuple[tuple[Path, ...], str | None]:
@@ -444,18 +447,18 @@ def snapshot_command(
     how an operator says the older review is finished with.
     """
     if name == DEFAULT_RUN_NAME:
-        _echo(f"{name!r} is the canonical review; choose another name for a snapshot")
+        echo(f"{name!r} is the canonical review; choose another name for a snapshot")
         raise typer.Exit(code=1)
 
     source = run_directory(DEFAULT_RUN_NAME)
     if not (source / "manifest.json").is_file():
-        _echo(f"nothing to snapshot: {source} holds no run")
+        echo(f"nothing to snapshot: {source} holds no run")
         raise typer.Exit(code=1)
 
     destination = run_directory(name)
     if destination.exists() and not replace:
         held = sum(1 for path in destination.rglob("*") if path.is_file())
-        _echo(
+        echo(
             f"snapshot {name!r} already exists at {destination} and holds {held} file(s). "
             "Nothing was written. Choose another name, or pass --replace to discard it."
         )
@@ -471,7 +474,7 @@ def snapshot_command(
     # Re-checked rather than trusted: only the exact path the refusal was
     # measured against is removed.
     commit_staged_run(staging, destination)
-    _echo(f"snapshot: {destination}")
+    echo(f"snapshot: {destination}")
 
 
 @app.command("rasterise")
@@ -480,7 +483,7 @@ def rasterise_command(
     cell_height: Annotated[
         int,
         typer.Option("--cell-height", help="Pixel height of one terminal cell."),
-    ] = _raster.DEFAULT_CELL_HEIGHT,
+    ] = raster_module.DEFAULT_CELL_HEIGHT,
 ) -> None:
     """Repaint an existing run's PNGs from the SVGs it already holds.
 
@@ -494,7 +497,7 @@ def rasterise_command(
     directory = run_directory(run)
     manifest = _load_manifest(run)
     if not manifest.frames:
-        _echo(f"run {run!r} holds no frames to repaint")
+        echo(f"run {run!r} holds no frames to repaint")
         raise typer.Exit(code=1)
 
     repainted: list[RenderedFrame] = []
@@ -502,13 +505,13 @@ def rasterise_command(
     for index, frame in enumerate(manifest.frames, start=1):
         svg_path = directory / frame.svg
         if not svg_path.is_file():
-            _echo(f"[{index}/{len(manifest.frames)}] {frame.key} — SVG missing, kept as recorded")
+            echo(f"[{index}/{len(manifest.frames)}] {frame.key} — SVG missing, kept as recorded")
             missing_svgs.append(frame.key)
             repainted.append(frame)
             continue
-        _echo(f"[{index}/{len(manifest.frames)}] {frame.key}")
+        echo(f"[{index}/{len(manifest.frames)}] {frame.key}")
         png_path = directory / frame.png
-        raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
+        raster = raster_module.rasterise(svg_path, png_path, cell_height=cell_height)
         repainted.append(
             frame.model_copy(
                 update={
@@ -523,11 +526,11 @@ def rasterise_command(
     write_manifest(directory, updated)
     write_index(directory, updated)
 
-    _echo("")
-    _echo(f"repainted {len(manifest.frames) - len(missing_svgs)} frames at cell height {cell_height}")
+    echo("")
+    echo(f"repainted {len(manifest.frames) - len(missing_svgs)} frames at cell height {cell_height}")
     if missing_svgs:
-        _echo(f"{len(missing_svgs)} frames had no SVG and were left as recorded")
-        _echo(
+        echo(f"{len(missing_svgs)} frames had no SVG and were left as recorded")
+        echo(
             "their PNGs are still at the cell height they were painted at, which the "
             "manifest records per frame: " + ", ".join(sorted(missing_svgs))
         )
@@ -547,7 +550,7 @@ def _refuse_a_run_whose_manifest_outlives_its_frames(name: str, directory: Path,
     absent = missing_artifacts(directory, manifest)
     if not absent:
         return
-    _echo(
+    echo(
         f"run {name!r} names {len(absent)} file(s) its directory does not hold, so its manifest "
         "claims frames that are not there. Nothing was compared; re-render or repaint the run. "
         + ", ".join(absent[:10]),
@@ -569,14 +572,14 @@ def diff_command(
     before, after = _load_manifest(baseline), _load_manifest(candidate)
     _refuse_a_run_whose_manifest_outlives_its_frames(baseline, baseline_root, before)
     _refuse_a_run_whose_manifest_outlives_its_frames(candidate, candidate_root, after)
-    diffs = _diff.compare(baseline_root, before, candidate_root, after)
-    _echo(_diff.render_report(diffs))
+    diffs = diff.compare(baseline_root, before, candidate_root, after)
+    echo(diff.render_report(diffs))
 
-    changed = [entry for entry in diffs if entry.change is _diff.Change.CHANGED]
+    changed = [entry for entry in diffs if entry.change is diff.Change.CHANGED]
     if highlight and changed:
         _write_diff_highlights(baseline, baseline_root, candidate_root, before, after, changed)
 
-    if changed or any(entry.change is not _diff.Change.UNCHANGED for entry in diffs):
+    if changed or any(entry.change is not diff.Change.UNCHANGED for entry in diffs):
         raise typer.Exit(code=1)
 
 
@@ -608,11 +611,11 @@ def serve_command(
         try:
             node = tailnet_node()
         except TailnetUnavailableError as refusal:
-            _echo(f"cannot bind the tailnet: {refusal}. Pass --host 127.0.0.1 to review on this machine only.")
+            echo(f"cannot bind the tailnet: {refusal}. Pass --host 127.0.0.1 to review on this machine only.")
             raise typer.Exit(code=1) from None
         address, name = node.address, node.name
     elif is_wildcard_host(host):
-        _echo(f"refusing to listen on {host!r}: that is every interface. Name the tailnet or loopback address.")
+        echo(f"refusing to listen on {host!r}: that is every interface. Name the tailnet or loopback address.")
         raise typer.Exit(code=1)
     else:
         address = host
@@ -621,7 +624,7 @@ def serve_command(
     try:
         store.ensure()
     except ReviewStoreVersionError as refusal:
-        _echo(str(refusal))
+        echo(str(refusal))
         raise typer.Exit(code=1) from None
 
     state = ReviewState(ReviewCatalogue(RUNS_DIR), store)
@@ -629,19 +632,19 @@ def serve_command(
     try:
         server = ReviewHTTPServer((address, port), state)
     except OSError as refusal:
-        _echo(f"cannot listen on {address}:{port}: {refusal}")
+        echo(f"cannot listen on {address}:{port}: {refusal}")
         raise typer.Exit(code=1) from None
 
-    _echo(f"visual review: {_url(address, port)}")
+    echo(f"visual review: {_url(address, port)}")
     if name is not None:
-        _echo(f"               {_url(name, port)}")
-    _echo(f"watching {RUNS_DIR}")
-    _echo(f"notes kept in {store.path}")
-    _echo("Ctrl+C stops the server; the notes stay on disk.")
+        echo(f"               {_url(name, port)}")
+    echo(f"watching {RUNS_DIR}")
+    echo(f"notes kept in {store.path}")
+    echo("Ctrl+C stops the server; the notes stay on disk.")
     try:
         serve(server)
     except KeyboardInterrupt:
-        _echo("stopped")
+        echo("stopped")
 
 
 @app.command("notes")
@@ -659,12 +662,12 @@ def notes_command(
     """
     store = ReviewStore()
     if not store.exists():
-        _echo(f"no review notes yet; `serve` creates {store.path}")
+        echo(f"no review notes yet; `serve` creates {store.path}")
         return
     try:
         notes = store.notes(include_resolved=include_resolved)
     except ReviewStoreVersionError as refusal:
-        _echo(str(refusal))
+        echo(str(refusal))
         raise typer.Exit(code=1) from None
 
     catalogue = ReviewCatalogue(RUNS_DIR, only=run)
@@ -681,10 +684,10 @@ def notes_command(
             }
             for note, element_state, frame_state in readings
         ]
-        _echo(json.dumps(payload, indent=2, ensure_ascii=False))
+        echo(json.dumps(payload, indent=2, ensure_ascii=False))
         return
     if not readings:
-        _echo("no notes" if include_resolved else "no open notes")
+        echo("no notes" if include_resolved else "no open notes")
         return
     shown_key: str | None = None
     for note, element_state, frame_state in readings:
@@ -697,8 +700,8 @@ def _print_review_note(
     """Print one note and return the last element heading shown."""
     if note.element_key != shown_key:
         shown_key = note.element_key
-        _echo("")
-        _echo(note.element_key)
+        echo("")
+        echo(note.element_key)
     flags = []
     if element_state is NoteImageState.CHANGED:
         flags.append("element re-rendered since")
@@ -707,16 +710,16 @@ def _print_review_note(
     if note.resolved_at is not None:
         flags.append("resolved")
     suffix = f"  [{', '.join(flags)}]" if flags else ""
-    _echo(f"  #{note.id} {note.created_at}{suffix}")
+    echo(f"  #{note.id} {note.created_at}{suffix}")
     if note.frame_key is not None:
         pointed = ""
         if frame_state is NoteImageState.CHANGED:
             pointed = " (re-rendered since)"
         elif frame_state is NoteImageState.ABSENT:
             pointed = f" (not in run {run!r})"
-        _echo(f"    on {note.frame_key}{pointed}")
+        echo(f"    on {note.frame_key}{pointed}")
     for line in note.body.splitlines():
-        _echo(f"    {line}")
+        echo(f"    {line}")
     return note.element_key
 
 
@@ -726,7 +729,7 @@ def _write_diff_highlights(
     candidate_root: Path,
     before: Manifest,
     after: Manifest,
-    changed: list[_diff.FrameDiff],
+    changed: list[diff.FrameDiff],
 ) -> None:
     """Write text differences and pixel highlights for changed frames."""
     destination_root = candidate_root / "diff" / baseline
@@ -738,11 +741,11 @@ def _write_diff_highlights(
         if entry.text_diff:
             (destination_root / f"{stem}.diff").parent.mkdir(parents=True, exist_ok=True)
             (destination_root / f"{stem}.diff").write_text(entry.text_diff + "\n", encoding=UTF_8, newline="\n")
-        produced = _diff.write_highlight(
+        produced = diff.write_highlight(
             baseline_root / baseline_frames[entry.key].png,
             candidate_root / frames[entry.key].png,
             destination_root / f"{stem}.png",
         )
         written += 1 if produced is not None else 0
-    _echo("")
-    _echo(f"wrote {written} highlight images to {destination_root}")
+    echo("")
+    echo(f"wrote {written} highlight images to {destination_root}")

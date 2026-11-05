@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from .._artifacts import (
+from ..artifacts import (
     MANIFEST_NAME,
     RUNS_DIR,
     commit_staged_run,

@@ -21,9 +21,9 @@ from __future__ import annotations
 
 import argparse
 
-from ._dotenv import env_setup, google_client_setup
-from ._install import install
-from ._workstation import workstation_tools
+from .dotenv import env_setup, google_client_setup
+from .install import install
+from .workstation import workstation_tools
 
 ACTIONS = {
     "install": install,

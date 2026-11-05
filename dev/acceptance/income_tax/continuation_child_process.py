@@ -6,16 +6,16 @@ import json
 from pathlib import Path
 from typing import cast
 
-from .continuation_contracts import InstalledContinuationError, _Direction
+from .continuation_contracts import Direction, InstalledContinuationError
 from .installed_tui_child import (
     reportable_child_failure_reason,
     run_installed_tui_child_process,
 )
 
 
-def _run_child(
+def run_child(
     *,
-    direction: _Direction,
+    direction: Direction,
     python_executable: Path,
     workspace_root: Path,
     authority_root: Path,

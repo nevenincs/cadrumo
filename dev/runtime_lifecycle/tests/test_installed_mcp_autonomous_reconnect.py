@@ -71,10 +71,10 @@ from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import Nativ
 
 from .installed_mcp_stdio_support import structured_object
 from .test_installed_authenticated_stdio import (
-    _installed_mcp_executable,
-    _native_backend_for_current_platform,
-    _scope_for_auth_read,
-    _unused_reference,
+    installed_mcp_executable,
+    native_backend_for_current_platform,
+    scope_for_auth_read,
+    unused_reference,
 )
 
 pytestmark = [
@@ -347,13 +347,13 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
 ) -> None:
     """Closing one stdio adapter retires only its session; revocation fences the next."""
     require_os_credential_store()
-    backend = _native_backend_for_current_platform()
+    backend = native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend
     with native_api_cli_session(
         tmp_path,
         invoke_cli=run_cadrumo_cli,
-        scope_for_destination=_scope_for_auth_read,
+        scope_for_destination=scope_for_auth_read,
         prepare_profile=lambda _profile_id, _root: None,
         server_native_store=native_store,
     ) as profile:
@@ -369,7 +369,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
             client_id=source_metadata.client_id,
             destination_id=source_metadata.destination_id,
         )
-        reference = _unused_reference(protected_store)
+        reference = unused_reference(protected_store)
         primary: BaseException | None = None
         try:
             published = protected_store.replace(
@@ -386,7 +386,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
             )
             assert readback.metadata == published and readback.read()
 
-            executable = _installed_mcp_executable()
+            executable = installed_mcp_executable()
             assert executable.is_file(), "the installed cadrumo-mcp executable is required"
             parameters = StdioServerParameters(
                 command=str(executable),
@@ -671,13 +671,13 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
         "RuntimeProfileConnections",
         partial(RuntimeProfileConnections, worker_script=worker_script.resolve(strict=True)),
     )
-    backend = _native_backend_for_current_platform()
+    backend = native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend
     with native_api_cli_session(
         tmp_path,
         invoke_cli=run_cadrumo_cli,
-        scope_for_destination=_scope_for_auth_read,
+        scope_for_destination=scope_for_auth_read,
         prepare_profile=lambda _profile_id, _root: None,
         server_native_store=native_store,
     ) as profile:
@@ -694,7 +694,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
             client_id=metadata.client_id,
             destination_id=metadata.destination_id,
         )
-        reference = await asyncio.to_thread(_unused_reference, protected)
+        reference = await asyncio.to_thread(unused_reference, protected)
         reference_owner = _NativeReferenceCleanup(protected, reference, metadata)
         primary: BaseException | None = None
         try:
@@ -704,7 +704,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
             )
 
             # No password or human-administration call follows expiry. Only protected API-reference admission.
-            executable = _installed_mcp_executable()
+            executable = installed_mcp_executable()
             assert executable.is_file()
             parameters = StdioServerParameters(
                 command=str(executable),

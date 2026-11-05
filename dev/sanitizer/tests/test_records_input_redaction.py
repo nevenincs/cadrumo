@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .._records import IbanReplacement, TokenMap
+from ..records import IbanReplacement, TokenMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -36,7 +36,7 @@ def _strongest_committed_boosts() -> dict[tuple[str, str], float]:
     read straight from the committed bytes through the one path authority
     rather than through a fixture or a hand-rolled path.
     """
-    from .._miss_rate import relevance_mapping_path
+    from ..miss_rate_support import relevance_mapping_path
 
     path = relevance_mapping_path()
     if not path.is_file():
@@ -54,9 +54,9 @@ def _strongest_committed_boosts() -> dict[tuple[str, str], float]:
 
 def _display_class_for_kind(kind: str):
     from ..search_record import SearchRecordKind
-    from ..unified_record import _KIND_TO_DISPLAY_CLASS
+    from ..unified_record import KIND_TO_DISPLAY_CLASS
 
-    return _KIND_TO_DISPLAY_CLASS[SearchRecordKind(kind)]
+    return KIND_TO_DISPLAY_CLASS[SearchRecordKind(kind)]
 
 
 def test_the_committed_corpus_actually_contains_boosts_that_would_escape() -> None:

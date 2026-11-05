@@ -15,9 +15,9 @@ from typing import Any
 from dev.acceptance.installed_cli import InstalledCli, authority_generation
 
 from .cli_contracts import LedgerCliReceipt, LedgerJourneyError
-from .cli_invoice_stages import _stage_invoice_edit, _stage_invoice_import, _stage_manual_invoices
-from .cli_readback import _stage_export_readback, _stage_invoice_readback, _stage_transaction_readback
-from .cli_transaction_stages import _add_and_link, _stage_purchase_evidence
+from .cli_invoice_stages import stage_invoice_edit, stage_invoice_import, stage_manual_invoices
+from .cli_readback import stage_export_readback, stage_invoice_readback, stage_transaction_readback
+from .cli_transaction_stages import add_and_link, stage_purchase_evidence
 from .scenario import BRIEF_REVISION, SCENARIO_VERSION, build_ledger_cli_scenario
 
 
@@ -63,28 +63,28 @@ def run_cli_journey(
     run = partial(_run_installed_command, cli)
 
     invoice_ids: dict[str, str] = {}
-    _stage_manual_invoices(run, scenario, invoice_ids)
+    stage_manual_invoices(run, scenario, invoice_ids)
 
     transaction_ids: dict[str, str] = {}
 
     for fixture in scenario.transactions:
         if fixture.linked_invoice_fixture_id in invoice_ids:
-            _add_and_link(run, cli, fixture, invoice_ids, transaction_ids)
+            add_and_link(run, cli, fixture, invoice_ids, transaction_ids)
 
-    _stage_invoice_edit(run, scenario, invoice_ids)
+    stage_invoice_edit(run, scenario, invoice_ids)
 
-    imported, replay = _stage_invoice_import(run, cli, scenario, output_root, invoice_ids)
+    imported, replay = stage_invoice_import(run, cli, scenario, output_root, invoice_ids)
 
     for fixture in scenario.transactions:
         if fixture.fixture_id not in transaction_ids:
-            _add_and_link(run, cli, fixture, invoice_ids, transaction_ids)
+            add_and_link(run, cli, fixture, invoice_ids, transaction_ids)
 
-    evidence_id = _stage_purchase_evidence(run, scenario, output_root, transaction_ids)
+    evidence_id = stage_purchase_evidence(run, scenario, output_root, transaction_ids)
 
-    _stage_invoice_readback(run, scenario, invoice_ids, transaction_ids)
-    rows = _stage_transaction_readback(run, scenario, invoice_ids, transaction_ids, evidence_id)
+    stage_invoice_readback(run, scenario, invoice_ids, transaction_ids)
+    rows = stage_transaction_readback(run, scenario, invoice_ids, transaction_ids, evidence_id)
 
-    export_rows, export_bytes = _stage_export_readback(run, output_root, transaction_ids, rows)
+    export_rows, export_bytes = stage_export_readback(run, output_root, transaction_ids, rows)
 
     return LedgerCliReceipt(
         brief_revision=BRIEF_REVISION,

@@ -6,7 +6,7 @@ import json
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_observations import _money_text, _percentage_text, _require_result, _required_text
+from .cli_observations import money_text, percentage_text, require_result, required_text
 from .scenario import (
     InstalledPeriodicCliSlice,
     Modelo180PropertyInput,
@@ -15,12 +15,12 @@ from .scenario import (
 )
 
 
-def _capture_invoice_withholding(*, cli: InstalledCli, slice_: InstalledPeriodicCliSlice, year: int) -> str:
+def capture_invoice_withholding(*, cli: InstalledCli, slice_: InstalledPeriodicCliSlice, year: int) -> str:
     """Capture one invoice's allocations only through the public typed CLI flag."""
     invoice_id = _create_received_invoice(cli, slice_=slice_)
     for allocation in slice_.allocations:
         request = _invoice_withholding_request(slice_=slice_, invoice_id=invoice_id, allocation=allocation)
-        _require_result(
+        require_result(
             cli,
             (
                 "app",
@@ -56,9 +56,9 @@ def _invoice_withholding_request(
         "payment_event_id": allocation.payment_event_id,
         "payment_occurred_on": allocation.paid_on.isoformat(),
         "allocation_id": allocation.allocation_id,
-        "allocated_base": _money_text(allocation.allocated_base),
-        "allocated_withholding": _money_text(allocation.allocated_withholding),
-        "allocated_settlement": _money_text(allocation.allocated_settlement),
+        "allocated_base": money_text(allocation.allocated_base),
+        "allocated_withholding": money_text(allocation.allocated_withholding),
+        "allocated_settlement": money_text(allocation.allocated_settlement),
         "idempotency_key": f"{slice_.slice_id}:{allocation.allocation_id}",
     }
     if slice_.modelo_180_property is not None:
@@ -82,7 +82,7 @@ def _modelo_180_property_payload(detail: Modelo180PropertyInput) -> dict[str, ob
         "recipient_province_code": detail.recipient_province_code,
         "modality": detail.modality,
         "accrual_year": detail.accrual_year,
-        "withholding_percentage": _money_text(detail.withholding_percentage),
+        "withholding_percentage": money_text(detail.withholding_percentage),
         "address": {
             "province_code": detail.province_code,
             "municipality_code": f"{detail.province_code}079",
@@ -116,8 +116,8 @@ def _modelo_190_detail_payload(
         "subclave": detail.subclave,
         "province_code": detail.province_code,
         "territorial_deduction_clave": detail.territorial_deduction_clave,
-        "percibido_dinerario": _money_text(allocation.allocated_base),
-        "retencion_practicada": _money_text(allocation.allocated_withholding),
+        "percibido_dinerario": money_text(allocation.allocated_base),
+        "retencion_practicada": money_text(allocation.allocated_withholding),
         "incapacity_cash_perception": zero,
         "incapacity_cash_withholding": zero,
         "incapacity_kind_value": zero,
@@ -128,14 +128,14 @@ def _modelo_190_detail_payload(
         "foral_retention_araba": zero,
         "foral_retention_gipuzkoa": zero,
         "foral_retention_bizkaia": zero,
-        "base_retenciones": _money_text(allocation.allocated_base),
-        "porcentaje_retencion": _percentage_text(slice_.invoice_withholding_rate),
+        "base_retenciones": money_text(allocation.allocated_base),
+        "porcentaje_retencion": percentage_text(slice_.invoice_withholding_rate),
     }
 
 
 def _create_received_invoice(cli: InstalledCli, *, slice_: InstalledPeriodicCliSlice) -> str:
     """Create the canonical invoice through the installed public CLI."""
-    result = _require_result(
+    result = require_result(
         cli,
         (
             "app",
@@ -153,18 +153,18 @@ def _create_received_invoice(cli: InstalledCli, *, slice_: InstalledPeriodicCliS
             "--invoice-date",
             slice_.invoice_date.isoformat(),
             "--taxable-base",
-            _money_text(slice_.invoice_base),
+            money_text(slice_.invoice_base),
             "--iva-rate",
-            _percentage_text(slice_.invoice_iva_rate),
+            percentage_text(slice_.invoice_iva_rate),
             "--country-code",
             "ES",
             "--retention-rate",
             str(slice_.invoice_withholding_rate),
             "--retention-amount",
-            _money_text(slice_.invoice_withholding),
+            money_text(slice_.invoice_withholding),
             "--iva-category",
             "domestic_general",
         ),
         stage=f"{slice_.slice_id}:invoice_create",
     )
-    return _required_text(result, key="invoice_id", stage=f"{slice_.slice_id}:invoice_create")
+    return required_text(result, key="invoice_id", stage=f"{slice_.slice_id}:invoice_create")

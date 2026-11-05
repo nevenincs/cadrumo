@@ -2,7 +2,7 @@
 
 import pytest
 
-from ._spelling_support import assert_exact_english_spelling
+from .spelling_support import assert_exact_english_spelling
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

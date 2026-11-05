@@ -20,9 +20,9 @@ from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (
-    _installed_mcp_executable,
-    _native_backend_for_current_platform,
-    _scope_for_auth_read,
+    installed_mcp_executable,
+    native_backend_for_current_platform,
+    scope_for_auth_read,
 )
 
 pytestmark = [
@@ -48,10 +48,10 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
     with native_api_cli_session(
         tmp_path,
         invoke_cli=run_cadrumo_cli,
-        scope_for_destination=_scope_for_auth_read,
+        scope_for_destination=scope_for_auth_read,
         prepare_profile=lambda _profile_id, _root: None,
     ) as profile:
-        backend = _native_backend_for_current_platform()
+        backend = native_backend_for_current_platform()
         try:
             native_automation_secret_store(backend)
         except AutomationCustodyError as error:
@@ -64,7 +64,7 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
         # synthetic controls. The installed process uses the selected native
         # platform backend for this fresh, never-written reference.
         reference = uuid4()
-        executable = _installed_mcp_executable()
+        executable = installed_mcp_executable()
         assert executable.is_file(), "the installed cadrumo-mcp executable is required"
         parameters = StdioServerParameters(
             command=str(executable),

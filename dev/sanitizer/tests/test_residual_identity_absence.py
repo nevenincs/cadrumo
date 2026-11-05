@@ -85,8 +85,8 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .._pipeline import sanitize_pdf
-from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
+from ..pipeline import sanitize_pdf
+from ..records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
 from ..residual_identity import (
     CHECKSUM_VERIFIED_KINDS,
     ResidualKind,

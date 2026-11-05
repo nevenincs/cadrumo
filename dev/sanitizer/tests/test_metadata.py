@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`dev.sanitizer._metadata`.
+"""Unit tests for :mod:`dev.sanitizer.metadata`.
 
 The tests synthesise PDFs in-process (no fixture dep) covering:
 
@@ -16,7 +16,7 @@ import io
 import pikepdf
 import pytest
 
-from .._metadata import scrub_docinfo, scrub_xmp
+from ..metadata import scrub_docinfo, scrub_xmp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -13,7 +13,7 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import LazyBinding, TranslationKey
 
-from ..signal_command_paths import _compile_command_paths, command_path_pattern, executable_command_paths
+from ..signal_command_paths import command_path_pattern, compile_command_paths, executable_command_paths
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text
 
@@ -23,10 +23,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 @pytest.fixture(autouse=True)
 def _fresh_command_path_cache() -> Iterator[None]:
     executable_command_paths.cache_clear()
-    _compile_command_paths.cache_clear()
+    compile_command_paths.cache_clear()
     yield
     executable_command_paths.cache_clear()
-    _compile_command_paths.cache_clear()
+    compile_command_paths.cache_clear()
 
 
 @pytest.mark.parametrize(
@@ -80,9 +80,9 @@ def test_both_graphs_and_numeric_paths_are_recognized_before_identifier_masking(
 
 
 def test_longest_path_is_one_span_and_distinct_mentions_remain_distinct() -> None:
-    pattern = _compile_command_paths(frozenset({("tool", "run"), ("tool", "run", "detail")}))
+    pattern = compile_command_paths(frozenset({("tool", "run"), ("tool", "run", "detail")}))
     assert pattern.subn(" ", "tool run detail then tool run") == ("  then  ", 2)
-    assert _compile_command_paths(frozenset()).subn(" ", "Natural prose") == ("Natural prose", 0)
+    assert compile_command_paths(frozenset()).subn(" ", "Natural prose") == ("Natural prose", 0)
 
 
 def test_inline_literals_and_urls_are_not_counted_again_as_commands() -> None:
@@ -102,7 +102,7 @@ def test_unavailable_handler_is_not_an_executable_path(monkeypatch: pytest.Monke
         handler=LazyBinding.unavailable(TranslationKey("errors.command.unavailable")),
     )
     graph = CommandSpecGraph((root, unavailable), resolver=COMMAND_GRAPH.resolver)
-    monkeypatch.setattr("dev.locales.signal_command_paths._command_graphs", lambda: (graph,))
+    monkeypatch.setattr("dev.locales.signal_command_paths.command_graphs", lambda: (graph,))
     assert executable_command_paths() == frozenset()
     assert not command_path_pattern().search("aeat login")
 
@@ -111,7 +111,7 @@ def test_graph_failure_does_not_fall_back_to_an_unchecked_vocabulary(monkeypatch
     def broken_graphs() -> tuple[CommandSpecGraph, ...]:
         raise RuntimeError("graph unavailable")
 
-    monkeypatch.setattr("dev.locales.signal_command_paths._command_graphs", broken_graphs)
+    monkeypatch.setattr("dev.locales.signal_command_paths.command_graphs", broken_graphs)
     with pytest.raises(RuntimeError, match="graph unavailable"):
         command_path_pattern()
 

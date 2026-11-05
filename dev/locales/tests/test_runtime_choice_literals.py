@@ -28,7 +28,7 @@ from cadrumo.domain.renta.actividad_asset.disposal import ADMITTED_DISPOSAL_REAS
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from dev.paths import REPO_ROOT
 
-from ..signal_command_paths import _command_graphs, executable_command_paths
+from ..signal_command_paths import command_graphs, executable_command_paths
 from ..signal_spelling_segments import translation_spelling_segments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -118,7 +118,7 @@ def accepted_choice_values() -> dict[str, set[str]]:
         )["modelo"]["tax_domain"]
         for modelo in ("303", "100", "200")
     }
-    for graph in _command_graphs():
+    for graph in command_graphs():
         for node in graph.nodes():
             for parameter in node.spec.parameters:
                 if parameter.help_key is None:

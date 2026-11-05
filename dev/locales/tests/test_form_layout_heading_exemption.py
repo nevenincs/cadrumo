@@ -8,7 +8,7 @@ shape-based pass: a heading-shaped key no layout declares is still extra.
 import pytest
 
 from ..form_layout_heading_scan import is_form_layout_heading_candidate, scan_form_layout_heading_keys
-from ..locale_audit import _audit_locale_file
+from ..locale_audit import audit_locale_file
 from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -35,7 +35,7 @@ def test_an_undeclared_heading_shaped_key_is_still_extra() -> None:
 def test_inter_locale_parity_exempts_only_exact_declared_optional_headings() -> None:
     declared = "modelo.schema.303.form.authored.page-1.heading"
     stray = "modelo.schema.303.form.page.not-a-page.heading"
-    result = _audit_locale_file(
+    result = audit_locale_file(
         "en.yml",
         {},
         set(),

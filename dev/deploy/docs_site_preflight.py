@@ -7,10 +7,10 @@ from pathlib import Path
 from defusedxml import ElementTree
 
 from cadrumo.core.directory_scan import scan_directory
-from dev.docs import i18n as _docs_i18n
+from dev.docs import i18n
 from dev.paths import UTF_8
 
-from .docs_delivery_contracts import _REQUIRED_ROOT_ARTIFACTS, _REQUIRED_SITE_SEARCH_ARTIFACTS
+from .docs_delivery_contracts import REQUIRED_ROOT_ARTIFACTS, REQUIRED_SITE_SEARCH_ARTIFACTS
 from .docs_site_languages import language_site_url, localized_languages
 
 
@@ -28,7 +28,7 @@ def _require_sitemap_locations(locations: list[str], expected_base_url: str, roo
 
 def _validate_apex(html_root: Path) -> None:
     """Require the apex entry, its error page, a sitemap index and the one search bundle."""
-    required = ("index.html", "404.html", "sitemap.xml", *_REQUIRED_SITE_SEARCH_ARTIFACTS)
+    required = ("index.html", "404.html", "sitemap.xml", *REQUIRED_SITE_SEARCH_ARTIFACTS)
     missing = [name for name in required if not (html_root / name).is_file()]
     if missing:
         raise SystemExit(f"The apex is not deployable; missing: {', '.join(missing)}")
@@ -50,7 +50,7 @@ def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
     its own. The search bundle is the site's, not a root's, and is required at
     the apex by :func:`_validate_apex`.
     """
-    missing = [artifact for artifact in _REQUIRED_ROOT_ARTIFACTS if not (html_root / artifact).is_file()]
+    missing = [artifact for artifact in REQUIRED_ROOT_ARTIFACTS if not (html_root / artifact).is_file()]
     if missing:
         joined = ", ".join(missing)
         raise SystemExit(f"{root_label} is not deployable; required artifacts are missing: {joined}")
@@ -78,7 +78,7 @@ def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_labe
     _require_sitemap_locations(locations, expected_base_url, root_label)
 
 
-def _require_search_index(site_root: Path, *, root_label: str) -> None:
+def require_search_index(site_root: Path, *, root_label: str) -> None:
     """Refuse a site whose Pagefind index is empty OR carries no records.
 
     Read once, at the apex: the site has ONE index and every language's pages
@@ -120,7 +120,7 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
         )
 
 
-def _validate_language_entry(html_root: Path) -> None:
+def validate_language_entry(html_root: Path) -> None:
     """Require the apex entry to exist and to reach every published root.
 
     This is the REACHABILITY half of what the apex owes, and only that half: it
@@ -143,14 +143,14 @@ def _validate_language_entry(html_root: Path) -> None:
             f"Language entry does not route to {', '.join(unreachable)}; refusing to publish "
             "a root that cannot reach every built language.",
         )
-    if _docs_i18n.DEFAULT_SITE_LANGUAGE not in body:
+    if i18n.DEFAULT_SITE_LANGUAGE not in body:
         raise SystemExit(
-            f"Language entry declares no {_docs_i18n.DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
+            f"Language entry declares no {i18n.DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
             "stated preference would reach nothing.",
         )
 
 
-def _validate_language_roots(html_root: Path) -> None:
+def validate_language_roots(html_root: Path) -> None:
     """Require every published site root to carry the complete required-artifact set.
 
     The same artifacts mandatory for the English root -- the rendered page, the
@@ -166,7 +166,7 @@ def _validate_language_roots(html_root: Path) -> None:
         _require_valid_sitemap(root, expected_base_url=language_site_url(language), root_label=label)
 
 
-def _validate_built_site(html_root: Path) -> None:
+def validate_built_site(html_root: Path) -> None:
     """Run every validation a publish runs against the built tree before uploading.
 
     Every language root must carry its complete artifact set, and the site must
@@ -174,6 +174,6 @@ def _validate_built_site(html_root: Path) -> None:
     cannot succeed would otherwise write to the live destination first.
     """
     _validate_apex(html_root)
-    _validate_language_entry(html_root)
-    _validate_language_roots(html_root)
-    _require_search_index(html_root, root_label="The documentation site")
+    validate_language_entry(html_root)
+    validate_language_roots(html_root)
+    require_search_index(html_root, root_label="The documentation site")

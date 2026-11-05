@@ -144,7 +144,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.domain.user_profile.values import ProfileSetupState
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
-    from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
+    from dev.locales.registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
     from dev.locales.wizard_fstring_registrations import (
         flow_choice_values,
         wizard_choice_description_registrations,
@@ -214,7 +214,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_aeat_sync_label_registrations(),
         *_declarations_workspace_registrations(),
-        *_own_account_registrations(),
+        *own_account_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
         *_runtime_registrations(descendant_relations, descendant_disability_grades),
@@ -411,7 +411,7 @@ def _runtime_registrations(
     )
 
 
-def _own_account_registrations() -> tuple[FStringKeyRegistration, ...]:
+def own_account_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Enumerate account and import copy from its exact authored command and model vocabularies."""
     from cadrumo.application.ledger.import_operation import LedgerImportFileRefusal
     from cadrumo.domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole, OwnBankAccountDetails
@@ -582,7 +582,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
 
 def _diagnostics_command_spec_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register diagnostic keys declared by the live command-spec registry."""
-    from ._command_spec_scanner import scan_command_spec_keys
+    from .command_spec_scanner import scan_command_spec_keys
 
     keys = tuple(sorted(key for key in scan_command_spec_keys() if key.startswith("cli.diagnostics.")))
     if not keys:

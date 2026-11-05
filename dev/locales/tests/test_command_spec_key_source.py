@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import pytest
 
-from .._command_spec_scanner import scan_command_spec_keys
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
+from ..command_spec_scanner import scan_command_spec_keys
 from ..manager import LocaleManager
-from .test_parity import _committed_catalogues
+from ..paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
+from .test_parity import committed_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -70,7 +70,7 @@ def test_every_key_the_live_registry_declares_is_translated() -> None:
     manager = _manager()
 
     missing: dict[str, list[str]] = {}
-    for code, source in _committed_catalogues(manager).items():
+    for code, source in committed_catalogues(manager).items():
         absent = sorted(declared - manager.get_yaml_keys(manager.load_locale(source)))
         if absent:
             missing[code] = absent[:20]

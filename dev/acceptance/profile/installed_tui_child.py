@@ -320,7 +320,7 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     await pilot.app.workers.wait_for_complete()
     await pilot.pause()
     status = query_public_selector(pilot, "#manager-status", PinnedStatusBar)
-    if not _is_exact_visible_no_op_outcome(
+    if not is_exact_visible_no_op_outcome(
         status_tone=status.tone,
         status_message=status.message,
         field_visible=_field_is_present(pilot=pilot, path=path),
@@ -329,7 +329,7 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     return True
 
 
-def _is_exact_visible_no_op_outcome(*, status_tone: str, status_message: str, field_visible: bool) -> bool:
+def is_exact_visible_no_op_outcome(*, status_tone: str, status_message: str, field_visible: bool) -> bool:
     """Accept only the localized outcome the visible manager declares for no change.
 
     The installed child does not read an overview revision or content digest:

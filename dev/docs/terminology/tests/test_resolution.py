@@ -290,9 +290,9 @@ def _cli_reference_source(relpath: str) -> Path:
     reader rather than naming the tree that was never generated or how to
     generate it. This refuses once, at the read, with both.
     """
-    from ..resolution import _require_built_cli_reference
+    from ..resolution import require_built_cli_reference
 
-    _require_built_cli_reference(REPO_ROOT)
+    require_built_cli_reference(REPO_ROOT)
     path = Path(relpath)
     if not path.is_file():
         pytest.fail(
@@ -512,9 +512,9 @@ def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> 
     (rather than a hardcoded page name) so this probe survives a future
     re-split.
     """
-    from ..resolution import DroppedHit, DropReason, _require_built_cli_reference
+    from ..resolution import DroppedHit, DropReason, require_built_cli_reference
 
-    _require_built_cli_reference(REPO_ROOT)
+    require_built_cli_reference(REPO_ROOT)
     pages = tuple((REPO_ROOT / "docs" / "cli").rglob("*.rst"))
     assert pages, "the generated CLI reference tree must hold at least one page"
     longest_page = max(pages, key=lambda page: len(page.read_text(encoding="utf-8").splitlines()))
@@ -689,10 +689,10 @@ def test_absent_generated_cli_reference_tree_is_refused_not_dropped(tmp_path: Pa
     reported as an ordinary unresolvable hit -- an absent input laundered into
     a corpus finding, which is the failure this gate exists to make impossible.
     """
-    from ..resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+    from ..resolution import UnbuiltGeneratedInputError, require_built_cli_reference
 
     with pytest.raises(UnbuiltGeneratedInputError) as refusal:
-        _require_built_cli_reference(tmp_path)
+        require_built_cli_reference(tmp_path)
     message = str(refusal.value)
     assert "docs/cli" in message, "the refusal must name the root that is missing"
     assert "just docs-build" in message, "the refusal must name the remedy that writes it"
@@ -706,20 +706,20 @@ def test_short_generated_cli_reference_tree_is_refused_like_an_absent_one(tmp_pa
     the single emitted page still drops. Short and absent fail the same way and
     are refused the same way.
     """
-    from ..resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+    from ..resolution import UnbuiltGeneratedInputError, require_built_cli_reference
 
     _write_cli_pages(tmp_path, 1)
     with pytest.raises(UnbuiltGeneratedInputError) as refusal:
-        _require_built_cli_reference(tmp_path)
+        require_built_cli_reference(tmp_path)
     assert "1 page(s)" in str(refusal.value)
 
 
 def test_a_complete_generated_cli_reference_tree_is_accepted(tmp_path: Path) -> None:
     """The refusal has to let a real generator run through, or it proves nothing."""
-    from ..resolution import _MIN_CLI_REFERENCE_PAGES, _require_built_cli_reference
+    from ..resolution import MIN_CLI_REFERENCE_PAGES, require_built_cli_reference
 
-    _write_cli_pages(tmp_path, _MIN_CLI_REFERENCE_PAGES)
-    _require_built_cli_reference(tmp_path)
+    _write_cli_pages(tmp_path, MIN_CLI_REFERENCE_PAGES)
+    require_built_cli_reference(tmp_path)
 
 
 def test_chunk_hit_and_resolved_target_are_frozen() -> None:

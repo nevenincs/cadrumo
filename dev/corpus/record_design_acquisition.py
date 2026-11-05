@@ -12,15 +12,15 @@ import httpx
 
 from cadrumo.core.directory_scan import iter_directory
 from dev.corpus.record_design_inventory import (
-    _RETRIEVED_AT,
-    _RequiredArtifact,
+    RETRIEVED_AT,
+    RequiredArtifact,
 )
 from dev.packaging.hashing import sha256_path
 
-from .record_design_manifests import _Artifact, _artifact_urls, _Manifest
+from .record_design_manifests import Artifact, Manifest, artifact_urls
 
 
-def _acquired_filename(extension: str, artifacts: list[_Artifact], required: _RequiredArtifact) -> str:
+def _acquired_filename(extension: str, artifacts: list[Artifact], required: RequiredArtifact) -> str:
     """Allocate the next bounded readable artifact name without publishing it."""
     indexes = [
         int(match.group(1))
@@ -35,8 +35,8 @@ def _acquired_filename(extension: str, artifacts: list[_Artifact], required: _Re
     return filename
 
 
-def _store_acquired_payload(
-    files_dir: Path, extension: str, data: bytes, digest: str, artifacts: list[_Artifact], required: _RequiredArtifact
+def store_acquired_payload(
+    files_dir: Path, extension: str, data: bytes, digest: str, artifacts: list[Artifact], required: RequiredArtifact
 ) -> Path:
     """Store acquired payload."""
     local_match = next(
@@ -60,7 +60,7 @@ def _store_acquired_payload(
     return local_match
 
 
-def _sha256_bytes(data: bytes) -> str:
+def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
@@ -79,10 +79,10 @@ def _valid_signature(extension: str, data: bytes) -> bool:
     return bool(data)
 
 
-def _pull_required_artifact(
+def pull_required_artifact(
     index: int,
-    required: _RequiredArtifact,
-    manifests: dict[str, _Manifest],
+    required: RequiredArtifact,
+    manifests: dict[str, Manifest],
     client: httpx.Client,
     corpus_root: Path,
     required_count: int,
@@ -98,17 +98,17 @@ def _pull_required_artifact(
     extension = Path(urlparse(str(response.url)).path).suffix.lower()
     if not _valid_signature(extension, data):
         raise RuntimeError(f"Unexpected signature for {required.url}")
-    digest = _sha256_bytes(data)
+    digest = sha256_bytes(data)
     print(f"FETCH {index:02d}/{required_count} M{required.modelo} {len(data):>9} {digest[:12]}")
 
     model_dir = corpus_root / f"modelo_{required.modelo}"
     files_dir = model_dir / "files"
     files_dir.mkdir(parents=True, exist_ok=True)
     if manifest is None:
-        manifest = _Manifest(
+        manifest = Manifest(
             source="Agencia Tributaria Sede Electronica - Disenos de registro",
             modelo=required.modelo,
-            retrieved_at=_RETRIEVED_AT,
+            retrieved_at=RETRIEVED_AT,
             source_pages=[],
             artefact_count=0,
             artefacts=[],
@@ -128,7 +128,7 @@ def _pull_required_artifact(
         aliases.append(required.url)
         return
 
-    local_match = _store_acquired_payload(files_dir, extension, data, digest, artifacts, required)
+    local_match = store_acquired_payload(files_dir, extension, data, digest, artifacts, required)
     artifacts.append(
         {
             "modelo": required.modelo,
@@ -140,17 +140,17 @@ def _pull_required_artifact(
             "content_type": response.headers.get("content-type", "application/octet-stream").split(";", 1)[0],
             "bytes": len(data),
             "sha256": digest,
-            "retrieved_at": _RETRIEVED_AT,
+            "retrieved_at": RETRIEVED_AT,
         }
     )
-    manifest["retrieved_at"] = _RETRIEVED_AT
+    manifest["retrieved_at"] = RETRIEVED_AT
 
 
-def _update_existing_artifact(manifest: _Manifest | None, required: _RequiredArtifact) -> bool:
+def _update_existing_artifact(manifest: Manifest | None, required: RequiredArtifact) -> bool:
     """Return whether an already acquired URL needs no payload fetch."""
     if manifest:
         existing = next(
-            (artifact for artifact in manifest["artefacts"] if required.url in _artifact_urls(artifact)),
+            (artifact for artifact in manifest["artefacts"] if required.url in artifact_urls(artifact)),
             None,
         )
         if existing is not None:

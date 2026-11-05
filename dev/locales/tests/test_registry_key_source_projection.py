@@ -8,8 +8,8 @@ import pytest
 
 from cadrumo.domain.categories import registry as category_registry
 
-from .. import _registry_scanner as scanner_module
-from .._registry_scanner import LocaleRegistryEnumerationError, scan_registry_keys
+from .. import registry_scanner as scanner_module
+from ..registry_scanner import LocaleRegistryEnumerationError, scan_registry_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

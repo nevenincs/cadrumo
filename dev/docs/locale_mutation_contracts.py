@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-_SCHEMA_VERSION: Final[int] = 1
+SCHEMA_VERSION: Final[int] = 1
 
 
 class DocumentationLocaleMutationError(ValueError):

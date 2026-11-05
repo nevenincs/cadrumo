@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .financial_lifecycle import _m130_expected, _parse_m130_artifact
-from .financial_navigation import _open_destination, _work_ids_by_period, open_work
-from .financial_transactions import _transaction_row_ids
+from .financial_lifecycle import m130_expected, parse_m130_artifact
+from .financial_navigation import open_destination, open_work, work_ids_by_period
+from .financial_transactions import financial_transactions_transaction_row_ids
 from .installed_tui_child import (
     InstalledTuiChildError,
     query_public_selector,
@@ -20,16 +20,16 @@ from .tui_navigation import acknowledge_export_result, open_workbench_export
 from .tui_operation_controls import activate_tui_operation
 
 
-async def _assert_tui_partial_readback(*, pilot: Any, scenario: Any, year: int) -> dict[str, str]:
+async def assert_tui_partial_readback(*, pilot: Any, scenario: Any, year: int) -> dict[str, str]:
     """Require visible entries, resolved links, and a Q1 local filing history row."""
     from textual.widgets import DataTable
 
-    rows = await _transaction_row_ids(pilot, scenario=scenario)
-    works = await _work_ids_by_period(pilot, year=year)
+    rows = await financial_transactions_transaction_row_ids(pilot, scenario=scenario)
+    works = await work_ids_by_period(pilot, year=year)
     if len(rows) != 8 or set(works) != {"1T", "2T", "3T", "4T"}:
         raise InstalledTuiChildError("installed TUI did not publicly reproduce the four-unit partial workflow")
 
-    await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
+    await open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#ledger-navigation",
@@ -41,7 +41,7 @@ async def _assert_tui_partial_readback(*, pilot: Any, scenario: Any, year: int) 
     if suggestions.row_count or inconsistencies.row_count:
         raise InstalledTuiChildError("installed TUI reconciliation publicly reports unresolved invoice links")
 
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
+    await open_destination(pilot, query="declarations", expected_selector="#declarations-list")
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#declarations-navigation",
@@ -59,7 +59,7 @@ async def _assert_tui_partial_readback(*, pilot: Any, scenario: Any, year: int) 
     return works
 
 
-async def _export_visible_m130(
+async def export_visible_m130(
     *, pilot: Any, export_path: Path, work_unit_id: str, year: int, period: str
 ) -> dict[str, str]:
     """Export an already-filed quarterly work through its workbench's export dialog."""
@@ -75,9 +75,9 @@ async def _export_visible_m130(
     if terminal.outcome.value != "proven":
         raise InstalledTuiChildError("installed TUI did not export the public Q1 work artifact")
     await acknowledge_export_result(pilot)
-    return _parse_m130_artifact(
+    return parse_m130_artifact(
         path=export_path,
         year=year,
         period=period,
-        expected=_m130_expected(next(item for item in build_scenario(year).quarter_oracle if item.period == period)),
+        expected=m130_expected(next(item for item in build_scenario(year).quarter_oracle if item.period == period)),
     )

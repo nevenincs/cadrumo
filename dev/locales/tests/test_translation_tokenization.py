@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.core.i18n.render import tr
 
-from ..signal_spelling_segments import _CATALAN_HYPHENATED_CLITIC_RE, locale_spelling_words
+from ..signal_spelling_segments import CATALAN_HYPHENATED_CLITIC_RE, locale_spelling_words
 from ..signal_tokens import filtered_translation_text, translation_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -61,7 +61,7 @@ def test_bare_or_malformed_catalan_clitics_are_not_silently_excluded(value: str)
     "value", ["Manténn-lo", "revisarr-los", "Mantén-lós", "revisar-lo", "comensar-ne", "començar-nee", "casa-ne"]
 )
 def test_unattested_catalan_clitic_forms_do_not_match_the_closed_exception(value: str) -> None:
-    assert _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)[1] == 0
+    assert CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)[1] == 0
 
 
 def test_catalan_clitic_exception_does_not_apply_to_other_locales() -> None:

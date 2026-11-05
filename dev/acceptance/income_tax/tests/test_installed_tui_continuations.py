@@ -13,9 +13,9 @@ import pytest
 
 from .. import cli_journey, continuation_child_process
 from .. import continuation_cli as continuation_module
-from ..continuation_cli import _cli_public_readback
+from ..continuation_cli import cli_public_readback
 from ..continuation_contracts import ContinuationPathReceipt, InstalledContinuationError
-from ..continuation_state import _parse_child_state, _state
+from ..continuation_state import continuation_state, parse_child_state
 from ..tui_continuation_evidence import create_continuation_checkpoint, prove_continuation
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ _GENERATION = "a" * 64
 
 
 def test_partial_handoff_has_four_work_units_but_only_q1_is_locally_filed() -> None:
-    handoff = _state(
+    handoff = continuation_state(
         generation=_GENERATION,
         year=2025,
         periods=("1T", "2T", "3T", "4T"),
@@ -35,7 +35,7 @@ def test_partial_handoff_has_four_work_units_but_only_q1_is_locally_filed() -> N
         annual_exported=False,
     )
     checkpoint = create_continuation_checkpoint(frontend_path="cli_to_tui", state=handoff)
-    completion = _state(
+    completion = continuation_state(
         generation=_GENERATION,
         year=2025,
         periods=("1T", "2T", "3T", "4T", "0A"),
@@ -107,7 +107,7 @@ def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
             },
         ]
     )
-    state = _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+    state = cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
     assert cli.calls == [
         ("app", "ledger", "list"),
@@ -131,7 +131,7 @@ def test_cli_readback_refuses_a_partial_public_work_list() -> None:
     )
 
     with pytest.raises(InstalledContinuationError, match="four-unit handoff"):
-        _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
 
 def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
@@ -148,7 +148,7 @@ def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
     )
 
     with pytest.raises(InstalledContinuationError, match="Q1 local filing"):
-        _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
+        cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
 
 def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Path) -> None:
@@ -156,7 +156,7 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
 
     monkeypatch.setattr(
         continuation_module,
-        "_public_work_units",
+        "public_work_units",
         lambda _cli, *, year: {
             "1T": {"work_unit_id": "q1"},
             "2T": {"work_unit_id": "q2"},
@@ -182,12 +182,12 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
     )
     monkeypatch.setattr(
         continuation_module,
-        "_validate_annual_artifact",
+        "validate_annual_artifact",
         lambda **_kwargs: ({}, {"xsd_valid": True, "error_identities": ()}),
     )
-    monkeypatch.setattr(continuation_module, "_annual_schema", lambda *_args: tmp_path / "official.xsd")
+    monkeypatch.setattr(continuation_module, "annual_schema", lambda *_args: tmp_path / "official.xsd")
 
-    state, validation = continuation_module._cli_complete(
+    state, validation = continuation_module.cli_complete(
         cli=cast("InstalledCli", SimpleNamespace()),
         workspace_root=tmp_path,
         output_dir=tmp_path,
@@ -210,7 +210,7 @@ def test_child_runner_has_a_bounded_2400_second_tui_window(monkeypatch, tmp_path
         return SimpleNamespace(returncode=0, receipt_status="proven")
 
     monkeypatch.setattr(continuation_child_process, "run_installed_tui_child_process", fake_child)
-    result = continuation_child_process._run_child(
+    result = continuation_child_process.run_child(
         direction="cli_to_tui",
         python_executable=tmp_path / "python.exe",
         workspace_root=tmp_path,
@@ -226,15 +226,15 @@ def test_child_runner_has_a_bounded_2400_second_tui_window(monkeypatch, tmp_path
 
 
 def test_child_state_receipt_retains_only_value_free_continuation_state() -> None:
-    state = _state(
+    state = continuation_state(
         generation=_GENERATION,
         year=2025,
         periods=("1T", "2T", "3T", "4T"),
         filed=("1T",),
         annual_exported=False,
     )
-    recovered = _parse_child_state({"handoff_state": asdict(state)}, "handoff_state")
-    json_recovered = _parse_child_state(json.loads(json.dumps({"handoff_state": asdict(state)})), "handoff_state")
+    recovered = parse_child_state({"handoff_state": asdict(state)}, "handoff_state")
+    json_recovered = parse_child_state(json.loads(json.dumps({"handoff_state": asdict(state)})), "handoff_state")
     receipt = ContinuationPathReceipt(
         direction="cli_to_tui",
         status="proven",

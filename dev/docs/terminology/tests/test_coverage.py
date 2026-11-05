@@ -23,7 +23,6 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
-from .._miss_rate import load_committed_relevance
 from ..casilla_projection import project_casilla_search_records
 from ..concept_card_projection import ConceptCardRecord, project_concept_cards
 from ..coverage_report import (
@@ -35,6 +34,7 @@ from ..coverage_report import (
     legal_provision_ids,
 )
 from ..legal_projection import legal_target_record_id
+from ..miss_rate_support import load_committed_relevance
 from ..search_record import CasillaSearchRecord, SearchRecordKind
 from ..term_relevance_mapping import SweepResult, TermRelevanceMapping, TermTargetRef
 from ..unified_record import to_search_record

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final, cast
 
-from .legal_catalogue_fields import _validate_authored_text, _validate_boe_permalink
+from .legal_catalogue_fields import validate_authored_text, validate_boe_permalink
 from .legal_note_languages import legal_note_language_ranges
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import legal_document_slug
@@ -26,7 +26,7 @@ _RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
 )
 
 
-def _validate_records(records: tuple[object, ...]) -> None:
+def validate_records(records: tuple[object, ...]) -> None:
     seen_ids: set[str] = set()
     page_slugs: dict[str, str] = {}
     for candidate in records:
@@ -64,7 +64,7 @@ def _validate_record_text(record: LegalProvisionRecord) -> None:
             raise LegalReferenceError(
                 f"legal entry {record.legal_id!r} field {field!r} must be a string",
             )
-        _validate_authored_text(value, path=Path("<rendered records>"), legal_id=record.legal_id, field=field)
+        validate_authored_text(value, path=Path("<rendered records>"), legal_id=record.legal_id, field=field)
     required_value = cast(object, record.required_text)
     if not isinstance(required_value, tuple):
         raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
@@ -72,13 +72,13 @@ def _validate_record_text(record: LegalProvisionRecord) -> None:
     if not all(isinstance(item, str) for item in required_items):
         raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
     for item in (item for item in required_items if isinstance(item, str)):
-        _validate_authored_text(
+        validate_authored_text(
             item,
             path=Path("<rendered records>"),
             legal_id=record.legal_id,
             field="required_text",
         )
-    _validate_boe_permalink(
+    validate_boe_permalink(
         record.permalink,
         path=Path("<rendered records>"),
         legal_id=record.legal_id,

@@ -26,7 +26,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 
-from ._filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
+from .filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

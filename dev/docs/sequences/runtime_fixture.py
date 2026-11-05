@@ -74,19 +74,19 @@ class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
             super()._connection(channel)
 
 
-_EXPORT_VERSION_FILE = "docs-export-version.json"
+EXPORT_VERSION_FILE = "docs-export-version.json"
 _EXPORT_VERSION_BYTES = 256
-_WORKER_SCRIPT: ContextVar[Path | None] = ContextVar("sequence_worker_script", default=None)
+WORKER_SCRIPT: ContextVar[Path | None] = ContextVar("sequence_worker_script", default=None)
 
 
 @contextmanager
 def sequence_worker_script(script: Path) -> Generator[None]:
     """Select a trusted instrumented copy for this developer sequence scope."""
-    token = _WORKER_SCRIPT.set(script.resolve(strict=True))
+    token = WORKER_SCRIPT.set(script.resolve(strict=True))
     try:
         yield
     finally:
-        _WORKER_SCRIPT.reset(token)
+        WORKER_SCRIPT.reset(token)
 
 
 class _RecordedExportVersion(BaseModel):
@@ -105,7 +105,7 @@ class _RecordedExportVersion(BaseModel):
 
 
 @contextmanager
-def _export_version_authority(sandbox_root: Path) -> Generator[None]:
+def export_version_authority(sandbox_root: Path) -> Generator[None]:
     """Validate against the exact public generation copied for this sandbox."""
     authority = IndexedRegistryAuthority(sandbox_root / "docs-authority" / AUTHORITY_DESCRIPTOR_FILENAME)
     try:
@@ -115,20 +115,20 @@ def _export_version_authority(sandbox_root: Path) -> Generator[None]:
         authority.close()
 
 
-def _publish_export_version(sandbox_root: Path) -> None:
-    with _export_version_authority(sandbox_root):
+def publish_export_version(sandbox_root: Path) -> None:
+    with export_version_authority(sandbox_root):
         recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
-    with (sandbox_root / _EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
+    with (sandbox_root / EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
         destination.write(recorded.model_dump_json())
 
 
 @contextmanager
-def _recorded_export_version(sandbox_root: Path) -> Generator[None]:
-    with (sandbox_root / _EXPORT_VERSION_FILE).open("rb") as source:
+def recorded_export_version(sandbox_root: Path) -> Generator[None]:
+    with (sandbox_root / EXPORT_VERSION_FILE).open("rb") as source:
         raw = source.read(_EXPORT_VERSION_BYTES + 1)
     if len(raw) > _EXPORT_VERSION_BYTES:
         raise ValueError("recorded documentation export version exceeds its finite limit")
-    with _export_version_authority(sandbox_root):
+    with export_version_authority(sandbox_root):
         recorded = _RecordedExportVersion.model_validate_json(raw)
     with pytest.MonkeyPatch.context() as selected:
         selected.setattr(software_identity, "PACKAGE_VERSION", recorded.package_version)
@@ -152,7 +152,7 @@ class _UnavailableSecretStore:
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 
 
-class _SequenceLoginObservation:
+class SequenceLoginObservation:
     """Explicit fixture login facts; native transport still verifies the peer."""
 
     def __init__(self, owner: str, login_id: str) -> None:
@@ -186,7 +186,7 @@ def _worker_composition() -> Generator[None]:
                 cadrumo_live_tests_enabled="",
                 cadrumo_live_tests_google="",
             ),
-            _recorded_export_version(root.parent),
+            recorded_export_version(root.parent),
             frozen_clock(SANDBOX_INSTANT),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             profile_adapter_composition(automation_secrets_store=_UnavailableSecretStore()),
@@ -218,7 +218,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     ):
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     staged.rename(authority_root)
-    _publish_export_version(sandbox_root)
+    publish_export_version(sandbox_root)
     endpoint = WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
     stop, boot = Event(), uuid4()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=25)
@@ -231,9 +231,9 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda channel: _SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
+            capture_login=lambda channel: SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
-            worker_script=_WORKER_SCRIPT.get() or Path(__file__).resolve(),
+            worker_script=WORKER_SCRIPT.get() or Path(__file__).resolve(),
             wall_clock=lambda: SANDBOX_INSTANT,
         )
         profiles.prepare_registry()

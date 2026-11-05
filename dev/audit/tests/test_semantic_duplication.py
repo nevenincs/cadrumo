@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from ..semantic_duplication import _DETECTORS, run
+from ..semantic_duplication import DETECTORS, run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -51,10 +51,10 @@ def test_every_dispatch_key_runs_the_detector_it_names(tmp_path: Path) -> None:
     package.mkdir()
     _module(package, "solo.py", _SHARED)
 
-    for name in sorted(_DETECTORS):
+    for name in sorted(DETECTORS):
         assert run((package,), [name]) is not None
 
-    assert sorted(_DETECTORS) == [
+    assert sorted(DETECTORS) == [
         "call_fingerprint",
         "duplicated_derivation",
         "enum_subset",
@@ -100,7 +100,7 @@ def test_a_corpus_with_no_production_module_refuses_rather_than_reporting_clean(
     indistinguishable from one that has stopped firing.
     """
     with pytest.raises(SystemExit, match=r"no production modules found under"):
-        run((tmp_path,), list(_DETECTORS))
+        run((tmp_path,), list(DETECTORS))
 
 
 def test_an_unparsable_module_refuses_rather_than_shortening_the_corpus(tmp_path: Path) -> None:
@@ -108,7 +108,7 @@ def test_an_unparsable_module_refuses_rather_than_shortening_the_corpus(tmp_path
     (tmp_path / "bad.py").write_text("def (:" + chr(10), encoding="utf-8")
 
     with pytest.raises(SystemExit, match=r"could not be parsed, so the duplication corpus"):
-        run((tmp_path,), list(_DETECTORS))
+        run((tmp_path,), list(DETECTORS))
 
 
 def test_an_unreadable_module_refuses_for_its_own_reason(tmp_path: Path) -> None:
@@ -124,7 +124,7 @@ def test_an_unreadable_module_refuses_for_its_own_reason(tmp_path: Path) -> None
     (tmp_path / "broken.py").mkdir()
 
     with pytest.raises(SystemExit, match=r"could not be read, so the duplication corpus"):
-        run((tmp_path,), list(_DETECTORS))
+        run((tmp_path,), list(DETECTORS))
 
 
 def test_a_concept_restated_in_another_package_collides_across_roots(tmp_path: Path) -> None:

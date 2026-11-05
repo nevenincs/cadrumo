@@ -117,7 +117,7 @@ def _public_response_metadata(stdout: bytes, stderr: bytes) -> tuple[str | None,
     return response_status, error_code, setup_state, configured
 
 
-def _run_command(
+def run_command(
     *,
     command: ProfileSetupCommandId,
     executable: Path,
@@ -232,7 +232,7 @@ def run_installed_cli_profile_setup(
     ).encode("utf-8")
     profile_secrets = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")).encode("utf-8")
 
-    create = _run_command(
+    create = run_command(
         command="profile_create",
         executable=aeat_executable,
         argv=(
@@ -284,7 +284,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    login = _run_command(
+    login = run_command(
         command="profile_login",
         executable=aeat_executable,
         argv=("--format", "json", "config", "login", profile_label, "--secrets-stdin"),
@@ -299,7 +299,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    complete_setup = _run_command(
+    complete_setup = run_command(
         command="profile_complete_setup",
         executable=aeat_executable,
         argv=(
@@ -329,7 +329,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    status = _run_command(
+    status = run_command(
         command="profile_status",
         executable=aeat_executable,
         argv=("--format", "json", "--profile-secrets-stdin", "config", "profile", "status"),

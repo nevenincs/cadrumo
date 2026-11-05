@@ -46,12 +46,12 @@ from dev.paths import REPO_ROOT
 
 from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
-from ._query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
-from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
+from .query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
 from .resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from .search_record import SearchRecordKind
 from .term_relevance_mapping import SweepResult, TermRelevanceMapping, TermTargetRef
 from .unified_record import SearchRecord
+from .wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
 
 if TYPE_CHECKING:
     from ..pagefind_inject import SearchRecordProjection
@@ -479,7 +479,7 @@ def run_sweep(
         resolution = resolve_chunk_hits(hits, resolver=target_resolver)
         wrangled = wrangle(resolution, score_floor=score_floor)
         mappings.append(
-            _mapping_from(
+            mapping_from(
                 query,
                 wrangled,
                 resolver=target_resolver,
@@ -502,7 +502,7 @@ def _empty_mapping(query: SweepQuery) -> TermRelevanceMapping:
     return TermRelevanceMapping(query=query.query, concept_id=query.concept_id, language=query.language)
 
 
-def _mapping_from(
+def mapping_from(
     query: SweepQuery,
     wrangled: WrangledResult,
     *,
@@ -551,7 +551,7 @@ def _augment_structured_casilla_target(
     base weight. A zero or ambiguous match is refused, and an id already
     surfaced by RAG is retained exactly once.
     """
-    record = _match_structured_casilla_query(query.query, search_records)
+    record = match_structured_casilla_query(query.query, search_records)
     if record is None or any(target.record_id == record.id for target in targets):
         return targets
 
@@ -559,7 +559,7 @@ def _augment_structured_casilla_target(
     return tuple(sorted(augmented, key=lambda target: (-target.ranking_weight, target.record_id)))
 
 
-def _match_structured_casilla_query(
+def match_structured_casilla_query(
     query: str,
     records: Iterable[SearchRecord],
 ) -> SearchRecord | None:

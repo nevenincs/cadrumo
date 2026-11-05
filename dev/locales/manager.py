@@ -18,36 +18,41 @@ from dev.first_party_source import is_test_source
 from dev.paths import REPO_ROOT
 from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
-from ._subtree_move import (
+from .errors import LocaleError
+from .locale_audit import (
+    LocaleAuditResult,
+    audit_locale_file,
+    audit_placeholder_mismatches,
+    locale_audit_covered_by_namespace,
+)
+from .locale_nodes import LocaleNode
+from .locale_tree import (
+    apply_mapping_edits,
+    collect_required_leaves,
+    flatten_leaf_values,
+    flatten_raw_locale_leaves,
+    normalise_product_identity_mapping,
+    remove_existing_locale_leaf,
+    remove_optional_locale_leaf,
+    remove_required_locale_leaf,
+    resolve_leaf_parent,
+    set_locale_mapping_value,
+    set_nested_leaf,
+)
+from .locale_yaml import (
+    deep_merge_dicts,
+    discover_locale_codes,
+    locale_catalogue_source,
+    parse_locale,
+    parse_raw_locale,
+    rewrite_locale_mapping,
+)
+from .subtree_move import (
     LocaleMoveConflict,
     LocaleSubtreeMovePlan,
     LocaleSubtreeMoveResult,
     normalise_key_prefix,
     plan_locale_subtree_move,
-)
-from .errors import LocaleError
-from .locale_audit import LocaleAuditResult, _audit_locale_file, _audit_placeholder_mismatches, _covered_by_namespace
-from .locale_nodes import LocaleNode
-from .locale_tree import (
-    _apply_mapping_edits,
-    _collect_required_leaves,
-    _flatten_leaf_values,
-    _flatten_raw_locale_leaves,
-    _normalise_product_identity_mapping,
-    _remove_existing_locale_leaf,
-    _remove_optional_locale_leaf,
-    _remove_required_locale_leaf,
-    _resolve_leaf_parent,
-    _set_locale_mapping_value,
-    _set_nested_leaf,
-)
-from .locale_yaml import (
-    _deep_merge_dicts,
-    _parse_locale,
-    _parse_raw_locale,
-    _rewrite_locale_mapping,
-    discover_locale_codes,
-    locale_catalogue_source,
 )
 from .wizard_translation_audit import wizard_descriptor_keys
 from .write_guard import CatalogueWriteGuard, catalogue_write_guard
@@ -75,7 +80,7 @@ def _is_repository_tree(root: Path) -> bool:
 
 
 def _committed_locales_dir() -> Path:
-    from ._paths import LOCALES_DIR
+    from .paths import LOCALES_DIR
 
     return LOCALES_DIR
 
@@ -101,7 +106,7 @@ def _codebase_key_tooling_inputs(tooling: Path) -> Iterable[Path]:
         )
 
 
-def _codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
+def codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
     """Every file the codebase-key scan of ``source_roots`` can read, over-approximated, never under.
 
     The scan parses the roots' Python, imports product registries from anywhere
@@ -121,11 +126,11 @@ def _codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
     return tuple(sorted(found))
 
 
-def _codebase_key_scanner_modules() -> tuple[ModuleType, ...]:
+def codebase_key_scanner_modules() -> tuple[ModuleType, ...]:
     """Load the AST implementation before identifying the code that will execute."""
-    from . import _ast_scanner
+    from . import ast_scanner
 
-    prefix = f"{_ast_scanner.__package__}._ast"
+    prefix = f"{ast_scanner.__package__}._ast"
     return tuple(module for name, module in sys.modules.copy().items() if name.startswith(prefix))
 
 
@@ -240,13 +245,13 @@ class LocaleManager:
                 {
                     "roots": [root.resolve().relative_to(REPO_ROOT).as_posix() for root in source_roots],
                     "committed_catalogues": self.locales_dir == _committed_locales_dir(),
-                    "ast_scanner": scanner_identity(*_codebase_key_scanner_modules()),
+                    "ast_scanner": scanner_identity(*codebase_key_scanner_modules()),
                 }
             )
             found, unread = shared_scan_result(
                 "locale-codebase-keys",
                 root=REPO_ROOT,
-                inputs=lambda: _codebase_key_inputs(source_roots),
+                inputs=lambda: codebase_key_inputs(source_roots),
                 scanner=scanner,
                 compute=self._scan_codebase_keys,
             )
@@ -264,12 +269,12 @@ class LocaleManager:
         """Run every discovery path; return the keys and the sources that could not be read."""
         from cadrumo_client.contracts.navigation import load_navigation_register
 
-        from ._ast_scanner import scan_source_trees
-        from ._command_spec_scanner import scan_command_spec_keys
-        from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+        from .ast_scanner import scan_source_trees
+        from .command_spec_scanner import scan_command_spec_keys
         from .desktop_chrome import DESKTOP_CHROME_KEYS
         from .fstring_registry import get_registered_keys
         from .manager_chrome import MANAGER_CHROME_KEYS
+        from .registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 
         keys: set[str] = set()
         unread: list[str] = []
@@ -289,7 +294,7 @@ class LocaleManager:
         keys.update(DESKTOP_CHROME_KEYS)
         keys.update(MANAGER_CHROME_KEYS)
         keys.update(key for element in load_navigation_register().elements for key in (element.label, element.keywords))
-        from ._paths import LOCALES_DIR
+        from .paths import LOCALES_DIR
         from .service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 
         if self.locales_dir == LOCALES_DIR:
@@ -326,7 +331,7 @@ class LocaleManager:
         """
         if self._codebase_namespaces is not None:
             return set(self._codebase_namespaces)
-        from ._ast_scanner import scan_namespace_markers
+        from .ast_scanner import scan_namespace_markers
 
         markers: set[str] = set()
         for root in (self.src_dir, *self.extra_src_dirs):
@@ -346,7 +351,7 @@ class LocaleManager:
         """
         locale_leaves = self._load_audit_leaves()
         codebase_keys = self.get_codebase_keys()
-        from ._paths import LOCALES_DIR
+        from .paths import LOCALES_DIR
 
         if self.locales_dir == LOCALES_DIR:
             # The desktop shell's catalogue is composed from the product,
@@ -368,7 +373,7 @@ class LocaleManager:
         namespace_prefixes = self._audit_namespace_prefixes()
 
         file_results = tuple(
-            _audit_locale_file(
+            audit_locale_file(
                 locale_file,
                 leaves,
                 key_sets[locale_file],
@@ -378,7 +383,7 @@ class LocaleManager:
             )
             for locale_file, leaves in locale_leaves.items()
         )
-        placeholder_mismatches = _audit_placeholder_mismatches(key_sets, locale_leaves)
+        placeholder_mismatches = audit_placeholder_mismatches(key_sets, locale_leaves)
         return LocaleAuditResult(file_results, placeholder_mismatches)
 
     def _discover_locales(self) -> set[str]:
@@ -392,7 +397,7 @@ class LocaleManager:
             source = locale_catalogue_source(self.locales_dir, locale)
             if source is None:
                 continue
-            leaves_by_locale[f"{locale}.yml"] = _flatten_raw_locale_leaves(self._load_raw_locale(source))
+            leaves_by_locale[f"{locale}.yml"] = flatten_raw_locale_leaves(self._load_raw_locale(source))
         return leaves_by_locale
 
     def _audit_namespace_prefixes(self) -> tuple[str, ...]:
@@ -420,11 +425,11 @@ class LocaleManager:
             merged: dict[str, LocaleNode] = {}
             for shard_file in sorted(path.rglob("*.yml")):
                 with open(shard_file, encoding=UTF_8_ENCODING) as f:
-                    data = _parse_locale(f)
-                _deep_merge_dicts(merged, data)
+                    data = parse_locale(f)
+                deep_merge_dicts(merged, data)
             return merged
         with open(path, encoding=UTF_8_ENCODING) as f:
-            return _parse_locale(f)
+            return parse_locale(f)
 
     def _load_raw_locale(self, path: Path) -> dict[str, object]:
         """Load a catalogue for auditing without refusing non-string leaves."""
@@ -432,11 +437,11 @@ class LocaleManager:
             merged: dict[str, object] = {}
             for shard_file in sorted(path.rglob("*.yml")):
                 with open(shard_file, encoding=UTF_8_ENCODING) as f:
-                    shard: dict[str, Any] = dict(_parse_raw_locale(f))
-                merged.update(_deep_merge_dicts(dict(merged), shard))
+                    shard: dict[str, Any] = dict(parse_raw_locale(f))
+                merged.update(deep_merge_dicts(dict(merged), shard))
             return merged
         with open(path, encoding=UTF_8_ENCODING) as f:
-            return _parse_raw_locale(f)
+            return parse_raw_locale(f)
 
     def _build_nested_dict(
         self,
@@ -445,20 +450,20 @@ class LocaleManager:
         namespace_prefixes: tuple[str, ...] = (),
     ) -> dict[str, LocaleNode]:
         """Build a sorted, nested dictionary strictly conforming to the required keys."""
-        existing_flat = _collect_required_leaves(keys, existing_data)
-        for key, value in _flatten_leaf_values(existing_data).items():
-            if key in existing_flat or not _covered_by_namespace(key, namespace_prefixes):
+        existing_flat = collect_required_leaves(keys, existing_data)
+        for key, value in flatten_leaf_values(existing_data).items():
+            if key in existing_flat or not locale_audit_covered_by_namespace(key, namespace_prefixes):
                 continue
             existing_flat[key] = value
 
         new_data: dict[str, LocaleNode] = {}
         for key in sorted(keys):
             if key in existing_flat:
-                _set_nested_leaf(new_data, key, existing_flat[key])
+                set_nested_leaf(new_data, key, existing_flat[key])
         for key in sorted(existing_flat):
             if key in keys:
                 continue
-            _set_nested_leaf(new_data, key, existing_flat[key])
+            set_nested_leaf(new_data, key, existing_flat[key])
         return new_data
 
     def scaffold(self) -> None:
@@ -479,7 +484,7 @@ class LocaleManager:
                     _scaffold_locale_shards(self, guard, loc_dir, codebase_keys, namespace_prefixes)
                 elif loc_file.is_file():
                     try:
-                        data = _parse_locale(guard.read_text(loc_file))
+                        data = parse_locale(guard.read_text(loc_file))
                     except (OSError, yaml.YAMLError, LocaleError) as exc:
                         _log.warning(
                             "locale scaffold: failed to parse %s; starting from empty mapping (%s)",
@@ -490,7 +495,7 @@ class LocaleManager:
                         guard.observe(loc_file)
 
                     new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
-                    _rewrite_locale_mapping(guard, loc_file, new_data)
+                    rewrite_locale_mapping(guard, loc_file, new_data)
 
     def canonicalize_product_identity_references(
         self,
@@ -506,16 +511,16 @@ class LocaleManager:
                 loc_file = self.locales_dir / f"{loc}.yml"
                 if loc_dir.is_dir():
                     for shard_file in sorted(loc_dir.rglob("*.yml")):
-                        data = _parse_locale(guard.read_text(shard_file))
-                        normalized = _normalise_product_identity_mapping(data)
+                        data = parse_locale(guard.read_text(shard_file))
+                        normalized = normalise_product_identity_mapping(data)
                         if normalized != data:
-                            _rewrite_locale_mapping(guard, shard_file, normalized)
+                            rewrite_locale_mapping(guard, shard_file, normalized)
                             updated_paths.append(shard_file)
                 elif loc_file.is_file():
-                    data = _parse_locale(guard.read_text(loc_file))
-                    normalized = _normalise_product_identity_mapping(data)
+                    data = parse_locale(guard.read_text(loc_file))
+                    normalized = normalise_product_identity_mapping(data)
                     if normalized != data:
-                        _rewrite_locale_mapping(guard, loc_file, normalized)
+                        rewrite_locale_mapping(guard, loc_file, normalized)
                         updated_paths.append(loc_file)
         return tuple(updated_paths)
 
@@ -557,20 +562,20 @@ class LocaleManager:
             shard_path = target / rel_shard
             with catalogue_write_guard(self.locales_dir) as guard:
                 if shard_path.is_file():
-                    data = _parse_locale(guard.read_text(shard_path))
+                    data = parse_locale(guard.read_text(shard_path))
                 else:
                     guard.observe(shard_path)
                     data = {}
-                cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+                cursor = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
                 cursor[parts[-1]] = value
-                _rewrite_locale_mapping(guard, shard_path, data)
+                rewrite_locale_mapping(guard, shard_path, data)
             return shard_path
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            data = _parse_locale(guard.read_text(target))
-            cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+            data = parse_locale(guard.read_text(target))
+            cursor = resolve_leaf_parent(data, parts, dotted_key=dotted_key)
             cursor[parts[-1]] = value
-            _rewrite_locale_mapping(guard, target, data)
+            rewrite_locale_mapping(guard, target, data)
         return target
 
     def set_locale_values(self, locale: str, values: Mapping[str, str | None]) -> Path:
@@ -588,20 +593,20 @@ class LocaleManager:
                 for rel_shard, shard_vals in sorted(by_shard.items()):
                     shard_path = target / rel_shard
                     if shard_path.is_file():
-                        data = _parse_locale(guard.read_text(shard_path))
+                        data = parse_locale(guard.read_text(shard_path))
                     else:
                         guard.observe(shard_path)
                         data = {}
                     for dotted_key, raw_value in sorted(shard_vals.items()):
-                        _set_locale_mapping_value(data, dotted_key, raw_value)
-                    _rewrite_locale_mapping(guard, shard_path, data)
+                        set_locale_mapping_value(data, dotted_key, raw_value)
+                    rewrite_locale_mapping(guard, shard_path, data)
             return target
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            data = _parse_locale(guard.read_text(target))
+            data = parse_locale(guard.read_text(target))
             for dotted_key, raw_value in sorted(values.items()):
-                _set_locale_mapping_value(data, dotted_key, raw_value)
-            _rewrite_locale_mapping(guard, target, data)
+                set_locale_mapping_value(data, dotted_key, raw_value)
+            rewrite_locale_mapping(guard, target, data)
         return target
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
@@ -619,15 +624,15 @@ class LocaleManager:
             if not shard_path.is_file():
                 raise LocaleError(f"Locale key not found: {dotted_key!r}")
             with catalogue_write_guard(self.locales_dir) as guard:
-                data = _parse_locale(guard.read_text(shard_path))
-                _remove_existing_locale_leaf(data, parts, dotted_key)
-                _rewrite_locale_mapping(guard, shard_path, data)
+                data = parse_locale(guard.read_text(shard_path))
+                remove_existing_locale_leaf(data, parts, dotted_key)
+                rewrite_locale_mapping(guard, shard_path, data)
             return shard_path
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            data = _parse_locale(guard.read_text(target))
-            _remove_existing_locale_leaf(data, parts, dotted_key)
-            _rewrite_locale_mapping(guard, target, data)
+            data = parse_locale(guard.read_text(target))
+            remove_existing_locale_leaf(data, parts, dotted_key)
+            rewrite_locale_mapping(guard, target, data)
         return target
 
     def locale_catalogue_keys(self, locale: str) -> set[str]:
@@ -653,17 +658,17 @@ class LocaleManager:
                     shard_path = target / rel_shard
                     if not shard_path.is_file():
                         continue
-                    data = _parse_locale(guard.read_text(shard_path))
+                    data = parse_locale(guard.read_text(shard_path))
                     for dotted_key in shard_keys:
-                        _remove_optional_locale_leaf(data, dotted_key)
-                    _rewrite_locale_mapping(guard, shard_path, data)
+                        remove_optional_locale_leaf(data, dotted_key)
+                    rewrite_locale_mapping(guard, shard_path, data)
             return target
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            data = _parse_locale(guard.read_text(target))
+            data = parse_locale(guard.read_text(target))
             for dotted_key in keys:
-                _remove_required_locale_leaf(data, dotted_key)
-            _rewrite_locale_mapping(guard, target, data)
+                remove_required_locale_leaf(data, dotted_key)
+            rewrite_locale_mapping(guard, target, data)
         return target
 
     def move_locale_subtree(
@@ -714,7 +719,7 @@ class LocaleManager:
             if catalogue is None:
                 continue
             targets[locale] = catalogue
-            leaves_by_locale[locale] = _flatten_leaf_values(self.load_locale(catalogue))
+            leaves_by_locale[locale] = flatten_leaf_values(self.load_locale(catalogue))
 
         plan = plan_locale_subtree_move(
             leaves_by_locale,
@@ -774,18 +779,18 @@ class LocaleManager:
             for rel_shard, (shard_edits, shard_removals) in sorted(by_shard.items()):
                 shard_path = target / rel_shard
                 if shard_path.is_file():
-                    data = _parse_locale(guard.read_text(shard_path))
+                    data = parse_locale(guard.read_text(shard_path))
                 else:
                     guard.observe(shard_path)
                     data = {}
-                _apply_mapping_edits(data, shard_edits, shard_removals)
-                _rewrite_locale_mapping(guard, shard_path, data)
+                apply_mapping_edits(data, shard_edits, shard_removals)
+                rewrite_locale_mapping(guard, shard_path, data)
                 written.append(shard_path)
             return tuple(written)
 
-        data = _parse_locale(guard.read_text(target))
-        _apply_mapping_edits(data, edits, removals)
-        _rewrite_locale_mapping(guard, target, data)
+        data = parse_locale(guard.read_text(target))
+        apply_mapping_edits(data, edits, removals)
+        rewrite_locale_mapping(guard, target, data)
         return (target,)
 
 
@@ -820,7 +825,7 @@ def _scaffold_locale_shards(
     from cadrumo.core.i18n.routing import route_key_to_shard
 
     existing_full = self.load_locale(loc_dir)
-    existing_leaves = _flatten_leaf_values(existing_full)
+    existing_leaves = flatten_leaf_values(existing_full)
 
     keys_by_shard: dict[Path, set[str]] = {}
     for key in codebase_keys:
@@ -828,7 +833,7 @@ def _scaffold_locale_shards(
         keys_by_shard.setdefault(rel_shard, set()).add(key)
 
     for key in existing_leaves:
-        if _covered_by_namespace(key, namespace_prefixes):
+        if locale_audit_covered_by_namespace(key, namespace_prefixes):
             rel_shard = route_key_to_shard(key)
             keys_by_shard.setdefault(rel_shard, set()).add(key)
 
@@ -853,7 +858,7 @@ def _scaffold_locale_shard(
     target_keys = keys_by_shard.get(rel_shard, set())
     if shard_path.is_file():
         try:
-            shard_data = _parse_locale(guard.read_text(shard_path))
+            shard_data = parse_locale(guard.read_text(shard_path))
         except Exception:
             shard_data = {}
             guard.observe(shard_path)
@@ -863,6 +868,6 @@ def _scaffold_locale_shard(
 
     new_data = self._build_nested_dict(target_keys, shard_data, namespace_prefixes)
     if new_data:
-        _rewrite_locale_mapping(guard, shard_path, new_data)
+        rewrite_locale_mapping(guard, shard_path, new_data)
     elif shard_path.is_file():
-        _rewrite_locale_mapping(guard, shard_path, {})
+        rewrite_locale_mapping(guard, shard_path, {})

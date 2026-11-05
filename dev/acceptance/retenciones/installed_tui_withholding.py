@@ -33,11 +33,11 @@ from dev.acceptance.income_tax.installed_tui_child import (
 from dev.acceptance.income_tax.tui_contracts import TuiJourneyError
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_annual_export_validation import _validate_annual_export
+from .cli_annual_export_validation import validate_annual_export
 from .cli_contracts import RetencionesInstalledCliError
-from .cli_export_validation import _validate_export
-from .cli_layout_selection import _selected_annual_layouts
-from .cli_preflight import _fresh_directory
+from .cli_export_validation import validate_export
+from .cli_layout_selection import selected_annual_layouts
+from .cli_preflight import fresh_directory
 from .installed_tui_controls import assert_capture_unavailable, assert_recorded_reopen, run_work_lifecycle
 from .installed_tui_runtime import installed_foreground_runtime
 from .installed_tui_seed import WithholdingWork, seed_withholding_work
@@ -98,7 +98,7 @@ class WithholdingTuiError(InstalledTuiChildError):
         self.stage = stage
 
 
-def _safe_tui_failure_reason(error: Exception) -> str:
+def safe_tui_failure_reason(error: Exception) -> str:
     """Project known driver messages without copying notices or findings."""
     message = str(error)
     if isinstance(error, InstalledTuiChildError) and message in _SAFE_WITHHOLDING_CONTROL_REASONS:
@@ -117,7 +117,7 @@ def _safe_tui_failure_reason(error: Exception) -> str:
     return "installed withholding public control failed"
 
 
-def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTuiError:
+def pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTuiError:
     """Capture only driver function identity while the public screen is mounted."""
     traceback = error.__traceback__
     while traceback is not None:
@@ -129,7 +129,7 @@ def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTu
         ):
             stage = f"{stage.split('.')[0]}.{function}"
         traceback = traceback.tb_next
-    reason = _safe_tui_failure_reason(error)
+    reason = safe_tui_failure_reason(error)
     return WithholdingTuiError(
         f"installed withholding {stage} failed: {reason}",
         stage=stage,
@@ -137,7 +137,7 @@ def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTu
     )
 
 
-def _child_process_failure(*, phase: str, receipt: Path) -> WithholdingTuiError:
+def child_process_failure(*, phase: str, receipt: Path) -> WithholdingTuiError:
     """Carry the sanitized child reason into the parent continuation receipt."""
     reason = reportable_child_failure_reason(receipt) or "installed child recorded no reportable failure reason"
     return WithholdingTuiError(f"installed withholding {phase} child failed: {reason}", stage=f"{phase}.child")
@@ -265,7 +265,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
     layout = resolve_export_layout(snapshot, layout_id).layout
     payload = path.read_bytes()
     if expected_source is None:
-        _validate_annual_export(
+        validate_annual_export(
             layout=layout,
             payload=payload,
             expected_header=annual.expected_header_fields,
@@ -273,7 +273,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
             stage="tui_annual_export_oracle",
         )
     else:
-        _validate_export(
+        validate_export(
             layout=layout,
             payload=payload,
             expected=tuple((key, Decimal(value)) for key, value in expected_source.expected_casillas),
@@ -282,7 +282,7 @@ def _export_evidence(target: WithholdingWork, *, path: Path, operation: Any) -> 
     return {"name": path.name, "size": len(payload), "sha256": hashlib.sha256(payload).hexdigest()}
 
 
-def _run_child(args: argparse.Namespace) -> dict[str, Any]:
+def run_child(args: argparse.Namespace) -> dict[str, Any]:
     """Admit through the production launcher and drive only rendered public controls."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -324,7 +324,7 @@ def _run_child(args: argparse.Namespace) -> dict[str, Any]:
                     works.append(evidence)
                 pilot.app.exit()
             except (TuiJourneyError, InstalledTuiChildError) as error:
-                raise _pilot_failure(error, pilot=pilot, stage=stage) from error
+                raise pilot_failure(error, pilot=pilot, stage=stage) from error
 
         run_admitted_installed_launcher(passphrase=credential, drive_after_home=drive, admission_polls=900)
     if not capture_checked or len(works) != len(targets):
@@ -351,15 +351,15 @@ def _run_child(args: argparse.Namespace) -> dict[str, Any]:
     return receipt
 
 
-def _run_parent(args: argparse.Namespace) -> dict[str, Any]:
+def run_parent(args: argparse.Namespace) -> dict[str, Any]:
     """Seed in public child CLI processes, then launch separate lifecycle and reopen TUIs."""
     if args.cli is None or args.python is None or args.storage_root is None or args.authority_root is None:
         raise ValueError("parent continuation requires installed CLI/Python, fresh storage and published authority")
     installed_product_evidence(workspace_root=args.workspace_root)
-    storage = _fresh_directory(args.storage_root, label="withholding TUI continuation storage")
-    outputs = _fresh_directory(args.output_dir, label="withholding TUI continuation outputs")
+    storage = fresh_directory(args.storage_root, label="withholding TUI continuation storage")
+    outputs = fresh_directory(args.output_dir, label="withholding TUI continuation outputs")
     slices = build_installed_annual_cli_slices(args.year)
-    generation, _ = _selected_annual_layouts(authority_root=args.authority_root, slices=slices, year=args.year)
+    generation, _ = selected_annual_layouts(authority_root=args.authority_root, slices=slices, year=args.year)
     cli = InstalledCli(
         args.cli,
         storage_root=storage,
@@ -438,7 +438,7 @@ def _run_withholding_children(
             timeout_seconds=args.timeout_seconds,
         )
         if process.returncode != 0 or process.receipt_status != "proven":
-            raise _child_process_failure(phase=phase, receipt=child_receipt)
+            raise child_process_failure(phase=phase, receipt=child_receipt)
         document = json.loads(child_receipt.read_text(encoding="utf-8"))
         validate_child_receipt(
             document,
@@ -506,7 +506,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.child_phase and args.manifest is None:
             raise ValueError("withholding child requires its public work manifest")
-        receipt = _run_child(args) if args.child_phase else _run_parent(args)
+        receipt = run_child(args) if args.child_phase else run_parent(args)
     except Exception as error:
         _write_continuation_failure(args, error)
         return 2

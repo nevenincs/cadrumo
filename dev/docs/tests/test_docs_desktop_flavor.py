@@ -24,8 +24,8 @@ from cadrumo.core.external_constants import OutputLanguage
 from ..desktop_palette import theme_variables
 from ..shared_page_assets import CHROME_STRINGS_GLOBAL, CHROME_STRINGS_SCRIPT, THEME_VARIABLES_STYLESHEET
 from ..site_chrome import site_chrome
-from ._docs_desktop_support import DOCS, build_fixture_site, built_site
-from ._http_serve_support import serve_directory
+from .docs_desktop_support import DOCS, build_fixture_site, built_site
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

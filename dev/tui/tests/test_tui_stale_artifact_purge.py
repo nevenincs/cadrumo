@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .._artifacts import (
+from ..artifacts import (
     FRAME_ARTEFACT_KINDS,
     MAX_STALE_FILES_PER_PURGE,
     Manifest,
@@ -23,9 +23,9 @@ from .._artifacts import (
     purge_stale_artifacts,
     stale_artifacts,
 )
-from .._viewports import DEFAULT_VIEWPORTS
-from .._viewports import resolve as resolve_viewport
 from ..cli import THEMES
+from ..viewports import DEFAULT_VIEWPORTS
+from ..viewports import resolve as resolve_viewport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

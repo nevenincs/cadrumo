@@ -42,7 +42,7 @@ from cadrumo.domain.filing.schema import (
     ModeloValueKind,
 )
 
-from ._filing_draft_support import IVA_RESULTADO_OPERANDS, approved_modelo_303_draft
+from .filing_draft_support import IVA_RESULTADO_OPERANDS, approved_modelo_303_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

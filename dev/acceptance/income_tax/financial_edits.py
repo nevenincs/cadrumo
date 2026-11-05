@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from .financial_contracts import _ANNUAL_EDITS, _EDIT_SECONDS
-from .financial_lifecycle import _workbench_notice
+from .financial_contracts import ANNUAL_EDITS, EDIT_SECONDS
+from .financial_lifecycle import financial_lifecycle_workbench_notice
 from .financial_navigation import open_work
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -62,7 +62,7 @@ async def _wait_for_casilla_editor(pilot: Any, workbench: ModeloWorkbenchScreen,
         try:
             value_input = pilot.app.screen.query_one("#editor-input", Input)
         except NoMatches:
-            notice = _workbench_notice(workbench)
+            notice = financial_lifecycle_workbench_notice(workbench)
             if notice:
                 raise InstalledTuiChildError(f"the annual workbench would not edit {label}: {notice[:200]}") from None
             if time.monotonic() > deadline:
@@ -87,7 +87,7 @@ async def _stage_workbench_value(
 
     label = ":".join(address)
     await _open_visible_casilla_editor(pilot, workbench, address, label)
-    deadline = time.monotonic() + _EDIT_SECONDS
+    deadline = time.monotonic() + EDIT_SECONDS
     value_input = await _wait_for_casilla_editor(pilot, workbench, label, deadline)
     editor = pilot.app.screen
     value_input.value = lexeme
@@ -107,11 +107,12 @@ async def _stage_workbench_value(
         await pilot.pause()
     if not any(address_key(change.field.address) == address for change in workbench.staged_changes):
         raise InstalledTuiChildError(
-            f"the annual workbench staged no change for {label}: {_workbench_notice(workbench)[:200]}"
+            f"the annual workbench staged no change for {label}: "
+            f"{financial_lifecycle_workbench_notice(workbench)[:200]}"
         )
 
 
-async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
+async def apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
     """Set explicit annual-only facts in the declaration's workbench, then review and apply them."""
     import re
 
@@ -119,14 +120,14 @@ async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
     from textual.widgets import Static
 
     workbench = await open_work(pilot, work_unit_id=work_unit_id)
-    for address, lexeme in _ANNUAL_EDITS:
+    for address, lexeme in ANNUAL_EDITS:
         await _stage_workbench_value(pilot, workbench=workbench, address=address, lexeme=lexeme)
-    if len(workbench.staged_changes) != len(_ANNUAL_EDITS):
+    if len(workbench.staged_changes) != len(ANNUAL_EDITS):
         raise InstalledTuiChildError(
-            f"the annual workbench staged {len(workbench.staged_changes)} changes, expected {len(_ANNUAL_EDITS)}"
+            f"the annual workbench staged {len(workbench.staged_changes)} changes, expected {len(ANNUAL_EDITS)}"
         )
     try:
-        await open_review_ready_to_apply(pilot, seconds=_EDIT_SECONDS)
+        await open_review_ready_to_apply(pilot, seconds=EDIT_SECONDS)
     except TuiJourneyError as error:
         raise InstalledTuiChildError(
             f"the annual workbench could not apply its changes: {error}", diagnostic=public_surface_diagnostic(pilot)
@@ -142,6 +143,6 @@ async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
         raise InstalledTuiChildError(
             f"modelo.edit.apply terminal={terminal.terminal_condition}, "
             f"receipt_present={terminal.receipt_present}, diagnostic_present={terminal.diagnostic_present}, "
-            f"public_event_codes={public_codes}, notice={_workbench_notice(workbench)[:200]!r}"
+            f"public_event_codes={public_codes}, notice={financial_lifecycle_workbench_notice(workbench)[:200]!r}"
         )
     await wait_for_tui_refresh(pilot, binding=binding)

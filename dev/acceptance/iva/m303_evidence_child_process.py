@@ -13,14 +13,14 @@ from dev.acceptance.income_tax.installed_tui_child import (
 )
 
 from .m303_evidence_contracts import (
-    _CHILD_MODULE,
+    CHILD_MODULE,
     ChildHandle,
     ChildMode,
     IvaInstalledM303Error,
     ReopenReadback,
     TuiOutcome,
 )
-from .m303_evidence_projection import _mapping
+from .m303_evidence_projection import mapping
 
 if TYPE_CHECKING:
     pass
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 # --------------------------------------------------------------------------- outer driver
 
 
-def _child(
+def child(
     *,
     args: argparse.Namespace,
     store: Path,
@@ -42,7 +42,7 @@ def _child(
     process = run_installed_tui_child_process(
         python_executable=args.python,
         workspace_root=args.workspace_root,
-        child_module=_CHILD_MODULE,
+        child_module=CHILD_MODULE,
         child_args=(
             *("--child", mode, "--workspace-root", str(args.workspace_root), "--receipt", str(receipt_path)),
             *("--year", str(args.year), "--work-unit-id", work_unit_id, *extra),
@@ -53,7 +53,7 @@ def _child(
         passphrase=passphrase,
         timeout_seconds=900,
     )
-    document = _mapping(json.loads(receipt_path.read_text(encoding="utf-8")), label=f"{mode} receipt")
+    document = mapping(json.loads(receipt_path.read_text(encoding="utf-8")), label=f"{mode} receipt")
     if process.returncode != 0 or process.receipt_status != "proven":
         raise IvaInstalledM303Error(f"installed TUI {mode} child failed: {document.get('error')}")
     if document.get("product_origin") != "site-packages":

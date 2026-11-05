@@ -38,7 +38,7 @@ from ..tui_journey import blocked_tui_journey_evidence, build_tui_journey_eviden
 from ..tui_lifecycle_contract import installed_lifecycle_contract
 from ..tui_navigation import wait_for_tui_refresh
 from ..tui_operation_controls import activate_tui_operation
-from ..tui_terminal_observation import _observe_operation_terminal, settled_notice_terminal
+from ..tui_terminal_observation import observe_operation_terminal, settled_notice_terminal
 from ..tui_xsd_validation import validate_modelo_100_xsd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -541,7 +541,7 @@ def test_a_modal_that_dismissed_itself_settles_from_the_workbench_notice(
     async def scenario() -> TuiTerminalEvidence:
         app = _WidgetsApp(Static(notice, id="wb-notice"))
         async with app.run_test():
-            return await _observe_operation_terminal(
+            return await observe_operation_terminal(
                 _NoPausePilot(app),
                 modal=DismissedModal(),
                 binding=TuiOperationBinding(
@@ -615,12 +615,12 @@ def test_a_result_statement_does_not_replace_the_dismissed_operations_terminal(
             observer = SettlementPilot(app)
             if expected_outcome is None:
                 with pytest.raises(TuiJourneyError, match="did not expose a terminal operation status"):
-                    await _observe_operation_terminal(
+                    await observe_operation_terminal(
                         observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
                     )
                 assert app.screen is statement
             else:
-                terminal = await _observe_operation_terminal(
+                terminal = await observe_operation_terminal(
                     observer, modal=modal, binding=installed_lifecycle_contract().calculate, maximum_polls=2
                 )
                 assert terminal.outcome is expected_outcome

@@ -61,7 +61,7 @@ class AssetOverlayOracle:
     m100_intangible: str = "0.00"
 
 
-def _asset_overlay_oracle() -> AssetOverlayOracle:
+def asset_overlay_oracle() -> AssetOverlayOracle:
     """Overlay one €300 claim on the established four-quarter income fixture."""
     control = build_scenario(_YEAR)
     q4 = control.quarter_oracle[-1]
@@ -340,7 +340,7 @@ def run_asset_export_journey(
     )
     report_stage("profile.create")
     cli.create_profile(year=_YEAR)
-    oracle = _asset_overlay_oracle()
+    oracle = asset_overlay_oracle()
     report_stage("ledger.ingest_control")
     ingest_income_fixture(cli, year=_YEAR)
     report_stage("asset.acquisition")

@@ -125,7 +125,7 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
     def refuse_profile(cli, *, year):
         raise RetencionesInstalledCliError(stage="profile_create", diagnostic_code="wrapper") from original
 
-    monkeypatch.setattr(installed_tui_seed, "_create_withholding_profile", refuse_profile)
+    monkeypatch.setattr(installed_tui_seed, "create_withholding_profile", refuse_profile)
     executable = tmp_path / "aeat"
     executable.write_text("", encoding="utf-8")
     authority = tmp_path / "authority"
@@ -141,7 +141,7 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
     def run_parent(args):
         return installed_tui_seed.seed_withholding_work(cli, year=2025)
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_parent", run_parent)
+    monkeypatch.setattr(installed_tui_withholding, "run_parent", run_parent)
     receipt = tmp_path / "failed.json"
     assert main(("--output-dir", str(tmp_path / "outputs"), "--receipt", str(receipt))) == 2
     contents = receipt.read_text(encoding="utf-8")
@@ -160,15 +160,15 @@ def test_pilot_failure_receipt_keeps_public_surface_without_private_notice(tmp_p
     pilot: Any = SimpleNamespace(
         app=SimpleNamespace(screen=screen, query=lambda _: [SimpleNamespace(id="home-agenda")])
     )
-    monkeypatch.setattr(tui_navigation, "_stack_text", lambda *_args: secret)
+    monkeypatch.setattr(tui_navigation, "stack_text", lambda *_args: secret)
 
     def run_child(args):
         try:
-            tui_navigation._require_fresh_notice(pilot, label="modelo.export")
+            tui_navigation.require_fresh_notice(pilot, label="modelo.export")
         except TuiJourneyError as error:
-            raise installed_tui_withholding._pilot_failure(error, pilot=pilot, stage="lifecycle") from error
+            raise installed_tui_withholding.pilot_failure(error, pilot=pilot, stage="lifecycle") from error
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_child", run_child)
+    monkeypatch.setattr(installed_tui_withholding, "run_child", run_child)
     receipt = tmp_path / "failed.json"
     assert (
         main(
@@ -234,7 +234,7 @@ def test_home_return_waits_for_one_back_transition_and_the_public_root_refresh(m
 
     monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", refresh)
     pilot = DelayedPilot()
-    asyncio.run(installed_tui_controls._home(pilot))
+    asyncio.run(installed_tui_controls.home(pilot))
     assert pilot.app.screen is home
     assert pilot.back_count == 1
 
@@ -270,8 +270,8 @@ def test_unavailable_home_retains_trusted_control_stage_without_claiming_success
     monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", unavailable_refresh)
     pilot = RootPilot()
     with pytest.raises(InstalledTuiChildError) as caught:
-        asyncio.run(installed_tui_controls._home(pilot))
-    failure = installed_tui_withholding._pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
+        asyncio.run(installed_tui_controls.home(pilot))
+    failure = installed_tui_withholding.pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
     assert failure.stage == "lifecycle._home"
     assert str(failure) == f"installed withholding lifecycle._home failed: {expected_reason}"
     assert "private-profile-and-credential" not in str(failure)
@@ -281,10 +281,10 @@ def test_unavailable_home_retains_trusted_control_stage_without_claiming_success
 def test_operation_failure_reason_discards_dynamic_detail(private_suffix: str) -> None:
     """Known operation identities survive while modal values stay out of receipts."""
     error = TuiJourneyError(f"modelo.work.verify did not expose a terminal operation status{private_suffix}")
-    assert installed_tui_withholding._safe_tui_failure_reason(error) == (
+    assert installed_tui_withholding.safe_tui_failure_reason(error) == (
         "modelo.work.verify did not expose a terminal operation status"
     )
-    assert installed_tui_withholding._safe_tui_failure_reason(TuiJourneyError("private-facts")) == (
+    assert installed_tui_withholding.safe_tui_failure_reason(TuiJourneyError("private-facts")) == (
         "installed withholding public control failed"
     )
 
@@ -303,9 +303,9 @@ def test_parent_receipt_retains_child_phase_and_reportable_reason(tmp_path: Path
     )
 
     def run_parent(args):
-        raise installed_tui_withholding._child_process_failure(phase="lifecycle", receipt=child)
+        raise installed_tui_withholding.child_process_failure(phase="lifecycle", receipt=child)
 
-    monkeypatch.setattr(installed_tui_withholding, "_run_parent", run_parent)
+    monkeypatch.setattr(installed_tui_withholding, "run_parent", run_parent)
     receipt = tmp_path / "parent.json"
     assert main(("--output-dir", str(tmp_path / "outputs"), "--receipt", str(receipt))) == 2
     document = json.loads(receipt.read_text(encoding="utf-8"))

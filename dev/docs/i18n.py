@@ -59,7 +59,7 @@ if TYPE_CHECKING:
 SOURCE_MANIFEST_NAME: Final[str] = ".source-manifest.json"
 SOURCE_MANIFEST_SCHEMA_VERSION: Final[int] = 1
 
-_DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})
+DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})
 
 #: A BCP-47 language tag is a single, portable locale directory token. Keeping
 #: the grammar lexical (rather than asking the host ``Path`` parser) refuses
@@ -74,7 +74,7 @@ _LANGUAGE_DIRECTORY_TOKEN: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9]+(?:
 #: products), and the technical collection, which documents the code for the
 #: people who work on it and is published in English with the API reference.
 #: The authored user surface is everything else.
-_EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
+EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
     {
         "api",
         "technical",
@@ -96,7 +96,7 @@ _EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
 #: excluding nothing while still reading as a reviewed decision. That is the
 #: second-registry failure :data:`_GENERATED_MARKER` below is written to avoid,
 #: so every entry here must name a file that exists.
-_EXCLUDED_FILES: Final[frozenset[str]] = frozenset[str]()
+EXCLUDED_FILES: Final[frozenset[str]] = frozenset[str]()
 
 #: The banner a generator writes into a page it owns. A page carrying it is
 #: English-only by policy and is excluded from the localized surface.
@@ -108,15 +108,15 @@ _EXCLUDED_FILES: Final[frozenset[str]] = frozenset[str]()
 #: this" and "do not translate this" are one fact rather than two that can
 #: disagree. A directory rule would be wrong on the facts: generated and
 #: hand-authored pages share ``reference/``.
-_GENERATED_MARKER: Final[str] = "GENERATED FILE"
+GENERATED_MARKER: Final[str] = "GENERATED FILE"
 
 #: How far into a page to look for :data:`_GENERATED_MARKER`. The banner is a
 #: header comment, so a bounded read is enough and keeps a page that merely
 #: DISCUSSES generated files from being excluded by a mention in its prose.
-_GENERATED_MARKER_SCAN_BYTES: Final[int] = 512
+GENERATED_MARKER_SCAN_BYTES: Final[int] = 512
 
 
-def _is_generated_page(source: Path) -> bool:
+def is_generated_page(source: Path) -> bool:
     """Return whether *source* declares itself generator-owned in its header.
 
     A generated page's content is derived from code — variable names and field
@@ -127,10 +127,10 @@ def _is_generated_page(source: Path) -> bool:
     unreliable, which discredits the pages that ARE maintained.
     """
     try:
-        head = source.read_bytes()[:_GENERATED_MARKER_SCAN_BYTES]
+        head = source.read_bytes()[:GENERATED_MARKER_SCAN_BYTES]
     except OSError:
         return False
-    return _GENERATED_MARKER.encode() in head
+    return GENERATED_MARKER.encode() in head
 
 
 #: The BCP-47 tags translated as documentation targets: the OutputLanguage
@@ -164,7 +164,7 @@ def _repo_root() -> Path:
 
 def is_localized_documentation_tree(relative: Path) -> bool:
     """Return whether a relative documentation path belongs to a translated tree."""
-    return bool(relative.parts) and relative.parts[0] not in _EXCLUDED_TOP_DIRS
+    return bool(relative.parts) and relative.parts[0] not in EXCLUDED_TOP_DIRS
 
 
 def user_scope_source_pages(docs_root: Path) -> list[str]:
@@ -188,14 +188,14 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
     """
     pages: list[str] = []
     for source in scan_directory(docs_root, recursive=True, select=DirectoryEntryKind.FILES):
-        if source.suffix not in _DOC_SUFFIXES:
+        if source.suffix not in DOC_SUFFIXES:
             continue
         relative = source.relative_to(docs_root)
         if not is_localized_documentation_tree(relative):
             continue
-        if relative.name in _EXCLUDED_FILES or is_test_source(relative):
+        if relative.name in EXCLUDED_FILES or is_test_source(relative):
             continue
-        if _is_generated_page(source):
+        if is_generated_page(source):
             continue
         pages.append(relative.as_posix())
     return sorted(pages)
@@ -467,7 +467,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         # terminated it, having written zero templates). The dedicated pytest
         # goldens gate owns that verification and runs it exactly once, which is
         # the same reason every sibling gate build sets this
-        # (``dev/docs/tests/_sphinx_build_harness.py``).
+        # (``dev/docs/tests/sphinx_build_harness.py``).
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
     }
     print(f"DOCS_I18N_SCOPE authored_pages={len(pages)} mode=gettext", flush=True)
@@ -531,8 +531,8 @@ def update_catalogues(
     selected = user_scope_source_pages(docs_root) if pages is None else validated_pages(docs_root, pages)
     with TemporaryDirectory(prefix="cadrumo-docs-pot-", dir=prepare_temp_root()) as scoped_text:
         scoped = Path(scoped_text)
-        _stage_selected_templates(templates, selected, scoped, docs_root)
-        _run_catalogue_update(repo_root, docs_root, scoped, languages)
+        stage_selected_templates(templates, selected, scoped, docs_root)
+        run_catalogue_update(repo_root, docs_root, scoped, languages)
     if pages is None:
         prune_orphan_catalogues(repo_root, languages)
         return
@@ -541,7 +541,7 @@ def update_catalogues(
     # no standing to delete a catalogue on behalf of the other fifty-six.
 
 
-def _run_catalogue_update(
+def run_catalogue_update(
     repo_root: Path,
     docs_root: Path,
     templates: Path,
@@ -681,7 +681,7 @@ def sync_catalogue_locations(
     return tuple(rewritten)
 
 
-def _stage_selected_templates(templates: Path, pages: Sequence[str], destination: Path, docs_root: Path) -> None:
+def stage_selected_templates(templates: Path, pages: Sequence[str], destination: Path, docs_root: Path) -> None:
     """Stage exactly *pages*' templates into *destination*, locations made canonical.
 
     ``sphinx-intl update`` syncs every template it is pointed at, so the
@@ -706,8 +706,8 @@ def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages
     """Run the catalogue update from a tree narrowed to exactly *pages*."""
     with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-", dir=prepare_temp_root()) as selected_text:
         selected = Path(selected_text)
-        _stage_selected_templates(templates, pages, selected, docs_root)
-        _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
+        stage_selected_templates(templates, pages, selected, docs_root)
+        run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
 
 
 def main(argv: list[str] | None = None) -> int:

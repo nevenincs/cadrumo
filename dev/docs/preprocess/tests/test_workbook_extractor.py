@@ -38,9 +38,9 @@ from ..sidecar import (
 )
 from ..workbook import (
     WORKBOOK_EXTRACTOR_ID,
-    _render_sheet,
     build_outputs,
     extract_workbook,
+    render_sheet,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
@@ -237,7 +237,7 @@ def test_workbook_and_pdf_extractors_share_one_budget_and_naming_scheme() -> Non
     split identically rather than each carrying its own drifted budget or
     naming convention.
     """
-    from .. import _pdf as pdf
+    from .. import pdf as pdf
     from .. import workbook
     from ..parts import TEXT_BUDGET_BYTES, part_stand_in_path
 
@@ -263,7 +263,7 @@ def test_render_sheet_normalises_and_drops_empty_rows() -> None:
     Pure-logic check on the renderer: a blank spacer row is dropped, and a
     short row does not render dangling separators for absent trailing cells.
     """
-    rendered = _render_sheet(
+    rendered = render_sheet(
         "S",
         [
             [1.0, "Posic.", None, None],

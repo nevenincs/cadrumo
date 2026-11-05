@@ -172,7 +172,7 @@ _LATIN_PHRASES = (
 )
 
 
-def _known_latin_phrase_word(value: str, word: str) -> bool:
+def known_latin_phrase_word(value: str, word: str) -> bool:
     """Recognize words only within the two complete, authored Latin phrases."""
     if not any(word in words for _pattern, words in _LATIN_PHRASES):
         return False
@@ -386,7 +386,7 @@ def record_unknown_spelling_word(
     if is_known_official_province_label(key, value) or is_known_residence_region_label(owner_locale, key, value):
         return
     stem = word.removesuffix(".") if dictionary_locale == "hu" else word
-    if _known_latin_phrase_word(value, stem):
+    if known_latin_phrase_word(value, stem):
         return
     foreign_context = spanish_word_context(
         value,

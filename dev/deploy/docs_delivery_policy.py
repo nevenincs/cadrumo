@@ -13,10 +13,10 @@ from dev.deploy.cloudflare_api import (
 from dev.deploy.r2_objects import R2Bucket
 from dev.source_tree import content_digest, repository_files
 
-from .docs_delivery_contracts import _CI_MARKERS, _RELEASE_LABEL_RE, DELIVERY_CREDENTIAL_ENV, DeliveryCredentials
+from .docs_delivery_contracts import CI_MARKERS, DELIVERY_CREDENTIAL_ENV, RELEASE_LABEL_RE, DeliveryCredentials
 
 
-def _delivery_credentials(environment: Mapping[str, str]) -> DeliveryCredentials:
+def delivery_credentials(environment: Mapping[str, str]) -> DeliveryCredentials:
     """Read the delivery credentials, naming every missing variable at once."""
     values = {name: environment.get(name, "").strip() for name in DELIVERY_CREDENTIAL_ENV}
     missing = [name for name, value in values.items() if not value]
@@ -43,18 +43,18 @@ def release_id(label: str, *, now: datetime) -> str:
     The timestamp makes every publish its own prefix, so re-publishing the
     same version never overwrites the bytes an earlier deploy served.
     """
-    if _RELEASE_LABEL_RE.fullmatch(label) is None:
-        raise SystemExit(f"Release label {label!r} must match {_RELEASE_LABEL_RE.pattern}.")
+    if RELEASE_LABEL_RE.fullmatch(label) is None:
+        raise SystemExit(f"Release label {label!r} must match {RELEASE_LABEL_RE.pattern}.")
     return f"{label}-{now.astimezone(UTC):%Y%m%dT%H%M%SZ}"
 
 
-def _local_release_label(repo_root: Path) -> str:
+def local_release_label(repo_root: Path) -> str:
     """Label a local publish by the actual documentation and producer content."""
     files = repository_files(repo_root, under=("docs", "src", "dev/docs", "pyproject.toml", "uv.lock"))
     return f"local-{content_digest(repo_root, files)[:12]}"
 
 
-def _require_authorized_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:
+def require_authorized_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:
     """Permit an automated publish only from the provisioned delivery environment.
 
     The documentation site is published as a release consequence, so an
@@ -71,7 +71,7 @@ def _require_authorized_publish_environment(*, environment: Mapping[str, str] | 
             explicit mapping without mutating real process state.
     """
     env = environment if environment is not None else os.environ
-    markers = tuple(name for name in _CI_MARKERS if name in env)
+    markers = tuple(name for name in CI_MARKERS if name in env)
     if not markers:
         return
     missing = [name for name in DELIVERY_CREDENTIAL_ENV if not env.get(name, "").strip()]
@@ -85,8 +85,8 @@ def _require_authorized_publish_environment(*, environment: Mapping[str, str] | 
     )
 
 
-def _require_local_session(verb: str, *, environment: Mapping[str, str]) -> None:
+def require_local_session(verb: str, *, environment: Mapping[str, str]) -> None:
     """Refuse a zone-level change from any automated run."""
-    markers = [name for name in _CI_MARKERS if name in environment]
+    markers = [name for name in CI_MARKERS if name in environment]
     if markers:
         raise SystemExit(f"{verb} changes the neve.md zone and runs only from a local session ({', '.join(markers)}).")

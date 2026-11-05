@@ -20,13 +20,13 @@ from dev.paths import REPO_ROOT, TEMP_ROOT
 
 from .. import security
 from ..security import (
-    _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
+    PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
     SecurityResult,
-    _semgrep_environment,
     classify_semgrep_output,
     render_console_report,
     semgrep_command,
+    semgrep_environment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -39,7 +39,7 @@ def test_scanner_state_uses_existing_controlled_directories(tmp_path: Path, monk
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("SEMGREP_SETTINGS_FILE", str(tmp_path / "ambient-settings.yml"))
     monkeypatch.setenv("CADRUMO_TOOL_STATE_DIR", "scanner-state")
-    environment = _semgrep_environment()
+    environment = semgrep_environment()
     for variable in ("SEMGREP_SETTINGS_FILE", "SEMGREP_LOG_FILE", "SEMGREP_VERSION_CACHE_PATH"):
         path = Path(environment[variable])
         assert path.is_relative_to(tmp_path)
@@ -119,7 +119,7 @@ def test_command_excludes_the_python36_python37_compatibility_rules() -> None:
     command = semgrep_command("uvx")
 
     excluded = {command[i + 1] for i, arg in enumerate(command) if arg == "--exclude-rule"}
-    assert excluded == set(_PYTHON_LEGACY_COMPATIBILITY_RULE_IDS)
+    assert excluded == set(PYTHON_LEGACY_COMPATIBILITY_RULE_IDS)
 
 
 def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None:
@@ -130,7 +130,7 @@ def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None
     requires_python = project["requires-python"]
     assert requires_python == ">=3.13"
     assert "<" not in requires_python
-    assert _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS
+    assert PYTHON_LEGACY_COMPATIBILITY_RULE_IDS
 
 
 def test_classify_reads_real_captured_findings() -> None:

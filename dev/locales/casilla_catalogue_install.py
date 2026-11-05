@@ -10,8 +10,8 @@ from typing import Final
 
 from cadrumo.core.atomic_write import atomic_write_text
 
-from ._paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 from .casilla_catalogue_models import CollapseVerificationError
+from .paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 
 _INSTALL_ATTEMPTS: Final = 60
 
@@ -31,10 +31,10 @@ def resume_install(locales_dir: Path = LOCALES_DIR, pending_dir: Path = PENDING_
     failed = _install_shards(staged, locales_dir)
     if failed:
         raise CollapseVerificationError(f"verified shards could not be installed, resume again: {failed}")
-    _discard(pending_dir)
+    discard(pending_dir)
 
 
-def _discard(pending_dir: Path) -> None:
+def discard(pending_dir: Path) -> None:
     """Remove a staged catalogue, tolerating lock sidecars that vanish while it is walked."""
 
     def ignore_vanished(function: Callable[..., object], path: str, error: BaseException) -> None:

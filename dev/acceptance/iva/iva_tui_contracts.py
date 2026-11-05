@@ -5,16 +5,16 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Final, Literal, cast
 
-_SCHEMA_VERSION: Final = "iva-01-installed-tui-capture-reopen-v2"
+SCHEMA_VERSION: Final = "iva-01-installed-tui-capture-reopen-v2"
 
 
-_PERIOD: Final = "1T"
+PERIOD: Final = "1T"
 
 
-_STATEMENT_CSV_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+STATEMENT_CSV_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
-_SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
+SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
     ("cadrumo.application.ledger.actions_manual", "src/cadrumo/application/ledger/actions_manual.py"),
     ("cadrumo_runtime.host.frontend.tui.launcher", "src/cadrumo_runtime/host/frontend/tui/launcher.py"),
     (
@@ -32,7 +32,7 @@ _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
 )
 
 
-_CLASSIFICATION_FIELDS: Final[tuple[str, ...]] = (
+CLASSIFICATION_FIELDS: Final[tuple[str, ...]] = (
     "taxable_base",
     "iva_rate",
     "iva_amount",
@@ -41,7 +41,7 @@ _CLASSIFICATION_FIELDS: Final[tuple[str, ...]] = (
 )
 
 
-_UNEXERCISED: Final[tuple[str, ...]] = (
+UNEXERCISED: Final[tuple[str, ...]] = (
     "invoice_capture_or_link",
     "m303_secure_attestation",
     "m303_work_creation",
@@ -119,7 +119,7 @@ class InstalledIvaTuiReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class _CaptureChildReceipt:
+class CaptureChildReceipt:
     """Value-free capture-child receipt passed to the outer driver."""
 
     schema_version: str
@@ -143,7 +143,7 @@ class _CaptureChildReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class _ReopenChildReceipt:
+class ReopenChildReceipt:
     """Value-free fresh-TUI-session receipt passed to the outer driver."""
 
     schema_version: str

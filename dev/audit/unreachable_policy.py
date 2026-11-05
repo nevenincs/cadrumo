@@ -13,13 +13,13 @@ _UTF_8: Final[str] = UTF_8
 FINDING_CAP: Final[int] = 40
 
 
-_EXIT_FINDINGS: Final[int] = 3
+EXIT_FINDINGS: Final[int] = 3
 
 
-_EXIT_ERROR: Final[int] = 1
+EXIT_ERROR: Final[int] = 1
 
 
-_DOTTED_SPEC: Final = re.compile(r"^\.*[A-Za-z_][\w.]*(:[A-Za-z_]\w*)?$")
+DOTTED_SPEC: Final = re.compile(r"^\.*[A-Za-z_][\w.]*(:[A-Za-z_]\w*)?$")
 
 
 SKIPPED_DIRS: Final[frozenset[str]] = frozenset({"__pycache__"})
@@ -56,11 +56,11 @@ ENUM_BASE_SUFFIXES: Final[tuple[str, ...]] = ("Enum", "Flag")
 DATA_GLOBS: Final[tuple[str, ...]] = ("_data/registry/**/*.toml", "_data/registry/**/*.json", "locales/**/*.json")
 
 
-_DATA_TOKEN: Final = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
+DATA_TOKEN: Final = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
 
 
 # A command leaf token: lowercase words joined by hyphens, as the CLI spells them.
-_COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*")
+COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*")
 
 
 #: ``used by:`` label for the repository's own ``dev/`` tooling and gates.
@@ -78,7 +78,7 @@ BUILD_GENERATOR_SCRIPTS: Final[tuple[str, ...]] = ("native/desktop/frontend/scri
 TRUSTED_OUTSIDE_LABELS: Final[frozenset[str]] = frozenset({DEV_LABEL, PACKAGING_LABEL, BUILD_GENERATOR_LABEL})
 
 
-_MODULE_EXEC_FLAG: Final[str] = "-m"
+MODULE_EXEC_FLAG: Final[str] = "-m"
 
 
 ENUM_COLLECTION_ATTRS: Final[frozenset[str]] = frozenset(

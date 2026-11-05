@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .financial_contracts import _STATEMENT_CSV_HEADER
-from .financial_navigation import _activate_button, _open_destination
+from .financial_contracts import STATEMENT_CSV_HEADER
+from .financial_navigation import activate_button, open_destination
 from .installed_tui_child import (
     InstalledTuiChildError,
     query_public_selector,
@@ -19,11 +19,11 @@ if TYPE_CHECKING:
     pass
 
 
-def _transaction_csv(*, scenario: IncomeTaxScenario, directory: Path) -> Path:
+def transaction_csv(*, scenario: IncomeTaxScenario, directory: Path) -> Path:
     """Build one transient generic-header CSV statement from the independent scenario."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "income-m130-transactions.csv"
-    rows = [_STATEMENT_CSV_HEADER]
+    rows = [STATEMENT_CSV_HEADER]
     for item in (*scenario.income, *scenario.expenses):
         amount = item.net_receipt if isinstance(item, IssuedInvoice) else -item.bank_payment
         rows.append(
@@ -42,17 +42,17 @@ def _transaction_csv(*, scenario: IncomeTaxScenario, directory: Path) -> Path:
     return path
 
 
-async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
+async def import_transactions(pilot: Any, *, csv_path: Path) -> None:
     """Use the visible bank-statement import preview and confirmation flow."""
     from textual.widgets import Input, Select
 
-    await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
+    await open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="import")
     await wait_for_public_selector(pilot, "#ledger-import-path")
     query_public_selector(pilot, "#ledger-import-kind", Select).value = "bank_statement"
     query_public_selector(pilot, "#ledger-import-provider", Select).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(csv_path)
-    await _activate_button(pilot, "#ledger-import-preview-button")
+    await activate_button(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm")
     from textual.widgets import Button, Static
@@ -61,17 +61,17 @@ async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
     confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
     if refusal or confirm.disabled:
         raise InstalledTuiChildError("installed transaction import preview did not reach confirmation")
-    await _activate_button(pilot, "#ledger-import-confirm")
+    await activate_button(pilot, "#ledger-import-confirm")
     await pilot.app.workers.wait_for_complete()
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     if refusal:
         raise InstalledTuiChildError("installed transaction import reported a visible persistence refusal")
-    await _activate_button(pilot, "#ledger-import-again")
+    await activate_button(pilot, "#ledger-import-again")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button")
 
 
-async def _transaction_row_ids(
+async def financial_transactions_transaction_row_ids(
     pilot: Any,
     *,
     scenario: IncomeTaxScenario,
@@ -79,7 +79,7 @@ async def _transaction_row_ids(
     """Resolve imported rows by the scenario's unique visible transaction dates."""
     from textual.widgets import DataTable
 
-    await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
+    await open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
     await wait_for_public_selector(pilot, "#ledger-entries")
     table = query_public_selector(pilot, "#ledger-entries", DataTable)
@@ -103,7 +103,7 @@ async def _transaction_row_ids(
     return resolved
 
 
-async def _classify_transaction(
+async def classify_transaction(
     pilot: Any,
     *,
     transaction_id: str,
@@ -112,7 +112,7 @@ async def _classify_transaction(
     """Classify one visible row and capture the tax facts needed by Renta."""
     from textual.widgets import Input, Static
 
-    await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
+    await open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
     await wait_for_public_selector(pilot, "#ledger-entries")
     from textual.widgets import DataTable
@@ -145,7 +145,7 @@ async def _classify_transaction(
         table_selector="#ledger-classifications",
         row_key="BUSINESS",
     )
-    await _activate_button(pilot, "#ledger-classification-confirm")
+    await activate_button(pilot, "#ledger-classification-confirm")
     await pilot.app.workers.wait_for_complete()
     status = str(query_public_selector(pilot, "#ledger-flow-status", Static).render()).strip()
     if not status:

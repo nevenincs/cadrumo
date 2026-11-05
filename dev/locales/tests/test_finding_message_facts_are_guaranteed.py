@@ -30,7 +30,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import tr
 
-from .._paths import SRC_DIR
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

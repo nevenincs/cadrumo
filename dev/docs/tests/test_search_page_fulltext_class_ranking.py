@@ -40,10 +40,10 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev.paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records, _Materialised
+from ..pagefind_inject import Materialised, inject_records
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import RankingTier, SearchRecord, SearchRecordMetadata, normalise_display_class_weight
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -144,7 +144,7 @@ def test_fulltext_user_doc_ranks_above_dev_machinery(tmp_path: Path) -> None:
     # The anchor does not match the query, so the query still returns only the two
     # pages, whose ordering is then decided purely by the page-band class rank.
     async def inject(index: object) -> None:
-        await _inject_records(index, _Materialised(records=[_ANCHOR_CARD], concepts=1), {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, Materialised(records=[_ANCHOR_CARD], concepts=1), {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(build, inject=inject)
 

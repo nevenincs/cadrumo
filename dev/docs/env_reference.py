@@ -47,8 +47,8 @@ from dev.packaging.native.environment_models import (
 )
 from dev.paths import REPO_ROOT, UTF_8
 
-from ._locale_chrome import docs_chrome
 from .build import docs_build_language
+from .locale_chrome import docs_chrome
 
 _UTF_8: Final[str] = UTF_8
 

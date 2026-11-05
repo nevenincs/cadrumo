@@ -10,12 +10,12 @@ from functools import cache
 
 import pytest
 
-from .._paths import LOCALES_DIR
 from ..casilla_catalogue_models import CatalogueFindings
 from ..casilla_reviewed_wording import REVIEWED_EQUIVALENT_SPANISH
 from ..casilla_source_inventory import edition_text_gaps, repeated_edition_text
 from ..casilla_text_policy import SOURCE_TRUNCATED_SPANISH
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -23,7 +23,7 @@ from cadrumo.tests.inventory import (
     repo_relative,
 )
 
-from ._project_inventory import project_test_control_modules, project_test_modules
+from .project_inventory import project_test_control_modules, project_test_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -85,8 +85,8 @@ def test_project_inventory_discovers_tests_outside_the_source_tree() -> None:
     controls = project_test_control_modules()
     assert Path(__file__).resolve() in modules
     assert Path(__file__).resolve() in controls
-    assert repo_path("dev/tests/_project_inventory.py") in controls
-    assert repo_path("dev/tests/_project_inventory.py") not in modules
+    assert repo_path("dev/tests/project_inventory.py") in controls
+    assert repo_path("dev/tests/project_inventory.py") not in modules
 
 
 def test_non_test_package_inventory_excludes_test_modules() -> None:

@@ -9,7 +9,7 @@ real repro is a real M130 calculate that returned correct casilla values but no
 
 This module dispatches a REAL ``modelo.work.calculate`` through the actual CLI
 command handling, decodes the JSON RESPONSE payload's ``observations`` rows, and
-feeds them into :func:`dev.mcp_eval._runner.run_golden_scenario` via its
+feeds them into :func:`dev.mcp_eval.runner.run_golden_scenario` via its
 ``response_observations`` parameter so the ``response_provenance_present``
 dimension asserts over the payload the operator actually reads.
 
@@ -42,9 +42,9 @@ from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-from .._models import GoldenScenario
-from .._runner import load_scenario, run_golden_scenario
-from ._real_cli_support import create_m130_work_unit, seed_natural_person_profile, valid_cli_commands
+from ..models import GoldenScenario
+from ..runner import load_scenario, run_golden_scenario
+from .real_cli_support import create_m130_work_unit, seed_natural_person_profile, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

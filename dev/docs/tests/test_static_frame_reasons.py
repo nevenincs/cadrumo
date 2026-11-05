@@ -38,7 +38,7 @@ import pytest
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.runner import live_aeat_tokens
 from ..sequences.schema import FrameKind, SequenceFrame, StaticBlocker
-from ._ratchet_support import ratchet_divergences
+from .ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

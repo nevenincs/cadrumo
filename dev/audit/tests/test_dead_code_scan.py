@@ -328,7 +328,7 @@ def test_the_shared_verdict_follows_an_edit_and_never_shares_an_error(
     package = _populated_tree(root)
     cache = root / "run-cache"
     monkeypatch.setattr(dead_code, "REPO_ROOT", root)
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(cache))
 
     def published() -> int:

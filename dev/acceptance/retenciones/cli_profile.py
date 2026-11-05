@@ -5,10 +5,10 @@ from __future__ import annotations
 from dev.acceptance.installed_cli import InstalledCli
 
 from .cli_contracts import RetencionesInstalledCliError
-from .cli_observations import _require_result
+from .cli_observations import require_result
 
 
-def _create_withholding_profile(cli: InstalledCli, *, year: int) -> None:
+def create_withholding_profile(cli: InstalledCli, *, year: int) -> None:
     """Create a secure synthetic profile and explicitly activate both duties."""
     try:
         cli.create_profile(year=year)
@@ -17,7 +17,7 @@ def _create_withholding_profile(cli: InstalledCli, *, year: int) -> None:
             stage="profile_create",
             diagnostic_code=f"profile_create_{type(exc).__name__}",
         ) from exc
-    _require_result(
+    require_result(
         cli,
         (
             "config",
@@ -36,7 +36,7 @@ def _create_withholding_profile(cli: InstalledCli, *, year: int) -> None:
         ),
         stage="profile_enable_withholding_duties",
     )
-    _require_result(
+    require_result(
         cli,
         ("config", "profile", "complete-setup"),
         stage="profile_complete_setup",

@@ -19,8 +19,8 @@ from cadrumo.domain.contribuyente.inventory.records import (
     InventoryRetirementReason,
 )
 
-from .._paths import LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

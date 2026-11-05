@@ -1,9 +1,9 @@
 """Working-tree identity canary.
 
 The scan that answers "did a real Spanish taxpayer identity reach this
-repository" lives in :mod:`dev.identity._tree_scan`. Detection itself belongs to
+repository" lives in :mod:`dev.identity.tree_scan`. Detection itself belongs to
 :mod:`dev.sanitizer`; this package owns the surface (a working tree) and the
-scope decision. See :mod:`dev.identity._tree_scan` for both arguments in full,
+scope decision. See :mod:`dev.identity.tree_scan` for both arguments in full,
 including why there is no value allowlist.
 
 Only that scan reaches for the sanitiser, and so only it carries the ``pikepdf``

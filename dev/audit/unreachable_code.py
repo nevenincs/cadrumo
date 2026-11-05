@@ -9,15 +9,20 @@ from pathlib import Path
 from cadrumo.core.toml import TomlDecodeError
 from dev.paths import REPO_ROOT
 
-from .unreachable_findings import _FormCodes, _module_findings, _symbol_findings, _test_findings
+from .unreachable_findings import (
+    FormCodes,
+    unreachable_findings_module_findings,
+    unreachable_findings_symbol_findings,
+    unreachable_test_findings,
+)
 from .unreachable_form_codes import coded_enum_sources, declared_form_codes
-from .unreachable_graph import _shipped_importers, _spawn_edges, module_edges, reachable_closure
+from .unreachable_graph import module_edges, reachable_closure, spawn_edges, unreachable_graph_shipped_importers
 from .unreachable_memo import shared_scan_memo
 from .unreachable_models import Confidence, ShippedModule, UnreachableCodeOutcome, UnreachableCodeResult
 from .unreachable_outside import outside_use
-from .unreachable_policy import _EXIT_ERROR, _EXIT_FINDINGS
+from .unreachable_policy import EXIT_ERROR, EXIT_FINDINGS
 from .unreachable_receiver_types import receiver_types
-from .unreachable_references import _data_tokens, _declared_data_values
+from .unreachable_references import declared_data_values, unreachable_references_data_tokens
 from .unreachable_reporting import filter_by_confidence, render_console_report, result_as_json
 from .unreachable_tree import ShippedTreeSpec, shipped_modules
 
@@ -44,7 +49,7 @@ def _resolve_scan_graph(
     """Resolve scan graph."""
     known = frozenset(modules)
     edges = {name: module_edges(module, known) for name, module in modules.items()}
-    spawned = {name: _spawn_edges(module, known) for name, module in modules.items()}
+    spawned = {name: spawn_edges(module, known) for name, module in modules.items()}
     runtime_edges = {name: runtime | spawned[name] for name, (runtime, _) in edges.items()}
     full_edges = {name: runtime | type_only | spawned[name] for name, (runtime, type_only) in edges.items()}
     script_reach = reachable_closure([entry.module for entry in spec.entry_points], modules, runtime_edges)
@@ -83,13 +88,13 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     audited_names = _audited_module_names(spec, modules)
     audited_total = len(audited_names)
     outside = outside_use(spec, known, receiver_types(modules), modules=modules)
-    data_tokens = _data_tokens(spec)
-    declared_values = _declared_data_values(spec)
-    shipped_importers = _shipped_importers(full_edges)
-    module_findings = _module_findings(
+    data_tokens = unreachable_references_data_tokens(spec)
+    declared_values = declared_data_values(spec)
+    shipped_importers = unreachable_graph_shipped_importers(full_edges)
+    module_findings = unreachable_findings_module_findings(
         spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers, full_edges
     )
-    symbol_findings, data_cleared, dev_cleared, registry_cleared = _symbol_findings(
+    symbol_findings, data_cleared, dev_cleared, registry_cleared = unreachable_findings_symbol_findings(
         spec,
         modules,
         runtime_reach,
@@ -97,7 +102,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         outside,
         data_tokens,
         declared_values,
-        _FormCodes(coded_enum_sources(modules), declared_form_codes(spec)),
+        FormCodes(coded_enum_sources(modules), declared_form_codes(spec)),
     )
 
     if not module_findings and not symbol_findings:
@@ -117,7 +122,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         reachable_modules=len(runtime_reach & audited_names),
         modules=module_findings,
         symbols=symbol_findings,
-        tests=_test_findings(spec, known, module_findings, symbol_findings),
+        tests=unreachable_test_findings(spec, known, module_findings, symbol_findings),
         data_cleared=data_cleared,
         dev_cleared=dev_cleared,
         registry_cleared=registry_cleared,
@@ -163,9 +168,9 @@ def main() -> int:
     print(result_as_json(result) if args.json else render_console_report(result, full=args.full))
 
     if result.outcome is UnreachableCodeOutcome.ERROR:
-        return _EXIT_ERROR
+        return EXIT_ERROR
     if result.outcome is UnreachableCodeOutcome.FINDINGS:
-        return _EXIT_FINDINGS
+        return EXIT_FINDINGS
     return 0
 
 

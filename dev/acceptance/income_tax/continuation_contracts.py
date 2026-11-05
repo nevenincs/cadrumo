@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Literal, cast
 
-_SCHEMA_VERSION = "income-01-installed-continuations-v1"
+SCHEMA_VERSION = "income-01-installed-continuations-v1"
 
 
-_Direction = Literal["cli_to_tui", "tui_to_cli"]
+Direction = Literal["cli_to_tui", "tui_to_cli"]
 
 
 class InstalledContinuationError(RuntimeError):
@@ -19,7 +19,7 @@ class InstalledContinuationError(RuntimeError):
 class ContinuationPathReceipt:
     """Sanitized result for one ordered installed frontend continuation."""
 
-    direction: _Direction
+    direction: Direction
     status: Literal["proven"]
     year: int
     product_origin: str

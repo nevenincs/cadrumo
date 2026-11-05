@@ -27,7 +27,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "BlockedReason",
@@ -220,7 +220,7 @@ class BlockedReason(BaseModel):
     makes the refusal auditable rather than a generic label.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: StaticBlocker
     detail: BlockedDetail
@@ -233,7 +233,7 @@ class CaptureBinding(BaseModel):
     envelope and bound to ``name``; later frames interpolate it as ``{name}``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: Identifier
     json_path: JsonPath
@@ -248,7 +248,7 @@ class ExpectAssertion(BaseModel):
     frame's process exit code.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     json_path: JsonPath
     expected: ExpectLiteral
@@ -274,7 +274,7 @@ class SequenceFrame(BaseModel):
     (``"body"`` or ``"seed:<name>"``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: FrameKind
     command_line: Annotated[str, StringConstraints(min_length=1)]
@@ -307,7 +307,7 @@ class ParsedSequence(BaseModel):
     requested.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sequence_id: SequenceId
     verify: VerifySentence | None = None

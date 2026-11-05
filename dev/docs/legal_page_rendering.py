@@ -12,8 +12,7 @@ from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.external_constants import OutputLanguage
 from dev.corpus.text import corpus_redaction_marks, resolve_anchored_extracted_unit
 
-from ._locale_chrome import chrome_anchor, docs_chrome, docs_fragment, same_wording
-from .compile_slots import Rendering, _educated, language_text
+from .compile_slots import Rendering, compile_slots_educated, language_text
 from .legal_note_languages import legal_note_language_ranges
 from .legal_reference_models import LegalPage, LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import (
@@ -24,6 +23,7 @@ from .legal_reference_routing import (
     legal_provision_designation,
     legal_reference_target,
 )
+from .locale_chrome import chrome_anchor, docs_chrome, docs_fragment, same_wording
 
 _DATE_FIELDS: Final[tuple[str, ...]] = (
     "published_at",
@@ -34,7 +34,7 @@ _DATE_FIELDS: Final[tuple[str, ...]] = (
 )
 
 
-def _rst_escape(text: str) -> str:
+def rst_escape(text: str) -> str:
     """Escape free catalogue text before it enters RST body prose."""
     return "".join(f"\\{char}" if char in "\\`*_|[]" else char for char in text)
 
@@ -52,7 +52,7 @@ def _rst_literal(text: str) -> str:
     return f"``{text}``"
 
 
-def _rst_provenance_text(text: str, record: LegalProvisionRecord) -> str:
+def rst_provenance_text(text: str, record: LegalProvisionRecord) -> str:
     """Style only this record's exact source identifiers within reviewer prose."""
     reference, separator, fragment = record.corpus_ref.partition("#")
     identifiers = {record.legal_id, record.document_id, record.corpus_ref, reference, Path(reference).name}
@@ -65,9 +65,9 @@ def _rst_provenance_text(text: str, record: LegalProvisionRecord) -> str:
     parts: list[str] = []
     previous = 0
     for match in pattern.finditer(text):
-        parts.extend((_rst_escape(text[previous : match.start()]), _rst_literal(match.group())))
+        parts.extend((rst_escape(text[previous : match.start()]), _rst_literal(match.group())))
         previous = match.end()
-    parts.append(_rst_escape(text[previous:]))
+    parts.append(rst_escape(text[previous:]))
     return "".join(parts)
 
 
@@ -78,7 +78,7 @@ def _rst_heading(text: str, underline: str) -> str:
 def _legal_heading(text: str, underline: str) -> str:
     """Mark the exact Spanish citation for generated-document spelling."""
     marker = json.dumps(text, ensure_ascii=False)
-    return f".. cadrumo-legal-citation: {marker}\n\n{_rst_heading(_rst_escape(text), underline)}"
+    return f".. cadrumo-legal-citation: {marker}\n\n{_rst_heading(rst_escape(text), underline)}"
 
 
 def _in_force_sentence(record: LegalProvisionRecord, language: OutputLanguage) -> str | None:
@@ -169,7 +169,7 @@ def _catalogue_record_block(
     provision text so they remain provenance rather than its summary.
     """
     fields = _catalogue_record_fields(record, language)
-    note = _catalogue_note_projection(record, language, repo_root, source_cache)
+    note = catalogue_note_projection(record, language, repo_root, source_cache)
     title = docs_chrome("docs.legal.record.title", language)
     return [".. container:: cadrumo-legal-record", "", f"   {title}", "", *(f"   {line}" for line in fields), *note]
 
@@ -202,12 +202,12 @@ def _catalogue_record_fields(record: LegalProvisionRecord, language: OutputLangu
     if record.reviewed_by is not None:
         fields.append(
             f":{docs_chrome('docs.legal.record.reviewed_by', language)}: "
-            f"{same_wording(record.reviewed_by, language, as_source=lambda text: _rst_provenance_text(text, record))}",
+            f"{same_wording(record.reviewed_by, language, as_source=lambda text: rst_provenance_text(text, record))}",
         )
     return fields
 
 
-def _catalogue_note_projection(
+def catalogue_note_projection(
     record: LegalProvisionRecord,
     language: OutputLanguage,
     repo_root: Path,
@@ -241,7 +241,7 @@ def _catalogue_note_projection(
         note = [
             "   "
             + f":{docs_chrome('docs.legal.record.note', language)}: "
-            + same_wording(record.notes, language, as_source=_rst_escape),
+            + same_wording(record.notes, language, as_source=rst_escape),
         ]
     return note
 
@@ -267,7 +267,7 @@ def _catalogue_note_html(note: str, spans: tuple[tuple[int, int, str], ...], lan
 def _catalogue_note_body(note: str, spans: tuple[tuple[int, int, str], ...], language: OutputLanguage) -> str:
     """Keep page-language typography while applying exact source ranges."""
     if "'" in note or '"' in note:
-        note = _educated(note, language.value)
+        note = compile_slots_educated(note, language.value)
     pieces: list[str] = []
     cursor = 0
     for start, end, span_language in spans:
@@ -296,7 +296,7 @@ def _all_quote_offsets_preserved(note: str) -> bool:
 
 def _quote_offsets_preserved(note: str, language: OutputLanguage) -> bool:
     """Allow typography only when it changes one quote to one character in place."""
-    educated = _educated(note, language.value)
+    educated = compile_slots_educated(note, language.value)
     return len(educated) == len(note) and all(
         original == rendered or original in "'\"" for original, rendered in zip(note, educated, strict=True)
     )
@@ -540,9 +540,9 @@ def _render_entry(
             "",
             ".. container:: cadrumo-legal-official",
             "",
-            f"   `{_rst_escape(read_label)} <{record.permalink}>`__",
+            f"   `{rst_escape(read_label)} <{record.permalink}>`__",
             "",
-            f"   {_rst_escape(docs_chrome('docs.legal.provision.boe_is_official', language))}",
+            f"   {rst_escape(docs_chrome('docs.legal.provision.boe_is_official', language))}",
             "",
         ],
     )
@@ -551,7 +551,7 @@ def _render_entry(
     return "\n".join(lines), anchor, record.permalink
 
 
-def _render_document_page(
+def render_document_page(
     document_id: str,
     records: tuple[LegalProvisionRecord, ...],
     language: OutputLanguage,
@@ -564,7 +564,7 @@ def _render_document_page(
         "   catalogue. Do not edit by hand; regenerate.\n\n"
     )
     instrument = legal_instrument_designation(records[0].legal_id, records[0].kind) if records else document_id
-    intro = _rst_escape(
+    intro = rst_escape(
         docs_chrome("docs.legal.page.intro", language, document=document_id, count=len(records)),
     )
     blocks: list[str] = [header + _legal_heading(instrument, "="), intro + "\n"]
@@ -610,14 +610,14 @@ def _render_document_page(
     )
 
 
-def _render_index(pages: tuple[LegalPage, ...], language: OutputLanguage) -> str:
+def render_index(pages: tuple[LegalPage, ...], language: OutputLanguage) -> str:
     header = "..\n   Generated by dev/docs/legal_reference.py. Do not edit by hand; regenerate.\n\n"
     lines = [
         header
         + chrome_anchor("docs.legal.index.title")
-        + _rst_heading(_rst_escape(docs_chrome("docs.legal.index.title", language)), "=").rstrip("\n"),
+        + _rst_heading(rst_escape(docs_chrome("docs.legal.index.title", language)), "=").rstrip("\n"),
         "",
-        _rst_escape(docs_chrome("docs.legal.index.intro", language)),
+        rst_escape(docs_chrome("docs.legal.index.intro", language)),
         "",
         ".. toctree::",
         "   :maxdepth: 1",
@@ -625,5 +625,5 @@ def _render_index(pages: tuple[LegalPage, ...], language: OutputLanguage) -> str
     ]
     for page in sorted(pages, key=lambda page: (page.instrument.casefold(), page.document_id)):
         slug = legal_document_slug(page.document_id)
-        lines.append(f"   {_rst_escape(page.instrument)} <{slug}>")
+        lines.append(f"   {rst_escape(page.instrument)} <{slug}>")
     return "\n".join(lines).rstrip("\n") + "\n"

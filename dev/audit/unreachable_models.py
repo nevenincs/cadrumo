@@ -72,22 +72,22 @@ _KIND_CONFIDENCE: Final[dict[SymbolKind, Confidence]] = {
 
 
 # Weakest-wins ordering, so a composite finding inherits its softest evidence.
-_CONFIDENCE_ORDER: Final[dict[Confidence, int]] = {
+CONFIDENCE_ORDER: Final[dict[Confidence, int]] = {
     Confidence.EXACT: 0,
     Confidence.NAME_MATCH: 1,
     Confidence.NAME_MATCH_DATA: 2,
 }
 
 
-_CONFIDENCE_BY_ORDER: Final[dict[int, Confidence]] = {rank: tier for tier, rank in _CONFIDENCE_ORDER.items()}
+CONFIDENCE_BY_ORDER: Final[dict[int, Confidence]] = {rank: tier for tier, rank in CONFIDENCE_ORDER.items()}
 
 
-_TOP_LEVEL_KINDS: Final[frozenset[SymbolKind]] = frozenset(
+TOP_LEVEL_KINDS: Final[frozenset[SymbolKind]] = frozenset(
     {SymbolKind.FUNCTION, SymbolKind.CLASS, SymbolKind.CONSTANT},
 )
 
 
-_DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
+DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
     {SymbolKind.ATTRIBUTE, SymbolKind.ENUM_MEMBER},
 )
 

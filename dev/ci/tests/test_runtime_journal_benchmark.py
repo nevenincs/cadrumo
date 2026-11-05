@@ -14,9 +14,9 @@ import pytest
 from cadrumo.core.locks import exclusive_file_lock
 from dev.ci.runtime_journal_benchmark import (
     JournalRecorder,
-    _worker_script,
     observe_journal,
     publish_after_worker_drain,
+    worker_script,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -65,7 +65,7 @@ def test_phase_exception_keeps_type_and_parent_without_exception_message(tmp_pat
 
 
 def test_generated_native_worker_installs_observer_in_composition(tmp_path: Path) -> None:
-    copied = _worker_script(tmp_path)
+    copied = worker_script(tmp_path)
     source = copied.read_text(encoding="utf-8")
     compile(source, str(copied), "exec")
     assert "observe_journal(recorder), publish_after_worker_drain(recorder):" in source

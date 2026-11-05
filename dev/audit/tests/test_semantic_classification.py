@@ -24,11 +24,11 @@ import ast
 import pytest
 
 from ..semantic import (
-    _is_calculation,
-    _is_tax_base_target,
-    _is_transcribed_value,
-    _name_words,
+    is_calculation,
+    is_tax_base_target,
+    is_transcribed_value,
     is_violation,
+    name_words,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -46,7 +46,7 @@ def test_a_word_merely_containing_sum_is_not_a_calculation(call: str) -> None:
     hexagonal-leak finding against code that computes nothing, and a reviewer
     who checks one and finds it hollow trusts the next one less.
     """
-    assert not _is_calculation(_expression(call))
+    assert not is_calculation(_expression(call))
 
 
 @pytest.mark.parametrize(
@@ -59,41 +59,41 @@ def test_a_genuine_calculation_is_still_caught(call: str) -> None:
     ``recalculate`` and ``precompute`` are the reason the longer tokens stay
     substring matches, and ``totalSum`` is why the word split handles camelCase.
     """
-    assert _is_calculation(_expression(call))
+    assert is_calculation(_expression(call))
 
 
 def test_arithmetic_is_a_calculation_whatever_it_is_called() -> None:
     """An operator needs no name to compute a base."""
-    assert _is_calculation(_expression("base - deductions"))
-    assert _is_calculation(_expression("-base"))
+    assert is_calculation(_expression("base - deductions"))
+    assert is_calculation(_expression("-base"))
 
 
 def test_a_calculation_nested_in_an_argument_is_found() -> None:
     """Wrapping a computation in a coercion does not make it transcription."""
-    assert _is_calculation(_expression("Decimal(calculate_total(rows))"))
+    assert is_calculation(_expression("Decimal(calculate_total(rows))"))
 
 
 def test_reading_a_stated_document_value_is_transcription() -> None:
     """The distinction the audit exists to draw: read versus derive."""
-    assert _is_transcribed_value(_expression("element.text"))
-    assert _is_transcribed_value(_expression("findtext('base')"))
-    assert _is_transcribed_value(_expression("Decimal(element.text)"))
+    assert is_transcribed_value(_expression("element.text"))
+    assert is_transcribed_value(_expression("findtext('base')"))
+    assert is_transcribed_value(_expression("Decimal(element.text)"))
 
 
 def test_a_computed_value_is_not_transcription() -> None:
     """A coercion around arithmetic is still arithmetic."""
-    assert not _is_transcribed_value(_expression("base - deductions"))
+    assert not is_transcribed_value(_expression("base - deductions"))
 
 
 @pytest.mark.parametrize("target", ["tax_base", "taxable_base", "self.tax_base", "TAX_BASE"])
 def test_the_tax_base_target_is_recognised(target: str) -> None:
     """Case and attribute access both name the same audited value."""
-    assert _is_tax_base_target(_expression(target))
+    assert is_tax_base_target(_expression(target))
 
 
 def test_an_unrelated_target_is_not_the_tax_base() -> None:
     """Otherwise every assignment in an adapter becomes a candidate leak."""
-    assert not _is_tax_base_target(_expression("total"))
+    assert not is_tax_base_target(_expression("total"))
 
 
 @pytest.mark.parametrize(
@@ -125,6 +125,6 @@ def test_domain_code_tests_and_documents_are_not_violations(path: str) -> None:
 
 def test_identifier_words_split_on_both_conventions() -> None:
     """The word split is what makes the short token safe, so it is pinned directly."""
-    assert _name_words("resume_profile_session") == {"resume", "profile", "session"}
-    assert _name_words("totalSum") == {"total", "sum"}
-    assert _name_words("sum") == {"sum"}
+    assert name_words("resume_profile_session") == {"resume", "profile", "session"}
+    assert name_words("totalSum") == {"total", "sum"}
+    assert name_words("sum") == {"sum"}

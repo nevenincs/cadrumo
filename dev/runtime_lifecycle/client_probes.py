@@ -140,7 +140,7 @@ asyncio.run(request())
 """
 
 
-def _tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None:
+def tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None:
     result = run_command(
         [str(harness.package / "python.exe"), "-I", "-c", _TUI_READ, str(profile.profile_id)],
         cwd=harness.root,
@@ -177,7 +177,7 @@ def _tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None
             raise AssertionError("Protected application probe failed")
 
 
-def _observe_read(
+def observe_read(
     connection: Connection, operation_id: OperationId, definition_id: str = "auth.local-read"
 ) -> OperationObservationSuccessV1:
     reply = connection.client.operation(
@@ -200,7 +200,7 @@ def _observe_read(
     return reply.observation
 
 
-def _submit_read(connection: Connection, *, diagnostics: bool = False) -> OperationId:
+def submit_read(connection: Connection, *, diagnostics: bool = False) -> OperationId:
     deadline = time.monotonic() + 60
     client = connection.client
     submitted = client.operation(
@@ -223,7 +223,7 @@ def _submit_read(connection: Connection, *, diagnostics: bool = False) -> Operat
     return submitted.receipt.operation_id
 
 
-def _execute_read(connection: Connection, operation_id: OperationId | None = None) -> OperationId:
+def execute_read(connection: Connection, operation_id: OperationId | None = None) -> OperationId:
     # Abrupt owner loss retains the production ten-minute lease. Fresh authority
     # cannot steal it; only the canonical expired-lease path admits continuation.
     deadline = time.monotonic() + (660 if operation_id is not None else 60)
@@ -234,7 +234,7 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
         raise AssertionError("Protected durable-operation probe failed")
     continuing = operation_id is not None
     if operation_id is None:
-        operation_id = _submit_read(connection)
+        operation_id = submit_read(connection)
     _start_protected_read(connection, operation_id, definition_id, deadline, continuing=continuing)
     projection = _wait_protected_read(connection, operation_id, definition_id, deadline).projection
     reply = client.operation(
@@ -279,7 +279,7 @@ def _wait_protected_read(
 ) -> OperationObservationSuccessV1:
     """Observe the operation to its successful terminal state within the original deadline."""
     while True:
-        observation = _observe_read(connection, operation_id, definition_id)
+        observation = observe_read(connection, operation_id, definition_id)
         if observation.projection.lifecycle is OperationLifecycle.TERMINAL:
             break
         if not (time.monotonic() < deadline):
@@ -326,7 +326,7 @@ def _start_protected_read(
             if not continuing or refusal.reason != "operation_unavailable" or time.monotonic() >= deadline:
                 raise
             if (
-                _observe_read(connection, operation_id, definition_id).projection.lifecycle
+                observe_read(connection, operation_id, definition_id).projection.lifecycle
                 is not OperationLifecycle.CREATED
             ):
                 raise AssertionError("Protected durable-operation probe failed") from None
@@ -335,7 +335,7 @@ def _start_protected_read(
         raise AssertionError("Protected durable-operation probe failed")
 
 
-def _read(connection: Connection) -> None:
+def read(connection: Connection) -> None:
     result = connection.client.read_profile_view((ProfileViewPageKind.STATUS,), timeout=60)
     if not (result.profile_id == connection.client.profile_id):
         raise AssertionError("Protected application probe failed")
@@ -349,7 +349,7 @@ def _read(connection: Connection) -> None:
         raise AssertionError("Protected application probe failed")
 
 
-def _private_request(connection: Connection, session_id: UUID, *, profile_id: UUID | None = None) -> object:
+def private_request(connection: Connection, session_id: UUID, *, profile_id: UUID | None = None) -> object:
     return connection.wire.operation(
         OperationContract(
             request_id=uuid4(),
@@ -361,7 +361,7 @@ def _private_request(connection: Connection, session_id: UUID, *, profile_id: UU
     )
 
 
-def _refused(reply: object) -> None:
+def refused(reply: object) -> None:
     # A denial must originate at the server, not a cleared frontend attribute.
     if not (isinstance(reply, AccessRefusal)):
         raise AssertionError("Protected application probe failed")
@@ -496,7 +496,7 @@ def _approval_facts(human: Connection, error: AutomationDecisionRunError, deadli
     }
     if deadline - time.monotonic() >= 10:
         try:
-            state = _observe_read(human, error.operation_id, AUTOMATION_APPROVE_OPERATION_DEFINITION_ID).projection
+            state = observe_read(human, error.operation_id, AUTOMATION_APPROVE_OPERATION_DEFINITION_ID).projection
             facts.update(
                 observation="observed",
                 lifecycle=state.lifecycle.value,

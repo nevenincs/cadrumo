@@ -314,7 +314,7 @@ def is_self_replacement(replacement: dict[str, Any], synthetic: str) -> bool:
     The row carries both halves of its own claim: ``synthetic`` is the text
     the sanitiser says it wrote, and ``real_sha256`` is the digest of the
     cleartext it says it wrote over -- ``sha256_hex(real.encode("utf-8"))``,
-    the same derivation :mod:`dev.sanitizer._streams` uses when it builds the
+    the same derivation :mod:`dev.sanitizer.streams` uses when it builds the
     row. When the two agree, the entry is asserting that the cleartext and
     the replacement are the SAME string, which is not a replacement at all.
 

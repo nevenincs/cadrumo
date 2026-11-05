@@ -51,7 +51,7 @@ def test_probe_reclaims_only_its_controlled_scratch(
 
         monkeypatch.setattr(concurrent_sessions_probe, "caller_owned_runtime", runtime)
         monkeypatch.setattr(concurrent_sessions_probe, "mark_development_root", lambda _root: None)
-        monkeypatch.setattr(concurrent_sessions_probe, "_setup", setup)
+        monkeypatch.setattr(concurrent_sessions_probe, "setup", setup)
 
     if fails:
         with pytest.raises(RuntimeError, match="probe failed"):

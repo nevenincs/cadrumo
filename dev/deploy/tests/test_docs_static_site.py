@@ -19,27 +19,25 @@ from typing import Final, override
 
 import pytest
 
-import dev.docs.i18n as _docs_i18n
+import dev.docs.i18n as docs_i18n
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs import compile_once as _compile_once
+from dev.docs import compile_once
 from dev.docs.build import pagefind_index_mode
 from dev.docs.build_paths import docs_site_prefix
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
 from dev.paths import REPO_ROOT
 
-from .. import docs_delivery_activation as _docs_delivery_activation
-from .. import docs_site_build as _docs_site_build
-from .. import docs_site_languages as _docs_site_languages
+from .. import docs_delivery_activation, docs_site_build, docs_site_languages
 from ..docs_delivery_contracts import (
-    _REQUIRED_ROOT_ARTIFACTS,
-    _REQUIRED_SITE_SEARCH_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
+    REQUIRED_ROOT_ARTIFACTS,
+    REQUIRED_SITE_SEARCH_ARTIFACTS,
 )
-from ..docs_site_build import _clear_apex, _compose_apex, _run_site_builds, indexed_roots
-from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATIC_PATH, _refresh_download_latest
+from ..docs_site_build import clear_apex, compose_apex, indexed_roots, run_site_builds
+from ..docs_site_download import DOWNLOAD_LATEST_SCHEMA, DOWNLOAD_LATEST_STATIC_PATH, refresh_download_latest
 from ..docs_site_languages import (
     TRANSLATED_ROOTS_BUILD,
     SiteBuild,
@@ -53,8 +51,8 @@ from ..docs_site_languages import (
     translated_roots_compile_command,
     write_language_entry,
 )
-from ..docs_site_preflight import _validate_built_site, _validate_language_entry, _validate_language_roots
-from ..docs_static_site import _dry_run
+from ..docs_site_preflight import validate_built_site, validate_language_entry, validate_language_roots
+from ..docs_static_site import dry_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -108,7 +106,7 @@ def _materialise_apex_root(html_root: Path) -> None:
     it in its real on-disk shape instead (:func:`_materialise_site_search_index`).
     """
     _materialise_site_search_index(html_root)
-    _compose_apex(html_root)
+    compose_apex(html_root)
 
 
 def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
@@ -171,13 +169,13 @@ def test_every_language_is_a_published_root_including_english() -> None:
     languages = localized_languages()
     assert set(languages) == {member.value for member in OutputLanguage}
     assert OutputLanguage.EN.value in languages
-    assert languages != _docs_i18n.TARGET_LANGUAGES, "deploy roots must not be re-derived from the catalogue set"
-    assert languages[0] == _docs_i18n.DEFAULT_SITE_LANGUAGE
+    assert languages != docs_i18n.TARGET_LANGUAGES, "deploy roots must not be re-derived from the catalogue set"
+    assert languages[0] == docs_i18n.DEFAULT_SITE_LANGUAGE
 
 
 def test_default_site_language_is_spanish() -> None:
     """A reader who has expressed no preference is sent to Spanish, not English."""
-    assert OutputLanguage.ES.value == _docs_i18n.DEFAULT_SITE_LANGUAGE
+    assert OutputLanguage.ES.value == docs_i18n.DEFAULT_SITE_LANGUAGE
 
 
 def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_path: Path) -> None:
@@ -186,8 +184,8 @@ def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_
     body = (tmp_path / "index.html").read_text(encoding="utf-8")
     for language in localized_languages():
         assert f'"{language}"' in body
-    assert _docs_i18n.DEFAULT_SITE_LANGUAGE in body
-    _validate_language_entry(tmp_path)
+    assert docs_i18n.DEFAULT_SITE_LANGUAGE in body
+    validate_language_entry(tmp_path)
 
 
 def test_language_entry_validation_refuses_a_root_it_cannot_reach(tmp_path: Path) -> None:
@@ -200,7 +198,7 @@ def test_language_entry_validation_refuses_a_root_it_cannot_reach(tmp_path: Path
     entry = tmp_path / "index.html"
     entry.write_text(entry.read_text(encoding="utf-8").replace('"hu"', '"xx"'), encoding="utf-8")
     with pytest.raises(SystemExit, match="hu"):
-        _validate_language_entry(tmp_path)
+        validate_language_entry(tmp_path)
 
 
 def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
@@ -272,10 +270,10 @@ def test_the_compile_reads_the_publishers_command_as_the_publisher_means_it(
             languages=localized_languages(), roots=dict.fromkeys(named), seconds=0.0, html_root=written_under
         )
 
-    monkeypatch.setattr(_compile_once, "compile_language_roots", record)
+    monkeypatch.setattr(compile_once, "compile_language_roots", record)
     monkeypatch.delenv(SEQUENCE_CHECK_SKIP_ENV, raising=False)
 
-    assert _compile_once.main(command[3:]) == 0
+    assert compile_once.main(command[3:]) == 0
     assert recorded["html_root"] == html_root
     assert recorded["build_root"] == tmp_path
     assert recorded["flavor"] == "web"
@@ -358,7 +356,7 @@ def test_the_site_builds_run_at_once_each_with_its_own_storage_and_every_failure
     html_root = tmp_path / "html"
 
     with pytest.raises(SystemExit, match=r"failed for translated roots \(3\); refusing to publish") as refused:
-        _run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds(translated_outcome="fails"))
+        run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds(translated_outcome="fails"))
 
     assert "9)" not in str(refused.value), "the builds did not run at once"
     storage = {
@@ -388,7 +386,7 @@ def test_a_previous_publishs_per_root_index_is_removed_before_the_build(tmp_path
         stale.mkdir(parents=True)
         (stale / "es_stale.pf_index").write_bytes(b"last release")
 
-    _run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds())
+    run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds())
 
     for language in languages:
         assert not (html_root / language / "pagefind").exists(), f"the {language!r} root kept a stale index"
@@ -399,13 +397,13 @@ def test_a_build_that_succeeds_without_writing_one_of_its_roots_stops_the_publis
     missing = _TRANSLATED[-1]
 
     with pytest.raises(SystemExit, match=rf"wrote no root for {missing}; refusing to publish"):
-        _run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_writes=_TRANSLATED[:-1]))
+        run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_writes=_TRANSLATED[:-1]))
 
 
 def test_a_root_that_comes_out_of_its_build_with_an_index_stops_the_publish(tmp_path: Path) -> None:
     """No root indexes itself, whichever build wrote it: the site's one index is at its apex."""
     with pytest.raises(SystemExit, match="holding a search index of their own"):
-        _run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_outcome="indexes"))
+        run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_outcome="indexes"))
 
 
 def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -> None:
@@ -430,11 +428,11 @@ def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
 
     Nothing downstream reaches for the roots itself, which is what this pins.
     """
-    calls = _direct_calls(_docs_site_build.build_site_roots)
+    calls = _direct_calls(docs_site_build.build_site_roots)
 
     assert calls.index("_produce_language_roots") < calls.index("_index_site") < calls.index("_compose_apex")
     assert "_run_site_builds" not in calls, "the build bypasses its own root producer"
-    produced = _direct_calls(_docs_site_build._produce_language_roots)
+    produced = _direct_calls(docs_site_build.produce_language_roots)
     assert "_run_site_builds" in produced, "the root producer no longer produces the roots"
 
 
@@ -527,7 +525,7 @@ def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses(tmp_path:
     """
     with (
         _replacing(
-            _docs_site_languages,
+            docs_site_languages,
             "source_root_build_environment",
             lambda *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
         ),
@@ -542,7 +540,7 @@ def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> No
     """Validation passes when every localized root carries the complete required-artifact set."""
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    _validate_language_roots(tmp_path)
+    validate_language_roots(tmp_path)
 
 
 def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None:
@@ -552,10 +550,10 @@ def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None
     missing = localized_languages()[0]
     (tmp_path / missing / "index.html").unlink()
     with pytest.raises(SystemExit, match="required artifacts are missing"):
-        _validate_language_roots(tmp_path)
+        validate_language_roots(tmp_path)
 
 
-@pytest.mark.parametrize("missing_artifact", sorted(_REQUIRED_ROOT_ARTIFACTS))
+@pytest.mark.parametrize("missing_artifact", sorted(REQUIRED_ROOT_ARTIFACTS))
 def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path: Path, missing_artifact: str) -> None:
     """A localized root missing ANY required artifact fails validation, not only index.html."""
     for language in localized_languages():
@@ -563,7 +561,7 @@ def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path
     target_language = localized_languages()[0]
     (tmp_path / target_language / missing_artifact).unlink()
     with pytest.raises(SystemExit, match="required artifacts are missing"):
-        _validate_language_roots(tmp_path)
+        validate_language_roots(tmp_path)
 
 
 def test_every_artifact_a_valid_root_carries_is_a_required_root_artifact(tmp_path: Path) -> None:
@@ -588,7 +586,7 @@ def test_every_artifact_a_valid_root_carries_is_a_required_root_artifact(tmp_pat
     }
 
     assert len(carried) >= _MINIMUM_REQUIRED_ROOT_ARTIFACTS, carried
-    assert set(_REQUIRED_ROOT_ARTIFACTS) == carried
+    assert set(REQUIRED_ROOT_ARTIFACTS) == carried
 
 
 def test_every_search_artifact_the_apex_carries_is_a_required_site_artifact(tmp_path: Path) -> None:
@@ -606,7 +604,7 @@ def test_every_search_artifact_the_apex_carries_is_a_required_site_artifact(tmp_
     named = {artifact for artifact in carried if not artifact.startswith(_GENERATED_INDEX_PREFIXES)}
 
     assert len(named) >= _MINIMUM_REQUIRED_SEARCH_ARTIFACTS, named
-    assert set(_REQUIRED_SITE_SEARCH_ARTIFACTS) == named
+    assert set(REQUIRED_SITE_SEARCH_ARTIFACTS) == named
 
 
 def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_path: Path) -> None:
@@ -622,7 +620,7 @@ def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_p
         encoding="utf-8",
     )
     with pytest.raises(SystemExit, match="missing the canonical docs root"):
-        _validate_language_roots(tmp_path)
+        validate_language_roots(tmp_path)
 
 
 def test_the_site_is_refused_when_its_one_pagefind_index_has_no_substantive_data(tmp_path: Path) -> None:
@@ -638,7 +636,7 @@ def test_the_site_is_refused_when_its_one_pagefind_index_has_no_substantive_data
         chunk.write_bytes(b"")
 
     with pytest.raises(SystemExit, match="no substantive generated index data"):
-        _validate_built_site(tmp_path)
+        validate_built_site(tmp_path)
 
 
 def test_the_site_is_refused_when_the_apex_carries_no_search_bundle(tmp_path: Path) -> None:
@@ -649,7 +647,7 @@ def test_the_site_is_refused_when_the_apex_carries_no_search_bundle(tmp_path: Pa
     (tmp_path / "pagefind" / "pagefind.js").unlink()
 
     with pytest.raises(SystemExit, match="apex is not deployable"):
-        _validate_built_site(tmp_path)
+        validate_built_site(tmp_path)
 
 
 def test_no_published_root_carries_a_search_index_of_its_own(tmp_path: Path) -> None:
@@ -663,7 +661,7 @@ def test_no_published_root_carries_a_search_index_of_its_own(tmp_path: Path) -> 
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
 
-    _validate_built_site(tmp_path)
+    validate_built_site(tmp_path)
 
     for language in localized_languages():
         assert not (tmp_path / language / "pagefind").exists(), f"the {language!r} root carries its own index"
@@ -685,7 +683,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     that passes where a publish refuses, with a green suite. So the inlined form
     is refused here by name.
     """
-    calls = _direct_calls(_docs_delivery_activation._publish)
+    calls = _direct_calls(docs_delivery_activation.docs_delivery_activation_publish)
     assert calls.index("build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
@@ -695,7 +693,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     )
     assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
 
-    assert inspect.signature(_dry_run).parameters["build"].default is _docs_site_build.build_site_roots
+    assert inspect.signature(dry_run).parameters["build"].default is docs_site_build.build_site_roots
 
 
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
@@ -710,7 +708,7 @@ def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: P
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
 
-    assert _dry_run(tmp_path, build=lambda _: tmp_path) == 0
+    assert dry_run(tmp_path, build=lambda _: tmp_path) == 0
 
 
 def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) -> None:
@@ -726,7 +724,7 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
     (tmp_path / localized_languages()[0] / "404.html").unlink()
 
     with pytest.raises(SystemExit, match="required artifacts are missing"):
-        _dry_run(tmp_path, build=lambda _: tmp_path)
+        dry_run(tmp_path, build=lambda _: tmp_path)
 
 
 def test_the_apex_carries_the_entry_error_page_sitemap_index_and_the_one_search_index(tmp_path: Path) -> None:
@@ -775,7 +773,7 @@ def test_an_error_page_declaring_no_site_prefix_stops_the_publish(tmp_path: Path
     source.write_text("<html><head></head></html>", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="declares no site prefix"):
-        _compose_apex(tmp_path)
+        compose_apex(tmp_path)
 
 
 def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) -> None:
@@ -790,7 +788,7 @@ def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) ->
     )
 
     with pytest.raises(SystemExit, match="not every language root's sitemap"):
-        _dry_run(tmp_path, build=lambda _: tmp_path)
+        dry_run(tmp_path, build=lambda _: tmp_path)
 
 
 def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None:
@@ -807,7 +805,7 @@ def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None
     (tmp_path / "api" / "stale.html").write_text("x", encoding="utf-8")
     (tmp_path / "how-to.html").write_text("x", encoding="utf-8")
 
-    _clear_apex(tmp_path)
+    clear_apex(tmp_path)
 
     assert {entry.name for entry in tmp_path.iterdir()} == set(localized_languages())
 
@@ -822,7 +820,7 @@ def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> No
     entry.write_text(entry.read_text(encoding="utf-8").replace(f'"{stranded}"', '"zz"'), encoding="utf-8")
 
     with pytest.raises(SystemExit, match="does not route to"):
-        _dry_run(tmp_path, build=lambda _: tmp_path)
+        dry_run(tmp_path, build=lambda _: tmp_path)
 
 
 class _StaticResponseHandler(http.server.BaseHTTPRequestHandler):
@@ -866,7 +864,7 @@ def _closed_port_url() -> str:
 
 
 def _download_latest_path(repo_root: Path) -> Path:
-    return repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
+    return repo_root.joinpath(*DOWNLOAD_LATEST_STATIC_PATH)
 
 
 def _seed_stale_download_latest(repo_root: Path) -> Path:
@@ -878,7 +876,7 @@ def _seed_stale_download_latest(repo_root: Path) -> Path:
     destination = _download_latest_path(repo_root)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(
-        json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "0.1.0-stale", "assets": []}),
+        json.dumps({"schema_name": DOWNLOAD_LATEST_SCHEMA, "version": "0.1.0-stale", "assets": []}),
         encoding="utf-8",
     )
     return destination
@@ -886,35 +884,35 @@ def _seed_stale_download_latest(repo_root: Path) -> Path:
 
 def test_refresh_download_latest_writes_a_valid_payload(tmp_path: Path) -> None:
     """A valid latest-release payload is written into docs/_static."""
-    body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
+    body = json.dumps({"schema_name": DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
     with _serving(body=body) as url:
-        _refresh_download_latest(tmp_path, source_url=url)
+        refresh_download_latest(tmp_path, source_url=url)
     written = _download_latest_path(tmp_path)
     assert written.is_file()
-    assert json.loads(written.read_bytes())["schema_name"] == _DOWNLOAD_LATEST_SCHEMA
+    assert json.loads(written.read_bytes())["schema_name"] == DOWNLOAD_LATEST_SCHEMA
 
 
 def test_refresh_download_latest_degrades_on_network_error(tmp_path: Path) -> None:
     """No release yet / network error degrades silently: no raise, no file."""
-    _refresh_download_latest(tmp_path, source_url=_closed_port_url())  # must not raise
+    refresh_download_latest(tmp_path, source_url=_closed_port_url())  # must not raise
     assert not _download_latest_path(tmp_path).exists()
 
 
 def test_refresh_download_latest_degrades_on_unexpected_payload(tmp_path: Path) -> None:
     """A body that is not the expected schema (e.g. a 404 page) degrades silently."""
     with _serving(body=b"<html>not found</html>") as url:
-        _refresh_download_latest(tmp_path, source_url=url)  # must not raise
+        refresh_download_latest(tmp_path, source_url=url)  # must not raise
     assert not _download_latest_path(tmp_path).exists()
 
 
 def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path) -> None:
     """A local write failure (a path component is a plain file, not a directory) degrades silently."""
-    body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
+    body = json.dumps({"schema_name": DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
     # `docs/_static/download-latest.json` requires `docs/` to be a directory; making it a
     # plain file forces a real OSError (NotADirectoryError) out of destination.parent.mkdir.
     (tmp_path / "docs").write_text("not a directory", encoding="utf-8")
     with _serving(body=body) as url:
-        _refresh_download_latest(tmp_path, source_url=url)  # must not raise despite the write failure
+        refresh_download_latest(tmp_path, source_url=url)  # must not raise despite the write failure
     assert not _download_latest_path(tmp_path).exists()
 
 
@@ -928,7 +926,7 @@ def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_networ
     stale = _seed_stale_download_latest(tmp_path)
     assert stale.is_file()
 
-    _refresh_download_latest(tmp_path, source_url=_closed_port_url())
+    refresh_download_latest(tmp_path, source_url=_closed_port_url())
 
     assert not stale.exists()
 
@@ -939,7 +937,7 @@ def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_malfor
     assert stale.is_file()
 
     with _serving(body=b"<html>not found</html>") as url:
-        _refresh_download_latest(tmp_path, source_url=url)
+        refresh_download_latest(tmp_path, source_url=url)
 
     assert not stale.exists()
 
@@ -951,6 +949,6 @@ def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_schema
     body = json.dumps({"schema_name": "cadrumo.some-other-schema.v1", "version": "9.9.9"}).encode("utf-8")
 
     with _serving(body=body) as url:
-        _refresh_download_latest(tmp_path, source_url=url)
+        refresh_download_latest(tmp_path, source_url=url)
 
     assert not stale.exists()

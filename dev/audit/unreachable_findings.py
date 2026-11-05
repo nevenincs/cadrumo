@@ -18,13 +18,13 @@ from .unreachable_dataclasses import dataclass_member_uses
 from .unreachable_definitions import collection_uses, source_definitions
 from .unreachable_form_codes import CodeSources, DeclaredCodes, member_code_is_declared
 from .unreachable_frameworks import framework_contracts
-from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
+from .unreachable_graph import collapse_packages, importers_of_span, reachable_closure, resolved_symbol_uses
 from .unreachable_memo import parse_module, walked
 from .unreachable_models import (
-    _CONFIDENCE_BY_ORDER,
-    _CONFIDENCE_ORDER,
-    _DATA_SHAPED_KINDS,
-    _TOP_LEVEL_KINDS,
+    CONFIDENCE_BY_ORDER,
+    CONFIDENCE_ORDER,
+    DATA_SHAPED_KINDS,
+    TOP_LEVEL_KINDS,
     Confidence,
     Definition,
     ModuleFinding,
@@ -43,7 +43,7 @@ from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
 
 
-def _module_findings(
+def unreachable_findings_module_findings(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
     script_reach: frozenset[str],
@@ -66,7 +66,7 @@ def _module_findings(
     tooling_reach = reachable_closure(tooling_roots, modules, dict(edges))
     audited = frozenset(name for name in modules if spec.audits(name)) - tooling_reach
     unreachable = audited - full_reach
-    for name, spanned in _collapse_packages(unreachable, modules):
+    for name, spanned in collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))
     for name in sorted((runtime_reach & audited) - script_reach):
         module = modules[name]
@@ -77,7 +77,7 @@ def _module_findings(
                 ModuleReach.MODULE_EXEC_ONLY,
                 1,
                 outside.labels_for_module(name),
-                _importers_of_span(name, modules, importers),
+                importers_of_span(name, modules, importers),
             ),
         )
     for name in sorted((full_reach & audited) - runtime_reach):
@@ -89,13 +89,13 @@ def _module_findings(
                 ModuleReach.TYPE_ONLY,
                 1,
                 outside.labels_for_module(name),
-                _importers_of_span(name, modules, importers),
+                importers_of_span(name, modules, importers),
             ),
         )
     return tuple(findings)
 
 
-def _symbol_findings(
+def unreachable_findings_symbol_findings(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
     runtime_reach: frozenset[str],
@@ -103,7 +103,7 @@ def _symbol_findings(
     outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-    form_codes: _FormCodes | None = None,
+    form_codes: FormCodes | None = None,
 ) -> tuple[tuple[SymbolFinding, ...], int, int, int]:
     """Return the symbol findings and the data, ``dev/`` and registry-code clear counts.
 
@@ -113,7 +113,7 @@ def _symbol_findings(
     and ``registry_cleared`` is a registry-coded enum member whose code the
     registry declares. Folding them into one number would misreport all three.
     """
-    form_codes = form_codes or _FormCodes({}, {})
+    form_codes = form_codes or FormCodes({}, {})
     entries = spec.entry_points
     member_names: set[str] = set()
     literal_tokens: set[str] = set()
@@ -219,7 +219,7 @@ def _support_hop_subjects(
     return frozenset(reached_modules), frozenset(reached_symbols)
 
 
-def _test_findings(
+def unreachable_test_findings(
     spec: ShippedTreeSpec,
     known: frozenset[str],
     module_findings: tuple[ModuleFinding, ...],
@@ -281,7 +281,7 @@ def _unreachable_module_finding(
         ModuleReach.UNREACHABLE,
         spanned,
         tuple(sorted(used_by)),
-        _importers_of_span(name, modules, importers),
+        importers_of_span(name, modules, importers),
     )
 
 
@@ -293,7 +293,7 @@ _KEPT = "reported"
 
 
 @dataclass(frozen=True)
-class _FormCodes:
+class FormCodes:
     """Registry-coded enums and the codes the shipped declarations give them."""
 
     sources: CodeSources
@@ -316,7 +316,7 @@ def _python_reaches_definition(name: str, definition: Definition, usage: _Symbol
     """Apply exact top-level references before member and enum-collection uses."""
     if (name, definition.qualname) in usage.schema_uses or (name, definition.qualname) in usage.resolved_uses:
         return True
-    if definition.kind in _TOP_LEVEL_KINDS:
+    if definition.kind in TOP_LEVEL_KINDS:
         if (name, definition.name) in usage.resolved_uses or definition.name in usage.self_uses[name]:
             return True
         if definition.name in usage.literal_tokens:
@@ -332,7 +332,7 @@ def _data_reaches_definition(
     declared_values: frozenset[str],
 ) -> bool:
     """Clear data-shaped members by tokens or values, and classes by whole parsed values."""
-    if definition.kind in _DATA_SHAPED_KINDS and (
+    if definition.kind in DATA_SHAPED_KINDS and (
         definition.name in data_tokens or (definition.value and definition.value in declared_values)
     ):
         return True
@@ -349,7 +349,7 @@ def _definition_finding(
     outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-    form_codes: _FormCodes,
+    form_codes: FormCodes,
 ) -> tuple[SymbolFinding | None, str]:
     """Clear resolved uses, naming which kind of evidence cleared the definition."""
     if _python_reaches_definition(name, definition, usage):
@@ -449,8 +449,8 @@ def _orphan_test_finding(
     if all(_module_is_dead(m, dead_roots) for m in modules) and not live_pairs:
         subjects = tuple(sorted(dead_modules)) + tuple(sorted(f"{m}:{n}" for m, n in dead_pairs))
         weakest = max(
-            (_CONFIDENCE_ORDER[dead_symbols[pair]] for pair in dead_pairs),
-            default=_CONFIDENCE_ORDER[Confidence.EXACT],
+            (CONFIDENCE_ORDER[dead_symbols[pair]] for pair in dead_pairs),
+            default=CONFIDENCE_ORDER[Confidence.EXACT],
         )
-        return TestFinding(relative_to_repo(test.path, spec), test.name, subjects, _CONFIDENCE_BY_ORDER[weakest])
+        return TestFinding(relative_to_repo(test.path, spec), test.name, subjects, CONFIDENCE_BY_ORDER[weakest])
     return None

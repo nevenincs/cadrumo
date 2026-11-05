@@ -350,7 +350,7 @@ def _heading_and_body(unit_markup: str) -> tuple[str, str]:
     return heading, body
 
 
-def _anchor_from_heading(heading: str) -> str:
+def anchor_from_heading(heading: str) -> str:
     """Derive BOE's article fragment when legacy source markup lacks a bloque marker."""
     match = _ARTICLE_HEADING_ANCHOR.match(heading.strip())
     if match is None:
@@ -421,7 +421,7 @@ def _declared_fragment_article_units(markup: str) -> list[PreprocessUnit]:
     headings: list[tuple[re.Match[str], str, str, int | None]] = []
     for match in _ANY_HEADING.finditer(markup):
         heading = render_normative_prose(match.group("inner"))
-        article_anchor = _anchor_from_heading(heading)
+        article_anchor = anchor_from_heading(heading)
         if not article_anchor:
             continue
         fragment, wrapper_close = _declared_article_fragment(markup, match, article_anchor)
@@ -530,7 +530,7 @@ def legal_markup_units(markup: str) -> list[PreprocessUnit]:
                     text=text,
                     title=heading or None,
                     section=heading or None,
-                    anchor=anchor or _anchor_from_heading(heading) or None,
+                    anchor=anchor or anchor_from_heading(heading) or None,
                 )
             )
     if not units:

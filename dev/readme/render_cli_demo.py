@@ -30,8 +30,8 @@ FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
     "aeat app quickfile --modelo=115 --year=2025 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
 )
-_CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
-_CLI_ARGUMENTS = (
+CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
+CLI_ARGUMENTS = (
     "app",
     "quickfile",
     "--modelo=115",
@@ -109,7 +109,7 @@ def _require_quickfile_export(fields: dict[str, list[tuple[str, ...]]]) -> None:
 def _run_quickfile() -> tuple[str, ...]:
     """Run the production CLI and return the stable, reader-relevant output rows."""
     result = run_command(
-        [sys.executable, "-c", _CLI_BOOTSTRAP, *_CLI_ARGUMENTS],
+        [sys.executable, "-c", CLI_BOOTSTRAP, *CLI_ARGUMENTS],
         cwd=REPO_ROOT,
         environment=demo_environment(),
         errors="replace",

@@ -83,16 +83,16 @@ from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 _UTF_8: Final[str] = UTF_8
 
 # Bind every interface so containers / VMs / LAN peers can reach the preview.
-_DEFAULT_HOST = str(ipaddress.IPv4Address(0))
+DEFAULT_HOST = str(ipaddress.IPv4Address(0))
 # The docs server's OWNED canonical port. 8765/8766 belong to the resident
 # vaultspec-rag stack (qdrant HTTP + the RAG service) and 8767/8770 to its
 # dashboards on developer machines, so the docs claim a port clear of that
 # cluster and clear of the crowded 8000. The port is strict: the server never
 # scans away from it, and a foreign squatter on it is evicted.
-_DEFAULT_PORT = 8788
+DEFAULT_PORT = 8788
 # Interfaces that cannot be the *target* of an HTTP probe: a wildcard bind is
 # reached over a concrete loopback address.
-_WILDCARD_PROBE_HOST = {_DEFAULT_HOST: "127.0.0.1", "::": "::1", "": "127.0.0.1"}
+_WILDCARD_PROBE_HOST = {DEFAULT_HOST: "127.0.0.1", "::": "::1", "": "127.0.0.1"}
 _PROBE_TIMEOUT_SECONDS = 1.5
 _PROBE_READ_BYTES = 8192
 # Ceiling for waiting on a terminated stale server to release its port.
@@ -331,12 +331,12 @@ def _terminate(pid: int, *, timeout: float = _PORT_RELEASE_TIMEOUT_SECONDS) -> N
         pass
 
 
-def _probe_host(host: str) -> str:
+def serve_probe_host(host: str) -> str:
     """Map a wildcard bind interface to a concrete address for probing."""
     return _WILDCARD_PROBE_HOST.get(host, host)
 
 
-def _looks_like_sphinx(body: str) -> bool:
+def looks_like_sphinx(body: str) -> bool:
     """Return whether an HTTP body looks like a Sphinx-generated docs page."""
     lowered = body.lower()
     return "sphinx" in lowered or "docutils" in lowered
@@ -413,7 +413,7 @@ def probe_port(bind_host: str, port: int, *, timeout: float = _PROBE_TIMEOUT_SEC
     """
     if _port_bindable(bind_host, port):
         return PortStatus.FREE
-    http_host = _probe_host(bind_host)
+    http_host = serve_probe_host(bind_host)
     try:
         validated_host, validated_port, target = _validated_probe_target(http_host, port)
         connection = http.client.HTTPConnection(validated_host, validated_port, timeout=timeout)
@@ -427,7 +427,7 @@ def probe_port(bind_host: str, port: int, *, timeout: float = _PROBE_TIMEOUT_SEC
     except (http.client.HTTPException, TimeoutError, OSError, ValueError):
         # Bound (bind failed above) but not usable as HTTP — dirty.
         return PortStatus.DIRTY
-    return classify_probe(http_ok=200 <= status < 300, is_sphinx=_looks_like_sphinx(body))
+    return classify_probe(http_ok=200 <= status < 300, is_sphinx=looks_like_sphinx(body))
 
 
 def _owned_stale(state_path: Path, port: int) -> bool:
@@ -538,7 +538,7 @@ def _wait_for_free(bind_host: str, port: int, *, timeout: float) -> bool:
     return probe_port(bind_host, port) is PortStatus.FREE
 
 
-def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
+def build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     """Return the child environment for the live-preview Sphinx builds.
 
     Each rebuild is a whole-site build, which ``docs/conf.py`` recognises from
@@ -632,7 +632,7 @@ def _launch(
 ) -> int:
     """Launch the server in the foreground, recording and clearing its state."""
     command = serve_command(repo_root, host=host, port=port, open_browser=open_browser, scope=scope)
-    probe_host = _probe_host(host)
+    probe_host = serve_probe_host(host)
     state_path = _state_path(repo_root)
     print(f"Serving {scope}-scope documentation on http://{probe_host}:{port}/ (Ctrl-C to stop).", flush=True)
     relay = start_ipv6_relay(port) if host in _WILDCARD_PROBE_HOST else None
@@ -641,7 +641,7 @@ def _launch(
         print(f"Bound to {host}:{port} ({stacks}) — reachable from other hosts on the network.", flush=True)
         print(f"Also reachable as http://{socket.gethostname().lower()}:{port}/ on the LAN.", flush=True)
     print("Watching docs/ and src/cadrumo/; rebuilding on change.", flush=True)
-    process = subprocess.Popen(command, cwd=repo_root, env=_build_env(repo_root, scope=scope))
+    process = subprocess.Popen(command, cwd=repo_root, env=build_env(repo_root, scope=scope))
     write_state(state_path, ServeState(pid=process.pid, host=host, port=port))
     try:
         return process.wait()
@@ -690,13 +690,13 @@ def _do_status(state_path: Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for the start-idempotent live-reloading docs server."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--host", default=_DEFAULT_HOST, help="Interface to bind (default: 0.0.0.0, every interface).")
+    parser.add_argument("--host", default=DEFAULT_HOST, help="Interface to bind (default: 0.0.0.0, every interface).")
     parser.add_argument(
         "--port",
         type=int,
         default=None,
         help=(
-            f"Port to serve on (default: the docs' canonical {_DEFAULT_PORT}, which is claimed strictly — "
+            f"Port to serve on (default: the docs' canonical {DEFAULT_PORT}, which is claimed strictly — "
             "an invalid occupant is evicted). A pinned non-canonical port a foreign process holds is refused."
         ),
     )
@@ -730,12 +730,12 @@ def main(argv: list[str] | None = None) -> int:
 
     resolution = resolve_target(
         requested_port=args.port,
-        default_port=_DEFAULT_PORT,
+        default_port=DEFAULT_PORT,
         probe=lambda port: probe_port(args.host, port),
         owned_stale=lambda port: _owned_stale(state_path, port),
     )
     port = resolution.port
-    url = f"http://{_probe_host(args.host)}:{port}/"
+    url = f"http://{serve_probe_host(args.host)}:{port}/"
 
     if resolution.action is ServeAction.ATTACH:
         print(f"A docs server is already serving at {url}; attaching instead of starting a second one.", flush=True)
@@ -746,7 +746,7 @@ def main(argv: list[str] | None = None) -> int:
     if resolution.action is ServeAction.BLOCKED:
         print(
             f"Port {port} is held by another process that is not an aeat docs server; "
-            f"choose a different --port (or omit --port to claim the canonical {_DEFAULT_PORT}).",
+            f"choose a different --port (or omit --port to claim the canonical {DEFAULT_PORT}).",
             file=sys.stderr,
             flush=True,
         )

@@ -12,8 +12,8 @@ from dev.paths import UTF_8
 
 from .build import docs_build_language
 from .legal_catalogue import load_legal_provisions
-from .legal_page_rendering import _render_document_page, _render_index
-from .legal_record_validation import _validate_records
+from .legal_page_rendering import render_document_page, render_index
+from .legal_record_validation import validate_records
 from .legal_reference_models import LegalPage, LegalProvisionRecord, LegalReferenceError, LegalReferenceResult
 from .legal_reference_routing import LEGAL_REFERENCE_DIR
 
@@ -42,14 +42,14 @@ def render_legal_reference(
             ),
         ),
     )
-    _validate_records(ordered)
+    validate_records(ordered)
 
     grouped: dict[str, list[LegalProvisionRecord]] = {}
     for record in ordered:
         grouped.setdefault(record.document_id, []).append(record)
     source_cache: dict[Path, str | None] = {}
     pages = tuple(
-        _render_document_page(document_id, tuple(grouped[document_id]), resolved_language, repo_root, source_cache)
+        render_document_page(document_id, tuple(grouped[document_id]), resolved_language, repo_root, source_cache)
         for document_id in sorted(grouped)
     )
     return _reference_result(pages)
@@ -81,7 +81,7 @@ def generate_legal_reference(
     if len(set(output_paths)) != len(output_paths):
         raise LegalReferenceError("generated legal output paths collide")
     _remove_generated_rst(out_dir, frozenset(output_paths))
-    _write_if_changed(output_paths[0], _render_index(result.pages, resolved_language))
+    _write_if_changed(output_paths[0], render_index(result.pages, resolved_language))
     for page, path in zip(result.pages, output_paths[1:], strict=True):
         _write_if_changed(path, page.rst)
     return result

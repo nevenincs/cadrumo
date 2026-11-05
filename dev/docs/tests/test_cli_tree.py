@@ -23,7 +23,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from ..cli_reference import _reference_subprocess_environment
+from ..cli_reference import reference_subprocess_environment
 from ..cli_tree import (
     CLI_TREE_STATIC_RELPATH,
     CliCommandNode,
@@ -52,7 +52,7 @@ def test_projection_environment_preserves_the_published_authority_dependency(
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(authority_root))
     monkeypatch.setenv("CADRUMO_LOG_LEVEL", "DEBUG")
 
-    environment = _reference_subprocess_environment(tmp_path / "state")
+    environment = reference_subprocess_environment(tmp_path / "state")
 
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root)
     assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "state")
@@ -73,7 +73,7 @@ def _collect_all_path_keys_in_subprocess() -> set[str]:
     with TemporaryDirectory(prefix="cadrumo-cli-tree-cov-") as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
-            env=_reference_subprocess_environment(Path(storage_root)),
+            env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
             text=True,
             timeout=None,

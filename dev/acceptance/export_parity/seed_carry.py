@@ -7,11 +7,11 @@ from .scenario import (
     activity_year,
 )
 from .seed_contracts import (
-    _ACTOR,
+    ACTOR,
 )
 from .seed_inputs import (
-    _m303_opening_balance_args,
-    _money,
+    m303_opening_balance_args,
+    money,
 )
 from .seed_state import SeedState
 
@@ -47,7 +47,7 @@ class CarrySeedStage(SeedState):
                     "--period",
                     "0A",
                     "--by",
-                    _ACTOR,
+                    ACTOR,
                 ),
                 stage=f"{stage}.create",
             )
@@ -57,7 +57,7 @@ class CarrySeedStage(SeedState):
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
             manifest = self.artifact_dir / f"modelo-100-{prior}-synthetic-aeat-register.csv"
             manifest.write_text(
-                f"casilla_code;value\n0224;{_money(activity_year(prior).net)}\n1384;0.00\n1387;0.00\n1390;0.00\n1391;0.00\n",
+                f"casilla_code;value\n0224;{money(activity_year(prior).net)}\n1384;0.00\n1387;0.00\n1390;0.00\n1391;0.00\n",
                 encoding="utf-8",
             )
             imported = self._result(
@@ -74,7 +74,7 @@ class CarrySeedStage(SeedState):
                     "--file",
                     str(manifest),
                     "--by",
-                    _ACTOR,
+                    ACTOR,
                 ),
                 stage=f"{stage}.import",
             )
@@ -97,7 +97,7 @@ class CarrySeedStage(SeedState):
             return
         prior, period = year - 1, QUARTERS[-1]
         if self._pending(f"{stage}.seed"):
-            seeded = self._result(_m303_opening_balance_args(prior, period), stage=f"{stage}.seed")
+            seeded = self._result(m303_opening_balance_args(prior, period), stage=f"{stage}.seed")
             self._remember(f"iva-wallet:303:{prior}:{period}", seeded.get("provenance", ""))
             self._complete(f"{stage}.seed")
         self._done(stage)

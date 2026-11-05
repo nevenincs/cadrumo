@@ -511,7 +511,7 @@ _PHASES: dict[str, Callable[[Run, Context, list[Held]], Awaitable[None]]] = {
 }
 
 
-def _setup(run: Run, context: Context) -> bool:
+def setup(run: Run, context: Context) -> bool:
     for name in ("A", "B"):
         try:
             context.profiles[name] = create_profile(context.programs, context.environment, f"probe-{name.lower()}")
@@ -552,7 +552,7 @@ def main(arguments: list[str] | None = None) -> int:
         run = Run()
         started = time.monotonic()
         with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
-            if run.check("runtime_ready", runtime.ready().get("kind") is not None) and _setup(run, context):
+            if run.check("runtime_ready", runtime.ready().get("kind") is not None) and setup(run, context):
                 asyncio.run(phases(run, context, runtime, stop_after=options.stop_after))
         problems = logged_problems(scratch)
         run.check(

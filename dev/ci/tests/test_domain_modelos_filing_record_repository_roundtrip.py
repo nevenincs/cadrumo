@@ -41,7 +41,7 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import ModeloRecordPersistenceError
 
-from ._filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
+from .filing_record_support import BUCKET_ID, P_2024_2T, RECORD_BUCKET_ID, hex_blob
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

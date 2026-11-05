@@ -38,12 +38,12 @@ from ..golden_store import (
     SANDBOX_STORAGE_ROOT_PLACEHOLDER,
     SANDBOX_WORKDIR_PLACEHOLDER,
     SequenceGolden,
-    _repo_root,
     build_golden,
     golden_path,
     normalise_document_paths,
     normalise_text_output,
     read_golden,
+    repo_root,
     write_golden,
 )
 from ..parser import parse_sequence
@@ -331,7 +331,7 @@ class TestEnvelopePathNormalisation:
     path, since no simple hermetic command is guaranteed to leak both roots.
     """
 
-    _REPO_ROOT: str = str(_repo_root())
+    _REPO_ROOT: str = str(repo_root())
 
     def _run(self, *, storage_root: str, workdir: str, status: str = "success") -> SequenceTranscript:
         detail = (

@@ -66,8 +66,8 @@ _UTF_8: Final[str] = UTF_8
 #: the harness is removable scaffolding that the published artifact must not
 #: depend on for its meaning.
 _ZONE_SLUG: Final[str] = "download-matrix"
-_ZONE_BEGIN: Final[str] = f"<!-- cadrumo:generated:begin {_ZONE_SLUG} -->"
-_ZONE_END: Final[str] = f"<!-- cadrumo:generated:end {_ZONE_SLUG} -->"
+ZONE_BEGIN: Final[str] = f"<!-- cadrumo:generated:begin {_ZONE_SLUG} -->"
+ZONE_END: Final[str] = f"<!-- cadrumo:generated:end {_ZONE_SLUG} -->"
 
 _REGEN_HINT: Final[str] = "uv run --no-sync python -m dev.docs.download_matrix generate"
 
@@ -246,15 +246,15 @@ def _inject_zone(page_text: str, zone_body: str) -> str:
     Raises:
         ValueError: When the begin/end markers are absent or malformed.
     """
-    begin = page_text.find(_ZONE_BEGIN)
-    end = page_text.find(_ZONE_END)
+    begin = page_text.find(ZONE_BEGIN)
+    end = page_text.find(ZONE_END)
     if begin == -1 or end == -1 or end < begin:
         raise ValueError(
-            f"docs/download.md is missing the generated marker zone; expected {_ZONE_BEGIN!r} ... {_ZONE_END!r}",
+            f"docs/download.md is missing the generated marker zone; expected {ZONE_BEGIN!r} ... {ZONE_END!r}",
         )
     prefix = page_text[:begin]
-    suffix = page_text[end + len(_ZONE_END) :]
-    return f"{prefix}{_ZONE_BEGIN}\n{zone_body}{_ZONE_END}{suffix}"
+    suffix = page_text[end + len(ZONE_END) :]
+    return f"{prefix}{ZONE_BEGIN}\n{zone_body}{ZONE_END}{suffix}"
 
 
 def render_page(descriptor: DownloadDescriptor, page_text: str) -> str:
@@ -371,7 +371,7 @@ def build_download_latest(
 # ---------------------------------------------------------------------------
 
 
-def _run_generate(*, check: bool, page: Path | None = None) -> int:
+def run_generate(*, check: bool, page: Path | None = None) -> int:
     descriptor = load_descriptor()
     target = page if page is not None else download_page_path()
     on_disk = target.read_text(encoding=_UTF_8)
@@ -443,7 +443,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_emit_latest(args)
     # generate (default) — top-level --check or `generate --check` both drift-gate.
     check = bool(args.check or getattr(args, "check", False))
-    return _run_generate(check=check)
+    return run_generate(check=check)
 
 
 if __name__ == "__main__":

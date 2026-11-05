@@ -3,9 +3,9 @@
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import extract_placeholders
 
-from ._paths import LOCALES_DIR
 from .chrome_projection import project_catalogue_strings
 from .errors import LocaleError
+from .paths import LOCALES_DIR
 
 MANAGER_CHROME_KEYS = frozenset(
     {

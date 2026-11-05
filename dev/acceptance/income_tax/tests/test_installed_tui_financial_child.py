@@ -8,11 +8,11 @@ from typing import Any
 
 import pytest
 
-from ..financial_artifacts import _validate_annual_artifact
-from ..financial_contracts import _STATEMENT_CSV_HEADER
-from ..financial_navigation import _open_destination
+from ..financial_artifacts import validate_annual_artifact
+from ..financial_contracts import STATEMENT_CSV_HEADER
+from ..financial_navigation import open_destination
 from ..financial_profile import required_profile_facts
-from ..financial_transactions import _transaction_csv
+from ..financial_transactions import transaction_csv
 from ..scenario import build_scenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -33,10 +33,10 @@ def test_profile_configuration_uses_canonical_manager_row_paths() -> None:
 
 
 def test_transaction_csv_is_a_generic_header_transient_scenario_input(tmp_path: Path) -> None:
-    path = _transaction_csv(scenario=build_scenario(2025), directory=tmp_path)
+    path = transaction_csv(scenario=build_scenario(2025), directory=tmp_path)
     assert path.parent == tmp_path
     lines = path.read_text(encoding="utf-8").splitlines()
-    assert lines[0] == _STATEMENT_CSV_HEADER
+    assert lines[0] == STATEMENT_CSV_HEADER
     assert len(lines) == 9
     assert all(line.endswith(",EUR," + line.rsplit(",", 1)[-1]) for line in lines[1:])
 
@@ -48,7 +48,7 @@ def test_annual_artifact_parser_checks_financial_meaning_and_official_schema() -
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/"
         "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
     )
-    values, validation = _validate_annual_artifact(xml_path=xml, xsd_path=schema, scenario=build_scenario(2025))
+    values, validation = validate_annual_artifact(xml_path=xml, xsd_path=schema, scenario=build_scenario(2025))
     assert values == {"E1INGRESO": "12000.00", "E1NGD": "2400.00", "E1RN": "9600.00", "PAGOS": "680.00"}
     assert validation["xsd_valid"] is True
     assert validation["normalization_count"] == 16
@@ -84,6 +84,6 @@ async def test_palette_selects_the_exact_destination_after_fuzzy_results(monkeyp
         assert polls == 180
 
     monkeypatch.setattr("dev.acceptance.income_tax.financial_navigation.wait_for_public_selector", available)
-    await _open_destination(PilotStub(), query="declarations", expected_selector="#declarations-list")
+    await open_destination(PilotStub(), query="declarations", expected_selector="#declarations-list")
     assert listing.highlighted == 1
     assert pressed == ["ctrl+p", "enter"]

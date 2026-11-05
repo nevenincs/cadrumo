@@ -78,7 +78,7 @@ def _norm_cell(value: object) -> str:
     return str(value).strip()
 
 
-def _render_sheet(name: str, rows: list[list[object]]) -> str:
+def render_sheet(name: str, rows: list[list[object]]) -> str:
     """Render one worksheet's field table as readable plain text.
 
     Args:
@@ -221,7 +221,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
 
     units: list[PreprocessUnit] = []
     for name, rows in sheets:
-        rendered = _render_sheet(name, rows)
+        rendered = render_sheet(name, rows)
         if rendered:
             units.append(PreprocessUnit(text=rendered, title=name, section=name))
 

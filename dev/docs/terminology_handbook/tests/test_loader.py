@@ -30,7 +30,7 @@ from ..loader import (
     load_terminology_handbook,
 )
 from ..schema import GrammaticalGender, PartOfSpeech
-from ._support import write_concept_fragment
+from .support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

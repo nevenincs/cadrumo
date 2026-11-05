@@ -21,7 +21,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.config_support import TuiAppearance
 
-from .._artifacts import (
+from ..artifacts import (
     FailedFrame,
     FrameFailureKind,
     Manifest,
@@ -29,8 +29,8 @@ from .._artifacts import (
     SkippedFrame,
     ThemeName,
 )
-from .._viewports import VIEWPORTS, ViewportName
-from ..cli import THEMES, _resolve_themes
+from ..cli import THEMES, resolve_themes
+from ..viewports import VIEWPORTS, ViewportName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -121,10 +121,10 @@ def test_a_manifest_read_back_from_disk_carries_the_theme_refusal() -> None:
 def test_the_command_line_offers_the_vocabulary_rather_than_a_second_list() -> None:
     """``THEMES`` is now derived, so it cannot name a word no record accepts."""
     assert tuple(ThemeName) == THEMES
-    assert _resolve_themes(None) == THEMES
-    assert _resolve_themes(["light"]) == (ThemeName.LIGHT,)
+    assert resolve_themes(None) == THEMES
+    assert resolve_themes(["light"]) == (ThemeName.LIGHT,)
 
     import typer
 
     with pytest.raises(typer.BadParameter, match="unknown theme 'solarized'"):
-        _resolve_themes(["solarized"])
+        resolve_themes(["solarized"])

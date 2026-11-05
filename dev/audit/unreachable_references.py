@@ -14,7 +14,7 @@ from dev.paths import UTF_8
 from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_memo import walked
-from .unreachable_policy import _COMMAND_TOKEN, _DATA_TOKEN, _DOTTED_SPEC
+from .unreachable_policy import COMMAND_TOKEN, DATA_TOKEN, DOTTED_SPEC
 from .unreachable_tree import ShippedTreeSpec
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def non_reference_nodes(tree: ast.Module) -> set[int]:
 
 def string_reference_names(value: str) -> Iterator[str]:
     """Identifiers a string literal may address dynamically (``"mod:attr"``, ``"a.b"``)."""
-    if _DOTTED_SPEC.match(value):
+    if DOTTED_SPEC.match(value):
         for part in re.split(r"[.:]", value):
             if isinstance(part, str) and part:
                 yield part
@@ -127,7 +127,7 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
     tokens = {
         node.value
         for node in walked(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and _COMMAND_TOKEN.fullmatch(node.value)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and COMMAND_TOKEN.fullmatch(node.value)
     }
     for prefix in prefixes:
         for token in tokens:
@@ -222,14 +222,14 @@ def string_tokens(tree: ast.Module) -> set[str]:
     return tokens
 
 
-def _data_paths(spec: ShippedTreeSpec) -> Iterator[Path]:
+def data_paths(spec: ShippedTreeSpec) -> Iterator[Path]:
     """Every shipped payload file the data globs select under an audited package root."""
     for root in spec.package_roots:
         for glob in spec.data_globs:
             yield from (path for path in root.glob(glob) if path.is_file())
 
 
-def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
+def unreachable_references_data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """Identifier tokens in the shipped non-Python payloads.
 
     Registry declarations and locale catalogues address fields and enum values
@@ -238,7 +238,7 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """
     tokens: set[str] = set()
     unread: list[str] = []
-    for path in _data_paths(spec):
+    for path in data_paths(spec):
         try:
             text = path.read_text(encoding=UTF_8)
         except (OSError, UnicodeDecodeError) as error:
@@ -250,13 +250,13 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
             # never matches, with nothing said either way.
             unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
-        tokens.update(_DATA_TOKEN.findall(text))
+        tokens.update(DATA_TOKEN.findall(text))
     if unread:
         raise OSError(format_unread_notice("unreachable-code data tokens", "coverage is unproven", unread).rstrip())
     return frozenset(tokens)
 
 
-def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
+def declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     """Mapping keys and COMPLETE string values in the shipped declarations.
 
     Deliberately stricter than :func:`_data_tokens`, and separate from it so
@@ -274,7 +274,7 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     values: set[str] = set()
     unread: list[str] = []
 
-    for path in _data_paths(spec):
+    for path in data_paths(spec):
         try:
             text = path.read_text(encoding=UTF_8)
             parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)

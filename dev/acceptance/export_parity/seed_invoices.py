@@ -12,14 +12,14 @@ from .scenario import (
     WithholdingDuty,
 )
 from .seed_contracts import (
-    _UNCHANGED_UPDATE,
+    UNCHANGED_UPDATE,
     SeedRefusalError,
 )
 from .seed_inputs import (
-    _investment_asset_args,
-    _is_investment_good,
-    _money,
-    _rate,
+    investment_asset_args,
+    is_investment_good,
+    money,
+    rate,
 )
 from .seed_state import SeedState
 
@@ -27,7 +27,7 @@ from .seed_state import SeedState
 def _received_invoice_identity(self: InvoiceSeedStage, item: ReceivedInvoice, stage: str) -> Any:
     """Received invoice identity."""
     withholding_args: tuple[str, ...] = (
-        ("--retention-rate", _rate(item.withholding / item.base), "--retention-amount", _money(item.withholding))
+        ("--retention-rate", rate(item.withholding / item.base), "--retention-amount", money(item.withholding))
         if item.withholding
         else ()
     )
@@ -52,9 +52,9 @@ def _received_invoice_identity(self: InvoiceSeedStage, item: ReceivedInvoice, st
                 "--invoice-date",
                 item.invoice_date.isoformat(),
                 "--taxable-base",
-                _money(item.base),
+                money(item.base),
                 "--iva-rate",
-                _rate(item.iva_rate * 100),
+                rate(item.iva_rate * 100),
                 "--country-code",
                 "ES",
                 *withholding_args,
@@ -83,8 +83,8 @@ def _classify_received_transaction(
                     "--classification",
                     "BUSINESS",
                     "--deduction-kind",
-                    "domestic_investment" if _is_investment_good(item) else "domestic_current",
-                    *_investment_asset_args(item),
+                    "domestic_investment" if is_investment_good(item) else "domestic_current",
+                    *investment_asset_args(item),
                     "--counterparty-country",
                     "ES",
                     "--reaffirm",
@@ -94,7 +94,7 @@ def _classify_received_transaction(
         except SeedRefusalError:
             # An interrupted run already applied this classification; the product
             # refuses a no-op update, which on resume is the expected answer.
-            if _UNCHANGED_UPDATE not in self.receipt.blocked.get(f"{stage}.classify", ""):
+            if UNCHANGED_UPDATE not in self.receipt.blocked.get(f"{stage}.classify", ""):
                 raise
             self.receipt.blocked.pop(f"{stage}.classify")
         self._complete(f"classify:{item.key}")
@@ -116,7 +116,7 @@ class InvoiceSeedStage(SeedState):
                     "--date",
                     item.payment_date.isoformat(),
                     "--amount",
-                    _money(item.receipt),
+                    money(item.receipt),
                     "--direction",
                     "INCOMING",
                     "--description",
@@ -124,11 +124,11 @@ class InvoiceSeedStage(SeedState):
                     "--classification",
                     "BUSINESS",
                     "--taxable-base",
-                    _money(item.base),
+                    money(item.base),
                     "--iva-rate",
                     "0.21",
                     "--iva-amount",
-                    _money(item.iva),
+                    money(item.iva),
                     "--iva-category",
                     "domestic_general",
                     "--irpf-category",
@@ -164,15 +164,15 @@ class InvoiceSeedStage(SeedState):
                     "--invoice-date",
                     item.invoice_date.isoformat(),
                     "--taxable-base",
-                    _money(item.base),
+                    money(item.base),
                     "--iva-rate",
                     "21",
                     "--country-code",
                     "ES",
                     "--retention-rate",
-                    _rate(item.withholding_rate),
+                    rate(item.withholding_rate),
                     "--retention-amount",
-                    _money(item.withholding),
+                    money(item.withholding),
                     "--iva-category",
                     "domestic_general",
                 ),
@@ -212,18 +212,18 @@ class InvoiceSeedStage(SeedState):
         iva_args: tuple[str, ...] = (
             (
                 "--taxable-base",
-                _money(item.base),
+                money(item.base),
                 "--iva-rate",
-                _rate(item.iva_rate),
+                rate(item.iva_rate),
                 "--iva-amount",
-                _money(item.iva),
+                money(item.iva),
                 "--iva-category",
                 "domestic_general",
             )
             if item.iva_rate
             else (
                 "--taxable-base",
-                _money(item.base),
+                money(item.base),
                 "--iva-rate",
                 "0",
                 "--iva-amount",
@@ -252,7 +252,7 @@ class InvoiceSeedStage(SeedState):
                         "--date",
                         item.payment_date.isoformat(),
                         "--amount",
-                        _money(item.payment),
+                        money(item.payment),
                         "--direction",
                         "OUTGOING",
                         "--description",

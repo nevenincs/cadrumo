@@ -5,14 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from .tui_contracts import TuiJourneyError
-from .tui_selectors import _FIRST_OPEN_GREETING, WORKBENCH_NOTICE
+from .tui_selectors import FIRST_OPEN_GREETING, WORKBENCH_NOTICE
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
     from textual.widget import Widget
 
 
-def _rendered_text(widget: object) -> str:
+def rendered_text(widget: object) -> str:
     """Read a widget's public rendered content without serializing raw data."""
     render = getattr(widget, "render", None)
     if not callable(render):
@@ -20,17 +20,17 @@ def _rendered_text(widget: object) -> str:
     return str(render()).strip()
 
 
-def _query_visible_tui_control(pilot: Pilot[Any], selector: str) -> Widget:
+def query_visible_tui_control(pilot: Pilot[Any], selector: str) -> Widget:
     """Resolve a public control on the top screen, the only one an operator can act on."""
     return pilot.app.screen.query_one(selector)
 
 
 def workbench_notice(pilot: Pilot[Any]) -> str:
     """Read the workbench's notice, even while a dialog it opened sits above it."""
-    return _stack_text(pilot, WORKBENCH_NOTICE)
+    return stack_text(pilot, WORKBENCH_NOTICE)
 
 
-def _stack_text(pilot: Pilot[Any], selector: str) -> str:
+def stack_text(pilot: Pilot[Any], selector: str) -> str:
     """Read the rendered text of the top-most screen that shows ``selector``, or nothing.
 
     The workbench's notice stays on the workbench while a dialog it opened
@@ -44,10 +44,10 @@ def _stack_text(pilot: Pilot[Any], selector: str) -> str:
 
     for screen in reversed(pilot.app.screen_stack):
         try:
-            text = _rendered_text(screen.query_one(selector))
+            text = rendered_text(screen.query_one(selector))
         except NoMatches:
             continue
-        if selector == WORKBENCH_NOTICE and text == tr(_FIRST_OPEN_GREETING):
+        if selector == WORKBENCH_NOTICE and text == tr(FIRST_OPEN_GREETING):
             return ""
         return text
     return ""

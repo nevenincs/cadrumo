@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 import yaml
 
-from .._paths import LOCALES_DIR
+from ..paths import LOCALES_DIR
 from ..signal_translation_matrix import suspicious_translation_locales
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

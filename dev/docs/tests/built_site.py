@@ -33,7 +33,7 @@ from dev.paths import REPO_ROOT
 
 from ..compile_once import WITNESS_LANGUAGE, witness_build
 from ..i18n import SITE_ROOT_LANGUAGES
-from ._sphinx_build_harness import gate_build_concurrency, gate_build_env, gate_build_jobs
+from .sphinx_build_harness import gate_build_concurrency, gate_build_env, gate_build_jobs
 
 __all__ = [
     "BASE_URL",
@@ -161,11 +161,11 @@ def built_documentation_site() -> BuiltSite:
     artifact = run_artifact(
         _KIND,
         digest,
-        publish=lambda staging: _publish(staging, digest),
-        verify=lambda root: _read(root, digest) is not None,
+        publish=lambda staging: publish(staging, digest),
+        verify=lambda root: read(root, digest) is not None,
         wait_seconds=_WAIT_SECONDS,
     )
-    site = _read(artifact.root, digest)
+    site = read(artifact.root, digest)
     if site is None:
         raise AssertionError(f"the run's documentation site at {artifact.root} no longer verifies")
     return site
@@ -185,7 +185,7 @@ def _compile_command(html_root: Path, build_root: Path, stored: Path) -> list[st
     ]
 
 
-def _publish(staging: Path, digest: str) -> None:
+def publish(staging: Path, digest: str) -> None:
     """Run the compile and its witness into ``staging`` and record how each ended."""
     html_root, build_root = staging / "html", staging / "build"
     # The stored form is the roots' own intermediate; the gate that reads what
@@ -239,7 +239,7 @@ def _record_streams(staging: Path, label: str, result: CommandResult) -> dict[st
     }
 
 
-def _read(root: Path, digest: str) -> BuiltSite | None:
+def read(root: Path, digest: str) -> BuiltSite | None:
     """Return the site recorded under ``root`` when it is the publication for ``digest``."""
     try:
         record = json.loads((root / _OUTCOME).read_text(encoding="utf-8"))

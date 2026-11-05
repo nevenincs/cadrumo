@@ -16,12 +16,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
 )
 
-from ._casilla_keys import is_delta_keyed_leaf
-from ._paths import LOCALES_DIR
 from .casilla_catalogue_models import CasillaOccurrence, Values
-from .casilla_text_policy import _EDITION_TEXT, _EDITION_TEXT_PLACEHOLDER
-from .locale_tree import _flatten_raw_locale_leaves
+from .casilla_keys import is_delta_keyed_leaf
+from .casilla_text_policy import EDITION_TEXT, EDITION_TEXT_PLACEHOLDER
+from .locale_tree import flatten_raw_locale_leaves
 from .locale_yaml import discover_locale_codes
+from .paths import LOCALES_DIR
 
 
 def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
@@ -30,7 +30,7 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
     A construct is carried as an occurrence whose label chain is its title chain,
     so both delta-keyed surfaces share one resolution, collapse and audit.
     """
-    return _published_surface()[0]
+    return published_surface()[0]
 
 
 type _PublishedSurface = tuple[
@@ -41,18 +41,18 @@ type _PublishedSurface = tuple[
 
 #: The walk visits every revision of every modelo (seconds of work), and each
 #: catalogue a process builds asks for it again; one walk per generation suffices.
-_surface_by_generation: Final[dict[str, _PublishedSurface]] = {}
+surface_by_generation: Final[dict[str, _PublishedSurface]] = {}
 
 
-def _published_surface() -> _PublishedSurface:
+def published_surface() -> _PublishedSurface:
     """Read occurrences, evolutions and binding keys from one authority operation, once per generation."""
     with bundled_indexed_authority().operation() as operation:
         generation = operation.generation.logical_generation
-        surface = _surface_by_generation.get(generation)
+        surface = surface_by_generation.get(generation)
         if surface is None:
             surface = _walk_published_surface(operation)
-            _surface_by_generation.clear()
-            _surface_by_generation[generation] = surface
+            surface_by_generation.clear()
+            surface_by_generation[generation] = surface
         return surface
 
 
@@ -111,7 +111,7 @@ def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:
         leaves: dict[str, str | None] = {}
         for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
             raw = yaml.load(shard.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or {}
-            for key, value in _flatten_raw_locale_leaves(raw).items():
+            for key, value in flatten_raw_locale_leaves(raw).items():
                 if is_delta_keyed_leaf(key):
                     leaves[key] = None if value is None else str(value)
         values[locale] = leaves
@@ -131,7 +131,7 @@ def edition_text_gaps(locales_dir: Path = LOCALES_DIR) -> dict[str, tuple[str, .
             sorted(
                 key
                 for key, value in labels.items()
-                if value is None or _EDITION_TEXT_PLACEHOLDER.search(value) is not None
+                if value is None or EDITION_TEXT_PLACEHOLDER.search(value) is not None
             )
         )
     return gaps
@@ -149,7 +149,7 @@ def repeated_edition_text(locales_dir: Path = LOCALES_DIR) -> dict[str, tuple[st
     for locale, labels in _edition_labels(locales_dir).items():
         by_text: dict[tuple[str, str], list[str]] = defaultdict(list)
         for key, value in labels.items():
-            match = _EDITION_TEXT.match(key)
+            match = EDITION_TEXT.match(key)
             if value is not None and match is not None:
                 by_text[(match.group("modelo"), value)].append(key)
         repeated[locale] = tuple(sorted(key for keys in by_text.values() if len(keys) > 1 for key in keys))
@@ -163,8 +163,8 @@ def _edition_labels(locales_dir: Path) -> dict[str, dict[str, str | None]]:
         found: dict[str, str | None] = {}
         for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
             raw = yaml.load(shard.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or {}
-            for key, value in _flatten_raw_locale_leaves(raw).items():
-                if _EDITION_TEXT.match(key):
+            for key, value in flatten_raw_locale_leaves(raw).items():
+                if EDITION_TEXT.match(key):
                     found[key] = None if value is None else str(value)
         labels[locale] = found
     return labels

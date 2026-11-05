@@ -13,8 +13,8 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.hashing import sha256_path
 from dev.paths import REPO_ROOT, UTF_8
 
-from .runtime_probe_contracts import _SHA256_RE, CompatibilityProbeError
-from .runtime_probe_environment import _isolated_environment
+from .runtime_probe_contracts import SHA256_RE, CompatibilityProbeError
+from .runtime_probe_environment import isolated_environment
 
 _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)")
 
@@ -40,7 +40,7 @@ def _validate_observed_runtime_minor(selector: str, observed_python: str) -> Non
         )
 
 
-def _read_lock_digest(path: Path) -> str:
+def read_lock_digest(path: Path) -> str:
     """Hash the exact lock bytes associated with the source or sealed cohort."""
     try:
         return sha256_path(path.resolve(strict=True))
@@ -48,10 +48,10 @@ def _read_lock_digest(path: Path) -> str:
         raise CompatibilityProbeError(f"uv.lock is unavailable: {path}", category="lock-missing") from exc
 
 
-def _cohort_lock_digest(cohort: Any) -> str:
+def cohort_lock_digest(cohort: Any) -> str:
     """Read the lock digest from the cohort's sealed wheelhouse manifest."""
     value = cohort.runtime_wheelhouse_manifest.get("lock_sha256")
-    if not isinstance(value, str) or _SHA256_RE.fullmatch(value) is None:
+    if not isinstance(value, str) or SHA256_RE.fullmatch(value) is None:
         raise CompatibilityProbeError("Python cohort does not carry a valid lock digest", category="cohort-invalid")
     with zipfile.ZipFile(cohort.source_archive) as archive:
         try:
@@ -69,7 +69,7 @@ def _cohort_lock_digest(cohort: Any) -> str:
     return value
 
 
-def _builder_pin(repo_root: Path) -> str:
+def builder_pin(repo_root: Path) -> str:
     """Return the exact release-builder interpreter identity, if declared."""
     try:
         value = (
@@ -88,7 +88,7 @@ def _builder_pin(repo_root: Path) -> str:
     return value
 
 
-def _runtime_identity(python: Path, *, runtime_id: str, selector: str, stability: str, cwd: Path) -> dict[str, str]:
+def runtime_identity(python: Path, *, runtime_id: str, selector: str, stability: str, cwd: Path) -> dict[str, str]:
     """Ask the selected interpreter for its identity, never trusting the host process."""
     code = (
         "import json,platform,sys; "
@@ -96,7 +96,7 @@ def _runtime_identity(python: Path, *, runtime_id: str, selector: str, stability
         "'implementation': platform.python_implementation(), "
         "'platform': sys.platform, 'machine': platform.machine()}, sort_keys=True))"
     )
-    env = _isolated_environment(cwd, python.parent)
+    env = isolated_environment(cwd, python.parent)
     result = run_command((str(python), "-I", "-W", "error::DeprecationWarning", "-c", code), cwd=cwd, environment=env)
     if result.returncode != 0:
         raise CompatibilityProbeError(

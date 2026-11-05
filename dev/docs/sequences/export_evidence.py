@@ -54,7 +54,7 @@ class _ExportEvidence(BaseModel):
     rows: list[_RowIdentity]
 
 
-class _ModeloExportEvidence(BaseModel):
+class ModeloExportEvidence(BaseModel):
     """Public BOE and XML receipt coordinates that reconstruct their audit payload.
 
     Account and other unprojected payload branches cannot pass the exact event
@@ -100,8 +100,8 @@ def _export_work_unit_argument(argv: tuple[str, ...]) -> str | None:
     return None
 
 
-def _modelo_export_selector_matches(
-    evidence: _ModeloExportEvidence,
+def modelo_export_selector_matches(
+    evidence: ModeloExportEvidence,
     *,
     argv: tuple[str, ...],
     profile_id: str,
@@ -140,7 +140,7 @@ def _modelo_export_selector_matches(
     )
 
 
-def _modelo_revision_matches(evidence: _ModeloExportEvidence, revision: str | None) -> bool:
+def _modelo_revision_matches(evidence: ModeloExportEvidence, revision: str | None) -> bool:
     return evidence.period.filing_year == evidence.filing_year and (
         revision is None or revision == evidence.calculation_revision_id
     )
@@ -297,7 +297,7 @@ def normalise_modelo_export_evidence(
 
 
 def _modelo_valid_actor(
-    evidence: _ModeloExportEvidence,
+    evidence: ModeloExportEvidence,
     destination: Path,
     argv: tuple[str, ...],
     profile_id: str,
@@ -309,7 +309,7 @@ def _modelo_valid_actor(
         registry_revision_id = _modelo_registry_revision(evidence, argv)
     except CadrumoError:
         return None
-    if not _modelo_export_selector_matches(
+    if not modelo_export_selector_matches(
         evidence, argv=argv, profile_id=profile_id, registry_revision_id=registry_revision_id
     ):
         return None
@@ -319,20 +319,20 @@ def _modelo_valid_actor(
 
 def _modelo_evidence(
     result: dict[str, JsonValue], workdir: str, authored: str
-) -> tuple[_ModeloExportEvidence, Path, Path] | None:
+) -> tuple[ModeloExportEvidence, Path, Path] | None:
     try:
         root = Path(workdir).resolve()
         destination = (root / authored).resolve()
         relative = destination.relative_to(root)
-        evidence = _ModeloExportEvidence.model_validate_json(
-            canonical_json_bytes({key: result[key] for key in _ModeloExportEvidence.model_fields if key in result}),
+        evidence = ModeloExportEvidence.model_validate_json(
+            canonical_json_bytes({key: result[key] for key in ModeloExportEvidence.model_fields if key in result}),
         )
     except (ValueError, ValidationError, OSError):
         return None
     return evidence, destination, relative
 
 
-def _modelo_registry_revision(evidence: _ModeloExportEvidence, argv: tuple[str, ...]) -> RevisionId | None:
+def _modelo_registry_revision(evidence: ModeloExportEvidence, argv: tuple[str, ...]) -> RevisionId | None:
     if _export_work_unit_argument(argv) is None:
         return None
     from cadrumo.application.modelo.work_addressing import law_selected_revision_for_work_target
@@ -347,7 +347,7 @@ def _modelo_registry_revision(evidence: _ModeloExportEvidence, argv: tuple[str, 
         )
 
 
-def _modelo_event_payload(evidence: _ModeloExportEvidence) -> dict[str, str] | None:
+def _modelo_event_payload(evidence: ModeloExportEvidence) -> dict[str, str] | None:
     payload = {
         "calculation_revision_id": evidence.calculation_revision_id,
         "work_unit_id": evidence.work_unit_id,
@@ -384,7 +384,7 @@ def _modelo_event_payload(evidence: _ModeloExportEvidence) -> dict[str, str] | N
     return payload
 
 
-def _add_modelo_provenance(payload: dict[str, str], evidence: _ModeloExportEvidence) -> None:
+def _add_modelo_provenance(payload: dict[str, str], evidence: ModeloExportEvidence) -> None:
     prior = evidence.prior_domiciliation_election
     if prior.baseline_filing_record_id is not None:
         payload.update(
@@ -453,8 +453,8 @@ def modelo_export_evidence_problem(
     if verified is document:
         return f"{label} receipt does not prove its canonical export event and sandbox destination"
     try:
-        evidence = _ModeloExportEvidence.model_validate_json(
-            canonical_json_bytes({key: result[key] for key in _ModeloExportEvidence.model_fields if key in result}),
+        evidence = ModeloExportEvidence.model_validate_json(
+            canonical_json_bytes({key: result[key] for key in ModeloExportEvidence.model_fields if key in result}),
         )
         artifact = Path(evidence.output_path)
         if artifact.stat().st_size != evidence.byte_size:

@@ -13,14 +13,14 @@ from dev.first_party_source import is_test_source
 from dev.paths import REPO_ROOT, UTF_8
 
 from .import_signal_projection import (
-    _contract_path_deductions,
-    _ContractPath,
-    _diagnostic_deductions,
-    _remediation_lanes,
+    ContractPath,
+    contract_path_deductions,
+    import_signal_projection_diagnostic_deductions,
+    remediation_lanes,
 )
-from .signal_values import _HOTSPOT_LIMIT, _is_json_object
+from .signal_values import HOTSPOT_LIMIT, is_json_object
 
-_IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
+IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
 
 
 _DIAGNOSTIC_RE: Final[re.Pattern[str]] = re.compile(r"^\[([A-Z][A-Z0-9_]*)\]")
@@ -81,7 +81,7 @@ def _diagnostic_target(code: str, message: str, path: str) -> str | None:
     return None
 
 
-class _ImportBoundariesProcessor:
+class ImportBoundariesProcessor:
     """Reduce the import gate transcript to stable counters."""
 
     def __init__(self) -> None:
@@ -93,7 +93,7 @@ class _ImportBoundariesProcessor:
         self.operational_failure = False
         self._current_forbidden_edge: tuple[str, str] | None = None
         self._current_contract_path: list[str] | None = None
-        self._contract_paths: list[_ContractPath] = []
+        self._contract_paths: list[ContractPath] = []
         self._diagnostic_files: set[str] = set()
         self._diagnostic_locations: Counter[str] = Counter()
         self._diagnostic_location_codes: defaultdict[str, Counter[str]] = defaultdict(Counter)
@@ -109,7 +109,7 @@ class _ImportBoundariesProcessor:
             structured = json.loads(text)
         except json.JSONDecodeError:
             structured = None
-        if _is_json_object(structured) and structured.get("event") == "import_health":
+        if is_json_object(structured) and structured.get("event") == "import_health":
             self._health_payload = structured
             return
         if _consume_contract_prefix(self, text):
@@ -142,7 +142,7 @@ class _ImportBoundariesProcessor:
         )
         if edges:
             self._contract_paths.append(
-                _ContractPath(
+                ContractPath(
                     forbidden_from=self._current_forbidden_edge[0],
                     forbidden_to=self._current_forbidden_edge[1],
                     normalized=normalized,
@@ -163,8 +163,8 @@ class _ImportBoundariesProcessor:
     ) -> dict[str, object]:
         broken = self.contracts["broken"]
         diagnostic_total = sum(self.diagnostics.values())
-        contract_deductions = _contract_path_deductions(self)
-        diagnostic_deductions = _diagnostic_deductions(self)
+        contract_deductions = contract_path_deductions(self)
+        diagnostic_deductions = import_signal_projection_diagnostic_deductions(self)
         if self._health_payload is not None:
             payload = dict(self._health_payload)
             payload.pop("event", None)
@@ -206,8 +206,8 @@ class _ImportBoundariesProcessor:
             "deductions": {
                 "contract_paths": contract_deductions,
                 "diagnostic_signal": diagnostic_deductions,
-                "hotspot_limit": _HOTSPOT_LIMIT,
-                "remediation_lanes": _remediation_lanes(self),
+                "hotspot_limit": HOTSPOT_LIMIT,
+                "remediation_lanes": remediation_lanes(self),
                 "schema_version": 1,
             },
             "diagnostics": {
@@ -235,7 +235,7 @@ class _ImportBoundariesProcessor:
         }
 
 
-def _consume_contract_prefix(self: _ImportBoundariesProcessor, text: str) -> bool:
+def _consume_contract_prefix(self: ImportBoundariesProcessor, text: str) -> bool:
     """Consume contract prefix."""
     forbidden_edge = _FORBIDDEN_EDGE_RE.fullmatch(text)
     if forbidden_edge:
@@ -258,7 +258,7 @@ def _consume_contract_prefix(self: _ImportBoundariesProcessor, text: str) -> boo
     return False
 
 
-def _consume_import_census(self: _ImportBoundariesProcessor, text: str) -> bool:
+def _consume_import_census(self: ImportBoundariesProcessor, text: str) -> bool:
     """Consume import census."""
     analyzed = _ANALYZED_RE.fullmatch(text)
     if analyzed:
@@ -275,7 +275,7 @@ def _consume_import_census(self: _ImportBoundariesProcessor, text: str) -> bool:
     return False
 
 
-def _consume_import_diagnostic(self: _ImportBoundariesProcessor, text: str) -> None:
+def _consume_import_diagnostic(self: ImportBoundariesProcessor, text: str) -> None:
     """Consume import diagnostic."""
     diagnostic = _DIAGNOSTIC_RE.match(text)
     if diagnostic and diagnostic.group(1) in _OPERATIONAL_CODES:

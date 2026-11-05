@@ -24,12 +24,12 @@ from cadrumo.core.directory_scan import scan_directory
 from .. import advisory
 from ..advisory import (
     AdvisoryDimension,
-    _overall,
-    _total_findings,
+    advisory_overall,
     allocate_run_dir,
     persist,
     render_text,
     to_json,
+    total_findings,
 )
 from ..report import DimensionReport, Status
 from ..security import SecurityOutcome, SecurityResult, classify_semgrep_output
@@ -137,7 +137,7 @@ def test_overall_is_green_when_every_dimension_is_green() -> None:
         _dim("b", Status.GREEN, "clean"),
     )
 
-    assert _overall(dimensions) is Status.GREEN
+    assert advisory_overall(dimensions) is Status.GREEN
 
 
 def test_overall_is_amber_when_no_dimension_is_red_but_one_is_amber() -> None:
@@ -146,7 +146,7 @@ def test_overall_is_amber_when_no_dimension_is_red_but_one_is_amber() -> None:
         _dim("b", Status.AMBER, "3 clones"),
     )
 
-    assert _overall(dimensions) is Status.AMBER
+    assert advisory_overall(dimensions) is Status.AMBER
 
 
 def test_overall_is_red_when_any_dimension_is_red_even_with_amber_present() -> None:
@@ -155,7 +155,7 @@ def test_overall_is_red_when_any_dimension_is_red_even_with_amber_present() -> N
         _dim("b", Status.AMBER, "3 clones"),
     )
 
-    assert _overall(dimensions) is Status.RED
+    assert advisory_overall(dimensions) is Status.RED
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ def test_total_findings_prefers_structured_findings() -> None:
         findings=({"a": 1}, {"b": 2}),
     )
 
-    assert _total_findings(dimension) == 2
+    assert total_findings(dimension) == 2
 
 
 def test_total_findings_falls_back_to_the_headlines_leading_count() -> None:
@@ -183,13 +183,13 @@ def test_total_findings_falls_back_to_the_headlines_leading_count() -> None:
         details=["see `just audit-dead-weight` for the full clone list"],
     )
 
-    assert _total_findings(dimension) == 17
+    assert total_findings(dimension) == 17
 
 
 def test_total_findings_is_zero_for_a_clean_headline_with_no_leading_number() -> None:
     dimension = _dim("complexity", Status.GREEN, "no complexity hotspots")
 
-    assert _total_findings(dimension) == 0
+    assert total_findings(dimension) == 0
 
 
 # ---------------------------------------------------------------------------

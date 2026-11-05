@@ -16,7 +16,7 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from .._venv import _exclusive
+from ..venv import exclusive
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -29,7 +29,7 @@ def _start_holder(venv: Path) -> subprocess.Popen[str]:
             "-c",
             "import os, sys\n"
             "from pathlib import Path\n"
-            "from dev.env._venv import _exclusive\n"
+            "from dev.env.venv import _exclusive\n"
             "with _exclusive(Path(os.environ['CADRUMO_LOCK_PROBE_VENV'])):\n"
             "    print('held', flush=True)\n"
             "    sys.stdin.read()\n",
@@ -49,11 +49,11 @@ def test_a_live_installer_refuses_a_second_one(tmp_path: Path) -> None:
     venv = tmp_path / ".venv"
     holder = _start_holder(venv)
     try:
-        with pytest.raises(RuntimeError, match="Another dependency install already owns"), _exclusive(venv):
+        with pytest.raises(RuntimeError, match="Another dependency install already owns"), exclusive(venv):
             pass
     finally:
         holder.communicate(input="")
-    with _exclusive(venv):
+    with exclusive(venv):
         pass
 
 
@@ -63,5 +63,5 @@ def test_an_installer_killed_while_holding_the_lock_leaves_none_behind(tmp_path:
     holder = _start_holder(venv)
     holder.kill()
     holder.wait()
-    with _exclusive(venv):
+    with exclusive(venv):
         pass

@@ -16,7 +16,7 @@ from .scenario import (
 )
 
 
-def _selected_layouts(
+def selected_layouts(
     *, authority_root: Path, slices: tuple[InstalledPeriodicCliSlice, ...], year: int
 ) -> tuple[str, dict[str, ExportLayoutDefinition]]:
     """Load the same descriptor-selected layouts used by the installed CLI."""
@@ -47,7 +47,7 @@ def _selected_layouts(
     return generation, layouts
 
 
-def _selected_annual_layouts(
+def selected_annual_layouts(
     *, authority_root: Path, slices: tuple[InstalledAnnualCliSlice, ...], year: int
 ) -> tuple[str, dict[str, ExportLayoutDefinition]]:
     """Load the selected annual layouts through the same local authority descriptor."""

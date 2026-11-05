@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._paths import SRC_DIR
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -26,7 +26,7 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens(read
     naming convention is a flat set of keys and is still collected whole, which
     is the half this must not break.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (
@@ -51,7 +51,7 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens(read
 
 def test_a_key_suffix_is_not_an_identity_wrapped_catalogue_key(tmp_path) -> None:
     """A local prefixing helper must not invent translations for its suffixes."""
-    from .._ast_scanner import scan_source_text, scan_source_tree
+    from ..ast_scanner import scan_source_text, scan_source_tree
 
     source = "\n".join(
         (
@@ -93,7 +93,7 @@ def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() ->
     The genuine shape must keep working, so both directions are pinned here:
     the key column reaching ``tr`` still confirms.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     prose_sink = chr(10).join(
         (
@@ -135,7 +135,7 @@ def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp
     translation-key parameter there. Both halves are pinned here: the agreeing
     name resolves, the disagreeing one yields nothing rather than guessing.
     """
-    from .._ast_scanner import scan_source_tree
+    from ..ast_scanner import scan_source_tree
 
     (tmp_path / "helpers.py").write_text(
         chr(10).join(
@@ -188,7 +188,7 @@ def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_ke
     the function must forward its OWN first parameter. A helper that calls tr on
     something else is not a key channel, and its arguments are not keys.
     """
-    from .._ast_scanner import scan_source_tree
+    from ..ast_scanner import scan_source_tree
 
     (tmp_path / "boundary.py").write_text(
         chr(10).join(
@@ -232,7 +232,7 @@ def test_a_translation_key_kwarg_is_read_through_a_conditional(tmp_path) -> None
     The negative arm matters as much: `None` is not a key, and a value that is
     not a dotted literal must not be invented into one.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (
@@ -265,7 +265,7 @@ def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -
     pins: a same-shaped table nothing reads stays unconfirmed even in a module
     that has a wrapper in it.
     """
-    from .._ast_scanner import scan_source_tree
+    from ..ast_scanner import scan_source_tree
 
     (tmp_path / "boundary.py").write_text(
         chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
@@ -316,7 +316,7 @@ def test_a_dynamic_namespace_is_read_when_its_prefix_is_selected_from_a_table() 
     with the dot, which is what proves the name is being used AS a dotted
     prefix rather than as ordinary leading text.
     """
-    from .._ast_scanner import scan_namespace_markers_in_text
+    from ..ast_scanner import scan_namespace_markers_in_text
 
     source = chr(10).join(
         (
@@ -364,7 +364,7 @@ def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index()
     key than prose is, which is why a non-string cell is carried as a position
     that can never be a key column rather than as grounds to reject the table.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     key_index = chr(10).join(
         (
@@ -422,7 +422,7 @@ def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tm
     not copy. The attribute NAME must be read into a translator for its
     literals to count -- the same bargain the dict and row-table shapes strike.
     """
-    from .._ast_scanner import scan_source_tree
+    from ..ast_scanner import scan_source_tree
 
     (tmp_path / "boundary.py").write_text(
         chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
@@ -469,7 +469,7 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
     """
     import ast
 
-    from .._ast_key_policy import _TRANSLATION_KEY_KWARGS
+    from ..ast_key_policy import TRANSLATION_KEY_KWARGS
 
     def _names_the_translation_key_type(annotation: ast.expr | None) -> bool:
         if isinstance(annotation, ast.Name):
@@ -493,7 +493,7 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
                 annotated.add(node.arg)
 
     assert annotated, "no TranslationKey-annotated parameter was found, so this proved nothing"
-    undeclared = sorted(annotated - set(_TRANSLATION_KEY_KWARGS))
+    undeclared = sorted(annotated - set(TRANSLATION_KEY_KWARGS))
     assert not undeclared, (
         "these parameters are annotated TranslationKey but are not declared translation-key "
         f"kwargs, so every dotted literal passed to one is invisible to the scanner: {undeclared}"
@@ -523,7 +523,7 @@ def test_a_column_table_handed_to_a_shared_fitter_is_still_confirmed() -> None:
     helper that indexes the PROSE column confirms nothing, however many tables
     are handed to it.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     handed_over = chr(10).join(
         (
@@ -570,7 +570,7 @@ def test_a_row_table_written_inline_at_the_call_site_is_confirmed() -> None:
     inline table handed to a helper that never translates stays out, so being
     anonymous buys no shortcut past confirmation.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     confirmed = chr(10).join(
         (
@@ -632,7 +632,7 @@ def test_a_key_held_in_a_local_is_confirmed_by_the_translator_that_reads_it() ->
     `destination = "workbench.home"` handed to a router is not a translation,
     and only the name reaching a TRANSLATOR admits its literals.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (
@@ -662,8 +662,8 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     """
     import ast
 
-    from .._ast_key_flows import _flow_confirmed_local_key_names
-    from .._ast_scanner import scan_source_text
+    from ..ast_key_flows import flow_confirmed_local_key_names
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (
@@ -676,7 +676,7 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
         )
     )
 
-    assert not _flow_confirmed_local_key_names(ast.parse(source)), (
+    assert not flow_confirmed_local_key_names(ast.parse(source)), (
         "the local rule must not claim a name bound to a registry; its value is not a key expression"
     )
 
@@ -692,7 +692,7 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
         )
     )
 
-    assert not _flow_confirmed_local_key_names(ast.parse(derived)), (
+    assert not flow_confirmed_local_key_names(ast.parse(derived)), (
         "a local bound to a call is not a key expression, whatever literals the call mentions"
     )
 
@@ -706,7 +706,7 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
 
 def test_a_mapping_get_literal_fallback_reaching_translation_is_discovered() -> None:
     """A runtime fallback needs no scanner-only aggregate registry."""
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (
@@ -746,7 +746,7 @@ def test_a_guard_that_admits_only_authored_keys_declares_them(tmp_path) -> None:
     arm is a guard over a name nothing translates: an allow-list of choice ids
     is the same shape and proves nothing about copy, so it stays out.
     """
-    from .._ast_scanner import scan_source_tree
+    from ..ast_scanner import scan_source_tree
 
     (tmp_path / "boundary.py").write_text(
         chr(10).join(("def ledger_copy(key, **values):", "    return tr(key, **values)")),
@@ -803,7 +803,7 @@ def test_a_function_whose_every_return_is_a_key_is_followed_into_its_caller() ->
     not a key factory, and none of its literals count. Without that, this would
     collect from any function that mentions a dotted string.
     """
-    from .._ast_scanner import scan_source_text
+    from ..ast_scanner import scan_source_text
 
     source = chr(10).join(
         (

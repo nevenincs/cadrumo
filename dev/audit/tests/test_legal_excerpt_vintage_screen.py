@@ -37,11 +37,11 @@ from ..legal_excerpt_vintage_screen import (
     Finding,
     OracleKind,
     Verdict,
-    _classify,
-    _is_vintaged,
     article_payloads,
+    classify,
     clause_chunks,
     confirms_citation,
+    is_vintaged,
     norm_root,
     screen,
     summarise,
@@ -238,11 +238,11 @@ def test_a_norm_named_after_its_own_year_is_not_a_declared_vintage() -> None:
     suffix called 29 bare-norm excerpts vintaged the moment the population
     widened. A vintage year FOLLOWS a citation token; a norm year does not.
     """
-    assert _is_vintaged("ley-35-2006-art-52-2015")
-    assert _is_vintaged("ley-58-2003-da-18-2021")
-    assert not _is_vintaged("orden-hac-590-2021")
-    assert not _is_vintaged("trlirnr-rdleg-5-2004")
-    assert not _is_vintaged("ley-12-2002")
+    assert is_vintaged("ley-35-2006-art-52-2015")
+    assert is_vintaged("ley-58-2003-da-18-2021")
+    assert not is_vintaged("orden-hac-590-2021")
+    assert not is_vintaged("trlirnr-rdleg-5-2004")
+    assert not is_vintaged("ley-12-2002")
 
 
 def test_the_article_payload_population_is_reached_through_its_own_oracle() -> None:
@@ -384,7 +384,7 @@ def test_a_superset_excerpt_no_longer_hides_inside_matches() -> None:
         corpus / "rd-1065-2007.html.extracted.json", anchor="a25", include_title=True
     )
     current_title, _, current_text = rendered.partition("\n")
-    finding = _classify(
+    finding = classify(
         "rd-1065-2007:art-25",
         {},
         "rd-1065-2007-art-25",
@@ -470,8 +470,8 @@ def test_a_declared_vintage_is_still_a_vintage_when_it_carries_more() -> None:
     findings = screen(_REPO_ROOT).findings
     vintaged = [item for item in findings if item.verdict is Verdict.VINTAGED]
     assert vintaged
-    assert all(_is_vintaged(item.detail) for item in vintaged)
-    assert not any(_is_vintaged(item.detail) for item in findings if item.verdict is Verdict.EXCERPT_CARRIES_MORE)
+    assert all(is_vintaged(item.detail) for item in vintaged)
+    assert not any(is_vintaged(item.detail) for item in findings if item.verdict is Verdict.EXCERPT_CARRIES_MORE)
 
 
 def test_the_catalogue_citation_token_binds_the_unit_compared_against() -> None:
@@ -512,7 +512,7 @@ def test_comparable_oracles_always_contribute_clauses() -> None:
 
 def test_short_operative_provisions_remain_comparable() -> None:
     assert clause_chunks("Suprimido.") == ("suprimido.",)
-    finding = _classify(
+    finding = classify(
         "test:art-1",
         {},
         "test-art-1",

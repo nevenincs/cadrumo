@@ -73,16 +73,16 @@ from typing import Final
 
 import pytest
 
-from ._tax_literal_sweep_visitor import (
-    _current,
+from .tax_literal_sweep_visitor import (
+    current,
     sweep_source,
     sweep_tree,
 )
-from ._tax_literal_sweep_vocabulary import (
-    _SRC,
-    _modelo_ids,
-    _period_codes,
-    _reader_name,
+from .tax_literal_sweep_vocabulary import (
+    SRC,
+    modelo_ids,
+    period_codes,
+    reader_name,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -812,11 +812,11 @@ def test_a_machine_owner_may_compare_sizes_but_not_hold_a_tax_value() -> None:
 
 
 def test_a_defect_added_to_a_copied_tree_is_found(tmp_path: Path) -> None:
-    source = _SRC / "domain" / "period.py"
+    source = SRC / "domain" / "period.py"
     copy = tmp_path / "domain" / "period.py"
     copy.parent.mkdir(parents=True)
     copy.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-    modelos, periods = _modelo_ids(), _period_codes()
+    modelos, periods = modelo_ids(), period_codes()
     clean = sweep_tree(tmp_path, modelos=modelos, periods=periods)
 
     with copy.open("a", encoding="utf-8") as handle:
@@ -848,12 +848,12 @@ def _strict_reads_in_validators(tree: ast.AST) -> list[tuple[int, str]]:
     for function in ast.walk(tree):
         if not isinstance(function, ast.FunctionDef):
             continue
-        decorators = {_reader_name(n) for d in function.decorator_list for n in ast.walk(d)}
+        decorators = {reader_name(n) for d in function.decorator_list for n in ast.walk(d)}
         if decorators & _VALIDATOR_DECORATORS:
             found += [
                 (call.lineno, function.name)
                 for call in ast.walk(function)
-                if isinstance(call, ast.Call) and _reader_name(call.func) in _STRICT_FORM_READERS
+                if isinstance(call, ast.Call) and reader_name(call.func) in _STRICT_FORM_READERS
             ]
     return found
 
@@ -882,6 +882,6 @@ def test_no_validator_turns_a_valid_client_result_into_an_error() -> None:
 
 
 def test_the_tax_code_holds_no_tax_literal() -> None:
-    found = _current()
+    found = current()
     listing = "\n".join(f"{path}: {entry}" for path, entries in sorted(found.items()) for entry in entries)
     assert not found, f"a tax value belongs to the registry:\n{listing}"

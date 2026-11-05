@@ -33,7 +33,7 @@ inside its own table.
 _UNSAFE_LINK_CHARS: Final[frozenset[str]] = frozenset({"<", ">", '"', "'", "`", "\\"})
 
 
-def _validate_authored_text(value: str, *, path: Path, legal_id: str, field: str) -> str:
+def validate_authored_text(value: str, *, path: Path, legal_id: str, field: str) -> str:
     """Reject authored control characters before text enters generated RST."""
     if any(unicodedata.category(char).startswith("C") for char in value):
         raise LegalReferenceError(
@@ -42,9 +42,9 @@ def _validate_authored_text(value: str, *, path: Path, legal_id: str, field: str
     return value
 
 
-def _validate_boe_permalink(value: str, *, path: Path, legal_id: str) -> str:
+def validate_boe_permalink(value: str, *, path: Path, legal_id: str) -> str:
     """Validate an authored BOE URL before it enters an RST link target."""
-    _validate_authored_text(value, path=path, legal_id=legal_id, field="permalink")
+    validate_authored_text(value, path=path, legal_id=legal_id, field="permalink")
     if any(char.isspace() for char in value) or any(char in _UNSAFE_LINK_CHARS for char in value):
         raise LegalReferenceError(
             f"{path}: legal entry {legal_id!r} field 'permalink' contains unsafe URL characters",
@@ -66,7 +66,7 @@ def _required_string(body: dict[str, object], key: str, *, path: Path, legal_id:
     value = body.get(key)
     if not isinstance(value, str) or not value.strip():
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} requires string field {key!r}")
-    return _validate_authored_text(value, path=path, legal_id=legal_id, field=key)
+    return validate_authored_text(value, path=path, legal_id=legal_id, field=key)
 
 
 def _optional_string(body: dict[str, object], key: str, *, path: Path, legal_id: str) -> str | None:
@@ -75,7 +75,7 @@ def _optional_string(body: dict[str, object], key: str, *, path: Path, legal_id:
         return None
     if not isinstance(value, str):
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field {key!r} must be a string")
-    return _validate_authored_text(value, path=path, legal_id=legal_id, field=key)
+    return validate_authored_text(value, path=path, legal_id=legal_id, field=key)
 
 
 def _optional_date(body: dict[str, object], key: str, *, path: Path, legal_id: str) -> date | None:
@@ -98,11 +98,11 @@ def required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tupl
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
     string_items = tuple(item for item in items if isinstance(item, str))
     return tuple(
-        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text") for item in string_items
+        validate_authored_text(item, path=path, legal_id=legal_id, field="required_text") for item in string_items
     )
 
 
-def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisionRecord:
+def record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisionRecord:
     if not isinstance(body, dict):
         raise LegalReferenceError(f"{path}: [legal.{legal_id!r}] must be a table")
     table = cast(dict[str, object], body)
@@ -113,7 +113,7 @@ def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisio
             f"{path}: legal entry {legal_id!r} contains unknown field(s): {fields}",
         )
     permalink = _required_string(table, "permalink", path=path, legal_id=legal_id)
-    _validate_boe_permalink(permalink, path=path, legal_id=legal_id)
+    validate_boe_permalink(permalink, path=path, legal_id=legal_id)
     return LegalProvisionRecord(
         legal_id=legal_id,
         kind=_required_string(table, "kind", path=path, legal_id=legal_id),

@@ -13,8 +13,8 @@ from ..installed_parity import (
     COMPARED_FIELDS,
     CalendarParityError,
     CalendarWindow,
-    _fresh_cli_calendar,
     compare_rows,
+    fresh_cli_calendar,
     parse_cli_calendar,
     parse_tui_detail,
 )
@@ -86,10 +86,10 @@ def test_post_tui_cli_calendar_uses_fresh_proof_for_both_formats(refused: bool) 
     window = CalendarWindow.for_evaluation(date(2026, 9, 23))
     if refused:
         with pytest.raises(CalendarParityError, match="fresh-proof refusal"):
-            _fresh_cli_calendar(cli, window)
+            fresh_cli_calendar(cli, window)
         assert calls == [("json", True)]
     else:
-        rows, authentication = _fresh_cli_calendar(cli, window)
+        rows, authentication = fresh_cli_calendar(cli, window)
         assert rows == _cli_rows()
         assert authentication == "stdin_secret"
         assert calls == [("json", True), ("text", True)]

@@ -143,7 +143,7 @@ def test_every_source_package_is_audited_and_a_scriptless_one_supplies_edges(tmp
 
 def test_each_audited_package_reads_its_own_shipped_payloads(tmp_path: Path) -> None:
     """A locale catalogue of the second package clears that package's data-shaped member."""
-    from ..unreachable_references import _data_tokens
+    from ..unreachable_references import unreachable_references_data_tokens
 
     _write_repository(
         tmp_path,
@@ -162,7 +162,7 @@ def test_each_audited_package_reads_its_own_shipped_payloads(tmp_path: Path) -> 
         data_globs=("locales/**/*.json",),
     )
 
-    assert {"first_token", "second_token"} <= _data_tokens(spec)
+    assert {"first_token", "second_token"} <= unreachable_references_data_tokens(spec)
 
 
 def test_packaging_hooks_clear_resolved_consumers_but_not_lookalikes_or_tests(tmp_path: Path) -> None:

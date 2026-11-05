@@ -36,7 +36,7 @@ def _site_root(repo_root: Path) -> Path:
     return docs_html_root(repo_root)
 
 
-def _clear_apex(html_root: Path) -> None:
+def clear_apex(html_root: Path) -> None:
     """Remove everything at the apex except the language roots.
 
     The apex is composed afresh on every publish, but each language root keeps
@@ -56,7 +56,7 @@ def _clear_apex(html_root: Path) -> None:
             entry.unlink()
 
 
-def _write_apex_sitemap(html_root: Path) -> Path:
+def write_apex_sitemap(html_root: Path) -> Path:
     """Write the apex sitemap as an index of every language root's own sitemap."""
     sitemaps = "".join(
         f"  <sitemap><loc>{language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
@@ -110,7 +110,7 @@ def _write_apex_error_page(source: Path, destination: Path) -> Path:
     return destination
 
 
-def _compose_apex(html_root: Path) -> None:
+def compose_apex(html_root: Path) -> None:
     """Give the apex its language entry, error page and sitemap index.
 
     The apex carries no copy of any site, and no pages of its own beyond these.
@@ -123,10 +123,10 @@ def _compose_apex(html_root: Path) -> None:
     write_language_entry(html_root)
     source = html_root / OutputLanguage.EN.value
     _write_apex_error_page(source / "404.html", html_root / "404.html")
-    _write_apex_sitemap(html_root)
+    write_apex_sitemap(html_root)
 
 
-def _run_site_builds(
+def run_site_builds(
     repo_root: Path,
     html_root: Path,
     *,
@@ -217,7 +217,7 @@ def _validate_built_roots(html_root: Path, builds: Sequence[SiteBuild]) -> None:
         )
 
 
-def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]:
+def produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]:
     """Produce every published language root and return where each one landed.
 
     The ONE place the published pages come from. Everything after it -- the one
@@ -238,7 +238,7 @@ def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]
     Returns:
         ``{language: root directory}`` for every published language.
     """
-    _run_site_builds(repo_root, html_root)
+    run_site_builds(repo_root, html_root)
     return {language: html_root / language for language in localized_languages()}
 
 
@@ -266,7 +266,7 @@ def indexed_roots(roots: Mapping[str, Path]) -> list[IndexedRoot]:
     ]
 
 
-def _index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> None:
+def index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> None:
     """Build the site's ONE search index over every published root, at the apex.
 
     Runs after every root is produced, because the index spans all of them. Each
@@ -331,10 +331,10 @@ def build_site_roots(repo_root: Path) -> Path:
         The composed HTML root, carrying every published root and the one index.
     """
     html_root = _site_root(repo_root)
-    _clear_apex(html_root)
-    roots = _produce_language_roots(repo_root, html_root)
-    _index_site(repo_root, html_root, roots)
-    _compose_apex(html_root)
+    clear_apex(html_root)
+    roots = produce_language_roots(repo_root, html_root)
+    index_site(repo_root, html_root, roots)
+    compose_apex(html_root)
     return html_root
 
 

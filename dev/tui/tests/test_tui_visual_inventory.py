@@ -20,8 +20,8 @@ from pydantic import ValidationError
 
 from dev.paths import UTF_8
 
-from .. import _coverage, _diff, _harness, _inventory, _raster
-from .._artifacts import (
+from .. import coverage, diff, harness_support, inventory, raster
+from ..artifacts import (
     MANIFEST_SCHEMA_VERSION,
     FailedFrame,
     FrameFailureKind,
@@ -31,17 +31,15 @@ from .._artifacts import (
     SequenceProvenance,
     SkippedFrame,
     ThemeName,
+    digest,
     now,
     read_manifest,
     unaccounted_frames,
     write_index,
     write_manifest,
 )
-from .._artifacts import (
-    digest as _artifacts_digest,
-)
-from .._inventory import InterfaceKind
-from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
+from ..inventory import InterfaceKind
+from ..viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,8 +51,8 @@ def test_the_pinned_font_file_still_carries_the_pinned_digest() -> None:
     """The pin names the committed file, not a file that has since changed."""
     from hashlib import sha256
 
-    assert _raster.FONT_PATH.is_file()
-    assert sha256(_raster.FONT_PATH.read_bytes()).hexdigest() == _raster.FONT_SHA256
+    assert raster.FONT_PATH.is_file()
+    assert sha256(raster.FONT_PATH.read_bytes()).hexdigest() == raster.FONT_SHA256
 
 
 def test_every_default_viewport_resolves_and_both_orientations_are_covered() -> None:
@@ -79,7 +77,7 @@ def test_the_inventory_finds_transitively_derived_interfaces() -> None:
     and the surface an operator logs in through would vanish from the
     inventory.
     """
-    found = {interface.name: interface for interface in _inventory.scan()}
+    found = {interface.name: interface for interface in inventory.scan()}
     assert "CredentialScreen" in found
     assert found["CredentialScreen"].is_base
     assert found["RegistrationScreen"].kind == "screen"
@@ -114,12 +112,12 @@ def test_every_interface_the_real_tree_declares_carries_a_declared_kind() -> Non
     a third kind of surface appearing in the tree cannot be represented and
     must be a visible failure rather than a quietly mislabelled row.
     """
-    for interface in _inventory.scan():
+    for interface in inventory.scan():
         assert interface.kind in frozenset(InterfaceKind), interface.qualname
 
 
 def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:
-    for interface in _inventory.scan():
+    for interface in inventory.scan():
         assert "tests" not in interface.path.parts
         assert interface.path.is_file()
         assert interface.line >= 1
@@ -127,12 +125,12 @@ def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:
 
 def test_coverage_is_derived_without_a_classification_inventory() -> None:
     """Every result follows from class shape and an executable registry row."""
-    interfaces = _inventory.scan()
+    interfaces = inventory.scan()
     leaf = next(interface for interface in interfaces if not interface.is_base)
     table = {"fixture": (leaf.qualname,)}
 
-    _coverage.check(interfaces, ("fixture",), rendered_table=table)
-    derived = _coverage.notes(interfaces, ("fixture",), rendered_table=table)
+    coverage.check(interfaces, ("fixture",), rendered_table=table)
+    derived = coverage.notes(interfaces, ("fixture",), rendered_table=table)
 
     assert set(derived) == {interface.qualname for interface in interfaces}
     assert derived[leaf.qualname] == "rendered"
@@ -141,13 +139,13 @@ def test_coverage_is_derived_without_a_classification_inventory() -> None:
 
 def test_coverage_check_bites_on_unknown_surfaces_and_interfaces() -> None:
     """Detector teeth for both sides of the live registry join."""
-    interfaces = _inventory.scan()
+    interfaces = inventory.scan()
     known = interfaces[0].qualname
 
-    with pytest.raises(_coverage.CoverageError, match="unknown surface"):
-        _coverage.check(interfaces, ("fixture",), rendered_table={"removed": (known,)})
-    with pytest.raises(_coverage.CoverageError, match="unknown interface"):
-        _coverage.check(
+    with pytest.raises(coverage.CoverageError, match="unknown surface"):
+        coverage.check(interfaces, ("fixture",), rendered_table={"removed": (known,)})
+    with pytest.raises(coverage.CoverageError, match="unknown interface"):
+        coverage.check(
             interfaces,
             ("fixture",),
             rendered_table={"fixture": ("cadrumo.entrypoints.tui.removed.StaleScreen",)},
@@ -157,17 +155,17 @@ def test_coverage_check_bites_on_unknown_surfaces_and_interfaces() -> None:
 def test_the_live_registry_names_only_live_surfaces_and_interfaces() -> None:
     """The render command's own join over the real fixture and sequence registry, so a page that
     claims a widget or a removed screen fails here rather than when a review run starts."""
-    surfaces = _harness.reviewable_surface_names(_harness.surfaces(), _harness.scenarios())
+    surfaces = harness_support.reviewable_surface_names(harness_support.surfaces(), harness_support.scenarios())
 
-    _coverage.check(_inventory.scan(), surfaces, rendered_table=_harness.coverage())
+    coverage.check(inventory.scan(), surfaces, rendered_table=harness_support.coverage())
 
 
 def test_unrendered_reports_only_concrete_leaf_interfaces() -> None:
-    interfaces = _inventory.scan()
+    interfaces = inventory.scan()
     leaves = tuple(interface for interface in interfaces if not interface.is_base)
     painted = leaves[0]
 
-    missing = _coverage.unrendered(
+    missing = coverage.unrendered(
         interfaces,
         ("fixture",),
         rendered_table={"fixture": (painted.qualname,)},
@@ -311,7 +309,7 @@ def test_rasterising_a_real_export_produces_the_declared_cell_grid(real_export: 
     """
     svg = real_export
     destination = tmp_path / "frame.png"
-    result = _raster.rasterise(svg, destination, cell_height=20)
+    result = raster.rasterise(svg, destination, cell_height=20)
 
     assert result.path == destination
     width, height = Image.open(destination).size
@@ -319,9 +317,9 @@ def test_rasterising_a_real_export_produces_the_declared_cell_grid(real_export: 
     # The SVG states its own terminal extent; the PNG must be exactly that
     # many rows tall, so a drifted row mapping cannot pass by rounding.
     markup = svg.read_text(encoding=UTF_8)
-    terminal = _raster._TERMINAL_CLIP.search(markup)
+    terminal = raster.TERMINAL_CLIP.search(markup)
     assert terminal is not None
-    cell_width_units, cell_height_units = _raster._cell_size(markup)
+    cell_width_units, cell_height_units = raster.cell_size(markup)
     expected_rows = round(float(terminal["height"]) / cell_height_units)
     expected_columns = round(float(terminal["width"]) / cell_width_units)
 
@@ -339,31 +337,31 @@ def test_the_cell_is_measured_on_drawn_text_even_when_padding_dominates(real_exp
     terminal width over the viewport's declared column count.
     """
     markup = real_export.read_text(encoding=UTF_8)
-    terminal = _raster._TERMINAL_CLIP.search(markup)
-    first_run = _raster._TEXT_RUN.search(markup)
+    terminal = raster.TERMINAL_CLIP.search(markup)
+    first_run = raster.TEXT_RUN.search(markup)
     assert terminal is not None and first_run is not None
     true_width = float(terminal["width"]) / resolve("medium").columns
     padding = "".join(
         f'<text class="{first_run["klass"]}" x="0" y="{first_run["y"]}" textLength="{4 * true_width}">'
         "&#160;&#160;&#160;&#160;</text>"
-        for _ in range(4 * len(_raster._TEXT_RUN.findall(markup)))
+        for _ in range(4 * len(raster.TEXT_RUN.findall(markup)))
     )
     padded = tmp_path / "padded.svg"
     padded.write_text(markup.replace("</svg>", f"{padding}</svg>"), encoding=UTF_8)
 
-    measured_width, _ = _raster._cell_size(padded.read_text(encoding=UTF_8))
+    measured_width, _ = raster.cell_size(padded.read_text(encoding=UTF_8))
     assert measured_width == pytest.approx(true_width, rel=0.02)
     assert (
-        Image.open(_raster.rasterise(padded, tmp_path / "padded.png", cell_height=20).path).size
-        == Image.open(_raster.rasterise(real_export, tmp_path / "plain.png", cell_height=20).path).size
+        Image.open(raster.rasterise(padded, tmp_path / "padded.png", cell_height=20).path).size
+        == Image.open(raster.rasterise(real_export, tmp_path / "plain.png", cell_height=20).path).size
     )
 
 
 def test_raising_the_cell_height_raises_the_resolution_proportionally(real_export: Path, tmp_path: Path) -> None:
     """The same frame at a larger cell is the same grid, more pixels."""
     svg = real_export
-    small = Image.open(_raster.rasterise(svg, tmp_path / "small.png", cell_height=14).path).size
-    large = Image.open(_raster.rasterise(svg, tmp_path / "large.png", cell_height=28).path).size
+    small = Image.open(raster.rasterise(svg, tmp_path / "small.png", cell_height=14).path).size
+    large = Image.open(raster.rasterise(svg, tmp_path / "large.png", cell_height=28).path).size
     assert large[1] == small[1] * 2
     assert large[0] > small[0]
 
@@ -372,8 +370,8 @@ def test_rasterising_a_document_that_is_not_a_terminal_refuses(tmp_path: Path) -
     """A non-terminal SVG must refuse rather than write a plausible blank."""
     stray = tmp_path / "stray.svg"
     stray.write_text('<svg viewBox="0 0 10 10"><rect x="0" y="0" width="10" height="10"/></svg>', encoding=UTF_8)
-    with pytest.raises(_raster.RasterError):
-        _raster.rasterise(stray, tmp_path / "out.png")
+    with pytest.raises(raster.RasterError):
+        raster.rasterise(stray, tmp_path / "out.png")
 
 
 def _frame(key: str, *, png_digest: str, text_digest: str) -> RenderedFrame:
@@ -419,9 +417,9 @@ def test_a_diff_of_a_run_against_itself_reports_no_change(tmp_path: Path) -> Non
     frames = (_frame("status/small/dark", png_digest="a" * 64, text_digest="b" * 64),)
     directory = _run(tmp_path, "one", frames, "same\n")
     manifest = read_manifest(directory)
-    diffs = _diff.compare(directory, manifest, directory, manifest)
-    assert [entry.change for entry in diffs] == [_diff.Change.UNCHANGED]
-    assert "no change" in _diff.render_report(diffs)
+    diffs = diff.compare(directory, manifest, directory, manifest)
+    assert [entry.change for entry in diffs] == [diff.Change.UNCHANGED]
+    assert "no change" in diff.render_report(diffs)
 
 
 def test_a_diff_separates_pixel_change_from_text_change(tmp_path: Path) -> None:
@@ -431,8 +429,8 @@ def test_a_diff_separates_pixel_change_from_text_change(tmp_path: Path) -> None:
     baseline = _run(tmp_path, "before", before, "same\n")
     candidate = _run(tmp_path, "after", after, "same\n")
 
-    diffs = _diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
-    assert diffs[0].change is _diff.Change.CHANGED
+    diffs = diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
+    assert diffs[0].change is diff.Change.CHANGED
     assert diffs[0].pixels_differ
     assert not diffs[0].text_differ
     assert diffs[0].text_diff == ""
@@ -444,7 +442,7 @@ def test_a_text_change_carries_a_readable_unified_diff(tmp_path: Path) -> None:
     baseline = _run(tmp_path, "before", before, "Estado\nAvisos\n")
     candidate = _run(tmp_path, "after", after, "Estado\nAlertas\n")
 
-    diffs = _diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
+    diffs = diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
     assert diffs[0].text_differ
     assert "-Avisos" in diffs[0].text_diff
     assert "+Alertas" in diffs[0].text_diff
@@ -463,10 +461,10 @@ def test_a_diff_names_added_and_removed_frames(tmp_path: Path) -> None:
         (_frame("login/small/dark", png_digest="a" * 64, text_digest="b" * 64),),
         "x\n",
     )
-    diffs = _diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
+    diffs = diff.compare(baseline, read_manifest(baseline), candidate, read_manifest(candidate))
     changes = {entry.key: entry.change for entry in diffs}
-    assert changes["status/small/dark"] is _diff.Change.REMOVED
-    assert changes["login/small/dark"] is _diff.Change.ADDED
+    assert changes["status/small/dark"] is diff.Change.REMOVED
+    assert changes["login/small/dark"] is diff.Change.ADDED
 
 
 def test_a_highlight_refuses_to_compare_frames_of_different_shapes(tmp_path: Path) -> None:
@@ -474,7 +472,7 @@ def test_a_highlight_refuses_to_compare_frames_of_different_shapes(tmp_path: Pat
     small, large = tmp_path / "small.png", tmp_path / "large.png"
     Image.new("RGB", (100, 100), "#000000").save(small)
     Image.new("RGB", (200, 100), "#000000").save(large)
-    assert _diff.write_highlight(small, large, tmp_path / "out.png") is None
+    assert diff.write_highlight(small, large, tmp_path / "out.png") is None
 
 
 def test_a_highlight_of_two_same_shaped_frames_is_written(tmp_path: Path) -> None:
@@ -484,7 +482,7 @@ def test_a_highlight_of_two_same_shaped_frames_is_written(tmp_path: Path) -> Non
     changed.putpixel((10, 10), (255, 0, 0))
     changed.save(after)
 
-    written = _diff.write_highlight(before, after, tmp_path / "out.png")
+    written = diff.write_highlight(before, after, tmp_path / "out.png")
     assert written is not None
     assert Image.open(written).size[0] > 60 * 2
 
@@ -600,8 +598,8 @@ def test_the_frame_reading_redacts_the_harness_build_timing_only() -> None:
     reports the whole matrix as changed, which is indistinguishable from
     reporting nothing.
     """
-    from .._harness import Capture
-    from .._viewports import resolve as resolve_viewport
+    from ..harness_support import Capture
+    from ..viewports import resolve as resolve_viewport
 
     header = "──────── frame 0 ──────── status · 80x24 · dark · auto · 591ms ────────"
     body = "│ Límite absoluto de la sesión 2026-08-26T21:23+00:00 │"
@@ -637,12 +635,12 @@ def test_a_glyph_the_pinned_font_lacks_is_detected_as_missing() -> None:
     really does not carry.
     """
     pixels = 20
-    font = _raster._font(pixels)
+    font = raster.raster_font(pixels)
 
-    assert _raster._is_missing(font, pixels, "\u24d8"), "the circled-i tofu must be reported"
-    assert not _raster._is_missing(font, pixels, "A")
-    assert not _raster._is_missing(font, pixels, "\u2502"), "box drawing must not read as missing"
-    assert not _raster._is_missing(font, pixels, "ñ"), "accented Spanish text must not read as missing"
+    assert raster.is_missing(font, pixels, "\u24d8"), "the circled-i tofu must be reported"
+    assert not raster.is_missing(font, pixels, "A")
+    assert not raster.is_missing(font, pixels, "\u2502"), "box drawing must not read as missing"
+    assert not raster.is_missing(font, pixels, "ñ"), "accented Spanish text must not read as missing"
 
 
 def test_rasterising_a_real_export_reports_a_glyph_the_font_lacks(real_export: Path, tmp_path: Path) -> None:
@@ -655,7 +653,7 @@ def test_rasterising_a_real_export_reports_a_glyph_the_font_lacks(real_export: P
     """
     markup = real_export.read_text(encoding=UTF_8)
     run = next(
-        (match for match in _raster._TEXT_RUN.finditer(markup) if match["content"].strip()),
+        (match for match in raster.TEXT_RUN.finditer(markup) if match["content"].strip()),
         None,
     )
     assert run is not None, "the export carries no visible text run"
@@ -665,8 +663,8 @@ def test_rasterising_a_real_export_reports_a_glyph_the_font_lacks(real_export: P
     doctored = tmp_path / "tofu.svg"
     doctored.write_text(markup[: run.start("content")] + altered + markup[run.end("content") :], encoding=UTF_8)
 
-    assert "\u24d8" in _raster.rasterise(doctored, tmp_path / "tofu.png").missing_glyphs
-    assert _raster.rasterise(real_export, tmp_path / "control.png").missing_glyphs == ()
+    assert "\u24d8" in raster.rasterise(doctored, tmp_path / "tofu.png").missing_glyphs
+    assert raster.rasterise(real_export, tmp_path / "control.png").missing_glyphs == ()
 
 
 def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
@@ -676,7 +674,7 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
     refusal, and the import error a peer's half-finished edit produced in a
     shared worktree.
     """
-    from .._harness import classify
+    from ..harness_support import classify
 
     refusal = (
         "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"
@@ -704,7 +702,7 @@ def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:
     must not be downgraded into a deterministic refusal, because downgrading
     it would skip the whole surface on the strength of a transient crash.
     """
-    from .._harness import classify
+    from ..harness_support import classify
 
     output = "Traceback (most recent call last):\n  ...\nValueError: refused: something that looks like a refusal"
     assert classify(output) is FrameFailureKind.CRASHED
@@ -712,27 +710,27 @@ def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:
 
 def test_a_harness_error_defaults_to_the_retryable_kind() -> None:
     """An unclassified failure must not silently condemn a whole surface."""
-    from .._harness import HarnessError
+    from ..harness_support import HarnessError
 
     assert HarnessError("boom").kind is FrameFailureKind.CRASHED
 
 
 def test_the_refusal_reason_is_extracted_for_the_skip_note() -> None:
     """A skipped frame must name why, in the harness's own words."""
-    from .._render import _first_refusal_line
+    from ..render import first_refusal_line
 
     detail = (
         "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"
         "refused: application.modelo.errors.profile_readiness_setup_incomplete\n"
         "the surface did not open; the session on disk is unchanged."
     )
-    assert _first_refusal_line(detail) == "application.modelo.errors.profile_readiness_setup_incomplete"
-    assert _first_refusal_line("") == "no diagnostics"
+    assert first_refusal_line(detail) == "application.modelo.errors.profile_readiness_setup_incomplete"
+    assert first_refusal_line("") == "no diagnostics"
 
 
 def test_a_crash_names_its_exception_and_where_it_was_raised() -> None:
     """A crashed frame's log line must say why, because a run that dies writes no manifest."""
-    from .._render import _crash_summary
+    from ..render import crash_summary
 
     detail = (
         "harness `open ledger-entries-add-empty --size 120x40 --theme light` exited 1\n"
@@ -742,11 +740,11 @@ def test_a_crash_names_its_exception_and_where_it_was_raised() -> None:
         "    from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES\n"
         "ModuleNotFoundError: No module named 'cadrumo'"
     )
-    assert _crash_summary(detail) == (
+    assert crash_summary(detail) == (
         "ModuleNotFoundError: No module named 'cadrumo' (at File \"dev/tui/harness/__main__.py\", line 17, in <module>)"
     )
-    assert _crash_summary("harness `open x` exited 3221225477") == "harness `open x` exited 3221225477"
-    assert _crash_summary("") == "no diagnostics"
+    assert crash_summary("harness `open x` exited 3221225477") == "harness `open x` exited 3221225477"
+    assert crash_summary("") == "no diagnostics"
 
 
 def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
@@ -840,7 +838,7 @@ def test_a_manifest_from_an_older_schema_is_refused_not_upgraded(tmp_path: Path)
     """
     import json
 
-    from .._artifacts import MANIFEST_SCHEMA_VERSION, ManifestVersionError
+    from ..artifacts import MANIFEST_SCHEMA_VERSION, ManifestVersionError
 
     stale = {
         "schema_version": MANIFEST_SCHEMA_VERSION - 1,
@@ -861,7 +859,7 @@ def test_a_manifest_with_no_schema_version_is_refused(tmp_path: Path) -> None:
     """An absent version is unknown provenance, not an implicit current one."""
     import json
 
-    from .._artifacts import ManifestVersionError
+    from ..artifacts import ManifestVersionError
 
     (tmp_path / "manifest.json").write_text(json.dumps({"generated_at": "x", "cell_height": 22}), encoding=UTF_8)
     with pytest.raises(ManifestVersionError):
@@ -909,9 +907,9 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(real_export: P
         ),
     )
 
-    result = _raster.rasterise(run / original.svg, run / original.png, cell_height=18)
+    result = raster.rasterise(run / original.svg, run / original.png, cell_height=18)
     repainted = original.model_copy(
-        update={"png_sha256": _artifacts_digest(run / original.png), "missing_glyphs": result.missing_glyphs},
+        update={"png_sha256": digest(run / original.png), "missing_glyphs": result.missing_glyphs},
     )
 
     assert repainted.png_sha256 != original.png_sha256, "the repaint must actually change the image digest"
@@ -938,7 +936,7 @@ def test_render_has_no_free_form_run_target() -> None:
 
 def test_the_canonical_review_directory_is_stable_and_singular() -> None:
     """One default name, and runs live nowhere but under `runs/`."""
-    from .._artifacts import DEFAULT_RUN_NAME, RUN_ROOT, RUNS_DIR, SCRATCH_DIR, run_directory
+    from ..artifacts import DEFAULT_RUN_NAME, RUN_ROOT, RUNS_DIR, SCRATCH_DIR, run_directory
 
     assert DEFAULT_RUN_NAME == "current"
     assert run_directory(DEFAULT_RUN_NAME) == RUNS_DIR / "current"
@@ -981,11 +979,11 @@ def test_snapshot_refuses_a_name_already_taken(tmp_path: Path, monkeypatch: pyte
     """
     import typer
 
-    from .. import _artifacts
+    from .. import artifacts
     from ..cli import snapshot_command
 
     runs = tmp_path / "runs"
-    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    monkeypatch.setattr(artifacts, "RUNS_DIR", runs)
     kept = _seed_run(runs, "baseline", "irreplaceable")
     _seed_run(runs, "current", "fresh")
 
@@ -998,11 +996,11 @@ def test_snapshot_refuses_a_name_already_taken(tmp_path: Path, monkeypatch: pyte
 
 def test_snapshot_replaces_only_when_told_to(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """``--replace`` is the explicit form, and a free name still just works."""
-    from .. import _artifacts
+    from .. import artifacts
     from ..cli import snapshot_command
 
     runs = tmp_path / "runs"
-    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    monkeypatch.setattr(artifacts, "RUNS_DIR", runs)
     kept = _seed_run(runs, "baseline", "irreplaceable")
     _seed_run(runs, "current", "fresh")
 
@@ -1049,12 +1047,12 @@ def test_every_declared_background_band_is_actually_painted(real_export: Path, t
     svg = real_export
     destination = tmp_path / "frame.png"
     cell_height = 20
-    _raster.rasterise(svg, destination, cell_height=cell_height)
+    raster.rasterise(svg, destination, cell_height=cell_height)
 
     markup = svg.read_text(encoding=UTF_8)
-    cell_width_units, cell_height_units = _raster._cell_size(markup)
+    cell_width_units, cell_height_units = raster.cell_size(markup)
     image = Image.open(destination).convert("RGB")
-    terminal = _raster._TERMINAL_CLIP.search(markup)
+    terminal = raster.TERMINAL_CLIP.search(markup)
     assert terminal is not None
     cell_width = image.width // round(float(terminal["width"]) / cell_width_units)
 
@@ -1065,7 +1063,7 @@ def test_every_declared_background_band_is_actually_painted(real_export: Path, t
     # Cells carrying a glyph are excluded: the glyph's own ink legitimately
     # differs from the band colour underneath it.
     inked: set[tuple[int, int]] = set()
-    for run in _raster._TEXT_RUN.finditer(markup):
+    for run in raster.TEXT_RUN.finditer(markup):
         row = int(float(run["y"]) // cell_height_units)
         start = round(float(run["x"]) / cell_width_units)
         for index, character in enumerate(html.unescape(run["content"])):
@@ -1075,7 +1073,7 @@ def test_every_declared_background_band_is_actually_painted(real_export: Path, t
     # Bands paint in document order and a later one covers an earlier one, as
     # in any SVG renderer; a zero-width band covers no cell at all.
     painted: dict[tuple[int, int], str] = {}
-    for band in _raster._CELL_RECT.finditer(markup):
+    for band in raster.CELL_RECT.finditer(markup):
         if float(band["width"]) <= 0 or float(band["height"]) <= 0:
             continue
         row = int(float(band["y"]) // cell_height_units)
@@ -1109,7 +1107,7 @@ def test_a_zero_width_band_paints_no_cell(real_export: Path, tmp_path: Path) -> 
     frame never uses, placed last so nothing paints over it, is the proof.
     """
     markup = real_export.read_text(encoding=UTF_8)
-    last = list(_raster._CELL_RECT.finditer(markup))[-1]
+    last = list(raster.CELL_RECT.finditer(markup))[-1]
     phantom = (
         f'<rect fill="#ff00ff" x="{last["x"]}" y="{last["y"]}" width="0" '
         f'height="{last["height"]}" shape-rendering="crispEdges"/>'
@@ -1117,7 +1115,7 @@ def test_a_zero_width_band_paints_no_cell(real_export: Path, tmp_path: Path) -> 
     doctored = tmp_path / "phantom.svg"
     doctored.write_text(markup[: last.end()] + phantom + markup[last.end() :], encoding=UTF_8)
 
-    image = Image.open(_raster.rasterise(doctored, tmp_path / "phantom.png").path).convert("RGB")
+    image = Image.open(raster.rasterise(doctored, tmp_path / "phantom.png").path).convert("RGB")
     assert (255, 0, 255) not in {colour for _count, colour in image.getcolors(maxcolors=1 << 20) or ()}
 
 

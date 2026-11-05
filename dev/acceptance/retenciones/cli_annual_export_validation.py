@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.export_parse import (
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from .cli_contracts import AnnualExportValidationEvidence, RetencionesInstalledCliError
-from .cli_export_rows import _parsed_record_rows, _record_for_type, _row_identity, _selected_expected_fields
+from .cli_export_rows import parsed_record_rows, record_for_type, row_identity, selected_expected_fields
 from .scenario import (
     AnnualExportRecordExpectation,
 )
@@ -33,12 +33,12 @@ def _validate_annual_export_rows(
         )
         for row in type2_rows
     )
-    if sorted(_row_identity(row) for row in parsed_rows) != sorted(_row_identity(row) for row in expected_rows):
+    if sorted(row_identity(row) for row in parsed_rows) != sorted(row_identity(row) for row in expected_rows):
         raise RetencionesInstalledCliError(stage=stage, diagnostic_code="annual_export_type2_rows_mismatch")
     return parsed_rows, expected_rows
 
 
-def _validate_annual_export(
+def validate_annual_export(
     *,
     layout: ExportLayoutDefinition,
     payload: bytes,
@@ -56,16 +56,16 @@ def _validate_annual_export(
         ) from exc
     if str(parsed.layout_id) != str(layout.id):
         raise RetencionesInstalledCliError(stage=stage, diagnostic_code="annual_export_layout_mismatch")
-    header_record = _record_for_type(layout=layout, record_type="declarante", stage=stage)
-    type2_record = _record_for_type(layout=layout, record_type="perceptor", stage=stage)
-    header_rows = _parsed_record_rows(parsed=parsed, record=header_record, stage=stage)
-    type2_rows = _parsed_record_rows(parsed=parsed, record=type2_record, stage=stage)
+    header_record = record_for_type(layout=layout, record_type="declarante", stage=stage)
+    type2_record = record_for_type(layout=layout, record_type="perceptor", stage=stage)
+    header_rows = parsed_record_rows(parsed=parsed, record=header_record, stage=stage)
+    type2_rows = parsed_record_rows(parsed=parsed, record=type2_record, stage=stage)
     if len(header_rows) != 1:
         raise RetencionesInstalledCliError(stage=stage, diagnostic_code="annual_export_header_count_mismatch")
 
     expected_header_values = dict(expected_header)
     actual_header = header_rows[0]
-    parsed_header = _selected_expected_fields(
+    parsed_header = selected_expected_fields(
         actual=actual_header,
         expected=expected_header_values,
         stage=stage,

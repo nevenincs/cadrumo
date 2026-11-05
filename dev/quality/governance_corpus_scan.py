@@ -57,9 +57,9 @@ from dev.paths import REPO_ROOT, UTF_8
 from .source_import_analysis import (
     DEV_TOOLING_ROOT,
     SRC_ROOT,
-    _comment_lines,
-    _docstring_constant_ids,
-    _prose_string_lines,
+    comment_lines,
+    docstring_constant_ids,
+    prose_string_lines,
 )
 from .unread_inputs import report_unread
 
@@ -292,7 +292,7 @@ def governance_path_hits(tree: ast.Module) -> list[tuple[int, GovernanceRefForm,
     Docstrings are excluded here and judged as prose instead, so no line is
     reported by two families.
     """
-    skip = _docstring_constant_ids(tree)
+    skip = docstring_constant_ids(tree)
     hits: list[tuple[int, GovernanceRefForm, str, str]] = []
     # One walk suffices: it visits a parent before its children, so an
     # f-string's literal parts are marked skipped before they are reached.
@@ -362,8 +362,8 @@ def find_governance_prose_violations(
             continue
         # A comment is a literal slice of the source, so a module that never
         # spells a governance root cannot hold a comment naming one.
-        comments = _comment_lines(source) if _spells_governance_root(source) else []
-        for kind, lines in (("string", _prose_string_lines(tree)), ("comment", comments)):
+        comments = comment_lines(source) if _spells_governance_root(source) else []
+        for kind, lines in (("string", prose_string_lines(tree)), ("comment", comments)):
             for lineno, text in lines:
                 _collect_governance_prose_line(lineno, text, kind, rel, violations)
     report_unread(

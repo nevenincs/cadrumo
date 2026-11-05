@@ -45,7 +45,7 @@ import math
 import pytest
 
 from ...terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
-from .._synonym_mining import (
+from ..synonym_mining import (
     SynonymRatificationQueue,
     load_synonym_ratification_queue,
     validate_ratification_queue,

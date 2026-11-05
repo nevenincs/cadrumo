@@ -13,13 +13,13 @@ from .lane_configuration import configured_marker_expression, configured_testpat
 from .lane_contracts import DirectoryCoverageReport, Lane, ReachabilityReport, UnreachableTest
 from .lane_ctest_commands import declared_ctest_lanes
 from .lane_marker_inventory import expression_selects, marker_sets_in, tracked_test_directories, tracked_test_files
-from .lane_recipe_commands import _justfile_lanes, _pytest_invocations, resolved_justfile_text
+from .lane_recipe_commands import justfile_lanes, pytest_invocations, resolved_justfile_text
 from .lane_workflow_graph import (
-    _WORKFLOW_DIR,
-    _workflow_run_steps,
+    WORKFLOW_DIR,
     ci_invoked_recipe_opt_in,
     ci_invoked_recipe_triggers,
     ci_invoked_recipes,
+    workflow_run_steps,
     workflow_triggers,
 )
 
@@ -67,24 +67,24 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
 
     text = resolved_justfile_text(root)
     if text:
-        lanes.extend(_justfile_lanes(text, default_paths=testpaths))
+        lanes.extend(justfile_lanes(text, default_paths=testpaths))
     lanes.extend(declared_ctest_lanes(root))
 
-    workflow_dir = root / _WORKFLOW_DIR
+    workflow_dir = root / WORKFLOW_DIR
     if workflow_dir.is_dir():
         effective = workflow_triggers(root)
         for workflow in scan_directory(workflow_dir, pattern="*.yml"):
             text = workflow.read_text(encoding=UTF_8)
-            events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
+            events = effective.get(f"{WORKFLOW_DIR}/{workflow.name}", ())
             # Per RUN STEP, not per file: an inline invocation inherits the
             # reach of the job holding it, and reading the whole workflow text
             # would hand a gated job the events that start the run without it.
-            for step in _workflow_run_steps(text, events):
+            for step in workflow_run_steps(text, events):
                 lanes.extend(
                     replace(lane, triggers=step.events, opt_in=step.opt_in)
-                    for lane in _pytest_invocations(
+                    for lane in pytest_invocations(
                         step.command,
-                        source=f"{_WORKFLOW_DIR}/{workflow.name}",
+                        source=f"{WORKFLOW_DIR}/{workflow.name}",
                         default_paths=testpaths,
                     )
                 )

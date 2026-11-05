@@ -159,17 +159,17 @@ def mark_number(mark: str) -> int:
     return int(matched.group(1), len(_DIGITS))
 
 
-def _docutils_text(value: str) -> str:
+def docutils_text(value: str) -> str:
     """Return one string as a docutils writer writes it into a text node."""
     return value.translate(_DOCUTILS_SPECIAL)
 
 
-def _docutils_attribute(value: str) -> str:
+def docutils_attribute(value: str) -> str:
     """Return one string as a docutils writer writes it into an attribute value."""
     return _ATTRIBUTE_WHITESPACE.sub(" ", value).translate(_DOCUTILS_SPECIAL)
 
 
-def _jinja(value: str) -> str:
+def jinja(value: str) -> str:
     """Return one string as Jinja escapes it into a template's output.
 
     ``markupsafe`` escapes ``&``, ``<`` and ``>`` like docutils does, leaves
@@ -178,7 +178,7 @@ def _jinja(value: str) -> str:
     return html.escape(value, quote=False).replace('"', "&#34;").replace("'", "&#39;")
 
 
-def _template_title(value: str) -> str:
+def template_title(value: str) -> str:
     """Return one string as the theme's ``<title>`` carries it.
 
     The template is handed the title already written as HTML, then strips its
@@ -187,7 +187,7 @@ def _template_title(value: str) -> str:
     page is the plain string, whitespace folded, escaped the way
     ``markupsafe`` escapes rather than the way docutils does.
     """
-    return _jinja(" ".join(value.split()))
+    return jinja(" ".join(value.split()))
 
 
 #: What the docutils smart-quotes transform is asked to educate: quotation
@@ -196,7 +196,7 @@ def _template_title(value: str) -> str:
 _SMARTQUOTES_ACTION: Final[str] = "qDe"
 
 
-def _educated(value: str, language: str) -> str:
+def compile_slots_educated(value: str, language: str) -> str:
     """Return one string with the typography the language's own build gives it.
 
     Sphinx educates quotation marks, dashes and ellipses in every text block
@@ -216,7 +216,7 @@ def _educated(value: str, language: str) -> str:
     return "".join(str(piece) for piece in educated)
 
 
-def _minimal(value: str) -> str:
+def compile_slots_minimal(value: str) -> str:
     """Return one string as BeautifulSoup's minimal formatter writes it.
 
     ``&``, ``<`` and ``>`` and nothing else, in text and in an attribute value
@@ -225,7 +225,7 @@ def _minimal(value: str) -> str:
     return html.escape(value, quote=False)
 
 
-def _resouped(markup: str) -> str:
+def resouped(markup: str) -> str:
     """Return one stretch of markup as BeautifulSoup writes it back.
 
     Furo hands the writer's toctree markup to BeautifulSoup and writes
@@ -269,14 +269,14 @@ def _message_written(position: Position, markup: str, plain: str) -> str:
     if position is Position.MARKUP:
         raise CompileSlotsError(f"a message reached page markup rather than text or an attribute: {plain!r}")
     if position is Position.TITLE:
-        return _template_title(plain)
+        return template_title(plain)
     if position is Position.NAVIGATION_TEXT:
-        return _resouped(markup)
+        return resouped(markup)
     if position is Position.NAVIGATION_ATTRIBUTE:
-        return _minimal(plain)
+        return compile_slots_minimal(plain)
     if position is Position.ENTRY_TEXT:
-        return _docutils_text(plain)
-    return _docutils_attribute(plain)
+        return docutils_text(plain)
+    return docutils_attribute(plain)
 
 
 def _plain_written(position: Position, value: str) -> str:
@@ -287,13 +287,13 @@ def _plain_written(position: Position, value: str) -> str:
     or a word of Sphinx's own that the writer put into a finished page.
     """
     if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
-        return _minimal(value)
+        return compile_slots_minimal(value)
     if position in {Position.TEXT, Position.ENTRY_TEXT}:
-        return _docutils_text(value)
+        return docutils_text(value)
     if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
-        return _docutils_attribute(value)
+        return docutils_attribute(value)
     if position is Position.TITLE:
-        return _template_title(value)
+        return template_title(value)
     raise CompileSlotsError(f"an uneducated string reached page markup rather than text or an attribute: {value!r}")
 
 
@@ -309,7 +309,7 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
         return _message_written(position, value, plain)
     if rendering is Rendering.TEMPLATE:
         if position is Position.TITLE:
-            return _template_title(value)
+            return template_title(value)
         if position in {Position.TEXT, Position.ATTRIBUTE}:
             # Sphinx renders the theme's templates in an environment that does
             # not autoescape, so a chrome string a template interpolates reaches
@@ -324,15 +324,15 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
 
 
 def _docutils_written(position: Position, value: str, language: str) -> str:
-    educated = _educated(value, language)
+    educated = compile_slots_educated(value, language)
     if position in {Position.TEXT, Position.ENTRY_TEXT}:
-        return _docutils_text(educated)
+        return docutils_text(educated)
     if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
-        return _docutils_attribute(educated)
+        return docutils_attribute(educated)
     if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
-        return _minimal(educated)
+        return compile_slots_minimal(educated)
     if position is Position.TITLE:
-        return _template_title(educated)
+        return template_title(educated)
     raise CompileSlotsError(
         f"a mark whose strings docutils owns reached page markup rather than text: {value!r}. "
         "A creation site writing markup itself must record its strings verbatim."
@@ -553,7 +553,7 @@ class CompileSlots:
             if plain is not None:
                 return plain[language]
             if rendering is Rendering.DOCUTILS:
-                return _educated(values[language], self.languages[language])
+                return compile_slots_educated(values[language], self.languages[language])
             return values[language]
 
         return MARK.sub(read, value)
@@ -702,8 +702,8 @@ def language_text(
 
     The primitive for a creation site that can already say what every language
     reads and needs no rendering of its own:
-    :func:`~dev.docs._locale_chrome.docs_chrome` for a catalogue string,
-    :func:`~dev.docs._locale_chrome.docs_fragment` where the markup itself
+    :func:`~dev.docs.locale_chrome.docs_chrome` for a catalogue string,
+    :func:`~dev.docs.locale_chrome.docs_fragment` where the markup itself
     differs, and this where the value is simply looked up per language.
 
     Args:

@@ -24,7 +24,7 @@ from typer.main import get_command
 
 from dev.paths import UTF_8
 
-from .._artifacts import FrameFailureKind
+from ..artifacts import FrameFailureKind
 from ..cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

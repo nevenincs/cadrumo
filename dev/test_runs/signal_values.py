@@ -12,32 +12,32 @@ from dev.paths import UTF_8
 _UTF_8: Final[str] = UTF_8
 
 
-_HOTSPOT_LIMIT: Final[int] = 10
+HOTSPOT_LIMIT: Final[int] = 10
 
 
-def _is_json_object(value: object) -> TypeGuard[dict[str, object]]:
+def is_json_object(value: object) -> TypeGuard[dict[str, object]]:
     """Narrow a decoded JSON value to an object with string keys."""
     return isinstance(value, dict) and all(isinstance(key, str) for key in value)
 
 
-def _json_int(value: object, *, field: str) -> int:
+def json_int(value: object, *, field: str) -> int:
     """Decode one JSON scalar accepted by the command transcript contract."""
     if isinstance(value, (int, float, str)):
         return int(value)
     raise TypeError(f"JSON field {field!r} must be an integer-compatible scalar")
 
 
-def _json_string_list(value: object, *, field: str) -> tuple[str, ...]:
+def json_string_list(value: object, *, field: str) -> tuple[str, ...]:
     """Decode one JSON array whose values are rendered as transcript strings."""
     if not isinstance(value, list):
         raise TypeError(f"JSON field {field!r} must be an array")
     return tuple(str(item) for item in value)
 
 
-def _top(
+def top(
     counter: Counter[str],
     *,
-    limit: int = _HOTSPOT_LIMIT,
+    limit: int = HOTSPOT_LIMIT,
     minimum_count: int = 1,
 ) -> list[dict[str, object]]:
     """Return a deterministic bounded frequency table."""
@@ -48,7 +48,7 @@ def _top(
     return rows[:limit]
 
 
-def _write_json_lines(path: Path, rows: object) -> None:
+def write_json_lines(path: Path, rows: object) -> None:
     """Persist a stable JSON-lines collection, refusing non-list payloads."""
     if not isinstance(rows, list):
         rows = []

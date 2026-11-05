@@ -10,7 +10,7 @@ from typing import Final, cast
 from dev.paths import UTF_8
 
 from .locale_mutation_contracts import (
-    _SCHEMA_VERSION,
+    SCHEMA_VERSION,
     DocumentationLocaleMutationError,
     ManifestMessage,
     ManifestStale,
@@ -23,7 +23,7 @@ _TARGET_LOCALES: Final[frozenset[str]] = frozenset({"ca", "es", "hu"})
 _SHA256: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def _read_manifest(path: Path) -> dict[str, object]:
+def read_manifest(path: Path) -> dict[str, object]:
     """Read and validate the manifest envelope."""
     try:
         payload = json.loads(path.read_text(encoding=UTF_8))
@@ -31,7 +31,7 @@ def _read_manifest(path: Path) -> dict[str, object]:
         raise DocumentationLocaleMutationError(f"cannot read docs translation manifest {path}: {exc}") from exc
     if not isinstance(payload, dict):
         raise DocumentationLocaleMutationError("docs translation manifest must contain an object")
-    if payload.get("schema_version") != _SCHEMA_VERSION:
+    if payload.get("schema_version") != SCHEMA_VERSION:
         raise DocumentationLocaleMutationError(
             f"unsupported docs translation manifest schema: {payload.get('schema_version')!r}"
         )
@@ -42,7 +42,7 @@ def _read_manifest(path: Path) -> dict[str, object]:
     return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
-def _parse_updates(payload: dict[str, object]) -> tuple[ManifestUpdate, ...]:
+def parse_updates(payload: dict[str, object]) -> tuple[ManifestUpdate, ...]:
     """Validate manifest records and reject duplicate catalogue/message targets."""
     raw_updates = payload["updates"]
     if not isinstance(raw_updates, list):

@@ -42,12 +42,12 @@ class _Completed:
     stderr: str
 
 
-def _fail(message: str) -> NoReturn:
+def fail(message: str) -> NoReturn:
     print(f"FAIL: {message}", file=sys.stderr)
     sys.exit(1)
 
 
-def _ok(message: str) -> None:
+def ok(message: str) -> None:
     print(f"ok: {message}")
 
 
@@ -74,7 +74,7 @@ async def _run_async(command: list[str], environment: dict[str, str]) -> _Comple
     )
 
 
-def _run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> _Completed:
+def run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> _Completed:
     """Run a console script, falling back to ``python -m`` when not on PATH."""
     script = shutil.which(name)
     command = (
@@ -96,7 +96,7 @@ def installed_version(distribution: str) -> str:
     try:
         return importlib.metadata.version(distribution)
     except importlib.metadata.PackageNotFoundError:
-        _fail(f"{distribution} is not installed in this environment")
+        fail(f"{distribution} is not installed in this environment")
 
 
 def check_metadata() -> str:
@@ -105,8 +105,8 @@ def check_metadata() -> str:
     for companion in COMPANIONS:
         companion_version = installed_version(companion)
         if companion_version != version:
-            _fail(f"{companion} is {companion_version}, expected {version} to match cadrumo")
-    _ok(f"cadrumo {version} installed with both corpora at the same version")
+            fail(f"{companion} is {companion_version}, expected {version} to match cadrumo")
+    ok(f"cadrumo {version} installed with both corpora at the same version")
     return version
 
 
@@ -115,18 +115,18 @@ def check_import() -> None:
     from cadrumo.core.package_version import PACKAGE_VERSION
 
     if not PACKAGE_VERSION.strip():
-        _fail("cadrumo package version is missing or empty")
-    _ok(f"cadrumo imports, package version = {PACKAGE_VERSION}")
+        fail("cadrumo package version is missing or empty")
+    ok(f"cadrumo imports, package version = {PACKAGE_VERSION}")
 
 
 def check_cli(version: str) -> None:
     """The CLI console script runs and reports the installed version."""
-    result = _run(CLI_SCRIPT, ["--version"])
+    result = run(CLI_SCRIPT, ["--version"])
     if result.returncode != 0:
-        _fail(f"{CLI_SCRIPT} --version exited {result.returncode}: {result.stderr.strip()[:400]}")
+        fail(f"{CLI_SCRIPT} --version exited {result.returncode}: {result.stderr.strip()[:400]}")
     if version not in result.stdout:
-        _fail(f"{CLI_SCRIPT} --version did not report {version}: {result.stdout.strip()[:200]}")
-    _ok(f"{CLI_SCRIPT} --version reports {version}")
+        fail(f"{CLI_SCRIPT} --version did not report {version}: {result.stdout.strip()[:200]}")
+    ok(f"{CLI_SCRIPT} --version reports {version}")
 
 
 def check_cli_help() -> None:
@@ -135,13 +135,13 @@ def check_cli_help() -> None:
     Asserts on the command tokens rather than the surrounding prose: help text
     is localized, the tokens are not.
     """
-    result = _run(CLI_SCRIPT, ["--help"])
+    result = run(CLI_SCRIPT, ["--help"])
     if result.returncode != 0:
-        _fail(f"{CLI_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
+        fail(f"{CLI_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
     for family in (f"{CLI_SCRIPT} config", f"{CLI_SCRIPT} app"):
         if family not in result.stdout:
-            _fail(f"{CLI_SCRIPT} --help does not list the {family!r} command family")
-    _ok(f"{CLI_SCRIPT} --help lists both root command families")
+            fail(f"{CLI_SCRIPT} --help does not list the {family!r} command family")
+    ok(f"{CLI_SCRIPT} --help lists both root command families")
 
 
 def check_mcp_script() -> None:
@@ -155,12 +155,12 @@ def check_mcp_script() -> None:
     Starting the server itself is not an option here - it is a stdio transport
     and would block until its peer closed the stream.
     """
-    result = _run(MCP_SCRIPT, ["--help"])
+    result = run(MCP_SCRIPT, ["--help"])
     if result.returncode != 0:
-        _fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
+        fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
     for option in ("--profile-id", "--credential-reference", "--surface"):
         if option not in result.stdout:
-            _fail(f"{MCP_SCRIPT} --help does not offer {option}: {result.stdout.strip()[:200]}")
+            fail(f"{MCP_SCRIPT} --help does not offer {option}: {result.stdout.strip()[:200]}")
     imported = asyncio.run(
         _run_async(
             [sys.executable, "-c", "from cadrumo_mcp.mcp.server import serve; assert callable(serve)"],
@@ -168,8 +168,8 @@ def check_mcp_script() -> None:
         )
     )
     if imported.returncode != 0:
-        _fail(f"{MCP_SCRIPT} server runtime did not import: {imported.stderr.strip()[:400]}")
-    _ok(f"{MCP_SCRIPT} resolves and its server runtime imports")
+        fail(f"{MCP_SCRIPT} server runtime did not import: {imported.stderr.strip()[:400]}")
+    ok(f"{MCP_SCRIPT} resolves and its server runtime imports")
 
 
 def main() -> int:

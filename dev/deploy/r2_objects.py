@@ -161,7 +161,7 @@ def signed_headers(
     return headers
 
 
-def _request(
+def request(
     bucket: R2Bucket,
     *,
     method: str,
@@ -217,7 +217,7 @@ def put_object(
     connection: HTTPSConnection | None = None,
 ) -> None:
     """Write one object, refusing anything but a success."""
-    status, payload = _request(
+    status, payload = request(
         bucket,
         method="PUT",
         path=_object_path(bucket, key),
@@ -237,7 +237,7 @@ def list_keys(bucket: R2Bucket, prefix: str) -> set[str]:
         query = {"list-type": "2", "prefix": prefix, "max-keys": "1000"}
         if token is not None and token:
             query["continuation-token"] = token
-        status, payload = _request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
+        status, payload = request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
         if status != 200:
             raise SystemExit(f"R2 refused to list {prefix!r}: HTTP {status} {payload[:300]!r}")
         document = ElementTree.fromstring(payload)
@@ -317,7 +317,7 @@ def upload_tree(
 
 def read_object(bucket: R2Bucket, key: str) -> bytes:
     """Read a required private release object, refusing missing data."""
-    status, body = _request(bucket, method="GET", path=_object_path(bucket, key))
+    status, body = request(bucket, method="GET", path=_object_path(bucket, key))
     if status != 200:
         raise ValueError(f"Cannot read release object {key}: HTTP {status}")
     return body
@@ -332,7 +332,7 @@ def object_inventory(bucket: R2Bucket, prefix: str) -> dict[str, tuple[int, str]
         query = {"list-type": "2", "prefix": prefix, "max-keys": "1000"}
         if token:
             query["continuation-token"] = token
-        status, body = _request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
+        status, body = request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
         if status != 200:
             raise ValueError(f"Cannot inventory release: HTTP {status}")
         document = ElementTree.fromstring(body)
@@ -348,7 +348,7 @@ def object_inventory(bucket: R2Bucket, prefix: str) -> dict[str, tuple[int, str]
 
 def copy_public_object(source: R2Bucket, destination: R2Bucket, key: str, etag: str) -> None:
     """Copy verified search bytes server-side with immutable public metadata."""
-    status, body = _request(
+    status, body = request(
         destination,
         method="PUT",
         path=_object_path(destination, key),
@@ -375,7 +375,7 @@ def deployment_lock(bucket: R2Bucket) -> Generator[None]:
     key = "delivery/deployment-lock.json"
     owner = uuid.uuid4().hex
     body = json.dumps({"owner": owner, "created_at": datetime.now(UTC).isoformat()}).encode()
-    status, _ = _request(
+    status, _ = request(
         bucket,
         method="PUT",
         path=_object_path(bucket, key),
@@ -390,7 +390,7 @@ def deployment_lock(bucket: R2Bucket) -> Generator[None]:
         current = json.loads(read_object(bucket, key))
         if current.get("owner") != owner:
             raise ValueError("Deployment lock owner changed; refusing to remove it")
-        status, _ = _request(bucket, method="DELETE", path=_object_path(bucket, key))
+        status, _ = request(bucket, method="DELETE", path=_object_path(bucket, key))
         if status != 204:
             raise ValueError(f"Could not release deployment lock: HTTP {status}")
 

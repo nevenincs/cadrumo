@@ -39,7 +39,7 @@ _M303_STATE_PERCENT_LABEL: Final[re.Pattern[str]] = re.compile(
 )
 
 
-def _validate_format_contract(
+def validate_format_contract(
     msgid: str,
     current: str,
     replacement: str,

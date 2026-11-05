@@ -32,7 +32,7 @@ from dev.paths import REPO_ROOT
 
 from ..rendering import TypeHintsFormatter, format_type_hint
 from ..type_aliases import public_type_aliases
-from ._sphinx_probe import run_sphinx_probe
+from .sphinx_probe import run_sphinx_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

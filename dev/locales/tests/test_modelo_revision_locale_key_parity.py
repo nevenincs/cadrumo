@@ -24,10 +24,10 @@ from __future__ import annotations
 
 import pytest
 
-from .._paths import LOCALES_DIR, SRC_DIR
-from .._registry_scanner import scan_modelo_schema_keys
-from .._revision_drift import classify_revision_moves, classify_revision_parity
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR, SRC_DIR
+from ..registry_scanner import scan_modelo_schema_keys
+from ..revision_drift import classify_revision_moves, classify_revision_parity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

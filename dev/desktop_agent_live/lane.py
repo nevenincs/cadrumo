@@ -707,9 +707,9 @@ def main(argv: list[str] | None = None) -> int:
     """Run the lane in its own kill-on-close Job; a process that outlives the run fails it."""
     job = LaneJob() if sys.platform == "win32" else None
     if job is None:
-        return _main(argv)
+        return run_lane(argv)
     try:
-        code = _main(argv)
+        code = run_lane(argv)
     except BaseException:  # The Job ends the lane, so nothing else would report an escaped error.
         traceback.print_exc()
         code = 1
@@ -721,7 +721,7 @@ def main(argv: list[str] | None = None) -> int:
     job.end(code)
 
 
-def _main(argv: list[str] | None) -> int:
+def run_lane(argv: list[str] | None) -> int:
     """Run the lane; exit 0 on pass, 1 on a failure, 3 when a prerequisite is absent."""
     parser = argparse.ArgumentParser(prog="desktop-agent-live", description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--served", action="store_true", help="Load the shell from the development server.")

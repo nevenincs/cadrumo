@@ -9,12 +9,12 @@ from typing import Final
 
 from dev.paths import UTF_8
 
-from .signal_values import _is_json_object
+from .signal_values import is_json_object
 
-_AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
+AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 
 
-class _DeadWeightSignalProcessor:
+class DeadWeightSignalProcessor:
     """Reduce the combined dead-weight payload to a stable run envelope."""
 
     def __init__(self) -> None:
@@ -36,7 +36,7 @@ class _DeadWeightSignalProcessor:
         summary: dict[str, object]
         try:
             decoded = json.loads("".join(self.lines))
-            if not _is_json_object(decoded):
+            if not is_json_object(decoded):
                 raise ValueError("audit payload is not a JSON object")
         except (json.JSONDecodeError, ValueError) as exc:
             outcome = "unavailable"
@@ -61,7 +61,7 @@ class _DeadWeightSignalProcessor:
             outcome = str(decoded.get("outcome", "unavailable"))
             headline = str(decoded.get("headline", f"{label} produced no headline"))
             raw_summary = decoded.get("summary", {})
-            if not _is_json_object(raw_summary):
+            if not is_json_object(raw_summary):
                 outcome = "unavailable"
                 headline = f"{label} signal contained no structured summary"
                 summary = {

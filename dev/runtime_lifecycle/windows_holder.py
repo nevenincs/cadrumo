@@ -28,7 +28,7 @@ from .windows_holder_cleanup import WindowsHolderCleanup
 _STARTUP_SECONDS = 30.0
 _CLOSE_SECONDS = 10.0
 _REAP_SECONDS = 10.0
-_WRITE_SECONDS = 30.0
+WRITE_SECONDS = 30.0
 _STDERR_CHUNK_BYTES = 4096
 
 
@@ -166,7 +166,7 @@ class WindowsRuntimeSessionHolder(WindowsHolderCleanup):
         writer = Thread(target=write, name="runtime-session-holder-input", daemon=True)
         self._writer_thread = writer
         writer.start()
-        if not finished.wait(_WRITE_SECONDS):
+        if not finished.wait(WRITE_SECONDS):
             timeout = AcceptanceError("runtime holder input timed out")
             try:
                 self._terminate_scope()

@@ -7,9 +7,9 @@ from decimal import Decimal
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_contracts import _ACTOR, AnnualSourcePeriodEvidence, RetencionesInstalledCliError
-from .cli_export_validation import _expected_casillas_from_result
-from .cli_observations import _require_result, _required_text
+from .cli_contracts import ACTOR, AnnualSourcePeriodEvidence, RetencionesInstalledCliError
+from .cli_export_validation import expected_casillas_from_result
+from .cli_observations import require_result, required_text
 from .scenario import (
     AnnualSourcePeriodInput,
     EvidenceState,
@@ -47,7 +47,7 @@ def _source_casilla_identity(captures: tuple[InstalledPeriodicCliSlice, ...], *,
     return expected_ids
 
 
-def _attest_annual_no_activity_periods(
+def attest_annual_no_activity_periods(
     *,
     cli: InstalledCli,
     slice_: InstalledAnnualCliSlice,
@@ -80,7 +80,7 @@ def _attest_annual_no_activity_periods(
             tokens.append(f"{year}:{source_period.period}")
     if not tokens:
         return frozenset[str]()
-    _require_result(
+    require_result(
         cli,
         (
             "config",
@@ -138,7 +138,7 @@ def _admit_annual_no_capture_source(
     return None
 
 
-def _materialize_annual_source_period(
+def materialize_annual_source_period(
     *,
     cli: InstalledCli,
     source_modelo: str,
@@ -172,7 +172,7 @@ def _materialize_annual_source_period(
         )
         if no_capture_evidence is not None:
             return no_capture_evidence
-    work = _require_result(
+    work = require_result(
         cli,
         (
             "app",
@@ -188,29 +188,29 @@ def _materialize_annual_source_period(
             "--revision",
             source_revision,
             "--by",
-            _ACTOR,
+            ACTOR,
         ),
         stage=f"{stage}:work_create",
     )
-    work_id = _required_text(work, key="work_unit_id", stage=f"{stage}:work_create")
-    calculation = _require_result(
+    work_id = required_text(work, key="work_unit_id", stage=f"{stage}:work_create")
+    calculation = require_result(
         cli,
-        ("app", "modelo", "work", "calculate", work_id, "--by", _ACTOR),
+        ("app", "modelo", "work", "calculate", work_id, "--by", ACTOR),
         stage=f"{stage}:work_calculate",
     )
-    calculated_casillas = _expected_casillas_from_result(
+    calculated_casillas = expected_casillas_from_result(
         calculation,
         expected=source_period.expected_casillas,
         stage=f"{stage}:work_calculate",
     )
-    revision_id = _required_text(
+    revision_id = required_text(
         calculation,
         key="calculation_revision_id",
         stage=f"{stage}:work_calculate",
     )
-    verification = _require_result(
+    verification = require_result(
         cli,
-        ("app", "modelo", "work", "verify", revision_id, "--by", _ACTOR),
+        ("app", "modelo", "work", "verify", revision_id, "--by", ACTOR),
         stage=f"{stage}:work_verify",
     )
     if verification.get("granted_verificado_completo") is not True:
@@ -218,9 +218,9 @@ def _materialize_annual_source_period(
             stage=f"{stage}:work_verify",
             diagnostic_code="annual_source_verification_not_complete",
         )
-    filing = _require_result(
+    filing = require_result(
         cli,
-        ("app", "modelo", "work", "file", revision_id, "--by", _ACTOR),
+        ("app", "modelo", "work", "file", revision_id, "--by", ACTOR),
         stage=f"{stage}:work_file",
     )
     if filing.get("live_submission") is not False or filing.get("aeat_accepted") is not False:
@@ -228,7 +228,7 @@ def _materialize_annual_source_period(
             stage=f"{stage}:work_file",
             diagnostic_code="annual_source_filing_not_local",
         )
-    filing_id = _required_text(filing, key="filing_record_id", stage=f"{stage}:work_file")
+    filing_id = required_text(filing, key="filing_record_id", stage=f"{stage}:work_file")
     m115_no_relevant_payment_attestation = not captures and source_modelo == "115"
     return AnnualSourcePeriodEvidence(
         modelo=source_modelo,
@@ -249,7 +249,7 @@ def _materialize_annual_source_period(
     )
 
 
-def _annual_source_revision(slice_: InstalledAnnualCliSlice, *, stage: str) -> str:
+def annual_source_revision(slice_: InstalledAnnualCliSlice, *, stage: str) -> str:
     """Require the annual slice's public captures to share one source revision."""
     revisions = {capture.revision for capture in slice_.captures}
     if len(revisions) != 1:

@@ -15,13 +15,13 @@ from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from ..installed_provenance import (
-    _cli_readback,
-    _parse_child_receipt,
-    _wait_with_deadline,
     assert_detail_provenance,
     assert_json_provenance,
     assert_track_text_provenance,
+    cli_readback,
     main,
+    parse_child_receipt,
+    wait_with_deadline,
 )
 from ..installed_tui_contracts import LedgerInstalledTuiError
 from ..provenance_fixtures import provenance_cases
@@ -52,10 +52,10 @@ def test_cli_readback_uses_fresh_stdin_proof_and_preserves_provenance(refused: b
     cli = cast("InstalledCli", ReadbackCli())
     if refused:
         with pytest.raises(LedgerInstalledTuiError, match="fresh-proof refusal"):
-            _cli_readback(cli, [case])
+            cli_readback(cli, [case])
         assert calls == [("ledger.list", True)]
     else:
-        assert _cli_readback(cli, [case]) == {case.case_id: ["cli_invoice_view_json"]}
+        assert cli_readback(cli, [case]) == {case.case_id: ["cli_invoice_view_json"]}
         assert calls == [("ledger.list", True), ("ledger.invoice.list", True), ("ledger.invoice.view", True)]
 
 
@@ -108,12 +108,12 @@ def test_child_receipt_requires_every_expected_case_observation(tmp_path: Path) 
     }
     receipt.write_text(json.dumps(document), encoding="utf-8")
 
-    parsed = _parse_child_receipt(receipt, mode="inspect", expected=["tui_detail:cli-csv"])
+    parsed = parse_child_receipt(receipt, mode="inspect", expected=["tui_detail:cli-csv"])
     assert parsed["observations"] == ["tui_detail:cli-csv"]
     with pytest.raises(LedgerInstalledTuiError, match="did not prove every case"):
-        _parse_child_receipt(receipt, mode="inspect", expected=["tui_detail:cli-csv", "tui_detail:tui-ofx"])
+        parse_child_receipt(receipt, mode="inspect", expected=["tui_detail:cli-csv", "tui_detail:tui-ofx"])
     with pytest.raises(LedgerInstalledTuiError, match="did not prove every case"):
-        _parse_child_receipt(receipt, mode="import", expected=["tui_detail:cli-csv"])
+        parse_child_receipt(receipt, mode="import", expected=["tui_detail:cli-csv"])
 
 
 def test_outer_run_refuses_a_used_output_root_with_a_value_free_failed_receipt(tmp_path: Path) -> None:
@@ -214,7 +214,7 @@ class _SlowRootPilot:
 def test_admission_wait_outlasts_a_slow_root_open() -> None:
     pilot = _SlowRootPilot(surface="#home-agenda", ready_after=400)
 
-    found = asyncio.run(_wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=600.0))
+    found = asyncio.run(wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=600.0))
 
     assert found == "#home-agenda"
     assert pilot.pauses == 400
@@ -224,4 +224,4 @@ def test_admission_wait_still_fails_when_the_surface_never_mounts() -> None:
     pilot = _SlowRootPilot(surface="#home-agenda", ready_after=10**9)
 
     with pytest.raises(InstalledTuiChildError, match="did not expose one of"):
-        asyncio.run(_wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=0.0))
+        asyncio.run(wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=0.0))

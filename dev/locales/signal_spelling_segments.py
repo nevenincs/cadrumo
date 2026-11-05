@@ -26,7 +26,7 @@ from .signal_syntax import (
     TRANSLATION_SPANISH_TAX_TERM_RE,
 )
 from .signal_tokens import (
-    _DESCENDANT_BOOL_CHOICES_RE,
+    DESCENDANT_BOOL_CHOICES_RE,
     DESCENDANT_RELATION_CHOICES_RE,
     filtered_translation_text,
     translation_words,
@@ -79,7 +79,7 @@ _CATALAN_NE_VERB_FORMS = (
     "tria",
     "triar",
 )
-_CATALAN_HYPHENATED_CLITIC_RE = re.compile(
+CATALAN_HYPHENATED_CLITIC_RE = re.compile(
     r"(?<![\w-])(?P<form>[Mm]antén-(?:lo|los)|revisar-los|traçar-lo|"
     r"(?i:(?:" + "|".join(map(re.escape, _CATALAN_NE_VERB_FORMS)) + r")-ne))(?![\w-])"
 )
@@ -156,7 +156,7 @@ _PROVINCE_TABLE_END = (
 )
 
 
-def _official_province_labels_from_table(source: str) -> dict[str, str]:
+def official_province_labels_from_table(source: str) -> dict[str, str]:
     """Read the complete code/name table from the bundled official record design."""
     if source.count(_PROVINCE_TABLE_START) != 1 or source.count(_PROVINCE_TABLE_END) != 1:
         raise ValueError("official province table boundaries are missing or ambiguous")
@@ -182,7 +182,7 @@ def _official_province_labels() -> dict[str, str]:
         .joinpath("_data", "corpus", "normatives", "html", "orden-eha-3481-2008.html.extracted.md")
         .read_text(encoding="utf-8")
     )
-    return _official_province_labels_from_table(source)
+    return official_province_labels_from_table(source)
 
 
 def is_known_official_province_label(key: str, value: str) -> bool:
@@ -317,7 +317,7 @@ def legal_title_spelling_segments(
             TRANSLATION_LITERAL_RE,
             command_path_pattern(),
             registered_operation_id_pattern(),
-            _DESCENDANT_BOOL_CHOICES_RE,
+            DESCENDANT_BOOL_CHOICES_RE,
             DESCENDANT_RELATION_CHOICES_RE,
         )
         for match in pattern.finditer(value)
@@ -426,7 +426,7 @@ def locale_spelling_words(value: str, locale: str) -> tuple[tuple[str, ...], int
         value, matches = hungarian_suffix_spelling_text(value)
         excluded += matches
     elif locale == "ca":
-        value, matches = _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)
+        value, matches = CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)
         excluded += matches
     filtered, structural_excluded = filtered_translation_text(value)
     # English dictionaries own contractions and possessives as complete words;

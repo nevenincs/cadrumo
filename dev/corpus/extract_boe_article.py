@@ -52,7 +52,7 @@ _CORPUS: Final[Path] = _ROOT / "src/cadrumo/_data/corpus/normatives/html"
 
 #: Every div open/close tag, in document order, so a block's true nesting
 #: depth can be tracked from its own opening tag to its own matching close.
-_DIV_OPEN_OR_CLOSE = re.compile(r"<div\b|</div\s*>", re.IGNORECASE)
+DIV_OPEN_OR_CLOSE = re.compile(r"<div\b|</div\s*>", re.IGNORECASE)
 
 #: The per-block version-selector widget (radio buttons choosing a historical
 #: redaction). Extraction-irrelevant BOE UI chrome: the production extractor
@@ -105,7 +105,7 @@ def _matching_close_tag(markup: str, *, start: int) -> re.Match[str]:
     "the next closing tag looks about right".
     """
     depth = 1
-    for tag in _DIV_OPEN_OR_CLOSE.finditer(markup, start):
+    for tag in DIV_OPEN_OR_CLOSE.finditer(markup, start):
         if tag.group(0).startswith("<div"):
             depth += 1
         else:

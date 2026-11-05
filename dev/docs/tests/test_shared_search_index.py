@@ -49,7 +49,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev.paths import REPO_ROOT
 
 from ..pagefind_index import SHARED_INDEX_LANGUAGE, IndexedRoot, build_shared_search_index
-from ..pagefind_inject import _inject_records, _Materialised
+from ..pagefind_inject import Materialised, inject_records
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import (
     RankingTier,
@@ -57,7 +57,7 @@ from ..terminology.unified_record import (
     SearchRecordMetadata,
     normalise_display_class_weight,
 )
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -140,7 +140,7 @@ def _write_root(root: Path, language: str, prefix: str, token: str) -> None:
     (destination / "303.html").write_text(_DESTINATION_PAGE.format(language=language), encoding="utf-8")
 
 
-def _shared_record() -> _Materialised:
+def _shared_record() -> Materialised:
     """One casilla record carrying both languages' text, as the projections emit it."""
     record = SearchRecord(
         id="casilla-record:sharedindextest",
@@ -152,7 +152,7 @@ def _shared_record() -> _Materialised:
         ranking_weight=normalise_display_class_weight(ResultDisplayClass.CASILLA),
         metadata=SearchRecordMetadata(modelo="303", number="00303"),
     )
-    return _Materialised(records=[record], casillas=1)
+    return Materialised(records=[record], casillas=1)
 
 
 @pytest.fixture(scope="module")
@@ -173,7 +173,7 @@ def shared_index_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
     materialised = _shared_record()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     outcome = build_shared_search_index(
         [

@@ -10,10 +10,10 @@ from dev.acceptance.income_tax.installed_tui_child import (
     wait_for_public_selector,
 )
 
-from .installed_tui_contracts import _COUNTERPARTY_NIF, _INVOICE_BASE, _STATEMENT_CSV_HEADER, LedgerInstalledTuiError
+from .installed_tui_contracts import COUNTERPARTY_NIF, INVOICE_BASE, STATEMENT_CSV_HEADER, LedgerInstalledTuiError
 
 
-async def _activate_button(pilot: Any, selector: str) -> None:
+async def activate_button(pilot: Any, selector: str) -> None:
     """Use a focused public button, which also works in the compact test terminal."""
     from textual.widgets import Button
 
@@ -25,7 +25,7 @@ async def _activate_button(pilot: Any, selector: str) -> None:
     await pilot.pause()
 
 
-async def _open_ledger_destination(pilot: Any) -> None:
+async def open_ledger_destination(pilot: Any) -> None:
     """Enter Ledger through the installed command palette and public destination label."""
     from textual.css.query import NoMatches
     from textual.widgets import Input, OptionList
@@ -77,12 +77,12 @@ async def _open_ledger_overview(pilot: Any) -> None:
     """Route to the public Ledger overview from the root palette."""
     from dev.acceptance.income_tax.installed_tui_child import select_public_data_table_row
 
-    await _open_ledger_destination(pilot)
+    await open_ledger_destination(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="overview")
     await wait_for_public_selector(pilot, "#ledger-add-invoice", polls=180)
 
 
-async def _capture_invoice_via_tui(
+async def capture_invoice_via_tui(
     pilot: Any,
     *,
     invoice_number: str,
@@ -93,17 +93,17 @@ async def _capture_invoice_via_tui(
     from textual.widgets import Input, Select, Static
 
     await _open_ledger_overview(pilot)
-    await _activate_button(pilot, "#ledger-add-invoice")
+    await activate_button(pilot, "#ledger-add-invoice")
     await wait_for_public_selector(pilot, "#ledger-invoice-review", polls=180)
     query_public_selector(pilot, "#ledger-invoice-kind", Select).value = "issued"
     query_public_selector(pilot, "#ledger-invoice-class", Select).value = "ordinaria"
     fields = {
         "#ledger-invoice-counterparty-name": "Ledger acceptance customer",
-        "#ledger-invoice-counterparty-nif": _COUNTERPARTY_NIF,
+        "#ledger-invoice-counterparty-nif": COUNTERPARTY_NIF,
         "#ledger-invoice-country-code": "ES",
         "#ledger-invoice-invoice-number": invoice_number,
         "#ledger-invoice-invoice-date": f"{year}-03-15",
-        "#ledger-invoice-taxable-base": format(_INVOICE_BASE, "f"),
+        "#ledger-invoice-taxable-base": format(INVOICE_BASE, "f"),
         "#ledger-invoice-iva-rate": "21",
         "#ledger-invoice-iva-category": "domestic_general",
         "#ledger-invoice-currency": "EUR",
@@ -111,26 +111,26 @@ async def _capture_invoice_via_tui(
     }
     for selector, value in fields.items():
         query_public_selector(pilot, selector, Input).value = value
-    await _activate_button(pilot, "#ledger-invoice-review")
+    await activate_button(pilot, "#ledger-invoice-review")
     await wait_for_public_selector(pilot, "#ledger-invoice-confirm", polls=180)
-    await _activate_button(pilot, "#ledger-invoice-confirm")
+    await activate_button(pilot, "#ledger-invoice-confirm")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-invoice-again", polls=180)
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     if refusal:
         raise LedgerInstalledTuiError("installed invoice form visibly refused persistence")
-    await _activate_button(pilot, "#ledger-invoice-again")
+    await activate_button(pilot, "#ledger-invoice-again")
     await wait_for_public_selector(pilot, "#ledger-invoice-review", polls=180)
     await pilot.press("escape")
     await wait_for_public_selector(pilot, "#ledger-add-invoice", polls=180)
 
 
-def _tui_only_transaction_descriptions(year: int) -> tuple[str, str]:
+def tui_only_transaction_descriptions(year: int) -> tuple[str, str]:
     """Return the distinct visible import label and its supported edited value."""
     return (f"ledger-tui-entry-{year}-initial", f"ledger-tui-entry-{year}-updated")
 
 
-def _write_tui_only_statement(*, scratch: Path, year: int, description: str) -> Path:
+def write_tui_only_statement(*, scratch: Path, year: int, description: str) -> Path:
     """Write one transient statement for the public Ledger import form.
 
     The file is an operator-selected input to the UI, never a persistence
@@ -144,7 +144,7 @@ def _write_tui_only_statement(*, scratch: Path, year: int, description: str) -> 
     statement.write_text(
         "\n".join(
             (
-                _STATEMENT_CSV_HEADER,
+                STATEMENT_CSV_HEADER,
                 f"{year}-03-16,Ledger acceptance counterparty,{description},10.00,EUR,ledger-tui-entry-{year}",
                 "",
             )
@@ -155,47 +155,47 @@ def _write_tui_only_statement(*, scratch: Path, year: int, description: str) -> 
     return statement
 
 
-async def _capture_transaction_via_tui(pilot: Any, *, statement: Path) -> None:
+async def capture_transaction_via_tui(pilot: Any, *, statement: Path) -> None:
     """Persist one transaction through Ledger's visible import review and confirmation flow."""
     from textual.widgets import Button, Input, Select, Static
 
     from dev.acceptance.income_tax.installed_tui_child import select_public_data_table_row
 
-    await _open_ledger_destination(pilot)
+    await open_ledger_destination(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="import")
     await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
     query_public_selector(pilot, "#ledger-import-kind", Select).value = "bank_statement"
     query_public_selector(pilot, "#ledger-import-provider", Select).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(statement)
-    await _activate_button(pilot, "#ledger-import-preview-button")
+    await activate_button(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
     if refusal or confirm.disabled:
         raise LedgerInstalledTuiError("installed Ledger transaction import did not reach public confirmation")
-    await _activate_button(pilot, "#ledger-import-confirm")
+    await activate_button(pilot, "#ledger-import-confirm")
     await pilot.app.workers.wait_for_complete()
     if str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip():
         raise LedgerInstalledTuiError("installed Ledger transaction import visibly refused persistence")
-    await _activate_button(pilot, "#ledger-import-again")
+    await activate_button(pilot, "#ledger-import-again")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
-async def _open_invoice_detail(pilot: Any, *, invoice_number: str) -> None:
+async def open_invoice_detail(pilot: Any, *, invoice_number: str) -> None:
     """Reach a catalogue invoice using its visible number and stable row selection."""
     await _open_ledger_overview(pilot)
-    await _activate_button(pilot, "#ledger-open-invoices")
+    await activate_button(pilot, "#ledger-open-invoices")
     await _select_table_row_by_text(pilot, selector="#ledger-invoice-catalogue", expected=invoice_number)
     await wait_for_public_selector(pilot, "#ledger-invoice-notes", polls=180)
 
 
-async def _inspect_invoice(pilot: Any, *, invoice_number: str, expected_notes: str) -> None:
+async def inspect_invoice(pilot: Any, *, invoice_number: str, expected_notes: str) -> None:
     """Read the canonical detail and require the expected visible metadata."""
     from textual.widgets import Input, Static
 
-    await _open_invoice_detail(pilot, invoice_number=invoice_number)
+    await open_invoice_detail(pilot, invoice_number=invoice_number)
     details = str(query_public_selector(pilot, "#ledger-record-detail", Static).render())
     if invoice_number not in details:
         raise LedgerInstalledTuiError("installed invoice detail did not retain its visible identity")
@@ -203,7 +203,7 @@ async def _inspect_invoice(pilot: Any, *, invoice_number: str, expected_notes: s
         raise LedgerInstalledTuiError("installed invoice detail did not retain its visible notes")
 
 
-async def _update_invoice_notes(
+async def update_invoice_notes(
     pilot: Any,
     *,
     invoice_number: str,
@@ -213,14 +213,14 @@ async def _update_invoice_notes(
     """Perform the supported notes-only update and refresh from committed state."""
     from textual.widgets import Button, Input, Static
 
-    await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
+    await inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
     notes = query_public_selector(pilot, "#ledger-invoice-notes", Input)
     notes.value = updated_notes
-    await _activate_button(pilot, "#ledger-invoice-edit-review")
+    await activate_button(pilot, "#ledger-invoice-edit-review")
     save = query_public_selector(pilot, "#ledger-invoice-edit-save", Button)
     if save.disabled:
         raise LedgerInstalledTuiError("installed invoice detail did not enable its reviewed save action")
-    await _activate_button(pilot, "#ledger-invoice-edit-save")
+    await activate_button(pilot, "#ledger-invoice-edit-save")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-invoice-notes", polls=180)
     if query_public_selector(pilot, "#ledger-invoice-notes", Input).value != updated_notes:
@@ -229,27 +229,27 @@ async def _update_invoice_notes(
         raise LedgerInstalledTuiError("installed invoice detail visibly refused the supported notes update")
 
 
-async def _open_transaction_detail(pilot: Any, *, description: str) -> None:
+async def open_transaction_detail(pilot: Any, *, description: str) -> None:
     """Reach a transaction through visible Entries selection and its public action button."""
     from dev.acceptance.income_tax.installed_tui_child import select_public_data_table_row
 
-    await _open_ledger_destination(pilot)
+    await open_ledger_destination(pilot)
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
     await _select_table_row_by_text(pilot, selector="#ledger-entries", expected=description)
-    await _activate_button(pilot, "#ledger-open-transaction")
+    await activate_button(pilot, "#ledger-open-transaction")
     await wait_for_public_selector(pilot, "#ledger-transaction-description", polls=180)
 
 
-async def _inspect_transaction(pilot: Any, *, description: str) -> None:
+async def inspect_transaction(pilot: Any, *, description: str) -> None:
     """Require a public detail readback before testing continuation or refusal stability."""
     from textual.widgets import Input
 
-    await _open_transaction_detail(pilot, description=description)
+    await open_transaction_detail(pilot, description=description)
     if query_public_selector(pilot, "#ledger-transaction-description", Input).value != description:
         raise LedgerInstalledTuiError("installed transaction detail did not retain its visible description")
 
 
-async def _edit_unlinked_transaction(
+async def edit_unlinked_transaction(
     pilot: Any,
     *,
     description: str,
@@ -258,13 +258,13 @@ async def _edit_unlinked_transaction(
     """Edit one unlinked transaction only through review, save, and refreshed detail."""
     from textual.widgets import Button, Input, Static
 
-    await _inspect_transaction(pilot, description=description)
+    await inspect_transaction(pilot, description=description)
     query_public_selector(pilot, "#ledger-transaction-description", Input).value = updated_description
-    await _activate_button(pilot, "#ledger-transaction-edit-review")
+    await activate_button(pilot, "#ledger-transaction-edit-review")
     save = query_public_selector(pilot, "#ledger-transaction-edit-save", Button)
     if save.disabled:
         raise LedgerInstalledTuiError("installed transaction detail did not enable its reviewed save action")
-    await _activate_button(pilot, "#ledger-transaction-edit-save")
+    await activate_button(pilot, "#ledger-transaction-edit-save")
     await pilot.app.workers.wait_for_complete()
     if query_public_selector(pilot, "#ledger-transaction-description", Input).value != updated_description:
         raise LedgerInstalledTuiError("installed transaction detail did not refresh the committed description")
@@ -272,19 +272,19 @@ async def _edit_unlinked_transaction(
         raise LedgerInstalledTuiError("installed transaction detail visibly refused the supported edit")
 
 
-async def _refuse_linked_transaction_edit(pilot: Any, *, description: str) -> None:
+async def refuse_linked_transaction_edit(pilot: Any, *, description: str) -> None:
     """Exercise the public review/save refusal before rereading committed detail."""
     from textual.widgets import Button, Input, Static
 
-    await _inspect_transaction(pilot, description=description)
+    await inspect_transaction(pilot, description=description)
     query_public_selector(pilot, "#ledger-transaction-description", Input).value = f"{description}-attempted-edit"
-    await _activate_button(pilot, "#ledger-transaction-edit-review")
+    await activate_button(pilot, "#ledger-transaction-edit-review")
     save = query_public_selector(pilot, "#ledger-transaction-edit-save", Button)
     if save.disabled:
         raise LedgerInstalledTuiError("installed linked transaction detail did not enable its reviewed save action")
-    await _activate_button(pilot, "#ledger-transaction-edit-save")
+    await activate_button(pilot, "#ledger-transaction-edit-save")
     await pilot.app.workers.wait_for_complete()
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip().casefold()
     if not all(marker in refusal for marker in ("linked transaction identity", "invoice link")):
         raise LedgerInstalledTuiError("installed linked transaction detail did not show the linked-identity refusal")
-    await _inspect_transaction(pilot, description=description)
+    await inspect_transaction(pilot, description=description)

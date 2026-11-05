@@ -10,18 +10,18 @@ from .frontend_contract import (
     InvoiceObservation,
     TransactionObservation,
 )
-from .installed_tui_cli_observations import _invoice_observation, _read_transaction
-from .installed_tui_cli_transport import _cli_command, _result, _text
+from .installed_tui_cli_observations import invoice_observation, read_transaction
+from .installed_tui_cli_transport import cli_command, installed_tui_cli_transport_result, text
 from .installed_tui_contracts import (
-    _COUNTERPARTY_NIF,
-    _INVOICE_BASE,
-    _INVOICE_IVA,
-    _LINKED_IDENTITY_REFUSAL,
+    COUNTERPARTY_NIF,
+    INVOICE_BASE,
+    INVOICE_IVA,
+    LINKED_IDENTITY_REFUSAL,
     LedgerInstalledTuiError,
 )
 
 
-def _add_invoice(
+def add_invoice(
     cli: InstalledCli,
     *,
     invoice_number: str,
@@ -30,7 +30,7 @@ def _add_invoice(
     stage: str,
 ) -> InvoiceObservation:
     """Capture one small issued invoice through the installed public CLI."""
-    document = _cli_command(
+    document = cli_command(
         cli,
         (
             "app",
@@ -42,13 +42,13 @@ def _add_invoice(
             "--counterparty-name",
             "Ledger acceptance customer",
             "--counterparty-nif",
-            _COUNTERPARTY_NIF,
+            COUNTERPARTY_NIF,
             "--invoice-number",
             invoice_number,
             "--invoice-date",
             f"{year}-03-15",
             "--taxable-base",
-            format(_INVOICE_BASE, "f"),
+            format(INVOICE_BASE, "f"),
             "--iva-rate",
             "21",
             "--country-code",
@@ -61,10 +61,10 @@ def _add_invoice(
         stage=stage,
         command="ledger.invoice.add",
     )
-    return _invoice_observation(_result(document, stage=stage), stage=stage)
+    return invoice_observation(installed_tui_cli_transport_result(document, stage=stage), stage=stage)
 
 
-def _add_transaction(
+def add_transaction(
     cli: InstalledCli,
     *,
     description: str,
@@ -74,7 +74,7 @@ def _add_transaction(
     stage: str,
 ) -> TransactionObservation:
     """Capture a public unlinked transaction with explicit IVA facts."""
-    document = _cli_command(
+    document = cli_command(
         cli,
         (
             "app",
@@ -91,11 +91,11 @@ def _add_transaction(
             "--classification",
             "BUSINESS",
             "--taxable-base",
-            format(_INVOICE_BASE, "f"),
+            format(INVOICE_BASE, "f"),
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            format(_INVOICE_IVA, "f"),
+            format(INVOICE_IVA, "f"),
             "--iva-category",
             "domestic_general",
             "--source-jurisdiction",
@@ -106,14 +106,14 @@ def _add_transaction(
         stage=stage,
         command="ledger.add",
     )
-    result = _result(document, stage=stage)
-    return _read_transaction(cli, _text(result.get("transaction_id"), stage=stage), stage=stage)
+    result = installed_tui_cli_transport_result(document, stage=stage)
+    return read_transaction(cli, text(result.get("transaction_id"), stage=stage), stage=stage)
 
 
-def _link_transaction(cli: InstalledCli, transaction_id: str, invoice_id: str, *, stage: str) -> None:
+def link_transaction(cli: InstalledCli, transaction_id: str, invoice_id: str, *, stage: str) -> None:
     """Link through the public command and require the normal successful envelope."""
-    _result(
-        _cli_command(
+    installed_tui_cli_transport_result(
+        cli_command(
             cli,
             ("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id),
             stage=stage,
@@ -123,9 +123,9 @@ def _link_transaction(cli: InstalledCli, transaction_id: str, invoice_id: str, *
     )
 
 
-def _assert_linked_identity_refused(cli: InstalledCli, transaction_id: str) -> None:
+def assert_linked_identity_refused(cli: InstalledCli, transaction_id: str) -> None:
     """Exercise the public guarded rejection before a TUI readback verifies stability."""
-    document = _cli_command(
+    document = cli_command(
         cli,
         ("app", "ledger", "update", transaction_id, "--description", "ledger-linked-refusal-attempt"),
         stage="linked identity refusal",
@@ -139,6 +139,6 @@ def _assert_linked_identity_refused(cli: InstalledCli, transaction_id: str) -> N
         or document.get("status") != "error"
         or not isinstance(error, dict)
         or error.get("code") != "ERROR_TRANSACTION_VALIDATION"
-        or error.get("message") != _LINKED_IDENTITY_REFUSAL
+        or error.get("message") != LINKED_IDENTITY_REFUSAL
     ):
         raise LedgerInstalledTuiError("public linked identity edit did not refuse")

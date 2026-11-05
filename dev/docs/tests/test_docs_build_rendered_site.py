@@ -383,14 +383,14 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
     assert ".cadrumo-copy-btn" in reduced
 
 
-from ._sequence_storage_fixtures import _isolated_sequence_storage
+from .sequence_storage_fixtures import isolated_sequence_storage
 
-__all__ = ["_isolated_sequence_storage"]
+__all__ = ["isolated_sequence_storage"]
 
 
 def test_sequence_page_ships_widget_and_degrades_without_js(
     tmp_path: Path,
-    _isolated_sequence_storage: None,
+    isolated_sequence_storage: None,
 ) -> None:
     """A real -n -W build renders the no-JS transcript, the enhanceable markup, and ships the assets."""
     site = tmp_path / "site"

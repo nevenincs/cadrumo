@@ -14,15 +14,15 @@ from dev.acceptance.income_tax.tui_contracts import TuiOperationBinding, TuiTerm
 from dev.acceptance.income_tax.tui_operation_controls import activate_tui_operation
 from dev.acceptance.income_tax.tui_selectors import WORKBENCH_AT_RISK_PROCEED, WORKBENCH_LIST, WORKBENCH_NOTICE
 
-from .m303_evidence_contracts import _EVIDENCE_SUBMIT_ID, TuiOutcome
-from .m303_evidence_navigation import _await_selector, _await_workbench_refresh, open_work
-from .m303_evidence_refusals import _notice_key, _visible_refusal
+from .m303_evidence_contracts import EVIDENCE_SUBMIT_ID, TuiOutcome
+from .m303_evidence_navigation import await_selector, await_workbench_refresh, open_work
+from .m303_evidence_refusals import notice_key, visible_refusal
 
 if TYPE_CHECKING:
     pass
 
 
-async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
+async def open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
     """Calculate from the workbench, which first asks the Modelo 303 filing evidence.
 
     The workbench may ask, before recalculating, to confirm a declaration last
@@ -38,7 +38,7 @@ async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
     deadline = time.monotonic() + 120.0
     while time.monotonic() < deadline:
         screen = pilot.app.screen
-        if screen.query(_EVIDENCE_SUBMIT_ID):
+        if screen.query(EVIDENCE_SUBMIT_ID):
             return
         try:
             proceed = screen.query_one(WORKBENCH_AT_RISK_PROCEED)
@@ -49,12 +49,12 @@ async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
             await pilot.press("enter")
         await pilot.pause(0.2)
     raise InstalledTuiChildError(
-        f"installed workbench did not ask the Modelo 303 filing evidence: {_visible_refusal(pilot)}",
+        f"installed workbench did not ask the Modelo 303 filing evidence: {visible_refusal(pilot)}",
         diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-def _fill_evidence_form(
+def fill_evidence_form(
     pilot: Any,
     *,
     attachment_id: str = "",
@@ -76,7 +76,7 @@ def _fill_evidence_form(
 
 _EVIDENCE_SUBMIT: Final = TuiOperationBinding(
     "modelo.work.calculate",
-    activation_id=_EVIDENCE_SUBMIT_ID,
+    activation_id=EVIDENCE_SUBMIT_ID,
     at_risk_proceed_id=WORKBENCH_AT_RISK_PROCEED,
     terminal_result_id="#operation-modal-status",
     refresh_result_id=WORKBENCH_LIST,
@@ -89,44 +89,44 @@ async def _submit_evidence(pilot: Any, *, step: str) -> TuiOutcome:
     return TuiOutcome(step=step, terminal_condition=terminal.terminal_condition, visible_notice_key=None)
 
 
-async def _form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> list[TuiOutcome]:
+async def form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> list[TuiOutcome]:
     """Missing answers stay on the form; cancelling is reported without a request."""
     from textual.widgets import Button
 
     outcomes: list[TuiOutcome] = []
-    await _open_evidence_form(pilot, work_unit_id=work_unit_id)
-    _fill_evidence_form(pilot, answer=False, observed_at=observed_at)
-    query_public_selector(pilot, _EVIDENCE_SUBMIT_ID, Button).focus()
+    await open_evidence_form(pilot, work_unit_id=work_unit_id)
+    fill_evidence_form(pilot, answer=False, observed_at=observed_at)
+    query_public_selector(pilot, EVIDENCE_SUBMIT_ID, Button).focus()
     await pilot.press("enter")
     await pilot.pause()
-    await _await_selector(pilot, _EVIDENCE_SUBMIT_ID)
+    await await_selector(pilot, EVIDENCE_SUBMIT_ID)
     outcomes.append(
         TuiOutcome(
             step="missing_booleans",
             terminal_condition="form_refused",
-            visible_notice_key=_notice_key(pilot, "#m303-evidence-notice", ("tui.modelo.m303_evidence.required",)),
+            visible_notice_key=notice_key(pilot, "#m303-evidence-notice", ("tui.modelo.m303_evidence.required",)),
         )
     )
     query_public_selector(pilot, "#m303-evidence-cancel", Button).focus()
     await pilot.press("enter")
-    await _await_selector(pilot, WORKBENCH_NOTICE)
+    await await_selector(pilot, WORKBENCH_NOTICE)
     await pilot.pause()
     outcomes.append(
         TuiOutcome(
             step="cancelled",
             terminal_condition="cancelled_without_request",
-            visible_notice_key=_notice_key(pilot, WORKBENCH_NOTICE, ("tui.modelo.m303_evidence.cancelled",)),
+            visible_notice_key=notice_key(pilot, WORKBENCH_NOTICE, ("tui.modelo.m303_evidence.cancelled",)),
         )
     )
     return outcomes
 
 
-async def _calculate_and_verify(
+async def calculate_and_verify(
     pilot: Any, *, work_unit_id: str, form: Mapping[str, str], asks_modelo_390: bool = True
 ) -> list[TuiOutcome]:
     outcomes: list[TuiOutcome] = []
-    await _open_evidence_form(pilot, work_unit_id=work_unit_id)
-    _fill_evidence_form(
+    await open_evidence_form(pilot, work_unit_id=work_unit_id)
+    fill_evidence_form(
         pilot,
         attachment_id=form.get("attachment_id", ""),
         sha256=form.get("sha256", ""),
@@ -137,7 +137,7 @@ async def _calculate_and_verify(
     outcomes.append(calculated)
     if calculated.terminal_condition != "succeeded":
         raise InstalledTuiChildError(
-            f"installed TUI M303 calculation ended {calculated.terminal_condition}: {_visible_refusal(pilot)}"
+            f"installed TUI M303 calculation ended {calculated.terminal_condition}: {visible_refusal(pilot)}"
         )
-    await _await_workbench_refresh(pilot, binding=_EVIDENCE_SUBMIT)
+    await await_workbench_refresh(pilot, binding=_EVIDENCE_SUBMIT)
     return outcomes

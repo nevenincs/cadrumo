@@ -22,8 +22,8 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from ..lane_recipe_commands import _recipe_bodies, _recipes_invoked_by
-from ..lane_workflow_graph import _workflow_run_steps
+from ..lane_recipe_commands import recipe_bodies, recipes_invoked_by
+from ..lane_workflow_graph import workflow_run_steps
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,7 +39,7 @@ def _declared_recipes(root: Path) -> frozenset[str]:
     tool being installed.
     """
     justfile = root / "justfile"
-    return frozenset(_recipe_bodies(justfile.read_text(encoding=_UTF_8))) if justfile.exists() else frozenset[str]()
+    return frozenset(recipe_bodies(justfile.read_text(encoding=_UTF_8))) if justfile.exists() else frozenset[str]()
 
 
 def _workflow_callees(root: Path) -> dict[str, set[str]]:
@@ -54,8 +54,8 @@ def _workflow_callees(root: Path) -> dict[str, set[str]]:
     if not workflow_dir.is_dir():
         return callees
     for workflow in sorted(path for path in workflow_dir.iterdir() if path.suffix in (".yml", ".yaml")):
-        for step in _workflow_run_steps(workflow.read_text(encoding=_UTF_8), ()):
-            for name in _recipes_invoked_by(step.command):
+        for step in workflow_run_steps(workflow.read_text(encoding=_UTF_8), ()):
+            for name in recipes_invoked_by(step.command):
                 callees.setdefault(name, set()).add(workflow.name)
     return callees
 
@@ -63,10 +63,10 @@ def _workflow_callees(root: Path) -> dict[str, set[str]]:
 def _body_callees(root: Path) -> dict[str, set[str]]:
     """Return each recipe name a recipe body invokes, mapped to the calling recipes."""
     justfile = root / "justfile"
-    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
+    bodies = recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
     callees: dict[str, set[str]] = {}
     for caller, text in bodies.items():
-        for name in _recipes_invoked_by(text):
+        for name in recipes_invoked_by(text):
             callees.setdefault(name, set()).add(caller)
     return callees
 
@@ -144,6 +144,6 @@ def test_a_recipe_named_only_in_a_comment_is_not_read_as_invoked() -> None:
     """
     body = "    echo building\n    # Verify the result with `just doctor-browser`.\n    just lint\n"
 
-    assert _recipes_invoked_by(body) == {"lint"}
-    assert _recipes_invoked_by("    # just doctor-browser\n") == set()
-    assert _recipes_invoked_by("    just doctor-browser\n") == {"doctor-browser"}
+    assert recipes_invoked_by(body) == {"lint"}
+    assert recipes_invoked_by("    # just doctor-browser\n") == set()
+    assert recipes_invoked_by("    just doctor-browser\n") == {"doctor-browser"}

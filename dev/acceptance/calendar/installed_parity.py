@@ -416,7 +416,7 @@ def _require_empty_directory(path: Path, *, label: str) -> Path:
     return path.resolve()
 
 
-def _fresh_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
+def fresh_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
     """Read after the TUI using fresh secure stdin proof, independently of its connection."""
     return _cli_calendar(cli, window, authenticated=True), "stdin_secret"
 
@@ -605,7 +605,7 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
     # TUI -> CLI: the TUI writes local work; the CLI uses fresh stdin password proof to read it.
     t2c_path, t2c_cli, t2c_secret = store("tui_to_cli")
     t2c_tui = child(t2c_path, t2c_secret, "tui_to_cli", "create_then_inspect", write_row=tui_row)
-    t2c_rows, t2c_authentication = _fresh_cli_calendar(t2c_cli, window)
+    t2c_rows, t2c_authentication = fresh_cli_calendar(t2c_cli, window)
     tui_work = t2c_rows[tui_row].work_unit_id
     tui_to_cli = _scenario(
         "tui_to_cli",

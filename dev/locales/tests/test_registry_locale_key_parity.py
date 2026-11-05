@@ -23,9 +23,9 @@ import pytest
 
 from cadrumo.core.i18n.render import tr
 
-from .._paths import LOCALES_DIR
-from .._registry_scanner import scan_registry_keys
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR
+from ..registry_scanner import scan_registry_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

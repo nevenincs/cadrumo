@@ -217,7 +217,7 @@ def test_a_symbol_only_a_sibling_tree_defines_does_not_resolve(
         '"""A development-only module."""\n\n\ndef dev_only_helper() -> None:\n    """Dev only."""\n',
         encoding="utf-8",
     )
-    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    monkeypatch.setattr(docstring_reference_targets, "SIBLING_TREES", (sibling,))
     root = _package(tmp_path, live='"""Points at :func:`dev_only_helper`."""\n')
 
     assert [item.target for item in dangling_references((root,))] == ["dev_only_helper"]
@@ -242,7 +242,7 @@ def test_the_screen_holds_the_sibling_symbols_it_refuses_to_use(
         '"""A development-only module."""\n\n\ndef dev_only_helper() -> None:\n    """Dev only."""\n',
         encoding="utf-8",
     )
-    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    monkeypatch.setattr(docstring_reference_targets, "SIBLING_TREES", (sibling,))
     sibling_defined, _sibling_imported, sibling_modules = collect_defined_names(sibling)
     root = _package(tmp_path, live='"""Points at :func:`dev_only_helper`."""\n')
 
@@ -263,7 +263,7 @@ def test_a_module_name_a_sibling_tree_defines_still_resolves(
     sibling = tmp_path / "dev"
     sibling.mkdir()
     (sibling / "harness.py").write_text('"""A development-only module."""\n', encoding="utf-8")
-    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    monkeypatch.setattr(docstring_reference_targets, "SIBLING_TREES", (sibling,))
     root = _package(tmp_path, live='"""Its counterpart is :mod:`harness`."""\n')
 
     assert dangling_references((root,)) == ()

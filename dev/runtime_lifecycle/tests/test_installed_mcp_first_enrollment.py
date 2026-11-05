@@ -40,8 +40,8 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
-from .records import _record
-from .test_installed_authenticated_stdio import _installed_mcp_executable, _scope_for_auth_read
+from .records import record
+from .test_installed_authenticated_stdio import installed_mcp_executable, scope_for_auth_read
 
 if TYPE_CHECKING:
     pass
@@ -104,7 +104,7 @@ async def test_installed_sdk_offers_no_enrollment_and_no_key_presentation_to_an_
 ) -> None:
     """An unauthenticated SDK can neither request a key for itself nor name one; the person issues and configures it."""
     _backend, native_store = _selected_native_store()
-    executable = _installed_mcp_executable()
+    executable = installed_mcp_executable()
     assert executable.is_file(), "the installed cadrumo-mcp executable is required"
     with (
         override_settings(
@@ -115,7 +115,7 @@ async def test_installed_sdk_offers_no_enrollment_and_no_key_presentation_to_an_
         native_api_cli_session(
             tmp_path,
             invoke_cli=run_cadrumo_cli,
-            scope_for_destination=_scope_for_auth_read,
+            scope_for_destination=scope_for_auth_read,
             prepare_profile=lambda _profile_id, _root: None,
             server_native_store=native_store,
         ) as profile,
@@ -149,11 +149,11 @@ async def test_installed_sdk_offers_no_enrollment_and_no_key_presentation_to_an_
 
         assert not names & {name for name, _arguments in _KEY_REQUEST_CALLS}
         assert not status.is_error
-        assert _record(status.structured_content)["authenticated"] is False
+        assert record(status.structured_content)["authenticated"] is False
         assert refused.is_error
-        assert _record(refused.structured_content)["code"] == "authentication_required"
+        assert record(refused.structured_content)["code"] == "authentication_required"
         for (name, _arguments), answer in zip(_KEY_REQUEST_CALLS, key_requests, strict=True):
             assert answer.is_error, name
-            assert _record(answer.structured_content) == {"outcome": "refused", "code": "unknown_tool"}, name
+            assert record(answer.structured_content) == {"outcome": "refused", "code": "unknown_tool"}, name
         # Nothing the server was asked admitted a session for it.
         assert profile.registered_sessions() == sessions_before

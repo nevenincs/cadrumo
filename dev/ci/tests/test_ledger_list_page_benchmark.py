@@ -51,7 +51,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 from ..perf_measurement import wall_advisory_message
-from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+from .ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

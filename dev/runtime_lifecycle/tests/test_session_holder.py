@@ -162,7 +162,7 @@ async def test_async_startup_refusal_reaps_the_exact_child(monkeypatch: pytest.M
 async def test_async_close_terminates_a_child_that_ignores_stdin_eof(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(async_holder_process, "CLOSE_SECONDS", 0.05)
     owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "import time; time.sleep(30)"),
@@ -184,7 +184,7 @@ async def test_async_close_terminates_a_child_that_ignores_stdin_eof(
 async def test_async_close_retries_stdin_wait_while_stream_is_already_closing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(async_holder_process, "CLOSE_SECONDS", 0.05)
     owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "import sys; sys.stdin.buffer.read()"),
@@ -221,7 +221,7 @@ async def test_async_close_retries_stdin_wait_while_stream_is_already_closing(
 async def test_async_close_retains_owner_until_stderr_drainer_finishes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(async_holder_process, "_REAP_SECONDS", 0.05)
+    monkeypatch.setattr(async_holder_process, "REAP_SECONDS", 0.05)
     owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "pass"),
@@ -256,7 +256,7 @@ async def test_async_close_retains_owner_until_stderr_drainer_finishes(
 
 @pytest.mark.asyncio
 async def test_cancelling_start_waits_for_spawn_then_reaps_the_child(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(async_holder_process, "CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_before_identity=True)
     launched = asyncio.Event()
     owners: list[AsyncPipeOwner] = []
@@ -320,7 +320,7 @@ def test_windows_holder_owns_correlated_pipe_session_and_cleans_threads(
 def test_windows_holder_job_terminates_and_reaps_an_unresponsive_child(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_forever=True)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
 
@@ -336,8 +336,8 @@ def test_windows_holder_job_terminates_and_reaps_an_unresponsive_child(
 def test_windows_holder_times_out_blocked_write_by_terminating_job_before_pipe_close(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(windows_holder, "_WRITE_SECONDS", 0.05)
-    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder, "WRITE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_forever=True)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
     scope = holder._scope
@@ -357,7 +357,7 @@ def test_windows_holder_times_out_blocked_write_by_terminating_job_before_pipe_c
 
 @pytest.mark.windows_only
 def test_windows_holder_retries_a_failed_stdin_close(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
     stream = holder._stdin

@@ -48,8 +48,8 @@ def _require_ordinary_calculation(
     reopened: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, work_unit_id: str
 ) -> tuple[str, Decimal]:
     """Require ordinary calculation."""
-    calculated = _result(
-        _run(
+    calculated = result(
+        run(
             reopened,
             receipts,
             artifact,
@@ -66,7 +66,7 @@ def _require_ordinary_calculation(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    revision_id = _required_id(calculated, "calculation_revision_id")
+    revision_id = required_id(calculated, "calculation_revision_id")
     casillas_raw = calculated.get("casilla_values")
     if not isinstance(casillas_raw, dict):
         raise IvaCliJourneyError("Modelo 303 calculate returned no public casilla projection")
@@ -180,8 +180,8 @@ def run_iva_m303_cli_journey(
         receipts: list[SanitizedCommandReceipt] = []
         _create_ordinary_profile(cli, receipts, artifact, year)
 
-        evidence = _result(
-            _run(
+        evidence = result(
+            run(
                 cli,
                 receipts,
                 artifact,
@@ -189,7 +189,7 @@ def run_iva_m303_cli_journey(
                 result_keys=("evidence_id",),
             )
         )
-        evidence_id = _required_id(evidence, "evidence_id")
+        evidence_id = required_id(evidence, "evidence_id")
 
         sale_transaction_id, sale_invoice_id = _capture_ordinary_sale(cli, receipts, artifact, journey_year, year)
 
@@ -223,8 +223,8 @@ def run_iva_m303_cli_journey(
             passphrase=cli.passphrase,
             cli_argument_prefix=cli.cli_argument_prefix,
         )
-        verification = _result(
-            _run(
+        verification = result(
+            run(
                 export_cli,
                 receipts,
                 artifact,
@@ -232,8 +232,8 @@ def run_iva_m303_cli_journey(
                 result_keys=("verification_report_id", "calculation_revision_id"),
             )
         )
-        verification_report_id = _required_id(verification, "verification_report_id")
-        verification_status = _required_text(verification, "completeness_status")
+        verification_report_id = required_id(verification, "verification_report_id")
+        verification_status = required_text(verification, "completeness_status")
         if verification.get("calculation_revision_id") != revision_id:
             raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
         if verification.get("granted_verificado_completo") is not True:
@@ -260,11 +260,11 @@ def run_iva_m303_cli_journey(
             schema_version="iva-01-installed-cli-journey-v3",
             filing_year=year,
             executable=str(cli.executable),
-            executable_sha256=_sha256_path(cli.executable),
-            source_identity=_checkout_source_identity(),
-            package_identity=_installed_package_identity(),
+            executable_sha256=sha256_path(cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
             authority_generation=_AUTHORITY_GENERATION(authority_root),
-            authority_descriptor_sha256=_sha256_path(descriptor),
+            authority_descriptor_sha256=sha256_path(descriptor),
             storage_root=str(storage_root.resolve()),
             purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
             transaction_ids=(sale_transaction_id, purchase_transaction_id),
@@ -294,7 +294,7 @@ def _create_ordinary_work(
     reopened: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, year: int
 ) -> str:
     """Seed the explicit zero opening wallet and create the ordinary first-quarter work unit."""
-    _run(
+    run(
         reopened,
         receipts,
         artifact,
@@ -313,8 +313,8 @@ def _create_ordinary_work(
         ),
         result_keys=(),
     )
-    created = _result(
-        _run(
+    created = result(
+        run(
             reopened,
             receipts,
             artifact,
@@ -322,7 +322,7 @@ def _create_ordinary_work(
             result_keys=("work_unit_id",),
         )
     )
-    work_unit_id = _required_id(created, "work_unit_id")
+    work_unit_id = required_id(created, "work_unit_id")
     return work_unit_id
 
 
@@ -340,7 +340,7 @@ def _export_ordinary_quarter(
 ) -> tuple[bytes, str, str, Decimal]:
     """Export locally and independently validate the header and parsed IVA result."""
     export_artifact = artifact_root / f"m303-{year}-1t.fichero-boe"
-    export_document = _run(
+    export_document = run(
         export_cli,
         receipts,
         artifact,
@@ -348,7 +348,7 @@ def _export_ordinary_quarter(
         result_keys=("work_unit_id", "calculation_revision_id", "file_sha256"),
         redacted_paths={export_artifact: _EXPORT_ARTIFACT_PLACEHOLDER},
     )
-    exported = _result(export_document)
+    exported = result(export_document)
     _require_export_receipt(
         exported=exported,
         work_unit_id=work_unit_id,
@@ -389,14 +389,14 @@ def _create_ordinary_profile(
         raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
     receipts.extend(
         (
-            _command_receipt(
+            command_receipt(
                 args=profile_create_args(year),
                 evidence=profile_commands[0],
                 artifact=artifact,
                 result_ids=(),
                 cli_argument_prefix=cli.cli_argument_prefix,
             ),
-            _command_receipt(
+            command_receipt(
                 args=("config", "profile", "complete-setup"),
                 evidence=profile_commands[1],
                 artifact=artifact,
@@ -411,8 +411,8 @@ def _capture_ordinary_sale(
     cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear, year: int
 ) -> tuple[str, str]:
     """Perform this ordinary IVA capture phase through the installed command boundary."""
-    sale_transaction = _result(
-        _run(
+    sale_transaction = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -446,26 +446,26 @@ def _capture_ordinary_sale(
             result_keys=("transaction_id",),
         )
     )
-    sale_transaction_id = _required_id(sale_transaction, "transaction_id")
-    sale_invoice = _result(
-        _run(
+    sale_transaction_id = required_id(sale_transaction, "transaction_id")
+    sale_invoice = result(
+        run(
             cli,
             receipts,
             artifact,
-            _invoice_add_args(
+            invoice_add_args(
                 kind="issued",
                 counterparty_name="Synthetic client SL",
                 counterparty_nif="A58818501",
                 invoice_number=f"IVA-ISS-{year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
-                line=_invoice_line(description="Synthetic sale", subtotal="100.00", iva_amount="21.00"),
+                line=invoice_line(description="Synthetic sale", subtotal="100.00", iva_amount="21.00"),
             ),
             result_keys=("invoice_id",),
         )
     )
-    sale_invoice_id = _required_id(sale_invoice, "invoice_id")
-    _run(
+    sale_invoice_id = required_id(sale_invoice, "invoice_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -485,8 +485,8 @@ def _capture_ordinary_purchase(
     evidence_id: str,
 ) -> tuple[str, str]:
     """Perform this ordinary IVA capture phase through the installed command boundary."""
-    purchase_transaction = _result(
-        _run(
+    purchase_transaction = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -524,8 +524,8 @@ def _capture_ordinary_purchase(
             result_keys=("transaction_id",),
         )
     )
-    purchase_transaction_id = _required_id(purchase_transaction, "transaction_id")
-    _run(
+    purchase_transaction_id = required_id(purchase_transaction, "transaction_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -544,25 +544,25 @@ def _capture_ordinary_purchase(
         ),
         result_keys=(),
     )
-    purchase_invoice = _result(
-        _run(
+    purchase_invoice = result(
+        run(
             cli,
             receipts,
             artifact,
-            _invoice_add_args(
+            invoice_add_args(
                 kind="received",
                 counterparty_name="Synthetic supplier SL",
                 counterparty_nif="A58818501",
                 invoice_number=f"IVA-REC-{year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
-                line=_invoice_line(description="Synthetic purchase", subtotal="50.00", iva_amount="10.50"),
+                line=invoice_line(description="Synthetic purchase", subtotal="50.00", iva_amount="10.50"),
             ),
             result_keys=("invoice_id",),
         )
     )
-    purchase_invoice_id = _required_id(purchase_invoice, "invoice_id")
-    _run(
+    purchase_invoice_id = required_id(purchase_invoice, "invoice_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -573,7 +573,7 @@ def _capture_ordinary_purchase(
     return purchase_transaction_id, purchase_invoice_id
 
 
-def _invoice_add_args(
+def invoice_add_args(
     *,
     kind: str,
     counterparty_name: str,
@@ -607,7 +607,7 @@ def _invoice_add_args(
     )
 
 
-def _invoice_line(*, description: str, subtotal: str, iva_amount: str) -> str:
+def invoice_line(*, description: str, subtotal: str, iva_amount: str) -> str:
     return json.dumps(
         {
             "description": description,
@@ -631,18 +631,18 @@ def _assert_reopened_identities(
     invoice_ids: tuple[str, str],
     evidence_id: str,
 ) -> None:
-    ledger = _result(_run(cli, receipts, artifact, ("app", "ledger", "list"), result_keys=()))
-    invoices = _result(_run(cli, receipts, artifact, ("app", "ledger", "invoice", "list"), result_keys=()))
-    evidence = _result(_run(cli, receipts, artifact, ("app", "ledger", "evidence", "list"), result_keys=()))
-    if _row_ids(ledger, "transaction_id") != set(transaction_ids):
+    ledger = result(run(cli, receipts, artifact, ("app", "ledger", "list"), result_keys=()))
+    invoices = result(run(cli, receipts, artifact, ("app", "ledger", "invoice", "list"), result_keys=()))
+    evidence = result(run(cli, receipts, artifact, ("app", "ledger", "evidence", "list"), result_keys=()))
+    if row_ids(ledger, "transaction_id") != set(transaction_ids):
         raise IvaCliJourneyError("fresh-process ledger readback lost a transaction identity")
-    if _row_ids(invoices, "invoice_id") != set(invoice_ids):
+    if row_ids(invoices, "invoice_id") != set(invoice_ids):
         raise IvaCliJourneyError("fresh-process invoice readback lost an invoice identity")
-    if _row_ids(evidence, "evidence_id") != {evidence_id}:
+    if row_ids(evidence, "evidence_id") != {evidence_id}:
         raise IvaCliJourneyError("fresh-process evidence readback lost the purchase evidence identity")
 
 
-def _row_ids(payload: dict[str, object], key: str) -> set[str]:
+def row_ids(payload: dict[str, object], key: str) -> set[str]:
     rows_raw = payload.get("rows")
     if not isinstance(rows_raw, list):
         raise IvaCliJourneyError(f"public list returned no rows for {key}")
@@ -657,7 +657,7 @@ def _row_ids(payload: dict[str, object], key: str) -> set[str]:
     return resolved
 
 
-def _run(
+def run(
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
     artifact: Path,
@@ -673,7 +673,7 @@ def _run(
     result_mapping = _object_mapping(result)
     result_ids = tuple(str(value) for key in result_keys if isinstance((value := result_mapping.get(key)), str))
     receipts.append(
-        _command_receipt(
+        command_receipt(
             args=args,
             evidence=evidence,
             artifact=artifact,
@@ -710,7 +710,7 @@ def _require_developer_header(payload: bytes, positions: tuple[str, str, str]) -
             raise IvaCliJourneyError(f"{record} bytes {span} carry {observed!r}, not the development identity")
 
 
-def _command_receipt(
+def command_receipt(
     *,
     args: tuple[str, ...],
     evidence: CommandEvidence,
@@ -739,7 +739,7 @@ def _sanitize_argv(
     return tuple(replacements.get(value, value) for value in args)
 
 
-def _result(document: dict[str, object]) -> dict[str, object]:
+def result(document: dict[str, object]) -> dict[str, object]:
     result = document.get("result")
     if not isinstance(result, dict):
         raise IvaCliJourneyError("public command returned no object result")
@@ -764,7 +764,7 @@ def _require_export_receipt(
     if not isinstance(size, int) or size != artifact.stat().st_size:
         raise IvaCliJourneyError("Modelo 303 export byte-size receipt does not match its artifact")
     sha256 = exported.get("file_sha256")
-    if not isinstance(sha256, str) or sha256 != _sha256_path(artifact):
+    if not isinstance(sha256, str) or sha256 != sha256_path(artifact):
         raise IvaCliJourneyError("Modelo 303 export digest receipt does not match its artifact")
 
 
@@ -800,25 +800,25 @@ def _object_mapping(value: object) -> Mapping[str, object]:
     return cast(Mapping[str, object], value)
 
 
-def _required_id(payload: dict[str, object], key: str) -> str:
+def required_id(payload: dict[str, object], key: str) -> str:
     value = payload.get(key)
     if not isinstance(value, str) or not value:
         raise IvaCliJourneyError(f"public command returned no {key}")
     return value
 
 
-def _required_text(payload: Mapping[str, object], key: str) -> str:
+def required_text(payload: Mapping[str, object], key: str) -> str:
     value = payload.get(key)
     if not isinstance(value, str) or not value:
         raise IvaCliJourneyError(f"public command returned no {key}")
     return value
 
 
-def _sha256_path(path: Path) -> str:
+def sha256_path(path: Path) -> str:
     return sha256_hex(path.read_bytes())
 
 
-def _checkout_source_identity() -> str:
+def checkout_source_identity() -> str:
     root = Path(__file__).resolve().parents[3]
     dot_git = root / ".git"
     if dot_git.is_file():
@@ -834,7 +834,7 @@ def _checkout_source_identity() -> str:
     return head
 
 
-def _installed_package_identity() -> str:
+def installed_package_identity() -> str:
     try:
         return f"cadrumo=={version('cadrumo')}"
     except PackageNotFoundError as exc:

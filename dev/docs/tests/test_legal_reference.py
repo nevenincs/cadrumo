@@ -22,7 +22,7 @@ from dev.locales.signal_documentation_inventory import inventory_generated_docum
 from dev.paths import REPO_ROOT
 
 from ..legal_catalogue import load_legal_provisions
-from ..legal_page_rendering import _rst_escape
+from ..legal_page_rendering import rst_escape
 from ..legal_reference import generate_legal_reference, render_legal_reference
 from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
 from ..legal_reference_routing import legal_provision_anchor
@@ -358,7 +358,7 @@ def test_tagged_note_changes_only_the_quote_language_span(tmp_path: Path) -> Non
         re.DOTALL,
     )
     assert raw_note is not None
-    prior_rst = tagged_rst.replace(raw_note.group(), f"   :Cataloguer's note: {_rst_escape(note)}")
+    prior_rst = tagged_rst.replace(raw_note.group(), f"   :Cataloguer's note: {rst_escape(note)}")
 
     before = publish_parts(prior_rst, writer_name="html5")["html_body"]
     after = publish_parts(tagged_rst, writer_name="html5")["html_body"]
@@ -450,7 +450,7 @@ def test_link_like_note_keeps_its_existing_rst_projection(tmp_path: Path) -> Non
 
     rst = render_legal_reference(tmp_path, records=(record,)).pages[0].rst
 
-    assert _rst_escape(note) in rst
+    assert rst_escape(note) in rst
     assert "https://example.test/law" in rst
     assert f'<span lang="es">{quote}</span>' not in rst
     rendered = BeautifulSoup(publish_parts(rst, writer_name="html5")["html_body"], "html.parser")

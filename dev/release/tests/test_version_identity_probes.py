@@ -40,7 +40,7 @@ from dev.packaging.command_execution import run_command
 from dev.paths import REPO_ROOT, UTF_8
 
 from ..version_identity import VersionIdentityError, pypi_projects_owning
-from ._https_connection_double import install_https_connection
+from .https_connection_double import install_https_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

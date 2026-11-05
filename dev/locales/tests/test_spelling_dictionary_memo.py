@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.locales._spelling import DICTIONARY_SPECS, SpellingToolError, dictionary_roots, load_dictionaries
+from dev.locales.spelling import DICTIONARY_SPECS, SpellingToolError, dictionary_roots, load_dictionaries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

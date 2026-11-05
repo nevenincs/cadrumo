@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from .._ast_scanner import scan_source_text
+from ..ast_scanner import scan_source_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

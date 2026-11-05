@@ -8,15 +8,15 @@ from pathlib import Path
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from .annual_contracts import _FINAL_QUARTER, _QUARTERS, IvaQuarterlyLocalFilingReceipt
-from .annual_projection import _decimal_casilla, _period_code, _unique_row
+from .annual_contracts import FINAL_QUARTER, QUARTERS, IvaQuarterlyLocalFilingReceipt
+from .annual_projection import decimal_casilla, period_code, unique_row
 from .cli_journey import (
     IvaCliJourneyError,
     SanitizedCommandReceipt,
-    _required_id,
-    _required_text,
-    _result,
-    _run,
+    required_id,
+    required_text,
+    result,
+    run,
 )
 from .filing_year import IvaJourneyYear
 
@@ -26,9 +26,9 @@ def _require_quarter_filing_identity(
 ) -> tuple[str, str, str]:
     """Require quarter filing identity."""
     filing_id, origin, confirmation = (
-        _required_id(filed, "filing_record_id"),
-        _required_text(filed, "origin"),
-        _required_text(filed, "confirmation"),
+        required_id(filed, "filing_record_id"),
+        required_text(filed, "origin"),
+        required_text(filed, "confirmation"),
     )
     if (
         filed.get("work_unit_id") != work_id
@@ -46,13 +46,13 @@ def _require_quarter_filing_identity(
     return filing_id, origin, confirmation
 
 
-def _require_foundation_filing_identity(
+def require_foundation_filing_identity(
     filed: dict[str, object], work_unit_id: str, calculation_revision_id: str
 ) -> tuple[str, str, str]:
     """Require foundation filing identity."""
-    filing_record_id = _required_id(filed, "filing_record_id")
-    filing_origin = _required_text(filed, "origin")
-    filing_confirmation = _required_text(filed, "confirmation")
+    filing_record_id = required_id(filed, "filing_record_id")
+    filing_origin = required_text(filed, "origin")
+    filing_confirmation = required_text(filed, "confirmation")
     if filed.get("work_unit_id") != work_unit_id or filed.get("calculation_revision_id") != calculation_revision_id:
         raise IvaCliJourneyError("Modelo 303 file returned another work unit or calculation revision")
     if filing_origin != "local" or filing_confirmation != "pendiente":
@@ -64,7 +64,7 @@ def _require_foundation_filing_identity(
     return filing_record_id, filing_origin, filing_confirmation
 
 
-def _assert_fresh_process_filing_readback(
+def assert_fresh_process_filing_readback(
     *,
     work_listing: Mapping[str, object],
     filing_listing: Mapping[str, object],
@@ -72,12 +72,12 @@ def _assert_fresh_process_filing_readback(
     calculation_revision_id: str,
     filing_record_id: str,
 ) -> None:
-    work = _unique_row(work_listing, "work_units", "work_unit_id", work_unit_id)
+    work = unique_row(work_listing, "work_units", "work_unit_id", work_unit_id)
     if work.get("filed_calculation_revision_id") != calculation_revision_id:
         raise IvaCliJourneyError("fresh-process work list lost the filed calculation revision")
     if work.get("current_filing_record_id") != filing_record_id:
         raise IvaCliJourneyError("fresh-process work list lost the current local filing record")
-    filing = _unique_row(filing_listing, "records", "filing_record_id", filing_record_id)
+    filing = unique_row(filing_listing, "records", "filing_record_id", filing_record_id)
     if filing.get("work_unit_id") != work_unit_id or filing.get("calculation_revision_id") != calculation_revision_id:
         raise IvaCliJourneyError("fresh-process filing-record list returned another work unit or revision")
     if filing.get("origin") != "local" or filing.get("confirmation") != "pendiente":
@@ -88,10 +88,10 @@ def _assert_fresh_process_filing_readback(
         raise IvaCliJourneyError("fresh-process filing-record list unexpectedly carries external AEAT evidence")
 
 
-def _seed_first_period(
+def seed_first_period(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> None:
-    _run(
+    run(
         cli,
         receipts,
         artifact,
@@ -112,7 +112,7 @@ def _seed_first_period(
     )
 
 
-def _file_quarter(
+def file_quarter(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -121,8 +121,8 @@ def _file_quarter(
     period: str,
     expected: Decimal,
 ) -> IvaQuarterlyLocalFilingReceipt:
-    created = _result(
-        _run(
+    created = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -141,11 +141,11 @@ def _file_quarter(
             result_keys=("work_unit_id",),
         )
     )
-    work_id = _required_id(created, "work_unit_id")
+    work_id = required_id(created, "work_unit_id")
     evidence_args: tuple[str, ...] = ("--no-joint-return-elected",)
-    if period == _FINAL_QUARTER:
-        attestation = _result(
-            _run(
+    if period == FINAL_QUARTER:
+        attestation = result(
+            run(
                 cli,
                 receipts,
                 artifact,
@@ -167,12 +167,12 @@ def _file_quarter(
         evidence_args = (
             *evidence_args,
             "--m303-exonerado-390-attachment-id",
-            _required_id(attestation, "attachment_id"),
+            required_id(attestation, "attachment_id"),
             "--m303-exonerado-390-sha256",
-            _required_id(attestation, "sha256"),
+            required_id(attestation, "sha256"),
         )
-    calculated = _result(
-        _run(
+    calculated = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -182,12 +182,12 @@ def _file_quarter(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError(f"Modelo 303 {period} calculate did not confirm a saved revision")
-    revision_id = _required_id(calculated, "calculation_revision_id")
-    resultado = _decimal_casilla(calculated, "iva.resultado")
+    revision_id = required_id(calculated, "calculation_revision_id")
+    resultado = decimal_casilla(calculated, "iva.resultado")
     if resultado != expected:
         raise IvaCliJourneyError(f"independent Modelo 303 {period} oracle mismatch")
-    verified = _result(
-        _run(
+    verified = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -196,16 +196,16 @@ def _file_quarter(
         )
     )
     report_id, status = (
-        _required_id(verified, "verification_report_id"),
-        _required_text(verified, "completeness_status"),
+        required_id(verified, "verification_report_id"),
+        required_text(verified, "completeness_status"),
     )
     if (
         verified.get("calculation_revision_id") != revision_id
         or verified.get("granted_verificado_completo") is not True
     ):
         raise IvaCliJourneyError(f"Modelo 303 {period} verify did not prove its saved revision complete")
-    filed = _result(
-        _run(
+    filed = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -243,7 +243,7 @@ def _require_local_work_chain(
     """Require the public work row to retain the quarter local filing chain."""
     if (
         work.get("modelo") != "303"
-        or _period_code(work.get("period"), filing_year=journey_year.year) != filing.period
+        or period_code(work.get("period"), filing_year=journey_year.year) != filing.period
         or work.get("filed_calculation_revision_id") != filing.calculation_revision_id
         or work.get("current_filing_record_id") != filing.filing_record_id
     ):
@@ -266,7 +266,7 @@ def _require_local_record_chain(
         raise IvaCliJourneyError(f"fresh-process filing-record list lost local-only {filing.period} evidence")
 
 
-def _assert_local_quarter_chain(
+def assert_local_quarter_chain(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -274,14 +274,14 @@ def _assert_local_quarter_chain(
     filings: tuple[IvaQuarterlyLocalFilingReceipt, ...],
     journey_year: IvaJourneyYear,
 ) -> None:
-    if tuple(item.period for item in filings) not in (("1T",), _QUARTERS):
+    if tuple(item.period for item in filings) not in (("1T",), QUARTERS):
         raise IvaCliJourneyError("quarterly source chain is incomplete or out of order")
-    work_listing = _result(_run(cli, receipts, artifact, ("app", "modelo", "work", "list"), result_keys=()))
-    record_listing = _result(
-        _run(cli, receipts, artifact, ("app", "modelo", "filing-record", "list", "--modelo", "303"), result_keys=())
+    work_listing = result(run(cli, receipts, artifact, ("app", "modelo", "work", "list"), result_keys=()))
+    record_listing = result(
+        run(cli, receipts, artifact, ("app", "modelo", "filing-record", "list", "--modelo", "303"), result_keys=())
     )
     for filing in filings:
-        work = _unique_row(work_listing, "work_units", "work_unit_id", filing.work_unit_id)
-        record = _unique_row(record_listing, "records", "filing_record_id", filing.filing_record_id)
+        work = unique_row(work_listing, "work_units", "work_unit_id", filing.work_unit_id)
+        record = unique_row(record_listing, "records", "filing_record_id", filing.filing_record_id)
         _require_local_work_chain(work, filing, journey_year)
         _require_local_record_chain(record, filing, journey_year)

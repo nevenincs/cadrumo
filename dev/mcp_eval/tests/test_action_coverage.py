@@ -7,7 +7,7 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from .._action_coverage import (
+from ..action_coverage import (
     LeafConditionScenario,
     LeafConditionScenarioMatrix,
     leaf_condition_scenario_matrix,

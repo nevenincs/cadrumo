@@ -15,7 +15,7 @@ from ..pypi_publication_state import (
     local_files,
     publication_state,
 )
-from ._https_connection_double import install_https_connection
+from .https_connection_double import install_https_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

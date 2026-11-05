@@ -50,7 +50,7 @@ DELIVERY_ROUTES: Final[tuple[WorkerRoute, ...]] = (
 )
 
 
-_CACHE_CONTROL = "public, max-age=300, must-revalidate"
+CACHE_CONTROL = "public, max-age=300, must-revalidate"
 
 
 _UTF_8: Final[str] = UTF_8
@@ -60,7 +60,7 @@ _UTF_8: Final[str] = UTF_8
 #: so these are required per root; the search bundle is not among them because
 #: the site has one index and it lives at the apex
 #: (:data:`_REQUIRED_SITE_SEARCH_ARTIFACTS`).
-_REQUIRED_ROOT_ARTIFACTS = (
+REQUIRED_ROOT_ARTIFACTS = (
     "index.html",
     "404.html",
     "sitemap.xml",
@@ -70,7 +70,7 @@ _REQUIRED_ROOT_ARTIFACTS = (
 #: What the site's apex must carry so any language's page can search. One copy
 #: for the whole site: every root's pages resolve the bundle here, so a missing
 #: file is every language's search gone, not one root's.
-_REQUIRED_SITE_SEARCH_ARTIFACTS = (
+REQUIRED_SITE_SEARCH_ARTIFACTS = (
     "pagefind/pagefind-entry.json",
     "pagefind/pagefind.js",
     "pagefind/pagefind-ui.js",
@@ -78,11 +78,11 @@ _REQUIRED_SITE_SEARCH_ARTIFACTS = (
 )
 
 
-_DOCTREE_EXCLUDES = (".doctrees/*", "*/.doctrees/*")
+DOCTREE_EXCLUDES = (".doctrees/*", "*/.doctrees/*")
 
 
 # Automation markers every hosted and self-hosted runner sets.
-_CI_MARKERS = ("CI", "GITHUB_ACTIONS")
+CI_MARKERS = ("CI", "GITHUB_ACTIONS")
 
 
 #: Cloudflare delivery credentials, read from the process environment by the
@@ -97,27 +97,27 @@ DELIVERY_CREDENTIAL_ENV: Final[tuple[str, ...]] = (
 )
 
 
-_RELEASE_LABEL_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+RELEASE_LABEL_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 
 
-_RELEASE_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}-[0-9]{8}T[0-9]{6}Z")
+RELEASE_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}-[0-9]{8}T[0-9]{6}Z")
 
 
-_ENDPOINT_TIMEOUT_SECONDS = 20
+ENDPOINT_TIMEOUT_SECONDS = 20
 
 
-_RELEASE_WAIT_SECONDS = 180
+RELEASE_WAIT_SECONDS = 180
 
 
-_RELEASE_POLL_SECONDS = 5
+RELEASE_POLL_SECONDS = 5
 
 
-_MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
+MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
 
 
 #: A page every language root carries and the apex never does, so a request for
 #: it at the apex proves the redirect to the source-language root.
-_APEX_DEEP_LINK = "search.html"
+APEX_DEEP_LINK = "search.html"
 
 
 @dataclass(frozen=True)

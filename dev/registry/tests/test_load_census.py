@@ -485,7 +485,7 @@ def _share_scans_under(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) 
     from ..analysis import load_census
 
     monkeypatch.setattr(load_census, "REPO_ROOT", tmp_path)
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(tmp_path / "run-cache"))
 
 

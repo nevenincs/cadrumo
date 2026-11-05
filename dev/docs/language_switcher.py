@@ -38,7 +38,7 @@ from sphinx.util.matching import Matcher
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from ._locale_chrome import docs_fragment
+from .locale_chrome import docs_fragment
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx

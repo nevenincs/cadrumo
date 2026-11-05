@@ -2,16 +2,14 @@
 
 import pytest
 
-from ..fstring_registry import _own_account_registrations
+from ..fstring_registry import own_account_registrations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_account_keys_are_locale_values_and_include_the_closing_date() -> None:
     keys = {
-        registration.key_factory(value)
-        for registration in _own_account_registrations()
-        for value in registration.values
+        registration.key_factory(value) for registration in own_account_registrations() for value in registration.values
     }
     assert {
         "cli.app.ledger.account.add_help",

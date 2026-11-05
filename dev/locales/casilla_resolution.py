@@ -15,7 +15,7 @@ from .casilla_catalogue_models import (
 )
 
 
-def _served_locale(
+def served_locale(
     catalogue: ModeloCasillaCatalogue,
     index: int,
     field_name: str,

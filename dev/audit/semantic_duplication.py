@@ -159,7 +159,7 @@ def _declared_members(node: ast.ClassDef) -> Iterator[str]:
                 yield target.id
 
 
-def _load_modules(roots: Sequence[Path]) -> list[Module]:
+def load_modules(roots: Sequence[Path]) -> list[Module]:
     """Parse every production module under ``roots`` once; every detector reads these.
 
     A module is named relative to its root's parent, so each site carries its
@@ -497,7 +497,7 @@ def detect_package_overlap(modules: Sequence[Module]) -> list[Candidate]:
     return candidates
 
 
-_DETECTORS = {
+DETECTORS = {
     "enum_subset": detect_enum_subset,
     "scarce_literal": detect_scarce_literal,
     "call_fingerprint": detect_call_fingerprint,
@@ -510,15 +510,15 @@ _DETECTORS = {
 
 def run(roots: Sequence[Path], detectors: Sequence[str]) -> list[Candidate]:
     """Run the named detectors over one corpus of ``roots`` and return candidates, heaviest first."""
-    modules = _load_modules(roots)
+    modules = load_modules(roots)
     _populate(modules, _closed_enums(modules))
     found: list[Candidate] = []
     for name in detectors:
-        found.extend(_DETECTORS[name](modules))
+        found.extend(DETECTORS[name](modules))
     return sorted(found, key=lambda candidate: (-candidate.weight, candidate.detector, candidate.sites))
 
 
-def _render(candidates: Sequence[Candidate], limit: int | None) -> str:
+def render(candidates: Sequence[Candidate], limit: int | None) -> str:
     """Render a human report, heaviest candidates first."""
     lines: list[str] = []
     by_detector: dict[str, list[Candidate]] = collections.defaultdict(list)
@@ -538,7 +538,7 @@ def _render(candidates: Sequence[Candidate], limit: int | None) -> str:
     return "\n".join(lines)
 
 
-def _emit(text: str) -> None:
+def emit(text: str) -> None:
     """Write the report as UTF-8; fingerprints carry literals a Windows console codec cannot encode."""
     stream = sys.stdout
     if isinstance(stream, io.TextIOWrapper):
@@ -556,17 +556,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="A source root to scan; repeat for several. Defaults to every package under src/.",
     )
-    parser.add_argument("--detector", action="append", choices=sorted(_DETECTORS), default=None)
+    parser.add_argument("--detector", action="append", choices=sorted(DETECTORS), default=None)
     parser.add_argument("--limit", type=int, default=12)
     parser.add_argument("--full", action="store_true", help="List every candidate per detector, uncapped.")
     parser.add_argument("--json", action="store_true", help="Emit every candidate as JSON (never capped).")
     args = parser.parse_args(argv)
 
-    candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(_DETECTORS))
+    candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(DETECTORS))
     if args.json:
-        _emit(json.dumps([candidate.as_dict() for candidate in candidates], indent=2) + "\n")
+        emit(json.dumps([candidate.as_dict() for candidate in candidates], indent=2) + "\n")
     else:
-        _emit(_render(candidates, None if args.full else args.limit) + "\n")
+        emit(render(candidates, None if args.full else args.limit) + "\n")
     return 0
 
 

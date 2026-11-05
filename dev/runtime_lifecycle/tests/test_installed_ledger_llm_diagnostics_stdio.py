@@ -58,9 +58,9 @@ from cadrumo_runtime.host.tests.frontend.cli.test_ledger_llm_diagnostics import 
 
 from .installed_mcp_stdio_support import release_query_result, structured_object
 from .test_installed_authenticated_stdio import (
-    _installed_mcp_executable,
-    _native_backend_for_current_platform,
-    _unused_reference,
+    installed_mcp_executable,
+    native_backend_for_current_platform,
+    unused_reference,
 )
 
 pytestmark = [
@@ -132,7 +132,7 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
 ) -> None:
     """The installed worker returns stored usage precision and confidence unchanged."""
     require_os_credential_store()
-    native = native_automation_secret_store(_native_backend_for_current_platform())
+    native = native_automation_secret_store(native_backend_for_current_platform())
     with (
         bundled_indexed_authority().operation() as operation,
         native_api_cli_session(
@@ -155,7 +155,7 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
             client_id=metadata.client_id,
             destination_id=metadata.destination_id,
         )
-        reference = _unused_reference(protected)
+        reference = unused_reference(protected)
         primary: BaseException | None = None
         try:
             protected.replace(
@@ -165,7 +165,7 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
                 review_digest=metadata.review_digest,
                 credential=source.read(),
             )
-            executable = _installed_mcp_executable()
+            executable = installed_mcp_executable()
             assert executable.is_file(), "the installed cadrumo-mcp executable is required"
             parameters = StdioServerParameters(
                 command=str(executable),

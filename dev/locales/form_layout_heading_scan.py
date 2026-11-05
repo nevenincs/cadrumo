@@ -13,7 +13,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.modelo_localization import form_heading_edition_locale_key
 
-from ._registry_scanner import LocaleRegistryEnumerationError
+from .registry_scanner import LocaleRegistryEnumerationError
 
 _FORM_LAYOUT_FRAGMENT_GLOB = "modelos/*/revisions/*/form_layouts/*.toml"
 

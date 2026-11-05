@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Final
 
 from dev.paths import REPO_ROOT
 
-from ._spelling import load_dictionaries
 from .signal_spelling import is_search_keyword_surface
+from .spelling import load_dictionaries
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -144,7 +144,7 @@ class UnaccentedWord:
     candidates: tuple[str, ...]
 
 
-def _restorations(word: str, table: Mapping[str, str], known: Callable[[str], bool]) -> tuple[str, ...]:
+def restorations(word: str, table: Mapping[str, str], known: Callable[[str], bool]) -> tuple[str, ...]:
     bases = [word]
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))
@@ -349,7 +349,7 @@ def cache_unaccented_word_verdict(
 ) -> None:
     """Memoize native or foreign acceptance before trying accent restorations."""
     plain = dictionary.lookup(word) or any(other.lookup(word) for other in foreign)
-    verdicts[word] = () if plain else _restorations(word, table, dictionary.lookup)
+    verdicts[word] = () if plain else restorations(word, table, dictionary.lookup)
 
 
 def verbatim_run_end(words: list[str], start: int, end: int, source_texts: list[str]) -> int:

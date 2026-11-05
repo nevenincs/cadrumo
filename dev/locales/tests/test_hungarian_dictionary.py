@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.locales._spelling import dictionary_roots, load_dictionaries
+from dev.locales.spelling import dictionary_roots, load_dictionaries
 from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

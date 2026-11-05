@@ -20,8 +20,8 @@ from cadrumo.tests.inventory import (
 from dev.quality.cyclic_gc import cyclic_gc_paused
 from dev.quality.unread_inputs import report_unread
 
-from ._broad_exception_aliases import broad_alias_assignments_from_target
-from ._project_inventory import all_test_control_modules
+from .broad_exception_aliases import broad_alias_assignments_from_target
+from .project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

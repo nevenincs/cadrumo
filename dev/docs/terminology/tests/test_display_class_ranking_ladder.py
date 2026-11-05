@@ -40,9 +40,9 @@ def test_every_display_class_carries_exactly_one_weight() -> None:
     that is no display class reds on sight.
     """
     from ..search_record import ResultDisplayClass
-    from ..unified_record import _DISPLAY_CLASS_BASE_WEIGHT, display_class_base_weight
+    from ..unified_record import DISPLAY_CLASS_BASE_WEIGHT, display_class_base_weight
 
-    declared = set(_DISPLAY_CLASS_BASE_WEIGHT)
+    declared = set(DISPLAY_CLASS_BASE_WEIGHT)
     members = set(ResultDisplayClass)
     assert declared == members, (
         "the declared weight table and the display-class enum disagree:\n"

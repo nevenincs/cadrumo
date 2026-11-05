@@ -15,23 +15,23 @@ from dev.corpus.artifact_catalogue import (
 )
 
 from .. import sync_aeat_record_design_corpus as record_design_sync
-from ..record_design_acquisition import _store_acquired_payload
+from ..record_design_acquisition import store_acquired_payload
 from ..record_design_inventory import (
-    _PAGES,
-    _REQUIRED,
-    _STATIC,
-    _RequiredArtifact,
+    PAGES,
+    REQUIRED,
+    STATIC,
+    RequiredArtifact,
 )
-from ..record_design_manifests import _Artifact, _Manifest, _root_aggregate
-from ..record_design_policy import _EXTRACTION_SIDECAR_DERIVATIONS, UNATTESTED_CORPUS_FILES
+from ..record_design_manifests import Artifact, Manifest, root_aggregate
+from ..record_design_policy import EXTRACTION_SIDECAR_DERIVATIONS, UNATTESTED_CORPUS_FILES
 from ..sync_aeat_record_design_corpus import (
-    _CORPUS,
-    _HISTORICAL_EXCLUSIONS_PATH,
-    _authority_failures,
-    _load_manifests,
-    _payload_paths,
-    _record_design_catalogue,
+    CORPUS,
+    HISTORICAL_EXCLUSIONS_PATH,
+    authority_failures,
     check,
+    load_manifests,
+    record_design_catalogue,
+    sync_aeat_record_design_corpus_payload_paths,
     unattested_corpus_files,
 )
 
@@ -40,25 +40,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.mark.parametrize("extension", [".pdf", ".xlsx", ".txt"])
 def test_acquisition_bounds_the_complete_stem_and_preserves_source_bytes(tmp_path: Path, extension: str) -> None:
-    required = _RequiredArtifact("999", "Árbol " * 40, "fixture" + extension, "100")
+    required = RequiredArtifact("999", "Árbol " * 40, "fixture" + extension, "100")
     payload = b"official source fixture"
     digest = hashlib.sha256(payload).hexdigest()
     previous = _artefact("files/999-old.pdf", "https://example.test/old.pdf")
-    stored = _store_acquired_payload(tmp_path, extension, payload, digest, [previous], required)
+    stored = store_acquired_payload(tmp_path, extension, payload, digest, [previous], required)
     assert stored.name.startswith("1000-arbol-")
     assert len(stored.stem) <= 48
     assert stored.suffix == extension
     assert stored.read_bytes() == payload
-    assert _store_acquired_payload(tmp_path, extension, payload, digest, [previous], required) == stored
+    assert store_acquired_payload(tmp_path, extension, payload, digest, [previous], required) == stored
 
 
 @pytest.mark.parametrize("suffix", ["", ".extracted.json", ".record-design-correction.json"])
 def test_acquisition_refuses_case_insensitive_artifact_and_sidecar_collisions(tmp_path: Path, suffix: str) -> None:
     existing = tmp_path / ("01-FIXTURE.PDF" + suffix)
     existing.write_bytes(b"preserve existing")
-    required = _RequiredArtifact("999", "fixture", "fixture.pdf", "100")
+    required = RequiredArtifact("999", "fixture", "fixture.pdf", "100")
     with pytest.raises(ValueError, match="collides"):
-        _store_acquired_payload(tmp_path, ".pdf", b"new source", "0" * 64, [], required)
+        store_acquired_payload(tmp_path, ".pdf", b"new source", "0" * 64, [], required)
     assert existing.read_bytes() == b"preserve existing"
     assert list(tmp_path.iterdir()) == [existing]
 
@@ -116,8 +116,8 @@ def test_modelos_308_and_309_historical_designs_are_required_not_excluded() -> N
             "309 - Orden EHA/3212/2004 (Ejercicios 2018 y posteriores)",
         ),
     }
-    required = {artifact.url: (artifact.modelo, artifact.title) for artifact in _REQUIRED}
-    exclusions = set(json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))["urls"])
+    required = {artifact.url: (artifact.modelo, artifact.title) for artifact in REQUIRED}
+    exclusions = set(json.loads(HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))["urls"])
 
     assert {url: required[url] for url in expected} == expected
     assert exclusions.isdisjoint(expected)
@@ -162,8 +162,8 @@ def test_modelo_353_historical_designs_are_required_not_excluded() -> None:
             "353 -Orden EHA/3434/2007 (Ejercicio 2020)",
         ),
     }
-    required = {artifact.url: (artifact.modelo, artifact.title) for artifact in _REQUIRED}
-    exclusions = set(json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))["urls"])
+    required = {artifact.url: (artifact.modelo, artifact.title) for artifact in REQUIRED}
+    exclusions = set(json.loads(HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))["urls"])
 
     assert {url: required[url] for url in expected} == expected
     assert exclusions.isdisjoint(expected)
@@ -238,12 +238,12 @@ def test_the_recorded_unattested_census_is_a_named_debt_not_a_blanket() -> None:
     assert UNATTESTED_CORPUS_FILES == ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
 
 
-def _artefact(stored_path: str, url: str) -> _Artifact:
+def _artefact(stored_path: str, url: str) -> Artifact:
     """One fully-formed manifest artefact; only path and URL vary per case."""
     return {
         "modelo": "999",
         "title": "fixture",
-        "source_page": _PAGES["100"],
+        "source_page": PAGES["100"],
         "url": url,
         "stored_path": stored_path,
         "original_filename": stored_path.rsplit("/", 1)[-1],
@@ -254,15 +254,15 @@ def _artefact(stored_path: str, url: str) -> _Artifact:
     }
 
 
-def _manifest(recorded_count: int, stored_paths: tuple[str, ...]) -> _Manifest:
+def _manifest(recorded_count: int, stored_paths: tuple[str, ...]) -> Manifest:
     """A manifest whose recorded count is stated independently of its artefact list."""
     return {
         "source": "fixture",
         "modelo": "999",
         "retrieved_at": "2026-01-01",
-        "source_pages": [_PAGES["100"]],
+        "source_pages": [PAGES["100"]],
         "artefact_count": recorded_count,
-        "artefacts": [_artefact(path, f"{_STATIC}/DR_900/archivos/{Path(path).name}") for path in stored_paths],
+        "artefacts": [_artefact(path, f"{STATIC}/DR_900/archivos/{Path(path).name}") for path in stored_paths],
     }
 
 
@@ -275,13 +275,13 @@ def test_the_root_census_is_derived_from_the_artefact_lists_not_the_recorded_cou
     manifest and the gate would pass on a corpus that is under-declared.
     """
     # Each recorded `artefact_count` disagrees with the list beside it.
-    manifests: dict[str, _Manifest] = {
+    manifests: dict[str, Manifest] = {
         "111": _manifest(99, ("files/01.pdf",)),
         "303": _manifest(0, ("files/a.pdf", "files/b.pdf")),
         "999": _manifest(7, ()),
     }
 
-    aggregate = _root_aggregate(manifests)
+    aggregate = root_aggregate(manifests)
 
     assert aggregate["artefact_count"] == 3
     assert aggregate["model_count"] == 3
@@ -300,9 +300,9 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
     the invariant behind them in one place, and is the assertion the offline
     ``--regenerate-aggregate`` repair path is written to restore.
     """
-    root = json.loads((_CORPUS / "manifest.json").read_text(encoding="utf-8"))
+    root = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
-    for field, expected in _root_aggregate(_load_manifests()).items():
+    for field, expected in root_aggregate(load_manifests()).items():
         assert root[field] == expected, f"root manifest {field} disagrees with the per-modelo manifests"
 
 
@@ -314,8 +314,8 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
     official files and the named sheet-text derivatives. Correction targets
     are checked here; annotation content remains owned by the record reader.
     """
-    catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
-    payload_paths = set(_payload_paths(_CORPUS))
+    catalogue, failures = record_design_catalogue(load_manifests(), CORPUS)
+    payload_paths = set(sync_aeat_record_design_corpus_payload_paths(CORPUS))
     explicit_debt = {PurePosixPath(path) for path in UNATTESTED_CORPUS_FILES}
 
     assert failures == []
@@ -337,10 +337,10 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
     assert {path for path, role in catalogue.roles.items() if role is ArtifactRole.OFFICIAL_ARTIFACT} == set(
         catalogue.identities
     )
-    assert {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS} <= set(catalogue.roles)
+    assert {derivative.path for derivative in EXTRACTION_SIDECAR_DERIVATIONS} <= set(catalogue.roles)
     assert all(
         catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
-        for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+        for derivative in EXTRACTION_SIDECAR_DERIVATIONS
     )
 
 
@@ -352,14 +352,14 @@ def test_record_design_catalogue_rejects_an_orphaned_correction(tmp_path: Path) 
     correction.write_text('{"corrections": []}', encoding="utf-8")
     relative = PurePosixPath(correction.relative_to(tmp_path).as_posix())
 
-    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    catalogue, failures = record_design_catalogue(manifests, tmp_path)
     assert failures == []
     assert catalogue is not None
     assert catalogue.roles[relative] is ArtifactRole.SEMANTIC_ANNOTATION
     assert not any(diagnostic.path == relative for diagnostic in catalogue.diagnostics)
 
     source.rename(source.with_suffix(".xlsx"))
-    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    catalogue, failures = record_design_catalogue(manifests, tmp_path)
     assert failures == []
     assert catalogue is not None
     assert any(
@@ -368,20 +368,20 @@ def test_record_design_catalogue_rejects_an_orphaned_correction(tmp_path: Path) 
     )
 
 
-def _corpus_fixture(tmp_path: Path) -> dict[str, _Manifest]:
+def _corpus_fixture(tmp_path: Path) -> dict[str, Manifest]:
     """A two-artefact corpus where each artefact resolves to one authority."""
     (tmp_path / "modelo_999" / "files").mkdir(parents=True)
     (tmp_path / "modelo_999" / "files" / "01-design.pdf").write_bytes(b"%PDF-1.4")
     (tmp_path / "modelo_999" / "files" / "02-orden.pdf").write_bytes(b"%PDF-1.4")
-    manifests: dict[str, _Manifest] = {
+    manifests: dict[str, Manifest] = {
         "999": {
             "source": "fixture",
             "modelo": "999",
             "retrieved_at": "2026-01-01",
-            "source_pages": [_PAGES["100"]],
+            "source_pages": [PAGES["100"]],
             "artefact_count": 2,
             "artefacts": [
-                _artefact("files/01-design.pdf", f"{_STATIC}/DR_900/archivos/dr999.pdf"),
+                _artefact("files/01-design.pdf", f"{STATIC}/DR_900/archivos/dr999.pdf"),
                 _artefact("files/02-orden.pdf", "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf"),
             ],
         }
@@ -392,27 +392,27 @@ def _corpus_fixture(tmp_path: Path) -> dict[str, _Manifest]:
 def _configure_isolated_sync_check(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    manifests: dict[str, _Manifest],
+    manifests: dict[str, Manifest],
 ) -> None:
     """Route ``check`` through a complete temporary corpus without live data."""
     for artifact in manifests["999"]["artefacts"]:
         artifact["sha256"] = hashlib.sha256(
             (tmp_path / "modelo_999" / artifact["stored_path"]).read_bytes()
         ).hexdigest()
-    aggregate = _root_aggregate(manifests)
+    aggregate = root_aggregate(manifests)
     (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
-    monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
-    monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
+    monkeypatch.setattr(record_design_sync, "CORPUS", tmp_path)
+    monkeypatch.setattr(record_design_sync, "REQUIRED", ())
     monkeypatch.setattr(record_design_sync, "UNATTESTED_CORPUS_FILES", ())
-    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", ())
-    monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
+    monkeypatch.setattr(record_design_sync, "EXTRACTION_SIDECAR_DERIVATIONS", ())
+    monkeypatch.setattr(record_design_sync, "load_manifests", lambda: manifests)
     monkeypatch.setattr(
         record_design_sync,
-        "_load_historical_exclusions",
+        "load_historical_exclusions",
         lambda: {
             "schema_version": 1,
             "disposition": "outside-supported-window-or-superseded",
-            "source_pages": [record_design_sync._PAGES[key] for key in record_design_sync._HISTORICAL_PAGE_KEYS],
+            "source_pages": [record_design_sync.PAGES[key] for key in record_design_sync.HISTORICAL_PAGE_KEYS],
             "urls": [],
         },
     )
@@ -486,7 +486,7 @@ def test_catalog_backed_sync_rejects_a_nonreproducible_stored_suffix_offline(
 def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A named text extraction has one derived role and the exact workbook digest."""
     manifests = _corpus_fixture(tmp_path)
-    manifests["999"]["artefacts"].append(_artefact("files/01-design.txt", f"{_STATIC}/DR_900/archivos/dr999.pdf"))
+    manifests["999"]["artefacts"].append(_artefact("files/01-design.txt", f"{STATIC}/DR_900/archivos/dr999.pdf"))
     (tmp_path / "modelo_999" / "files" / "01-design.txt").write_text("# Sheet: Fixture", encoding="utf-8")
     derivative = DerivedArtifact(
         path=PurePosixPath("modelo_999/files/01-design.txt"),
@@ -494,14 +494,14 @@ def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, mo
         input_sha256="0" * 64,
         producer="record-design-sheet-text-extractor",
     )
-    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (derivative,))
+    monkeypatch.setattr(record_design_sync, "EXTRACTION_SIDECAR_DERIVATIONS", (derivative,))
 
-    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    catalogue, failures = record_design_catalogue(manifests, tmp_path)
 
     assert failures == []
     assert catalogue is not None
     assert catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
-    assert _authority_failures(manifests, catalogue) == []
+    assert authority_failures(manifests, catalogue) == []
 
     stale = DerivedArtifact(
         path=derivative.path,
@@ -509,9 +509,9 @@ def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, mo
         input_sha256="1" * 64,
         producer=derivative.producer,
     )
-    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (stale,))
+    monkeypatch.setattr(record_design_sync, "EXTRACTION_SIDECAR_DERIVATIONS", (stale,))
 
-    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    catalogue, failures = record_design_catalogue(manifests, tmp_path)
 
     assert failures == []
     assert catalogue is not None
@@ -524,7 +524,7 @@ def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, mo
 def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
     """Named records prevent a suffix exemption and bind each source workbook."""
     assert tuple(
-        (derivative.path.as_posix(), derivative.input_path.as_posix()) for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+        (derivative.path.as_posix(), derivative.input_path.as_posix()) for derivative in EXTRACTION_SIDECAR_DERIVATIONS
     ) == (
         (
             "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
@@ -536,5 +536,5 @@ def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
         ),
     )
     assert all(
-        derivative.producer == "record-design-sheet-text-extractor" for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+        derivative.producer == "record-design-sheet-text-extractor" for derivative in EXTRACTION_SIDECAR_DERIVATIONS
     )

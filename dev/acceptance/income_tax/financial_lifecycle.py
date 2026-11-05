@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .financial_contracts import _EDIT_SECONDS
+from .financial_contracts import EDIT_SECONDS
 from .financial_navigation import open_work
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from .tui_contracts import InstalledTuiContract
 
 
-def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
+def m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
     """Return independently computed M130 casillas in rendered money form."""
     return {
         "01": f"{oracle.cumulative_income:.2f}",
@@ -44,7 +44,7 @@ def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
     }
 
 
-async def _run_lifecycle(
+async def run_lifecycle(
     pilot: Any,
     *,
     export_path: Path,
@@ -92,7 +92,7 @@ async def _run_lifecycle(
     return tuple(completed)
 
 
-def _parse_m130_artifact(*, path: Path, year: int, period: str, expected: dict[str, str]) -> dict[str, str]:
+def parse_m130_artifact(*, path: Path, year: int, period: str, expected: dict[str, str]) -> dict[str, str]:
     """Independently parse one TUI export through its installed registry layout."""
     from decimal import Decimal
 
@@ -111,7 +111,7 @@ def _parse_m130_artifact(*, path: Path, year: int, period: str, expected: dict[s
     return actual
 
 
-def _workbench_notice(workbench: ModeloWorkbenchScreen) -> str:
+def financial_lifecycle_workbench_notice(workbench: ModeloWorkbenchScreen) -> str:
     from textual.widgets import Static
 
     return str(workbench.query_one(WORKBENCH_NOTICE, Static).render()).strip()
@@ -120,7 +120,7 @@ def _workbench_notice(workbench: ModeloWorkbenchScreen) -> str:
 async def _confirm_assumed_values(pilot: Any, *, contract: InstalledTuiContract) -> bool:
     """Confirm, review and apply the assumed values the workbench offers to confirm; whether it offered any."""
     try:
-        terminal = await confirm_assumed_values(pilot, binding=contract.apply, seconds=_EDIT_SECONDS)
+        terminal = await confirm_assumed_values(pilot, binding=contract.apply, seconds=EDIT_SECONDS)
     except TuiJourneyError as error:
         raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
     if terminal is None:

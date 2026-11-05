@@ -18,7 +18,7 @@ from cadrumo_client.commands.parameters import OptionSpec
 
 from ..signal_command_paths import registered_operation_id_pattern
 from ..signal_spelling_segments import translation_spelling_segments
-from ..signal_tokens import _M303_MOTIVES_RE, _PRORRATA_INPUT_CHOICES_RE, _filter_rich_styles, filtered_translation_text
+from ..signal_tokens import M303_MOTIVES_RE, PRORRATA_INPUT_CHOICES_RE, filter_rich_styles, filtered_translation_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -72,8 +72,8 @@ def test_bulk_headers_and_m303_motives_follow_their_source_contracts() -> None:
         "rectificaciones",
         "discrepancia_criterio_administrativo",
     }
-    assert _M303_MOTIVES_RE.fullmatch(correct)
-    assert not _M303_MOTIVES_RE.fullmatch(correct.replace("rectificaciones", "rectificacioness"))
+    assert M303_MOTIVES_RE.fullmatch(correct)
+    assert not M303_MOTIVES_RE.fullmatch(correct.replace("rectificaciones", "rectificacioness"))
 
 
 @pytest.mark.usefixtures("operation")
@@ -83,12 +83,12 @@ def test_prorrata_choices_keep_glosses_and_admit_only_the_complete_source_list()
     value = "exclusively_deductible first; exclusively_non_deductible typoedgloss; common proportion"
     filtered, _ = filtered_translation_text(value)
     assert "typoedgloss" in filtered and "proportion" in filtered and "common" not in filtered
-    assert not _PRORRATA_INPUT_CHOICES_RE.search(value.replace("common", "commonn"))
+    assert not PRORRATA_INPUT_CHOICES_RE.search(value.replace("common", "commonn"))
 
 
 def test_rich_style_keeps_visible_text_and_rejects_invalid_style_names() -> None:
-    assert _filter_rich_styles("[blue]definitelywrong[/]") == ("definitelywrong", 1)
-    assert _filter_rich_styles("[bluuue]definitelywrong[/]") == ("[bluuue]definitelywrong[/]", 0)
+    assert filter_rich_styles("[blue]definitelywrong[/]") == ("definitelywrong", 1)
+    assert filter_rich_styles("[bluuue]definitelywrong[/]") == ("[bluuue]definitelywrong[/]", 0)
     assert filtered_translation_text("[blue]definitelywrong[/]")[0] == "definitelywrong"
     assert "bluuue" in filtered_translation_text("[bluuue]definitelywrong[/]")[0]
     assert "definitelywrong" in filtered_translation_text("[bluuue]definitelywrong[/]")[0]

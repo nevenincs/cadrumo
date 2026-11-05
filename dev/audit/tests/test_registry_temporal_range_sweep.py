@@ -40,7 +40,7 @@ def test_canonical_bounds_reads_open_and_closed_real_toml_declarations(
 ) -> None:
     _write_authority(tmp_path, declaration)
 
-    assert temporal_sweep._canonical_bounds(tmp_path) == expected
+    assert temporal_sweep.canonical_bounds(tmp_path) == expected
 
 
 @pytest.mark.parametrize(
@@ -64,14 +64,14 @@ def test_canonical_bounds_refuses_malformed_or_noncanonical_real_toml(
     _write_authority(tmp_path, declaration)
 
     with pytest.raises(ValidationError):
-        temporal_sweep._canonical_bounds(tmp_path)
+        temporal_sweep.canonical_bounds(tmp_path)
 
 
 def test_canonical_bounds_preserves_toml_syntax_refusal(tmp_path: Path) -> None:
     _write_authority(tmp_path, "[supported_filing_years\nfloor = 2022\n")
 
     with pytest.raises(TomlDecodeError):
-        temporal_sweep._canonical_bounds(tmp_path)
+        temporal_sweep.canonical_bounds(tmp_path)
 
 
 def test_sweep_keeps_candidate_results_for_a_miniature_tree(tmp_path: Path) -> None:

@@ -173,7 +173,7 @@ class FileOpenTrace:
         }
 
 
-def _scenario(name: str, arguments: list[str]) -> dict[str, object]:
+def scenario(name: str, arguments: list[str]) -> dict[str, object]:
     if name == "registry":
         from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
@@ -224,7 +224,7 @@ def main() -> None:
     details: dict[str, object] = {}
     try:
         with trace:
-            details = _scenario(
+            details = scenario(
                 options.scenario, options.arguments[1:] if options.arguments[:1] == ["--"] else options.arguments
             )
     except BaseException as error:

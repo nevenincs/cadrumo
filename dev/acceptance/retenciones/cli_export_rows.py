@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 
 from .cli_contracts import RetencionesInstalledCliError
-from .cli_observations import _money_or_integer_text
+from .cli_observations import money_or_integer_text
 
 
 def _record_field_ids(record: ExportRecordDefinition, *, stage: str) -> tuple[str, ...]:
@@ -20,7 +20,7 @@ def _record_field_ids(record: ExportRecordDefinition, *, stage: str) -> tuple[st
     return expected_field_ids
 
 
-def _record_for_type(*, layout: ExportLayoutDefinition, record_type: str, stage: str) -> ExportRecordDefinition:
+def record_for_type(*, layout: ExportLayoutDefinition, record_type: str, stage: str) -> ExportRecordDefinition:
     """Return one unambiguous official record family by its registry type."""
     matches = tuple(record for record in layout.records if record.record_type == record_type)
     if len(matches) != 1:
@@ -28,7 +28,7 @@ def _record_for_type(*, layout: ExportLayoutDefinition, record_type: str, stage:
     return matches[0]
 
 
-def _parsed_record_rows(
+def parsed_record_rows(
     *, parsed: ParsedExportPayload, record: ExportRecordDefinition, stage: str
 ) -> tuple[dict[str, str], ...]:
     """Reconstruct fixed-width record instances in canonical layout field order."""
@@ -45,7 +45,7 @@ def _parsed_record_rows(
     return tuple(rows)
 
 
-def _selected_expected_fields(
+def selected_expected_fields(
     *, actual: Mapping[str, str], expected: Mapping[str, str], stage: str, mismatch_code: str
 ) -> dict[str, str]:
     """Require every independently authored annual expectation from a parsed row."""
@@ -64,10 +64,10 @@ def _parsed_field_text(field: ParsedExportFieldValue) -> str:
     """Normalize parser values into the synthetic fixture's stable value form."""
     value = field.value
     if isinstance(value, Decimal):
-        return _money_or_integer_text(value)
+        return money_or_integer_text(value)
     return str(value)
 
 
-def _row_identity(row: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
+def row_identity(row: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
     """Compare independently ordered type-2 expectations without hiding duplicates."""
     return tuple(sorted(row.items()))

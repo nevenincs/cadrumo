@@ -254,7 +254,7 @@ class ProfileInstalledCli:
 
     def export_current_profile(self, *, artifact_dir: Path) -> ProfileArchiveConsumerEvidence:
         """Exercise the supported sealed export/inspect consumer without reading its ciphertext."""
-        _require_empty_directory(artifact_dir, label="archive artifact directory")
+        require_empty_directory(artifact_dir, label="archive artifact directory")
         target = artifact_dir / f"profile{_ARCHIVE_SUFFIX}"
         export = self._result(
             ("config", "profile", "archive", "export", "--output", str(target)),
@@ -312,7 +312,7 @@ def run_cli_only_lifecycle(
     absent and refuses any nonempty root, so it can never overwrite another
     acceptance run or an operator store.
     """
-    _require_empty_directory(storage_root, label="CLI-only storage root")
+    require_empty_directory(storage_root, label="CLI-only storage root")
     cli = ProfileInstalledCli(
         executable=executable,
         storage_root=storage_root,
@@ -352,7 +352,7 @@ def run_cli_only_lifecycle(
     )
 
 
-def _require_empty_directory(path: Path, *, label: str) -> None:
+def require_empty_directory(path: Path, *, label: str) -> None:
     """Create exactly one caller-owned run directory or refuse a nonempty one."""
     if path.exists() and not path.is_dir():
         raise ProfileCliAcceptanceError(stage="preflight", diagnostic_code=f"{label.replace(' ', '_')}_not_directory")

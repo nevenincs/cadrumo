@@ -19,7 +19,7 @@ a per-kind RST-level view structurally cannot:
 
 Both layers are wanted; this is layer (ii), the ``-n -W`` analogue for
 the injection seam. It walks the ONE unified projection funnel the Pagefind
-injection consumes (:func:`~dev.docs.pagefind_inject._materialise_records`) --
+injection consumes (:func:`~dev.docs.pagefind_inject.materialise_records`) --
 never a hand re-enumeration of kinds, which would rebuild the exact hardcoding
 that caused the CLI break -- and asserts every record's ``target`` resolves
 against a real built page and (where a fragment is present) a real element id.
@@ -56,7 +56,7 @@ from bs4 import BeautifulSoup
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from ..pagefind_inject import _materialise_records
+from ..pagefind_inject import materialise_records
 from .built_site import built_documentation_site
 
 pytestmark = [
@@ -87,7 +87,7 @@ def test_every_injected_record_target_resolves_in_built_site() -> None:
     failure names the offending record's kind + id + target + which check failed,
     so 274-dead-link-class breaks come back triage-ready, not as a bare count.
     """
-    materialised = _materialise_records()
+    materialised = materialise_records()
     assert materialised.cli_skipped_reason is None, (
         "CLI projection was skipped -- the sweep would silently drop a whole record kind. "
         f"Reason: {materialised.cli_skipped_reason}"

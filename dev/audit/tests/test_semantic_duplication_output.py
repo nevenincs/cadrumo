@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..semantic_duplication import Candidate, _emit, _render, main
+from ..semantic_duplication import Candidate, emit, main, render
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,14 +21,14 @@ def _candidates(count: int) -> list[Candidate]:
 
 
 def test_the_default_report_caps_each_detector_and_says_how_to_see_the_rest() -> None:
-    report = _render(_candidates(30), 12)
+    report = render(_candidates(30), 12)
 
     assert report.count("  [") == 12
     assert "showing up to 12, --full for all" in report
 
 
 def test_an_uncapped_report_lists_every_candidate() -> None:
-    report = _render(_candidates(30), None)
+    report = render(_candidates(30), None)
 
     assert report.count("  [") == 30
     assert "showing all" in report
@@ -51,6 +51,6 @@ def test_a_literal_outside_the_console_codec_is_written_rather_than_crashing(mon
     console = io.TextIOWrapper(raw, encoding="cp1252", newline="", write_through=True)
     monkeypatch.setattr("sys.stdout", console)
 
-    _emit("lit:'▲'\n")
+    emit("lit:'▲'\n")
 
     assert raw.getvalue().decode("utf-8") == "lit:'▲'\n"

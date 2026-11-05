@@ -6,10 +6,10 @@ from collections import Counter
 from collections.abc import Mapping
 from difflib import SequenceMatcher
 
-from ._status import CatalogueLeafState, classify_catalogue_leaf
 from .signal_contracts import TranslationBacklogItem, TranslationMatrix
 from .signal_discovery import signal_key_domain
 from .signal_tokens import human_translation_text, translation_tokens, translation_words
+from .status import CatalogueLeafState, classify_catalogue_leaf
 
 
 def translation_matrix(

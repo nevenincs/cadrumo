@@ -9,6 +9,6 @@ if TYPE_CHECKING:
     pass
 
 
-def _record_stage(scratch: Path, stage: str) -> None:
+def record_stage(scratch: Path, stage: str) -> None:
     """Leave a value-free progress marker inside the isolated temporary run."""
     (scratch / "tui-stage.txt").write_text(stage + "\n", encoding="ascii")

@@ -15,7 +15,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
 )
 
 
-async def _open_ledger(pilot: Any) -> None:
+async def open_ledger(pilot: Any) -> None:
     """Reach Ledger through the normal installed command-palette interaction."""
     from textual.widgets import Input, OptionList
 
@@ -66,7 +66,7 @@ def _ledger_destination_matches(options: OptionList, destination_label: str, des
     return matches
 
 
-async def _activate(pilot: Any, selector: str) -> None:
+async def activate(pilot: Any, selector: str) -> None:
     """Activate a visible public button without a coordinate-dependent click."""
     from textual.widgets import Button
 
@@ -78,6 +78,6 @@ async def _activate(pilot: Any, selector: str) -> None:
     await pilot.press("enter")
 
 
-def _visible_text(widget: Any) -> str:
+def visible_text(widget: Any) -> str:
     """Read an already-rendered public status line, never a persistence object."""
     return str(widget.render()).strip()

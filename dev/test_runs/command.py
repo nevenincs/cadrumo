@@ -17,9 +17,9 @@ from dev.cache_root import dev_cache_root
 from dev.paths import REPO_ROOT, UTF_8
 from dev.tool_storage import storage_directory
 
-from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
-from .import_boundaries_signal import _IMPORT_BOUNDARIES_SIGNAL, _ImportBoundariesProcessor
-from .locales_status_signal import _LOCALES_STATUS_SIGNAL, _LocalesStatusSignalProcessor
+from .dead_weight_signal import AUDIT_DEAD_WEIGHT_SIGNAL, DeadWeightSignalProcessor
+from .import_boundaries_signal import IMPORT_BOUNDARIES_SIGNAL, ImportBoundariesProcessor
+from .locales_status_signal import LOCALES_STATUS_SIGNAL, LocalesStatusSignalProcessor
 from .paths import (
     ScratchAllocation,
     ScratchOwnershipError,
@@ -30,9 +30,9 @@ from .paths import (
     scratch_environment,
     test_log_root,
 )
-from .pytest_summary_signal import _PYTEST_SUMMARY_SIGNAL, _PytestSummaryProcessor
+from .pytest_summary_signal import PYTEST_SUMMARY_SIGNAL, PytestSummaryProcessor
 from .reaper import sweep_scratch_directories
-from .registry_health_signal import _BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL, _RegistryHealthProcessor
+from .registry_health_signal import BINDING_SIGNAL, REGISTRY_HEALTH_SIGNAL, RegistryHealthProcessor
 
 _INTERRUPTED_EXIT_STATUS: Final[int] = 130
 
@@ -287,9 +287,9 @@ def _run_in_scratch(
                 )
             )
             normalized_processors = (
-                _ImportBoundariesProcessor,
-                _LocalesStatusSignalProcessor,
-                _PytestSummaryProcessor,
+                ImportBoundariesProcessor,
+                LocalesStatusSignalProcessor,
+                PytestSummaryProcessor,
             )
             if not interrupted and isinstance(processor, normalized_processors):
                 exit_status = processor.effective_exit_status(exit_status)
@@ -342,12 +342,12 @@ def main() -> int:
     parser.add_argument(
         "--signal",
         choices=(
-            _AUDIT_DEAD_WEIGHT_SIGNAL,
-            _BINDING_SIGNAL,
-            _IMPORT_BOUNDARIES_SIGNAL,
-            _LOCALES_STATUS_SIGNAL,
-            _PYTEST_SUMMARY_SIGNAL,
-            _REGISTRY_HEALTH_SIGNAL,
+            AUDIT_DEAD_WEIGHT_SIGNAL,
+            BINDING_SIGNAL,
+            IMPORT_BOUNDARIES_SIGNAL,
+            LOCALES_STATUS_SIGNAL,
+            PYTEST_SUMMARY_SIGNAL,
+            REGISTRY_HEALTH_SIGNAL,
         ),
     )
     parser.add_argument("--expected-lane", action="append", default=[])
@@ -368,26 +368,26 @@ def main() -> int:
 
 
 type _SignalProcessor = (
-    _ImportBoundariesProcessor
-    | _RegistryHealthProcessor
-    | _PytestSummaryProcessor
-    | _DeadWeightSignalProcessor
-    | _LocalesStatusSignalProcessor
+    ImportBoundariesProcessor
+    | RegistryHealthProcessor
+    | PytestSummaryProcessor
+    | DeadWeightSignalProcessor
+    | LocalesStatusSignalProcessor
 )
 
 
 def _new_signal_processor(signal: str | None, expected_lanes: tuple[str, ...]) -> _SignalProcessor | None:
     """Select the declared signal reducer without changing the transcript protocol."""
-    if signal == _IMPORT_BOUNDARIES_SIGNAL:
-        processor = _ImportBoundariesProcessor()
-    elif signal in {_BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL}:
-        processor = _RegistryHealthProcessor()
-    elif signal == _PYTEST_SUMMARY_SIGNAL:
-        processor = _PytestSummaryProcessor(expected_lanes)
-    elif signal == _AUDIT_DEAD_WEIGHT_SIGNAL:
-        processor = _DeadWeightSignalProcessor()
-    elif signal == _LOCALES_STATUS_SIGNAL:
-        processor = _LocalesStatusSignalProcessor()
+    if signal == IMPORT_BOUNDARIES_SIGNAL:
+        processor = ImportBoundariesProcessor()
+    elif signal in {BINDING_SIGNAL, REGISTRY_HEALTH_SIGNAL}:
+        processor = RegistryHealthProcessor()
+    elif signal == PYTEST_SUMMARY_SIGNAL:
+        processor = PytestSummaryProcessor(expected_lanes)
+    elif signal == AUDIT_DEAD_WEIGHT_SIGNAL:
+        processor = DeadWeightSignalProcessor()
+    elif signal == LOCALES_STATUS_SIGNAL:
+        processor = LocalesStatusSignalProcessor()
     else:
         processor = None
     return processor

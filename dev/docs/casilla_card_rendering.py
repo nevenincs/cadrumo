@@ -14,11 +14,11 @@ from collections.abc import Mapping
 from functools import partial
 from typing import TYPE_CHECKING
 
-from ._locale_chrome import docs_chrome, docs_line
-from .casilla_legal_grounding import _legal_list, _LegalLink
-from .casilla_markup import _raw_html
+from .casilla_legal_grounding import LegalLink, legal_list
+from .casilla_markup import raw_html
 from .casilla_reference_models import CasillaFacts
 from .compile_slots import escape
+from .locale_chrome import docs_chrome, docs_line
 from .terminology.casilla_anchor import casilla_page_anchor
 from .terminology.search_record import CasillaSearchRecord
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 # ── Card rendering ───────────────────────────────────────────────────────────
 
 
-def _localised(record: CasillaSearchRecord, language: OutputLanguage) -> tuple[str | None, str | None]:
+def localised(record: CasillaSearchRecord, language: OutputLanguage) -> tuple[str | None, str | None]:
     """Return ``(label, help)`` for the build language, or ``None`` where unauthored.
 
     There is deliberately no fallback: a casilla with no label in the build
@@ -52,7 +52,7 @@ def _title_element(record: CasillaSearchRecord, language: OutputLanguage) -> str
     label has no title element at all rather than an empty one, which is why the
     element and not the string is what each language reads.
     """
-    label, _help = _localised(record, language)
+    label, _help = localised(record, language)
     if label is None:
         return None
     return f'<h3 class="casilla-card__title">{escape(" ".join(label.split()))}</h3>'
@@ -60,7 +60,7 @@ def _title_element(record: CasillaSearchRecord, language: OutputLanguage) -> str
 
 def _help_element(record: CasillaSearchRecord, box_number: str, language: OutputLanguage) -> str | None:
     """Return the card's help paragraph in ``language``, or None where it has none."""
-    _label, help_text = _localised(record, language)
+    _label, help_text = localised(record, language)
     description = _description(help_text, box_number)
     if not (description is not None and description):
         return None
@@ -144,7 +144,7 @@ def _description(help_text: str | None, box_number: str) -> str | None:
     return stripped[:1].upper() + stripped[1:]
 
 
-def _box_number(record: CasillaSearchRecord, facts: CasillaFacts | None) -> str:
+def casilla_card_rendering_box_number(record: CasillaSearchRecord, facts: CasillaFacts | None) -> str:
     """The box number a reader sees on the printed form.
 
     ``form_number`` is the printed box; ``number`` is AEAT record-design
@@ -206,9 +206,9 @@ def _internals_block(record: CasillaSearchRecord, box_number: str, language: Out
     return lines
 
 
-def _render_entry(
+def render_entry(
     record: CasillaSearchRecord,
-    links: dict[str, _LegalLink],
+    links: dict[str, LegalLink],
     language: OutputLanguage,
     facts: CasillaFacts | None,
     numbers_by_id: Mapping[str, str],
@@ -218,7 +218,7 @@ def _render_entry(
     Returns ``(rst, anchor, rendered_legal_refs, resolved_link_count)``.
     """
     anchor = casilla_page_anchor(record.modelo, record.casilla_id)
-    box_number = _box_number(record, facts)
+    box_number = casilla_card_rendering_box_number(record, facts)
 
     lines = [
         f'<article class="casilla-card" id="{escape(anchor, quote=True)}">',
@@ -239,7 +239,7 @@ def _render_entry(
     legal_lines, resolved = (
         ([], 0)
         if not record.legal_refs
-        else _legal_list(record.legal_refs, links, docs_chrome("docs.casilla.chrome.legal_basis", language))
+        else legal_list(record.legal_refs, links, docs_chrome("docs.casilla.chrome.legal_basis", language))
     )
     lines.extend(legal_lines)
     lines.extend(_internals_block(record, box_number, language))
@@ -252,7 +252,7 @@ def _render_entry(
     rendered_refs = tuple(
         ref for ref in record.legal_refs if escape(ref) in legal_markup or escape(ref, quote=True) in legal_markup
     )
-    return _raw_html(lines), anchor, rendered_refs, resolved
+    return raw_html(lines), anchor, rendered_refs, resolved
 
 
 def _value_constraint_phrases(constraints: CasillaConstraints, language: OutputLanguage, phrases: list[str]) -> None:

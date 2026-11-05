@@ -86,7 +86,7 @@ def _platform_key() -> tuple[str, str]:
     return system, machine
 
 
-def _cache_root() -> Path:
+def cache_root() -> Path:
     """Where a verified binary is kept between runs.
 
     The Cadrumo storage root owns the default. ``CADRUMO_ACTIONLINT_DIR`` can
@@ -173,7 +173,7 @@ def find() -> Path | None:
     key = _platform_key()
     if key not in ARCHIVES:
         return None
-    binary = _cache_root() / ("actionlint.exe" if key[0] == "windows" else "actionlint")
+    binary = cache_root() / ("actionlint.exe" if key[0] == "windows" else "actionlint")
     return binary if binary.is_file() else None
 
 
@@ -198,7 +198,7 @@ def ensure() -> Path:
             "reached an ARM runner and passed its own digest check."
         )
     suffix, expected = ARCHIVES[key]
-    root = _cache_root()
+    root = cache_root()
     binary = root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
     if binary.is_file():
         return binary

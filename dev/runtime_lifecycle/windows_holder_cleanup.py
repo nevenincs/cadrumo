@@ -12,7 +12,7 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from .caller_owned_root import AcceptanceError
 
-_CLOSE_SECONDS = 10.0
+CLOSE_SECONDS = 10.0
 _REAP_SECONDS = 10.0
 
 
@@ -86,7 +86,7 @@ class WindowsHolderCleanup:
                 failures.append(error)
                 scope_failed_before_pipe_close = True
         if writer is not None and writer_alive and self._scope is None:
-            writer.join(timeout=_CLOSE_SECONDS)
+            writer.join(timeout=CLOSE_SECONDS)
             if writer.is_alive():
                 failures.append(AcceptanceError("runtime holder input writer did not stop after job termination"))
             else:
@@ -105,7 +105,7 @@ class WindowsHolderCleanup:
 
         if self._process is not None and not self._scope_termination_attempted:
             try:
-                self._process.wait(timeout=_CLOSE_SECONDS)
+                self._process.wait(timeout=CLOSE_SECONDS)
             except RefusalError as error:
                 if error.reason != RefusalCode.TIMEOUT:
                     failures.append(error)
@@ -144,7 +144,7 @@ class WindowsHolderCleanup:
     def _join_pipe_threads(self, failures: list[BaseException]) -> None:
         for thread in (self._writer_thread, self._stdout_thread, self._stderr_thread):
             if thread is not None and thread.ident is not None:
-                thread.join(timeout=_CLOSE_SECONDS)
+                thread.join(timeout=CLOSE_SECONDS)
                 if thread.is_alive():
                     failures.append(AcceptanceError(f"runtime holder pipe thread {thread.name} did not stop"))
                 elif thread is self._writer_thread:

@@ -17,7 +17,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import STORAGE_ROOT, ChildEnvironmentProfile, child_environment
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 
-from .._dotenv import provision, provision_google_client
+from ..dotenv import provision, provision_google_client
 
 if TYPE_CHECKING:
     from pathlib import Path

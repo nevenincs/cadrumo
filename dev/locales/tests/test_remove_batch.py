@@ -26,10 +26,10 @@ from click.testing import Result
 
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._paths import LOCALES_DIR
 from ..cli import app
 from ..locale_nodes import LocaleNode
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

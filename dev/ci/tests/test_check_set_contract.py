@@ -14,7 +14,7 @@ import yaml
 from cadrumo.core.toml import parse_toml
 from dev.paths import REPO_ROOT
 
-from ..lane_recipe_commands import _recipe_bodies, _recipes_invoked_by
+from ..lane_recipe_commands import recipe_bodies, recipes_invoked_by
 from ..workflow_delegation import calls_local_workflow
 from ..workflow_run_text import executed_lines
 
@@ -240,7 +240,7 @@ def _commands(
     signatures = {} if parameters is None else parameters
 
     def expand(text: str, stack: frozenset[str] = frozenset(), *, recipe_body: bool = False) -> None:
-        invoked = _recipes_invoked_by(text)
+        invoked = recipes_invoked_by(text)
         if invoked:
             arguments_by_recipe = _invocation_arguments(text)
             for recipe in sorted(invoked - {"setup"}):
@@ -299,7 +299,7 @@ def _platform_recipe_bodies(text: str, platform: str) -> dict[str, str]:
             attributes = []
         if keep:
             kept.append(raw)
-    return _recipe_bodies("\n".join(kept))
+    return recipe_bodies("\n".join(kept))
 
 
 _RECIPE_HEADER_LINE: Final = re.compile(r"^[a-z][\w-]*\b[^:\n]*:(?![=])")

@@ -6,21 +6,21 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-from .tui_checkbox import _tick
+from .tui_checkbox import tui_checkbox_tick
 from .tui_contracts import TuiJourneyError, TuiOperationBinding
-from .tui_readback import _query_visible_tui_control, _rendered_text, _stack_text, workbench_notice
+from .tui_readback import query_visible_tui_control, rendered_text, stack_text, workbench_notice
 from .tui_selectors import (
-    _COUNT_PLACEHOLDER,
-    _DATE_PLACEHOLDER,
-    _EXPORT_PATH,
-    _EXPORT_RESULT_CLOSE,
-    _OFFERED_STEP_ACTIONS,
-    _OFFERED_STEP_KEYS,
-    _RESULT_STATEMENT_CLOSE,
-    _REVIEW_ACKNOWLEDGE,
-    _REVIEW_APPLY,
-    _REVIEW_FINDINGS,
-    _REVIEW_KEY,
+    COUNT_PLACEHOLDER,
+    DATE_PLACEHOLDER,
+    EXPORT_PATH,
+    EXPORT_RESULT_CLOSE,
+    OFFERED_STEP_ACTIONS,
+    OFFERED_STEP_KEYS,
+    RESULT_STATEMENT_CLOSE,
+    REVIEW_ACKNOWLEDGE,
+    REVIEW_APPLY,
+    REVIEW_FINDINGS,
+    REVIEW_KEY,
     WORKBENCH_NEXT,
     WORKBENCH_NOTICE,
 )
@@ -54,7 +54,7 @@ async def wait_for_workbench(pilot: Pilot[Any], *, seconds: float = 300.0) -> Mo
             if screen.form is not None:
                 return screen
             try:
-                loading = _rendered_text(screen.query_one("#wb-loading"))
+                loading = rendered_text(screen.query_one("#wb-loading"))
             except NoMatches:
                 loading = ""
             if loading == read_failed:
@@ -75,13 +75,13 @@ async def open_workbench_export(pilot: Pilot[Any], *, output_path: str, maximum_
     from textual.css.query import NoMatches
     from textual.widgets import Input
 
-    _require_fresh_notice(pilot, label="modelo.export")
+    require_fresh_notice(pilot, label="modelo.export")
     await pilot.press("e")
     for _ in range(maximum_polls):
         try:
-            destination = pilot.app.screen.query_one(_EXPORT_PATH, Input)
+            destination = pilot.app.screen.query_one(EXPORT_PATH, Input)
         except NoMatches:
-            notice = _stack_text(pilot, WORKBENCH_NOTICE)
+            notice = stack_text(pilot, WORKBENCH_NOTICE)
             if notice:
                 raise TuiJourneyError(f"the workbench did not open its export dialog: {notice[:240]}") from None
             await pilot.pause()
@@ -97,14 +97,14 @@ async def acknowledge_export_result(pilot: Pilot[Any], *, maximum_polls: int = 6
 
     for _ in range(maximum_polls):
         try:
-            close = pilot.app.screen.query_one(_EXPORT_RESULT_CLOSE)
+            close = pilot.app.screen.query_one(EXPORT_RESULT_CLOSE)
         except NoMatches:
             await pilot.pause()
             continue
         close.focus()
         await pilot.press("enter")
         for _ in range(maximum_polls):
-            if not pilot.app.screen.query(_EXPORT_RESULT_CLOSE):
+            if not pilot.app.screen.query(EXPORT_RESULT_CLOSE):
                 return
             await pilot.pause()
         raise TuiJourneyError("the export statement did not close")
@@ -113,7 +113,7 @@ async def acknowledge_export_result(pilot: Pilot[Any], *, maximum_polls: int = 6
 
 def workbench_offers(pilot: Pilot[Any], step: str) -> bool:
     """Whether the workbench on top offers ``step`` on its next-step line, with the key it shows for it."""
-    return _offered_step_pattern(step).match(_offered_line(pilot)) is not None
+    return _offered_step_pattern(step).match(offered_line(pilot)) is not None
 
 
 async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.0) -> None:
@@ -126,11 +126,11 @@ async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.
     from textual.css.query import NoMatches
     from textual.widgets import Button, Checkbox
 
-    await pilot.press(_REVIEW_KEY)
+    await pilot.press(REVIEW_KEY)
     deadline = time.monotonic() + seconds
     while True:
         try:
-            apply = pilot.app.screen.query_one(_REVIEW_APPLY, Button)
+            apply = pilot.app.screen.query_one(REVIEW_APPLY, Button)
         except NoMatches:
             if time.monotonic() > deadline:
                 raise TuiJourneyError(
@@ -140,12 +140,12 @@ async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.
             continue
         break
     review = pilot.app.screen
-    acknowledge = next(iter(review.query(_REVIEW_ACKNOWLEDGE).results(Checkbox)), None)
-    if acknowledge is not None and not acknowledge.value and not await _tick(pilot, acknowledge):
+    acknowledge = next(iter(review.query(REVIEW_ACKNOWLEDGE).results(Checkbox)), None)
+    if acknowledge is not None and not acknowledge.value and not await tui_checkbox_tick(pilot, acknowledge):
         raise TuiJourneyError("the review's acknowledgement did not take")
     while apply.disabled:
         if time.monotonic() > deadline:
-            findings = _stack_text(pilot, _REVIEW_FINDINGS)
+            findings = stack_text(pilot, REVIEW_FINDINGS)
             raise TuiJourneyError(f"the review never allowed applying the changes (findings {findings[:300]!r})")
         await pilot.pause()
 
@@ -169,7 +169,7 @@ async def wait_for_tui_refresh(
         raise TuiJourneyError(f"{binding.operation_id} has no installed refresh target")
     for _ in range(maximum_polls):
         try:
-            close = pilot.app.screen.query_one(_RESULT_STATEMENT_CLOSE)
+            close = pilot.app.screen.query_one(RESULT_STATEMENT_CLOSE)
         except NoMatches:
             pass
         else:
@@ -188,11 +188,11 @@ async def wait_for_tui_refresh(
     raise TuiJourneyError(f"{binding.operation_id} did not reach its refreshed TUI destination")
 
 
-def _require_fresh_notice(pilot: Pilot[Any], *, label: str, selector: str | None = WORKBENCH_NOTICE) -> None:
+def require_fresh_notice(pilot: Pilot[Any], *, label: str, selector: str | None = WORKBENCH_NOTICE) -> None:
     """Refuse to start an operation while the workbench still shows an earlier notice."""
     if selector is None:
         return
-    notice = _stack_text(pilot, selector)
+    notice = stack_text(pilot, selector)
     if notice:
         raise TuiJourneyError(
             f"{label} would start under an earlier workbench notice; open the declaration afresh first "
@@ -200,20 +200,20 @@ def _require_fresh_notice(pilot: Pilot[Any], *, label: str, selector: str | None
         )
 
 
-def _require_offered_step(pilot: Pilot[Any], *, step: str) -> None:
+def require_offered_step(pilot: Pilot[Any], *, step: str) -> None:
     """Require the workbench to offer ``step`` as the one its next-step key runs."""
     if not workbench_offers(pilot, step):
         raise TuiJourneyError(
-            f"the workbench does not offer {step} as its next step (it offers {_offered_line(pilot)[:200]!r})"
+            f"the workbench does not offer {step} as its next step (it offers {offered_line(pilot)[:200]!r})"
         )
 
 
-def _offered_line(pilot: Pilot[Any]) -> str:
+def offered_line(pilot: Pilot[Any]) -> str:
     """Read the next-step line of the workbench on top, or nothing while another screen is on top."""
     from textual.css.query import NoMatches
 
     try:
-        return _rendered_text(pilot.app.screen.query_one(WORKBENCH_NEXT))
+        return rendered_text(pilot.app.screen.query_one(WORKBENCH_NEXT))
     except NoMatches:
         return ""
 
@@ -224,10 +224,10 @@ def _offered_step_pattern(step: str) -> re.Pattern[str]:
     Recording the filing is offered on its own line once a file made from the
     current calculation exists, naming the day that file was created.
     """
-    key = _OFFERED_STEP_KEYS.get(step)
+    key = OFFERED_STEP_KEYS.get(step)
     if key is None:
         raise TuiJourneyError(f"the workbench offers no step named {step!r}")
-    return re.compile(_next_line_source(_OFFERED_STEP_ACTIONS.get(step, step), key))
+    return re.compile(_next_line_source(OFFERED_STEP_ACTIONS.get(step, step), key))
 
 
 def _next_line_source(action: str, key: str) -> str:
@@ -236,20 +236,20 @@ def _next_line_source(action: str, key: str) -> str:
 
     line = tr(
         "tui.modelo.next_line",
-        action=tr(f"workspace.modelo.next.{action}", count=_COUNT_PLACEHOLDER, date=_DATE_PLACEHOLDER),
+        action=tr(f"workspace.modelo.next.{action}", count=COUNT_PLACEHOLDER, date=DATE_PLACEHOLDER),
         key=key,
     )
-    source = re.escape(line).replace(_COUNT_PLACEHOLDER, r"\d+")
-    return source.replace(_DATE_PLACEHOLDER, r".+?")
+    source = re.escape(line).replace(COUNT_PLACEHOLDER, r"\d+")
+    return source.replace(DATE_PLACEHOLDER, r".+?")
 
 
-async def _wait_for_visible_tui_control(pilot: Pilot[Any], selector: str, *, maximum_polls: int) -> Widget:
+async def wait_for_visible_tui_control(pilot: Pilot[Any], selector: str, *, maximum_polls: int) -> Widget:
     """Wait until a control is on the top screen."""
     from textual.css.query import NoMatches
 
     for _ in range(maximum_polls):
         try:
-            return _query_visible_tui_control(pilot, selector)
+            return query_visible_tui_control(pilot, selector)
         except NoMatches:
             await pilot.pause()
     raise TuiJourneyError(f"installed TUI did not show {selector}")

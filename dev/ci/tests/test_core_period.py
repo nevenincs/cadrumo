@@ -8,7 +8,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.core import aggregation
-from cadrumo.core import period as _period
+from cadrumo.core import period as core_period
 from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.period import (
     FilingPeriodCode,
@@ -35,7 +35,7 @@ SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
 
 def test_period_kind_has_one_core_definition_without_aggregation_shadow() -> None:
     """The public classifier is the core-period type, never an aggregation subset."""
-    assert PeriodKind is _period.PeriodKind
+    assert PeriodKind is core_period.PeriodKind
     assert "PeriodKind" not in vars(aggregation)
 
 

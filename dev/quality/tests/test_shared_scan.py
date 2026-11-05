@@ -31,7 +31,7 @@ class _Lines:
 @pytest.fixture(autouse=True)
 def _fresh_process(monkeypatch: pytest.MonkeyPatch) -> None:
     """Every test starts as a process that has not yet read any scan."""
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
 
 
 def _line_scan(tree: Path, calls: list[None]) -> Callable[[], _Lines]:
@@ -64,7 +64,7 @@ def test_an_unchanged_input_is_scanned_once_and_read_by_every_later_process(
 
     first = _scan(tree, tmp_path / "cache", calls)
     assert _scan(tree, tmp_path / "cache", calls) is first, "one process must share one result object"
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
     reread = _scan(tree, tmp_path / "cache", calls)
 
     assert len(calls) == 1, "a later process must read the published scan, not repeat it"
@@ -90,7 +90,7 @@ def test_a_published_result_naming_paths_is_read_back_by_a_later_process(
         )
 
     first = scan()
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
 
     assert scan() == first == (tree / "a.py",)
 
@@ -289,7 +289,7 @@ def test_a_snapshot_scan_distinguishes_the_order_and_multiplicity_of_every_input
     changed = scan(after)
     assert changed == tuple((name, "unreadable" if name == "missing.py" else name) for name in after)
     assert len(calls) == 2, "a changed input sequence must compute its own result"
-    shared_scan._memo.clear()
+    shared_scan.memo.clear()
     assert scan(before) == initial
     assert scan(after) == changed
     assert len(calls) == 2, "each sequence must also retrieve its own disk artifact"

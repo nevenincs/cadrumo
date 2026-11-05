@@ -16,16 +16,16 @@ from dev.acceptance.income_tax.tui_navigation import (
 )
 from dev.acceptance.income_tax.tui_operation_controls import activate_tui_operation, confirm_assumed_values
 
-from .m303_evidence_contracts import _RESULTADO_CASILLA, TuiOutcome
-from .m303_evidence_navigation import _await_workbench_refresh, open_work
+from .m303_evidence_contracts import RESULTADO_CASILLA, TuiOutcome
+from .m303_evidence_navigation import await_workbench_refresh, open_work
 from .m303_evidence_projection import resultado_matches_oracle
-from .m303_evidence_refusals import _visible_refusal
+from .m303_evidence_refusals import visible_refusal
 
 if TYPE_CHECKING:
     pass
 
 
-async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
+async def verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
     """Verify from the workbench, first confirming, reviewing and applying any assumed values it offers to confirm."""
     contract = installed_lifecycle_contract()
     verify = contract.verify
@@ -38,32 +38,32 @@ async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
         if confirmed.terminal_condition != "succeeded":
             raise InstalledTuiChildError(
                 f"installed TUI M303 confirmation of assumed values ended {confirmed.terminal_condition}: "
-                f"{_visible_refusal(pilot)}"
+                f"{visible_refusal(pilot)}"
             )
         await open_work(pilot, work_unit_id=work_unit_id)
     terminal = await activate_tui_operation(pilot, binding=verify)
     if terminal.terminal_condition != "succeeded":
         raise InstalledTuiChildError(
-            f"installed TUI M303 verification ended {terminal.terminal_condition}: {_visible_refusal(pilot)}"
+            f"installed TUI M303 verification ended {terminal.terminal_condition}: {visible_refusal(pilot)}"
         )
-    await _await_workbench_refresh(pilot, binding=verify)
+    await await_workbench_refresh(pilot, binding=verify)
     return TuiOutcome(step="verify", terminal_condition=terminal.terminal_condition, visible_notice_key=None)
 
 
-async def _workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | None, bool]:
+async def workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | None, bool]:
     """Read ``iva.resultado`` off the workbench's form: its origin, and whether its value equals the oracle."""
     from cadrumo.application.modelo.work_form_models import address_key
 
     form = (await open_work(pilot, work_unit_id=work_unit_id)).form
     if form is None:
         raise InstalledTuiChildError("installed workbench lost its form", diagnostic=public_surface_diagnostic(pilot))
-    field = next((item for item in form.fields() if address_key(item.address) == ("casilla", _RESULTADO_CASILLA)), None)
+    field = next((item for item in form.fields() if address_key(item.address) == ("casilla", RESULTADO_CASILLA)), None)
     if field is None:
         return None, False
     return field.origin.value, resultado_matches_oracle(field.value)
 
 
-async def _attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
+async def attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
     """Run the official export through the workbench's export dialog and classify its public terminal result."""
     binding = installed_lifecycle_contract().export
     await open_work(pilot, work_unit_id=work_unit_id)

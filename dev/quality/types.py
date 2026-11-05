@@ -66,7 +66,7 @@ class TargetPlatform:
 # is a failure wherever it appears. `[tool.ty.environment]`, `[tool.pyrefly]`
 # and `[tool.basedpyright]` carry the same pin for a bare, unharnessed
 # invocation; the flags below override it per run.
-_PLATFORMS: tuple[TargetPlatform, ...] = (
+PLATFORMS: tuple[TargetPlatform, ...] = (
     TargetPlatform(key="linux", basedpyright="Linux"),
     TargetPlatform(key="win32", basedpyright="Windows"),
     TargetPlatform(key="darwin", basedpyright="Darwin"),
@@ -119,7 +119,7 @@ def platform_pin_failures(document: Mapping[str, Any]) -> list[str]:
     plausible-looking answer for a platform nobody chose, and a green one at
     that. The checkers do not validate this, so the validation is here.
     """
-    valid = {pin.spelling: {getattr(platform, pin.spelling) for platform in _PLATFORMS} for pin in _PLATFORM_PINS}
+    valid = {pin.spelling: {getattr(platform, pin.spelling) for platform in PLATFORMS} for pin in _PLATFORM_PINS}
     failures: list[str] = []
     declared: dict[str, str] = {}
     for pin in _PLATFORM_PINS:
@@ -148,7 +148,7 @@ class Diagnostic:
 
 
 @dataclass(frozen=True)
-class _ExternalGap:
+class ExternalGap:
     """One documented, irreducible external-import diagnostic to suppress."""
 
     path_suffix: str
@@ -171,17 +171,17 @@ class _ExternalGap:
 # corpus-search model loader; that loader was deleted with the runtime embedding
 # stack, so the suppression it needed no longer has a subject. Reviewed
 # 2026-08-01.
-_IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = ()
+IRREDUCIBLE_EXTERNAL_GAPS: tuple[ExternalGap, ...] = ()
 
 
-def _is_irreducible_external_gap(diagnostic: Diagnostic) -> bool:
+def is_irreducible_external_gap(diagnostic: Diagnostic) -> bool:
     """Return True when a diagnostic matches a documented irreducible external-import gap."""
     return any(
         diagnostic.checker == gap.checker
         and diagnostic.rule == gap.rule
         and diagnostic.path.endswith(gap.path_suffix)
         and gap.needle in diagnostic.message
-        for gap in _IRREDUCIBLE_EXTERNAL_GAPS
+        for gap in IRREDUCIBLE_EXTERNAL_GAPS
     )
 
 
@@ -210,7 +210,7 @@ _CHECKER_TIMEOUT_SECONDS = 600
 _STREAM_EXCERPT_CHARS = 2000
 
 
-def _describe_stream(stream: str | bytes | None, name: str) -> str:
+def describe_stream(stream: str | bytes | None, name: str) -> str:
     """Describe a captured stream for a failure message, empty or not.
 
     The distinction this preserves is the whole point. "See the captured stderr
@@ -230,7 +230,7 @@ def _describe_stream(stream: str | bytes | None, name: str) -> str:
     return f"{name}: {text}"
 
 
-def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a checker, capturing stdout/stderr without raising.
 
     A checker that stops making progress is reported as itself rather than
@@ -251,8 +251,8 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
         raise RuntimeError(
             f"checker `{spelling}` produced no result within {_CHECKER_TIMEOUT_SECONDS}s "
             f"and was terminated. Partial output before the kill: "
-            f"{_describe_stream(expired.stdout, 'stdout')}, "
-            f"{_describe_stream(expired.stderr, 'stderr')}.",
+            f"{describe_stream(expired.stdout, 'stdout')}, "
+            f"{describe_stream(expired.stderr, 'stderr')}.",
         ) from expired
 
 
@@ -274,7 +274,7 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
         return
     raise RuntimeError(
         f"{checker} produced no report: exit code {result.returncode}, "
-        f"{_describe_stream(result.stdout, 'stdout')}, {_describe_stream(result.stderr, 'stderr')}. "
+        f"{describe_stream(result.stdout, 'stdout')}, {describe_stream(result.stderr, 'stderr')}. "
         f"A clean run of this checker prints a report rather than nothing, so this is the "
         f"checker failing to run, not a clean tree.",
     )
@@ -282,7 +282,7 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
 
 def collect_ty(platform: TargetPlatform) -> list[Diagnostic]:
     """Run ty against one target platform and parse its GitLab-JSON diagnostics."""
-    result = _run(
+    result = run(
         [
             "ty",
             "check",
@@ -327,7 +327,7 @@ def collect_pyrefly(platform: TargetPlatform) -> list[Diagnostic]:
     # Resolve dependencies through the interpreter running this harness. Automatic
     # discovery can select a different Python on PATH, producing missing-import
     # cascades even though the project environment has every dependency installed.
-    result = _run(
+    result = run(
         [
             "pyrefly",
             "check",
@@ -380,7 +380,7 @@ def collect_basedpyright(platform: TargetPlatform) -> list[Diagnostic]:
     # cascades whenever it runs against a tree that has no ``.venv`` of its own --
     # a source snapshot, for instance. Naming the running interpreter makes the
     # gate report the same thing wherever it is invoked from.
-    result = _run(
+    result = run(
         [
             "basedpyright",
             "--project",
@@ -432,7 +432,7 @@ def _collect_checker(collector: Callable[[TargetPlatform], list[Diagnostic]]) ->
     bounding that pressure.
     """
     diagnostics: list[Diagnostic] = []
-    for platform in _PLATFORMS:
+    for platform in PLATFORMS:
         diagnostics.extend(collector(platform))
     return diagnostics
 
@@ -464,7 +464,7 @@ def fold_platforms(diagnostics: list[Diagnostic]) -> list[tuple[Diagnostic, tupl
     that DID report it ride along, because "only on Windows" is the most
     actionable thing a cross-platform type gate can say.
     """
-    order = {platform.key: index for index, platform in enumerate(_PLATFORMS)}
+    order = {platform.key: index for index, platform in enumerate(PLATFORMS)}
     folded: dict[tuple[str, str, str, int, str], list[str]] = {}
     for diagnostic in diagnostics:
         key = (diagnostic.checker, diagnostic.rule, diagnostic.path, diagnostic.line, diagnostic.message)
@@ -488,7 +488,7 @@ def fold_platforms(diagnostics: list[Diagnostic]) -> list[tuple[Diagnostic, tupl
 
 def _scope(platforms: tuple[str, ...]) -> str:
     """Render the platform scope of a finding, silent when it is every platform."""
-    if len(platforms) == len(_PLATFORMS):
+    if len(platforms) == len(PLATFORMS):
         return ""
     return f"  [{', '.join(platforms)}]"
 
@@ -496,7 +496,7 @@ def _scope(platforms: tuple[str, ...]) -> str:
 def _print_platform_summary(entries: list[tuple[Diagnostic, tuple[str, ...]]]) -> None:
     """Print how many findings each target platform contributes."""
     print("  by platform:")
-    for platform in _PLATFORMS:
+    for platform in PLATFORMS:
         count = sum(1 for _, platforms in entries if platform.key in platforms)
         print(f"    {count:>6}  {platform.key}")
 
@@ -566,8 +566,8 @@ def main() -> int:
     args = parser.parse_args()
 
     collected = fold_platforms(collect_all())
-    suppressed = [entry for entry in collected if _is_irreducible_external_gap(entry[0])]
-    entries = [entry for entry in collected if not _is_irreducible_external_gap(entry[0])]
+    suppressed = [entry for entry in collected if is_irreducible_external_gap(entry[0])]
+    entries = [entry for entry in collected if not is_irreducible_external_gap(entry[0])]
     diagnostics = [entry[0] for entry in entries]
 
     if args.count:
@@ -615,7 +615,7 @@ def _validate_platform_pin(
             f"{location} = {value!r} is not a platform this project sweeps ({', '.join(sorted(valid[pin.spelling]))})"
         )
         return
-    declared[location] = next(platform.key for platform in _PLATFORMS if getattr(platform, pin.spelling) == value)
+    declared[location] = next(platform.key for platform in PLATFORMS if getattr(platform, pin.spelling) == value)
 
 
 def _emit_full_type_audit(

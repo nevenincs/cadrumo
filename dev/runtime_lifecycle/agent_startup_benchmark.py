@@ -29,12 +29,12 @@ from cadrumo_runtime.application.development_root import mark_development_root
 from dev.temporary_output import prepare_temp_root
 
 from .agent_service_session import (
-    _close_holder,
-    _logout_profile,
-    _require_runtime_stopped,
-    _validate_agent_event,
-    _validate_service_lease,
-    _validate_service_ready,
+    close_holder,
+    logout_profile,
+    require_runtime_stopped,
+    validate_agent_event,
+    validate_service_lease,
+    validate_service_ready,
 )
 from .caller_owned_root import Programs, caller_owned_runtime, consumer_environment, require
 from .packaged_service_process import PackagedServiceProcess
@@ -70,7 +70,7 @@ def _wait_for_builds() -> None:
         time.sleep(1.0)
 
 
-def _health_facts(health: dict[str, Any]) -> dict[str, Any]:
+def agent_startup_benchmark_health_facts(health: dict[str, Any]) -> dict[str, Any]:
     """Require a live worker in either documented gateway health projection."""
     if "gateway_readiness" in health:
         require(health["gateway_readiness"] == "ready", "gateway health probe was not ready")
@@ -144,14 +144,14 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
     with ExitStack() as cleanup:
         phase = time.monotonic()
         runtime = cleanup.enter_context(caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log"))
-        cleanup.callback(_require_runtime_stopped, runtime)
+        cleanup.callback(require_runtime_stopped, runtime)
         require(runtime.ready().get("kind") == "runtime_ready", "runtime readiness refused")
         measurements["runtime_ready_seconds"] = time.monotonic() - phase
         phase = time.monotonic()
         profile = create_profile(programs, environment, "startup-benchmark")
         persisted = login_profile(programs, environment, profile)
         if persisted:
-            cleanup.callback(_logout_profile, programs, environment)
+            cleanup.callback(logout_profile, programs, environment)
         profile = identify_profile(programs, environment, profile)
         if profile.profile_id is None:
             raise RuntimeError("synthetic profile identity unavailable")
@@ -164,7 +164,7 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
             password=bytearray(profile.password, "utf-8"),
             frontend="cli",
         )
-        cleanup.callback(_close_holder, holder)
+        cleanup.callback(close_holder, holder)
         measurements["holder_start_seconds"] = time.monotonic() - phase
         for label in ("first", "cached"):
             phase = time.monotonic()
@@ -188,15 +188,15 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
                     )
                     service_cleanup.callback(service.close)
                     ready = service.event()
-                    _validate_service_ready(ready, holder, profile)
+                    validate_service_ready(ready, holder, profile)
                     service_seconds = time.monotonic() - phase
                     admission = holder.command(
                         "service_admission", recipient_connection_id=ready["connection_id"], service_id=SERVICE_ID
                     )
-                    _validate_service_lease(admission, holder, ready, profile)
+                    validate_service_lease(admission, holder, ready, profile)
                     admitted_seconds = time.monotonic() - phase
                     event = service.event()
-                    _validate_agent_event(event)
+                    validate_agent_event(event)
                     require(event["event"] == "agent_ready", "packaged agent startup refused")
                     gateway_seconds = time.monotonic() - phase
                     milestones = _milestones(root, wall_start)
@@ -207,7 +207,7 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
                         )
                         response.raise_for_status()
                         health = response.json()
-                    health_facts = _health_facts(health)
+                    health_facts = agent_startup_benchmark_health_facts(health)
                     starts.append(
                         {
                             "store_state_before_start": store_state,

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._ast_scanner import scan_namespace_markers_in_text, scan_source_text
-from .._paths import SRC_DIR
+from ..ast_scanner import scan_namespace_markers_in_text, scan_source_text
+from ..paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

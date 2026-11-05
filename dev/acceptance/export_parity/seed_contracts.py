@@ -15,28 +15,28 @@ from .scenario import (
 RECEIPT_SCHEMA: Final = "export-parity.seed-receipt/v1"
 
 
-_ACTOR: Final = "export-parity-seed"
+ACTOR: Final = "export-parity-seed"
 
 
-_UNCHANGED_UPDATE: Final = "must change at least one ledger field"
+UNCHANGED_UPDATE: Final = "must change at least one ledger field"
 
 
-_PROFILE: Final = f"income-{YEARS[0]}"
+PROFILE: Final = f"income-{YEARS[0]}"
 
 
-_PERIODIC: Final = ("303", "130", "111", "115")
+PERIODIC: Final = ("303", "130", "111", "115")
 
 
-_ANNUAL: Final = ("390", "190", "180", "100")
+ANNUAL: Final = ("390", "190", "180", "100")
 
 
-_M100_CASILLAS: Final = ("0001=declarante", "0165=declarante", "0166=A05")
+M100_CASILLAS: Final = ("0001=declarante", "0165=declarante", "0166=A05")
 
 
 #: Renta bindings the scenario answers, applied only where the selected revision declares them.
 #: The profile declares only economic-activity income, so the suffered-withholding credit
 #: classes of the annual return are proven zero by its categories and take no answer here.
-_M100_BINDINGS: Final = {
+M100_BINDINGS: Final = {
     "renta-modelo-100-estimacion-directa-es-normal": "1",
 }
 

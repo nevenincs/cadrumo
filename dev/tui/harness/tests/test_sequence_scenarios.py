@@ -22,8 +22,8 @@ from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScr
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.golden_store import golden_path, read_golden
 
-from ... import _harness, _viewports
-from ..._artifacts import ThemeName
+from ... import harness_support, viewports
+from ...artifacts import ThemeName
 from ..sequences import (
     BULK_CONFIRM_PAGE,
     DECLARATIONS_PAGE,
@@ -168,9 +168,9 @@ def test_a_page_the_scenario_does_not_offer_is_refused_before_its_sequence_runs(
 @pytest.mark.integration
 @pytest.mark.hex_core
 def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(tmp_path: Path) -> None:
-    viewport = _viewports.resolve("small")
+    viewport = viewports.resolve("small")
 
-    provenance, captures, refusals = _harness.capture_scenario(
+    provenance, captures, refusals = harness_support.capture_scenario(
         _FIRST_QUARTER.sequence_id,
         (viewport,),
         themes=(ThemeName.DARK,),

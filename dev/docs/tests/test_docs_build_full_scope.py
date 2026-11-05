@@ -8,7 +8,7 @@ of every language with its witness build
 (``test_docs_build_localized_compile``) runs concurrently instead of queueing
 behind it.
 Shared machinery and the hook-dedupe rationale live in
-:mod:`dev.docs.tests._sphinx_build_harness`.
+:mod:`dev.docs.tests.sphinx_build_harness`.
 
 """
 
@@ -23,7 +23,7 @@ import pytest
 
 from dev.packaging.command_execution import CommandResult
 
-from ._sphinx_build_harness import (
+from .sphinx_build_harness import (
     copy_docs_source,
     gate_build_env,
     persist_sphinx_build_output,

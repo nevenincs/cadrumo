@@ -9,9 +9,9 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.domain.invoices.figures import FigureFindingCode
 from cadrumo.domain.invoices.rule_findings import InvoiceRuleFindingCode
 
-from .._paths import LOCALES_DIR
 from ..fstring_registry import get_registered_keys
 from ..invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

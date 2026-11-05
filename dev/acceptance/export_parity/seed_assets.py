@@ -12,7 +12,7 @@ from .scenario import (
     ActivityAsset,
 )
 from .seed_inputs import (
-    _money,
+    money,
 )
 from .seed_state import SeedState
 
@@ -35,7 +35,7 @@ class AssetSeedStage(SeedState):
                 "--date",
                 asset.in_service.isoformat(),
                 "--amount",
-                _money(asset.basis + iva),
+                money(asset.basis + iva),
                 "--direction",
                 "OUTGOING",
                 "--description",
@@ -43,11 +43,11 @@ class AssetSeedStage(SeedState):
                 "--classification",
                 "BUSINESS",
                 "--taxable-base",
-                _money(asset.basis),
+                money(asset.basis),
                 "--iva-rate",
                 "0.21",
                 "--iva-amount",
-                _money(iva),
+                money(iva),
             ),
             stage=f"{stage}.acquisition",
         )
@@ -79,14 +79,14 @@ class AssetSeedStage(SeedState):
             "asset_kind": asset.kind,
             "basis": {
                 "stage": "business_allocated",
-                "basis_amount": _money(asset.basis),
+                "basis_amount": money(asset.basis),
                 "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "synthetic export-parity allocation",
             },
             "in_service_date": asset.in_service.isoformat(),
             "opening_history": {
                 "status": "known",
-                "accumulated_amount": _money(accumulated),
+                "accumulated_amount": money(accumulated),
                 **({"covered_through_tax_year": self.first_year - 1} if accumulated else {}),
             },
             "acquired_condition": "new",
@@ -119,7 +119,7 @@ class AssetSeedStage(SeedState):
                     "--acquisition-ledger-id",
                     transaction_id,
                     "--cuota-soportada",
-                    _money(asset.basis * Decimal("0.21")),
+                    money(asset.basis * Decimal("0.21")),
                     "--prorrata-inicial",
                     "100",
                     "--kind",

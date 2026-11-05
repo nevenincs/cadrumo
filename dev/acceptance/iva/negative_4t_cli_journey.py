@@ -23,15 +23,15 @@ from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, author
 from .cli_journey import (
     IvaCliJourneyError,
     SanitizedCommandReceipt,
-    _checkout_source_identity,
-    _installed_package_identity,
-    _required_id,
-    _result,
-    _run,
-    _sha256_path,
+    checkout_source_identity,
+    installed_package_identity,
+    required_id,
+    result,
+    run,
+    sha256_path,
 )
 from .filing_year import IvaJourneyYear, require_journey_year
-from .multirate_cli_journey import _create_profile
+from .multirate_cli_journey import create_profile
 
 RefundElection = Literal["compensar", "devolver"]
 
@@ -45,7 +45,7 @@ _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 
 def _require_negative_local_filing(filed: dict[str, object]) -> tuple[str, str, str]:
     """Require negative local filing."""
-    filing_record_id = _required_id(filed, "filing_record_id")
+    filing_record_id = required_id(filed, "filing_record_id")
     filing_origin = _required_text(filed, "origin")
     filing_confirmation = _required_text(filed, "confirmation")
     if filing_origin != "local" or filing_confirmation != "pendiente":
@@ -177,12 +177,12 @@ def run_iva_negative_4t_cli_journey(
         )
         receipts: list[SanitizedCommandReceipt] = []
         try:
-            _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+            create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
         except InstalledCliError as exc:
             raise IvaCliJourneyError("config profile create refused") from exc
 
-        evidence = _result(
-            _run(
+        evidence = result(
+            run(
                 cli,
                 receipts,
                 artifact,
@@ -190,7 +190,7 @@ def run_iva_negative_4t_cli_journey(
                 result_keys=("evidence_id",),
             )
         )
-        evidence_id = _required_id(evidence, "evidence_id")
+        evidence_id = required_id(evidence, "evidence_id")
 
         transaction_id, invoice_id = _capture_negative_purchase(
             cli, receipts, artifact, journey_year, year, evidence_id
@@ -212,8 +212,8 @@ def run_iva_negative_4t_cli_journey(
             authority_root=authority_root,
             passphrase=cli.passphrase,
         )
-        verified = _result(
-            _run(
+        verified = result(
+            run(
                 verify_cli,
                 receipts,
                 artifact,
@@ -236,8 +236,8 @@ def run_iva_negative_4t_cli_journey(
             authority_root=authority_root,
             passphrase=cli.passphrase,
         )
-        history = _result(
-            _run(
+        history = result(
+            run(
                 history_cli,
                 receipts,
                 artifact,
@@ -255,11 +255,11 @@ def run_iva_negative_4t_cli_journey(
             acceptance_ids=(_acceptance_id(refund_election, filing_year=year),),
             filing_year=year,
             executable=str(cli.executable),
-            executable_sha256=_sha256_path(cli.executable),
-            source_identity=_checkout_source_identity(),
-            package_identity=_installed_package_identity(),
+            executable_sha256=sha256_path(cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
             authority_generation=authority_generation(authority_root),
-            authority_descriptor_sha256=_sha256_path(descriptor),
+            authority_descriptor_sha256=sha256_path(descriptor),
             storage_root=str(storage_root.resolve()),
             purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
             transaction_id=transaction_id,
@@ -291,8 +291,8 @@ def _file_negative_quarter(
     refund_election: RefundElection,
 ) -> tuple[str, str, str]:
     """Record the selected election as a local pending filing and verify its provenance."""
-    filed = _result(
-        _run(
+    filed = result(
+        run(
             verify_cli,
             receipts,
             artifact,
@@ -324,8 +324,8 @@ def _capture_negative_purchase(
     evidence_id: str,
 ) -> tuple[str, str]:
     """Execute this acceptance phase in order through its existing command boundary."""
-    purchase = _result(
-        _run(
+    purchase = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -363,8 +363,8 @@ def _capture_negative_purchase(
             result_keys=("transaction_id",),
         )
     )
-    transaction_id = _required_id(purchase, "transaction_id")
-    _run(
+    transaction_id = required_id(purchase, "transaction_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -383,8 +383,8 @@ def _capture_negative_purchase(
         ),
         result_keys=(),
     )
-    invoice = _result(
-        _run(
+    invoice = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -416,8 +416,8 @@ def _capture_negative_purchase(
             result_keys=("invoice_id",),
         )
     )
-    invoice_id = _required_id(invoice, "invoice_id")
-    _run(
+    invoice_id = required_id(invoice, "invoice_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -436,7 +436,7 @@ def _calculate_negative_quarter(
     year: int,
 ) -> tuple[str, str, Decimal]:
     """Execute this acceptance phase in order through its existing command boundary."""
-    _run(
+    run(
         work_cli,
         receipts,
         artifact,
@@ -455,8 +455,8 @@ def _calculate_negative_quarter(
         ),
         result_keys=(),
     )
-    attestation = _result(
-        _run(
+    attestation = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -475,10 +475,10 @@ def _calculate_negative_quarter(
             result_keys=("attachment_id", "sha256"),
         )
     )
-    attachment_id = _required_id(attestation, "attachment_id")
-    attachment_sha256 = _required_id(attestation, "sha256")
-    created = _result(
-        _run(
+    attachment_id = required_id(attestation, "attachment_id")
+    attachment_sha256 = required_id(attestation, "sha256")
+    created = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -486,9 +486,9 @@ def _calculate_negative_quarter(
             result_keys=("work_unit_id",),
         )
     )
-    work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
+    work_unit_id = required_id(created, "work_unit_id")
+    calculated = result(
+        run(
             work_cli,
             receipts,
             artifact,
@@ -509,7 +509,7 @@ def _calculate_negative_quarter(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+    calculation_revision_id = required_id(calculated, "calculation_revision_id")
     iva_resultado = _decimal_casilla(calculated, "iva.resultado")
     if iva_resultado != _EXPECTED_RESULT:
         raise IvaCliJourneyError(

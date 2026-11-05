@@ -40,7 +40,7 @@ _CI_REPORTS_ENV = "CADRUMO_CI_REPORTS_DIR"
 _CI_REPORT_NAME_ENV = "CADRUMO_CI_REPORT_NAME"
 
 
-def _ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
+def ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
     """Return the JUnit path this run should write, or ``None`` to write none.
 
     Args:
@@ -67,7 +67,7 @@ def _enable_ci_report(config: pytest.Config) -> None:
     """Point the junitxml plugin at this run's report, when one is asked for."""
     if getattr(config.option, "xmlpath", None):
         return
-    path = _ci_report_path(list(config.invocation_params.args))
+    path = ci_report_path(list(config.invocation_params.args))
     if path is not None:
         config.option.xmlpath = path
 

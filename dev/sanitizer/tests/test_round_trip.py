@@ -155,8 +155,8 @@ def _no_op_rewrite_sidecar() -> tuple[bytes, dict[str, Any]]:
 
     from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-    from .._pipeline import sanitize_pdf
-    from .._records import IbanReplacement, NifReplacement, TokenMap
+    from ..pipeline import sanitize_pdf
+    from ..records import IbanReplacement, NifReplacement, TokenMap
 
     token_map = TokenMap(
         nif=(NifReplacement(real=SecretStr(_SPECIMEN_NIF), synthetic=_SPECIMEN_NIF, surface_label="taxpayer NIF"),),

@@ -8,7 +8,7 @@ heavy whole-tree ``-n -W`` builds live one-per-module beside this file
 carrying the one compile of every language with the one language build it is
 measured against) so pytest-xdist's per-file distribution runs them
 concurrently; their shared machinery is
-:mod:`dev.docs.tests._sphinx_build_harness`.
+:mod:`dev.docs.tests.sphinx_build_harness`.
 """
 
 from __future__ import annotations
@@ -30,16 +30,16 @@ from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStub
 from ..build import (
     PREVIEW_SEQUENCE_NOTICE,
     DocBuildPlan,
-    _generated_api_stub_names,
-    _targets_for_docs_root,
+    generated_api_stub_names,
     planned_doc_targets,
     preview_doctree_dir,
     resolve_preview_targets,
     sphinx_build_environment,
+    targets_for_docs_root,
 )
 from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
-from ._sphinx_build_harness import gate_build_env
+from .sphinx_build_harness import gate_build_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -224,14 +224,14 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 
 def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path) -> None:
     """Generated pages written by one root's build never reach the shared tree or another root."""
-    from ..build import _full_build_source
+    from ..build import full_build_source
 
     docs_root = tmp_path / "docs"
     (docs_root / "_build" / "html").mkdir(parents=True)
     (docs_root / "_build" / "html" / "index.html").write_text("built\n", encoding="utf-8")
     (docs_root / "index.md").write_text("# Home\n", encoding="utf-8")
 
-    with _full_build_source(docs_root, isolated=True) as first, _full_build_source(docs_root, isolated=True) as second:
+    with full_build_source(docs_root, isolated=True) as first, full_build_source(docs_root, isolated=True) as second:
         assert first != second
         assert (first / "index.md").read_text(encoding="utf-8") == "# Home\n"
         assert not (first / "_build").exists()
@@ -242,7 +242,7 @@ def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path)
     assert not first.exists()
     assert not second.exists()
 
-    with _full_build_source(docs_root, isolated=False) as shared:
+    with full_build_source(docs_root, isolated=False) as shared:
         assert shared == docs_root
 
 
@@ -285,16 +285,16 @@ def test_a_desktop_build_is_refused_outside_its_own_output_root(monkeypatch: pyt
 
 def test_the_flavor_flag_overrides_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """``--flavor`` wins over ``CADRUMO_DOCS_FLAVOR`` and is what the Sphinx child reads."""
-    from ..build import _docs_build_arguments, _docs_flavor
+    from ..build import docs_build_arguments, docs_flavor
 
     monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
-    assert _docs_flavor(_docs_build_arguments(["--flavor", "web"])) == "web"
+    assert docs_flavor(docs_build_arguments(["--flavor", "web"])) == "web"
     assert os.environ["CADRUMO_DOCS_FLAVOR"] == "web"
     monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
-    assert _docs_flavor(_docs_build_arguments(["--flavor", "desktop", "--out-dir", "out"])) == "desktop"
+    assert docs_flavor(docs_build_arguments(["--flavor", "desktop", "--out-dir", "out"])) == "desktop"
     assert os.environ["CADRUMO_DOCS_FLAVOR"] == "desktop"
     with pytest.raises(SystemExit):
-        _docs_build_arguments(["--flavor", "mobile"])
+        docs_build_arguments(["--flavor", "mobile"])
 
 
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
@@ -614,11 +614,11 @@ def test_a_changed_page_check_keeps_only_the_api_stubs_its_build_generates(tmp_p
     copied = tmp_path / "copy"
     (copied / "how-to").mkdir(parents=True)
     (copied / "how-to" / "page.md").write_text("# Page\n", encoding="utf-8")
-    generated = _generated_api_stub_names(_REPO_ROOT)
+    generated = generated_api_stub_names(_REPO_ROOT)
     kept_stub = stub_filename(f"{API_SOURCE_PACKAGE}.core")
     assert kept_stub in generated, "the real generator must admit the stub this case keeps"
 
-    mapped = _targets_for_docs_root(
+    mapped = targets_for_docs_root(
         original,
         copied,
         [

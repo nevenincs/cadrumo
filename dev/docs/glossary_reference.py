@@ -52,11 +52,11 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev.paths import UTF_8
 
-from ._locale_chrome import chrome_anchor, docs_chrome
 from .build import docs_build_language
 from .compile_slots import active, language_text
 from .legal_catalogue import LEGAL_CATALOGUE_RELPATH
 from .legal_reference_routing import legal_citation
+from .locale_chrome import chrome_anchor, docs_chrome
 from .terminology_handbook.enums import TermStatus
 from .terminology_handbook.loader import TerminologyHandbook, load_bundled_terminology_handbook
 from .terminology_handbook.schema import ConceptRecord, LanguageSection
@@ -107,7 +107,7 @@ class GlossaryResult:
     deduplicated_terms: tuple[str, ...] = ()
 
 
-def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
+def legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
     """Build the ``legal-ref-id -> grounding`` map from the catalogue TOMLs.
 
     Reads the ``[legal."<id>"]`` tables directly (a lightweight read, not the
@@ -384,7 +384,7 @@ def render_glossary(
         many legal grounding links resolved.
     """
     resolved_language = language if language is not None else docs_build_language(os.environ)
-    permalinks = _legal_permalinks(repo_root)
+    permalinks = legal_permalinks(repo_root)
     approved = _approved_concepts(handbook)
     # concept_id -> headword for every approved concept, so broader/related
     # relations can be rendered as resolvable ``:term:`` cross-references to the

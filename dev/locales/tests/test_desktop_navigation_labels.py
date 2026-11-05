@@ -10,7 +10,6 @@ import yaml
 
 from cadrumo_client.contracts.navigation import load_navigation_register
 
-from .._paths import LOCALES_DIR
 from ..desktop_chrome import (
     DESKTOP_LOCALES,
     DESKTOP_NAVIGATION_KEYWORD_KEYS,
@@ -19,6 +18,7 @@ from ..desktop_chrome import (
     main,
 )
 from ..errors import LocaleError
+from ..paths import LOCALES_DIR
 from ..signal_translation_matrix import suspicious_translation_locales
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

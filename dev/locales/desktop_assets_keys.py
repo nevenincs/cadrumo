@@ -18,10 +18,10 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Final
 
-from ._paths import LOCALES_DIR, SRC_DIR
-from .locale_tree import _flatten_raw_locale_leaves
+from .locale_tree import flatten_raw_locale_leaves
 from .locale_yaml import locale_catalogue_source
 from .manager import LocaleManager
+from .paths import LOCALES_DIR, SRC_DIR
 
 #: The namespace of every key the Assets tab shares with the backend.
 ASSET_NAMESPACE: Final[str] = "ledger.actividad_asset."
@@ -95,7 +95,7 @@ def _reason_members() -> tuple[str, ...]:
     source = locale_catalogue_source(LOCALES_DIR, "en")
     if source is None:
         raise ValueError(f"No source catalogue under {LOCALES_DIR}, so no backend reason could be listed")
-    leaves = _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
+    leaves = flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
     return tuple(sorted(key.removeprefix(ASSET_REASON_FAMILY) for key in leaves if key.startswith(ASSET_REASON_FAMILY)))
 
 
@@ -181,7 +181,7 @@ def _inventory_advisory_members() -> tuple[str, ...]:
     source = locale_catalogue_source(LOCALES_DIR, "en")
     if source is None:
         raise ValueError(f"No source catalogue under {LOCALES_DIR}, so no backend advisory could be listed")
-    leaves = _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
+    leaves = flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
     return tuple(
         sorted(
             key.removeprefix(INVENTORY_ADVISORY_FAMILY) for key in leaves if key.startswith(INVENTORY_ADVISORY_FAMILY)

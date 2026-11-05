@@ -11,7 +11,7 @@ from dev.quality.source_import_analysis import resolve_relative_import
 from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_models import ShippedModule
-from .unreachable_references import _data_paths
+from .unreachable_references import data_paths
 from .unreachable_tree import ShippedTreeSpec
 
 CODED_ENUM_BASE = "RegistryCodedEnum"
@@ -32,7 +32,7 @@ def declared_form_codes(spec: ShippedTreeSpec) -> DeclaredCodes:
     """
     declared: dict[str, set[str]] = {}
     unread: list[str] = []
-    for path in _data_paths(spec):
+    for path in data_paths(spec):
         if path.suffix != ".toml":
             continue
         try:

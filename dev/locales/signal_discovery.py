@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from .locale_audit import _covered_by_namespace
-from .locale_tree import _flatten_raw_locale_leaves
+from .locale_audit import locale_audit_covered_by_namespace
+from .locale_tree import flatten_raw_locale_leaves
 from .locale_yaml import discover_locale_codes, locale_catalogue_source
 from .manager import LocaleManager
 from .signal_policy import OPEN_ENDED_NAMESPACES
@@ -108,7 +108,11 @@ def signal_catalogue_coverage(
 
 def is_catalogue_only_key(key: str, required_keys: set[str]) -> bool:
     """Apply the catalogue audit exemptions to keys outside the required inventory."""
-    return key not in required_keys and not is_optional_namespace_key(key) and not _covered_by_namespace(key, ())
+    return (
+        key not in required_keys
+        and not is_optional_namespace_key(key)
+        and not locale_audit_covered_by_namespace(key, ())
+    )
 
 
 def is_optional_namespace_key(key: str) -> bool:
@@ -157,7 +161,7 @@ def catalogue_leaves(
         source = locale_catalogue_source(manager.locales_dir, locale)
         if source is None:
             continue
-        leaves = _flatten_raw_locale_leaves(manager.load_locale(source))
+        leaves = flatten_raw_locale_leaves(manager.load_locale(source))
         leaves_by_locale[locale] = leaves
     _include_desktop_catalogue_leaves(manager, required_keys, leaves_by_locale)
     findings = _non_string_catalogue_findings(leaves_by_locale)
@@ -170,7 +174,7 @@ def _include_desktop_catalogue_leaves(
     leaves_by_locale: dict[str, dict[str, object]],
 ) -> None:
     """Compose required desktop keys only for the canonical product catalogues."""
-    from ._paths import LOCALES_DIR
+    from .paths import LOCALES_DIR
 
     if manager.locales_dir == LOCALES_DIR:
         from .desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings

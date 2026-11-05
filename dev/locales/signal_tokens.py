@@ -55,7 +55,7 @@ _LEDGER_PERIOD_FILTER_RE = re.compile(
 # These names are the actual review-filter keys, shown together in CLI help.
 # Match the complete ordered list and leave both explanatory glosses visible;
 # an incomplete or misspelled list is not treated as an established contract.
-_REVIEW_FILTER_LIST_RE = re.compile(
+REVIEW_FILTER_LIST_RE = re.compile(
     r"(?<![\w-])"
     + rf"(?P<status>{re.escape(LedgerReviewFilterKey.STATUS.value)}),[ \t]*"
     + rf"(?P<period>{re.escape(LedgerReviewFilterKey.PERIOD.value)})[ \t]*\([^()\r\n]*\)[ \t]*"
@@ -93,7 +93,7 @@ _RESIDENCE_EXAMPLE_PAIR_RE = re.compile(r"(?<![\w-])cataluna,[ \t]+comunidad-val
 # The bulk classifier requires both of these CSV headers. Optional columns
 # and malformed alternatives remain visible to the spelling signal.
 _CLASSIFICATION_HEADER_RE = re.compile(r"(?<!\w)transaction_id,[ \t]*classification(?![\w-])")
-_M303_MOTIVES_RE = re.compile(
+M303_MOTIVES_RE = re.compile(
     r"(?<![\w-])(?P<first>"
     + re.escape(M303RectificativaMotive.RECTIFICACIONES.value)
     + r")[ \t]+(?:or|o|vagy)[ \t]+(?P<second>"
@@ -102,7 +102,7 @@ _M303_MOTIVES_RE = re.compile(
 )
 # Match the complete three-choice list but remove only its exact wire tokens;
 # every translated explanation between them remains dictionary input.
-_PRORRATA_INPUT_CHOICES_RE = re.compile(
+PRORRATA_INPUT_CHOICES_RE = re.compile(
     r"(?<![\w-])(?P<deductible>exclusively_deductible)[^;\r\n]*;[ \t]*"
     r"(?P<nondeductible>exclusively_non_deductible)[^;\r\n]*;[ \t]*(?P<common>common)(?![\w-])"
 )
@@ -123,7 +123,7 @@ _PERCENT_FORMULA_CALL_RE = re.compile(r"(?<![\w.])percent\([ \t]*\d+[ \t]*,[ \t]
 _MINUTE_QUANTITY_RE = re.compile(r"(?<![\w.])(?P<value>\{minutes\}|\d+(?:[.,]\d+)?)[ \t]+min(?![\w])")
 # Exact boolean choice notation documented by parse_descendiente_flag; an
 # unknown field or changed option remains visible to the spelling signal.
-_DESCENDANT_BOOL_CHOICES_RE = re.compile(
+DESCENDANT_BOOL_CHOICES_RE = re.compile(
     r"(?<![\w])(?:CONVIVENCIA|DEPENDENCIA|CUSTODIA|DECLARACION_PROPIA|PRORRATA)=true\|false(?![\w|])"
 )
 # A complete, copyable list of the governed RELACION wire values. A missing,
@@ -149,7 +149,7 @@ _ARTICLE_ORDINAL = (
     r"(?:bis|quater|nonies|noniesdecies|octiesdecies|septiesdecies|septvicies|quatervicies|quinquies|quinvicies|sexies|unvicies|terdecies|"
     r"quaterdecies|undecies|decies|duodecies|quinquiesdecies|duovicies|sexvicies|tervicies|vicies|octovicies)(?![\w-])"
 )
-_NUMBERED_ARTICLE_REFERENCE_RE = re.compile(
+NUMBERED_ARTICLE_REFERENCE_RE = re.compile(
     rf"(?<![\w.])\d+[ \t]+{_ARTICLE_ORDINAL}(?:[ \t]+(?:a|to)[ \t]+{_ARTICLE_ORDINAL})?"
 )
 _CENSO_GLOSSED_CHOICES_RE = re.compile(
@@ -175,7 +175,7 @@ def _visible_assignment_label(match: re.Match[str]) -> str:
     return " " if name == match.group("parameter") else f" {name} "
 
 
-def _filter_rich_styles(value: str) -> tuple[str, int]:
+def filter_rich_styles(value: str) -> tuple[str, int]:
     """Keep visible Rich span text and count only styles that Rich admits."""
     from rich.errors import StyleSyntaxError
     from rich.style import Style
@@ -243,7 +243,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
     labels, while targets remain outside the dictionary surface.
     """
     text, excluded = filter_detail_row_examples(value)
-    text, rich_excluded = _filter_rich_styles(text)
+    text, rich_excluded = filter_rich_styles(text)
     excluded += rich_excluded
     for pattern, replacement in (
         (TRANSLATION_HTML_TAG_RE, " "),
@@ -262,15 +262,15 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_RESIDENCE_EXAMPLE_PAIR_RE, " "),
         (_CONTROL_MODIFIER_RE, " "),
         (_ESCAPE_BACK_LABEL_RE, " "),
-        (_M303_MOTIVES_RE, _visible_review_filter_glosses),
-        (_PRORRATA_INPUT_CHOICES_RE, _visible_review_filter_glosses),
+        (M303_MOTIVES_RE, _visible_review_filter_glosses),
+        (PRORRATA_INPUT_CHOICES_RE, _visible_review_filter_glosses),
         (registered_operation_id_pattern(), " "),
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
-        (_DESCENDANT_BOOL_CHOICES_RE, " "),
+        (DESCENDANT_BOOL_CHOICES_RE, " "),
         (DESCENDANT_RELATION_CHOICES_RE, " "),
-        (_REVIEW_FILTER_LIST_RE, _visible_review_filter_glosses),
+        (REVIEW_FILTER_LIST_RE, _visible_review_filter_glosses),
         (_LEGISLATIVE_DECREE_REFERENCE_RE, " "),
         (_SPREADSHEET_SUFFIX_RE, " "),
         (TRANSLATION_URL_RE, " "),
@@ -281,7 +281,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_PERCENT_FORMULA_CALL_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
         (_AREA_UNIT_RE, " "),
-        (_NUMBERED_ARTICLE_REFERENCE_RE, " "),
+        (NUMBERED_ARTICLE_REFERENCE_RE, " "),
         (TRANSLATION_NUMERIC_RE, " "),
         (TRANSLATION_IDENTIFIER_RE, " "),
         (TRANSLATION_PASCAL_IDENTIFIER_RE, " "),

@@ -22,10 +22,10 @@ from dev.packaging.lane_verification_core import (
 from dev.packaging.runtime_wheelhouse_reader import extract_runtime_wheelhouse, load_runtime_wheelhouse
 from dev.paths import REPO_ROOT, UTF_8
 
-from .runtime_probe_artifacts import _cohort_digests, _load_binary_artifacts, _source_artifacts
-from .runtime_probe_checks import _focused_runtime_tests, _installed_probe
+from .runtime_probe_artifacts import cohort_digests, load_binary_artifacts, source_artifacts
+from .runtime_probe_checks import focused_runtime_tests, installed_probe
 from .runtime_probe_contracts import (
-    _SCHEMA,
+    SCHEMA,
     CommandEvidence,
     CompatibilityProbeError,
     FocusedTestEvidence,
@@ -34,13 +34,13 @@ from .runtime_probe_contracts import (
     ProbeStatus,
     PythonRuntimeDependencyStatus,
 )
-from .runtime_probe_identity import _builder_pin, _read_lock_digest, _runtime_identity
+from .runtime_probe_identity import builder_pin, read_lock_digest, runtime_identity
 from .runtime_probe_installation import (
-    _install,
-    _runtime_minor,
-    _select_runtime_wheelhouse,
-    _venv,
-    _wheelhouse_platform,
+    install,
+    runtime_minor,
+    runtime_probe_installation_venv,
+    runtime_probe_installation_wheelhouse_platform,
+    select_runtime_wheelhouse,
 )
 
 
@@ -98,7 +98,7 @@ def run_probe(
     commands: list[CommandEvidence] = []
     artifacts: tuple[tuple[str, Path], ...] = ()
     artifact_digests: dict[str, str] = {}
-    lock_sha256 = _read_lock_digest(repo_root / "uv.lock")
+    lock_sha256 = read_lock_digest(repo_root / "uv.lock")
     wheelhouse_dir: Path | None = None
     wheelhouse_manifest: Mapping[str, Any] | None = None
     wheelhouse_platform: str | None = None
@@ -115,16 +115,16 @@ def run_probe(
     runtime = _initial_runtime(runtime_id, python, stability)
     try:
         if selected_mode is ProbeMode.SOURCE:
-            artifacts, lock_sha256, artifact_digests, source_digest = _source_artifacts(repo_root, work_dir)
+            artifacts, lock_sha256, artifact_digests, source_digest = source_artifacts(repo_root, work_dir)
             artifact_sha256 = artifact_map_digest(artifact_digests)
         else:
             if cohort_dir is None:
                 raise CompatibilityProbeError("binary mode requires --cohort-dir", category="cohort-missing")
-            cohort, artifacts, lock_sha256, artifact_sha256, builder_python = _load_binary_artifacts(
+            cohort, artifacts, lock_sha256, artifact_sha256, builder_python = load_binary_artifacts(
                 cohort_dir,
                 repo_root=repo_root,
             )
-            artifact_digests = _cohort_digests(cohort)
+            artifact_digests = cohort_digests(cohort)
             # ``load_python_cohort`` has already checked the source archive,
             # cohort manifest, and every wheelhouse member byte. Validate the
             # archive against the same lock digest once more at this handoff.
@@ -139,9 +139,9 @@ def run_probe(
             artifact_sha256 = artifact_map_digest(artifact_digests)
             cohort_manifest_sha256 = sha256_path(cohort.manifest)
             source_digest = cohort.source_digest
-        venv, created = _venv(uv, repo_root=repo_root, work_dir=work_dir, selector=python)
+        venv, created = runtime_probe_installation_venv(uv, repo_root=repo_root, work_dir=work_dir, selector=python)
         commands.extend(created)
-        runtime = _runtime_identity(
+        runtime = runtime_identity(
             venv_python_path(venv),
             runtime_id=runtime_id,
             selector=python,
@@ -152,15 +152,15 @@ def run_probe(
             # Bind failures to the observed target minor before selecting the
             # manifest entry.  This keeps an advisory missing-wheel verdict
             # attributable even when selection itself raises.
-            wheelhouse_runtime = _runtime_minor(runtime)
+            wheelhouse_runtime = runtime_minor(runtime)
             dependency["wheelhouse_runtime"] = wheelhouse_runtime
-            wheelhouse_platform = _wheelhouse_platform(runtime)
+            wheelhouse_platform = runtime_probe_installation_wheelhouse_platform(runtime)
             if wheelhouse_bundle is None:  # pragma: no cover - guarded by binary cohort setup
                 raise CompatibilityProbeError(
                     "binary mode did not load its sealed runtime wheelhouse",
                     category="cohort-invalid",
                 )
-            wheelhouse_runtime, selected_wheelhouse = _select_runtime_wheelhouse(
+            wheelhouse_runtime, selected_wheelhouse = select_runtime_wheelhouse(
                 wheelhouse_bundle.manifest,
                 runtime,
             )
@@ -173,7 +173,7 @@ def run_probe(
             )
             wheelhouse_manifest = selected_wheelhouse
             dependency["wheelhouse_platform"] = wheelhouse_platform
-        install_commands, dependency_status, dependency_detail = _install(
+        install_commands, dependency_status, dependency_detail = install(
             uv,
             repo_root=repo_root,
             work_dir=work_dir,
@@ -191,9 +191,9 @@ def run_probe(
             "detail": dependency_detail or "resolved",
         }
         _require_resolved_dependencies(dependency_status, dependency_detail)
-        probe_commands, isolation = _installed_probe(venv, work_dir=work_dir)
+        probe_commands, isolation = installed_probe(venv, work_dir=work_dir)
         commands.extend(probe_commands)
-        focused_tests, focused_commands, focused_failure = _focused_runtime_tests(venv, work_dir=work_dir)
+        focused_tests, focused_commands, focused_failure = focused_runtime_tests(venv, work_dir=work_dir)
         commands.extend(focused_commands)
         if focused_failure is not None:
             raise CompatibilityProbeError(focused_failure, category="focused-test-failed")
@@ -201,7 +201,7 @@ def run_probe(
         failure = _failed_probe_evidence(exc, dependency)
     status = ProbeStatus.FAILED.value if failure is not None else ProbeStatus.PASSED.value
     return ProbeEvidence(
-        schema=_SCHEMA,
+        schema=SCHEMA,
         runtime=runtime,
         mode=selected_mode.value,
         status=status,
@@ -265,7 +265,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("compatibility probe requires --mode source|binary (or a mode positional)", file=sys.stderr)
         return 2
     repo_root = args.repo_root.resolve()
-    selector = args.python or _builder_pin(repo_root)
+    selector = args.python or builder_pin(repo_root)
     runtime_id = args.runtime_id or "cp" + selector.replace(".", "").replace("-", "").replace("+", "")
     work_dir = args.work_dir or (repo_root / "var" / "python-runtime-compatibility" / f"{runtime_id}-{mode}")
     try:

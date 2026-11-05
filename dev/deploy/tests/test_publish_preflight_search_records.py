@@ -50,9 +50,9 @@ from dev.paths import UTF_8
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_site_build import _write_apex_sitemap, indexed_roots
+from ..docs_site_build import indexed_roots, write_apex_sitemap
 from ..docs_site_languages import language_site_url, localized_languages, write_language_entry
-from ..docs_site_preflight import _require_search_index, _validate_built_site, _validate_language_roots
+from ..docs_site_preflight import require_search_index, validate_built_site, validate_language_roots
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -160,7 +160,7 @@ def test_the_pages_only_index_is_the_shape_the_old_check_waved_through(pages_onl
 def test_publish_refuses_a_pages_only_index(pages_only_site: Path) -> None:
     """The preflight REFUSES the real pages-only artefact, naming every missing kind."""
     with pytest.raises(SystemExit) as excinfo:
-        _require_search_index(pages_only_site, root_label="Docs build")
+        require_search_index(pages_only_site, root_label="Docs build")
 
     message = str(excinfo.value)
     for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
@@ -172,7 +172,7 @@ def test_publish_accepts_a_record_bearing_index(record_bearing_site: Path) -> No
     """The other half of the mutation: a correct artefact passes, unchanged."""
     assert injected_record_kinds_in_index(record_bearing_site) == DECIDED_INJECTED_RECORD_KINDS
 
-    _require_search_index(record_bearing_site, root_label="Docs build")
+    require_search_index(record_bearing_site, root_label="Docs build")
 
 
 def test_an_empty_index_is_still_refused(tmp_path: Path) -> None:
@@ -185,7 +185,7 @@ def test_an_empty_index_is_still_refused(tmp_path: Path) -> None:
     (site / "pagefind" / "index").mkdir(parents=True)
 
     with pytest.raises(SystemExit) as excinfo:
-        _require_search_index(site, root_label="Docs build")
+        require_search_index(site, root_label="Docs build")
 
     assert "no substantive generated index data" in str(excinfo.value)
 
@@ -219,13 +219,13 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
             encoding="utf-8",
         )
     write_language_entry(html_root)
-    _write_apex_sitemap(html_root)
+    write_apex_sitemap(html_root)
     (html_root / "404.html").write_text("<html lang='en'><body>not found</body></html>", encoding="utf-8")
 
-    _validate_language_roots(html_root)  # the roots themselves are complete
+    validate_language_roots(html_root)  # the roots themselves are complete
 
     with pytest.raises(SystemExit) as excinfo:
-        _validate_built_site(html_root)
+        validate_built_site(html_root)
 
     message = str(excinfo.value)
     assert "documentation site" in message, message

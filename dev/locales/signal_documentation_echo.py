@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from ._spelling import SpellingToolError, load_dictionaries
 from .signal_contracts import DocumentationEchoDictionaries
 from .signal_echo_classification import (
     translation_echo_normalize,
@@ -13,6 +12,7 @@ from .signal_echo_classification import (
     translation_similarity,
 )
 from .signal_policy import ECHO_SAMPLE_LIMIT, NEAR_ECHO_THRESHOLD
+from .spelling import SpellingToolError, load_dictionaries
 
 
 def inventory_documentation_translation_message(

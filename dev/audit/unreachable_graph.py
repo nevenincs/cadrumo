@@ -14,7 +14,7 @@ from dev.quality.source_import_analysis import (
 from .unreachable_members import resolved_member_uses
 from .unreachable_memo import walked
 from .unreachable_models import ShippedModule
-from .unreachable_policy import _DOTTED_SPEC, _MODULE_EXEC_FLAG
+from .unreachable_policy import DOTTED_SPEC, MODULE_EXEC_FLAG
 from .unreachable_receiver_types import ReceiverTypes
 
 # ---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def _string_module_target(value: str, module: ShippedModule, known: frozenset[st
     Accepts ``pkg.mod``, ``pkg.mod:attr``, and package-relative ``.mod``
     spellings; everything else is prose and is ignored.
     """
-    if not _DOTTED_SPEC.match(value):
+    if not DOTTED_SPEC.match(value):
         return None
     target = value.partition(":")[0]
     if target.startswith("."):
@@ -63,7 +63,7 @@ def _string_module_target(value: str, module: ShippedModule, known: frozenset[st
     return target if target in known else None
 
 
-def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]:
+def spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]:
     """Return the modules ``module`` starts as a ``python -m`` child interpreter.
 
     A console script that spawns another shipped package as a child process
@@ -80,7 +80,7 @@ def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]
     literals = {
         node.value for node in walked(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
     }
-    if _MODULE_EXEC_FLAG not in literals:
+    if MODULE_EXEC_FLAG not in literals:
         return frozenset[str]()
     targets: set[str] = set()
     for name in literals:
@@ -120,7 +120,7 @@ def reachable_closure(
     return frozenset(seen)
 
 
-def _collapse_packages(unreachable: frozenset[str], modules: dict[str, ShippedModule]) -> list[tuple[str, int]]:
+def collapse_packages(unreachable: frozenset[str], modules: dict[str, ShippedModule]) -> list[tuple[str, int]]:
     """Report a folder once when every module under it is unreachable.
 
     Returns ``(module_name, spanned_count)`` pairs: packages first, then the
@@ -170,7 +170,7 @@ def resolved_symbol_uses(
     return uses
 
 
-def _shipped_importers(edges: Mapping[str, frozenset[str]]) -> dict[str, frozenset[str]]:
+def unreachable_graph_shipped_importers(edges: Mapping[str, frozenset[str]]) -> dict[str, frozenset[str]]:
     """Reverse ``edges`` into "who imports this", over shipped modules only.
 
     Both runtime and type-checking edges count. The question the reverse graph
@@ -185,7 +185,7 @@ def _shipped_importers(edges: Mapping[str, frozenset[str]]) -> dict[str, frozens
     return {target: frozenset(sources) for target, sources in reverse.items()}
 
 
-def _importers_of_span(
+def importers_of_span(
     name: str,
     modules: Mapping[str, ShippedModule],
     importers: Mapping[str, frozenset[str]],

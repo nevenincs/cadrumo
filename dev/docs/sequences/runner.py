@@ -73,7 +73,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import semantic_cli_text
@@ -85,8 +85,8 @@ from dev.temporary_output import prepare_temp_root
 from .errors import SequenceExecutionError
 from .sandbox import (
     SequenceSandbox,
-    _publish_replacement_sandbox_profile,
     owned_scratch_directory,
+    publish_replacement_sandbox_profile,
     sequence_sandbox,
 )
 from .schema import (
@@ -99,7 +99,7 @@ from .schema import (
     SequenceId,
 )
 
-_FRAME_OBSERVER: ContextVar[Callable[[int], AbstractContextManager[None]] | None] = ContextVar(
+FRAME_OBSERVER: ContextVar[Callable[[int], AbstractContextManager[None]] | None] = ContextVar(
     "sequence_frame_observer", default=None
 )
 
@@ -107,11 +107,11 @@ _FRAME_OBSERVER: ContextVar[Callable[[int], AbstractContextManager[None]] | None
 @contextmanager
 def observe_sequence_frames(observer: Callable[[int], AbstractContextManager[None]]) -> Generator[None]:
     """Observe invocation durations without exposing arguments or captured outputs."""
-    token = _FRAME_OBSERVER.set(observer)
+    token = FRAME_OBSERVER.set(observer)
     try:
         yield
     finally:
-        _FRAME_OBSERVER.reset(token)
+        FRAME_OBSERVER.reset(token)
 
 
 #: The ``@expect`` pseudo-path asserting a frame's process exit code.
@@ -149,7 +149,7 @@ _TRANSIENT_RETRY_ATTEMPTS: int = 8
 #: its lifetime; the runner only records the last frame that actually started.
 #: It deliberately does not use a ``CADRUMO_*`` name because sandbox execution
 #: correctly scrubs that operator-facing namespace.
-_PROGRESS_JOURNAL_ENV: str = "CLI_SEQUENCE_PROGRESS_JOURNAL"
+PROGRESS_JOURNAL_ENV: str = "CLI_SEQUENCE_PROGRESS_JOURNAL"
 _SEQUENCE_PROGRESS_PAGE: ContextVar[str | None] = ContextVar("sequence_progress_page", default=None)
 
 #: A captured value must be a non-null JSON scalar: it interpolates into a
@@ -164,7 +164,7 @@ class CapturedValue(BaseModel):
     ``{name}`` placeholders interpolate to.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: Identifier
     json_path: JsonPath
@@ -193,7 +193,7 @@ class FrameExecution(BaseModel):
     frame).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: FrameKind
     command_line: str
@@ -215,7 +215,7 @@ class SequenceTranscript(BaseModel):
     tokens; they are never golden content themselves.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sequence_id: SequenceId
     profile_id: str
@@ -264,7 +264,7 @@ def _frame_at(frame: SequenceFrame) -> str:
 
 
 @contextmanager
-def _sequence_progress_scope(page: str) -> Generator[None]:
+def sequence_progress_scope(page: str) -> Generator[None]:
     """Bind the owning docs page while its sequences execute.
 
     The binding is invocation-scoped, so a child interpreter that checks more
@@ -291,7 +291,7 @@ def _record_frame_progress(
     child executes frames serially, so replacing the sole record is sufficient
     and avoids accumulating an unbounded diagnostic log.
     """
-    journal = os.environ.get(_PROGRESS_JOURNAL_ENV)
+    journal = os.environ.get(PROGRESS_JOURNAL_ENV)
     page = _SEQUENCE_PROGRESS_PAGE.get()
     if journal is None or page is None:
         return
@@ -561,7 +561,7 @@ def _next_process_session_view() -> Generator[None]:
         yield
 
 
-def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
+def invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
     The race exists only during local development, where concurrent
@@ -579,7 +579,7 @@ def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
-        result = _invoke_authenticated_frame(args, program=program)
+        result = invoke_authenticated_frame(args, program=program)
     if bool(os.environ.get("CI")):
         return result
     tries = 1
@@ -590,7 +590,7 @@ def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     ):
         time.sleep(2)
         dispose_engine()
-        result = _invoke_authenticated_frame(args, program=program)
+        result = invoke_authenticated_frame(args, program=program)
         tries += 1
     return result
 
@@ -600,7 +600,7 @@ def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) 
     return CliRunner().invoke(cadrumo_click_command(), list(args), **kwargs)
 
 
-def _invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
+def invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Supply a fresh bounded password proof without replacing authored channels."""
     if program is CommandProgram.AUTHENTICATION:
         from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
@@ -653,9 +653,9 @@ def _execute_frame(
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
     _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
-    observer = _FRAME_OBSERVER.get()
+    observer = FRAME_OBSERVER.get()
     with observer(frame_index) if observer is not None else nullcontext():
-        result = _invoke_frame(argv[1:], program=frame.program)
+        result = invoke_frame(argv[1:], program=frame.program)
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which
@@ -800,7 +800,7 @@ def executed_sequence_sandbox(
     """
     _refuse_unexecutable(sequence)
     with (
-        _logs_retained_on_failure(sandbox_root, _retained_logs_root(), sequence.sequence_id),
+        logs_retained_on_failure(sandbox_root, retained_logs_root(), sequence.sequence_id),
         sequence_sandbox(
             sequence_id=sequence.sequence_id,
             sandbox_root=sandbox_root,
@@ -891,7 +891,7 @@ def _execute_page_in_root(
     page_seeds: dict[str, _PageSeedState] = {}
     page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]] = {}
     with (
-        _logs_retained_on_failure(sandbox_root, _retained_logs_root(), label),
+        logs_retained_on_failure(sandbox_root, retained_logs_root(), label),
         sequence_sandbox(
             sequence_id=label,
             sandbox_root=sandbox_root,
@@ -906,13 +906,13 @@ def _execute_page_in_root(
     return tuple(transcripts)
 
 
-def _retained_logs_root() -> Path:
+def retained_logs_root() -> Path:
     """Keep disposable failure diagnostics in the owning worktree's temporary root."""
     return Path(prepare_temp_root()) / "failed-sandboxes"
 
 
 @contextmanager
-def _logs_retained_on_failure(sandbox_root: Path, retained_root: Path, label: str) -> Generator[None]:
+def logs_retained_on_failure(sandbox_root: Path, retained_root: Path, label: str) -> Generator[None]:
     """Copy a failed sandbox's product logs out before its directory is removed.
 
     Each sandbox binds the runtime's, the profile worker's and this process's
@@ -946,7 +946,7 @@ def _execute_page_sequence(
     if not sequence.executed_frames:
         return None  # all-@static: nothing runs, so no transcript
     if sequence.sequence_id == "profile-setup-delete":
-        _publish_replacement_sandbox_profile()
+        publish_replacement_sandbox_profile()
     captures: dict[str, CapturedScalar] = {}
     seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
     seed_frames = (

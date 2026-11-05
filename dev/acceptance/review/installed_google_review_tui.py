@@ -174,7 +174,7 @@ def _capture_public_failure[T](app: App[T], output_dir: Path, *, stage: str, rea
     )
 
 
-async def _until[T](
+async def until[T](
     pilot: Pilot[T],
     predicate: Callable[[], bool],
     *,
@@ -274,7 +274,7 @@ async def _open_saved_review(
     screenshots: list[tuple[str, str]],
 ) -> ModeloWorkForm:
     """Open the exact saved declaration through the rendered workbench controls."""
-    await _until(
+    await until(
         pilot,
         lambda: isinstance(app.screen, HomeScreen),
         deadline=min(deadline, monotonic() + 60),
@@ -287,7 +287,7 @@ async def _open_saved_review(
             focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declarations.work"),
         )
     )
-    await _until(
+    await until(
         pilot,
         lambda: isinstance(app.screen, GroupedDeclarationsScreen) and bool(app.screen.rows),
         deadline=min(deadline, monotonic() + 60),
@@ -295,7 +295,7 @@ async def _open_saved_review(
         output_dir=output_dir,
     )
     await _select_saved_declaration(app, pilot, work_unit_id)
-    await _until(
+    await until(
         pilot,
         lambda: isinstance(app.screen, ModeloWorkbenchScreen) and app.screen.form is not None,
         deadline=min(deadline, monotonic() + 60),
@@ -338,7 +338,7 @@ async def _inspect_review_disclosure(
         )
 
     disclosure_deadline = min(deadline, monotonic() + 60)
-    await _until(
+    await until(
         pilot,
         disclosure_ready,
         deadline=disclosure_deadline,
@@ -350,7 +350,7 @@ async def _inspect_review_disclosure(
     path = Path(app.save_screenshot("02-human-disclosure.svg", str(output_dir)))
     screenshots.append((str(path), sha256_file(path)))
     await pilot.press("t")
-    await _until(
+    await until(
         pilot,
         lambda: (
             isinstance(app.screen, GoogleSavedReviewModal)
@@ -475,7 +475,7 @@ async def run_google_saved_review_tui(
                 and not app.screen.query_one("#saved-google-review-link", Link).disabled
             )
 
-        await _until(
+        await until(
             pilot,
             published,
             deadline=deadline,

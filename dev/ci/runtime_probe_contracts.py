@@ -15,10 +15,10 @@ from dev.paths import UTF_8
 _UTF_8: Final[str] = UTF_8
 
 
-_SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
+SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
 
 
-_SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
+SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _validate_passing_focused_probe(evidence: ProbeEvidence) -> None:
@@ -32,7 +32,7 @@ def _validate_passing_focused_probe(evidence: ProbeEvidence) -> None:
 
 def _validate_probe_identity(evidence: ProbeEvidence) -> None:
     """Validate probe identity."""
-    if evidence.schema != _SCHEMA:
+    if evidence.schema != SCHEMA:
         raise CompatibilityProbeError(f"unsupported compatibility evidence schema: {evidence.schema!r}")
     if evidence.mode not in {item.value for item in ProbeMode}:
         raise CompatibilityProbeError(f"invalid compatibility mode: {evidence.mode!r}")
@@ -45,9 +45,9 @@ def _validate_probe_identity(evidence: ProbeEvidence) -> None:
 def _validate_probe_artifacts(evidence: ProbeEvidence) -> None:
     """Validate probe artifacts."""
     for name, digest in (("lock_sha256", evidence.lock_sha256), ("artifact_sha256", evidence.artifact_sha256)):
-        if _SHA256_RE.fullmatch(digest) is None:
+        if SHA256_RE.fullmatch(digest) is None:
             raise CompatibilityProbeError(f"{name} must be a lowercase SHA-256 digest")
-    if any(_SHA256_RE.fullmatch(digest) is None for digest in evidence.artifact_digests.values()):
+    if any(SHA256_RE.fullmatch(digest) is None for digest in evidence.artifact_digests.values()):
         raise CompatibilityProbeError("artifact_digests contains an invalid SHA-256 digest")
     if evidence.artifact_digests and evidence.artifact_sha256 != artifact_map_digest(evidence.artifact_digests):
         raise CompatibilityProbeError("artifact_sha256 must bind the canonical artifact digest map")

@@ -16,13 +16,13 @@ from typing import Final
 
 from cadrumo.core.i18n.render import extract_placeholders
 
-from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
-from ._status import CatalogueLeafState, classify_catalogue_leaf
 from .errors import LocaleError
-from .locale_tree import _flatten_raw_locale_leaves
+from .locale_tree import flatten_raw_locale_leaves
 from .locale_yaml import locale_catalogue_source
 from .manager import LocaleManager
+from .paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
 from .service_catalogues import SERVICE_LOCALES_DIR
+from .status import CatalogueLeafState, classify_catalogue_leaf
 
 RUNTIME_LOCALES_DIR: Final[Path] = RUNTIME_SRC_DIR / "_data" / "locales"
 
@@ -35,12 +35,12 @@ def _verbatim(key: str, value: str) -> str:
     return value
 
 
-def _catalogue_leaves(locales_dir: Path, locale: str) -> dict[str, object]:
+def catalogue_leaves(locales_dir: Path, locale: str) -> dict[str, object]:
     """Read one locale's catalogue leaves through the catalogue authority."""
     source = locale_catalogue_source(locales_dir, locale)
     if source is None:
         raise LocaleError(f"No catalogue for desktop locale {locale!r} under {locales_dir}")
-    return _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, locales_dir).load_locale(source))
+    return flatten_raw_locale_leaves(LocaleManager(SRC_DIR, locales_dir).load_locale(source))
 
 
 def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
@@ -60,12 +60,12 @@ def _project_locale(
     refusals: list[str],
     shell_form: Callable[[str, str], str],
 ) -> dict[str, str]:
-    leaves = _catalogue_leaves(locales_dir, locale)
+    leaves = catalogue_leaves(locales_dir, locale)
     if locales_dir == LOCALES_DIR:
         for owner, owned_locales in (("runtime", RUNTIME_LOCALES_DIR), ("service", SERVICE_LOCALES_DIR)):
             if not owned_locales.is_dir():
                 continue
-            owned_leaves = _catalogue_leaves(owned_locales, locale)
+            owned_leaves = catalogue_leaves(owned_locales, locale)
             collisions = leaves.keys() & owned_leaves.keys()
             if collisions:
                 raise LocaleError(f"Desktop and {owner} catalogue keys overlap: {sorted(collisions)}")

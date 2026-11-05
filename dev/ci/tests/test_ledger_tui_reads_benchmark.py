@@ -167,7 +167,7 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
 )
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
-from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+from .ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
 
 pytestmark = [pytest.mark.integration, pytest.mark.perf, pytest.mark.serial, pytest.mark.hex_entrypoint]
 

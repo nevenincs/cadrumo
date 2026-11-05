@@ -250,7 +250,7 @@ def _names_a_fragment(entry: str) -> bool:
     return PurePosixPath(page).name.startswith(FRAGMENT_PREFIX)
 
 
-def _per_language_inventory(
+def per_language_inventory(
     files: dict[str, Path],
     slots: CompileSlots,
     staging: Path,
@@ -578,7 +578,7 @@ def _compile_and_compose(
     slots = read_slots(record)
     files = site_files(compiled)
     language_files = _per_language_assets(files, slots.languages)
-    for language, inventory in _per_language_inventory(files, slots, compiled / _INVENTORY_STAGING).items():
+    for language, inventory in per_language_inventory(files, slots, compiled / _INVENTORY_STAGING).items():
         language_files[language].update(inventory)
     # The sitemap names every page by its absolute address, and the driver that
     # wrote it was given the address above the language directories, because

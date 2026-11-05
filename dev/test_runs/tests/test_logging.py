@@ -16,7 +16,7 @@ from coverage import CoverageData
 
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.paths import REPO_ROOT
-from dev.test_runs.logging import RunLog, _redirect_collection_output
+from dev.test_runs.logging import RunLog, redirect_collection_output
 from dev.test_runs.paths import (
     SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
@@ -500,7 +500,7 @@ def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Pat
     config.option.collectonly = True
     run_log = _FakeRunLog(transcript)
 
-    assert _redirect_collection_output(config, run_log)
+    assert redirect_collection_output(config, run_log)
     terminal._tw._file.write("<Module noisy_collection.py>\n")
     transcript.close()
 

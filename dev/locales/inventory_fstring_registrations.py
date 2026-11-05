@@ -42,7 +42,7 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
         "application.inventory.workbench.state.retired",
     )
 
-    from ._command_spec_scanner import scan_command_spec_keys
+    from .command_spec_scanner import scan_command_spec_keys
 
     command_keys = tuple(sorted(key for key in scan_command_spec_keys() if key.startswith("cli.app.ledger.inventory.")))
     if not command_keys:

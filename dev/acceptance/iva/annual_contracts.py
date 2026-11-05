@@ -10,31 +10,31 @@ from .cli_journey import (
     SanitizedCommandReceipt,
 )
 
-_FOUNDATION_PERIOD: Final = "1T"
+FOUNDATION_PERIOD: Final = "1T"
 
 
-_FOUNDATION_SALE_IVA: Final = Decimal("21.00")
+FOUNDATION_SALE_IVA: Final = Decimal("21.00")
 
 
 _FOUNDATION_PURCHASE_IVA: Final = Decimal("10.50")
 
 
-_FOUNDATION_EXPECTED_RESULT: Final = _FOUNDATION_SALE_IVA - _FOUNDATION_PURCHASE_IVA
+FOUNDATION_EXPECTED_RESULT: Final = FOUNDATION_SALE_IVA - _FOUNDATION_PURCHASE_IVA
 
 
-_QUARTERS: Final = ("1T", "2T", "3T", "4T")
+QUARTERS: Final = ("1T", "2T", "3T", "4T")
 
 
-_FINAL_QUARTER: Final = "4T"
+FINAL_QUARTER: Final = "4T"
 
 
-_ANNUAL_PERIOD: Final = "0A"
+ANNUAL_PERIOD: Final = "0A"
 
 
-_M390_COORDINATES: Final = (*(("303", quarter) for quarter in _QUARTERS), ("390", _ANNUAL_PERIOD))
+M390_COORDINATES: Final = (*(("303", quarter) for quarter in QUARTERS), ("390", ANNUAL_PERIOD))
 
 
-_PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
+PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 
 
 @dataclass(frozen=True, slots=True)

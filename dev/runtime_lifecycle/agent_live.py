@@ -98,7 +98,7 @@ _SCENARIO: Final[dict[str, Any]] = {
 }
 
 
-def _driver_process_start_identity(pid: int) -> str | None:
+def driver_process_start_identity(pid: int) -> str | None:
     """Read a clock-independent process start stamp for the package handoff."""
     if pid <= 0:
         return None
@@ -282,7 +282,7 @@ class Exchange:
 
 
 @asynccontextmanager
-async def _attending(
+async def attending(
     holder: AsyncRuntimeSessionHolder, relay: Path, gateway: Mapping[str, ProcessIdentity | None]
 ) -> AsyncGenerator[list[int]]:
     """Approve, for the life of the block, each attendance ask from the announced gateway's relay."""
@@ -373,7 +373,7 @@ def owner_binding(owner_pid: int, owner_start_identity: str, storage_root: Path)
     return hashlib.sha256(material.encode("utf-8")).hexdigest()[:48]
 
 
-def _driver_profile_evidence(
+def driver_profile_evidence(
     profile: Profile,
     held_session: Mapping[str, Any],
     *,
@@ -512,10 +512,10 @@ async def run(package: Path, scratch: Path) -> Receipt:
         )
         try:
             receipt.record("signed_in_and_held")
-            owner_start = _driver_process_start_identity(os.getpid())
+            owner_start = driver_process_start_identity(os.getpid())
             if owner_start is None:
                 raise AcceptanceError("driver process identity unavailable")
-            evidence = _driver_profile_evidence(
+            evidence = driver_profile_evidence(
                 profile,
                 holder.identity,
                 storage_root=root,
@@ -526,7 +526,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
             )
             write_whole(directory / _DRIVER_PROFILE_FILE, evidence)
             gateway: dict[str, ProcessIdentity | None] = {"identity": None}
-            async with _attending(holder, programs.mcp, gateway) as approved:
+            async with attending(holder, programs.mcp, gateway) as approved:
                 write_whole(
                     directory / "handoff.json",
                     {

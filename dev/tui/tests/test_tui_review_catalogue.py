@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from .._artifacts import MANIFEST_NAME, Manifest, RenderedFrame, ThemeName, write_manifest
-from .._review_catalogue import SETTLE_SECONDS, ReviewCatalogue, parse_stem
-from .._viewports import VIEWPORTS, ViewportName
+from ..artifacts import MANIFEST_NAME, Manifest, RenderedFrame, ThemeName, write_manifest
+from ..review_catalogue import SETTLE_SECONDS, ReviewCatalogue, parse_stem
+from ..viewports import VIEWPORTS, ViewportName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

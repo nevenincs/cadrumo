@@ -23,21 +23,21 @@ import io
 
 import pytest
 
-from ..__main__ import _bucket, main
+from ..__main__ import main, main___bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_a_repository_root_file_is_labelled_as_such() -> None:
     """A bare filename has no directory to summarise under."""
-    assert _bucket("pyproject.toml") == "<repository root>"
+    assert main___bucket("pyproject.toml") == "<repository root>"
 
 
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
         ("src/cadrumo/domain/thing.py", "src/cadrumo"),
-        ("dev/identity/_tree_scan.py", "dev/identity"),
+        ("dev/identity/tree_scan.py", "dev/identity"),
         ("docs/guide/install.md", "docs/guide"),
     ],
 )
@@ -47,7 +47,7 @@ def test_the_managed_trees_are_summarised_two_levels_deep(path: str, expected: s
     ``src`` alone says nothing about where identity material clusters, which is
     the only reason the advisory summary is worth printing.
     """
-    assert _bucket(path) == expected
+    assert main___bucket(path) == expected
 
 
 @pytest.mark.parametrize("path", ["var/scratch/thing.json", "node_modules/pkg/file.js"])
@@ -57,7 +57,7 @@ def test_an_unmanaged_tree_is_summarised_at_its_root(path: str) -> None:
     Going deeper there would scatter one external tree across many buckets and
     bury the count that matters.
     """
-    assert _bucket(path) == path.split("/")[0]
+    assert main___bucket(path) == path.split("/")[0]
 
 
 @pytest.fixture(scope="module")
@@ -109,7 +109,7 @@ def test_every_path_exclusion_is_printed_with_a_reason(canary_run: tuple[int, st
 
     The count alone would say how much was hidden but not why any of it was.
     """
-    from .._tree_scan import EXCLUDED_PATH_FRAGMENTS
+    from ..tree_scan import EXCLUDED_PATH_FRAGMENTS
 
     _, out = canary_run
 

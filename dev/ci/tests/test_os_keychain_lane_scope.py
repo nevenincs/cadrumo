@@ -35,7 +35,7 @@ import pytest
 from dev.paths import REPO_ROOT
 
 from ..lane_marker_inventory import expression_selects
-from ..lane_recipe_commands import _pytest_invocations
+from ..lane_recipe_commands import pytest_invocations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,7 +48,7 @@ def _lane_paths(justfile_text: str | None = None) -> tuple[Path, ...]:
     justfile = justfile_text if justfile_text is not None else (REPO_ROOT / "justfile").read_text(encoding="utf-8")
     selecting = [
         lane
-        for lane in _pytest_invocations(justfile, source="justfile", default_paths=())
+        for lane in pytest_invocations(justfile, source="justfile", default_paths=())
         if lane.marker_expression is not None and expression_selects(lane.marker_expression, frozenset({_MARKER}))
     ]
     assert selecting, "no recipe selects the os_keychain marker; this gate would measure nothing"

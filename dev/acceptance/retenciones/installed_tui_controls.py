@@ -19,7 +19,7 @@ from dev.acceptance.income_tax.tui_operation_controls import activate_tui_operat
 from .installed_tui_seed import WithholdingWork
 
 
-async def _home(pilot: Any) -> None:
+async def home(pilot: Any) -> None:
     """Dismiss public child screens so Home obtains a fresh runtime projection."""
     for _ in range(12):
         if pilot.app.screen.query("#home-agenda") or pilot.app.screen.query("#root-shell"):
@@ -41,7 +41,7 @@ async def _home(pilot: Any) -> None:
 
 async def open_withholding_work(pilot: Any, target: WithholdingWork) -> None:
     """Reach the work unit by its visible public declaration row key."""
-    await _home(pilot)
+    await home(pilot)
     await open_work(pilot, work_unit_id=target.work_unit_id)
 
 
@@ -57,7 +57,7 @@ async def assert_capture_unavailable(pilot: Any) -> None:
 
     from cadrumo.core.i18n.render import tr
 
-    await _home(pilot)
+    await home(pilot)
     await pilot.press("ctrl+p")
     withholding = tr("tui.search.destination.withholding")
     declarations = tr("tui.search.destination.declarations")

@@ -8,11 +8,11 @@ from typing import Final
 SOURCE_LOCALE: Final = "es"
 
 
-_FIELDS: Final = ("label", "help")
+FIELDS: Final = ("label", "help")
 
 
 #: Help renderings generated from the label; they state nothing the label does not.
-_DERIVED_HELP: Final = (
+DERIVED_HELP: Final = (
     re.compile(r"^Indique o revise «.*» para completar esta autoliquidación\.$", re.S),
     re.compile(r"^Consulte la información correspondiente a la casilla: .*$", re.S),
     re.compile(r"^Información fiscal sobre .*de la casilla .*$", re.S),
@@ -21,12 +21,12 @@ _DERIVED_HELP: Final = (
 )
 
 
-_REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.(?P<revision>[^.]+)\.")
+REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.(?P<revision>[^.]+)\.")
 
 
 #: Scaffold renderings standing in for a label that was never authored. Help text may
 #: legitimately open with its box number, so only labels are judged.
-_PLACEHOLDER: Final = re.compile(
+PLACEHOLDER: Final = re.compile(
     r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci"
     r"|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—"
     r"|^(?:Informació fiscal de la casella|Tax information for this field|Az űrlap adóadata)\.?$",
@@ -35,15 +35,15 @@ _PLACEHOLDER: Final = re.compile(
 
 
 #: A value that a length limit cut mid-text and closed with an ellipsis.
-_TRUNCATED: Final = re.compile(r"\S\s?(?:\.\.\.|…)\s*$")
+TRUNCATED: Final = re.compile(r"\S\s?(?:\.\.\.|…)\s*$")
 
 
 #: "N por 100" and "N por ciento" state the rate "N%"; the words carry no content.
-_PERCENT_WORDS: Final = re.compile(r"\s*por\s*(?:100|ciento)(?![0-9])", re.IGNORECASE)
+PERCENT_WORDS: Final = re.compile(r"\s*por\s*(?:100|ciento)(?![0-9])", re.IGNORECASE)
 
 
 #: An ordinal a translation spells out states the same number as the Spanish digit.
-_SPELLED_NUMBERS: Final[dict[str, int]] = {
+SPELLED_NUMBERS: Final[dict[str, int]] = {
     # English
     "first": 1,
     "second": 2,
@@ -133,27 +133,27 @@ _SPELLED_NUMBERS: Final[dict[str, int]] = {
 }
 
 
-_WORD_TOKEN: Final = re.compile(r"[^\W\d_]+")
+WORD_TOKEN: Final = re.compile(r"[^\W\d_]+")
 
 
 #: ">=" and "<=" write the comparison the Spanish sets with the symbol itself.
-_ASCII_COMPARISON: Final[dict[str, str]] = {">=": "≥", "<=": "≤"}
+ASCII_COMPARISON: Final[dict[str, str]] = {">=": "≥", "<=": "≤"}
 
 
 #: A thousands separator is typography: 60.000, 60,000 and 60 000 state one amount.
-_THOUSANDS: Final = re.compile(r"\b\d{1,3}(?:[.,\u00a0 ]\d{3})+\b")
+THOUSANDS: Final = re.compile(r"\b\d{1,3}(?:[.,\u00a0 ]\d{3})+\b")
 
 
 #: The legal content a label states: box references, amounts and comparison symbols.
-_CONTENT_TOKEN: Final = re.compile(r"\[[0-9][^\]]{0,11}\]|\d+|[≤≥]")
+CONTENT_TOKEN: Final = re.compile(r"\[[0-9][^\]]{0,11}\]|\d+|[≤≥]")
 
 
 #: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
-_IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
+IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
 
 
 #: The words an official label loses when AEAT shortens it, which carry no legal meaning.
-_SPANISH_FUNCTION_WORDS: Final[frozenset[str]] = frozenset(
+SPANISH_FUNCTION_WORDS: Final[frozenset[str]] = frozenset(
     [
         "a",
         "al",
@@ -181,11 +181,11 @@ _SPANISH_FUNCTION_WORDS: Final[frozenset[str]] = frozenset(
 #: The separators AEAT composes a long label from: heading, regime, year, state of the amount.
 #: A dash also subtracts one box from another, which :func:`_segments` keeps whole, and a full
 #: stop also abbreviates a word, so a sentence break is read only between a word and a capital.
-_SEGMENT: Final = re.compile(r"\s+-\s+|(?<=[^\W\dA-Z_])\.\s+(?=[A-ZÁÀÂÄÉÈÊËÍÏÎÓÒÔÖŐÚÙÛÜŰÑÇ])")
+SEGMENT: Final = re.compile(r"\s+-\s+|(?<=[^\W\dA-Z_])\.\s+(?=[A-ZÁÀÂÄÉÈÊËÍÏÎÓÒÔÖŐÚÙÛÜŰÑÇ])")
 
 
 #: What tells a composed segment from an operand: a segment states words, an operand a box.
-_SEGMENT_PROSE: Final = re.compile(r"[^\W\d_]{3,}")
+SEGMENT_PROSE: Final = re.compile(r"[^\W\d_]{3,}")
 
 
 #: Spanish texts whose official record design is itself cut short with an ellipsis;
@@ -207,7 +207,7 @@ SOURCE_TRUNCATED_SPANISH: Final[frozenset[str]] = frozenset(
 
 #: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
 #: alternations standing alone, and Spanish function words left untranslated.
-_GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
+GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
     "hu": re.compile(
         r"-(?:ban/-ben|nak/-nek|ra/-re|ról/-ről|ba/-be|val/-vel|tól/-től|hoz/-hez|ból/-ből|ként)\b"
         r"|\ba\(z\) [a-záéíóöőúüű]+ -|\b(?:Aplicado|esta)\b"
@@ -217,8 +217,8 @@ _GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
 }
 
 
-_EDITION_TEXT: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.[^.]+\.field\.label$")
+EDITION_TEXT: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.[^.]+\.field\.label$")
 
 
 #: Scaffold renderings standing in for revision or construct text that was never authored.
-_EDITION_TEXT_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella)\s*—|—\s*(?:tax|informaci|adóügyi)")
+EDITION_TEXT_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella)\s*—|—\s*(?:tax|informaci|adóügyi)")

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     pass
 
 
-def _validate_annual_artifact(
+def validate_annual_artifact(
     *, xml_path: Path, xsd_path: Path, scenario: IncomeTaxScenario
 ) -> tuple[dict[str, str], dict[str, object]]:
     """Read financial XML meaning independently, then validate the official structure."""

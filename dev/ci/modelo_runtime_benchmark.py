@@ -57,7 +57,7 @@ _AGGREGATE_FLUSH_BOUNDARIES = frozenset(
 
 
 @dataclass
-class _Total:
+class Total:
     calls: int = 0
     wall_seconds: float = 0.0
     cpu_seconds: float = 0.0
@@ -79,7 +79,7 @@ class RuntimeBenchmarkRecorder:
         self.path = output / f"{role}-{os.getpid()}.jsonl"
         self.lock = threading.RLock()
         self.counts: dict[str, int] = {}
-        self.totals: dict[str, _Total] = {}
+        self.totals: dict[str, Total] = {}
         self.profile_first_decode = profile_first_decode
         self._profiled = False
         self.profile_first_admission = profile_first_admission
@@ -106,14 +106,14 @@ class RuntimeBenchmarkRecorder:
             outcome = type(error).__name__
             raise
         finally:
-            sample = _Total(1, time.perf_counter() - wall, time.process_time() - cpu, time.thread_time() - thread)
+            sample = Total(1, time.perf_counter() - wall, time.process_time() - cpu, time.thread_time() - thread)
             self._finish(boundary, call, outcome, sample, aggregate=aggregate)
 
-    def _finish(self, boundary: str, call: int, outcome: str, sample: _Total, *, aggregate: bool) -> None:
+    def _finish(self, boundary: str, call: int, outcome: str, sample: Total, *, aggregate: bool) -> None:
         finished = time.perf_counter()
         if aggregate:
             with self.lock:
-                total = self.totals.setdefault(boundary, _Total())
+                total = self.totals.setdefault(boundary, Total())
                 total.calls += 1
                 total.wall_seconds += sample.wall_seconds
                 total.cpu_seconds += sample.cpu_seconds
@@ -284,7 +284,7 @@ def _profile_row(
     }
 
 
-def _patch_function_aliases[**P, R](
+def patch_function_aliases[**P, R](
     patch: pytest.MonkeyPatch, original: Callable[P, R], replacement: Callable[P, R]
 ) -> None:
     """Observe existing direct-import consumers as well as the defining module."""
@@ -303,16 +303,16 @@ def _observe_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkReco
     from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
     from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
-    _patch_function_aliases(
+    patch_function_aliases(
         patch, strict_model_json_schema, recorder.wrap(strict_model_json_schema, "operations.strict_schema")
     )
-    _patch_function_aliases(
+    patch_function_aliases(
         patch,
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
         recorder.wrap(calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, "modelo.calculate"),
     )
-    _patch_function_aliases(patch, export_modelo_revision, recorder.wrap(export_modelo_revision, "modelo.export"))
-    _patch_function_aliases(
+    patch_function_aliases(patch, export_modelo_revision, recorder.wrap(export_modelo_revision, "modelo.export"))
+    patch_function_aliases(
         patch,
         build_production_operation_registry,
         recorder.wrap(build_production_operation_registry, "operations.build_registry"),
@@ -360,8 +360,8 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
         (ProfileWorkerOperationHost, "warm_imports", "startup.worker_warm_imports"),
     ):
         patch.setattr(owner, name, recorder.wrap(getattr(owner, name), boundary))
-    _patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
-    _patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
+    patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
+    patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
     if sys.platform == "win32":
         from cadrumo_client.transport.windows import WindowsEndpoint
         from cadrumo_client.transport.windows_process import WindowsProcessScope
@@ -372,7 +372,7 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
         patch.setattr(WindowsEndpoint, "connect", recorder.wrap(WindowsEndpoint.connect, "startup.native_connect"))
 
 
-def _observe_logging(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
+def observe_logging(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
     patch.setattr(logging.Logger, "_log", recorder.wrap(logging.Logger._log, "diagnostics.logger_log", aggregate=True))
 
 
@@ -414,7 +414,7 @@ def observe_runtime_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[
                     recorder.retain_profile(profile)
 
     with pytest.MonkeyPatch.context() as patch:
-        _observe_logging(patch, recorder)
+        observe_logging(patch, recorder)
         for method in ("load", "load_revisioned"):
             original = getattr(CalculationRevisionCatalogueRepository, method)
             patch.setattr(

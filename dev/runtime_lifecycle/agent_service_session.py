@@ -163,7 +163,7 @@ def agent_service_session(
 
     with ExitStack() as cleanup:
         runtime = cleanup.enter_context(caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log"))
-        cleanup.callback(_require_runtime_stopped, runtime)
+        cleanup.callback(require_runtime_stopped, runtime)
         counts["runtime_start"] += 1
         phase = time.monotonic()
         runtime_ready = runtime.ready()
@@ -176,7 +176,7 @@ def agent_service_session(
         login_session_persisted = login_profile(programs, environment, profile)
         counts["profile_login"] += 1
         if login_session_persisted:
-            cleanup.callback(_logout_profile, programs, environment)
+            cleanup.callback(logout_profile, programs, environment)
         profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         counts["profile_setup"] += 1
@@ -193,7 +193,7 @@ def agent_service_session(
             password=bytearray(profile.password, "utf-8"),
             frontend="cli",
         )
-        cleanup.callback(_close_holder, holder)
+        cleanup.callback(close_holder, holder)
         counts["holder_start"] += 1
         timings["holder_start"] = time.monotonic() - phase
 
@@ -211,7 +211,7 @@ def agent_service_session(
         cleanup.callback(service.close)
         counts["service_start"] += 1
         service_ready = service.event()
-        _validate_service_ready(service_ready, holder, profile)
+        validate_service_ready(service_ready, holder, profile)
         timings["service_ready"] = time.monotonic() - phase
 
         phase = time.monotonic()
@@ -220,10 +220,10 @@ def agent_service_session(
             recipient_connection_id=service_ready["connection_id"],
             service_id=SERVICE_ID,
         )
-        _validate_service_lease(admission, holder, service_ready, profile)
+        validate_service_lease(admission, holder, service_ready, profile)
         counts["service_admission"] += 1
         agent_event = service.event()
-        _validate_agent_event(agent_event)
+        validate_agent_event(agent_event)
         if agent_event["event"] == "refused":
             service.settle_refusal_diagnostics()
         timings["service_admission_and_agent_event"] = time.monotonic() - phase
@@ -247,7 +247,7 @@ def agent_service_session(
         )
 
 
-def _close_holder(holder: WindowsRuntimeSessionHolder) -> None:
+def close_holder(holder: WindowsRuntimeSessionHolder) -> None:
     """Retire the held person connection before releasing its contained process."""
     failures: list[BaseException] = []
     try:
@@ -265,7 +265,7 @@ def _close_holder(holder: WindowsRuntimeSessionHolder) -> None:
         raise BaseExceptionGroup("held-session cleanup failed", failures)
 
 
-def _logout_profile(programs: Programs, environment: Mapping[str, str]) -> None:
+def logout_profile(programs: Programs, environment: Mapping[str, str]) -> None:
     """Retire a persisted sign-in before its disposable product root is removed."""
     code, envelope = run_cli(programs, environment, "config", "logout")
     require(
@@ -274,12 +274,12 @@ def _logout_profile(programs: Programs, environment: Mapping[str, str]) -> None:
     )
 
 
-def _require_runtime_stopped(runtime: Any) -> None:
+def require_runtime_stopped(runtime: Any) -> None:
     """Require a clean caller-owned runtime drain after service and holder cleanup."""
     require(runtime.stop() == 64, "caller-owned runtime did not drain with its supervised exit")
 
 
-def _validate_service_ready(event: Mapping[str, Any], holder: WindowsRuntimeSessionHolder, profile: Profile) -> None:
+def validate_service_ready(event: Mapping[str, Any], holder: WindowsRuntimeSessionHolder, profile: Profile) -> None:
     """Bind service readiness to the held runtime boot, profile and exact peer connection."""
     expected = {
         "event",
@@ -304,7 +304,7 @@ def _validate_service_ready(event: Mapping[str, Any], holder: WindowsRuntimeSess
         raise AcceptanceError("service readiness omitted exact native coordinates") from error
 
 
-def _validate_service_lease(
+def validate_service_lease(
     reply: Mapping[str, Any],
     holder: WindowsRuntimeSessionHolder,
     service_ready: Mapping[str, Any],
@@ -332,7 +332,7 @@ def _validate_service_lease(
     require(lease.session_id != lease.parent_session_id, "service lease reused the person session")
 
 
-def _validate_agent_event(event: Mapping[str, Any]) -> None:
+def validate_agent_event(event: Mapping[str, Any]) -> None:
     """Preserve one typed provider refusal or ready event without demanding readiness."""
     kind = event.get("event")
     require(kind in {"agent_ready", "refused"}, "service emitted no typed agent readiness or refusal event")

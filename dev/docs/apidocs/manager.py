@@ -53,7 +53,7 @@ def _python_source_fingerprint(src_parent: Path) -> str:
     return digest.hexdigest()
 
 
-def _published_stubs(root: Path, key: str) -> dict[str, str] | None:
+def published_stubs(root: Path, key: str) -> dict[str, str] | None:
     """Return the rendering published under ``root`` for ``key``, or None when it is not that one."""
     try:
         document = json.loads((root / _PUBLISHED_FILE).read_text(encoding=_UTF_8))
@@ -153,7 +153,7 @@ _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 # consequently index the defining object (and its fields) again from every
 # importing module.  Exclude only those imported names at the consumer stub;
 # the defining-module stub remains their sole object owner.
-_NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
+NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
     "cadrumo.application.config_reset_repository": ("JournalRepositoryBase",),
     "cadrumo.application.aggregation.impatriado_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation.irnr_income_ledger": ("LedgerAggregationResultBase",),
@@ -477,7 +477,7 @@ class ApiStubManager:
         ]
         excluded_members = sorted(
             {
-                *_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
+                *NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
                 *(alias for alias, _ in type_alias_declarations(source_path)),
             }
         )
@@ -555,11 +555,11 @@ class ApiStubManager:
             _PUBLISHED_KIND,
             key,
             publish=publish,
-            verify=lambda root: _published_stubs(root, key) is not None,
+            verify=lambda root: published_stubs(root, key) is not None,
             cache_root=dev_cache_dir("run-artifacts"),
             retain=_PUBLISHED_RETAINED,
         )
-        published = _published_stubs(artifact.root, key)
+        published = published_stubs(artifact.root, key)
         if published is None:
             raise ApiDocsError(f"the shared API stub rendering at {artifact.root} no longer verifies")
         return published

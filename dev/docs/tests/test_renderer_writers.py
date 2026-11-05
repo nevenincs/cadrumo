@@ -39,14 +39,14 @@ from sphinx.application import Sphinx
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..compile_slots import (
-    _docutils_attribute,
-    _docutils_text,
-    _educated,
-    _jinja,
-    _minimal,
-    _resouped,
-    _template_title,
+    compile_slots_educated,
+    compile_slots_minimal,
+    docutils_attribute,
+    docutils_text,
+    jinja,
     plain_text,
+    resouped,
+    template_title,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -96,7 +96,7 @@ def writer() -> HTMLTranslator:
 @pytest.mark.parametrize("value", _HOSTILE)
 def test_the_text_renderer_escapes_as_the_docutils_writer_does(value: str, writer: HTMLTranslator) -> None:
     """A string recorded for a text node is written as the writer would have written it."""
-    assert _docutils_text(value) == writer.encode(value)
+    assert docutils_text(value) == writer.encode(value)
 
 
 @pytest.mark.parametrize("value", _HOSTILE)
@@ -104,7 +104,7 @@ def test_the_attribute_renderer_escapes_and_folds_as_the_docutils_writer_does(
     value: str, writer: HTMLTranslator
 ) -> None:
     """An attribute value folds its whitespace as well as escaping, which the writer owns."""
-    assert _docutils_attribute(value) == writer.attval(value)
+    assert docutils_attribute(value) == writer.attval(value)
 
 
 @pytest.mark.parametrize("value", _HOSTILE)
@@ -115,7 +115,7 @@ def test_the_template_renderer_escapes_as_markupsafe_does(value: str) -> None:
     ``markupsafe`` writes ``&#39;``, and nothing in the surrounding markup says
     which of the two wrote the string.
     """
-    assert _jinja(value) == str(escape(value))
+    assert jinja(value) == str(escape(value))
 
 
 @pytest.mark.parametrize("markup", _RENDERED)
@@ -126,7 +126,7 @@ def test_the_title_renderer_strips_and_escapes_as_the_template_does(markup: str)
     (:func:`~dev.docs.compile_slots.plain_text`) and writes it for the
     ``<title>``, and the two filters the template composes do the same.
     """
-    assert _template_title(plain_text(markup)) == str(escape(do_striptags(markup)))
+    assert template_title(plain_text(markup)) == str(escape(do_striptags(markup)))
 
 
 @pytest.mark.parametrize("value", _HOSTILE)
@@ -137,13 +137,13 @@ def test_the_minimal_renderer_substitutes_as_beautiful_soup_does(value: str) -> 
     serialisation, not of a reading of what that formatter does.
     """
     minimal = HTMLFormatter.REGISTRY["minimal"]
-    assert _minimal(value) == minimal.substitute(NavigableString(value))
+    assert compile_slots_minimal(value) == minimal.substitute(NavigableString(value))
 
 
 @pytest.mark.parametrize("markup", _RENDERED)
 def test_the_navigation_renderer_is_beautiful_soup_re_serialising_the_markup(markup: str) -> None:
     """Furo hands the writer's toctree to BeautifulSoup and writes ``str(soup)`` back."""
-    assert _resouped(markup) == str(BeautifulSoup(markup, "html.parser"))
+    assert resouped(markup) == str(BeautifulSoup(markup, "html.parser"))
 
 
 @pytest.mark.parametrize("value", _HOSTILE)
@@ -155,7 +155,7 @@ def test_re_serialising_the_writers_escaping_leaves_the_minimal_escaping(value: 
     whatever the writer escaped on the way in. The three renderers are composed
     here as the compile composes them, over the real writer's output.
     """
-    assert _resouped(writer.encode(value)) == _minimal(value)
+    assert resouped(writer.encode(value)) == compile_slots_minimal(value)
 
 
 #: One sentence carrying what the smart-quotes transform educates -- single and
@@ -212,7 +212,7 @@ def test_the_typography_renderer_educates_as_a_build_of_that_language_does(
     build of that language would have done to the same text block.
     """
     assert language in typeset, f"the build typeset no paragraph for {language}: {sorted(typeset)}"
-    assert _educated(_TYPESET, language) == typeset[language]
+    assert compile_slots_educated(_TYPESET, language) == typeset[language]
 
 
 def test_the_languages_are_not_all_typeset_alike(typeset: dict[str, str]) -> None:

@@ -25,11 +25,11 @@ from .caller_owned_root import (
 )
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
-_ADMIN_EXCHANGE_SECONDS = 6.0
+ADMIN_EXCHANGE_SECONDS = 6.0
 
 
 def service_admin(
-    bearer: bytearray, port: int, action: AdminAction, *, within: float = _ADMIN_EXCHANGE_SECONDS, **fields: Any
+    bearer: bytearray, port: int, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
 ) -> dict[str, JsonValue]:
     """Use the service's typed, bounded parent-administration protocol for public reads.
 

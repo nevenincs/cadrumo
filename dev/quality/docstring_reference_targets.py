@@ -55,7 +55,7 @@ _SOURCE_ROOTS: tuple[Path, ...] = tuple(_REPO_ROOT / package for package in SOUR
 #: may legitimately reference. A gate in `src` naming its counterpart in
 #: `dev/tests` is citing something real; reporting it would be an artefact of
 #: where this screen happens to look.
-_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING,)
+SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING,)
 
 #: Sphinx roles that name a code object. ``:ref:`` and ``:doc:`` name document
 #: anchors instead and are not this screen's business.
@@ -260,7 +260,7 @@ def dangling_references(
         imported |= root_imported
         modules |= root_modules
     owned = frozenset(root.name for root in roots)
-    for sibling in _SIBLING_TREES if siblings is None else siblings:
+    for sibling in SIBLING_TREES if siblings is None else siblings:
         if sibling.exists():
             # MODULE names only. Pulling in every symbol these trees define
             # would let a shipped docstring resolve against a dev-only function

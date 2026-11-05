@@ -1,4 +1,4 @@
-"""End-to-end tests for :mod:`dev.sanitizer._pipeline`.
+"""End-to-end tests for :mod:`dev.sanitizer.pipeline`.
 
 These tests exercise the orchestrator on synthesised PDFs and
 assert:
@@ -24,9 +24,9 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo.tests.log_records import delivered_records
 
 from .. import fixtures
-from .._pipeline import sanitize_pdf
-from .._records import NameReplacement, NifReplacement, TokenMap
 from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
+from ..pipeline import sanitize_pdf
+from ..records import NameReplacement, NifReplacement, TokenMap
 from ..residual_identity import decompressed_streams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
@@ -300,8 +300,8 @@ class TestRefuseIfAlreadySanitized:
 
     def test_the_public_symbols_are_importable_from_the_modules_that_define_them(self) -> None:
         """What the retired test was actually protecting, asked of the real homes."""
-        from .._pipeline import sanitize_pdf
         from ..errors import AlreadySanitizedError, SanitizationError
+        from ..pipeline import sanitize_pdf
         from ..residual_identity import ResidualKind, scan_for_residual_identities
 
         for symbol in (

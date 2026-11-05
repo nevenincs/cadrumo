@@ -13,7 +13,7 @@ import pytest
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from dev.paths import REPO_ROOT
 
-from ..chrome_projection import _catalogue_leaves
+from ..chrome_projection import catalogue_leaves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -57,7 +57,7 @@ def test_the_scan_reads_a_direct_message_and_one_through_a_local_name() -> None:
 
 @pytest.mark.parametrize("locale", _LOCALES)
 def test_no_notice_message_names_a_raw_command(locale: str) -> None:
-    leaves = _catalogue_leaves(_LOCALES_DIR, locale)
+    leaves = catalogue_leaves(_LOCALES_DIR, locale)
     keys = {
         key
         for path in _product_sources()

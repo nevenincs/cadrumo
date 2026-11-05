@@ -249,13 +249,13 @@ def test_every_persons_act_is_refused_on_each_automation_frontend_and_admitted_o
 # Requests built from the registered schema alone
 # ---------------------------------------------------------------------------
 
-_PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _PROBE_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000bb")
 _PROBE_PERIOD = Period.from_year_and_code(2025, "1T")
 _RESOLVED = "resolved"
 
 _PATTERN_SAMPLES: tuple[str, ...] = (
-    str(_PROBE_PROFILE),
+    str(PROBE_PROFILE),
     "0" * 64,
     f"sha256:{'0' * 64}",
     "0" * 10,
@@ -300,7 +300,7 @@ class _NoGenericSampleError(Exception):
 def _string_sample(schema: Mapping[str, Any], choice: _SampleChoice) -> str:
     text_format = schema.get("format")
     if text_format == "uuid":
-        return str(_PROBE_PROFILE)
+        return str(PROBE_PROFILE)
     if text_format == "date":
         return "2025-01-01"
     if text_format == "date-time":
@@ -379,7 +379,7 @@ def _decoded_request(definition_id: str, sample: str) -> OperationRequest[BaseMo
     try:
         return OperationRequest(
             definition_id=definition_id,
-            subject_ref=profile_operation_subject(str(_PROBE_PROFILE)),
+            subject_ref=profile_operation_subject(str(PROBE_PROFILE)),
             payload=production_operation_registry().decode_request_payload(definition_id, sample),
         )
     except (CadrumoError, ValueError, LookupError):
@@ -387,7 +387,7 @@ def _decoded_request(definition_id: str, sample: str) -> OperationRequest[BaseMo
 
 
 @cache
-def _probe_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ...]:
+def probe_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ...]:
     """Every distinct request the operation's own registered schema and decoder accept.
 
     Each sample is built from the registered request schema alone and admitted
@@ -414,7 +414,7 @@ def _probe_contexts(
     otherwise read the addressed record's period can still be asked.
     """
     submit = OperationAccessContext(
-        profile_id=_PROBE_PROFILE,
+        profile_id=PROBE_PROFILE,
         destination_id=_PROBE_DESTINATION,
         action=AccessAction.SUBMIT,
         frontend=frontend,
@@ -428,7 +428,7 @@ def _probe_contexts(
     )
     for label, periods in replayed_scopes:
         admitted = OperationAccessRequest(
-            profile_id=_PROBE_PROFILE,
+            profile_id=PROBE_PROFILE,
             definition_id=registration.contract.definition_id,
             action=AccessAction.SUBMIT,
             frontend=frontend,
@@ -467,7 +467,7 @@ def test_the_schema_sample_keeps_to_required_members_and_declared_shapes() -> No
         },
         "$defs": {"Nested": {"type": "object", "required": ["flag"], "properties": {"flag": {"type": "boolean"}}}},
     }
-    fixed = {"profile_id": str(_PROBE_PROFILE), "digest": "0" * 64, "nested": {"flag": False}, "kind": "thing"}
+    fixed = {"profile_id": str(PROBE_PROFILE), "digest": "0" * 64, "nested": {"flag": False}, "kind": "thing"}
 
     first = _schema_sample(schema, schema["$defs"], _SampleChoice(text="0", whole_number=0, alternative=0))
     second = _schema_sample(schema, schema["$defs"], _SampleChoice(text="1T", whole_number=2025, alternative=1))
@@ -594,8 +594,8 @@ def _sample_request(definition_id: str, document: Mapping[str, Any]) -> Operatio
     """Admit one written-out document through the registry's own decoder; a stale sample fails here."""
     record_member = _RECORD_ADDRESSED.get(definition_id)
     if record_member is None:
-        subject_ref = profile_operation_subject(str(_PROBE_PROFILE))
-        document = {"profile_id": str(_PROBE_PROFILE), **document}
+        subject_ref = profile_operation_subject(str(PROBE_PROFILE))
+        document = {"profile_id": str(PROBE_PROFILE), **document}
     else:
         subject_ref = str(document[record_member])
     return OperationRequest(
@@ -715,7 +715,7 @@ def test_every_schema_built_request_is_answered_alike_on_every_frontend() -> Non
     admitted = 0
     for definition_id in _definition_ids(resolved=True):
         registration = production_operation_registry().lookup_public_registration(definition_id)
-        for index, request in enumerate(_probe_requests(definition_id)):
+        for index, request in enumerate(probe_requests(definition_id)):
             by_frontend = {frontend: _answers_on(registration, request, frontend) for frontend in _FRONTENDS}
             admitted += _RESOLVED in by_frontend[_CLI].values()
             found = _differing(_on_the_persons_frontends(by_frontend, request))
@@ -734,7 +734,7 @@ def test_every_admission_a_schema_built_request_reports_is_refused_for_another_p
     unrefused: list[tuple[str, str, str]] = []
     for definition_id in _definition_ids(resolved=True):
         registration = registry.lookup_public_registration(definition_id)
-        for request in _probe_requests(definition_id)[:1]:
+        for request in probe_requests(definition_id)[:1]:
             for frontend in _FRONTENDS:
                 for position, context in _probe_contexts(registration, frontend):
                     if _resolution(request, context) != _RESOLVED:
@@ -892,9 +892,9 @@ def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_
     """Admitted with the same policy or refused with the same code, for a human session and for a key session."""
     probed = [
         _answers_at_every_judged_access(
-            production_operation_registry(), request, profile_id=_PROBE_PROFILE, operation=operation
+            production_operation_registry(), request, profile_id=PROBE_PROFILE, operation=operation
         )
-        for request in _probe_requests(definition_id)
+        for request in probe_requests(definition_id)
     ]
     for index, answers in enumerate(probed):
         assert not _unlike(answers), (
@@ -940,13 +940,13 @@ def test_a_reviewed_decision_is_answered_alike_on_every_frontend(
     registry = production_operation_registry()
     definition = registry.lookup(definition_id)
     payload = definition.request_type.model_validate(
-        {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": OPERATION_REVIEW_DIGEST}, strict=True
+        {"profile_id": PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": OPERATION_REVIEW_DIGEST}, strict=True
     )
-    subject_ref = expected_operation_subject(definition.subject_reference, profile_id=_PROBE_PROFILE, payload=payload)
+    subject_ref = expected_operation_subject(definition.subject_reference, profile_id=PROBE_PROFILE, payload=payload)
     assert subject_ref is not None
     request = OperationRequest[BaseModel](definition_id=definition_id, subject_ref=subject_ref, payload=payload)
 
-    answers = _answers_at_every_judged_access(registry, request, profile_id=_PROBE_PROFILE, operation=operation)
+    answers = _answers_at_every_judged_access(registry, request, profile_id=PROBE_PROFILE, operation=operation)
     assert answers[AccessAction.SUBMIT][_CLI].resolution == _RESOLVED, answers[AccessAction.SUBMIT][_CLI]
     assert not _unlike(answers), _unlike(answers)
 

@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
-from ..signal_spelling_enrollment import _known_latin_phrase_word, check_dictionary_spelling_words, is_project_spelling
+from ..signal_spelling_enrollment import check_dictionary_spelling_words, is_project_spelling, known_latin_phrase_word
 from ..signal_spelling_segments import hungarian_suffix_spelling_text, translation_spelling_segments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -89,13 +89,13 @@ def test_reviewed_indexar_infinitive_accepts_only_its_attested_grammatical_attac
 @pytest.mark.parametrize("phrase", ["ad hoc", "pro rata"])
 def test_latin_words_require_the_complete_phrase_and_keep_code_separate(phrase: str) -> None:
     for word in phrase.split():
-        assert _known_latin_phrase_word(phrase, word)
-        assert not _known_latin_phrase_word(phrase.upper(), word)
-        assert not _known_latin_phrase_word("x" + phrase, word)
-        assert not _known_latin_phrase_word(phrase + "x", word)
-        assert not _known_latin_phrase_word("`" + phrase + "` " + word, word)
-        assert not _known_latin_phrase_word(word, word)
-    assert not _known_latin_phrase_word(phrase + " misspellledd", "misspellledd")
+        assert known_latin_phrase_word(phrase, word)
+        assert not known_latin_phrase_word(phrase.upper(), word)
+        assert not known_latin_phrase_word("x" + phrase, word)
+        assert not known_latin_phrase_word(phrase + "x", word)
+        assert not known_latin_phrase_word("`" + phrase + "` " + word, word)
+        assert not known_latin_phrase_word(word, word)
+    assert not known_latin_phrase_word(phrase + " misspellledd", "misspellledd")
 
 
 class EmptyDictionary:

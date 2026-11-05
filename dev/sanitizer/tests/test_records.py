@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`dev.sanitizer._records`.
+"""Unit tests for :mod:`dev.sanitizer.records`.
 
 The tests focus on three load-bearing contracts:
 
@@ -23,7 +23,7 @@ from pydantic import SecretStr, ValidationError
 
 from cadrumo.core.identity.documents import IdentityError
 
-from .._records import (
+from ..records import (
     AddressReplacement,
     ArbitraryReplacement,
     CsvReplacement,
@@ -35,11 +35,11 @@ from .._records import (
     NifReplacement,
     NrcReplacement,
     Replacement,
+    ReplacementBase,
     SanitizationResult,
     SanitizationWarning,
     ScrubbedSurface,
     TokenMap,
-    _ReplacementBase,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
@@ -247,7 +247,7 @@ def test_every_replacement_subclass_is_reached_by_the_case_tables() -> None:
     ``_ReplacementBase`` constraint on a subclass that adds none is still a real
     rejection, which is why only the validator-without-case direction fails.
     """
-    subclasses = tuple(_ReplacementBase.__subclasses__())
+    subclasses = tuple(ReplacementBase.__subclasses__())
     assert len(subclasses) >= 9, (
         f"only {len(subclasses)} Replacement subclass(es) were discovered; the coverage "
         "assertions below quantify over this population, so a truncated one proves nothing"

@@ -65,11 +65,11 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
     and the unsupported-suffix refusal never pay for pdfplumber/openpyxl
     imports.
     """
-    from ._pdf import build_outputs as build_pdf
-    from ._terminology import build_outputs as build_terminology
     from .modelo_100_properties import build_outputs as build_modelo_100_properties
     from .normatives_html import build_outputs as build_html
     from .normatives_html import build_xml_outputs as build_xml
+    from .pdf import build_outputs as build_pdf
+    from .terminology import build_outputs as build_terminology
     from .workbook import build_outputs as build_workbook
 
     return {

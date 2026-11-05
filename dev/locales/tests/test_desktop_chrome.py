@@ -18,7 +18,6 @@ import yaml
 from dev.paths import REPO_ROOT
 
 from .. import chrome_projection, desktop_chrome
-from .._paths import LOCALES_DIR
 from ..desktop_chrome import (
     DESKTOP_CHROME_AWAITING_CONSUMER,
     DESKTOP_CHROME_FAMILIES,
@@ -34,6 +33,7 @@ from ..desktop_chrome import (
 )
 from ..errors import LocaleError
 from ..manager import LocaleManager
+from ..paths import LOCALES_DIR
 from ..service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

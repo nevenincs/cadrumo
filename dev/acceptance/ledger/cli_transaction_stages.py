@@ -9,18 +9,18 @@ from pathlib import Path
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_contracts import _expect, _LedgerRun, _result
+from .cli_contracts import LedgerRun, expect, result
 from .scenario import LedgerCliScenario, TransactionFixture
 
 
-def _add_and_link(
-    run: _LedgerRun,
+def add_and_link(
+    run: LedgerRun,
     cli: InstalledCli,
     fixture: TransactionFixture,
     invoice_ids: dict[str, str],
     transaction_ids: dict[str, str],
 ) -> None:
-    created = _result(
+    created = result(
         run(
             (
                 "app",
@@ -75,25 +75,25 @@ def _add_and_link(
         ),
         allow_error=True,
     )
-    _expect(cli.commands[-1].returncode != 0, stage="linked identity edit refusal")
-    _expect(refused.get("status") == "error", stage="linked identity edit status")
+    expect(cli.commands[-1].returncode != 0, stage="linked identity edit refusal")
+    expect(refused.get("status") == "error", stage="linked identity edit status")
 
 
-def _stage_purchase_evidence(
-    run: _LedgerRun, scenario: LedgerCliScenario, output_root: Path, transaction_ids: dict[str, str]
+def stage_purchase_evidence(
+    run: LedgerRun, scenario: LedgerCliScenario, output_root: Path, transaction_ids: dict[str, str]
 ) -> str:
     """Observe the installed ledger purchase evidence stage."""
     evidence = scenario.purchase_evidence
     document_path = output_root / evidence.filename
     document_bytes = text_pdf_bytes(evidence.text_lines)
     document_path.write_bytes(document_bytes)
-    added_evidence = _result(
+    added_evidence = result(
         run(("app", "ledger", "evidence", "add", str(document_path), "--supplier", evidence.supplier)),
         stage="purchase evidence add",
     )
     evidence_id = str(added_evidence["evidence_id"])
-    _expect(added_evidence["source_sha256"] == hashlib.sha256(document_bytes).hexdigest(), stage="evidence digest")
-    _expect(bool(added_evidence["attachment_id"]), stage="encrypted attachment reference")
+    expect(added_evidence["source_sha256"] == hashlib.sha256(document_bytes).hexdigest(), stage="evidence digest")
+    expect(bool(added_evidence["attachment_id"]), stage="encrypted attachment reference")
     run(
         (
             "app",
@@ -104,9 +104,9 @@ def _stage_purchase_evidence(
             evidence_id,
         )
     )
-    reopened_evidence = _result(run(("app", "ledger", "evidence", "view", evidence_id)), stage="evidence view")
-    _expect(reopened_evidence["attachment_id"] == added_evidence["attachment_id"], stage="evidence attachment custody")
-    _expect(
+    reopened_evidence = result(run(("app", "ledger", "evidence", "view", evidence_id)), stage="evidence view")
+    expect(reopened_evidence["attachment_id"] == added_evidence["attachment_id"], stage="evidence attachment custody")
+    expect(
         reopened_evidence["source_sha256"] == hashlib.sha256(document_bytes).hexdigest(), stage="evidence reopen digest"
     )
     return evidence_id

@@ -46,11 +46,11 @@ import pytest
 from dev.paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records
+from ..pagefind_inject import inject_records
 from .test_palette_ranking import (
-    _TRIGGER_PAGE,
-    _approved_concept_records,
-    _build_glossary_site,
+    TRIGGER_PAGE,
+    approved_concept_records,
+    build_glossary_site,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -111,18 +111,18 @@ def _serve(directory: Path, handler_cls: type) -> Generator[tuple[socketserver.T
 
 def _palette_site(out: Path, *, with_index: bool) -> Path:
     """Build the glossary subset + trigger page, optionally with a real index."""
-    build = _build_glossary_site(out)
+    build = build_glossary_site(out)
     static = build / "_static"
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
+    (build / "palette.html").write_text(TRIGGER_PAGE, encoding="utf-8")
 
     if with_index:
-        materialised = _approved_concept_records()
+        materialised = approved_concept_records()
 
         async def inject(index: object) -> None:
-            await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+            await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
         build_search_index(build, inject=inject)
     return build

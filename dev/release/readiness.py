@@ -174,7 +174,7 @@ def _companion_version_pins(repo_root: Path, pyproject_version: str) -> tuple[tu
     return (observed_pins, expected_pins)
 
 
-def _repo_root() -> Path:
+def readiness_repo_root() -> Path:
     """Return the repository root two levels above this module."""
     return REPO_ROOT
 
@@ -622,7 +622,7 @@ def build_report(
     and the aggregated rows into ``var/promotion/*`` and must point the gate at
     them rather than at a working-tree default that does not exist in CI.
     """
-    root = Path(repo_root) if repo_root is not None else _repo_root()
+    root = Path(repo_root) if repo_root is not None else readiness_repo_root()
     checks: list[ReadinessCheck] = [
         check_project_names_are_canonical(root),
         check_version_surfaces_agree(root),

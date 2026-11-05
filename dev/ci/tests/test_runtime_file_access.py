@@ -102,7 +102,7 @@ def test_exit_text_is_not_retained_in_a_failed_probe(tmp_path: Path, monkeypatch
     def refuse(_name: str, _arguments: list[str]) -> dict[str, object]:
         raise SystemExit(private_text)
 
-    monkeypatch.setattr(runtime_file_access, "_scenario", refuse)
+    monkeypatch.setattr(runtime_file_access, "scenario", refuse)
     monkeypatch.setattr(sys, "argv", ["probe", "record", "--scenario", "registry", "--output", str(output)])
     with pytest.raises(SystemExit):
         runtime_file_access.main()

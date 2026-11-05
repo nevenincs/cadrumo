@@ -129,7 +129,7 @@ from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
-from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+from .ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

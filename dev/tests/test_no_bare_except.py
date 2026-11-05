@@ -28,8 +28,8 @@ import pytest
 
 from cadrumo.tests.inventory import ast_for_path, discover_test_modules, qualified_name, repo_relative
 
-from ._broad_exception_aliases import broad_alias_assignments_from_target
-from ._project_inventory import project_test_control_modules
+from .broad_exception_aliases import broad_alias_assignments_from_target
+from .project_inventory import project_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

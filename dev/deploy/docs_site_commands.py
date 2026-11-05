@@ -11,7 +11,7 @@ from dev.packaging.command_execution import CommandResult, run_command
 from dev.paths import REPO_ROOT
 
 
-def _repo_root() -> Path:
+def docs_site_commands_repo_root() -> Path:
     """Return the repository root."""
     return REPO_ROOT
 

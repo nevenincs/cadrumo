@@ -23,7 +23,7 @@ def _rendered(widget: object) -> str:
     return str(render()).strip() if callable(render) else ""
 
 
-def _notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | None:
+def notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | None:
     """Name the catalogue key whose rendering is the visible notice, never the text itself."""
     from textual.widgets import Static
 
@@ -64,7 +64,7 @@ def _refusal_notice_stack(pilot: Any) -> list[str]:
     return stack
 
 
-async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str, refusal_key: str) -> TuiOutcome:
+async def settle_expected_refusal(pilot: Any, *, activation_id: str, step: str, refusal_key: str) -> TuiOutcome:
     """Drive one operation the product must refuse and read the refusal where the product leaves it.
 
     The operation modal dismisses itself as soon as the operation is terminal, so
@@ -121,7 +121,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     return TuiOutcome(step=step, terminal_condition="refused", visible_notice_key=refusal_key)
 
 
-def _visible_refusal(pilot: Any) -> str:
+def visible_refusal(pilot: Any) -> str:
     """Name what the operator can see after a non-succeeded operation: the modal receipt or the workbench notice."""
     from textual.css.query import NoMatches
 

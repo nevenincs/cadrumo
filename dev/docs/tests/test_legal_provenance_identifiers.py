@@ -6,7 +6,7 @@ import pytest
 from docutils import nodes
 from docutils.core import publish_doctree
 
-from ..legal_page_rendering import _rst_provenance_text
+from ..legal_page_rendering import rst_provenance_text
 from ..legal_reference_models import LegalProvisionRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -25,7 +25,7 @@ def test_reviewer_source_identifiers_preserve_text_and_leave_near_matches_as_pro
         f"Reviewer prose with typppo, #{anchor}. The file ley-35-2006.html and {anchor} match; "
         f"#{anchor}typo, #{anchor}-extra, prefix{anchor}, and {anchor}.extension do not."
     )
-    tree = publish_doctree(_rst_provenance_text(source, record))
+    tree = publish_doctree(rst_provenance_text(source, record))
     assert tree.astext() == source
     assert tuple(node.astext() for node in tree.findall(nodes.literal)) == (
         "#" + anchor,
@@ -48,6 +48,6 @@ def test_reviewer_without_source_identifiers_remains_ordinary_prose() -> None:
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     )
     source = "Agent review is pending; this paragraph has typppo and an unregistered #otheranchor."
-    tree = publish_doctree(_rst_provenance_text(source, record))
+    tree = publish_doctree(rst_provenance_text(source, record))
     assert tree.astext() == source
     assert not tuple(tree.findall(nodes.literal))

@@ -31,8 +31,8 @@ import pytest
 
 from dev.ci.modelo_runtime_benchmark import (
     RuntimeBenchmarkRecorder,
-    _patch_function_aliases,
-    _Total,
+    Total,
+    patch_function_aliases,
     record_runtime_tree,
 )
 from dev.paths import REPO_ROOT
@@ -64,7 +64,7 @@ class ProfileBenchmarkRecorder(RuntimeBenchmarkRecorder):
             _ACTIVE_BOUNDARIES.reset(token)
 
     @override
-    def _finish(self, boundary: str, call: int, outcome: str, sample: _Total, *, aggregate: bool) -> None:
+    def _finish(self, boundary: str, call: int, outcome: str, sample: Total, *, aggregate: bool) -> None:
         with self.lock:
             self.samples.setdefault(boundary, []).append(
                 (sample.wall_seconds, sample.cpu_seconds, sample.thread_cpu_seconds)
@@ -126,7 +126,7 @@ def _observe_alias(
                     patch.setattr(module, attribute, replacement)
 
 
-def _observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
+def observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
     """Observe real custody, record and SQLite commit owners in either process."""
     from sqlalchemy.orm import Session
 
@@ -145,7 +145,7 @@ def _observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenc
         (ProfileRecordStore, "_write_with_event", "profile.record_write_transaction"),
         (SecureObjectRepository, "apply_batch", "storage.secure_batch"),
     ):
-        _observe(patch, recorder, owner, name, label)
+        observe(patch, recorder, owner, name, label)
     _observe_alias(patch, recorder, kdf_supervision, "unlock_profile_custody", "custody.unlock")
     _observe_alias(
         patch, recorder, kdf_supervision, "unlock_profile_custody_password_material", "custody.unlock_password_material"
@@ -160,7 +160,7 @@ def _observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenc
                 scope.enter_context(lease(*args, **kwargs))
             yield
 
-    _patch_function_aliases(patch, lease, measured_lease)
+    patch_function_aliases(patch, lease, measured_lease)
     commit = Session.commit
 
     @functools.wraps(commit)
@@ -172,7 +172,7 @@ def _observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenc
     patch.setattr(Session, "commit", commit_transaction)
 
 
-def _observe(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder, owner: Any, name: str, label: str) -> None:
+def observe(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder, owner: Any, name: str, label: str) -> None:
     original = getattr(owner, name)
     if inspect.iscoroutinefunction(original):
 
@@ -200,7 +200,7 @@ def _observe_binding(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecord
         with recorder.measure("custody.validate_binding", aggregate=True):
             return validate_automation_profile_binding(*args, **kwargs)
 
-    _patch_function_aliases(patch, validate_automation_profile_binding, validate)
+    patch_function_aliases(patch, validate_automation_profile_binding, validate)
 
 
 @contextmanager
@@ -212,15 +212,15 @@ def observe_worker(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
     from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost
 
     with pytest.MonkeyPatch.context() as patch:
-        _observe_profile_boundaries(patch, recorder)
+        observe_profile_boundaries(patch, recorder)
         _observe_binding(patch, recorder)
-        _observe(patch, recorder, os, "fsync", "storage.fsync")
-        _observe(patch, recorder, JournalRepositoryBase, "_write_payload", "journal.write")
-        _observe(patch, recorder, view_reader, "_build_overview_source", "profile.build_overview_source")
-        _observe(patch, recorder, view_reader, "_paginate_source", "profile.paginate")
-        _observe(patch, recorder, WorkerAuthorizationLease, "acquire", "authority.lease_acquire")
-        _observe(patch, recorder, WorkerAuthorizationLease, "release", "authority.lease_release")
-        _observe(patch, recorder, ProfileWorkerOperationHost, "require_current_inventory", "worker.current_inventory")
+        observe(patch, recorder, os, "fsync", "storage.fsync")
+        observe(patch, recorder, JournalRepositoryBase, "_write_payload", "journal.write")
+        observe(patch, recorder, view_reader, "_build_overview_source", "profile.build_overview_source")
+        observe(patch, recorder, view_reader, "_paginate_source", "profile.paginate")
+        observe(patch, recorder, WorkerAuthorizationLease, "acquire", "authority.lease_acquire")
+        observe(patch, recorder, WorkerAuthorizationLease, "release", "authority.lease_release")
+        observe(patch, recorder, ProfileWorkerOperationHost, "require_current_inventory", "worker.current_inventory")
         delivered = ProfileWorkerOperationHost.release_delivered_result
 
         @functools.wraps(delivered)
@@ -263,13 +263,13 @@ def observe_parent(recorder: RuntimeBenchmarkRecorder, output: Path, journey: Mo
         encoding="utf-8",
     )
     with pytest.MonkeyPatch.context() as patch:
-        _observe_profile_boundaries(patch, recorder)
+        observe_profile_boundaries(patch, recorder)
         if sys.platform == "win32":
             from cadrumo_client.transport.windows import WindowsEndpoint
             from cadrumo_client.transport.windows_process import WindowsProcessScope
 
-            _observe(patch, recorder, WindowsEndpoint, "connect", "startup.native_connect")
-            _observe(patch, recorder, WindowsProcessScope, "launch", "startup.native_process_launch")
+            observe(patch, recorder, WindowsEndpoint, "connect", "startup.native_connect")
+            observe(patch, recorder, WindowsProcessScope, "launch", "startup.native_process_launch")
         _observe_binding(patch, recorder)
         construct = ProfileWorkerProcess.__init__
 
@@ -308,10 +308,10 @@ def observe_parent(recorder: RuntimeBenchmarkRecorder, output: Path, journey: Mo
             (ProfileManagerScreen, "_redraw", "ui.redraw"),
             (ProfileManagerScreen, "apply_overview", "ui.apply_overview"),
         ):
-            _observe(patch, recorder, owner, name, label)
+            observe(patch, recorder, owner, name, label)
         if hasattr(journey, "_walk"):
-            _observe(patch, recorder, journey, "register_profile_through_installed_tui", "startup.registration")
-            _observe(patch, recorder, journey, "_walk", "wizard.walk")
+            observe(patch, recorder, journey, "register_profile_through_installed_tui", "startup.registration")
+            observe(patch, recorder, journey, "_walk", "wizard.walk")
         if hasattr(journey, "_invoke"):
             invoke = journey._invoke
             invocation = 0

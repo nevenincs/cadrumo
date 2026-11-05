@@ -10,24 +10,24 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev.locales.signal_document_prose import visible_document_prose
 
-from ..cli_reference import _cli_help_as_rst, _render_graph_command, _render_group_reference
+from ..cli_reference import cli_help_as_rst, render_graph_command, render_group_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 
 def test_only_complete_markdown_code_spans_become_rst_literals() -> None:
     source = "Use `fifo` or `pmp`; :ref:`guide`, `label <https://example.org>`_, ``existing``, x=`value`, and `open."
-    assert _cli_help_as_rst(source) == (
+    assert cli_help_as_rst(source) == (
         "Use ``fifo`` or ``pmp``; :ref:`guide`, `label <https://example.org>`_, ``existing``, x=`value`, and `open."
     )
     before = publish_doctree(source, settings_overrides={"report_level": 5, "halt_level": 6})
-    after = publish_doctree(_cli_help_as_rst(source), settings_overrides={"report_level": 5, "halt_level": 6})
+    after = publish_doctree(cli_help_as_rst(source), settings_overrides={"report_level": 5, "halt_level": 6})
     assert before.astext() == after.astext()
 
 
 def test_multilingual_compile_receives_rst_code_markup(tmp_path: Path) -> None:
-    from .._locale_chrome import markup_page
     from ..compile_slots import activate, deactivate
+    from ..locale_chrome import markup_page
     from ..message_marks import FRAGMENT_PREFIX, prepare
 
     page = tmp_path / "cli" / "app" / "ledger.rst"
@@ -38,7 +38,7 @@ def test_multilingual_compile_receives_rst_code_markup(tmp_path: Path) -> None:
     slots = activate(("en", "es", "ca", "hu"))
     try:
         with markup_page("cli/app/ledger"):
-            _render_graph_command(OutputLanguage.EN, path, node.spec)
+            render_graph_command(OutputLanguage.EN, path, node.spec)
         prepare(
             tmp_path,
             slots=slots,
@@ -60,7 +60,7 @@ def test_generated_command_group_title_is_a_literal_with_the_same_visible_title_
 ) -> None:
     family_nodes = tuple(node for node in COMMAND_GRAPH.nodes() if len(node.path) > 3 and node.path[1] == "config")
     rendered: dict[str, str] = {}
-    _render_group_reference("config", "collab", family_nodes, language, tmp_path, rendered, [])
+    render_group_reference("config", "collab", family_nodes, language, tmp_path, rendered, [])
     page = tmp_path / "config" / "collab.rst"
     document = publish_doctree(
         page.read_text(encoding="utf-8"), settings_overrides={"report_level": 5, "halt_level": 6}
@@ -81,7 +81,7 @@ def test_generated_command_group_title_is_a_literal_with_the_same_visible_title_
 def test_real_generated_commands_keep_literal_nodes_and_visible_prose(language: OutputLanguage, tmp_path: Path) -> None:
     paths = (("aeat", "app", "ledger", "inventory", "create"), ("aeat", "app", "live", "verify", "tgvi"))
     graph_nodes = {node.path: node for node in COMMAND_GRAPH.nodes()}
-    source = "\n".join(_render_graph_command(language, path, graph_nodes[path].spec) for path in paths)
+    source = "\n".join(render_graph_command(language, path, graph_nodes[path].spec) for path in paths)
     document = publish_doctree(source, settings_overrides={"report_level": 5, "halt_level": 6})
     literals = {node.astext() for node in document.findall(nodes.literal)}
     assert {"fifo", "pmp", "nif"} <= literals

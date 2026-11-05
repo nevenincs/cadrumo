@@ -15,7 +15,7 @@ import pytest
 from dev.acceptance.installed_cli import InstalledCli
 
 from ..seed import carried_years
-from ..seed_campaign import _Seeder
+from ..seed_campaign import Seeder
 from ..seed_contracts import SeedReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -43,12 +43,12 @@ class _RecordingCli(InstalledCli):
         return {"status": "success", "result": {"provenance": "operator_seed"}}
 
 
-def _seeder(cli: InstalledCli, tmp_path: Path) -> _Seeder:
+def _seeder(cli: InstalledCli, tmp_path: Path) -> Seeder:
     receipt_path = tmp_path / "seed-receipt.json"
     receipt = SeedReceipt.load(receipt_path) or SeedReceipt(
         scenario="test", authority_generation="test", executable_sha256="test", carry_evidence="synthetic_csv_register"
     )
-    return _Seeder(cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=tmp_path / "evidence", first_year=2025)
+    return Seeder(cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=tmp_path / "evidence", first_year=2025)
 
 
 def test_the_honest_lane_carries_no_prior_year_evidence() -> None:

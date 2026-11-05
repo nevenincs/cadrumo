@@ -13,21 +13,21 @@ from dev.acceptance.income_tax.installed_tui_child import (
 )
 
 from .m303_evidence_contracts import (
-    _ATTESTATION_REFUSAL_KEY,
-    _EVIDENCE_SUBMIT_ID,
-    _MISMATCHED_ATTACHMENT_ID,
-    _MISMATCHED_SHA256,
-    _SCHEMA_VERSION,
+    ATTESTATION_REFUSAL_KEY,
+    EVIDENCE_SUBMIT_ID,
+    MISMATCHED_ATTACHMENT_ID,
+    MISMATCHED_SHA256,
+    SCHEMA_VERSION,
     ChildMode,
     ChildReceipt,
     ReopenReadback,
     TuiOutcome,
 )
-from .m303_evidence_form import _calculate_and_verify, _fill_evidence_form, _form_refusals, _open_evidence_form
-from .m303_evidence_navigation import _listed_revision
-from .m303_evidence_projection import _year_end_observed_at
-from .m303_evidence_refusals import _settle_expected_refusal
-from .m303_evidence_workbench import _attempt_export, _verify, _workbench_resultado
+from .m303_evidence_form import calculate_and_verify, fill_evidence_form, form_refusals, open_evidence_form
+from .m303_evidence_navigation import listed_revision
+from .m303_evidence_projection import year_end_observed_at
+from .m303_evidence_refusals import settle_expected_refusal
+from .m303_evidence_workbench import attempt_export, verify, workbench_resultado
 
 if TYPE_CHECKING:
     pass
@@ -40,11 +40,11 @@ async def _admit_session(pilot: Any, *, passphrase: str, seconds: float = 300.0)
     )
 
 
-def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
+def run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
     product = installed_product_evidence(workspace_root=args.workspace_root)
     mode = cast(ChildMode, args.child)
     work_unit_id = cast(str, args.work_unit_id)
-    observed_at = _year_end_observed_at(cast(int, args.year))
+    observed_at = year_end_observed_at(cast(int, args.year))
     outcomes: list[TuiOutcome] = []
     reopen: list[ReopenReadback] = []
     failure: list[InstalledTuiChildError] = []
@@ -54,43 +54,43 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
     async def drive(pilot: Any) -> None:
         try:
             if mode == "tui-led-calculate":
-                outcomes.extend(await _form_refusals(pilot, work_unit_id=work_unit_id, observed_at=observed_at))
+                outcomes.extend(await form_refusals(pilot, work_unit_id=work_unit_id, observed_at=observed_at))
                 for step, attachment_id, sha256 in (
-                    ("mismatched_pair", _MISMATCHED_ATTACHMENT_ID, _MISMATCHED_SHA256),
+                    ("mismatched_pair", MISMATCHED_ATTACHMENT_ID, MISMATCHED_SHA256),
                     ("wrong_filing_context", args.wrong_attachment_id, args.wrong_sha256),
                 ):
-                    await _open_evidence_form(pilot, work_unit_id=work_unit_id)
-                    _fill_evidence_form(pilot, attachment_id=attachment_id, sha256=sha256)
+                    await open_evidence_form(pilot, work_unit_id=work_unit_id)
+                    fill_evidence_form(pilot, attachment_id=attachment_id, sha256=sha256)
                     outcomes.append(
-                        await _settle_expected_refusal(
+                        await settle_expected_refusal(
                             pilot,
-                            activation_id=_EVIDENCE_SUBMIT_ID,
+                            activation_id=EVIDENCE_SUBMIT_ID,
                             step=step,
-                            refusal_key=_ATTESTATION_REFUSAL_KEY,
+                            refusal_key=ATTESTATION_REFUSAL_KEY,
                         )
                     )
                 outcomes.extend(
-                    await _calculate_and_verify(pilot, work_unit_id=work_unit_id, form={"observed_at": observed_at})
+                    await calculate_and_verify(pilot, work_unit_id=work_unit_id, form={"observed_at": observed_at})
                 )
-                outcomes.append(await _verify(pilot, work_unit_id=work_unit_id))
+                outcomes.append(await verify(pilot, work_unit_id=work_unit_id))
             elif mode == "tui-joint-only-calculate":
                 outcomes.extend(
-                    await _calculate_and_verify(pilot, work_unit_id=work_unit_id, form={}, asks_modelo_390=False)
+                    await calculate_and_verify(pilot, work_unit_id=work_unit_id, form={}, asks_modelo_390=False)
                 )
-                outcomes.append(await _verify(pilot, work_unit_id=work_unit_id))
+                outcomes.append(await verify(pilot, work_unit_id=work_unit_id))
             elif mode == "tui-continue-calculate":
                 outcomes.extend(
-                    await _calculate_and_verify(
+                    await calculate_and_verify(
                         pilot,
                         work_unit_id=work_unit_id,
                         form={"attachment_id": args.existing_attachment_id, "sha256": args.existing_sha256},
                     )
                 )
             else:
-                listed_current, state = await _listed_revision(
+                listed_current, state = await listed_revision(
                     pilot, calculation_revision_id=cast(str, args.calculation_revision_id)
                 )
-                origin, matches_oracle = await _workbench_resultado(pilot, work_unit_id=work_unit_id)
+                origin, matches_oracle = await workbench_resultado(pilot, work_unit_id=work_unit_id)
                 reopen.append(
                     ReopenReadback(
                         revision_listed_current=listed_current,
@@ -101,7 +101,7 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
                 )
                 if args.export_path:
                     outcomes.append(
-                        await _attempt_export(pilot, work_unit_id=work_unit_id, output_path=args.export_path)
+                        await attempt_export(pilot, work_unit_id=work_unit_id, output_path=args.export_path)
                     )
         except InstalledTuiChildError as error:
             failure.append(error)
@@ -124,7 +124,7 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
     if exit_code != 0:
         raise InstalledTuiChildError(f"installed TUI {mode} child exited {exit_code}")
     return ChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode=mode,
         product_origin=product.product_origin,

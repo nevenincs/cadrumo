@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 # --------------------------------------------------------------------------- installed TUI child
 
 
-async def _await_selector(pilot: Any, selector: str, *, seconds: float = 120.0) -> None:
+async def await_selector(pilot: Any, selector: str, *, seconds: float = 120.0) -> None:
     """Wait on wall-clock time, not a poll count: installed composition speed varies between runs."""
     import time
 
@@ -64,7 +64,7 @@ async def _open_declarations(pilot: Any) -> None:
                 if getattr(getattr(results.get_option_at_index(index), "hit", None), "text", None) == label:
                     results.highlighted = index
                     await pilot.press("enter")
-                    await _await_selector(pilot, "#declarations-list")
+                    await await_selector(pilot, "#declarations-list")
                     return
         break
     raise InstalledTuiChildError(
@@ -83,7 +83,7 @@ async def _close_modals(pilot: Any) -> None:
     raise InstalledTuiChildError("installed operation modal did not close after its terminal result")
 
 
-async def _await_workbench_refresh(pilot: Any, *, binding: TuiOperationBinding) -> None:
+async def await_workbench_refresh(pilot: Any, *, binding: TuiOperationBinding) -> None:
     """After a succeeded write, wait for the workbench to come back on top and read the declaration again."""
     await _close_modals(pilot)
     try:
@@ -108,7 +108,7 @@ async def open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
         ) from error
 
 
-async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple[bool, str | None]:
+async def listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple[bool, str | None]:
     """Return whether Declarations lists the revision as current, and its lifecycle state as shown."""
     from textual.widgets import DataTable
 
@@ -120,7 +120,7 @@ async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple
     await select_public_data_table_row(
         pilot=pilot, table_selector="#declarations-navigation", row_key="declarations.revisions"
     )
-    await _await_selector(pilot, "#declarations-revisions")
+    await await_selector(pilot, "#declarations-revisions")
     table = cast("DataTable[Any]", query_public_selector(pilot, "#declarations-revisions", DataTable))
     for row_key in table.rows:
         if row_key.value != calculation_revision_id:

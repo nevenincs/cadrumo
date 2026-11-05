@@ -35,8 +35,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .._synonym_cli import app
-from .._synonym_mining import (
+from ..synonym_cli import app
+from ..synonym_mining import (
     RatificationStatus,
     SynonymCandidateEntry,
     SynonymCandidateObservation,

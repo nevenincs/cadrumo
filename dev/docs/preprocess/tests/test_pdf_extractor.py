@@ -21,13 +21,13 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from .._pdf import (
+from ..parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
+from ..pdf import (
     PDF_EXTRACTOR_ID,
-    _attribution_for,
+    attribution_for,
     build_outputs,
     extract_pdf,
 )
-from ..parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
 from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -70,8 +70,8 @@ def test_worked_example_pdf_exists() -> None:
 
 
 def test_missing_manifest_does_not_invent_aeat_attribution(tmp_path: Path) -> None:
-    assert "unavailable" in _attribution_for(tmp_path / "european-parliament.pdf")
-    assert "AEAT" not in _attribution_for(tmp_path / "european-parliament.pdf")
+    assert "unavailable" in attribution_for(tmp_path / "european-parliament.pdf")
+    assert "AEAT" not in attribution_for(tmp_path / "european-parliament.pdf")
 
 
 def test_manual_manifest_must_identify_its_pdf(tmp_path: Path) -> None:
@@ -88,8 +88,8 @@ def test_manual_manifest_must_identify_its_pdf(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    assert "unavailable" in _attribution_for(tmp_path / "unrelated.pdf")
-    assert "unavailable" in _attribution_for(source)
+    assert "unavailable" in attribution_for(tmp_path / "unrelated.pdf")
+    assert "unavailable" in attribution_for(source)
 
     manifest.write_text(
         json.dumps(
@@ -101,7 +101,7 @@ def test_manual_manifest_must_identify_its_pdf(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    assert "BOE" in _attribution_for(source)
+    assert "BOE" in attribution_for(source)
 
 
 def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None:
@@ -123,7 +123,7 @@ def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None
         ),
         encoding="utf-8",
     )
-    assert "unavailable" in _attribution_for(source)
+    assert "unavailable" in attribution_for(source)
     manifest.write_text(
         json.dumps(
             {
@@ -138,11 +138,11 @@ def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None
         ),
         encoding="utf-8",
     )
-    assert "BOE" in _attribution_for(source)
-    assert "AEAT" not in _attribution_for(source)
+    assert "BOE" in attribution_for(source)
+    assert "AEAT" not in attribution_for(source)
 
     source.write_bytes(b"a different file at the same path")
-    assert "unavailable" in _attribution_for(source)
+    assert "unavailable" in attribution_for(source)
 
 
 @pytest.mark.parametrize(
@@ -176,7 +176,7 @@ def test_pdf_attribution_classifies_only_exact_official_hosts(
         encoding="utf-8",
     )
 
-    attribution = _attribution_for(source)
+    attribution = attribution_for(source)
     assert expected in attribution
     assert unexpected not in attribution
 
@@ -210,12 +210,12 @@ def test_attribution_resolves_for_both_manifest_shapes() -> None:
     Both must carry the AEAT source and pin the official download URL so no
     corpus text ships unattributed.
     """
-    diseno = _attribution_for(_SMALL_PDF)
+    diseno = attribution_for(_SMALL_PDF)
     assert "AEAT" in diseno
     assert "agenciatributaria.gob.es" in diseno
 
     if _MANUAL_PDF.is_file():
-        manual = _attribution_for(_MANUAL_PDF)
+        manual = attribution_for(_MANUAL_PDF)
         assert "agenciatributaria.gob.es" in manual
         assert "Manual" in manual  # the manuales URL path
 
@@ -223,7 +223,7 @@ def test_attribution_resolves_for_both_manifest_shapes() -> None:
 def test_attribution_resolves_shipped_sibling_diseno_manifest() -> None:
     historical = _CORPUS / "aeat_official" / "disenos_registro" / "modelo_210" / "dr210_2011.pdf"
 
-    attribution = _attribution_for(historical)
+    attribution = attribution_for(historical)
     assert "AEAT" in attribution
     assert attribution.endswith("/DR_200_299/archivos/dr210_2011.pdf")
 

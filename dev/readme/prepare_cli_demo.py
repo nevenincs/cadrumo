@@ -29,7 +29,7 @@ _UTF_8: Final[str] = UTF_8
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
 DEMO_VALUE = "readme-demo-only-synthetic-passphrase-2026"
-_CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
+CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
 
 
 def _reset_demo_root() -> None:
@@ -83,7 +83,7 @@ def _run_cli(stage: str, *arguments: str, environment: dict[str, str], secrets: 
     invoked with ``--secrets-stdin``; CLI secret input never reads the environment.
     """
     result = run_command(
-        [sys.executable, "-c", _CLI_BOOTSTRAP, *arguments],
+        [sys.executable, "-c", CLI_BOOTSTRAP, *arguments],
         cwd=REPO_ROOT,
         environment=environment,
         errors="replace",

@@ -35,21 +35,21 @@ from ..build_paths import docs_build_root, docs_html_root
 from ..i18n import TARGET_LANGUAGES
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from ..serve import (
-    _DEFAULT_HOST,
-    _DEFAULT_PORT,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
     PortStatus,
     Resolution,
     ServeAction,
     ServeState,
-    _build_env,
-    _looks_like_sphinx,
-    _probe_host,
+    build_env,
     classify_probe,
     clear_state,
+    looks_like_sphinx,
     probe_port,
     read_state,
     resolve_target,
     serve_command,
+    serve_probe_host,
     start_ipv6_relay,
     write_state,
 )
@@ -94,7 +94,7 @@ def test_serve_command_excludes_self_regenerated_trees() -> None:
 @pytest.mark.parametrize("scope", ["user", "full"])
 def test_the_live_preview_renders_goldens_without_executing_them(scope: str) -> None:
     """Each rebuild skips sequence execution explicitly and builds the scope it was asked for."""
-    env = _build_env(_REPO_ROOT, scope=scope)
+    env = build_env(_REPO_ROOT, scope=scope)
     try:
         assert env[SEQUENCE_CHECK_SKIP_ENV] == "1"
         assert env["CADRUMO_DOCS_SCOPE"] == scope
@@ -149,7 +149,7 @@ def test_live_preview_writes_dropdown_destinations_from_one_compile() -> None:
 
 def test_default_host_binds_every_interface() -> None:
     """The default bind exposes the preview on every interface, not loopback."""
-    assert str(ipaddress.IPv4Address(0)) == _DEFAULT_HOST
+    assert str(ipaddress.IPv4Address(0)) == DEFAULT_HOST
 
 
 def test_default_port_is_the_owned_canonical_port() -> None:
@@ -159,17 +159,17 @@ def test_default_port_is_the_owned_canonical_port() -> None:
     8767/8770 its dashboards on developer machines; the docs' strict eviction
     semantics must never point a kill at those.
     """
-    assert _DEFAULT_PORT == 8788
-    assert _DEFAULT_PORT not in {8000, 8765, 8766, 8767, 8770}
+    assert DEFAULT_PORT == 8788
+    assert DEFAULT_PORT not in {8000, 8765, 8766, 8767, 8770}
 
 
 @pytest.mark.parametrize(
     ("bind", "expected"),
-    [(_DEFAULT_HOST, "127.0.0.1"), ("::", "::1"), ("", "127.0.0.1"), ("192.168.1.4", "192.168.1.4")],
+    [(DEFAULT_HOST, "127.0.0.1"), ("::", "::1"), ("", "127.0.0.1"), ("192.168.1.4", "192.168.1.4")],
 )
 def test_probe_host_maps_wildcard_to_a_reachable_address(bind: str, expected: str) -> None:
     """A wildcard bind is probed over a concrete loopback / its own address."""
-    assert _probe_host(bind) == expected
+    assert serve_probe_host(bind) == expected
 
 
 # ── Probe classification ──────────────────────────────────────────────────────
@@ -185,9 +185,9 @@ def test_classify_probe_serving_needs_2xx_and_sphinx() -> None:
 
 def test_looks_like_sphinx_recognises_generator_markers() -> None:
     """A Sphinx/Docutils generator marker identifies our docs page."""
-    assert _looks_like_sphinx('<meta name="generator" content="Docutils: ... Sphinx">')
-    assert _looks_like_sphinx("Created using SPHINX 8")
-    assert not _looks_like_sphinx("<html><body>hello from some other service</body></html>")
+    assert looks_like_sphinx('<meta name="generator" content="Docutils: ... Sphinx">')
+    assert looks_like_sphinx("Created using SPHINX 8")
+    assert not looks_like_sphinx("<html><body>hello from some other service</body></html>")
 
 
 def _free_port() -> int:
@@ -269,7 +269,7 @@ def test_ipv6_relay_bridges_to_the_ipv4_listener(sphinx_http_server: int) -> Non
     try:
         with urllib.request.urlopen(f"http://[::1]:{sphinx_http_server}/", timeout=3) as response:
             assert response.status == 200
-            assert _looks_like_sphinx(response.read().decode("utf-8", "replace"))
+            assert looks_like_sphinx(response.read().decode("utf-8", "replace"))
     finally:
         relay.close()
 
@@ -281,7 +281,7 @@ def test_state_round_trips_and_clears(tmp_path: Path) -> None:
     """State writes, reads back equal, and clears; a missing file reads None."""
     path = tmp_path / "state.json"
     assert read_state(path) is None
-    state = ServeState(pid=4242, host=_DEFAULT_HOST, port=8765)
+    state = ServeState(pid=4242, host=DEFAULT_HOST, port=8765)
     write_state(path, state)
     assert read_state(path) == state
     clear_state(path)
@@ -300,7 +300,7 @@ def test_read_state_tolerates_corrupt_file(tmp_path: Path) -> None:
 def test_clear_state_only_pid_guard(tmp_path: Path) -> None:
     """clear_state(only_pid=...) leaves a file another invocation now owns."""
     path = tmp_path / "state.json"
-    original = ServeState(pid=999, host=_DEFAULT_HOST, port=8765)
+    original = ServeState(pid=999, host=DEFAULT_HOST, port=8765)
     write_state(path, original)
     clear_state(path, only_pid=111)  # not ours — must not delete
     # Not just "a" state survived — the SAME state another invocation owns,

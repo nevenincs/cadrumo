@@ -10,7 +10,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev.paths import UTF_8
 
-from .legal_catalogue_fields import _record_from_table, _validate_authored_text
+from .legal_catalogue_fields import record_from_table, validate_authored_text
 from .legal_note_languages import apply_legal_note_languages
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
@@ -79,11 +79,11 @@ def _read_legal_fragment(fragment: Path, records: list[LegalProvisionRecord], se
         if not isinstance(raw_id, str) or not raw_id.strip():
             raise LegalReferenceError(f"{fragment}: legal provision id must be a non-empty string")
         legal_id = raw_id
-        _validate_authored_text(legal_id, path=fragment, legal_id=legal_id, field="legal id")
+        validate_authored_text(legal_id, path=fragment, legal_id=legal_id, field="legal id")
         previous = seen_ids.get(legal_id)
         if previous is not None:
             raise LegalReferenceError(
                 f"duplicate legal provision id {legal_id!r} in {fragment} and {previous}; refusing to merge authority",
             )
         seen_ids[legal_id] = fragment
-        records.append(_record_from_table(fragment, legal_id, body))
+        records.append(record_from_table(fragment, legal_id, body))

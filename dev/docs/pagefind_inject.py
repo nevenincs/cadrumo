@@ -76,7 +76,7 @@ _RELEVANCE_RELPATH = Path("dev") / "docs" / "terminology" / "relevance" / "relev
 _SORT_SCALE = 1_000_000
 
 
-def _append_cli_projection(out: _Materialised) -> None:
+def _append_cli_projection(out: Materialised) -> None:
     """Append cli projection."""
     try:
         from .terminology.cli_projection import project_cli_search_records
@@ -122,7 +122,7 @@ class InjectionStats:
 
 
 @dataclass
-class _Materialised:
+class Materialised:
     """The unified records to inject, plus the projection stats."""
 
     records: list[SearchRecord] = field(default_factory=list)
@@ -255,7 +255,7 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     return weights
 
 
-def _materialise_records(repo_root: Path | None = None) -> _Materialised:
+def materialise_records(repo_root: Path | None = None) -> Materialised:
     """Project and funnel every record kind into unified search records.
 
     Concepts and casillas are the priority surfaces and always project. The CLI
@@ -271,7 +271,7 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     from .terminology.concept_card_projection import project_concept_cards
     from .terminology.legal_projection import project_legal_search_records
 
-    out = _Materialised()
+    out = Materialised()
     root = repo_root if repo_root is not None else REPO_ROOT
 
     # Inject APPROVED concept cards only. A draft concept is scaffold-empty
@@ -305,7 +305,7 @@ def materialise_search_records(repo_root: Path | None = None) -> SearchRecordPro
     preserves the CLI projection outcome so a caller can refuse a partial
     manifest rather than silently compiling a bundle from a narrowed corpus.
     """
-    materialised = _materialise_records(repo_root)
+    materialised = materialise_records(repo_root)
     return SearchRecordProjection(
         records=tuple(materialised.records),
         concepts=materialised.concepts,
@@ -317,7 +317,7 @@ def materialise_search_records(repo_root: Path | None = None) -> SearchRecordPro
     )
 
 
-def _require_complete_projection(materialised: _Materialised) -> None:
+def _require_complete_projection(materialised: Materialised) -> None:
     """Reject an incomplete authoritative projection before Pagefind writes."""
     if materialised.casillas == 0:
         raise SearchInjectionError("cannot inject an incomplete search corpus because the casilla projection is empty")
@@ -328,7 +328,7 @@ def _require_complete_projection(materialised: _Materialised) -> None:
         )
 
 
-def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> float:
+def effective_weight(record: SearchRecord, relevance: dict[str, float]) -> float:
     """Return the record's ranking weight, boosted by relevance when present.
 
     The boost orders records WITHIN their display class and is contained in
@@ -344,7 +344,7 @@ def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> floa
     return contain_boost_in_band(derive_display_class(record), boost)
 
 
-def _sort_key(weight: float) -> str:
+def sort_key(weight: float) -> str:
     """Render a weight to a zero-padded integer string for Pagefind sort."""
     return f"{round(weight * _SORT_SCALE):08d}"
 
@@ -360,7 +360,7 @@ SITE_LANGUAGES: Final[tuple[OutputLanguage, ...]] = tuple(OutputLanguage(code) f
 _FALLBACK_SUMMARY_LANGUAGE = OutputLanguage.EN
 
 
-def _content_for(record: SearchRecord) -> str:
+def content_for(record: SearchRecord) -> str:
     """Build the searchable content: title + aliases + every description.
 
     Combining the title, every declared term alias (the English "pro rata",
@@ -382,10 +382,10 @@ def _content_for(record: SearchRecord) -> str:
 #: Cap for the clean one-line card summary. The palette shows this in place of
 #: Pagefind's auto-excerpt, which for an injected record would otherwise be a
 #: cross-lingual token blob (title + every alias + all four descriptions).
-_SUMMARY_MAX_CHARS: Final[int] = 160
+SUMMARY_MAX_CHARS: Final[int] = 160
 
 
-def _summary_for(record: SearchRecord, language: OutputLanguage) -> str:
+def summary_for(record: SearchRecord, language: OutputLanguage) -> str:
     """A clean single-language one-line summary for the card display.
 
     Prefers the description in the asked-for language, so a reader of the
@@ -400,8 +400,8 @@ def _summary_for(record: SearchRecord, language: OutputLanguage) -> str:
         or record.description_es
     )
     collapsed = " ".join(text.split())
-    if len(collapsed) > _SUMMARY_MAX_CHARS:
-        collapsed = collapsed[: _SUMMARY_MAX_CHARS - 1].rstrip() + "…"
+    if len(collapsed) > SUMMARY_MAX_CHARS:
+        collapsed = collapsed[: SUMMARY_MAX_CHARS - 1].rstrip() + "…"
     return collapsed
 
 
@@ -416,7 +416,7 @@ def summary_meta_key(language: OutputLanguage | str) -> str:
     return f"summary_{code}"
 
 
-def _meta_for(
+def meta_for(
     record: SearchRecord,
     weight: float,
     languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
@@ -454,7 +454,7 @@ def _meta_for(
         "title": record.title,
         "target": record.target,
         "weight": f"{weight:.6f}",
-        **{summary_meta_key(language): _summary_for(record, language) for language in languages},
+        **{summary_meta_key(language): summary_for(record, language) for language in languages},
     }
     md = record.metadata
     optional = {
@@ -472,7 +472,7 @@ def _meta_for(
     return meta
 
 
-def _filters_for(
+def filters_for(
     record: SearchRecord,
     languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
 ) -> dict[str, list[str]]:
@@ -509,7 +509,7 @@ class _IndexEntry:
     weight: float
 
 
-def _group_content(members: tuple[SearchRecord, ...]) -> str:
+def group_content(members: tuple[SearchRecord, ...]) -> str:
     """Build the searchable content for every record sharing one destination.
 
     Each member contributes its own cross-lingual blob; identical lines are kept
@@ -518,21 +518,21 @@ def _group_content(members: tuple[SearchRecord, ...]) -> str:
     seen: set[str] = set()
     unique: list[str] = []
     for member in members:
-        for part in _content_for(member).split("\n"):
+        for part in content_for(member).split("\n"):
             if part and part not in seen:
                 seen.add(part)
                 unique.append(part)
     return "\n".join(unique)
 
 
-def _group_filters(
+def group_filters(
     members: tuple[SearchRecord, ...],
     languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
 ) -> dict[str, list[str]]:
     """Union the members' filter values so the palette narrows to every one of them."""
     filters: dict[str, list[str]] = {}
     for member in members:
-        for axis, values in _filters_for(member, languages).items():
+        for axis, values in filters_for(member, languages).items():
             existing = filters.setdefault(axis, [])
             for value in values:
                 if value not in existing:
@@ -540,7 +540,7 @@ def _group_filters(
     return filters
 
 
-def _index_entries(
+def index_entries(
     records: list[SearchRecord],
     relevance: dict[str, float],
 ) -> list[_IndexEntry]:
@@ -588,31 +588,31 @@ def _index_entries(
             _IndexEntry(
                 primary=members[0],
                 members=members,
-                weight=max(_effective_weight(member, relevance) for member in members),
+                weight=max(effective_weight(member, relevance) for member in members),
             ),
         )
     return entries
 
 
-async def _inject_records(
+async def inject_records(
     index: PagefindIndex,
-    materialised: _Materialised,
+    materialised: Materialised,
     relevance: dict[str, float],
     languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
 ) -> InjectionStats:
     written = 0
-    entries = _index_entries(materialised.records, relevance)
+    entries = index_entries(materialised.records, relevance)
     boosts = sum(1 for record in materialised.records if record.id in relevance)
     for entry in entries:
-        meta = _meta_for(entry.primary, entry.weight, languages)
-        filters = _group_filters(entry.members, languages)
-        sort = {"weight": _sort_key(entry.weight)}
+        meta = meta_for(entry.primary, entry.weight, languages)
+        filters = group_filters(entry.members, languages)
+        sort = {"weight": sort_key(entry.weight)}
         # Inject once for the whole site, with content carrying every language's
         # description, so the record is matchable by the Spanish term and the
         # other-language forms and reachable from every language's pages. The
         # record is added under the index's own forced language, which is what
         # keeps the site's one index a single split.
-        content = _group_content(entry.members)
+        content = group_content(entry.members)
         if not content:
             continue
         # Sequential: the indexer drops records added concurrently to one index.
@@ -639,7 +639,7 @@ async def _inject_records(
     )
 
 
-def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Materialised:
+def bounded_to_sample(materialised: Materialised, sample_per_kind: int) -> Materialised:
     """Return the materialised records capped at ``sample_per_kind`` per projection.
 
     ``records`` is the concatenation of the five projection runs in the order
@@ -678,7 +678,7 @@ def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Ma
         runs.append(materialised.records[start : start + min(size, sample_per_kind)])
         start += size
     concepts, casillas, legal_provisions, cli_commands, cli_options = runs
-    return _Materialised(
+    return Materialised(
         records=[record for run in runs for record in run],
         concepts=len(concepts),
         casillas=len(casillas),
@@ -726,12 +726,12 @@ def build_record_injector(
     """
 
     async def _inject(index: PagefindIndex) -> None:
-        materialised = _materialise_records(repo_root)
+        materialised = materialise_records(repo_root)
         _require_complete_projection(materialised)
         relevance = load_relevance_weights(repo_root)
         if sample_per_kind is not None:
-            materialised = _bounded_to_sample(materialised, sample_per_kind)
-        stats = await _inject_records(index, materialised, relevance, languages)
+            materialised = bounded_to_sample(materialised, sample_per_kind)
+        stats = await inject_records(index, materialised, relevance, languages)
         if on_complete is not None:
             on_complete(stats)
 

@@ -9,13 +9,13 @@ if TYPE_CHECKING:
     pass
 
 
-_SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
+SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 
 
-_STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
-_SYNTHETIC_COUNTERPARTY_NIF = "A58818501"
+SYNTHETIC_COUNTERPARTY_NIF = "A58818501"
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,11 +51,11 @@ class FinancialChildReceipt:
         return cast("dict[str, object]", asdict(self))
 
 
-_EDIT_SECONDS: Final = 120.0
+EDIT_SECONDS: Final = 120.0
 
 
 #: The annual-only facts the scenario declares, addressed as the workbench addresses them.
-_ANNUAL_EDITS: Final[tuple[tuple[tuple[str, str], str], ...]] = (
+ANNUAL_EDITS: Final[tuple[tuple[tuple[str, str], str], ...]] = (
     (("casilla", "0001"), "declarante"),
     (("casilla", "0165"), "declarante"),
     (("casilla", "0166"), "A05"),

@@ -12,7 +12,7 @@ from .installed_tui_child import (
 )
 
 
-def _requested_continuation_evidence(args: argparse.Namespace) -> dict[str, object] | InstalledContinuationEvidence:
+def requested_continuation_evidence(args: argparse.Namespace) -> dict[str, object] | InstalledContinuationEvidence:
     """Validate and dispatch the parent or stdin-credentialed child request."""
     if args.child_direction:
         if args.year is None or args.output_root is not None:

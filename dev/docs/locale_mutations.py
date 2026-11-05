@@ -29,10 +29,10 @@ from pathlib import Path
 from dev.locales.write_guard import catalogue_write_guard
 from dev.paths import REPO_ROOT
 
-from .locale_catalogue_paths import _source_pages
-from .locale_catalogue_preparation import _prepare_catalogue_update
-from .locale_manifest import _parse_updates, _read_manifest
-from .locale_mutation_contracts import _SCHEMA_VERSION, PreparedCatalogue
+from .locale_catalogue_paths import locale_catalogue_paths_source_pages
+from .locale_catalogue_preparation import prepare_catalogue_update
+from .locale_manifest import parse_updates, read_manifest
+from .locale_mutation_contracts import SCHEMA_VERSION, PreparedCatalogue
 
 
 def apply_manifest(
@@ -61,11 +61,11 @@ def apply_manifest(
         DocumentationLocaleMutationError: If the manifest, source, catalogue,
             message identity, digest, or formatting contract is invalid.
     """
-    manifest = _read_manifest(path)
-    updates = _parse_updates(manifest)
+    manifest = read_manifest(path)
+    updates = parse_updates(manifest)
     docs_root = repo_root / "docs"
     locale_root = docs_root / "locales"
-    source_pages = _source_pages(docs_root)
+    source_pages = locale_catalogue_paths_source_pages(docs_root)
     prepared: list[PreparedCatalogue] = []
     requested_messages = sum(len(update.messages) for update in updates)
 
@@ -74,7 +74,7 @@ def apply_manifest(
     # untouched.
     with catalogue_write_guard(locale_root) as guard:
         for update in updates:
-            _prepare_catalogue_update(update, locale_root, docs_root, source_pages, guard, prepared)
+            prepare_catalogue_update(update, locale_root, docs_root, source_pages, guard, prepared)
 
         if not dry_run:
             for item in prepared:
@@ -89,7 +89,7 @@ def _manifest_result(prepared: list[PreparedCatalogue], requested_messages: int,
     changed_messages = sum(item.changed_messages for item in prepared)
     changed_catalogues = sum(item.rendered != item.original for item in prepared)
     return {
-        "schema_version": _SCHEMA_VERSION,
+        "schema_version": SCHEMA_VERSION,
         "dry_run": dry_run,
         "catalogues": len(prepared),
         "requested_messages": requested_messages,

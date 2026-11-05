@@ -11,10 +11,10 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .financial_contracts import _SCHEMA_VERSION, FinancialChildReceipt
-from .financial_drive import _drive_financial_journey
-from .financial_navigation import _open_destination, _work_ids_by_period, open_work
-from .financial_transactions import _transaction_csv, _transaction_row_ids
+from .financial_contracts import SCHEMA_VERSION, FinancialChildReceipt
+from .financial_drive import drive_financial_journey
+from .financial_navigation import open_destination, open_work, work_ids_by_period
+from .financial_transactions import financial_transactions_transaction_row_ids, transaction_csv
 from .installed_tui_child import (
     InstalledTuiChildError,
     admitted_session_autopilot,
@@ -46,7 +46,7 @@ def run_financial_child(
     """Run visible setup, capture, lifecycle actions, then a fresh-session readback."""
     scenario = build_scenario(year)
     product = installed_product_evidence(workspace_root=workspace_root)
-    csv_path = _transaction_csv(scenario=scenario, directory=scratch)
+    csv_path = transaction_csv(scenario=scenario, directory=scratch)
     work_unit_ids: dict[str, str] = {}
     operations: list[str] = []
     financial_values: dict[str, str] = {}
@@ -61,7 +61,7 @@ def run_financial_child(
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
-        await _drive_financial_journey(
+        await drive_financial_journey(
             pilot,
             scenario,
             scratch,
@@ -87,10 +87,10 @@ def run_financial_child(
     observed: list[str] = []
 
     async def readback(pilot: Any) -> None:
-        rows = await _transaction_row_ids(pilot, scenario=scenario)
+        rows = await financial_transactions_transaction_row_ids(pilot, scenario=scenario)
         if len(rows) != 8:
             raise InstalledTuiChildError("fresh installed TUI session lost imported transaction rows")
-        await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
+        await open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
         await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="reconciliation")
         from textual.widgets import DataTable
 
@@ -98,10 +98,10 @@ def run_financial_child(
         inconsistencies = query_public_selector(pilot, "#ledger-inconsistencies", DataTable)
         if suggestions.row_count or inconsistencies.row_count:
             raise InstalledTuiChildError("fresh installed TUI session did not preserve the invoice links")
-        reopened = await _work_ids_by_period(pilot, year=year)
+        reopened = await work_ids_by_period(pilot, year=year)
         if reopened != work_unit_ids:
             raise InstalledTuiChildError("fresh installed TUI session did not preserve annual and quarterly work")
-        await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
+        await open_destination(pilot, query="declarations", expected_selector="#declarations-list")
         await select_public_data_table_row(
             pilot=pilot,
             table_selector="#declarations-list",
@@ -119,7 +119,7 @@ def run_financial_child(
     if readback_exit_code != 0 or observed != ["financial-work-and-links-reopened"]:
         raise InstalledTuiChildError("fresh installed session did not reopen the persisted income work")
     return FinancialChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         product_origin=product.product_origin,
         product_init_sha256=product.product_init_sha256,
@@ -158,7 +158,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             scratch=args.scratch,
         )
     except InstalledTuiChildError as error:
-        write_installed_tui_failure_receipt(path=args.receipt, schema_version=_SCHEMA_VERSION, error=error)
+        write_installed_tui_failure_receipt(path=args.receipt, schema_version=SCHEMA_VERSION, error=error)
         return 2
     except Exception as error:
         trace = error.__traceback__
@@ -172,7 +172,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             trace = trace.tb_next
         write_installed_tui_failure_receipt(
             path=args.receipt,
-            schema_version=_SCHEMA_VERSION,
+            schema_version=SCHEMA_VERSION,
             error=InstalledTuiChildError(
                 f"unexpected installed TUI failure: {type(error).__name__} at {','.join(frames[-4:])}"
             ),

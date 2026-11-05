@@ -29,7 +29,6 @@ from cadrumo.domain.contribuyente.inventory.records import (
     ValuationMethod,
 )
 
-from .._paths import LOCALES_DIR
 from ..desktop_assets_keys import (
     INVENTORY_ADVISORY_FAMILY,
     INVENTORY_ENUM_FAMILIES,
@@ -38,6 +37,7 @@ from ..desktop_assets_keys import (
     INVENTORY_LABEL_NAMESPACE,
 )
 from ..desktop_chrome import DESKTOP_CHROME_KEYS, DESKTOP_LOCALES, desktop_chrome_strings
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

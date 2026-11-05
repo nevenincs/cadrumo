@@ -14,11 +14,11 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 from dev.paths import UTF_8
 
-from .lane_recipe_commands import _parameterless_recipes, _recipe_bodies, _recipe_closure
+from .lane_recipe_commands import parameterless_recipes, recipe_bodies, recipe_closure
 from .workflow_job_gates import job_gate, narrowed_events
 
 #: Where lane declarations live. Anything else is not a lane.
-_WORKFLOW_DIR: Final[str] = ".github/workflows"
+WORKFLOW_DIR: Final[str] = ".github/workflows"
 
 
 #: A `gh workflow run <file>.yml` call in a workflow `run:` block. This is a
@@ -44,7 +44,7 @@ class _RunStep:
     command: str
 
 
-def _workflow_run_steps(text: str, events: tuple[str, ...]) -> tuple[_RunStep, ...]:
+def workflow_run_steps(text: str, events: tuple[str, ...]) -> tuple[_RunStep, ...]:
     """Return every ``run:`` command in a workflow, attributed to its job's reach.
 
     Read from the parsed document rather than the raw file, for the same reason
@@ -99,7 +99,7 @@ def _dispatch_edges(text: str) -> tuple[tuple[str, str | None], ...]:
     measurement, so the edge carries the event narrowing only.
     """
     edges: list[tuple[str, str | None]] = []
-    for step in _workflow_run_steps(text, ()):
+    for step in workflow_run_steps(text, ()):
         for match in _GH_WORKFLOW_RUN.finditer(step.command):
             edges.append((match.group("workflow"), step.condition))
     document = yaml.load(text, Loader=yaml.CSafeLoader)
@@ -155,7 +155,7 @@ def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     not the dispatcher's whole ``on:`` block: a button pressed from a job that
     a push cannot start is not pressed by that push.
     """
-    workflow_dir = root / _WORKFLOW_DIR
+    workflow_dir = root / WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return MappingProxyType(dict[str, tuple[str, ...]]())
 
@@ -182,7 +182,7 @@ def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
                     changed = True
 
     return MappingProxyType(
-        {f"{_WORKFLOW_DIR}/{name}": tuple(sorted(found)) for name, found in events.items()},
+        {f"{WORKFLOW_DIR}/{name}": tuple(sorted(found)) for name, found in events.items()},
     )
 
 
@@ -207,10 +207,10 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     """
     justfile = root / "justfile"
     justfile_text = justfile.read_text(encoding=UTF_8) if justfile.exists() else ""
-    bodies = _recipe_bodies(justfile_text)
-    parameterless = _parameterless_recipes(justfile_text)
+    bodies = recipe_bodies(justfile_text)
+    parameterless = parameterless_recipes(justfile_text)
 
-    workflow_dir = root / _WORKFLOW_DIR
+    workflow_dir = root / WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return MappingProxyType(dict[str, tuple[str, ...]]())
 
@@ -218,9 +218,9 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     accumulated: dict[str, set[str]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
         text = workflow.read_text(encoding=UTF_8)
-        events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
-        for step in _workflow_run_steps(text, events):
-            reached = _recipe_closure(step.command, bodies, parameterless)
+        events = effective.get(f"{WORKFLOW_DIR}/{workflow.name}", ())
+        for step in workflow_run_steps(text, events):
+            reached = recipe_closure(step.command, bodies, parameterless)
             for name in reached:
                 accumulated.setdefault(name, set()).update(step.events)
     return MappingProxyType({name: tuple(sorted(events)) for name, events in accumulated.items()})
@@ -244,18 +244,18 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     """
     justfile = root / "justfile"
     justfile_text = justfile.read_text(encoding=UTF_8) if justfile.exists() else ""
-    bodies = _recipe_bodies(justfile_text)
-    parameterless = _parameterless_recipes(justfile_text)
+    bodies = recipe_bodies(justfile_text)
+    parameterless = parameterless_recipes(justfile_text)
 
-    workflow_dir = root / _WORKFLOW_DIR
+    workflow_dir = root / WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return frozenset[str]()
 
     routed: dict[str, set[bool]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
         text = workflow.read_text(encoding=UTF_8)
-        for step in _workflow_run_steps(text, ()):
-            reached = _recipe_closure(step.command, bodies, parameterless)
+        for step in workflow_run_steps(text, ()):
+            reached = recipe_closure(step.command, bodies, parameterless)
             for name in reached:
                 routed.setdefault(name, set()).add(step.opt_in)
     return frozenset(name for name, states in routed.items() if states == {True})

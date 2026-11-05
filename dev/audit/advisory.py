@@ -221,7 +221,7 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     )
 
 
-def _overall(dimensions: tuple[AdvisoryDimension, ...]) -> Status:
+def advisory_overall(dimensions: tuple[AdvisoryDimension, ...]) -> Status:
     """Worst status across all dimensions (RED > AMBER > GREEN)."""
     statuses = {d.report.status for d in dimensions}
     for status in _STATUS_PRECEDENCE:
@@ -258,7 +258,7 @@ def render_text(dimensions: tuple[AdvisoryDimension, ...], overall: Status, *, f
 _LEADING_COUNT: Final = re.compile(r"^(\d+)")
 
 
-def _total_findings(dimension: AdvisoryDimension) -> int:
+def total_findings(dimension: AdvisoryDimension) -> int:
     """The best available true count for a dimension.
 
     Dimensions built in this module (dead code and security)
@@ -295,7 +295,7 @@ def to_json(
                 "headline": dimension.report.headline,
                 "available": dimension.report.available,
                 "count_by_severity": dimension.count_by_severity,
-                "total_findings": _total_findings(dimension),
+                "total_findings": total_findings(dimension),
                 "details": dimension.report.details,
                 "findings": list(dimension.findings),
             }
@@ -366,7 +366,7 @@ def main() -> int:
 
     repo_root = REPO_ROOT
     dimensions = build_advisory_report(repo_root)
-    overall = _overall(dimensions)
+    overall = advisory_overall(dimensions)
 
     if args.json:
         print(json.dumps(to_json(dimensions, overall, datetime.now(tz=UTC).isoformat()), indent=2, ensure_ascii=False))

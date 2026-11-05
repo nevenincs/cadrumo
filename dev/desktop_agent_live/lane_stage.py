@@ -12,9 +12,9 @@ from .lane_errors import UnavailableError
 from .package import stage_lane_package
 
 _REPOSITORY: Final = Path(__file__).resolve().parents[2]
-_BUILD: Final = _REPOSITORY / "build" / "windows-x64"
-_STAGE: Final = _BUILD / "stage"
-_TESTING: Final = _BUILD / "desktop" / "testing"
+BUILD: Final = _REPOSITORY / "build" / "windows-x64"
+STAGE: Final = BUILD / "stage"
+TESTING: Final = BUILD / "desktop" / "testing"
 _PACKAGED_ENTRY: Final = "http://tauri.localhost/index.html"
 
 
@@ -30,12 +30,12 @@ class TestHost:
     @property
     def package(self) -> Path:
         """The staged package of the host's own configuration, which the run's package mirrors."""
-        return _STAGE / self.configuration / "app"
+        return STAGE / self.configuration / "app"
 
     @property
     def lane_package(self) -> Path:
         """Where the run's package mirrors :attr:`package` with this host as its desktop image."""
-        return _TESTING / "agent-live-package" / self.configuration / "app"
+        return TESTING / "agent-live-package" / self.configuration / "app"
 
 
 def test_host(served: bool) -> TestHost:
@@ -43,7 +43,7 @@ def test_host(served: bool) -> TestHost:
     import hashlib
 
     variant = "served" if served else "packaged"
-    record = _TESTING / variant / "host.json"
+    record = TESTING / variant / "host.json"
     build = (
         "node native/desktop/tests/packaged/host.mjs --served (with CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG "
         "and CADRUMO_NATIVE_CONTRACT set)"
@@ -73,7 +73,7 @@ def require_current(host: TestHost) -> StageVerdict:
     for the run to report with its results.
     """
     configuration = host.configuration
-    verdict = stage_verdict(_BUILD, configuration)
+    verdict = stage_verdict(BUILD, configuration)
     if verdict.refusals:
         raise UnavailableError("; ".join(verdict.refusals))
     return verdict
@@ -98,7 +98,7 @@ def stage_package(host: TestHost, destination: Path) -> Path:
     """Mirror the host's staged package into ``destination`` with the host as its desktop; return its image."""
     from ..packaging.native.layout import load_layout
 
-    target = json.loads((_BUILD / "generated" / "identity.json").read_text(encoding="utf-8"))["target"]
+    target = json.loads((BUILD / "generated" / "identity.json").read_text(encoding="utf-8"))["target"]
     try:
         image = stage_lane_package(load_layout(target), host.package, host.executable, destination)
     except (OSError, ValueError) as refused:

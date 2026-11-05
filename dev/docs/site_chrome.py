@@ -10,7 +10,7 @@ renders English around translated pages, which is exactly the silent fallback
 the localization contract refuses.
 
 This module is the single place those strings are named.  Every one is resolved
-through :func:`~dev.docs._locale_chrome.template_chrome`, which is as strict as
+through :func:`~dev.docs.locale_chrome.template_chrome`, which is as strict as
 the resolver the generated reference surfaces use -- a key with no authored
 value in the build language raises instead of degrading to English -- and which
 records the string as the templates' own, because a template escapes and
@@ -33,7 +33,7 @@ from __future__ import annotations
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from ._locale_chrome import template_chrome
+from .locale_chrome import template_chrome
 
 __all__ = ["site_chrome", "site_labels"]
 

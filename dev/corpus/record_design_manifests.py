@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import NotRequired, TypedDict
 
 
-class _Artifact(TypedDict):
+class Artifact(TypedDict):
     modelo: str
     title: str
     #: ``None`` where no official index page was established for the artefact.
@@ -23,39 +23,39 @@ class _Artifact(TypedDict):
     url_aliases: NotRequired[list[str]]
 
 
-class _Manifest(TypedDict):
+class Manifest(TypedDict):
     source: str
     modelo: str
     retrieved_at: str
     source_pages: list[str]
     artefact_count: int
-    artefacts: list[_Artifact]
+    artefacts: list[Artifact]
 
 
-class _ModeloRow(TypedDict):
+class ModeloRow(TypedDict):
     modelo: str
     artefact_count: int
 
 
-class _RootAggregate(TypedDict):
+class RootAggregate(TypedDict):
     supported_corpus_modelos: list[str]
     model_count: int
     artefact_count: int
-    modelos: list[_ModeloRow]
+    modelos: list[ModeloRow]
 
 
-class _HistoricalExclusions(TypedDict):
+class HistoricalExclusions(TypedDict):
     schema_version: int
     disposition: str
     source_pages: list[str]
     urls: list[str]
 
 
-def _artifact_urls(artifact: _Artifact) -> set[str]:
+def artifact_urls(artifact: Artifact) -> set[str]:
     return {str(artifact["url"]), *(str(url) for url in artifact.get("url_aliases", []))}
 
 
-def _root_aggregate(manifests: dict[str, _Manifest]) -> _RootAggregate:
+def root_aggregate(manifests: dict[str, Manifest]) -> RootAggregate:
     """Derive the root manifest's census fields from the per-modelo manifests.
 
     These four fields are a pure function of what the per-modelo manifests
@@ -73,8 +73,8 @@ def _root_aggregate(manifests: dict[str, _Manifest]) -> _RootAggregate:
     }
 
 
-def _represented_urls(manifests: dict[str, _Manifest]) -> set[str]:
+def record_design_manifests_represented_urls(manifests: dict[str, Manifest]) -> set[str]:
     """Project every declared source URL and alias from the complete manifest inventory."""
     return {
-        url for manifest in manifests.values() for artifact in manifest["artefacts"] for url in _artifact_urls(artifact)
+        url for manifest in manifests.values() for artifact in manifest["artefacts"] for url in artifact_urls(artifact)
     }

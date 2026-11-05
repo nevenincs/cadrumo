@@ -27,7 +27,7 @@ _KEY = "modelo.schema.100.casilla.continuidad.x.label"
 def test_restorations_return_every_dictionary_form(
     word: str, table: dict[str, str], known: set[str], expected: tuple[str, ...]
 ) -> None:
-    assert casilla_orthography._restorations(word, table, known.__contains__) == expected
+    assert casilla_orthography.restorations(word, table, known.__contains__) == expected
 
 
 @pytest.mark.integration
@@ -118,14 +118,14 @@ def test_the_shipped_interface_domains_keep_their_diacritics() -> None:
     Repair with `python -m dev.locales casilla-orthography`, which reports the
     same finding over the interface domains and the casilla catalogue together.
     """
-    from dev.locales._paths import LOCALES_DIR, SRC_DIR
-    from dev.locales.locale_tree import _flatten_raw_locale_leaves
+    from dev.locales.locale_tree import flatten_raw_locale_leaves
     from dev.locales.manager import LocaleManager
+    from dev.locales.paths import LOCALES_DIR, SRC_DIR
 
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     values: Values = {}
     for locale in ("es", "en", "ca", "hu"):
-        leaves = _flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
+        leaves = flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
         values[locale] = {
             key: value
             for key, value in leaves.items()
@@ -149,8 +149,8 @@ def test_no_shipped_casilla_text_is_half_translated() -> None:
     same finding; record a term the product keeps in Spanish in
     ``REVIEWED_SPANISH_TERMS`` with its reason instead.
     """
-    from dev.locales._paths import LOCALES_DIR
     from dev.locales.modelo_casilla_catalogue import ModeloCasillaCatalogue
+    from dev.locales.paths import LOCALES_DIR
 
     catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
     sources = {locale: catalogue.served_sources(locale) for locale in catalogue.locales}

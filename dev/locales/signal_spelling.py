@@ -7,7 +7,6 @@ from itertools import combinations
 from pathlib import Path
 from typing import Final
 
-from ._spelling import SpellingToolError, load_dictionaries
 from .signal_contracts import SpellingInventory
 from .signal_discovery import signal_key_domain
 from .signal_spelling_enrollment import (
@@ -15,6 +14,7 @@ from .signal_spelling_enrollment import (
     enroll_spelling_locale,
     excluded_structural_inventory,
 )
+from .spelling import SpellingToolError, load_dictionaries
 
 # Exact lowercase search aliases: IBI is named in the ibi_* category labels,
 # and IRPF in _data/terminology/concepts/irpf.toml. These are accepted only on

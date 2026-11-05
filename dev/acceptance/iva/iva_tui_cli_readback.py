@@ -9,8 +9,8 @@ from cadrumo.core.hashing import sha256_hex
 from dev.acceptance.installed_cli import InstalledCli
 
 from .iva_tui_contracts import IvaInstalledTuiError
-from .iva_tui_projection import _canonical_ledger_decimal_text, _object
-from .iva_tui_scenario import _SyntheticIvaRow
+from .iva_tui_projection import canonical_ledger_decimal_text, iva_tui_projection_object
+from .iva_tui_scenario import SyntheticIvaRow
 
 
 def _observe_public_canonical_transaction(
@@ -18,8 +18,8 @@ def _observe_public_canonical_transaction(
 ) -> tuple[str, str, str, str, str, str]:
     """Read one persisted transaction and require every submitted canonical field."""
     document = cli.run(("app", "ledger", "view", transaction_id))
-    result = _object(document.get("result"), label="installed public ledger view result")
-    transaction = _object(result.get("transaction"), label="installed public ledger transaction")
+    result = iva_tui_projection_object(document.get("result"), label="installed public ledger view result")
+    transaction = iva_tui_projection_object(result.get("transaction"), label="installed public ledger transaction")
     if result.get("transaction_id") != transaction_id:
         raise IvaInstalledTuiError("installed public ledger view returned a different transaction identity")
     for field_name, expected_value in expected_fields.items():
@@ -37,14 +37,14 @@ def _observe_public_canonical_transaction(
     )
 
 
-def _readback_canonical_fields(
+def readback_canonical_fields(
     *,
     executable: Path,
     storage_root: Path,
     authority_root: Path,
     passphrase: str,
     transaction_ids: tuple[str, str],
-    synthetic_rows: tuple[_SyntheticIvaRow, ...],
+    synthetic_rows: tuple[SyntheticIvaRow, ...],
 ) -> tuple[str, tuple[str, ...]]:
     """Read public persisted fields in fresh installed CLI processes, without writes.
 
@@ -58,9 +58,9 @@ def _readback_canonical_fields(
             transaction_id,
             {
                 "business_classification": "BUSINESS",
-                "taxable_base": _canonical_ledger_decimal_text(scenario_row.taxable_base),
+                "taxable_base": canonical_ledger_decimal_text(scenario_row.taxable_base),
                 "iva_rate": "0.21",
-                "iva_amount": _canonical_ledger_decimal_text(scenario_row.iva_amount),
+                "iva_amount": canonical_ledger_decimal_text(scenario_row.iva_amount),
                 "iva_category": "domestic_general",
             },
         )

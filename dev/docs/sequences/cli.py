@@ -43,12 +43,12 @@ import argparse
 import sys
 
 from .checks import (
-    _build_argument_parser,
-    _owning_page,
+    build_argument_parser,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
+    checks_owning_page,
     refresh_sequences,
 )
 from .errors import SequenceEngineError
@@ -59,7 +59,7 @@ from .golden_store import (
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
-    parser = _build_argument_parser()
+    parser = build_argument_parser()
     args = parser.parse_args(argv)
 
     if args.mode == "refresh":
@@ -166,7 +166,7 @@ def _coherence_mode(args: argparse.Namespace) -> int:
 
 def _single_sequence_advisory(args: argparse.Namespace) -> None:
     """Single sequence advisory."""
-    owning_page = _owning_page(
+    owning_page = checks_owning_page(
         args.sequence,
         docs_root=args.docs_root,
     )

@@ -35,7 +35,7 @@ from dev.paths import REPO_ROOT
 
 from ..normatives_html import (
     HTML_EXTRACTOR_ID,
-    _anchor_from_heading,
+    anchor_from_heading,
     build_outputs,
     extract_html,
 )
@@ -496,15 +496,15 @@ def test_heading_derived_anchor_is_lossy_and_collides_across_articles() -> None:
     articles must not be representable by one anchor, and the fact that they
     are is the defect this test makes visible rather than endorses.
     """
-    assert _anchor_from_heading("Artículo 5. Concepto de empresario.") == "#a5"
-    assert _anchor_from_heading("Artículo 163 quinquies. Opciones.") == "#a163quinquies"
+    assert anchor_from_heading("Artículo 5. Concepto de empresario.") == "#a5"
+    assert anchor_from_heading("Artículo 163 quinquies. Opciones.") == "#a163quinquies"
     # A heading that names no article yields nothing: the fallback does have a
     # refusal path, so the collision below is a gap in coverage, not absence.
-    assert _anchor_from_heading("Disposición adicional primera.") == ""
+    assert anchor_from_heading("Disposición adicional primera.") == ""
 
-    base = _anchor_from_heading("Artículo 163. Régimen especial.")
+    base = anchor_from_heading("Artículo 163. Régimen especial.")
     later_ordinals = {
-        heading: _anchor_from_heading(heading)
+        heading: anchor_from_heading(heading)
         for heading in (
             "Artículo 163 sexies. Condiciones para la aplicación.",
             "Artículo 163 vicies. Derecho a la deducción.",

@@ -32,7 +32,7 @@ _PROBE = """
 import sys
 from pathlib import Path
 import dev.paths
-from dev.env._dotenv import provision
+from dev.env.dotenv import provision
 import dev.init.plan
 root = Path(sys.argv[1])
 (root / "env").mkdir()
@@ -49,7 +49,7 @@ def test_the_pre_sync_bootstrap_loads_no_project_dependency(tmp_path: Path) -> N
     Proved able to fail: restoring the taxonomy import in
     `cadrumo.core.storage_environment.prepare_temporary_directory`, and
     separately restoring the Google client staging call at the end of
-    `dev.env._dotenv.provision`, each made this test alone fail on its
+    `dev.env.dotenv.provision`, each made this test alone fail on its
     `pydantic` assertion; reverting each made it pass.
     """
     # Pytest's run scratch makes the bootstrap skip temporary-root preparation,

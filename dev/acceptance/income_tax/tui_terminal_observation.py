@@ -6,9 +6,9 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 from .scenario import AcceptanceOutcome
-from .tui_contracts import TerminalCondition, TuiJourneyError, TuiOperationBinding, TuiTerminalEvidence, _TuiScreen
-from .tui_readback import _rendered_text, _stack_text
-from .tui_selectors import _RESULT_STATEMENT_CLOSE
+from .tui_contracts import TerminalCondition, TuiJourneyError, TuiOperationBinding, TuiScreen, TuiTerminalEvidence
+from .tui_readback import rendered_text, stack_text
+from .tui_selectors import RESULT_STATEMENT_CLOSE
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -39,7 +39,7 @@ def settled_notice_terminal(notice: str) -> tuple[TerminalCondition, AcceptanceO
     return None
 
 
-async def _apply_visible_operation_review(pilot: Pilot[Any], modal: _TuiScreen, binding: TuiOperationBinding) -> bool:
+async def _apply_visible_operation_review(pilot: Pilot[Any], modal: TuiScreen, binding: TuiOperationBinding) -> bool:
     """Apply the visible review once when its actual public control is enabled."""
     from textual.css.query import NoMatches
     from textual.widget import Widget
@@ -59,10 +59,10 @@ async def _apply_visible_operation_review(pilot: Pilot[Any], modal: _TuiScreen, 
     return False
 
 
-async def _observe_operation_terminal(
+async def observe_operation_terminal(
     pilot: Pilot[Any],
     *,
-    modal: _TuiScreen,
+    modal: TuiScreen,
     binding: TuiOperationBinding,
     maximum_polls: int,
 ) -> TuiTerminalEvidence:
@@ -108,9 +108,9 @@ async def _observe_operation_terminal(
         receipt = diagnostic = ""
         terminal = None
         if retained_widgets is not None:
-            status = _rendered_text(retained_widgets[0])
-            receipt = _rendered_text(retained_widgets[1])
-            diagnostic = _rendered_text(retained_widgets[2])
+            status = rendered_text(retained_widgets[0])
+            receipt = rendered_text(retained_widgets[1])
+            diagnostic = rendered_text(retained_widgets[2])
             terminal = expected.get(status)
         if terminal is None and (retained_widgets is None or not getattr(modal, "is_mounted", True)):
             terminal = _settled_terminal(pilot, binding)
@@ -137,13 +137,13 @@ async def _observe_operation_terminal(
     raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
 
 
-def _terminal_timeout_detail(modal: _TuiScreen, status: str | None, review_applied: bool) -> str:
+def _terminal_timeout_detail(modal: TuiScreen, status: str | None, review_applied: bool) -> str:
     """Describe only the retained public terminal controls when observation times out."""
     from textual.css.query import NoMatches
 
     try:
         apply = modal.query_one("#btn-operation-apply")
-        phase = _rendered_text(modal.query_one("#operation-modal-phase"))
+        phase = rendered_text(modal.query_one("#operation-modal-phase"))
         detail = (
             f"status={status!r}, phase={phase!r}, apply_disabled={getattr(apply, 'disabled', None)!r}, "
             f"apply_attempted={review_applied!r}"
@@ -158,7 +158,7 @@ async def _close_operation_result_statement(pilot: Pilot[Any]) -> None:
     from cadrumo.entrypoints.tui.modelo.workbench.result import WorkbenchResultScreen
 
     if isinstance(pilot.app.screen, WorkbenchResultScreen):
-        close = pilot.app.screen.query_one(_RESULT_STATEMENT_CLOSE)
+        close = pilot.app.screen.query_one(RESULT_STATEMENT_CLOSE)
         close.focus()
         await pilot.press("enter")
         await pilot.pause()
@@ -171,4 +171,4 @@ def _settled_terminal(
     refusal_notice_id = binding.refusal_notice_id
     if refusal_notice_id is None:
         return None
-    return settled_notice_terminal(_stack_text(pilot, refusal_notice_id))
+    return settled_notice_terminal(stack_text(pilot, refusal_notice_id))

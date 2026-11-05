@@ -61,9 +61,9 @@ from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import Nativ
 
 from .installed_mcp_stdio_support import release_query_result, structured_object
 from .test_installed_authenticated_stdio import (
-    _installed_mcp_executable,
-    _native_backend_for_current_platform,
-    _unused_reference,
+    installed_mcp_executable,
+    native_backend_for_current_platform,
+    unused_reference,
 )
 
 pytestmark = [
@@ -249,7 +249,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
     tmp_path: Path, run_cadrumo_cli: Callable[..., Result]
 ) -> None:
     require_os_credential_store()
-    backend = _native_backend_for_current_platform()
+    backend = native_backend_for_current_platform()
     native = native_automation_secret_store(backend)
     assert native.backend is backend
     with (
@@ -274,7 +274,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
             client_id=metadata.client_id,
             destination_id=metadata.destination_id,
         )
-        reference = _unused_reference(protected)
+        reference = unused_reference(protected)
         primary: BaseException | None = None
         try:
             protected.replace(
@@ -284,7 +284,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                 review_digest=metadata.review_digest,
                 credential=source.read(),
             )
-            executable = _installed_mcp_executable()
+            executable = installed_mcp_executable()
             assert executable.is_file()
             parameters = StdioServerParameters(
                 command=str(executable),

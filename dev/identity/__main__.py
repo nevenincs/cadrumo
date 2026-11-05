@@ -16,7 +16,7 @@ from collections import Counter
 
 from dev.paths import REPO_ROOT
 
-from ._tree_scan import (
+from .tree_scan import (
     EXCLUDED_PATH_FRAGMENTS,
     SCANNED_SUFFIXES,
     advisory_findings,
@@ -27,7 +27,7 @@ from ._tree_scan import (
 _REPO_ROOT = REPO_ROOT
 
 
-def _bucket(relative_path: str) -> str:
+def main___bucket(relative_path: str) -> str:
     """The coarsest location label for a path, for a countable summary."""
     parts = relative_path.split("/")
     if len(parts) == 1:
@@ -68,7 +68,7 @@ def main() -> int:
 
     advisory = advisory_findings(_REPO_ROOT, files=files)
     print(f"\nadvisory, outside the blocking scope: {len(advisory)} occurrences")
-    for bucket, count in sorted(Counter(_bucket(finding.path) for finding in advisory).items()):
+    for bucket, count in sorted(Counter(main___bucket(finding.path) for finding in advisory).items()):
         print(f"  {bucket:34s} {count:6d}")
 
     return 1 if scan.findings else 0

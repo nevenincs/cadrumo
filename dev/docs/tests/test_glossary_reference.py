@@ -215,12 +215,12 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
     actually maps. ``_legal_permalinks`` reads the catalogue TOMLs directly, not
     the render path, so it is an independent oracle -- no URL is hardcoded.
     """
-    from ..glossary_reference import _legal_permalinks
+    from ..glossary_reference import legal_permalinks
 
     rst, result = render_glossary(_REPO_ROOT, _load_handbook())
     assert result.legal_links > 0
 
-    catalogue_permalinks = {grounding.permalink for grounding in _legal_permalinks(_REPO_ROOT).values()}
+    catalogue_permalinks = {grounding.permalink for grounding in legal_permalinks(_REPO_ROOT).values()}
     # Matched on the line's shape, not its label: the label is localized.
     rendered_links = re.findall(r"^ +\* [^:]+: `[^`]+ <([^>]+)>`__ \(``[^`]+``\)$", rst, re.MULTILINE)
     assert len(rendered_links) == result.legal_links
@@ -321,7 +321,7 @@ def test_a_concept_without_build_language_prose_never_borrows_another_language()
     # language-safe compiled structure still carries the entry. The expected
     # marker is read from the catalogue, never from the renderer, and never
     # written here as prose.
-    from .._locale_chrome import docs_chrome
+    from ..locale_chrome import docs_chrome
 
     assert docs_chrome("docs.glossary.entry.undefined", OutputLanguage.CA) in rst
     assert docs_chrome("docs.glossary.entry.legal_basis", OutputLanguage.CA) in rst
@@ -538,9 +538,9 @@ def test_an_absent_legal_catalogue_says_so_instead_of_grounding_nothing(
     but it now says which render is ungrounded. Measured live: 64 fragments,
     704 grounding entries, so empty is never the true answer for the real tree.
     """
-    from ..glossary_reference import _legal_permalinks
+    from ..glossary_reference import legal_permalinks
 
-    assert _legal_permalinks(tmp_path) == {}
+    assert legal_permalinks(tmp_path) == {}
     assert "no legal catalogue" in capsys.readouterr().err
 
 
@@ -574,7 +574,7 @@ def test_a_malformed_catalogue_fragment_refuses(tmp_path: Path) -> None:
     Distinguished from a read failure on purpose: broken TOML is a defect, while
     a vanished file is a race, and one handler was treating them alike.
     """
-    from ..glossary_reference import _legal_permalinks
+    from ..glossary_reference import legal_permalinks
     from ..legal_catalogue import LEGAL_CATALOGUE_RELPATH
 
     catalogue = tmp_path / LEGAL_CATALOGUE_RELPATH
@@ -582,19 +582,19 @@ def test_a_malformed_catalogue_fragment_refuses(tmp_path: Path) -> None:
     (catalogue / "broken.toml").write_text("[legal" + chr(10), encoding="utf-8")
 
     with pytest.raises(SystemExit, match="not valid TOML"):
-        _legal_permalinks(tmp_path)
+        legal_permalinks(tmp_path)
 
 
 def test_the_live_catalogue_still_grounds_every_reference() -> None:
     """The success path, so the refusals are not satisfied by refusing everything."""
-    from ..glossary_reference import _legal_permalinks
+    from ..glossary_reference import legal_permalinks
 
     # This is the positive control the refusals above lean on, so its floor
     # decides how much 'refusing everything' the module can still hide. `> 0`
     # only ruled out a catalogue that grounds NOTHING; a partial collapse left
     # the refusals satisfied by refusing almost everything. A floor, not a
     # pinned count: the live catalogue grounds 704 legal permalinks.
-    permalinks = _legal_permalinks(_REPO_ROOT)
+    permalinks = legal_permalinks(_REPO_ROOT)
     assert len(permalinks) > 500, (
         f"the live catalogue grounds only {len(permalinks)} legal permalinks, so the "
         "refusal cases above are no longer held apart from refusing everything"

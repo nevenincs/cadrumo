@@ -15,7 +15,7 @@ from dev.packaging.lane_verification_core import (
 )
 
 from .runtime_probe_contracts import CommandEvidence, CompatibilityProbeError, FocusedTestEvidence, FocusedTestStatus
-from .runtime_probe_environment import _isolated_environment
+from .runtime_probe_environment import isolated_environment
 
 
 def _installed_site_root(venv: Path) -> Path:
@@ -40,7 +40,7 @@ def _installed_site_root(venv: Path) -> Path:
     return install_root
 
 
-def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidence], dict[str, bool]]:
+def installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidence], dict[str, bool]]:
     """Prove package origins and CLI execution from the target venv outside checkout."""
     python = venv_python_path(venv)
     install_root = _installed_site_root(venv)
@@ -53,7 +53,7 @@ def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidenc
         "assert not any(n == 'dev' or n.startswith('dev.') for n in sys.modules); "
         "print(json.dumps({'origins_inside':True,'checkout_imports_removed':True}, sort_keys=True))"
     )
-    env = _isolated_environment(work_dir, venv_bin_dir(venv))
+    env = isolated_environment(work_dir, venv_bin_dir(venv))
     result = run_command(
         (str(python), "-I", "-W", "error::DeprecationWarning", "-c", code, str(install_root)),
         cwd=work_dir,
@@ -120,7 +120,7 @@ def _run_focused_test(
     )
 
 
-def _focused_runtime_tests(
+def focused_runtime_tests(
     venv: Path,
     *,
     work_dir: Path,
@@ -132,7 +132,7 @@ def _focused_runtime_tests(
     the package import and MCP entrypoint without duplicating application code in
     an inline Python program.
     """
-    environment = _isolated_environment(work_dir, venv_bin_dir(venv))
+    environment = isolated_environment(work_dir, venv_bin_dir(venv))
     tests = (
         _run_focused_test(
             "installed-cadrumo-mcp-help",

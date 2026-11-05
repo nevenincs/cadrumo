@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .._review_store import (
+from ..review_store import (
     NOTE_BODY_LIMIT,
     InvalidNoteError,
     NoteImageState,

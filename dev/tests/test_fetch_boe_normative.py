@@ -91,7 +91,7 @@ def test_normative_fetch_writes_only_to_the_requested_candidate_root(
 ) -> None:
     bundled = tmp_path / "bundled"
     candidate = tmp_path / "candidate"
-    monkeypatch.setattr(fetch_boe_normative, "_HTML_CORPUS", bundled)
+    monkeypatch.setattr(fetch_boe_normative, "HTML_CORPUS", bundled)
     payload = (_CORPUS / _MULTI_BLOCK).read_bytes()
     transport = httpx.MockTransport(lambda request: httpx.Response(HTTPStatus.OK, content=payload, request=request))
     with httpx.Client(transport=transport) as client:

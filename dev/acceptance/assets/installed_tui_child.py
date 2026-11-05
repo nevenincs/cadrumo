@@ -20,16 +20,16 @@ from dev.acceptance.income_tax.installed_tui_child import (
 from .installed_method_fixture import read_acquisition_sidecar
 from .installed_tui_contracts import InstalledAssetTuiError, InstalledAssetTuiJourney, InstalledAssetTuiReceipt
 from .installed_tui_controls import (
-    _open_activity_asset_screen,
-    _open_ledger_destination,
-    _public_surface_diagnostic,
-    _wait_for_public_selector,
-    _wait_for_public_selector_absent,
+    open_activity_asset_screen,
+    open_ledger_destination,
+    public_surface_diagnostic,
+    wait_for_public_selector,
+    wait_for_public_selector_absent,
 )
 from .installed_tui_lifecycle import (
-    _exercise_cli_created_asset_readback,
-    _exercise_method_asset_lifecycle,
-    _exercise_method_asset_readback,
+    exercise_cli_created_asset_readback,
+    exercise_method_asset_lifecycle,
+    exercise_method_asset_readback,
 )
 
 _SCHEMA_VERSION = "activity-asset-installed-tui-child-v3"
@@ -153,7 +153,7 @@ async def _register_profile(*, profile_label: str, passphrase: str) -> None:
         screen.query_one("#field-confirm", Input).value = passphrase
         await pilot.click("#btn-create")
         await pilot.app.workers.wait_for_complete()  # type: ignore[reportUnknownMemberType]
-        await _wait_for_public_selector(pilot, "#btn-skip-recovery", stage="registration_recovery")
+        await wait_for_public_selector(pilot, "#btn-skip-recovery", stage="registration_recovery")
         await pilot.click("#btn-skip-recovery")
         await pilot.pause()
     if screen.outcome is None:
@@ -177,16 +177,16 @@ async def _drive_profile_path(
         "asset_readback",
         "asset_cli_readback",
     }:
-        await _wait_for_public_selector(pilot, "#home-agenda", stage="home_ready", timeout_seconds=45.0)
-        observed.append(_public_surface_diagnostic(pilot))
+        await wait_for_public_selector(pilot, "#home-agenda", stage="home_ready", timeout_seconds=45.0)
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("home_ready")
         publish("home_ready", diagnostic=observed[-1])
     if journey in {"profile", "profile_ready"}:
         # F4 is the public account-profile route.  It is deliberately
         # distinct from F2, which opens the account language editor.
         await pilot.press("f4")
-        await _wait_for_public_selector(pilot, "#manager-context", stage="profile_ready", timeout_seconds=45.0)
-        observed.append(_public_surface_diagnostic(pilot))
+        await wait_for_public_selector(pilot, "#manager-context", stage="profile_ready", timeout_seconds=45.0)
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("profile_ready")
         publish("profile_ready", diagnostic=observed[-1])
     if journey == "profile_ready":
@@ -194,13 +194,13 @@ async def _drive_profile_path(
         # disappearance of its visible control proves a terminal state;
         # a timeout remains a failed stage instead of a guessed success.
         await pilot.press("f8")
-        await _wait_for_public_selector_absent(
+        await wait_for_public_selector_absent(
             pilot,
             "#manager-complete-setup",
             stage="profile_completion",
             timeout_seconds=20.0,
         )
-        observed.append(_public_surface_diagnostic(pilot))
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("profile_completed")
         publish("profile_completed", diagnostic=observed[-1])
 
@@ -215,35 +215,35 @@ async def _drive_asset_path(
     receipt_path: Path,
 ) -> None:
     if journey in {"ledger", "asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
-        await _open_ledger_destination(pilot=pilot)
-        observed.append(_public_surface_diagnostic(pilot))
+        await open_ledger_destination(pilot=pilot)
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("ledger_ready")
         publish("ledger_ready", diagnostic=observed[-1])
     if journey in {"asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
-        await _open_activity_asset_screen(pilot=pilot)
-        observed.append(_public_surface_diagnostic(pilot))
+        await open_activity_asset_screen(pilot=pilot)
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("asset_screen_ready")
         publish("asset_screen_ready", diagnostic=observed[-1])
 
     def record_asset_stage(stage: str) -> None:
         completed.append(stage)
-        publish(stage, diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions or None)
+        publish(stage, diagnostic=public_surface_diagnostic(pilot), receipt_assertions=assertions or None)
 
     if journey == "asset_method_lifecycle":
         assertions.update(
-            await _exercise_method_asset_lifecycle(
+            await exercise_method_asset_lifecycle(
                 pilot=pilot,
                 progress=record_asset_stage,
                 acquisition_transaction_id=read_acquisition_sidecar(receipt_path.parent),
             )
         )
-        publish("asset_claim_replay", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
+        publish("asset_claim_replay", diagnostic=public_surface_diagnostic(pilot), receipt_assertions=assertions)
     if journey == "asset_readback":
-        assertions.update(await _exercise_method_asset_readback(pilot=pilot, progress=record_asset_stage))
-        publish("asset_readback", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
+        assertions.update(await exercise_method_asset_readback(pilot=pilot, progress=record_asset_stage))
+        publish("asset_readback", diagnostic=public_surface_diagnostic(pilot), receipt_assertions=assertions)
     if journey == "asset_cli_readback":
-        assertions.update(await _exercise_cli_created_asset_readback(pilot=pilot, progress=record_asset_stage))
-        publish("asset_cli_readback", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
+        assertions.update(await exercise_cli_created_asset_readback(pilot=pilot, progress=record_asset_stage))
+        publish("asset_cli_readback", diagnostic=public_surface_diagnostic(pilot), receipt_assertions=assertions)
 
 
 def _run_probe(
@@ -319,7 +319,7 @@ def _run_probe(
                 publish("session_admitted")
             return
         await pilot.pause()
-        observed.append(_public_surface_diagnostic(pilot))
+        observed.append(public_surface_diagnostic(pilot))
         completed.append("launcher_autopilot")
         publish("launcher_autopilot", diagnostic=observed[-1])
         await _drive_profile_path(pilot, journey, completed, observed, publish)

@@ -8,29 +8,29 @@ from pathlib import Path
 from typing import Final
 
 from .pytest_lane_projection import (
-    _lane_envelope,
-    _lane_tool_failed,
-    _only_collection_errors,
-    _summaryless_collection_failure,
-    _summaryless_load_failure,
-    _summaryless_tool_failure,
+    lane_envelope,
+    lane_tool_failed,
+    only_collection_errors,
+    summaryless_collection_failure,
+    summaryless_load_failure,
+    summaryless_tool_failure,
 )
 from .pytest_transcript_syntax import (
-    _PYTEST_COUNT_RE,
-    _PYTEST_OUTCOME_KEYS,
-    _PYTEST_SUMMARY_RE,
-    _REGISTRY_LOAD_FAILURE_RE,
-    _ROOT_CAUSE_RE,
-    _TEST_IDENTITY_RE,
-    _lane_marker,
-    _normalize_root_cause,
+    PYTEST_COUNT_RE,
+    PYTEST_OUTCOME_KEYS,
+    PYTEST_SUMMARY_RE,
+    REGISTRY_LOAD_FAILURE_RE,
+    ROOT_CAUSE_RE,
+    TEST_IDENTITY_RE,
+    lane_marker,
+    normalize_root_cause,
 )
-from .signal_values import _json_int, _json_string_list
+from .signal_values import json_int, json_string_list
 
-_PYTEST_SUMMARY_SIGNAL: Final[str] = "pytest-summary"
+PYTEST_SUMMARY_SIGNAL: Final[str] = "pytest-summary"
 
 
-class _PytestSummaryProcessor:
+class PytestSummaryProcessor:
     """Reduce one or more pytest transcripts to stable aggregate counters."""
 
     def __init__(self, expected_lanes: tuple[str, ...] = ()) -> None:
@@ -62,17 +62,17 @@ class _PytestSummaryProcessor:
 
     def consume(self, line: str) -> dict[str, object] | None:
         text = line.strip()
-        marker = _lane_marker(text)
+        marker = lane_marker(text)
         if marker is not None:
             return _consume_lane_event(self, marker)
         _record_pytest_diagnostics(self, text)
-        match = _PYTEST_SUMMARY_RE.fullmatch(text)
+        match = PYTEST_SUMMARY_RE.fullmatch(text)
         if match is None:
             return None
         lane_counts = Counter(
             {
-                _PYTEST_OUTCOME_KEYS[count.group("outcome")]: int(count.group("count"))
-                for count in _PYTEST_COUNT_RE.finditer(match.group("summary"))
+                PYTEST_OUTCOME_KEYS[count.group("outcome")]: int(count.group("count"))
+                for count in PYTEST_COUNT_RE.finditer(match.group("summary"))
             }
         )
         if not lane_counts:
@@ -89,7 +89,7 @@ class _PytestSummaryProcessor:
         lanes: list[dict[str, object]] = []
         names = self.expected_lanes or tuple(self.lane_data)
         for name in names:
-            lanes.append(_lane_envelope(name, self.lane_data.get(name)))
+            lanes.append(lane_envelope(name, self.lane_data.get(name)))
         return lanes
 
     def _completion(self) -> tuple[int, int, int, bool]:
@@ -121,9 +121,9 @@ class _PytestSummaryProcessor:
         failures = self.counts["failed"]
         errors = self.counts["error"]
         completed, blocked, expected, complete = self._completion()
-        summaryless_collection_failed = sum(_summaryless_collection_failure(data) for data in self.lane_data.values())
-        summaryless_tool_failed = sum(_summaryless_tool_failure(data) for data in self.lane_data.values())
-        summaryless_load_failed = sum(_summaryless_load_failure(data) for data in self.lane_data.values())
+        summaryless_collection_failed = sum(summaryless_collection_failure(data) for data in self.lane_data.values())
+        summaryless_tool_failed = sum(summaryless_tool_failure(data) for data in self.lane_data.values())
+        summaryless_load_failed = sum(summaryless_load_failure(data) for data in self.lane_data.values())
         classification, headline = _pytest_headline(
             self,
             label,
@@ -172,7 +172,7 @@ class _PytestSummaryProcessor:
                 "lanes_completed": completed,
                 "lanes_expected": expected,
                 "lanes_failed": sum(data["status"] not in (None, 0) for data in self.lane_data.values()),
-                "lanes_tool_failed": sum(_lane_tool_failed(data) for data in self.lane_data.values()),
+                "lanes_tool_failed": sum(lane_tool_failed(data) for data in self.lane_data.values()),
                 "lanes_load_failed": summaryless_load_failed,
                 "lanes_blocked": blocked,
                 "lanes_not_run": expected - completed - blocked,
@@ -183,7 +183,7 @@ class _PytestSummaryProcessor:
         }
 
 
-def _lane_started(self: _PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
+def _lane_started(self: PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
     """Apply the lane started event and emit its transcript projection."""
     self.current_lane = str(marker["lane"])
     lane = self._lane()
@@ -198,15 +198,15 @@ def _lane_started(self: _PytestSummaryProcessor, marker: dict[str, object]) -> d
     }
 
 
-def _lane_finished(self: _PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
+def _lane_finished(self: PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
     """Apply the lane finished event and emit its transcript projection."""
     self.current_lane = str(marker["lane"])
     lane = self._lane()
-    status = _json_int(marker["exit_status"], field="exit_status")
+    status = json_int(marker["exit_status"], field="exit_status")
     lane["kind"] = str(marker.get("kind", lane["kind"]))
     lane["role"] = str(marker.get("role", lane["role"]))
     lane["status"] = status
-    lane["seconds"] = _json_int(marker["seconds"], field="seconds")
+    lane["seconds"] = json_int(marker["seconds"], field="seconds")
     return {
         "event": "lane_finished",
         "kind": lane["kind"],
@@ -218,11 +218,11 @@ def _lane_finished(self: _PytestSummaryProcessor, marker: dict[str, object]) -> 
     }
 
 
-def _lane_skipped(self: _PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
+def _lane_skipped(self: PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
     """Apply the lane skipped event and emit its transcript projection."""
     self.current_lane = str(marker["lane"])
     lane = self._lane()
-    blocked_by = () if "blocked_by" not in marker else _json_string_list(marker["blocked_by"], field="blocked_by")
+    blocked_by = () if "blocked_by" not in marker else json_string_list(marker["blocked_by"], field="blocked_by")
     lane["kind"] = str(marker.get("kind", "command"))
     lane["role"] = str(marker.get("role", "execution"))
     lane["skipped"] = True
@@ -239,9 +239,9 @@ def _lane_skipped(self: _PytestSummaryProcessor, marker: dict[str, object]) -> d
     }
 
 
-def _record_pytest_diagnostics(self: _PytestSummaryProcessor, text: str) -> None:
+def _record_pytest_diagnostics(self: PytestSummaryProcessor, text: str) -> None:
     """Collect failed test identities and typed root causes before reading terminal counts."""
-    identity = _TEST_IDENTITY_RE.fullmatch(text)
+    identity = TEST_IDENTITY_RE.fullmatch(text)
     if identity is not None:
         failed_nodes = self._lane()["failed_nodes"]
         assert isinstance(failed_nodes, set)
@@ -250,17 +250,17 @@ def _record_pytest_diagnostics(self: _PytestSummaryProcessor, text: str) -> None
     if diagnostic_text.startswith("INTERNALERROR>"):
         self._lane()["internal_error"] = True
         diagnostic_text = diagnostic_text.removeprefix("INTERNALERROR>").strip()
-    root_cause = _ROOT_CAUSE_RE.fullmatch(diagnostic_text)
+    root_cause = ROOT_CAUSE_RE.fullmatch(diagnostic_text)
     if root_cause is None and str(self._lane()["kind"]) == "load":
-        root_cause = _REGISTRY_LOAD_FAILURE_RE.fullmatch(diagnostic_text)
+        root_cause = REGISTRY_LOAD_FAILURE_RE.fullmatch(diagnostic_text)
     if root_cause is not None:
         causes = self._lane()["root_causes"]
         assert isinstance(causes, Counter)
-        signature = _normalize_root_cause(root_cause.group("message"))
+        signature = normalize_root_cause(root_cause.group("message"))
         causes[(root_cause.group("type"), signature)] += 1
 
 
-def _consume_lane_event(self: _PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
+def _consume_lane_event(self: PytestSummaryProcessor, marker: dict[str, object]) -> dict[str, object]:
     """Dispatch the closed lane-event vocabulary after parsing the complete marker."""
     if marker["event"] == "lane_started":
         return _lane_started(self, marker)
@@ -270,7 +270,7 @@ def _consume_lane_event(self: _PytestSummaryProcessor, marker: dict[str, object]
 
 
 def _pytest_headline(
-    self: _PytestSummaryProcessor,
+    self: PytestSummaryProcessor,
     label: str,
     exit_status: int,
     completed: int,
@@ -318,7 +318,7 @@ def _pytest_headline(
     elif self.lanes == 0:
         classification = "tool_failure"
         headline = f"{label} failed before any pytest invocation produced a terminal summary; inspect the run log."
-    elif _only_collection_errors(errors, self.counts["passed"], failures):
+    elif only_collection_errors(errors, self.counts["passed"], failures):
         classification = "collection_failure"
         headline = f"{label} could not collect tests: {errors} collection errors across {self.lanes} lanes."
     else:

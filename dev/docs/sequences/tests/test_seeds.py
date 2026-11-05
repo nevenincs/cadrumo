@@ -15,11 +15,11 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
 from ..errors import SequenceParseError
 from ..parser import parse_sequence
 from ..sandbox import SANDBOX_PROFILE_LABEL
 from ..schema import FrameKind
+from ..seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

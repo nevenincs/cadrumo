@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.i18n.render import extract_placeholders
 
-from ._casilla_keys import is_delta_keyed_leaf
-from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
+from .casilla_keys import is_delta_keyed_leaf
+from .revision_drift import RevisionMoveCandidate, classify_revision_moves
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ class LocaleAuditResult:
         return all(file.ok for file in self.files) and not self.placeholder_mismatches
 
 
-def _audit_locale_file(
+def audit_locale_file(
     locale_file: str,
     leaves: dict[str, object],
     keys: set[str],
@@ -90,14 +90,16 @@ def _audit_locale_file(
     )
     codebase_missing = tuple(sorted(codebase_keys - keys))
     codebase_extra = tuple(
-        sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
+        sorted(key for key in keys - codebase_keys if not locale_audit_covered_by_namespace(key, namespace_prefixes))
     )
     moves = classify_revision_moves(locale_file, codebase_missing, codebase_extra)
     return LocaleFileAudit(
         locale_file=locale_file,
         codebase_missing=codebase_missing,
         codebase_extra=codebase_extra,
-        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not _covered_by_namespace(key, ()))),
+        inter_locale_missing=tuple(
+            sorted(key for key in all_locale_keys - keys if not locale_audit_covered_by_namespace(key, ()))
+        ),
         scalar_violations=violations,
         revision_moves=moves.candidates,
         move_accounted_missing=moves.accounted_missing,
@@ -105,7 +107,7 @@ def _audit_locale_file(
     )
 
 
-def _audit_placeholder_mismatches(
+def audit_placeholder_mismatches(
     key_sets: dict[str, set[str]],
     locale_leaves: dict[str, dict[str, object]],
 ) -> tuple[LocalePlaceholderMismatch, ...]:
@@ -126,7 +128,7 @@ def _audit_placeholder_mismatches(
     return tuple(mismatches)
 
 
-def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
+def locale_audit_covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     """Return whether a dotted locale key belongs to a namespace governed outside key-set parity.
 
     Dynamic namespaces are one such family; delta-keyed casilla leaves are

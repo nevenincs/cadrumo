@@ -6,34 +6,34 @@ from dataclasses import asdict, dataclass
 from decimal import Decimal
 from typing import Literal, cast
 
-_SCHEMA_VERSION = "ledger-01-installed-tui-v1"
+SCHEMA_VERSION = "ledger-01-installed-tui-v1"
 
 
-_YEAR = 2025
+YEAR = 2025
 
 
-_COUNTERPARTY_NIF = "A58818501"
+COUNTERPARTY_NIF = "A58818501"
 
 
-_INVOICE_BASE = Decimal("100.00")
+INVOICE_BASE = Decimal("100.00")
 
 
-_INVOICE_IVA = Decimal("21.00")
+INVOICE_IVA = Decimal("21.00")
 
 
-_INVOICE_TOTAL = _INVOICE_BASE + _INVOICE_IVA
+INVOICE_TOTAL = INVOICE_BASE + INVOICE_IVA
 
 
-_TUI_IMPORTED_TRANSACTION_AMOUNT = Decimal("10.00")
+TUI_IMPORTED_TRANSACTION_AMOUNT = Decimal("10.00")
 
 
-_TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
+TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
 
 
-_LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
+LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
 
 
-_STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
 type ChildMode = Literal[
@@ -121,7 +121,7 @@ class TuiOnlyCliOracleReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class _TuiOnlyRun:
+class TuiOnlyRun:
     """Private coordinates retained only while an outer journey reads back its own store."""
 
     receipt: LedgerTuiChildReceipt

@@ -17,15 +17,15 @@ from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, author
 from .cli_journey import (
     IvaCliJourneyError,
     SanitizedCommandReceipt,
-    _checkout_source_identity,
-    _command_receipt,
-    _installed_package_identity,
-    _required_id,
-    _required_text,
-    _result,
-    _row_ids,
-    _run,
-    _sha256_path,
+    checkout_source_identity,
+    command_receipt,
+    installed_package_identity,
+    required_id,
+    required_text,
+    result,
+    row_ids,
+    run,
+    sha256_path,
 )
 from .filing_year import IvaJourneyYear, require_journey_year
 
@@ -142,24 +142,24 @@ def run_iva_multirate_cli_journey(
             passphrase=secrets.token_urlsafe(32),
         )
         receipts: list[SanitizedCommandReceipt] = []
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
 
-        evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
+        evidence_id = add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
         general_transaction_id, reduced_transaction_id, issued_invoice_id = _capture_multirate_sales(
             cli, receipts, artifact, journey_year, year
         )
 
-        purchase_transaction_id = _add_purchase_transaction(
+        purchase_transaction_id = add_purchase_transaction(
             cli=cli,
             receipts=receipts,
             artifact=artifact,
             evidence_id=evidence_id,
             journey_year=journey_year,
         )
-        purchase_invoice_id = _add_purchase_invoice(
+        purchase_invoice_id = add_purchase_invoice(
             cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
         )
-        _run(
+        run(
             cli,
             receipts,
             artifact,
@@ -195,8 +195,8 @@ def run_iva_multirate_cli_journey(
             authority_root=authority_root,
             passphrase=cli.passphrase,
         )
-        verification = _result(
-            _run(
+        verification = result(
+            run(
                 verification_cli,
                 receipts,
                 artifact,
@@ -204,8 +204,8 @@ def run_iva_multirate_cli_journey(
                 result_keys=("verification_report_id", "calculation_revision_id"),
             )
         )
-        verification_report_id = _required_id(verification, "verification_report_id")
-        verification_status = _required_text(verification, "completeness_status")
+        verification_report_id = required_id(verification, "verification_report_id")
+        verification_status = required_text(verification, "completeness_status")
         if verification.get("calculation_revision_id") != calculation_revision_id:
             raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
         if verification.get("granted_verificado_completo") is not True:
@@ -220,11 +220,11 @@ def run_iva_multirate_cli_journey(
             acceptance_ids=(f"IVA-CLI-MULTIRATE-{year}-1T",),
             filing_year=year,
             executable=str(cli.executable),
-            executable_sha256=_sha256_path(cli.executable),
-            source_identity=_checkout_source_identity(),
-            package_identity=_installed_package_identity(),
+            executable_sha256=sha256_path(cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
             authority_generation=authority_generation(authority_root),
-            authority_descriptor_sha256=_sha256_path(descriptor),
+            authority_descriptor_sha256=sha256_path(descriptor),
             storage_root=str(storage_root.resolve()),
             purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
             transaction_ids=transaction_ids,
@@ -249,7 +249,7 @@ def _capture_multirate_sales(
     cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear, year: int
 ) -> tuple[str, str, str]:
     """Execute this acceptance phase in order through its existing command boundary."""
-    general_transaction_id = _add_transaction(
+    general_transaction_id = add_transaction(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
@@ -262,7 +262,7 @@ def _capture_multirate_sales(
         iva_category="domestic_general",
         idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
     )
-    reduced_transaction_id = _add_transaction(
+    reduced_transaction_id = add_transaction(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
@@ -282,7 +282,7 @@ def _capture_multirate_sales(
         journey_year=journey_year,
     )
     for transaction_id in (general_transaction_id, reduced_transaction_id):
-        _run(
+        run(
             cli,
             receipts,
             artifact,
@@ -301,7 +301,7 @@ def _calculate_multirate_quarter(
     year: int,
 ) -> tuple[str, str, Decimal, tuple[RateObservation, RateObservation, RateObservation]]:
     """Execute this acceptance phase in order through its existing command boundary."""
-    _run(
+    run(
         reopened,
         receipts,
         artifact,
@@ -320,8 +320,8 @@ def _calculate_multirate_quarter(
         ),
         result_keys=(),
     )
-    created = _result(
-        _run(
+    created = result(
+        run(
             reopened,
             receipts,
             artifact,
@@ -329,9 +329,9 @@ def _calculate_multirate_quarter(
             result_keys=("work_unit_id",),
         )
     )
-    work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
+    work_unit_id = required_id(created, "work_unit_id")
+    calculated = result(
+        run(
             reopened,
             receipts,
             artifact,
@@ -348,7 +348,7 @@ def _calculate_multirate_quarter(
     )
     if calculated.get("saved") is not True:
         raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+    calculation_revision_id = required_id(calculated, "calculation_revision_id")
     iva_resultado = _decimal_field(calculated, "iva.resultado")
     if iva_resultado != _EXPECTED_RESULT:
         raise IvaCliJourneyError(
@@ -359,7 +359,7 @@ def _calculate_multirate_quarter(
     return work_unit_id, calculation_revision_id, iva_resultado, rate_observations
 
 
-def _create_profile(
+def create_profile(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> None:
     profile_start = len(cli.commands)
@@ -372,19 +372,19 @@ def _create_profile(
         raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
     receipts.extend(
         (
-            _command_receipt(
+            command_receipt(
                 args=profile_create_args(journey_year.year), evidence=commands[0], artifact=artifact, result_ids=()
             ),
-            _command_receipt(
+            command_receipt(
                 args=("config", "profile", "complete-setup"), evidence=commands[1], artifact=artifact, result_ids=()
             ),
         )
     )
 
 
-def _add_purchase_evidence(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
-    evidence = _result(
-        _run(
+def add_purchase_evidence(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
+    evidence = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -392,10 +392,10 @@ def _add_purchase_evidence(*, cli: InstalledCli, receipts: list[SanitizedCommand
             result_keys=("evidence_id",),
         )
     )
-    return _required_id(evidence, "evidence_id")
+    return required_id(evidence, "evidence_id")
 
 
-def _add_transaction(
+def add_transaction(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -409,8 +409,8 @@ def _add_transaction(
     iva_category: str,
     idempotency_key: str,
 ) -> str:
-    transaction = _result(
-        _run(
+    transaction = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -444,7 +444,7 @@ def _add_transaction(
             result_keys=("transaction_id",),
         )
     )
-    return _required_id(transaction, "transaction_id")
+    return required_id(transaction, "transaction_id")
 
 
 def _add_issued_invoice(
@@ -462,8 +462,8 @@ def _add_issued_invoice(
         iva_rate="RATE_10",
         iva_amount=_REDUCED_IVA,
     )
-    invoice = _result(
-        _run(
+    invoice = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -494,10 +494,10 @@ def _add_issued_invoice(
             result_keys=("invoice_id",),
         )
     )
-    return _required_id(invoice, "invoice_id")
+    return required_id(invoice, "invoice_id")
 
 
-def _add_purchase_transaction(
+def add_purchase_transaction(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -505,8 +505,8 @@ def _add_purchase_transaction(
     evidence_id: str,
     journey_year: IvaJourneyYear,
 ) -> str:
-    transaction = _result(
-        _run(
+    transaction = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -544,8 +544,8 @@ def _add_purchase_transaction(
             result_keys=("transaction_id",),
         )
     )
-    transaction_id = _required_id(transaction, "transaction_id")
-    _run(
+    transaction_id = required_id(transaction, "transaction_id")
+    run(
         cli,
         receipts,
         artifact,
@@ -567,11 +567,11 @@ def _add_purchase_transaction(
     return transaction_id
 
 
-def _add_purchase_invoice(
+def add_purchase_invoice(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> str:
-    invoice = _result(
-        _run(
+    invoice = result(
+        run(
             cli,
             receipts,
             artifact,
@@ -605,7 +605,7 @@ def _add_purchase_invoice(
             result_keys=("invoice_id",),
         )
     )
-    return _required_id(invoice, "invoice_id")
+    return required_id(invoice, "invoice_id")
 
 
 def _invoice_line(*, description: str, subtotal: Decimal, iva_rate: str, iva_amount: Decimal) -> str:
@@ -634,17 +634,17 @@ def _assert_reopened_persistence(
     issued_transaction_ids: tuple[str, str],
     evidence_id: str,
 ) -> tuple[tuple[str, str], tuple[str, str]]:
-    ledger = _result(_run(cli, receipts, artifact, ("app", "ledger", "list"), result_keys=()))
-    invoices = _result(_run(cli, receipts, artifact, ("app", "ledger", "invoice", "list"), result_keys=()))
-    evidence = _result(_run(cli, receipts, artifact, ("app", "ledger", "evidence", "list"), result_keys=()))
-    if _row_ids(ledger, "transaction_id") != set(transaction_ids):
+    ledger = result(run(cli, receipts, artifact, ("app", "ledger", "list"), result_keys=()))
+    invoices = result(run(cli, receipts, artifact, ("app", "ledger", "invoice", "list"), result_keys=()))
+    evidence = result(run(cli, receipts, artifact, ("app", "ledger", "evidence", "list"), result_keys=()))
+    if row_ids(ledger, "transaction_id") != set(transaction_ids):
         raise IvaCliJourneyError("fresh-process ledger readback lost a transaction identity")
-    if _row_ids(invoices, "invoice_id") != set(invoice_ids):
+    if row_ids(invoices, "invoice_id") != set(invoice_ids):
         raise IvaCliJourneyError("fresh-process invoice readback lost an invoice identity")
-    if _row_ids(evidence, "evidence_id") != {evidence_id}:
+    if row_ids(evidence, "evidence_id") != {evidence_id}:
         raise IvaCliJourneyError("fresh-process evidence readback lost the purchase evidence identity")
-    issued = _result(
-        _run(
+    issued = result(
+        run(
             cli,
             receipts,
             artifact,

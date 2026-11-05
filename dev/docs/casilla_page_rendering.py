@@ -16,13 +16,13 @@ from collections.abc import Mapping
 from functools import partial
 from typing import TYPE_CHECKING
 
-from ._locale_chrome import chrome_anchor, docs_chrome, docs_fragment, docs_line, toctree_title_chrome
-from .casilla_card_rendering import _box_number, _localised, _render_entry
-from .casilla_display import _section_anchor, _token_display, section_display
-from .casilla_legal_grounding import _legal_list, _LegalLink
-from .casilla_markup import _raw_html, _rst_escape, _rst_heading
+from .casilla_card_rendering import casilla_card_rendering_box_number, localised, render_entry
+from .casilla_display import section_anchor, section_display, token_display
+from .casilla_legal_grounding import LegalLink, legal_list
+from .casilla_markup import raw_html, rst_escape, rst_heading
 from .casilla_reference_models import CasillaPage, CasillaReferenceError, CompiledSchema, ModeloOverview
 from .compile_slots import escape
+from .locale_chrome import chrome_anchor, docs_chrome, docs_fragment, docs_line, toctree_title_chrome
 from .section_anchors import heading_anchor, section_anchor_directive
 from .terminology.casilla_anchor import casilla_page_anchor, casilla_page_relpath
 from .terminology.search_record import CasillaSearchRecord
@@ -65,7 +65,7 @@ def _chip_title(record: CasillaSearchRecord, language: OutputLanguage) -> str:
     A casilla with no label in that language is named by its registry id, which
     is what the chip already links to, so the chip never loses its hover title.
     """
-    label, _help = _localised(record, language)
+    label, _help = localised(record, language)
     return escape(" ".join((label or str(record.casilla_id)).split()), quote=True)
 
 
@@ -96,7 +96,7 @@ def _casilla_index(
     for section, section_records in grouped.items():
         lines.append('<div class="casilla-index__group">')
         lines.append(
-            f'<a class="casilla-index__section" href="#{escape(_section_anchor(section), quote=True)}">'
+            f'<a class="casilla-index__section" href="#{escape(section_anchor(section), quote=True)}">'
             f"{escape(section_display(section, language))}</a>",
         )
         numbered: list[str] = []
@@ -109,7 +109,7 @@ def _casilla_index(
             # line of ordinary markup, so each language's title is escaped and
             # folded where it is read rather than after the fact.
             title = docs_fragment(partial(_chip_title, record), language)
-            box = _box_number(record, facts)
+            box = casilla_card_rendering_box_number(record, facts)
             chip = f'<a href="#{escape(anchor, quote=True)}" title="{title}">{escape(box)}</a>'
             # A casilla with no printed number falls back to its id, which is
             # five times the width of a number and would tear the grid apart.
@@ -146,7 +146,7 @@ def _page_header(
     overview: ModeloOverview | None,
     records: tuple[CasillaSearchRecord, ...],
     sections: list[tuple[tuple[str, ...], int]],
-    links: dict[str, _LegalLink],
+    links: dict[str, LegalLink],
     language: OutputLanguage,
 ) -> tuple[str, int]:
     """Render what this modelo IS, then the jump list over its sections."""
@@ -164,7 +164,7 @@ def _page_header(
         counted[record.input_kind.value] = counted.get(record.input_kind.value, 0) + 1
     facts: list[str] = []
     if overview is not None:
-        facts.append(_token_display(overview.tax_domain))
+        facts.append(token_display(overview.tax_domain))
         facts.append(docs_chrome(f"docs.casilla.cadence.{overview.cadence}", language))
     facts.append(
         docs_chrome("docs.casilla.chrome.casilla_count", language, casillas=len(records), sections=len(sections))
@@ -178,19 +178,19 @@ def _page_header(
     lines.append("</ul>")
 
     if overview is not None and overview.legal_refs:
-        legal_lines, resolved = _legal_list(
+        legal_lines, resolved = legal_list(
             overview.legal_refs, links, docs_chrome("docs.casilla.chrome.established_by", language)
         )
         lines.extend(legal_lines)
     lines.append("</div>")
 
-    return _raw_html(lines), resolved
+    return raw_html(lines), resolved
 
 
-def _render_modelo_page(
+def render_modelo_page(
     modelo: str,
     records: tuple[CasillaSearchRecord, ...],
-    links: dict[str, _LegalLink],
+    links: dict[str, LegalLink],
     language: OutputLanguage,
     schema: CompiledSchema,
 ) -> tuple[CasillaPage, int]:
@@ -214,7 +214,7 @@ def _render_modelo_page(
         if overview is None
         else chrome_anchor("docs.casilla.chrome.page_heading", modelo=modelo, title=overview.source_title)
     )
-    title = anchor + _rst_heading(_rst_escape(heading), "=")
+    title = anchor + rst_heading(rst_escape(heading), "=")
 
     grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]] = OrderedDict()
     for record in records:
@@ -226,18 +226,22 @@ def _render_modelo_page(
     # sitting after 155. Section order itself is the registry's, which is the
     # official structure.
     def _order(record: CasillaSearchRecord) -> tuple[int, int, str]:
-        return _box_sort_key(_box_number(record, schema.casillas.get((modelo, str(record.casilla_id)))))
+        return _box_sort_key(
+            casilla_card_rendering_box_number(record, schema.casillas.get((modelo, str(record.casilla_id))))
+        )
 
     for items in grouped.values():
         items.sort(key=_order)
     section_counts = _validated_section_counts(grouped, modelo)
 
     numbers_by_id = {
-        str(record.casilla_id): _box_number(record, schema.casillas.get((modelo, str(record.casilla_id))))
+        str(record.casilla_id): casilla_card_rendering_box_number(
+            record, schema.casillas.get((modelo, str(record.casilla_id)))
+        )
         for record in records
     }
     page_header, legal_links = _page_header(modelo, overview, records, section_counts, links, language)
-    blocks: list[str] = [header + title, page_header, _raw_html(_casilla_index(grouped, schema, modelo, language))]
+    blocks: list[str] = [header + title, page_header, raw_html(_casilla_index(grouped, schema, modelo, language))]
     anchors: list[str] = []
     seen: set[str] = set()
     rendered_legal_refs: dict[str, tuple[str, ...]] = {}
@@ -249,11 +253,11 @@ def _render_modelo_page(
             # The locale inventory uses this invisible comment to recognize
             # the exact registry path behind the displayed heading.
             blocks.append(_casilla_section_identifier_comment(section))
-        blocks.append(_rst_heading(_rst_escape(section_title), "-"))
-        blocks.append(_raw_html([f'<span class="casilla-section-anchor" id="{_section_anchor(section)}"></span>']))
+        blocks.append(rst_heading(rst_escape(section_title), "-"))
+        blocks.append(raw_html([f'<span class="casilla-section-anchor" id="{section_anchor(section)}"></span>']))
         for record in section_records:
             facts = schema.casillas.get((modelo, str(record.casilla_id)))
-            entry, anchor, refs, resolved = _render_entry(record, links, language, facts, numbers_by_id)
+            entry, anchor, refs, resolved = render_entry(record, links, language, facts, numbers_by_id)
             if anchor in seen:
                 raise CasillaReferenceError(
                     f"modelo {modelo}: duplicate casilla anchor {anchor!r} "
@@ -281,13 +285,13 @@ def _casilla_section_identifier_comment(section: tuple[str, ...]) -> str:
     return f".. cadrumo-casilla-section-identifier: {json.dumps(section, ensure_ascii=True)}\n"
 
 
-def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, language: OutputLanguage) -> str:
+def render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, language: OutputLanguage) -> str:
     """Render the casilla reference toctree index over the per-modelo pages."""
     header = "..\n   Generated by dev/docs/casilla_reference.py. Do not edit by hand; regenerate.\n\n"
-    title = chrome_anchor("docs.casilla.chrome.index_title") + _rst_heading(
-        _rst_escape(docs_chrome("docs.casilla.chrome.index_title", language)), "="
+    title = chrome_anchor("docs.casilla.chrome.index_title") + rst_heading(
+        rst_escape(docs_chrome("docs.casilla.chrome.index_title", language)), "="
     )
-    intro = _rst_escape(docs_chrome("docs.casilla.chrome.index_intro", language)) + "\n\n"
+    intro = rst_escape(docs_chrome("docs.casilla.chrome.index_intro", language)) + "\n\n"
     lines = [".. toctree::", "   :maxdepth: 1", ""]
     for page in pages:
         overview = schema.modelos.get(page.modelo)
@@ -301,7 +305,7 @@ def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, langua
                 "docs.casilla.chrome.page_heading", language, modelo=page.modelo, title=overview.title
             )
         )
-        lines.append(f"   {_rst_escape(label)} <{page.modelo}>")
+        lines.append(f"   {rst_escape(label)} <{page.modelo}>")
     return header + title + "\n" + intro + "\n".join(lines) + "\n"
 
 
@@ -314,7 +318,7 @@ def _validated_section_counts(
     # and ``a-b`` both give ``section-a-b``), which would ship a page whose jump
     # target is ambiguous. Refuse it the same way a casilla anchor collision is
     # refused, never silently emitting the duplicate id.
-    section_anchors = [_section_anchor(section) for section, _count in section_counts]
+    section_anchors = [section_anchor(section) for section, _count in section_counts]
     if len(set(section_anchors)) != len(section_anchors):
         duplicates = sorted({anchor for anchor in section_anchors if section_anchors.count(anchor) > 1})
         raise CasillaReferenceError(

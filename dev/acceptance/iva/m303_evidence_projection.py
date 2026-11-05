@@ -6,25 +6,25 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, cast
 
-from .m303_evidence_contracts import _ORACLE_RESULTADO, IvaInstalledM303Error, ReopenReadback, TuiOutcome
+from .m303_evidence_contracts import ORACLE_RESULTADO, IvaInstalledM303Error, ReopenReadback, TuiOutcome
 
 if TYPE_CHECKING:
     pass
 
 
-def _mapping(value: object, *, label: str) -> Mapping[str, object]:
+def mapping(value: object, *, label: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise IvaInstalledM303Error(f"{label} returned no object")
     return cast(Mapping[str, object], value)
 
 
-def _text(value: object, *, label: str) -> str:
+def text(value: object, *, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise IvaInstalledM303Error(f"{label} returned no text")
     return value
 
 
-def _year_end_observed_at(year: int) -> str:
+def year_end_observed_at(year: int) -> str:
     """The attestation observation instant: noon UTC on the last day of the filing year."""
     return f"{year}-12-31T12:00:00+00:00"
 
@@ -32,7 +32,7 @@ def _year_end_observed_at(year: int) -> str:
 def resultado_matches_oracle(raw: object) -> bool:
     """Compare one public ``iva.resultado`` rendering with the independent 21.00 - 10.50 oracle."""
     try:
-        return Decimal(str(raw)).quantize(Decimal("0.01")) == _ORACLE_RESULTADO
+        return Decimal(str(raw)).quantize(Decimal("0.01")) == ORACLE_RESULTADO
     except (InvalidOperation, ValueError):
         return False
 

@@ -690,7 +690,7 @@ _CLI_REFERENCE_ROOT: Final[str] = "docs/cli"
 #: per command family, so the smallest honest tree is several pages; a one- or
 #: two-page tree drops hits for exactly the same reason an absent one does, and
 #: must be refused for the same reason.
-_MIN_CLI_REFERENCE_PAGES: Final[int] = 3
+MIN_CLI_REFERENCE_PAGES: Final[int] = 3
 
 
 class UnbuiltGeneratedInputError(RuntimeError):
@@ -702,7 +702,7 @@ class UnbuiltGeneratedInputError(RuntimeError):
     """
 
 
-def _require_built_cli_reference(repo_root: Path) -> None:
+def require_built_cli_reference(repo_root: Path) -> None:
     """Refuse when the generated CLI-reference tree is absent or too short.
 
     Args:
@@ -726,10 +726,10 @@ def _require_built_cli_reference(repo_root: Path) -> None:
             f"reported as an ordinary unresolvable hit instead: {remedy}",
         )
     pages = tuple(root.rglob("*.rst"))
-    if len(pages) < _MIN_CLI_REFERENCE_PAGES:
+    if len(pages) < MIN_CLI_REFERENCE_PAGES:
         raise UnbuiltGeneratedInputError(
             f"the generated CLI reference tree {_CLI_REFERENCE_ROOT!r} under {repo_root} holds "
-            f"{len(pages)} page(s), fewer than the {_MIN_CLI_REFERENCE_PAGES} a real generator "
+            f"{len(pages)} page(s), fewer than the {MIN_CLI_REFERENCE_PAGES} a real generator "
             f"run emits, so it cannot ground the CLI hits being resolved: {remedy}",
         )
 
@@ -769,7 +769,7 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
         # page alike and returning ``None`` launders a missing build product into a
         # per-hit NO_TARGET_ENTITY drop indistinguishable from a page that really
         # carries no command or option locator.
-        _require_built_cli_reference(_REPO_ROOT)
+        require_built_cli_reference(_REPO_ROOT)
         return None
 
     locators = _cli_command_locators(lines)

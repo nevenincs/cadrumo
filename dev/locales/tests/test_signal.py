@@ -17,8 +17,8 @@ from ..signal_source_inventory import collect_source_inventory
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text, human_translation_text
 from ..signal_translation_matrix import translation_matrix
-from ._signal_support import (
-    _list,
+from .signal_support import (
+    signal_list,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -403,7 +403,7 @@ def test_source_inventory_reports_dot_key_uniqueness_and_semantic_duplicate_find
     conflicts = [finding for finding in findings if finding["kind"] == "conflicting_duplicate_translation_key"]
     assert len(conflicts) == inventory["conflicting_duplicate_declarations"] == 1
     assert conflicts[0]["key"] == "cli.save"
-    declarations = [_mapping(declaration) for declaration in _list(conflicts[0]["declarations"])]
+    declarations = [_mapping(declaration) for declaration in signal_list(conflicts[0]["declarations"])]
     assert [declaration["placeholders"] for declaration in declarations] == [[], ["name"], []]
 
 
@@ -444,7 +444,7 @@ def test_dynamic_key_families_use_registered_concrete_values() -> None:
 
 
 def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal as signal_module
     from .. import signal_discovery as discovery_module
 
     source = tmp_path / "source"

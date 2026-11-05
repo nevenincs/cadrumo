@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from .._key import INGEST_CORPUS_ROOT_ENV, CorpusKeyError, CorpusRootError, corpus_root, load_corpus_key
+from ..key import INGEST_CORPUS_ROOT_ENV, CorpusKeyError, CorpusRootError, corpus_root, load_corpus_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

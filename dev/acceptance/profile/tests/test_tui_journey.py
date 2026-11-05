@@ -13,7 +13,7 @@ from ..tui_journey import (
     ProfileInstalledAcceptanceError,
     ProfileInstalledAcceptanceEvidence,
     ProfileInstalledAcceptanceFailure,
-    _parse_tui_child_evidence,
+    parse_tui_child_evidence,
     write_profile_installed_receipt,
 )
 
@@ -53,7 +53,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
         encoding="utf-8",
     )
 
-    evidence = _parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="assert-clear")
+    evidence = parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="assert-clear")
 
     assert evidence.row_key == "4"
     assert evidence.clear_visible_absent is True
@@ -82,7 +82,7 @@ def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    evidence = _parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="no-op")
+    evidence = parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="no-op")
 
     assert evidence.operation == "no-op"
     assert evidence.no_op_observed is True
@@ -122,7 +122,7 @@ def test_tui_child_failure_is_not_promoted_to_acceptance(tmp_path: Path) -> None
     receipt.write_text('{"status":"failed","failure_code":"safe"}', encoding="utf-8")
 
     with pytest.raises(ProfileInstalledAcceptanceError) as raised:
-        _parse_tui_child_evidence(outer=_outer(status="failed", returncode=2), receipt_path=receipt, operation="remove")
+        parse_tui_child_evidence(outer=_outer(status="failed", returncode=2), receipt_path=receipt, operation="remove")
 
     assert raised.value.diagnostic_code == "TUI_CHILD_NOT_PROVEN"
 

@@ -124,7 +124,7 @@ def test_publish_lock_blocks_overlap_and_releases_after_error(monkeypatch: pytes
         del state[path]
         return 204, b""
 
-    monkeypatch.setattr(r2_objects, "_request", request)
+    monkeypatch.setattr(r2_objects, "request", request)
     bucket = R2Bucket("account", "private", "key", "secret")
     with pytest.raises(RuntimeError, match="failed verification"), deployment_lock(bucket):
         assert json.loads(next(iter(state.values())))["owner"]
@@ -152,28 +152,28 @@ def test_failed_public_verification_restores_previous_deployment(
     calls: list[str] = []
     previous = {"release": "old-20260926T000000Z"}
     monkeypatch.setattr(publisher, "deploy_assets", lambda *args, script: calls.append(script) or "new-version")
-    monkeypatch.setattr(publisher, "_verify_candidate", lambda *_args: calls.append("candidate-verified"))
+    monkeypatch.setattr(publisher, "verify_candidate", lambda *_args: calls.append("candidate-verified"))
     monkeypatch.setattr(publisher, "cloudflare_call", lambda *_args: [])
     monkeypatch.setattr(publisher, "list_keys", lambda *_args: {"delivery/active.json"})
     monkeypatch.setattr(publisher, "read_object", lambda *_args: json.dumps(previous).encode())
     monkeypatch.setattr(publisher, "active_version", lambda *_args: "old-version")
     monkeypatch.setattr(publisher, "ensure_routes", lambda *_args: calls.append("routes-switched"))
-    monkeypatch.setattr(publisher, "_await_release_served", lambda release: calls.append("await:" + release))
-    monkeypatch.setattr(publisher, "_await_static_delivery", lambda release: calls.append("static:" + release))
+    monkeypatch.setattr(publisher, "await_release_served", lambda release: calls.append("await:" + release))
+    monkeypatch.setattr(publisher, "await_static_delivery", lambda release: calls.append("static:" + release))
 
     def verify(release: str) -> None:
         if release == RELEASE:
             raise ValueError("public response failed")
         calls.append("previous-verified")
 
-    monkeypatch.setattr(publisher, "_verify_public_delivery", verify)
+    monkeypatch.setattr(publisher, "verify_public_delivery", verify)
     monkeypatch.setattr(publisher, "restore_version", lambda _account, version: calls.append("restore:" + version))
-    monkeypatch.setattr(publisher, "_restore_routes", lambda *_args: calls.append("routes-restored"))
+    monkeypatch.setattr(publisher, "restore_routes", lambda *_args: calls.append("routes-restored"))
     credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="public response failed"):
-        publisher._activate_static_release(credentials, document, tmp_path, "zone")
+        publisher.activate_static_release(credentials, document, tmp_path, "zone")
     assert calls.index("candidate-verified") < calls.index("routes-switched")
     assert calls[-4:] == ["restore:old-version", "routes-restored", "await:old-20260926T000000Z", "previous-verified"]
 
@@ -188,12 +188,12 @@ def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatc
     def refuse(*_args: Any) -> None:
         raise ValueError("candidate failed")
 
-    monkeypatch.setattr(publisher, "_verify_candidate", refuse)
+    monkeypatch.setattr(publisher, "verify_candidate", refuse)
     credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="candidate failed"):
-        publisher._activate_static_release(credentials, fixture_release(tmp_path), tmp_path, "zone")
+        publisher.activate_static_release(credentials, fixture_release(tmp_path), tmp_path, "zone")
     assert calls == ["cadrumo-docs-candidate"]
 
 
@@ -207,8 +207,8 @@ def test_cutover_waits_for_static_even_when_release_identity_is_unchanged(monkey
             (200, {RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
         ]
     )
-    monkeypatch.setattr(publisher, "_endpoint_response", lambda _url: next(responses))
-    monkeypatch.setattr(publisher, "_RELEASE_POLL_SECONDS", 0)
-    publisher._await_static_delivery(RELEASE)
+    monkeypatch.setattr(publisher, "endpoint_response", lambda _url: next(responses))
+    monkeypatch.setattr(publisher, "RELEASE_POLL_SECONDS", 0)
+    publisher.await_static_delivery(RELEASE)
     with pytest.raises(StopIteration):
         next(responses)

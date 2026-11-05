@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 
-from .signal_values import _HOTSPOT_LIMIT, _top
+from .signal_values import HOTSPOT_LIMIT, top
 
 
-def _lane_envelope(name: str, data: dict[str, object] | None) -> dict[str, object]:
+def lane_envelope(name: str, data: dict[str, object] | None) -> dict[str, object]:
     """Project a missing, blocked or completed lane without conflating their outcomes."""
     if data is None:
         return {"name": name, "result": "not_run"}
@@ -49,11 +49,11 @@ def _lane_envelope(name: str, data: dict[str, object] | None) -> dict[str, objec
         "role": data["role"],
         "summary": dict(sorted(evidence.counts.items())),
         "failed_test_identities": len(evidence.failed_nodes),
-        "top_affected_files": _top(evidence.files),
+        "top_affected_files": top(evidence.files),
         "root_causes": [
             {"count": count, "exception": cause[0], "message": cause[1], "phase": phase}
             for cause, count in sorted(evidence.root_causes.items(), key=lambda item: (-item[1], item[0]))[
-                :_HOTSPOT_LIMIT
+                :HOTSPOT_LIMIT
             ]
         ],
     }
@@ -107,12 +107,12 @@ def _lane_collection_failure(internal_error: bool, summaryless_failure: bool, ki
     )
 
 
-def _summaryless_collection_failure(data: dict[str, object]) -> bool:
+def summaryless_collection_failure(data: dict[str, object]) -> bool:
     """Recognize the original summaryless collection failed predicate."""
     return data["status"] not in (None, 0) and (not data["counts"]) and (data["kind"] == "collection")
 
 
-def _summaryless_tool_failure(data: dict[str, object]) -> bool:
+def summaryless_tool_failure(data: dict[str, object]) -> bool:
     """Recognize the original summaryless tool failed predicate."""
     return (
         data["status"] not in (None, 0)
@@ -122,7 +122,7 @@ def _summaryless_tool_failure(data: dict[str, object]) -> bool:
     )
 
 
-def _summaryless_load_failure(data: dict[str, object]) -> bool:
+def summaryless_load_failure(data: dict[str, object]) -> bool:
     """Recognize the original summaryless load failed predicate."""
     return (
         data["status"] not in (None, 0)
@@ -132,7 +132,7 @@ def _summaryless_load_failure(data: dict[str, object]) -> bool:
     )
 
 
-def _lane_tool_failed(data: dict[str, object]) -> bool:
+def lane_tool_failed(data: dict[str, object]) -> bool:
     """Count an internal failure even when the lane produced terminal counts."""
     return bool(data["internal_error"]) or (
         data["status"] not in (None, 0)
@@ -142,7 +142,7 @@ def _lane_tool_failed(data: dict[str, object]) -> bool:
     )
 
 
-def _only_collection_errors(errors: int, passed: int, failures: int) -> bool:
+def only_collection_errors(errors: int, passed: int, failures: int) -> bool:
     return bool(errors and not (passed or failures))
 
 

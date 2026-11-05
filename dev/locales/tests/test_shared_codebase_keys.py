@@ -12,8 +12,8 @@ import pytest
 from dev.quality import shared_scan
 
 from .. import manager as manager_module
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, SRC_DIR
-from ..manager import LocaleManager, _codebase_key_inputs
+from ..manager import LocaleManager, codebase_key_inputs
+from ..paths import LOCALE_SOURCE_EXTRA_DIRS, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,7 +40,7 @@ def test_a_shared_key_scan_follows_an_edit_to_a_scanned_source(tmp_path: Path, m
 
     monkeypatch.setattr(manager_module, "REPO_ROOT", repository)
     monkeypatch.setattr(LocaleManager, "_scan_codebase_keys", scan)
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(repository / "run-cache"))
 
     first = LocaleManager(package, repository / "locales").get_codebase_keys()
@@ -55,7 +55,7 @@ def test_a_shared_key_scan_follows_an_edit_to_a_scanned_source(tmp_path: Path, m
 
 def test_the_shared_key_scan_is_keyed_on_every_kind_of_input_it_reads() -> None:
     """The key covers source, packaged TOML data, the extra roots and the scanner's own code."""
-    inputs = set(_codebase_key_inputs((SRC_DIR, *LOCALE_SOURCE_EXTRA_DIRS)))
+    inputs = set(codebase_key_inputs((SRC_DIR, *LOCALE_SOURCE_EXTRA_DIRS)))
     repository = manager_module.REPO_ROOT
 
     assert SRC_DIR / "core" / "hashing.py" in inputs
@@ -103,14 +103,14 @@ def test_an_import_before_a_scanner_edit_cannot_poison_the_current_implementatio
         return frozenset(str(key) for key in keys), ()
 
     monkeypatch.setattr(manager_module, "REPO_ROOT", repository)
-    monkeypatch.setattr(manager_module, "_codebase_key_scanner_modules", lambda: tuple(imported))
+    monkeypatch.setattr(manager_module, "codebase_key_scanner_modules", lambda: tuple(imported))
     monkeypatch.setattr(LocaleManager, "_scan_codebase_keys", scan)
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(repository / "run-cache"))
 
     assert LocaleManager(package, repository / "locales").get_codebase_keys() == {"planted.old"}
     imported[0] = current
-    monkeypatch.setattr(shared_scan, "_memo", {})
+    monkeypatch.setattr(shared_scan, "memo", {})
 
     assert LocaleManager(package, repository / "locales").get_codebase_keys() == {"planted.current"}
     assert len(calls) == 2, "different loaded implementations must not share a source-only cache entry"

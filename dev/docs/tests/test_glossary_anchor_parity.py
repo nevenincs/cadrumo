@@ -39,7 +39,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev.paths import REPO_ROOT
 
 from ..glossary_reference import render_glossary
-from ..pagefind_inject import _SUMMARY_MAX_CHARS, _summary_for
+from ..pagefind_inject import SUMMARY_MAX_CHARS, summary_for
 from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.glossary_anchor import glossary_term_anchor
 from ..terminology.search_record import SearchRecordKind
@@ -308,10 +308,10 @@ def test_card_summary_is_clean_single_language() -> None:
     for card in approved:
         record = to_search_record(card)
         for language in OutputLanguage:
-            summary = _summary_for(record, language)
+            summary = summary_for(record, language)
             assert summary, f"empty {language.value} summary for {record.id}"
             assert "\n" not in summary, f"multi-line {language.value} summary for {record.id}"
-            assert len(summary) <= _SUMMARY_MAX_CHARS, f"{language.value} summary over cap for {record.id}"
+            assert len(summary) <= SUMMARY_MAX_CHARS, f"{language.value} summary over cap for {record.id}"
             # The summary is one language's description verbatim (or its
             # truncation), never the title+aliases+all-descriptions blob.
             is_whole = summary in record.descriptions.values()

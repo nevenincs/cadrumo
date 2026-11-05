@@ -16,12 +16,12 @@ import pytest
 
 from ..checks import (
     COHERENCE_TIER_PREFIX,
-    _timeout_progress_diagnostic,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     discover_sequences,
     refresh_sequences,
+    timeout_progress_diagnostic,
 )
 from ..cli import main
 
@@ -587,6 +587,6 @@ def test_timeout_diagnostic_rejects_malformed_child_receipts(
     journal = tmp_path / "last-frame.json"
     journal.write_text(json.dumps(invalid_record), encoding="utf-8")
 
-    diagnostic = _timeout_progress_diagnostic(journal, timeout=1.0)
+    diagnostic = timeout_progress_diagnostic(journal, timeout=1.0)
 
     assert "before the child recorded an executing frame" in diagnostic

@@ -47,11 +47,11 @@ from dev.paths import REPO_ROOT
 
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
-from ..pagefind_inject import _inject_records, _Materialised
+from ..pagefind_inject import Materialised, inject_records
 from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.unified_record import to_search_record
-from ._http_serve_support import serve_directory
+from .http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -159,7 +159,7 @@ def _build_subset_site(out: Path) -> None:
     app.build()
 
 
-def _prorrata_records() -> _Materialised:
+def _prorrata_records() -> Materialised:
     """Concept cards plus the M303 prorrata casillas - the smoke surfaces.
 
     The casillas come from the per-modelo projection, not the whole-registry one:
@@ -173,7 +173,7 @@ def _prorrata_records() -> _Materialised:
     for casilla in project_modelo_casillas(Modelo("303")):
         if any("prorrata" in (text or "").lower() for text in casilla.descriptions.values()):
             records.append(to_search_record(casilla))
-    return _Materialised(records=records)
+    return Materialised(records=records)
 
 
 def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
@@ -191,7 +191,7 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
     materialised = _prorrata_records()
 
     async def inject(index: object) -> None:
-        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+        await inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(build, inject=inject)
 

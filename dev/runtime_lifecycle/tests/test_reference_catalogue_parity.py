@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.work_create_policy import ceded_autonomic_modelo_locale_key
 from cadrumo.core.i18n.render import tr
@@ -24,7 +24,7 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -54,7 +54,7 @@ class Finding:
     context: str
 
 
-def _canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
+def canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
     payload = parse_toml((repo / AUTHORITY).read_text(encoding="utf-8"))
     catalogue = SupportedFilingYearsCatalogue.model_validate(payload.get("supported_filing_years"))
     return catalogue.floor, catalogue.horizon, catalogue.hard_ceiling
@@ -150,7 +150,7 @@ def _toml_findings(path: Path, repo: Path, canonical: set[int]) -> list[Finding]
 
 def sweep(repo: Path, roots: tuple[Path, ...]) -> list[Finding]:
     """Return candidate policy restatements beneath the requested roots."""
-    floor, horizon, _ = _canonical_bounds(repo)
+    floor, horizon, _ = canonical_bounds(repo)
     canonical = set(range(floor, horizon + 1))
     findings: list[Finding] = []
     for root in roots:
@@ -174,7 +174,7 @@ def main() -> int:
     parser.add_argument("roots", nargs="*", type=Path, default=DEFAULT_ROOTS)
     args = parser.parse_args()
     repo = args.repo.resolve()
-    floor, horizon, hard_ceiling = _canonical_bounds(repo)
+    floor, horizon, hard_ceiling = canonical_bounds(repo)
     findings = sweep(repo, tuple(args.roots))
     print(f"authority={AUTHORITY} floor={floor} horizon={horizon} hard_ceiling={hard_ceiling}")
     print(f"candidates={len(findings)}")

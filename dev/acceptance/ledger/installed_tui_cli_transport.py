@@ -11,7 +11,7 @@ from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 from .installed_tui_contracts import LedgerInstalledTuiError
 
 
-def _result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
+def installed_tui_cli_transport_result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
     """Return one public CLI result object or name the failed observation stage."""
     result = document.get("result")
     if not isinstance(result, dict):
@@ -19,7 +19,7 @@ def _result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
     return result
 
 
-def _cli_command(
+def cli_command(
     cli: InstalledCli,
     arguments: Sequence[str],
     *,
@@ -46,7 +46,7 @@ def _cli_command(
         raise LedgerInstalledTuiError(f"{stage}: installed CLI {command} failed ({outcome})") from error
 
 
-def _create_profile(cli: InstalledCli, *, year: int, stage: str) -> None:
+def create_profile(cli: InstalledCli, *, year: int, stage: str) -> None:
     """Create the shared synthetic profile while preserving a safe failure stage."""
     command_count = len(cli.commands)
     try:
@@ -60,7 +60,7 @@ def _create_profile(cli: InstalledCli, *, year: int, stage: str) -> None:
         raise LedgerInstalledTuiError(f"{stage}: installed CLI {command} failed ({outcome})") from error
 
 
-def _decimal(value: object, *, stage: str) -> Decimal:
+def decimal(value: object, *, stage: str) -> Decimal:
     """Parse an observed public monetary value without accepting malformed data."""
     try:
         amount = Decimal(str(value))
@@ -71,7 +71,7 @@ def _decimal(value: object, *, stage: str) -> Decimal:
     return amount
 
 
-def _text(value: object, *, stage: str) -> str:
+def text(value: object, *, stage: str) -> str:
     """Require one non-empty public transport string."""
     if not isinstance(value, str) or not value:
         raise LedgerInstalledTuiError(f"{stage} omitted a required public identifier")

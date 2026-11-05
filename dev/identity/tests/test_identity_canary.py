@@ -46,9 +46,9 @@ import pytest
 
 from dev.paths import REPO_ROOT
 from dev.sanitizer.residual_identity import ResidualKind
-from dev.source_tree import repository_files as _enumerated_repository_files
+from dev.source_tree import repository_files as source_tree_enumerated_repository_files
 
-from .._tree_scan import (
+from ..tree_scan import (
     BLOCKING_KINDS,
     BLOCKING_TRACKING,
     DATA_SUFFIXES,
@@ -61,10 +61,10 @@ from .._tree_scan import (
     FileTracking,
     TreeFinding,
     TreeScan,
-    _raw_relative_paths,
     advisory_findings,
     exclusion_reason,
     matching_fragments,
+    raw_relative_paths,
     repository_files,
     scan_tree,
     unenumerated_reason,
@@ -279,7 +279,7 @@ def test_the_specimen_confirms_the_enumerator_really_excludes_the_planted_direct
     ignored_directory.mkdir()
     (ignored_directory / ".env").write_text(f"CADRUMO_CLAVE_MOVIL_DNI_NIE={_PLANTED_NIF}\n", encoding="utf-8")
 
-    visible = _enumerated_repository_files(specimen_repository)
+    visible = source_tree_enumerated_repository_files(specimen_repository)
     candidates = repository_files(specimen_repository, suffixes=DATA_SUFFIXES)
     ignored = {candidate.relative for candidate in candidates if candidate.tracking is FileTracking.IGNORED}
 
@@ -594,8 +594,8 @@ def test_an_authored_ignored_file_is_still_enumerated() -> None:
     every other assertion here while restoring exactly the blindness the ignored
     sweep was added to remove.
     """
-    raw = _raw_relative_paths(_REPO_ROOT)
-    visible = set(_enumerated_repository_files(_REPO_ROOT))
+    raw = raw_relative_paths(_REPO_ROOT)
+    visible = set(source_tree_enumerated_repository_files(_REPO_ROOT))
     ignored = {path for path in raw if path not in visible and unenumerated_reason(path) is None}
 
     assert ignored, (

@@ -422,7 +422,7 @@ def test_an_element_only_some_languages_carry_owns_its_own_line_break(slots: Com
     """
     from cadrumo.core.external_constants import OutputLanguage
 
-    from .._locale_chrome import docs_line
+    from ..locale_chrome import docs_line
 
     break_ = "\n"
     titles = {OutputLanguage.EN: "<h3>Activity</h3>", OutputLanguage.ES: "<h3>Actividad</h3>"}

@@ -15,12 +15,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .. import _runner as runner_module
-from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
-from .._field_mapping import expand_document_slots, slots_unavailable_at
-from .._key import CorpusKey, CorpusKeyError, IngestCorpusDocument
-from .._reference_points import ReferencePoint
-from .._result import (
+from .. import runner as runner_module
+from ..caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
+from ..field_mapping import expand_document_slots, slots_unavailable_at
+from ..key import CorpusKey, CorpusKeyError, IngestCorpusDocument
+from ..reference_points import ReferencePoint
+from ..result import (
     EmittedOnly,
     EngineRoute,
     HarnessModelTier,
@@ -31,13 +31,13 @@ from .._result import (
     amounts_match,
     build_result_row,
 )
-from .._runner import (
+from ..runner import (
     HarnessReport,
     format_report,
     require_model_tier,
     verify_decimal_comparison_path,
 )
-from .._scoring import FieldOutcome, FieldScoring, FieldVerdict
+from ..scoring import FieldOutcome, FieldScoring, FieldVerdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

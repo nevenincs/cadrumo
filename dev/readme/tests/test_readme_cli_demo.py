@@ -16,14 +16,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
     """The renderer and preparer contain no retired product bootstrap or command."""
-    assert prepare_cli_demo._CLI_BOOTSTRAP == "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
-    assert render_cli_demo._CLI_BOOTSTRAP == prepare_cli_demo._CLI_BOOTSTRAP
+    assert prepare_cli_demo.CLI_BOOTSTRAP == "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
+    assert render_cli_demo.CLI_BOOTSTRAP == prepare_cli_demo.CLI_BOOTSTRAP
     assert render_cli_demo.DISPLAY_COMMAND.startswith("aeat app quickfile ")
-    assert "aeat " + " ".join(render_cli_demo._CLI_ARGUMENTS) == render_cli_demo.DISPLAY_COMMAND, (
+    assert "aeat " + " ".join(render_cli_demo.CLI_ARGUMENTS) == render_cli_demo.DISPLAY_COMMAND, (
         "the README shows DISPLAY_COMMAND but the demo runs _CLI_ARGUMENTS; a prefix check "
         "cannot tell the two apart, so a reader would be given an invocation that was never "
         f"the one demonstrated: shown {render_cli_demo.DISPLAY_COMMAND!r}, ran "
-        f"{'aeat ' + ' '.join(render_cli_demo._CLI_ARGUMENTS)!r}"
+        f"{'aeat ' + ' '.join(render_cli_demo.CLI_ARGUMENTS)!r}"
     )
     assert prepare_cli_demo.DEMO_ROOT == REPO_ROOT / "var" / "readme-demo"
 
@@ -31,7 +31,7 @@ def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
 def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
     """The exact subprocess bootstrap used by the demo reaches the live Cadrumo CLI."""
     completed = run_command(
-        [sys.executable, "-c", prepare_cli_demo._CLI_BOOTSTRAP, "--help"],
+        [sys.executable, "-c", prepare_cli_demo.CLI_BOOTSTRAP, "--help"],
         cwd=REPO_ROOT,
         environment=prepare_cli_demo.demo_environment(),
         errors="replace",

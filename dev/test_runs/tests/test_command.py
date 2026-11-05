@@ -8,17 +8,17 @@ from pathlib import Path
 import pytest
 
 from ..command import run
-from ..locales_status_signal import _LocalesStatusSignalProcessor
+from ..locales_status_signal import LocalesStatusSignalProcessor
 from ..paths import SCRATCH_BASE_ENV
-from ..pytest_transcript_syntax import _normalize_root_cause
+from ..pytest_transcript_syntax import normalize_root_cause
 from ..reaper import assess_run_directories, reclaim_run_directories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_run_paths_do_not_split_root_cause_signatures() -> None:
-    first = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-29/run-1/file.txt")
-    second = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-30/run-2/file.txt")
+    first = normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-29/run-1/file.txt")
+    second = normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-30/run-2/file.txt")
     assert first == second == "Failure: /.tmp/logs/test-runs/<run>/file.txt"
 
 
@@ -310,10 +310,10 @@ def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    original_envelope = _LocalesStatusSignalProcessor.envelope
+    original_envelope = LocalesStatusSignalProcessor.envelope
 
     def envelope_while_running(
-        self: _LocalesStatusSignalProcessor,
+        self: LocalesStatusSignalProcessor,
         *,
         label: str,
         run_dir: Path,
@@ -338,7 +338,7 @@ def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
             finished=finished,
         )
 
-    monkeypatch.setattr(_LocalesStatusSignalProcessor, "envelope", envelope_while_running)
+    monkeypatch.setattr(LocalesStatusSignalProcessor, "envelope", envelope_while_running)
     payload = {
         "outcome": "backlog",
         "headline": "Translate 1 locale cell for 1 unique key: es 1.",

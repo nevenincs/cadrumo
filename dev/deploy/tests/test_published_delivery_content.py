@@ -32,7 +32,7 @@ from dev.docs.tests.built_site import built_documentation_site
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_delivery_probe import _assert_served_index_matches_build, _verify_published_search_index
+from ..docs_delivery_probe import assert_served_index_matches_build, verify_published_search_index
 from ..docs_site_languages import localized_languages
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -84,7 +84,7 @@ def test_a_record_free_published_index_is_refused(tmp_path: Path) -> None:
     published = _built_root(tmp_path, "published", with_records=False)
 
     with pytest.raises(SystemExit) as excinfo:
-        _assert_served_index_matches_build(
+        assert_served_index_matches_build(
             built=built / "pagefind" / "pagefind-entry.json",
             served=_entry_bytes(published),
             label="docs root",
@@ -99,7 +99,7 @@ def test_the_matching_published_index_passes(tmp_path: Path) -> None:
     """The other half: the index that was built and validated is accepted."""
     built = _built_root(tmp_path, "built", with_records=True)
 
-    _assert_served_index_matches_build(
+    assert_served_index_matches_build(
         built=built / "pagefind" / "pagefind-entry.json",
         served=_entry_bytes(built),
         label="docs root",
@@ -142,7 +142,7 @@ def test_the_one_index_is_read_at_the_apex_not_inside_a_language_root(tmp_path: 
         requested.append(url)
         return _entry_bytes(built)
 
-    _verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
+    verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
 
     assert requested == ["https://example.invalid/docs/pagefind/pagefind-entry.json"], requested
     for language in localized_languages():

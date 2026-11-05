@@ -76,7 +76,7 @@ _TRUSTED_MODULES: Final = frozenset(
 )
 _TRUSTED_PACKAGES: Final = frozenset({"cadrumo", "dev", "pydantic", "pydantic_core"})
 
-_memo: dict[tuple[str, str], object] = {}
+memo: dict[tuple[str, str], object] = {}
 
 
 class _UnpublishedResultError(Exception):
@@ -319,7 +319,7 @@ def shared_scan_result[T](
 def _shared(kind: str, key: str, produce: Callable[[], object], *, cache_root: Path | None) -> object:
     if cache_root is None:
         cache_root = storage_directory(RUN_ARTIFACT_ROOT_ENV, "run-artifacts", root=dev_cache_root())
-    remembered = _memo.get((kind, key))
+    remembered = memo.get((kind, key))
     if remembered is not None:
         return remembered
 
@@ -342,7 +342,7 @@ def _shared(kind: str, key: str, produce: Callable[[], object], *, cache_root: P
         return _shared(kind, key, produce, cache_root=cache_root)
     result = _ResultUnpickler(io.BytesIO(payload)).load()
     require_immutable(result)
-    _memo[(kind, key)] = result
+    memo[(kind, key)] = result
     return result
 
 

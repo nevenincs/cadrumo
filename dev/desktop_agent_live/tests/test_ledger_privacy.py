@@ -128,6 +128,6 @@ def test_the_privacy_run_is_told_what_to_scan_and_runs_without_debug_logging(
 
 def test_the_privacy_run_and_the_attachment_check_are_one_choice(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as refused:
-        lane._main(["--attach-only", "--ledger-privacy"])
+        lane.run_lane(["--attach-only", "--ledger-privacy"])
     assert refused.value.code == 2
     assert "not allowed with argument" in capsys.readouterr().err

@@ -133,7 +133,7 @@ def test_the_sanitiser_still_strips_what_the_probe_can_read() -> None:
     """
     import pikepdf
 
-    from .._dynamic import strip_attachments
+    from ..dynamic import strip_attachments
 
     source = _pdf_with_embedded_xml()
     assert iter_pdf_embedded_files(source), "precondition: the probe can see the attachment"

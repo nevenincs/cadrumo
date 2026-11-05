@@ -10,64 +10,62 @@ if TYPE_CHECKING:
     pass
 
 
-_SCHEMA_VERSION: Final = "iva-01-installed-m303-evidence-journey-v2"
+SCHEMA_VERSION: Final = "iva-01-installed-m303-evidence-journey-v2"
 
 
-_CHILD_MODULE: Final = "dev.acceptance.iva.installed_m303_evidence_journey"
+CHILD_MODULE: Final = "dev.acceptance.iva.installed_m303_evidence_journey"
 
 
-_PERIOD: Final = "4T"
+PERIOD: Final = "4T"
 
 
-_PRIOR_PERIOD: Final = "3T"
+PRIOR_PERIOD: Final = "3T"
 
 
-_WRONG_PERIOD: Final = "12"
+WRONG_PERIOD: Final = "12"
 
 
-_MONTH: Final = "12"
+MONTH: Final = "12"
 
 
-_PRIOR_MONTH: Final = "11"
+PRIOR_MONTH: Final = "11"
 
 
-_FIRST_QUARTER: Final = "1T"
+FIRST_QUARTER: Final = "1T"
 
 
-_COORDINATES: Final = tuple(
-    ("303", period) for period in (_PERIOD, _PRIOR_PERIOD, _MONTH, _PRIOR_MONTH, _FIRST_QUARTER)
-)
+COORDINATES: Final = tuple(("303", period) for period in (PERIOD, PRIOR_PERIOD, MONTH, PRIOR_MONTH, FIRST_QUARTER))
 
 
-_ORACLE_RESULTADO: Final = Decimal("21.00") - Decimal("10.50")
+ORACLE_RESULTADO: Final = Decimal("21.00") - Decimal("10.50")
 
 
-_RESULTADO_CASILLA: Final = "iva.resultado"
+RESULTADO_CASILLA: Final = "iva.resultado"
 
 
-_OUTSIDE_LAST_PERIOD: Final = "exonerado_390_attestation_outside_last_period"
+OUTSIDE_LAST_PERIOD: Final = "exonerado_390_attestation_outside_last_period"
 
 
 # Month and day of the sale and purchase inside each scenario's period.
-_LAST_PERIOD_DAYS: Final = ((12, 15), (12, 18))
+LAST_PERIOD_DAYS: Final = ((12, 15), (12, 18))
 
 
-_FIRST_QUARTER_DAYS: Final = ((2, 15), (2, 18))
+FIRST_QUARTER_DAYS: Final = ((2, 15), (2, 18))
 
 
-_MISMATCHED_ATTACHMENT_ID: Final = "a" * 64
+MISMATCHED_ATTACHMENT_ID: Final = "a" * 64
 
 
-_MISMATCHED_SHA256: Final = "b" * 64
+MISMATCHED_SHA256: Final = "b" * 64
 
 
-_DEVELOPMENT_MOCK_HEADER: Final = {"program": b"0000", "developer": b"00000000T"}
+DEVELOPMENT_MOCK_HEADER: Final = {"program": b"0000", "developer": b"00000000T"}
 
 
-_EVIDENCE_SUBMIT_ID: Final = "#m303-evidence-submit"
+EVIDENCE_SUBMIT_ID: Final = "#m303-evidence-submit"
 
 
-_ATTESTATION_REFUSAL_KEY: Final = "errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible"
+ATTESTATION_REFUSAL_KEY: Final = "errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible"
 
 
 type ChildMode = Literal["tui-led-calculate", "tui-continue-calculate", "tui-joint-only-calculate", "tui-reopen"]
