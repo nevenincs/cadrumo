@@ -116,6 +116,6 @@ def test_a_declarant_envelope_refuses_a_period_its_design_does_not_list(token: s
             modelo=Modelo("369"),
             period=Period.from_year_and_code(2026, token),
             product_software_identity=None,
-            declarant_tax_id="Y0000001S",
+            declarant_tax_id="Y0001006P",
             envelope=envelope,
         )

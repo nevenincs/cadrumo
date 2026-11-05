@@ -49,7 +49,7 @@ _SHA = "0" * 64
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NIF_CANARY = "99999999R"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
-_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NIF = "12345678Z"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
@@ -365,7 +365,7 @@ class TestReplacementShape:
             surface="content_stream",
             surface_index=(2, 17),
             real_sha256=_SHA,
-            synthetic="Y0000001S",
+            synthetic="Y0001006P",
             encoding="literal",
         )
         assert record.surface == "content_stream"

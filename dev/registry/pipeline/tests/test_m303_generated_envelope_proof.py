@@ -640,7 +640,7 @@ def test_m303_untouched_generated_layout_renders_official_6919_f022(
         + (b" " * 70)
         + b"C303"
         + (b" " * 4)
-        + b"Y0000001S"
+        + b"Y0001006P"
         + (b" " * 213)
         + b"</AUX>"
     )

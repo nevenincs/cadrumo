@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 #: A checksum-valid synthetic NIF, used only to prove the populated branch
 #: still pseudonymises. It never reaches storage or an AEAT surface.
-_SYNTHETIC_NIF = "00000024R"
+_SYNTHETIC_NIF = "00001005Q"
 
 
 def _lot(taxpayer_nif: str | None) -> IvaCompensationCarryForwardLot:

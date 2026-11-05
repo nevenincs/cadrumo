@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("p
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
-_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 _SENSITIVE_SOURCE_BASENAME = "12345678Z-sanitizer-source.pdf"
 
@@ -150,7 +150,7 @@ class TestSanitizePdfHappyPath:
 
         # Replacement rows reference the cleartext via SHA only.
         assert all(row.real_sha256 != "" for row in result_a.replacements_applied)
-        assert any(row.synthetic == "Y0000001S" for row in result_a.replacements_applied)
+        assert any(row.synthetic == "Y0001006P" for row in result_a.replacements_applied)
 
         # The output round-trips through pikepdf.
         re_opened = pikepdf.Pdf.open(io.BytesIO(result_a.output_bytes))

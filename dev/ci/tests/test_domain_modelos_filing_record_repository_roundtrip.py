@@ -163,7 +163,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
         work_unit_id=hex_blob("1"),
         calculation_revision_id=hex_blob("2"),
         filed_by="aeat.cli.modelo.file",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
     member_b_id = derive_filing_record_id(
         work_unit_id=hex_blob("3"),
@@ -182,7 +182,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 modelo=ModeloCode("322"),
                 filing_year=2026,
                 period=_P_2026_01,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 filed_at=filed_at,
                 filed_by="aeat.cli.modelo.file",
                 origin=FilingOrigin.LOCAL,
@@ -221,7 +221,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
         modelo="322",
         filing_year=2026,
         period=_P_2026_01,
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
     assert current_a is not None
     assert current_a.filing_record_id == member_a_id
@@ -362,13 +362,13 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
         work_unit_id=hex_blob("5"),
         calculation_revision_id=hex_blob("6"),
         filed_by="aeat.cli.modelo.file",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
     second_id = derive_filing_record_id(
         work_unit_id=hex_blob("7"),
         calculation_revision_id=hex_blob("8"),
         filed_by="aeat.cli.modelo.file",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
 
     with pytest.raises(ValidationError, match="more than one current filing record"):
@@ -382,7 +382,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
-                    member_nif="A00000000",
+                    member_nif="A00010009",
                     filed_at=filed_at,
                     filed_by="aeat.cli.modelo.file",
                     origin=FilingOrigin.LOCAL,
@@ -397,7 +397,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
-                    member_nif="A00000000",
+                    member_nif="A00010009",
                     filed_at=filed_at + timedelta(minutes=5),
                     filed_by="aeat.cli.modelo.file",
                     origin=FilingOrigin.LOCAL,
@@ -425,7 +425,7 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
         work_unit_id=hex_blob("1"),
         calculation_revision_id=hex_blob("2"),
         filed_by="aeat.cli.modelo.file",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
     amendment_id = derive_filing_record_id(
         work_unit_id=hex_blob("1"),
@@ -445,7 +445,7 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
                     modelo=ModeloCode("322"),
                     filing_year=2026,
                     period=_P_2026_01,
-                    member_nif="A00000000",
+                    member_nif="A00010009",
                     filed_at=filed_at,
                     filed_by="aeat.cli.modelo.file",
                     status=ModeloRecordStatus.SUPERSEDIDO,

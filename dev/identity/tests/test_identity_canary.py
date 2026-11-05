@@ -104,7 +104,7 @@ _PLANTED_SHAPE_ONLY = "00000000X"
 #: its tax identity as clean, and the prefixed spelling hides every shape behind
 #: two alphanumeric characters. Both are as unmistakably synthetic as the
 #: personal specimen above.
-_PLANTED_CIF = "B00000000"
+_PLANTED_CIF = "B00010082"
 _PLANTED_NIF_IVA = "ES00000000T"
 
 

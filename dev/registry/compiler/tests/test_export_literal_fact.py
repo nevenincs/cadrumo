@@ -94,7 +94,7 @@ def test_an_inline_literal_contradicting_its_fact_is_refused(tmp_path: Path) -> 
     """An authored value beside the reference must equal what the fact resolves to."""
     planted = _SHIPPED_BINDING + 'literal = "12345678Z"\n'
 
-    with pytest.raises(RegistryError, match="resolves to 'X0000000T'"):
+    with pytest.raises(RegistryError, match="resolves to 'X0001003Z'"):
         load_modelo_directory(_modelo_115(tmp_path, binding=planted))
 
 
