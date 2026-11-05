@@ -50,6 +50,7 @@ from cadrumo_client.transport.installed_client import open_installed_client
 from .. import sandbox as sequence_sandbox_module
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
+from ..persona_profile import SANDBOX_PERSONA_ID, pinned_persona, profile_option_arguments, sandbox_profile_facts
 from ..runner import (
     SequenceTranscript,
     execute_page_sequences,
@@ -63,26 +64,43 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _FAKE_SESSION_ENV_NAME = "AEAT_FAKE_SESSION_TOKEN"
 
-#: A profile edit declares the modality for this Modelo 130 2025 1T chain. The verify
-#: gate refuses (cross-period evidence is absent in a fresh sandbox), so the
-#: result frame declares the non-zero exit and asserts the refusal semantically.
-_CHAIN_BODY = "\n".join(
-    [
-        "@setup aeat --format json config profile edit docs-sequence-sandbox"
-        " --quiet --irpf-estimation-regime directa_normal",
-        '@expect result.status == "updated"',
-        "@expect exit_code == 0",
-        "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T",
-        "@capture work_unit_id result.work_unit_id",
-        "aeat --format json app modelo work calculate {work_unit_id}"
-        " --binding irpf.previous_year_economic_activity_net_income=13000"
-        " --binding modelo-130-resultados-negativos-anteriores=0",
-        "@capture calculation_revision_id result.calculation_revision_id",
-        "@result aeat --format json app modelo work verify {calculation_revision_id}",
-        "@expect result.granted_verificado_completo == false",
-        "@expect exit_code == 1",
-    ],
-)
+
+def _persona_tax_id() -> str:
+    """Return the tax ID the canonical sandbox persona states, read from its own catalogue facts."""
+    stated = [fact.value for fact in sandbox_profile_facts() if fact.path == "identity.tax_id"]
+    assert len(stated) == 1
+    assert isinstance(stated[0], str)
+    return stated[0]
+
+
+def _chain_body() -> str:
+    """Return the Modelo 130 chain for the year before the persona's activity began.
+
+    The sandbox profile is the canonical persona, whose activity began on the first
+    day of the horizon year. The chain files the previous year, so its profile edit
+    states an activity start two years back; the filing year and the prior-year
+    income binding then describe a taxpayer who was already active.
+    """
+    with pinned_persona(SANDBOX_PERSONA_ID) as (persona, envelope):
+        start = profile_option_arguments(persona, envelope, ("activity-start-date=horizon-2:01-01",))
+        filing_year = envelope.horizon - 1
+    return "\n".join(
+        [
+            "@setup aeat --format json config profile edit docs-sequence-sandbox"
+            f" --quiet --irpf-estimation-regime directa_normal {' '.join(start)}",
+            '@expect result.status == "updated"',
+            "@expect exit_code == 0",
+            f"aeat --format json app modelo work create --modelo 130 --year {filing_year} --period 1T",
+            "@capture work_unit_id result.work_unit_id",
+            "aeat --format json app modelo work calculate {work_unit_id}"
+            " --binding irpf.previous_year_economic_activity_net_income=13000"
+            " --binding modelo-130-resultados-negativos-anteriores=0",
+            "@capture calculation_revision_id result.calculation_revision_id",
+            "@result aeat --format json app modelo work verify {calculation_revision_id}",
+            "@expect result.granted_verificado_completo == false",
+            "@expect exit_code == 1",
+        ],
+    )
 
 
 def _envelope_result(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue]:
@@ -104,7 +122,7 @@ def _chain_sequence() -> ParsedSequence:
     return parse_sequence(
         sequence_id="runner-m130-chain",
         options={"verify": "Verify the calculation before exporting."},
-        body=_CHAIN_BODY,
+        body=_chain_body(),
     )
 
 
@@ -164,7 +182,7 @@ def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone
                 assert record.profile_id == SANDBOX_PROFILE_ID
                 assert record.setup_state is ProfileSetupState.COMPLETE
                 facts = {fact.path: fact.value for fact in record.facts}
-                assert facts["identity.tax_id"] == "12345678Z"
+                assert facts["identity.tax_id"] == _persona_tax_id()
                 assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
                 assert facts["iva.regime"] == "GENERAL"
                 records.append(record)
@@ -221,7 +239,7 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
                 for item in view.items(ProfileViewPageKind.FACTS)
                 if isinstance(item, ProfileViewFactItem)
             }
-            assert facts["identity.tax_id"] == "12345678Z"
+            assert facts["identity.tax_id"] == _persona_tax_id()
             assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
         finally:
             client.close()
@@ -242,8 +260,9 @@ def test_sequence_profile_view_uses_fresh_runtime_proof_and_exact_profile(tmp_pa
     assert isinstance(facts, list)
     # Public CLI output applies canonical personal-identifier redaction. Derive
     # the expected fact from the known fixture, never from captured output.
-    expected_fact = redact_structured_for_cli_output({"path": "identity.tax_id", "value": "12345678Z"})
-    assert expected_fact["value"] != "12345678Z"
+    tax_id = _persona_tax_id()
+    expected_fact = redact_structured_for_cli_output({"path": "identity.tax_id", "value": tax_id})
+    assert expected_fact["value"] != tax_id
     assert expected_fact in facts
 
 
@@ -271,7 +290,7 @@ def test_sandbox_template_tracks_current_scoped_password_and_rejects_previous_pa
                 record = ProfileRecordStore(session=session, root=sandbox.storage_root).load().record
                 assert record.profile_id == SANDBOX_PROFILE_ID
                 assert record.setup_state is ProfileSetupState.COMPLETE
-                assert UserProfileFact(path="identity.tax_id", value="12345678Z") in record.facts
+                assert UserProfileFact(path="identity.tax_id", value=_persona_tax_id()) in record.facts
                 records.append(record)
                 envelope_digests.append(material.envelope.self_digest)
             finally:
@@ -595,6 +614,8 @@ class TestHermeticChainExecution:
         kinds = [frame.kind for frame in chain_transcript.frames]
         assert kinds == [FrameKind.SETUP, FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
         assert chain_transcript.profile_id == SANDBOX_PROFILE_ID
+        with pinned_persona(SANDBOX_PERSONA_ID) as (_, envelope):
+            horizon = envelope.horizon
         assert chain_transcript.frames[0].argv == (
             "aeat",
             "--format",
@@ -606,6 +627,8 @@ class TestHermeticChainExecution:
             "--quiet",
             "--irpf-estimation-regime",
             "directa_normal",
+            "--activity-start-date",
+            f"{horizon - 2}-01-01",
         )
         assert chain_transcript.frames[0].exit_code == 0
         assert _envelope_result(chain_transcript.frames[0].envelope) == {
