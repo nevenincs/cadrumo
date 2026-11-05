@@ -92,8 +92,6 @@ FILED_RENTA_BINDING = "irpf.previous_year_economic_activity_net_income"
 CLEAN_130_ANSWERS: tuple[tuple[str, str], ...] = tuple(
     answer for answer in FILED_130_ANSWERS if answer[0] != FILED_RENTA_BINDING
 )
-#: The quarter's activity income booked for the calculated-only 130.
-INCOME_130 = Decimal("12000.00")
 #: The catalogue persona every Modelo 130, 303, 347 and 390 profile starts from, whose fiscal year the declarations
 #: are of and whose clock every envelope is read on.
 ACTIVITY_PERSONA = "autonomo-fontanero"
@@ -507,14 +505,24 @@ def render_contract() -> str:
 
 @contextmanager
 def _persona_profile(
-    tmp: Path, persona_id: str, stated: tuple[tuple[str, object], ...] = (), *, read_on: datetime | None = None
+    tmp: Path,
+    persona_id: str,
+    stated: tuple[tuple[str, object], ...] = (),
+    *,
+    read_on: datetime | None = None,
+    household_only: bool = False,
 ) -> Generator[Any]:
     """The catalogue persona ``persona_id`` replayed into its own profile, under every session adapter.
 
-    Its profile facts are replayed through the profile operations, and ``stated`` is then stated over them through
-    the profile fact writer, each path with its value or ``None`` to take the persona's answer back, the way the
-    profile manager states a field. Where ``read_on`` is given the persona is replayed and read on that day.
+    The persona is replayed in full: its profile facts, household, declared withholding, ledger rows, invoices
+    and evidence go through the production operations, so the activity and the withholding the envelopes show
+    are the persona's own. ``household_only`` replays only its profile and household, for a scenario whose point
+    is a register without the persona's income or withholding. ``stated`` is then stated over what was replayed
+    through the profile fact writer, each path with its value or ``None`` to take the persona's answer back, the
+    way the profile manager states a field. Where ``read_on`` is given the persona is replayed and read on that day.
     """
+    from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+    from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.user_profile.values import UserProfileFact
@@ -527,8 +535,16 @@ def _persona_profile(
 
     with (
         profile_adapter_composition(),
+        # The ledger import converts foreign amounts; the recorded reference rates keep that off the network.
+        bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
         bundled_indexed_authority().operation(),
-        materialised_persona(persona_id, tmp, ReplayScope.PROFILE, reuse=True, read_on=read_on) as persona,
+        materialised_persona(
+            persona_id,
+            tmp,
+            ReplayScope.HOUSEHOLD if household_only else ReplayScope.FULL,
+            reuse=True,
+            read_on=read_on,
+        ) as persona,
     ):
         world = persona.world
         if stated:
@@ -1074,17 +1090,6 @@ def _check_clean(work: Any) -> Any:
     return checked
 
 
-def _seed_income(work: Any) -> None:
-    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures.
-
-    The boxes it feeds are capped below filing grade: only a profile that is
-    calculated and never checked, exported or filed may hold it.
-    """
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-
-    seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
-
-
 def _record_filed(work: Any) -> BaseModel:
     """Check a Modelo 130 cleanly and record it as filed locally, through the registered executors.
 
@@ -1285,12 +1290,16 @@ class RentaFiler:
     envelope: str
     #: The IRPF income categories the profile declares, comma separated as the setup answer states them.
     categories: str
-    #: The cash remuneration and the Social Security contributions typed into the form, where the filer is salaried.
-    salary: tuple[str, str] | None = None
-    #: The withholding the payer's certificate states and the register holds, where there is a certificate.
-    certified: Decimal | None = None
-    #: Activity income booked in the profile's ledger for the year.
-    ledger_income: Decimal | None = None
+    #: Whether the cash remuneration and Social Security contributions the salaried persona's employer certificate
+    #: declares are typed into the form; the figures are the persona's, never restated here.
+    salary: bool = False
+    #: Whether the register holds the persona's own declared certificate, replayed with the persona in full. A
+    #: salaried filer without it starts from the persona's profile and household alone.
+    persona_certificate: bool = False
+    #: The withholding of a certificate the scenario states in place of the persona's, over the persona's own
+    #: remuneration: a result to pay needs less withheld than the persona's certificate states. The certificate is
+    #: recorded through the register's operation for the filer's year.
+    withheld: Decimal | None = None
     #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
     #: annual return from the quarters reads; the projection is read for the filer only then.
     quarter_130: bool = False
@@ -1314,90 +1323,71 @@ class RentaFiler:
     attested_none: tuple[str, ...] = ()
 
 
+#: The withholding a scenario states where it needs a result to pay: below what the persona's certificate states.
+PAYING_WITHHOLDING = Decimal("2000.00")
+
 RENTA_FILERS: tuple[RentaFiler, ...] = (
     # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
     # the three withholding credits and the totals that read them stay unresolved.
-    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900"), compared=True),
-    # Salaried, one certificate in the register: a credit smaller than the tax, so the result is to pay.
-    RentaFiler("pay", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00")),
-    # The same income with a certificate stating more than the tax: the result is to refund.
-    RentaFiler("refund", "trabajo", salary=("30000", "1900"), certified=Decimal("6000.00")),
-    # Self-employed, with the year's activity income booked in the ledger.
-    RentaFiler("activity", "actividad_economica", ledger_income=Decimal("40000.00")),
+    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=True, compared=True),
+    # Salaried, one certificate in the register that withholds less than the tax: the result is to pay.
+    RentaFiler("pay", "trabajo", salary=True, withheld=PAYING_WITHHOLDING),
+    # The persona's own certificate, which withholds more than the tax: the result is to refund.
+    RentaFiler("refund", "trabajo", salary=True, persona_certificate=True),
+    # Self-employed, with the activity persona's year of income in the ledger.
+    RentaFiler("activity", "actividad_economica"),
     # Salaried and self-employed, the year's first quarter calculated, and no certificate in the register: the
     # projection from the quarter names the employment credit and the totals that read it as unresolved.
-    RentaFiler(
-        "projected",
-        "trabajo,actividad_economica",
-        salary=("30000", "1900"),
-        ledger_income=Decimal("40000.00"),
-        quarter_130=True,
-    ),
+    RentaFiler("projected", "trabajo,actividad_economica", salary=True, quarter_130=True),
     # The same filer with a certificate in the register, and the attestation that no payer withheld on the rental
     # activity the register would otherwise leave unresolved: the projection resolves every credit.
     RentaFiler(
         "credited",
         "trabajo,actividad_economica",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        ledger_income=Decimal("40000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         quarter_130=True,
         attested_none=("arrendamiento_inmueble_urbano_actividad",),
     ),
     # The salaried filer with a certificate that leaves a result to pay, read within the filing period: the
     # result may be paid at once or in two instalments, and the split states both amounts as advisory.
-    RentaFiler(
-        "instalment",
-        "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        read_on=RENTA_FILING_PERIOD_DAY,
-    ),
+    RentaFiler("instalment", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_FILING_PERIOD_DAY),
     # A married couple whose profile states the spouse, one certificate in the register: the filing modes can be
     # compared, and joint filing comes out lower.
     RentaFiler(
         "married",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
         compared_states=True,
     ),
     # The same couple with no certificate in the register: the credits the results read have no value, so the
     # comparison names those boxes instead of comparing.
-    RentaFiler("uncredited", "trabajo", salary=("30000", "1900"), household="married", compared=True),
+    RentaFiler("uncredited", "trabajo", salary=True, household="married", compared=True),
     # A married filer whose profile does not state the spouse.
     RentaFiler(
         "spouseless",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married-no-spouse",
         compared=True,
     ),
     # A single filer with no child in the household, who has no family unit to file jointly.
-    RentaFiler(
-        "alone",
-        "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        household="alone",
-        compared=True,
-    ),
+    RentaFiler("alone", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="alone", compared=True),
     # A married couple whose return was never calculated.
     RentaFiler("uncalculated", "trabajo", household="married", calculated=False, compared=True),
     # A single parent who has not said whether they live with the child's other parent: the joint reduction
     # depends on it, so the comparison names the box it leaves without a value.
-    RentaFiler(
-        "parent", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"), household="parent", compared=True
-    ),
+    RentaFiler("parent", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="parent", compared=True),
     # The same parent stating that they do not live with the child's other parent: the comparison is made.
     RentaFiler(
         "parentapart",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="parent-apart",
         compared=True,
     ),
@@ -1425,8 +1415,8 @@ def renta_year_filer(year: int) -> RentaFiler:
     return RentaFiler(
         f"y{year}",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
         year=year,
@@ -1500,16 +1490,44 @@ def _filer_persona(filer: RentaFiler) -> str:
     return ACTIVITY_PERSONA if "actividad_economica" in filer.categories.split(",") else SALARIED_PERSONA
 
 
+def _salaried_certificate() -> Any:
+    """The employer certificate the salaried persona declares: the figures every salaried filer's form states."""
+    persona, _ = _catalogue_persona(SALARIED_PERSONA)
+    (certificate,) = (item for item in persona.withholding_certificates if item.payer == RENTA_PAYER)
+    return certificate
+
+
+def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] | None:
+    """The cash remuneration and contributions the filer types, or ``None`` where it types none.
+
+    ``small`` takes the figures of a household too small for either filing mode to owe tax on.
+    """
+    if small:
+        return RENTA_SMALL_SALARY
+    if not filer.salary:
+        return None
+    certificate = _salaried_certificate()
+    return str(certificate.importe_integro), str(certificate.cotizaciones_seguridad_social)
+
+
 @contextmanager
 def _renta_seeded(tmp: Path, filer: RentaFiler, *, read_on: datetime | None = None) -> Generator[tuple[Any, Any]]:
     """The filer's persona with its categories and household stated, and its Modelo 100 of its year, not calculated."""
     stated = (("taxpayer_type.irpf_income_categories", filer.categories), *_household(filer.household))
-    with _persona_profile(tmp, _filer_persona(filer), stated, read_on=read_on) as persona:
+    persona_id = _filer_persona(filer)
+    # The salaried persona's own certificate is part of its full replay; a filer that states its own, or has none,
+    # starts from the profile and household alone.
+    household_only = persona_id == SALARIED_PERSONA and not filer.persona_certificate
+    with _persona_profile(tmp, persona_id, stated, read_on=read_on, household_only=household_only) as persona:
         yield persona, _declaration(persona, "100", filer.year, RENTA_PERIOD)
 
 
 def _record_certificate(persona: Any, filer: RentaFiler) -> None:
-    """Record the payer's certificate and the filer's attestations through the register's own operations."""
+    """Record the certificate the scenario states and the filer's attestations through the register's operations.
+
+    The certificate has the salaried persona's own remuneration, the payer's identity and the withheld amount the
+    scenario states; the persona's own certificate is replayed with the persona, not recorded here.
+    """
     from cadrumo.application.operations.public_scalar import PublicDecimal
     from cadrumo.application.retencion_soportada_absence.contracts import (
         RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
@@ -1540,8 +1558,9 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
             is None
         ):
             raise SystemExit(f"the attestation of {token} published nothing")
-    if filer.certified is None or filer.salary is None:
+    if filer.withheld is None:
         return
+    certificate = _salaried_certificate()
     payer = persona.persona.identities.role(RENTA_PAYER)
     zero = PublicDecimal(decimal="0.00")
     recorded = run_operation(
@@ -1553,9 +1572,9 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
             income_class=RetencionSoportadaClase.TRABAJO,
             payer_tax_id=payer.value,
             payer_legal_name=payer.legal_name,
-            importe_integro_dinerario=PublicDecimal(decimal=f"{Decimal(filer.salary[0]):.2f}"),
+            importe_integro_dinerario=PublicDecimal(decimal=str(certificate.importe_integro)),
             valoracion_especie=zero,
-            retencion=PublicDecimal(decimal=str(filer.certified)),
+            retencion=PublicDecimal(decimal=str(filer.withheld)),
             ingreso_a_cuenta=zero,
             ingreso_a_cuenta_repercutido=zero,
             origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
@@ -1566,20 +1585,25 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
         raise SystemExit(f"the payer's certificate was refused: {recorded.refusal}")
 
 
-def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None) -> None:
+def _calculate_renta(
+    work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None, small_salary: bool = False
+) -> None:
     """Calculate the filer's declaration through the registered calculation, with the answers it refuses without.
 
     The filer starts from the answers the latest design asks. Another year's design asks others, which the
     calculation names one at a time as the binding it refuses without; the filer answers each as none, the way
     an operator answers a question the calculation puts, and the calculation is asked again.
-    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it.
+    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it. With
+    ``small_salary`` the filer types the figures of a household too small to owe tax on.
     """
     from cadrumo.application.modelo.work_missing_input import ModeloWorkMissingInputError
 
     answers = list(RENTA_ANSWERS)
     while True:
         try:
-            _calculate_renta_with(work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id)
+            _calculate_renta_with(
+                work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id, small_salary=small_salary
+            )
         except ModeloWorkMissingInputError as missing:
             if any(missing.binding_id == key for key, _ in answers):
                 raise
@@ -1589,7 +1613,12 @@ def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str 
 
 
 def _calculate_renta_with(
-    work: Any, filer: RentaFiler, answers: tuple[tuple[str, str], ...], *, borrador_snapshot_id: str | None
+    work: Any,
+    filer: RentaFiler,
+    answers: tuple[tuple[str, str], ...],
+    *,
+    borrador_snapshot_id: str | None,
+    small_salary: bool,
 ) -> None:
     """Calculate the filer's declaration once, answering the bindings in ``answers``."""
     from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
@@ -1609,7 +1638,8 @@ def _calculate_renta_with(
         calculation_action_ports_factory=lambda **_: work.ports,
         attachment_store_factory=build_attachment_store,
     )
-    stated = zip(RENTA_SALARY_BOXES, filer.salary, strict=True) if filer.salary is not None else ()
+    salary = _typed_salary(filer, small=small_salary)
+    stated = zip(RENTA_SALARY_BOXES, salary, strict=True) if salary is not None else ()
     request = OperationRequest(
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work.work_unit_id,
@@ -1763,8 +1793,6 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
     reached by the single-earner household the application models, so the real projection and its served words
     state one built from amounts: the application's own result, projected and worded as any comparison is.
     """
-    from dataclasses import replace
-
     from cadrumo.application.modelo.taxation_comparison import (
         TaxationComparisonResult,
         TaxationRecommendation,
@@ -1773,7 +1801,7 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
     from cadrumo.application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
     from cadrumo.core.config import override_settings
 
-    _calculate_renta(work, replace(filer, salary=RENTA_SMALL_SALARY))
+    _calculate_renta(work, filer, small_salary=True)
     _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
     conjunta, individual, conjunta_cuota, individual_cuota = (Decimal(amount) for amount in INDIVIDUAL_LOWER)
     built = TaxationComparisonResult(
@@ -1799,30 +1827,26 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
 def _write_projection_steps(directory: Path) -> None:
     """Record the stops from a profile with no quarterly declaration to an estimate, as served.
 
-    The profile is the projected filer's, with its income booked and no quarter yet. Its first quarter is created
-    through the registered creation, which the first refusal's step names, and the refusal that follows names the
-    declaration just created as the one to calculate. That is calculated through the registered calculation, with
-    none of the answers about earlier filings it refuses without, and the estimate is then refused for want of a
-    result the quarter does not yet hold: the refusal names the quarter's open boxes from its own form and serves
-    the step that opens it. Each refusal is recorded as a stopped executor's detail is, in every language; the two
-    results are recorded once.
+    The profile is the projected filer's, with the activity persona's income in its ledger and no quarter yet. Its
+    first quarter is created through the registered creation, which the first refusal's step names, and the refusal
+    that follows names the declaration just created as the one to calculate. That is calculated through the registered
+    calculation, with none of the answers about earlier filings it refuses without, and the estimate is then refused for
+    want of a result the quarter does not yet hold: the refusal names the quarter's open boxes from its own form and
+    serves the step that opens it. Each refusal is recorded as a stopped executor's detail is, in every language; the
+    two results are recorded once.
     """
     from dataclasses import replace
 
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
     from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
     from cadrumo.application.modelo.work_create_operation import ModeloWorkCreateProjection, ModeloWorkCreateRequest
     from cadrumo.application.operations.public_period import PublicPeriod
 
     projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
     filer = replace(projected, quarter_130=False)
-    if filer.ledger_income is None:
-        raise SystemExit("the filer of the estimate's steps books no income")
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _renta_seeded(Path(tmp), filer) as (_, work),
     ):
-        seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="synthetic-ledger")
         created = _operate(
             work,
             "modelo.work.create",
@@ -1857,17 +1881,11 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
 
     The first filer is also the one whose declarations list, help cards and refused projection are read.
     """
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _renta_seeded(Path(tmp), filer, read_on=filer.read_on) as (persona, work),
     ):
         _record_certificate(persona, filer)
-        if filer.ledger_income is not None:
-            seed_m130_income_transaction(
-                amount=filer.ledger_income, filing_year=filer.year, source_key="synthetic-ledger"
-            )
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
         if filer.calculated:
@@ -1889,14 +1907,27 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
 
 
 #: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.
-BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"))
+BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=True, withheld=PAYING_WITHHOLDING)
 #: The boxes an AEAT draft prints as results, which no binding owns: they are kept only to be compared. The draft
 #: prints what the calculation works out for each, except the last, which it prints a euro and a quarter higher.
 BORRADOR_PRINTED_RESULTS: tuple[str, ...] = ("0505", "0545", "0546", "0585", "0586")
 BORRADOR_PRINTED_OFF = ("0585", Decimal("1.25"))
-#: Boxes the draft prints that its import does not read: the cash remuneration, stated lower than the filer typed,
-#: and the Social Security contributions, stated as typed.
-BORRADOR_PRINTED_EXTRA: tuple[tuple[str, str], ...] = (("0003", "29500.00"), ("0013", "1900.00"))
+#: How much lower than the filer typed the draft prints the cash remuneration.
+BORRADOR_PRINTED_REMUNERATION_SHORT = Decimal("500.00")
+
+
+def _borrador_printed_extra() -> tuple[tuple[str, Decimal], ...]:
+    """Boxes the draft prints that its import does not read, from the salaried persona's certificate.
+
+    The cash remuneration is stated lower than the filer typed, and the Social Security contributions as typed.
+    """
+    certificate = _salaried_certificate()
+    return (
+        ("0003", certificate.importe_integro - BORRADOR_PRINTED_REMUNERATION_SHORT),
+        ("0013", certificate.cotizaciones_seguridad_social),
+    )
+
+
 #: When a draft the rules refuse was stored, when the first draft was imported and when the second was.
 BORRADOR_REFUSED_AT = datetime(RENTA_YEAR + 1, 4, 2, 10, 0, tzinfo=UTC)
 BORRADOR_FIRST_AT = datetime(RENTA_YEAR + 1, 4, 3, 10, 0, tzinfo=UTC)
@@ -1960,8 +1991,8 @@ def _import_borrador(
         profile_tax_id=ports.profile_tax_id,
     )
     extra = tuple(
-        Borrador100PrintedObservation(casilla_id=box, continuidad_id=None, value=Decimal(value))
-        for box, value in BORRADOR_PRINTED_EXTRA
+        Borrador100PrintedObservation(casilla_id=box, continuidad_id=None, value=value)
+        for box, value in _borrador_printed_extra()
     )
     repository = build_borrador_100_snapshot_repository(bucket_id=bucket)
     return (
@@ -3128,13 +3159,12 @@ def _write_scenarios(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
-    # Its own profile: the quarter's income is booked and the declaration is calculated, never checked or filed. It
-    # records no estimation regime, so its form shows what that leaves the declaration waiting on.
+    # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
+    # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
-        _seed_income(booked)
         booked.recalculate()
         _write_form(directory, booked, "modelo-130-1T-income")
     # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
