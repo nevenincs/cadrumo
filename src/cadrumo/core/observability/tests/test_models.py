@@ -220,17 +220,17 @@ class TestRunIdentity:
     def test_minted_run_ids_satisfy_the_canonical_shape(self) -> None:
         """The declared shape is the shape the minter actually produces.
 
-        Without this the pattern could drift away from ``_mint_run_id`` and the
+        Without this the pattern could drift away from ``mint_run_id`` and the
         constraint would reject every genuine run rather than only bad ones.
         """
         import re
 
         from ..models import RUN_ID_PATTERN
-        from .run_scope import _mint_run_id
+        from .run_scope import mint_run_id
 
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
-            assert pattern.fullmatch(_mint_run_id())
+            assert pattern.fullmatch(mint_run_id())
 
 
 class TestTraceFingerprints:

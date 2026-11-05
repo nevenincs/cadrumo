@@ -7,9 +7,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import NamedTuple, cast, override
 
-from sqlalchemy import Engine, bindparam, delete, inspect, select, text
+from sqlalchemy import Connection, Engine, String, bindparam, delete, select, text, type_coerce
 from sqlalchemy.engine import Result
-from sqlalchemy.orm import Session
 
 from .....core.classification.policies import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
@@ -29,25 +28,16 @@ from ..runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_e
 from ..schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition, is_former_product_namespace
 from ..storage_hierarchy_registry import StorageHierarchyRegistry
-from ._secure_object_integrity import (
+from .engine import get_engine
+from .secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
-from ._secure_object_integrity import (
+from .secure_object_integrity import (
     probe_namespace_integrity as _probe_namespace_integrity,
 )
-from ._secure_object_integrity import (
+from .secure_object_integrity import (
     quarantine_unreadable_rows as _quarantine_unreadable_rows,
 )
-from ._secure_object_row_codec import (
-    secure_object_list_item_from_raw_row,
-    secure_object_record_from_row,
-)
-from ._secure_object_schema import (
-    parse_revision_ancestor_ids,
-)
-from ._secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
-from .engine import get_engine
-from .orm import SecureObjectRow
 from .secure_object_records import (
     SecureObjectBatchLoadItem,
     SecureObjectDecryptabilityRow,
@@ -58,7 +48,16 @@ from .secure_object_records import (
     SecureObjectRecord,
     SecureObjectUnreadable,  # deliberate re-export: consumers import it from this module
 )
+from .secure_object_row_codec import (
+    secure_object_list_item_from_raw_row,
+    secure_object_record_from_row,
+)
+from .secure_object_schema import (
+    parse_revision_ancestor_ids,
+)
+from .secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
 from .session import session_scope
+from .tables import secure_objects_table
 
 __all__ = ["SecureObjectUnreadable"]
 
@@ -68,7 +67,7 @@ _log = get_logger(__name__)
 type _ArchiveColumns = tuple[
     int,  # id
     str,  # namespace
-    Buffer | str,  # object_key, without the ORM lookup decoder
+    Buffer | str,  # object_key, without the HashedLookup result processor
     str,  # classification
     int,  # schema_version
     datetime | str,  # written_at, without a SQL datetime processor
@@ -115,20 +114,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._active_session_bucket_id = active_session_bucket_id
         self._require_secure_active_session = require_secure_active_session
         self._mutation_writer = mutation_writer
-        # SQLAlchemy declares ``local_table`` as the wider ``FromClause`` even
-        # though this mapped row must resolve to a concrete ``Table`` before it
-        # can be created. Keep the boundary executable: a quoted-only cast
-        # would disappear under optimisation and would not reject a malformed
-        # mapper result.
-        from sqlalchemy import Table as _Table
-
-        local_table = inspect(SecureObjectRow).local_table
-        if not isinstance(local_table, _Table):
-            raise TypeError(
-                "SecureObjectRow inspection must resolve to a SQLAlchemy Table "
-                f"before secure_objects creation; got {type(local_table).__name__}"
-            )
-        local_table.create(self._engine, checkfirst=True)
+        secure_objects_table.create(self._engine, checkfirst=True)
 
     @staticmethod
     def object_key_digest(object_key: str | bytes) -> bytes:
@@ -148,7 +134,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
     def engine(self) -> Engine:
         """Return the bound SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
 
-        Exposed so a sibling plaintext ORM table (e.g. a derived, non-sensitive
+        Exposed so a sibling plaintext table (e.g. a derived, non-sensitive
         routing index) can be written in the SAME database file and, where the
         driver supports it, the same transaction as this repository's encrypted
         rows -- without duplicating the bucket-to-engine routing this repository
@@ -157,8 +143,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         return self._engine
 
     @contextmanager
-    def guarded_session_scope(self) -> Generator[Session]:
-        """Yield a session over this repository's engine, session-checked first.
+    def guarded_session_scope(self) -> Generator[Connection]:
+        """Yield a transactional connection over this repository's engine, session-checked first.
 
         The counterpart to :attr:`engine` for a sibling plaintext table. Taking
         the engine directly is the one route into this database that skips
@@ -180,7 +166,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         with session_scope(self._engine) as session:
             yield session
 
-    def write_transaction(self, write: Callable[[Session], None]) -> None:
+    def write_transaction(self, write: Callable[[Connection], None]) -> None:
         """Admit and finish one prepared sibling-table mutation transaction.
 
         The caller prepares its diff before admission and checks its baseline
@@ -370,7 +356,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._check_session_freshness(namespace, touch=False)
         with session_scope(self._engine) as session:
             rows = session.execute(
-                select(SecureObjectRow.revision_id).where(SecureObjectRow.namespace == namespace),
+                select(secure_objects_table.c.revision_id).where(secure_objects_table.c.namespace == namespace),
             ).all()
         return tuple(sorted((row[0] for row in rows), key=lambda revision: revision or ""))
 
@@ -399,9 +385,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         with session_scope(self._engine) as session:
             for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
-                    select(SecureObjectRow.object_key).where(
-                        SecureObjectRow.namespace == namespace,
-                        SecureObjectRow.object_key.in_(
+                    select(secure_objects_table.c.object_key).where(
+                        secure_objects_table.c.namespace == namespace,
+                        secure_objects_table.c.object_key.in_(
                             digests[start : start + OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
@@ -418,7 +404,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Used by the archive restore pipeline when the natural key was
         not present in the source bundle. Same
         master-key constraint as
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:
@@ -428,9 +414,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             )
         with session_scope(self._engine) as session:
             row_id = session.execute(
-                select(SecureObjectRow.id).where(
-                    SecureObjectRow.namespace == namespace,
-                    SecureObjectRow.object_key == hashed_object_key,
+                select(secure_objects_table.c.id).where(
+                    secure_objects_table.c.namespace == namespace,
+                    secure_objects_table.c.object_key == hashed_object_key,
                 ),
             ).scalar_one_or_none()
             return row_id is not None
@@ -477,7 +463,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 stmt = text(projection + "WHERE namespace = :namespace ORDER BY namespace, object_key")
             stmt = stmt.execution_options(yield_per=batch_size)
             parameters = {"namespace": namespace} if namespace is not None else {}
-            # text() bypasses the ORM column processors. Bind the exact SELECT
+            # text() bypasses the typed column processors. Bind the exact SELECT
             # shape at the SQL API boundary; physical rows already support unpacking.
             # Defer the variadic type subscription for the SQLAlchemy 2.0 runtime floor.
             rows = cast("Result[*_ArchiveColumns]", session.execute(stmt, parameters))
@@ -559,7 +545,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         with session_scope(self._engine) as session:
             rows = (
                 session.execute(
-                    select(SecureObjectRow.namespace).distinct().order_by(SecureObjectRow.namespace),
+                    select(type_coerce(secure_objects_table.c.namespace, String))
+                    .distinct()
+                    .order_by(secure_objects_table.c.namespace),
                 )
                 .scalars()
                 .all()
@@ -636,9 +624,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             rows = session.execute(
-                select(SecureObjectRow.object_key)
-                .where(SecureObjectRow.namespace == namespace)
-                .order_by(SecureObjectRow.object_key),
+                select(secure_objects_table.c.object_key)
+                .where(secure_objects_table.c.namespace == namespace)
+                .order_by(secure_objects_table.c.object_key),
             ).scalars()
             return tuple(bytes(row).hex() for row in rows)
 
@@ -736,11 +724,11 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                             bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
                         )
                         .columns(
-                            id=SecureObjectRow.__table__.c.id.type,
-                            object_key=SecureObjectRow.__table__.c.object_key.type,
-                            classification=SecureObjectRow.__table__.c.classification.type,
-                            schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                            written_at=SecureObjectRow.__table__.c.written_at.type,
+                            id=secure_objects_table.c.id.type,
+                            object_key=secure_objects_table.c.object_key.type,
+                            classification=secure_objects_table.c.classification.type,
+                            schema_version=secure_objects_table.c.schema_version.type,
+                            written_at=secure_objects_table.c.written_at.type,
                         ),
                     ),
                 )
@@ -861,13 +849,13 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             return
         with session_scope(self._engine) as session:
             rows = session.execute(
-                select(SecureObjectRow)
+                select(secure_objects_table)
                 .where(
-                    SecureObjectRow.namespace == namespace,
-                    SecureObjectRow.object_key.in_(object_key_digests),
+                    secure_objects_table.c.namespace == namespace,
+                    secure_objects_table.c.object_key.in_(object_key_digests),
                 )
-                .order_by(SecureObjectRow.object_key),
-            ).scalars()
+                .order_by(secure_objects_table.c.object_key),
+            )
             for row in rows:
                 yield self._record_from_row(
                     row,
@@ -978,11 +966,11 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 )
                 .bindparams(bindparam("namespace", value=namespace))
                 .columns(
-                    id=SecureObjectRow.__table__.c.id.type,
-                    object_key=SecureObjectRow.__table__.c.object_key.type,
-                    classification=SecureObjectRow.__table__.c.classification.type,
-                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=SecureObjectRow.__table__.c.written_at.type,
+                    id=secure_objects_table.c.id.type,
+                    object_key=secure_objects_table.c.object_key.type,
+                    classification=secure_objects_table.c.classification.type,
+                    schema_version=secure_objects_table.c.schema_version.type,
+                    written_at=secure_objects_table.c.written_at.type,
                 )
                 .execution_options(stream_results=True, yield_per=batch_size)
             )
@@ -1058,11 +1046,11 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         )
         with session_scope(self._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == namespace,
-                    SecureObjectRow.object_key == object_key,
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == namespace,
+                    secure_objects_table.c.object_key == object_key,
                 ),
-            ).scalar_one_or_none()
+            ).one_or_none()
             if row is None:
                 return None
             return self._record_from_row(
@@ -1080,15 +1068,15 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         to discard (e.g. the workflow-state reset recovery path).
         """
         self._check_session_freshness(namespace)
-        # Resolve the row id through the ORM so the HashedLookup column
+        # Resolve the row id through the typed column so the HashedLookup
         # binding hashes ``object_key`` consistently with the rest of
         # the repository, then read the raw row through ``text()`` so
         # the encrypted payload column is not auto-decrypted.
         with session_scope(self._engine) as session:
             row_id = session.execute(
-                select(SecureObjectRow.id).where(
-                    SecureObjectRow.namespace == namespace,
-                    SecureObjectRow.object_key == object_key,
+                select(secure_objects_table.c.id).where(
+                    secure_objects_table.c.namespace == namespace,
+                    secure_objects_table.c.object_key == object_key,
                 ),
             ).scalar_one_or_none()
             if row_id is None:
@@ -1099,9 +1087,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 )
                 .bindparams(bindparam("row_id", value=int(row_id)))
                 .columns(
-                    classification=SecureObjectRow.__table__.c.classification.type,
-                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=SecureObjectRow.__table__.c.written_at.type,
+                    classification=secure_objects_table.c.classification.type,
+                    schema_version=secure_objects_table.c.schema_version.type,
+                    written_at=secure_objects_table.c.written_at.type,
                 )
             )
             classification, schema_version, written_at, payload = cast(
@@ -1137,8 +1125,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
                 )
                 .columns(
-                    object_key=SecureObjectRow.__table__.c.object_key.type,
-                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                    object_key=secure_objects_table.c.object_key.type,
+                    schema_version=secure_objects_table.c.schema_version.type,
                 )
             )
             rows = cast("Result[Buffer, int]", session.execute(stmt)).all()
@@ -1166,8 +1154,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
                 )
                 .columns(
-                    object_key=SecureObjectRow.__table__.c.object_key.type,
-                    revision_id=SecureObjectRow.__table__.c.revision_id.type,
+                    object_key=secure_objects_table.c.object_key.type,
+                    revision_id=secure_objects_table.c.revision_id.type,
                 )
             )
             rows = cast("Result[Buffer, str | None]", session.execute(stmt)).all()
@@ -1181,14 +1169,14 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
-            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a
+            # SQLAlchemy types ``Connection.execute()`` as ``Result[Any]``; a
             # DML DELETE always yields a rowcount-bearing result.
             result = cast(
                 RowcountResult,
                 session.execute(
-                    delete(SecureObjectRow).where(
-                        SecureObjectRow.namespace == namespace,
-                        SecureObjectRow.object_key == object_key,
+                    delete(secure_objects_table).where(
+                        secure_objects_table.c.namespace == namespace,
+                        secure_objects_table.c.object_key == object_key,
                     ),
                 ),
             )
@@ -1196,7 +1184,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
 
     def _record_from_row(
         self,
-        row: SecureObjectRow,
+        row: object,
         *,
         expected_class: SensitivityClass,
         max_supported_version: int,

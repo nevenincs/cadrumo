@@ -19,12 +19,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @contextmanager
-def _ephemeral_secure_repo_at(
+def ephemeral_secure_repo_at(
     db_path: Path,
 ) -> Generator[tuple[Any, SecureObjectRepository]]:
     """Open ``db_path`` under a fresh, self-managed ephemeral key.
 
-    This is intentionally distinct from :func:`_repo_at`: callers of the
+    This is intentionally distinct from :func:`repo_at`: callers of the
     latter already own an active :class:`EphemeralBucketSession`, while
     this helper owns the provider lifecycle for a fresh-key reopen.
     """
@@ -37,7 +37,7 @@ def _ephemeral_secure_repo_at(
 
 
 @contextmanager
-def _ephemeral_secure_repo(
+def ephemeral_secure_repo(
     tmp_path: Path,
     database_name: str,
 ) -> Generator[tuple[Path, Any, SecureObjectRepository]]:
@@ -47,12 +47,12 @@ def _ephemeral_secure_repo(
     or reopen the same on-disk database under the same key.
     """
     db_path = tmp_path / database_name
-    with _ephemeral_secure_repo_at(db_path) as (engine, repo):
+    with ephemeral_secure_repo_at(db_path) as (engine, repo):
         yield db_path, engine, repo
 
 
 @contextmanager
-def _repo_at(db_path: Path) -> Generator[SecureObjectRepository]:
+def repo_at(db_path: Path) -> Generator[SecureObjectRepository]:
     """Open a real :class:`SecureObjectRepository` against a fresh schema at ``db_path``."""
     engine = bootstrap_sqlite_engine(db_path)
     try:
@@ -61,7 +61,7 @@ def _repo_at(db_path: Path) -> Generator[SecureObjectRepository]:
         engine.dispose()
 
 
-def _seed_under_key(
+def seed_under_key(
     *,
     db_path: Path,
     provider: EphemeralBucketSession,

@@ -126,7 +126,7 @@ def _raw_transaction(
     )
 
 
-def _fully_taxable_purchase(provider_id: str) -> Transaction:
+def fully_taxable_purchase_row(provider_id: str) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(provider_id),
@@ -148,7 +148,7 @@ def _fully_taxable_purchase(provider_id: str) -> Transaction:
 def _classified_purchase(provider_id: str, classification: InputClassification) -> Transaction:
     """A fully-domestic 21% purchase carrying an art. 106 input_classification.
 
-    Same base/cuota shape as :func:`_fully_taxable_purchase` (taxable_base
+    Same base/cuota shape as :func:`fully_taxable_purchase_row` (taxable_base
     50.00, iva 10.50) so the three art. 106 reglas can be exercised against a
     single deducible cuota binding.
     """
@@ -171,7 +171,7 @@ def _classified_purchase(provider_id: str, classification: InputClassification) 
     )
 
 
-def _fully_taxable_sale(provider_id: str) -> Transaction:
+def fully_taxable_sale_row(provider_id: str) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -205,7 +205,7 @@ def test_repository_aggregation_refuses_an_implicit_prorrata_store(tmp_path: Pat
     """A caller must name the encrypted register it expects to consume."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        tx_repo.save(TransactionCatalogue.from_transactions((_fully_taxable_purchase("missing-prorrata-owner"),)))
+        tx_repo.save(TransactionCatalogue.from_transactions((fully_taxable_purchase_row("missing-prorrata-owner"),)))
 
         with pytest.raises(TypeError, match="prorrata_register_repository"):
             cast(Any, iva_ledger.aggregate_iva_ledger_observations_from_repositories)(
@@ -226,7 +226,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-        tx_repo.save(TransactionCatalogue.from_transactions((_fully_taxable_purchase("purchase-full"),)))
+        tx_repo.save(TransactionCatalogue.from_transactions((fully_taxable_purchase_row("purchase-full"),)))
 
         baseline = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
@@ -287,8 +287,8 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-full"),
-                    _fully_taxable_purchase("purchase-prorrata"),
+                    fully_taxable_sale_row("sale-full"),
+                    fully_taxable_purchase_row("purchase-prorrata"),
                 ),
             ),
         )
@@ -386,8 +386,8 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-general"),
-                    _fully_taxable_purchase("purchase-general"),
+                    fully_taxable_sale_row("sale-general"),
+                    fully_taxable_purchase_row("purchase-general"),
                 ),
             ),
         )
@@ -434,7 +434,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-especial"),
+                    fully_taxable_sale_row("sale-especial"),
                     _classified_purchase("buy-excl-ded", InputClassification.from_registry("exclusively_deductible")),
                     _classified_purchase(
                         "buy-excl-non", InputClassification.from_registry("exclusively_non_deductible")
@@ -487,7 +487,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-cmp"),
+                    fully_taxable_sale_row("sale-cmp"),
                     _classified_purchase("buy-common-a", InputClassification.from_registry("common")),
                     _classified_purchase("buy-common-b", InputClassification.from_registry("common")),
                 ),
@@ -549,9 +549,9 @@ def test_especial_refuses_an_unclassified_deducible_input(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-unclassified"),
+                    fully_taxable_sale_row("sale-unclassified"),
                     _classified_purchase("buy-common", InputClassification.from_registry("common")),
-                    _fully_taxable_purchase("buy-unclassified"),
+                    fully_taxable_purchase_row("buy-unclassified"),
                 ),
             ),
         )
@@ -635,7 +635,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-1sec"),
+                    fully_taxable_sale_row("sale-1sec"),
                     _sectored_purchase("buy-1sec-a", "comercio"),
                     _sectored_purchase("buy-1sec-b", "comercio"),
                 ),
@@ -675,7 +675,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-1sec"),
+                    fully_taxable_sale_row("sale-1sec"),
                     _sectored_purchase("buy-1sec-a", None),
                     _sectored_purchase("buy-1sec-b", None),
                 ),
@@ -727,7 +727,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-2sec"),
+                    fully_taxable_sale_row("sale-2sec"),
                     _sectored_purchase("buy-high", "comercio"),
                     _sectored_purchase("buy-low", "arrendamiento"),
                     _sectored_purchase("buy-common", None),
@@ -885,7 +885,7 @@ def test_especial_settlement_applies_the_definitive_percentage_to_the_common_sli
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-especial-settlement"),
+                    fully_taxable_sale_row("sale-especial-settlement"),
                     _classified_purchase("buy-excl-ded", InputClassification.from_registry("exclusively_deductible")),
                     _classified_purchase(
                         "buy-excl-non", InputClassification.from_registry("exclusively_non_deductible")
@@ -933,7 +933,7 @@ def test_sectorized_settlement_applies_each_sector_definitive_and_refuses_a_part
         tx_repo.save(
             TransactionCatalogue.from_transactions(
                 (
-                    _fully_taxable_sale("sale-2sec-settlement"),
+                    fully_taxable_sale_row("sale-2sec-settlement"),
                     _sectored_purchase("buy-high", "comercio"),
                     _sectored_purchase("buy-low", "arrendamiento"),
                     _sectored_purchase("buy-common", None),

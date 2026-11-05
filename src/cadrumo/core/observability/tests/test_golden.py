@@ -40,7 +40,7 @@ from ...time.clock import frozen_clock, now
 from ..capture import record_emitted_envelope
 from ..errors import GoldenCaptureError, GoldenReplayMismatchError
 from .envelope_capture import capture_envelopes
-from .run_scope import _mint_run_id
+from .run_scope import mint_run_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -80,7 +80,7 @@ def _capture_scenario() -> dict[str, object]:
             # unique so the mask is exercised without importing the domain
             # profile model into the core test package.
             snapshot_id=f"{_PROFILE_ID}:{now().strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}",
-            run_id=_mint_run_id(),
+            run_id=mint_run_id(),
         )
         stream = io.StringIO()
         with capture_envelopes() as sink:

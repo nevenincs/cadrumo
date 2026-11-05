@@ -317,7 +317,7 @@ class WorkflowStateRepository:
         Lets callers co-transactionally persist the workflow state and a
         sibling secure-object payload (typically an updated
         bucket-event-history catalogue) via a single
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         call.
         """
         return self._persistence.prepare_state_write(

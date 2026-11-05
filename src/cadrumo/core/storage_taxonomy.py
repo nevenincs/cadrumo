@@ -189,6 +189,17 @@ itself. It is not an escape because the application both chooses it and writes
 beneath it. It is therefore the anchor rather than a member.
 """
 
+RUN_TRACE_FILENAME: Final[str] = "trace.json"
+RUN_EVENTS_FILENAME: Final[str] = "events.jsonl"
+RUN_ENVELOPE_FILENAME: Final[str] = "envelope.json"
+"""Leaf names of the artefacts inside each per-run directory under :attr:`StorageCategory.RUNS`.
+
+A run directory is named by its run id, so these leaves sit below a fan-out
+that no enumerable member can name. They are declared here, beside the
+category they live under, so the observability store that writes them and the
+storage-path contracts that describe them read one spelling.
+"""
+
 _PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"
 
 
@@ -383,6 +394,9 @@ class StorageLocation(BaseModel):
 
 
 __all__ = [
+    "RUN_ENVELOPE_FILENAME",
+    "RUN_EVENTS_FILENAME",
+    "RUN_TRACE_FILENAME",
     "STORAGE_ROOT_SETTINGS_FIELD",
     "FingerprintParticipation",
     "StorageArea",

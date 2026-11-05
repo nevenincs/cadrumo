@@ -22,11 +22,11 @@ from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import (
-    _ephemeral_secure_repo,
-)
 from .batch_failures import iter_many_with_failures
 from .raw_key_writer import save_with_raw_key
+from .secure_objects_support import (
+    ephemeral_secure_repo,
+)
 
 
 def _refuse_batch_schema(keys: tuple[str, ...]) -> None:
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Path) -> None:
     """A CAS conflict in a batch rolls back sibling writes in the unit of work."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-batch.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-batch.db") as (db_path, _, repo):
         namespace = "cadrumo.revision.cas.batch"
         repo.save(
             namespace=namespace,
@@ -86,7 +86,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
 def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Path) -> None:
     """Raw-key archive writes use the same expected-revision conflict contract."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-raw-key.db") as (db_path, _, repo):
         raw_key = b"x" * 32
         namespace = "cadrumo.revision.cas.raw"
         save_with_raw_key(
@@ -129,7 +129,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
 ) -> None:
     """Raw-key CAS writes must not overwrite when the expected revision is stale."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key-stale.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-raw-key-stale.db") as (db_path, _, repo):
         raw_key = b"y" * 32
         namespace = "cadrumo.revision.cas.raw.stale"
         save_with_raw_key(
@@ -194,7 +194,7 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
 ) -> None:
     """Targeted batch load returns the same readable rows as repeated single loads."""
 
-    with _ephemeral_secure_repo(tmp_path, "load-many-readable.db") as (_, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "load-many-readable.db") as (_, engine, repo):
         namespace = "cadrumo.batch.readable"
         rows = {
             "row-a": b"payload-a",
@@ -259,7 +259,7 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
 def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_path: Path) -> None:
     """Targeted batch load keeps readable rows and schema failures visible."""
 
-    with _ephemeral_secure_repo(tmp_path, "load-many-failures.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "load-many-failures.db") as (_, _, repo):
         namespace = "cadrumo.batch.failures"
         repo.save(
             namespace=namespace,
@@ -336,7 +336,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
     schema_version, and written_at it returns must match what was
     saved, and the byte_length must be the non-empty ciphertext size."""
 
-    with _ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
         namespace = "cadrumo-test.peek"
         written_at = datetime(2026, 5, 21, 9, 15, 0, tzinfo=UTC)
         repo.save(
@@ -364,7 +364,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
     the peeked value tracks the mutation — if `peek_metadata` returned
     a cached or hard-coded version, on-disk drift would be invisible."""
 
-    with _ephemeral_secure_repo(tmp_path, "peek-drift.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "peek-drift.db") as (db_path, _, repo):
         namespace = "cadrumo-test.peek.drift"
         repo.save(
             namespace=namespace,
@@ -398,7 +398,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
     serialization contract; a duplicate-insert regression would leave
     two divergent ciphertexts under the same logical key."""
 
-    with _ephemeral_secure_repo(tmp_path, "converge.db") as (db_path, engine, _):
+    with ephemeral_secure_repo(tmp_path, "converge.db") as (db_path, engine, _):
         namespace = "cadrumo-test.converge"
         natural_key = "shared-object-key"
         SecureObjectRepository(engine=engine).save(
@@ -439,7 +439,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
 def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_path: Path) -> None:
     """Runtime-bound secure-object writes must use a registered namespace."""
 
-    with _ephemeral_secure_repo(tmp_path, "policy-unregistered.db") as (db_path, engine, _):
+    with ephemeral_secure_repo(tmp_path, "policy-unregistered.db") as (db_path, engine, _):
         repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
 
         with pytest.raises(StorageValidationError) as raised:
@@ -461,7 +461,7 @@ def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_p
 def test_registry_bound_repository_rejects_wrong_write_classification_and_schema(tmp_path: Path) -> None:
     """The namespace registry, not the caller, is authoritative for write policy."""
 
-    with _ephemeral_secure_repo(tmp_path, "policy-write-contract.db") as (db_path, engine, _):
+    with ephemeral_secure_repo(tmp_path, "policy-write-contract.db") as (db_path, engine, _):
         namespace = WORKFLOW_STATE_NAMESPACE.namespace
         repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
 
@@ -496,7 +496,7 @@ def test_registry_bound_repository_rejects_wrong_write_classification_and_schema
 def test_registry_bound_repository_rejects_reader_class_not_declared_by_registry(tmp_path: Path) -> None:
     """A caller cannot widen a registered namespace to a different sensitivity on read."""
 
-    with _ephemeral_secure_repo(tmp_path, "policy-read-class.db") as (_, engine, _):
+    with ephemeral_secure_repo(tmp_path, "policy-read-class.db") as (_, engine, _):
         namespace = WORKFLOW_STATE_NAMESPACE.namespace
         object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
         repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
@@ -522,7 +522,7 @@ def test_registry_bound_repository_rejects_reader_class_not_declared_by_registry
 def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tmp_path: Path) -> None:
     """Registry policy catches stored schema drift even if the reader claims support."""
 
-    with _ephemeral_secure_repo(tmp_path, "policy-read-schema.db") as (_, engine, _):
+    with ephemeral_secure_repo(tmp_path, "policy-read-schema.db") as (_, engine, _):
         namespace = WORKFLOW_STATE_NAMESPACE.namespace
         object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
         unbound_repo = SecureObjectRepository(engine=engine)
@@ -548,7 +548,7 @@ def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tm
 
 def test_repository_refuses_former_product_namespace_before_read_write_delete_or_list(tmp_path: Path) -> None:
     """Former product namespaces never reach SQL or mutate current rows."""
-    with _ephemeral_secure_repo(tmp_path, "former-namespace-refusal.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "former-namespace-refusal.db") as (db_path, _, repo):
         current_namespace = "cadrumo-test.namespace.refusal.current"
         former_namespace = "aeat-test.namespace.refusal.former"
         repo.save(

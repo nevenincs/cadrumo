@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import String, create_engine, inspect
 
-from .._secure_object_schema import ensure_quarantine_table
-from ..orm import SecureObjectRow
+from ..secure_object_schema import ensure_quarantine_table
+from ..tables import secure_objects_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -23,7 +23,7 @@ def _reflected_hash_lengths(table_name: str) -> dict[str, int | None]:
     engine = create_engine("sqlite:///:memory:")
     try:
         if table_name == "secure_objects":
-            SecureObjectRow.metadata.create_all(engine)
+            secure_objects_table.metadata.create_all(engine)
         else:
             ensure_quarantine_table(engine)
         reflected = {column["name"]: column["type"] for column in inspect(engine).get_columns(table_name)}

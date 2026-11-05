@@ -21,9 +21,9 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from .....domain.transactions.repository import transaction_object_key
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
-from ...storage.sql import orm as _orm
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
@@ -135,10 +135,10 @@ def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
         stored_key = secure_object_key_digest(transaction_object_key(profile.bucket_id, stale.transaction_id))
         with session_scope(profile.repository.engine) as session:
             session.execute(
-                update(_orm.SecureObjectRow)
+                update(secure_objects_table)
                 .where(
-                    _orm.SecureObjectRow.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                    _orm.SecureObjectRow.object_key == stored_key,
+                    secure_objects_table.c.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                    secure_objects_table.c.object_key == stored_key,
                 )
                 .values(schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version - 1),
             )

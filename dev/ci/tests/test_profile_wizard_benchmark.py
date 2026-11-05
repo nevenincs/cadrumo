@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ..profile_wizard_benchmark import ProfileBenchmarkRecorder, _observe, _observe_profile_boundaries, summarize
+from ..profile_wizard_benchmark import ProfileBenchmarkRecorder, observe, observe_profile_boundaries, summarize
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -20,7 +20,7 @@ def test_observer_preserves_result_exception_and_excludes_payload(tmp_path: Path
     owner = SimpleNamespace(decode=json.loads)
     original = owner.decode
     with pytest.MonkeyPatch.context() as patch:
-        _observe(patch, recorder, owner, "decode", "safe.decode")
+        observe(patch, recorder, owner, "decode", "safe.decode")
         assert owner.decode('{"synthetic-private": 42}') == {"synthetic-private": 42}
         with pytest.raises(json.JSONDecodeError):
             owner.decode("synthetic-private-invalid")
@@ -56,22 +56,24 @@ def test_summary_uses_last_distribution_and_omits_small_sample_percentiles(tmp_p
 
 def test_sql_commit_attribution_preserves_transaction_and_restores_hooks(tmp_path: Path) -> None:
     from sqlalchemy import create_engine, text
-    from sqlalchemy.orm import Session
+    from sqlalchemy.engine import Transaction
 
     recorder = ProfileBenchmarkRecorder(tmp_path, role="parent")
-    original = Session.commit
+    original = Transaction.commit
     engine = create_engine("sqlite://")
     with pytest.MonkeyPatch.context() as patch:
-        _observe_profile_boundaries(patch, recorder)
-        with Session(engine) as session:
-            session.execute(text("CREATE TABLE benchmark (value INTEGER)"))
-            session.commit()
+        observe_profile_boundaries(patch, recorder)
+        with engine.connect() as connection:
+            transaction = connection.begin()
+            connection.execute(text("CREATE TABLE benchmark (value INTEGER)"))
+            transaction.commit()
             with recorder.measure("profile.record_write_transaction", aggregate=True):
-                session.execute(text("INSERT INTO benchmark VALUES (42)"))
-                session.commit()
-        with Session(engine) as reopened:
+                transaction = connection.begin()
+                connection.execute(text("INSERT INTO benchmark VALUES (42)"))
+                transaction.commit()
+        with engine.connect() as reopened:
             assert reopened.scalar(text("SELECT value FROM benchmark")) == 42
-    assert Session.commit is original
+    assert Transaction.commit is original
     assert recorder.totals["storage.sql_commit.profile"].calls == 1
     assert recorder.totals["storage.sql_commit.other"].calls == 1
     recorder.flush()
@@ -102,7 +104,7 @@ def test_kdf_lease_observer_releases_on_body_failure_and_restores_owner(tmp_path
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(kdf_supervision, "profile_kdf_lease", lease)
         with pytest.MonkeyPatch.context() as observer:
-            _observe_profile_boundaries(observer, recorder)
+            observe_profile_boundaries(observer, recorder)
             with pytest.raises(ValueError, match="synthetic failure"), kdf_supervision.profile_kdf_lease(deadline=42):
                 assert lifecycle == ["acquired"]
                 raise ValueError("synthetic failure")

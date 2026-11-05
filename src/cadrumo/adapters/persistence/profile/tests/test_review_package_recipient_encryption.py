@@ -49,10 +49,10 @@ from cadrumo.adapters.persistence.profile.recipient_replay_guard import (
 )
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import (
     RecipientEncryptionAdapter,
-    _recipient_encryption_key_object_key,
+    recipient_encryption_key_object_key,
 )
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+from cadrumo.adapters.persistence.profile.tests.review_package_bytes_support import (
     build_package_bytes,
     review_package_revision,
     review_package_work_unit,
@@ -60,8 +60,8 @@ from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support im
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.recipient_encryption import (
     RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
@@ -763,8 +763,10 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
-            ).scalar_one()
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace
+                ),
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
         assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
@@ -793,7 +795,7 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=target_bucket_id) as profile:
-        object_key = _recipient_encryption_key_object_key(target_bucket_id)
+        object_key = recipient_encryption_key_object_key(target_bucket_id)
         misplaced_payload = misplaced.model_dump_json().encode("utf-8")
         profile.repository.save(
             namespace=_ENCRYPTION_KEY_NAMESPACE.namespace,
@@ -869,8 +871,8 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
         with session_scope(profile.repository._engine) as session:
             persisted_count = session.execute(
                 select(func.count())
-                .select_from(SecureObjectRow)
-                .where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
+                .select_from(secure_objects_table)
+                .where(secure_objects_table.c.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
             ).scalar_one()
         assert persisted_count == 1
 

@@ -306,7 +306,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         The caller hands the returned
         :class:`~core.secure_object_write.SecureObjectWrite` to
-        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+        :meth:`adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         (or ``apply_batch``) alongside a sibling repository's write, so both
         land in ONE SQL unit of work and a crash between them is impossible.
         That is the same co-emit shape the filing path already uses to keep the
@@ -336,7 +336,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         The deletion counterpart of :meth:`to_secure_object_write`, so a caller
         that must remove some rows and write others can hand both to
-        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+        :meth:`adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
         and land the whole change in ONE SQL unit of work.
         :class:`adapters.persistence.storage.sql.secure_object_records.SecureObjectDeletion` addresses a
         row by its stored HMAC digest, so the natural id is bound here with the

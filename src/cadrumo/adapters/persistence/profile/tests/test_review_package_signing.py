@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.profile.review_package_signing import (
     ReviewPackageSigningKeypairAdapter,
     build_review_package_signing_keypair_reader,
 )
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+from cadrumo.adapters.persistence.profile.tests.review_package_bytes_support import (
     build_package_path,
     review_package_revision,
     review_package_work_unit,
@@ -24,8 +24,8 @@ from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support im
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.review_package_signing import (
     ReviewPackageSigningError,
@@ -80,8 +80,8 @@ def test_load_keypair_absence_never_creates_a_secure_object(tmp_path: Path) -> N
         with session_scope(profile.repository._engine) as session:
             assert (
                 session.execute(
-                    select(SecureObjectRow).where(
-                        SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+                    select(secure_objects_table).where(
+                        secure_objects_table.c.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
                     ),
                 ).first()
                 is None
@@ -147,10 +147,10 @@ def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
                 ),
-            ).scalar_one()
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
         assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
@@ -297,8 +297,8 @@ def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_pack
         with session_scope(profile.repository._engine) as session:
             persisted_count = session.execute(
                 select(func.count())
-                .select_from(SecureObjectRow)
-                .where(SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace),
+                .select_from(secure_objects_table)
+                .where(secure_objects_table.c.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace),
             ).scalar_one()
         assert persisted_count == 1
 
@@ -321,10 +321,10 @@ def test_counter_signer_keys_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(runtime.secondary.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
                 ),
-            ).scalar_one()
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
     assert accountant_keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes

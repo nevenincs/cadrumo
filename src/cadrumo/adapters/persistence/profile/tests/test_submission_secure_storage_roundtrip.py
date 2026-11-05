@@ -128,7 +128,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     submission_namespace = SubmissionRepository.namespace
 
@@ -137,9 +137,9 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
         repo = SubmissionRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == submission_namespace,
-            SecureObjectRow.object_key == original.submission_id,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == submission_namespace,
+            secure_objects_table.c.object_key == original.submission_id,
         )
 
         def mutate(envelope):
@@ -185,7 +185,7 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
 
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     submission_namespace = SubmissionRepository.namespace
 
@@ -194,9 +194,9 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
         repo = SubmissionRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == submission_namespace,
-            SecureObjectRow.object_key == original.submission_id,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == submission_namespace,
+            secure_objects_table.c.object_key == original.submission_id,
         )
 
         def mutate(envelope):

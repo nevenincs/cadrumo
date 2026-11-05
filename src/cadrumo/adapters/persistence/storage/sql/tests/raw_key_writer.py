@@ -7,7 +7,7 @@ from datetime import datetime
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import DEFAULT_WRITE_PROVENANCE
 from ...errors import StorageValidationError
-from .._secure_object_writes import SecureObjectWriteOperations
+from ..secure_object_writes import SecureObjectWriteOperations
 
 
 def save_with_raw_key(

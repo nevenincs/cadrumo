@@ -37,7 +37,7 @@ from sqlalchemy import select
 
 from cadrumo.adapters.outbound.aeat.sede.errors import SedeNavigationError
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -324,9 +324,9 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
 
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == _DOCUMENT_NAMESPACE,
+                secure_objects_table.c.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
             ),
             mutate=_drop,
         )
@@ -352,9 +352,9 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
 
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == _DOCUMENT_NAMESPACE,
+                secure_objects_table.c.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
             ),
             mutate=_drop,
         )
@@ -397,9 +397,9 @@ def test_deleting_the_parse_refusal_on_disk_makes_the_load_refuse(tmp_path: Path
 
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == _DOCUMENT_NAMESPACE,
+                secure_objects_table.c.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
             ),
             mutate=_drop,
         )
@@ -419,9 +419,9 @@ def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
 
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == _DOCUMENT_NAMESPACE,
+                secure_objects_table.c.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
             ),
             mutate=_zero,
         )

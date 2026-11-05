@@ -12,7 +12,7 @@ from sqlalchemy import select
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
@@ -60,9 +60,9 @@ def test_runtime_review_command_redacts_identity_in_success_and_mutated_record_r
 
         mutate_encrypted_secure_object_json(
             objects._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-                SecureObjectRow.object_key
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+                secure_objects_table.c.object_key
                 == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             ),
             mutate=_orphan_row_source_identity,

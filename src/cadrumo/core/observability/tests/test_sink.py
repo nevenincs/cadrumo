@@ -35,13 +35,11 @@ from ....tests.path_obstruction import obstructed_path
 from ...config import override_settings
 from ...directory_scan import iter_directory
 from ...logging import flush_logging
-from ...storage_taxonomy import StorageCategory
+from ...storage_taxonomy import RUN_EVENTS_FILENAME, RUN_TRACE_FILENAME, StorageCategory
 from ...storage_taxonomy_locations import storage_path
 from ..errors import RunTracePersistenceError, RunTraceValidationError
 from ..models import NavigationPayload, RunEvent, RunEventKind, RunEventPayload, RunOutcome, RunTrace
 from ..store import (
-    EVENTS_FILENAME,
-    TRACE_FILENAME,
     iter_events,
     iter_runs,
     load_trace,
@@ -101,7 +99,7 @@ class TestJsonlStoreRoundTrip:
         with override_settings(cadrumo_storage_root=tmp_path):
             evt = self._make_event(1)
             save_events_append(evt.run_id, evt)
-            target = runs_dir() / evt.run_id / EVENTS_FILENAME
+            target = runs_dir() / evt.run_id / RUN_EVENTS_FILENAME
             with target.open("a", encoding="utf-8") as handle:
                 handle.write('{"not_a": "valid_run_event"}\n')
             with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
@@ -297,7 +295,7 @@ class TestStorePersistenceErrors:
         run_id = "abcdef0123456789"
         with override_settings(cadrumo_storage_root=tmp_path) as settings:
             runs_root = storage_path(StorageCategory.RUNS, settings=settings)
-            trace_path = runs_root / run_id / TRACE_FILENAME
+            trace_path = runs_root / run_id / RUN_TRACE_FILENAME
 
             with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
                 load_trace(run_id, settings=settings)
@@ -314,7 +312,7 @@ class TestStorePersistenceErrors:
         with override_settings(cadrumo_storage_root=tmp_path):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / TRACE_FILENAME
+            target = runs_dir() / run_a / RUN_TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
@@ -333,7 +331,7 @@ class TestStorePersistenceErrors:
         with override_settings(cadrumo_storage_root=tmp_path):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / TRACE_FILENAME
+            target = runs_dir() / run_a / RUN_TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
@@ -436,7 +434,7 @@ class TestIterEvents:
             run_id = "abcdef0123456789"
             save_events_append(run_id, self._event(run_id, 0))
             # Append a malformed line after the valid one.
-            target = runs_dir() / run_id / EVENTS_FILENAME
+            target = runs_dir() / run_id / RUN_EVENTS_FILENAME
             with target.open("a", encoding="utf-8", newline="") as handle:
                 handle.write('{"invalid": "event"}\n')
             save_events_append(run_id, self._event(run_id, 2))

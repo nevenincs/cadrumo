@@ -8,7 +8,7 @@ are set by law independently of when the movement was booked, so a row
 booked in one quarter can carry an observation in another.
 
 These are the single owners of both answers. The plaintext routing index
-(:class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`) records
+(:data:`~adapters.persistence.storage.sql.tables.transaction_date_index_table`) records
 what they return, and the period partition selects candidates by overlap
 against the span rather than by equality against the filing date.
 
