@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7605935a799d3d7e9250b143e6a0283d5c9383cc9383dbedd06425f5033e3e3'
+body_hash: 'sha256:513efe33c06a5cb1a4f83ef1662578d29bf151a00311372bf84ded54ff07b54c'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1044,6 +1044,22 @@ related:
 - `S24` `verify:` `check-identity` -> `pass`
 - `S24` `verify:` `changed test modules` -> `pass`
 - `S24` `by:` `vaultspec-standard-executor`
+- `S05` `M` `dev/fixture_projections`
+- `S05` `M` `dev/source_tree.py`
+- `S05` `M` `dev/tests/test_source_tree.py`
+- `S05` `A` `dev/fixtures/ledger-staged-check-questions`
+- `S05` `A` `dev/fixtures/assets-served-words-questions`
+- `S05` `A` `dev/fixtures/ledger-entry-option-questions`
+- `S05` `M` `native/desktop/frontend/scripts`
+- `S05` `M` `dev/quality/metadata`
+- `S05` `verify:` `pytest -n 2 dev/fixture_projections/tests test_source_tree recording tests` -> `pass`
+- `S05` `verify:` `ruff, lint-imports, dev.quality.types` -> `pass`
+- `S05` `by:` `sonnet`
+- `S06` `M` `.github/workflows/aeat-corpus-staleness.yml`
+- `S06` `M` `.github/workflows/aeat-drift-detector.yml`
+- `S06` `M` `.github/workflows/code-health-report.yml`
+- `S06` `M` `.github/actions/setup/action.yml`
+- `S06` `verify:` `check-workflows, check-workflow-security, just --list, pytest check-set/precommit/native-build-recipes` -> `pass`
 
 ## Notes
 
@@ -1068,3 +1084,4 @@ related:
 - `S05` The window Modelo family's check needs `node_modules` for prettier; it runs in the S19 full gates
 - `S04` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
 - `S24` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
+- `S06` desktop job not yet run on a real runner and kept out of verdict.needs; stagedCheck.ts tsc/eslint/prettier deferred under the CHECKS2 machine conditions

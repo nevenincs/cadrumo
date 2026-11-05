@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:2e404608260306810e92c62e0d9a32ad956cc7b52866c3fbe7b6e354ed0f2068'
+body_hash: 'sha256:b084e132e16e7d6dc31a5d7450c3b96449a939fd84c1a9d086516d3f009e4511'
 ---
 
 # `fixture-canonicalization` plan
@@ -39,8 +39,8 @@ Make existing generators deterministic and remove known stale or orphan fixture 
 
 Separate fixture seeding from testing in the justfile and CI with digest-based freshness.
 
-- [ ] `P02.S05` - Add the fixture projection registry with digest stamps and the seed, force, status, check and clean recipes; `dev/fixtures, justfile and .importlinter`.
-- [ ] `P02.S06` - Make frontend and native test recipes seed first, seed on setup, and run the fixture check in the local and merge gates with a per-PR frontend and Rust job; `justfile and .github/workflows`.
+- [x] `P02.S05` - Add the fixture projection registry with digest stamps and the seed, force, status, check and clean recipes; `dev/fixtures, justfile and .importlinter`.
+- [x] `P02.S06` - Make frontend and native test recipes seed first, seed on setup, and run the fixture check in the local and merge gates with a per-PR frontend and Rust job; `justfile and .github/workflows`.
 
 ### Phase `P03` - Persona catalogue
 
