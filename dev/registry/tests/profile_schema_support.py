@@ -205,5 +205,5 @@ def authored_history_authority() -> ValidatedRegistryAuthority:
         catalogues=authority.catalogues.model_copy(
             update={"supported_filing_years": authored_history_supported_filing_years()}
         ),
-        _snapshots={},
+        snapshots={},
     )

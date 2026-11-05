@@ -255,14 +255,14 @@ def test_the_validator_sources_are_read_only_when_a_recorded_cell_would_skip_the
         ),
     )
     identity_checks: list[int] = []
-    sources_match = snapshot_proof_module._sources_match
+    sources_match = snapshot_proof_module.sources_match
 
     def counted_sources_match(sources: Sequence[ValidatorSource]) -> bool:
         identity_checks.append(len(sources))
         return sources_match(sources)
 
-    monkeypatch.setattr(snapshot_proof_module, "_validator_matches", {})
-    monkeypatch.setattr(snapshot_proof_module, "_sources_match", counted_sources_match)
+    monkeypatch.setattr(snapshot_proof_module, "validator_matches", {})
+    monkeypatch.setattr(snapshot_proof_module, "sources_match", counted_sources_match)
     counts = count_cross_checks(monkeypatch)
 
     full = _build(unproven, cell)

@@ -38,12 +38,12 @@ def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     authority = compiled_bundled_authority()
 
     first = _schema_provider(_PERIOD).get_snapshot(_MODELO)
-    cache_size = len(authority._snapshots)
+    cache_size = len(authority.snapshots)
     warm = _schema_provider(_PERIOD).get_snapshot(_MODELO)
 
     assert warm == first
     assert warm is first
-    assert len(authority._snapshots) == cache_size
+    assert len(authority.snapshots) == cache_size
 
 
 @pytest.mark.usefixtures("governed_fact_scope")

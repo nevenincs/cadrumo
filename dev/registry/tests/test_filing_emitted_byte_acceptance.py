@@ -78,8 +78,8 @@ def _narrow_authority(
     return replace(
         authority,
         modelos=(narrowed_modelo,),
-        _modelos_by_id={narrowed_modelo.id: narrowed_modelo},
-        _snapshots={},
+        modelos_by_id={narrowed_modelo.id: narrowed_modelo},
+        snapshots={},
     )
 
 

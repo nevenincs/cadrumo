@@ -75,7 +75,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
     catalogues = authority.catalogues.model_copy(
         update={"sources": {**authority.catalogues.sources, source_id: source.model_copy(update={"sha256": "0" * 64})}}
     )
-    mutated = replace(authority, catalogues=catalogues, _snapshots={})
+    mutated = replace(authority, catalogues=catalogues, snapshots={})
     # A replaced authority is a new object, and the evidence root is registered
     # per compilation result by identity, so the copy has to declare the root it
     # inherits or every layout-byte read refuses before the mutation is reached.
@@ -103,7 +103,7 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
     )
     divergent_modelo = modelo.model_copy(update={"revisions": {divergent_revision.id: divergent_revision}})
     mutated = replace(
-        authority, _modelos_by_id={**authority._modelos_by_id, divergent_modelo.id: divergent_modelo}, _snapshots={}
+        authority, modelos_by_id={**authority.modelos_by_id, divergent_modelo.id: divergent_modelo}, snapshots={}
     )
     register_authoring_authority(mutated, source_root=source_root_for(authority))
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)

@@ -295,7 +295,7 @@ class SQLiteAuthorityReader:
     def pin(self) -> AuthorityGenerationPin:
         """Return this reader's immutable logical-generation/incarnation identity."""
         self._require_open()
-        self._verify_database_identity()
+        self.verify_database_identity()
         return AuthorityGenerationPin(self._descriptor.logical_generation, self._incarnation)
 
     @contextmanager
@@ -355,7 +355,7 @@ class SQLiteAuthorityReader:
         generation is immutable, and identity verification still runs on every
         call so a swapped file is refused rather than served from memory.
         """
-        self._verify_database_identity()
+        self.verify_database_identity()
         with self._state_lock:
             if self._component_queries is not None:
                 return self._component_queries
@@ -374,7 +374,7 @@ class SQLiteAuthorityReader:
         publication sweeps it. The contract is read once per admitted
         database; identity is still verified on every call.
         """
-        self._verify_database_identity()
+        self.verify_database_identity()
         with self._state_lock:
             if self._proof_contract is not None:
                 return self._proof_contract[0]
@@ -393,7 +393,7 @@ class SQLiteAuthorityReader:
                 "WHERE modelo_id = ? AND filing_year = ? AND period = ? AND grade = ?",
                 (key.modelo_id, key.filing_year, key.period, key.grade.value),
             ).fetchone()
-        self._verify_database_identity()
+        self.verify_database_identity()
         if row is None:
             return None
         revision_id = row[0]
@@ -409,7 +409,7 @@ class SQLiteAuthorityReader:
             source_rows = connection.execute(
                 "SELECT module, sha256 FROM snapshot_proof_validator_sources ORDER BY module"
             ).fetchall()
-        self._verify_database_identity()
+        self.verify_database_identity()
         if row is None:
             return None
         digest, window_from, window_to = row
@@ -462,7 +462,7 @@ class SQLiteAuthorityReader:
                 "WHERE component_kind = ? AND component_key = ? ORDER BY ordinal",
                 (kind.value, key),
             ).fetchall()
-        self._verify_database_identity()
+        self.verify_database_identity()
         if row is None:
             raise LookupError(f"authority component {kind.value}/{key} is unavailable")
         codec, payload_digest, retained_weight, payload = row
@@ -589,7 +589,8 @@ class SQLiteAuthorityReader:
             _record_admission(observed)
         return observed
 
-    def _verify_database_identity(self) -> None:
+    def verify_database_identity(self) -> None:
+        """Refuse, and drop every cached component, once the admitted file object is no longer the one proved."""
         try:
             status = self._database_path.stat()
             observed = (
