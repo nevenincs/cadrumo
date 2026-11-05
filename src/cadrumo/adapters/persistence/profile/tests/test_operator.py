@@ -802,7 +802,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
         display_name=_PROFILE_LABEL,
         overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
-    with override_settings(cadrumo_clave_movil_dni_nie="00000024R"):
+    with override_settings(cadrumo_clave_movil_dni_nie="00001005Q"):
         result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.identity_alignment == "mismatch"
@@ -810,7 +810,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     assert result.complete is False
     assert result.incomplete_reason == result.identity_alignment_detail
     assert "00000000T" in result.identity_alignment_detail
-    assert "00000024R" in result.identity_alignment_detail
+    assert "00001005Q" in result.identity_alignment_detail
     verdict = result.precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
@@ -912,7 +912,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
         display_name=_PROFILE_LABEL,
         overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
-    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00000024R")):
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00001005Q")):
         result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.identity_alignment == "mismatch"

@@ -69,7 +69,7 @@ def preview_draft(*lines: InvoiceFiguresPreviewLine, **overrides: object) -> Inv
         "invoice_number": "SYN-2026-001",
         "issued_at": APRIL,
         "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "B00000281",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "currency": "EUR",
         "lines": lines or (preview_line(),),

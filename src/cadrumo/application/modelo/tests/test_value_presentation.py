@@ -246,7 +246,7 @@ def test_a_bank_account_is_masked_unless_the_editor_asks_for_it() -> None:
 
 
 def test_codes_and_text_are_shown_as_stored() -> None:
-    assert format_casilla_value("00000024R", data_type="nif", language=OutputLanguage.EN) == "00000024R"
+    assert format_casilla_value("00001005Q", data_type="nif", language=OutputLanguage.EN) == "00001005Q"
     assert format_casilla_value("1T", data_type="period_code", language=OutputLanguage.ES) == "1T"
     assert value_presentation_kind("postal_code") is ValuePresentationKind.CODE
 

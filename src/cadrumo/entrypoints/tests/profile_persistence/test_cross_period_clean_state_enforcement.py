@@ -627,7 +627,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
             operation=operation,
             taxpayer_tax_id="X1234567L",
             ejercicio=2025,
-            payer_tax_id="B00000000",
+            payer_tax_id="B00010082",
             income_class=RetencionSoportadaClase.TRABAJO,
             retencion=retenciones_trabajo_amount,
             importe_integro_dinerario=Decimal("32000.00"),
@@ -922,7 +922,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -967,7 +967,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000001"),
+                        member_nifs=("A00010009", "B00000001"),
                     ),
                 ),
                 clock=_CLOCK,
@@ -1006,7 +1006,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -1039,7 +1039,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000000"),
+                        member_nifs=("A00010009", "B00010082"),
                     ),
                 ),
             },

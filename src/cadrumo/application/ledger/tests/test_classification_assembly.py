@@ -649,7 +649,7 @@ def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
 #: that this identifier is genuinely, verifiably Spanish and still establishes
 #: nothing about establishment. A malformed value would be refused for the wrong
 #: reason and would prove nothing.
-_DOMESTIC_B_CIF = "B00000208"
+_DOMESTIC_B_CIF = "B00010108"
 
 
 def test_a_bare_spanish_company_identifier_never_reaches_the_peninsula() -> None:

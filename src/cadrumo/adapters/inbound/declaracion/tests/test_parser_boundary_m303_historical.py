@@ -48,7 +48,7 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
 
     assert filing.modelo == "303"
     assert filing.period == _expected_period(year, period)
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
     assert filing.registry_snapshot_ref.revision_id == "2022"

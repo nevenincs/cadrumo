@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B00000281",
+        supplier_tax_id="B00010157",
         invoice_number="F-1",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),

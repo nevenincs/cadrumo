@@ -294,7 +294,7 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
                 FindingResolution(
                     blocker_id=blockers[0].blocker_id,
                     action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                    value="ESA00000000",
+                    value="ESA00010009",
                 ),
             ),
         )

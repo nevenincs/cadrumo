@@ -92,7 +92,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     second_pdf = tmp_path / "second.pdf"
     target_pdf = tmp_path / "declaracion.pdf"
     _write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
-    _write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000024R")
+    _write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00001005Q")
 
     first_bytes = first_pdf.read_bytes()
     second_bytes = second_pdf.read_bytes()
@@ -126,5 +126,5 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     assert replacement_stat.st_size == original_stat.st_size
     assert replacement_stat.st_mtime_ns == original_stat.st_mtime_ns
     assert first.tax_id == "00000000T"
-    assert replacement.tax_id == "00000024R"
+    assert replacement.tax_id == "00001005Q"
     assert replacement.source_pdf_sha256 == hashlib.sha256(second_bytes).hexdigest()

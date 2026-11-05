@@ -235,7 +235,7 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
         prefix_start = written.index(b"<T3030")
         # The all-zero values the development mock identity fact declares.
         assert written[prefix_start + 92 : prefix_start + 96] == b"0000"
-        assert written[prefix_start + 100 : prefix_start + 109] == b"X0000000T"
+        assert written[prefix_start + 100 : prefix_start + 109] == b"X0001003Z"
         assert taxpayer_nif.encode("ascii") not in written[prefix_start + 100 : prefix_start + 109]
         assert result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
         assert event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))

@@ -99,10 +99,10 @@ _NIFIVA = TypeAdapter(NifIvaString)
 class TestNifIvaString:
     def test_accepted(self) -> None:
         cases = (
-            ("ESB00000356", "ESB00000356"),
+            ("ESB00010181", "ESB00010181"),
             ("FR12345678901", "FR12345678901"),
             ("DE123456789", "DE123456789"),
-            ("  es-b00000356  ", "ESB00000356"),
+            ("  es-b00010181  ", "ESB00010181"),
             ("BE 0123.456.789", "BE0123456789"),
             ("\tbe.12 \t", "BE12"),
             ("BE123456789012", "BE123456789012"),

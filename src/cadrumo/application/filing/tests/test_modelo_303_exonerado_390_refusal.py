@@ -318,7 +318,7 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
     """Return a synthetic AEAT product/software identity for the export guard."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:exonerado-390-refusal-proof",

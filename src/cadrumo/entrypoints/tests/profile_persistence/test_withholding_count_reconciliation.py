@@ -56,8 +56,8 @@ _ACTIVITY_BOX = "07"
 _EXCEEDS_KEY = "application.modelo.findings.withholding_count_exceeds_summary_perceptors"
 _UNCHECKED_KEY = "application.modelo.findings.withholding_count_not_cross_checked"
 _PERSON_A = "00000000T"
-_PERSON_B = "00000024R"
-_PERSON_C = "00000002W"
+_PERSON_B = "00001005Q"
+_PERSON_C = "00001000B"
 
 
 @pytest.fixture

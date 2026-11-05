@@ -33,7 +33,7 @@ from ..draft_review import _invoice_catalogue_fingerprint
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _RUNTIME_BUCKET_ID = "0fab7c94-777c-4598-ae8f-c4b539f300c3"  # was 'filing-test'
-_COUNTERPARTY_CIF = "B00000281"
+_COUNTERPARTY_CIF = "B00010157"
 
 
 def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RUNTIME_BUCKET_ID) -> Invoice:

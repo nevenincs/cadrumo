@@ -190,7 +190,7 @@ def _ledger() -> _Ledger:
             kind=InvoiceKind.RECEIVED,
             number="P-003",
             issued_at=date(_FILING_YEAR, 5, 5),
-            counterparty_tax_id="B00000281",
+            counterparty_tax_id="B00010157",
             counterparty_name="PROVEEDOR PEQUENO SA",
             base_total=Decimal("826.45"),
             iva_total=Decimal("173.55"),

@@ -41,7 +41,7 @@ from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, In
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FIRST = "B12345674"
-_SECOND = "A00000018"
+_SECOND = "A00010017"
 
 
 def _ambiguous_draft() -> InvoiceDraft:

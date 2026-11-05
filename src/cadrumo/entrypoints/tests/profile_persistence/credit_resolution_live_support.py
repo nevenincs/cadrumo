@@ -137,7 +137,7 @@ def _seed_profile() -> None:
 
 
 def _seed_payers(operation: PinnedAuthorityOperation) -> None:
-    for payer, retencion, ingreso_a_cuenta in (("B00000000", "1200.00", "300.00"), ("A00000000", "450.00", "0.00")):
+    for payer, retencion, ingreso_a_cuenta in (("B00010082", "1200.00", "300.00"), ("A00010009", "450.00", "0.00")):
         seed_payer_certificate(
             operation=operation,
             taxpayer_tax_id=_TAX_ID,
@@ -151,7 +151,7 @@ def _seed_payers(operation: PinnedAuthorityOperation) -> None:
         operation=operation,
         taxpayer_tax_id=_TAX_ID,
         ejercicio=YEAR,
-        payer_tax_id="C00000000",
+        payer_tax_id="C00010231",
         income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
         retencion=EXPECTED_CAPITAL_CREDIT,
     )

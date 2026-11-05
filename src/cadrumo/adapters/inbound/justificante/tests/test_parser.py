@@ -188,7 +188,7 @@ def _real_corpus_pdfs() -> list[Path]:
 
 # Spanish tax-identifier shape (NIF / NIE / CIF): an optional leading letter,
 # 7-8 digits, and a trailing control character. Distinguishes the sanitiser's
-# redacted tax-id replacement (Y0000001S / B00000001 / 00000000T) from the same
+# redacted tax-id replacement (Y0001006P / B00000001 / 00000000T) from the same
 # sidecar's redacted date (01-01-1900) and presentation-id (SANITIZED...) values.
 _SANITISED_TAX_ID_PATTERN = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
 
@@ -248,7 +248,7 @@ class TestRealCorpusParses:
         assert record.period == expected_period, f"period mismatch for {fixture}: got {record.period}"
         assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
         # The redacted identifier declared by the sidecar survives the round-trip.
-        # It is a NIE/NIF for a personal filer (Y0000001S) but a CIF for a
+        # It is a NIE/NIF for a personal filer (Y0001006P) but a CIF for a
         # sociedad's Impuesto sobre Sociedades modelo (e.g. Modelo 202 -> B00000001),
         # so the expectation is derived per-fixture from the authoritative
         # fixture-provenance sidecar rather than hardcoded to one shape.

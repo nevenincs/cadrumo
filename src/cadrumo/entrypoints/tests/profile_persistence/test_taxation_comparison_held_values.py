@@ -92,7 +92,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "31111111-1111-4111-8111-111111111111"
 _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
-_SPOUSE_TAX_ID = "00000024R"
+_SPOUSE_TAX_ID = "00001005Q"
 _YEAR = 2025
 _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""

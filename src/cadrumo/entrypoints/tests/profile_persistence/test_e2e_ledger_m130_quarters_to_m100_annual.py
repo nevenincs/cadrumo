@@ -471,7 +471,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
         operation=published_authority_operation(),
         taxpayer_tax_id=TAX_ID,
         ejercicio=YEAR,
-        payer_tax_id="B00000000",
+        payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=_AUTONOMA_SALARY_WITHHOLDING,
         importe_integro_dinerario=_AUTONOMA_SALARY_GROSS,

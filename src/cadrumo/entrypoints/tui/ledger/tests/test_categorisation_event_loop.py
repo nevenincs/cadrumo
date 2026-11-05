@@ -121,7 +121,7 @@ async def _drive_iva(pilot: Pilot[None], screen: Screen[None]) -> None:
 
 
 async def _drive_counterparties(pilot: Pilot[None], screen: Screen[None]) -> None:
-    type_into(screen, "#categorisation-counterparty-identifier", "B00000000")
+    type_into(screen, "#categorisation-counterparty-identifier", "B00010082")
     type_into(screen, "#categorisation-counterparty-scope", "TAI")
     type_into(screen, "#categorisation-counterparty-asserted", "Operator")
     await press(pilot, screen, "categorisation-counterparty-confirm")

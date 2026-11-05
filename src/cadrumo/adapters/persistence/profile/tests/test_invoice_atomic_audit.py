@@ -197,7 +197,7 @@ def _invoice():
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="B00000281",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="ATOMIC-2026-001",
         issued_at=date(2026, 9, 22),

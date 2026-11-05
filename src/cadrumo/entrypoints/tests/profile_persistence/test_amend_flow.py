@@ -602,10 +602,10 @@ def test_amend_member_scoped_filing_id_carries_member_nif(
     _, _, baseline = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
-        member_nif="A00000000",
+        member_nif="A00010009",
         operation=operation,
     )
-    assert baseline.member_nif == "A00000000"
+    assert baseline.member_nif == "A00010009"
 
     with bundled_indexed_authority().operation() as operation:
         new_filing = amend_modelo_revision(
@@ -618,12 +618,12 @@ def test_amend_member_scoped_filing_id_carries_member_nif(
             clock=_T4,
         )
 
-    assert new_filing.member_nif == "A00000000"
+    assert new_filing.member_nif == "A00010009"
     assert new_filing.filing_record_id == derive_filing_record_id(
         work_unit_id=new_filing.work_unit_id,
         calculation_revision_id=new_filing.calculation_revision_id,
         filed_by="operator-A",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
 
 
@@ -645,7 +645,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
     work_unit, _, baseline_a = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
-        member_nif="A00000000",
+        member_nif="A00010009",
         operation=operation,
     )
 
@@ -683,7 +683,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
             clock=_T4,
         )
 
-    assert new_filing.member_nif == "A00000000"
+    assert new_filing.member_nif == "A00010009"
     refreshed_single_filer = persisted_filing_record(
         single_filer_filing_id,
         ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),

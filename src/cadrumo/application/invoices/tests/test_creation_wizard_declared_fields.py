@@ -27,7 +27,7 @@ def test_wizard_preserves_all_four_declared_facts_and_idempotent_noop(
             return create_invoice_via_wizard(
                 bucket_id=_PROFILE,
                 kind=InvoiceKind.RECEIVED,
-                counterparty_nif="B00000281",
+                counterparty_nif="B00010157",
                 counterparty_name="Synthetic supplier",
                 invoice_number="WIZARD-R1",
                 invoice_date="2026-05-01",
@@ -60,7 +60,7 @@ def test_wizard_accumulates_new_and_existing_field_refusals_before_write(
         create_invoice_via_wizard(
             bucket_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="B00000281",
+            counterparty_nif="B00010157",
             counterparty_name="",
             invoice_number="WIZARD-BAD",
             invoice_date="2026-05-01",

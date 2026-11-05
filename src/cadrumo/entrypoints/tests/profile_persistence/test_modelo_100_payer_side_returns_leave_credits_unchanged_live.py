@@ -371,7 +371,7 @@ def _seed_salary_certificate(operation: PinnedAuthorityOperation) -> None:
         operation=operation,
         taxpayer_tax_id="12345678Z",
         ejercicio=_YEAR,
-        payer_tax_id="B00000000",
+        payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=_SALARY_CERTIFICATE_RETENCIONES,
         importe_integro_dinerario=Decimal("20000.00"),

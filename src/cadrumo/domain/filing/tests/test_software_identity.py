@@ -14,7 +14,7 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
     """An export header cannot reuse a filing participant or an implicit product default."""
     identity = AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:c303",
@@ -24,7 +24,7 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
     )
 
     assert identity.program_identifier == "C303"
-    assert identity.developer_tax_id == "Y0000001S"
+    assert identity.developer_tax_id == "Y0001006P"
     assert identity.evidence[0].reference == "aeat-software-registration:c303"
     assert not {
         name
@@ -35,13 +35,13 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
     with pytest.raises(ValueError, match="program_identifier"):
         AeatProductSoftwareIdentity(
             program_identifier="303",
-            developer_tax_id="Y0000001S",
+            developer_tax_id="Y0001006P",
             evidence=identity.evidence,
         )
     with pytest.raises(ValueError, match="at least 1 item"):
         AeatProductSoftwareIdentity(
             program_identifier="C303",
-            developer_tax_id="Y0000001S",
+            developer_tax_id="Y0001006P",
             evidence=(),
         )
 

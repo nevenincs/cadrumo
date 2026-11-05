@@ -144,7 +144,7 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
     profile = projection_for_taxpayer(
         {
-            "tax.id": "X0000002W",
+            "tax.id": "X0001004S",
             "iva.regime": "GENERAL",
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.m303_regime_composition": "general",
@@ -154,7 +154,7 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
-    assert profile.tax_id == "X0000002W"
+    assert profile.tax_id == "X0001004S"
     assert profile.iva_regime == default_iva_regime()
 
 
@@ -162,8 +162,8 @@ def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
     record = _record(
         setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=()
     )
-    profile = projection_for_taxpayer(record, tax_id_default="Z0000000M", schema=_SCHEMA)
-    assert profile.tax_id == "Z0000000M"
+    profile = projection_for_taxpayer(record, tax_id_default="Z0001008R", schema=_SCHEMA)
+    assert profile.tax_id == "Z0001008R"
     assert profile.iva_regime == default_iva_regime()
 
 

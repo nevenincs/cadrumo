@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # AEAT-checksum-valid Spanish identifiers: a CIF and a NIF.
 _SPANISH_CIF = "B12345674"
-_SPANISH_NIF = "00000019L"
+_SPANISH_NIF = "00001001N"
 
 
 def _fields(**overrides: str | None) -> ExtractedInvoiceResponse:

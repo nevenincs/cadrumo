@@ -49,7 +49,7 @@ from .leased_profile_authority import leased_profile_decode_context
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TAX_ID = "12345678Z"
-_OTHER_TAX_ID = "00000024R"
+_OTHER_TAX_ID = "00001005Q"
 
 _LIVE_SESSION_RETURN_TYPES = ("AeatSession", "AuthenticatedAeatSessionResult")
 _GUARD = "assert_session_identity_matches_expected"
@@ -327,7 +327,7 @@ class TestClaveIdentityIsComparedCanonically:
     def test_a_genuine_mismatch_is_still_refused(self) -> None:
         """Anti-tautology: normalisation must not make the guard permissive."""
         with pytest.raises(AuthProfileIdentityMismatchError):
-            self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie="00000024R")
+            self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie="00001005Q")
 
     def test_a_matching_canonical_pair_is_accepted(self) -> None:
         """Anti-tautology: the guard must not simply refuse everything."""

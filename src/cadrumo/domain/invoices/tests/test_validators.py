@@ -30,8 +30,8 @@ def test_validate_spanish_tax_id_accepts_known_valid_nif() -> None:
     values = (
         "12345678Z",
         "00000000T",
-        "00000024R",
-        "00000002W",
+        "00001005Q",
+        "00001000B",
     )
 
     for value in values:
@@ -55,7 +55,7 @@ def test_validate_spanish_tax_id_accepts_cif_digit_control() -> None:
     values = (
         # body 0000028 → digit-control 1 (Luhn sum over doubled odd positions +
         # even positions = 9).
-        "B00000281",
+        "B00010157",
         # body 1234567 → digit-control 4.
         "B12345674",
         "E12345674",

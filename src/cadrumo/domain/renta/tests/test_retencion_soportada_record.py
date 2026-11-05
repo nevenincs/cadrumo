@@ -26,7 +26,7 @@ _FINGERPRINT = "b" * 64
 def _payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "ejercicio": 2025,
-        "payer_tax_id": "B00000000",
+        "payer_tax_id": "B00010082",
         "payer_legal_name": "Pagador Sintetico SL",
         "payer_ref": _PAYER_REF,
         "income_class": "trabajo",

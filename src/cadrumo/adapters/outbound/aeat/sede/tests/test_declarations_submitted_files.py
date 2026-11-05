@@ -470,7 +470,7 @@ class TestSubmittedFileObservation:
             official_page_casillas = {validated_casilla_id(f"{number:02d}") for number in range(1, 31)}
 
             assert set(observed_values) == official_page_casillas
-            assert parsed_fields["modelo-111-page-01-nif"] == "Y0000001S"
+            assert parsed_fields["modelo-111-page-01-nif"] == "Y0001006P"
             assert parsed_fields["modelo-111-page-01-apellidos"] == "SANITIZED SURNAME"
             assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]
             assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]

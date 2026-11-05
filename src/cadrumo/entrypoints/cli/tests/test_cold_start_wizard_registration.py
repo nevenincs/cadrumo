@@ -168,7 +168,7 @@ def test_cold_process_work_create_registers_wizard_catalogue(
         tmp_path,
         "coldwiz",
         **{
-            "identity.tax_id": "00000019L",
+            "identity.tax_id": "00001001N",
             "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Cold",
             "identity.surnames": "Wizard",

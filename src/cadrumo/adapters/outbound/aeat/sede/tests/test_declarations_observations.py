@@ -450,7 +450,7 @@ class TestParseListbox:
 
     def test_malformed_timestamp_cell_is_refused_without_echoing_cell_text(self) -> None:
         """A shifted grid can put taxpayer text in the timestamp column; the refusal must not carry it."""
-        leaked_cell = "X0000002W SINTETICO APELLIDO"
+        leaked_cell = "X0001004S SINTETICO APELLIDO"
         html = f"""
             <div class="z-listbox">
               <tr class="z-listhead">
@@ -514,7 +514,7 @@ def _exception_chain_disclosures(error: BaseException, text: str) -> list[str]:
     return disclosures
 
 
-_PLANTED_CELL = "Y0000002Q SINTETICO NOMBRE"
+_PLANTED_CELL = "Y0001007D SINTETICO NOMBRE"
 _REDACTED_REFUSAL = "presented_at could not be parsed"
 
 

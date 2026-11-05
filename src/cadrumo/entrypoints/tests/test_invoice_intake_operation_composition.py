@@ -80,7 +80,7 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
         wizard = create_invoice_via_wizard(
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="B00000281",
+            counterparty_nif="B00010157",
             counterparty_name="Synthetic supplier",
             invoice_number="PIN-WIZARD",
             invoice_date="2026-05-01",
