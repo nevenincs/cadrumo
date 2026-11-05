@@ -1,10 +1,10 @@
 {
   "provenance": "synthetic_generated",
   "role": "formula_verification",
-  "source_sha256": "4d7c26b58706f6269c01620fe5e875f27fb401a9164fff1dfa986bc76e474349",
-  "output_sha256": "4d7c26b58706f6269c01620fe5e875f27fb401a9164fff1dfa986bc76e474349",
-  "source_size_bytes": 2006,
-  "output_size_bytes": 2006,
+  "source_sha256": "36f8bf8b5d772e9c3b4534599a1230cd5294a868d3759a67ab20a481244591a2",
+  "output_sha256": "36f8bf8b5d772e9c3b4534599a1230cd5294a868d3759a67ab20a481244591a2",
+  "source_size_bytes": 2009,
+  "output_size_bytes": 2009,
   "sanitizer_version": "0.1.0-synthetic",
   "determinism_flags": {
     "deterministic_id": true,
@@ -21,6 +21,7 @@
         0,
         0
       ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "synthetic": "01-01-1900",
       "encoding": "literal"
     },
@@ -30,6 +31,7 @@
         0,
         1
       ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "synthetic": "SANITIZED8402024",
       "encoding": "literal"
     },
@@ -39,6 +41,7 @@
         0,
         2
       ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "synthetic": "Y0001006P",
       "encoding": "literal"
     }
