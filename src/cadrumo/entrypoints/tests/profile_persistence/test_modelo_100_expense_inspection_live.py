@@ -88,7 +88,6 @@ _M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casi
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
-_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_SS_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-ledger-expense-0199-deductible"
 
@@ -247,7 +246,6 @@ def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
         for binding in snapshot.revision.bindings
         if str(binding.source) not in _AUTO_RESOLVED_SOURCES
     }
-    values[_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 

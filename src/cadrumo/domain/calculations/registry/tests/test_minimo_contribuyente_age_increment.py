@@ -74,6 +74,7 @@ def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
         inputs={},
         date_context={"filing_period": date(_PRIOR_EDITION, 12, 31)},
         binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-profile-declaration-type": Decimal("1"),

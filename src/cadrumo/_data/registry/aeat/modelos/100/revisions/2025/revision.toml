@@ -9258,8 +9258,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "renta-estimacion-directa-rendimiento-neto"}
-sequence_additions = {"expression.args" = [{op = "equal", args = [{binding = "renta-profile-has-economic-activity"}, {literal = "1"}]}, {op = "if_then_else", args = [{op = "equal", args = [{binding = "renta-modelo-100-estimacion-directa-es-normal"}, {literal = "1"}]}, {op = "subtract", args = [{casilla_id = "0180"}, {casilla_id = "0220"}]}, {op = "subtract", args = [{casilla_id = "0180"}, {casilla_id = "0223"}]}]}, {literal = "0"}], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {"expression.args" = [0, 1, 2], legal_refs = [2], source_citations = [0], source_refs = [0]}
+sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_removals = {legal_refs = [2], source_citations = [0], source_refs = [0]}
 sequence_order = {legal_refs = [2, 0, 1, 3, 4]}
 
 [[revisions."2025".family_overrides]]

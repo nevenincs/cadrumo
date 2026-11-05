@@ -62,6 +62,7 @@ _DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
 _BINDINGS_2024: dict[str, Decimal] = {
+    "renta-profile-has-economic-activity": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # declaration_type = 1 (individual) → 0461 computed = 0
     "renta-profile-declaration-type": Decimal("1"),

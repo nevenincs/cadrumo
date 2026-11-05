@@ -154,7 +154,7 @@ def _m100_binding_values() -> dict[str, Decimal]:
     carried = {
         binding.id: Decimal("0") for binding in revision.bindings if binding.source is BindingSourceKind.PREVIOUS_FILING
     }
-    return {**carried, "renta-modelo-100-estimacion-directa-es-normal": Decimal("1")}
+    return carried
 
 
 def _zero_relation_values() -> dict[str, Decimal]:

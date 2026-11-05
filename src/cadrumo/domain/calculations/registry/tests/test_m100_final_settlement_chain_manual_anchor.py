@@ -99,6 +99,7 @@ def _bindings() -> dict[str, Decimal]:
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

@@ -21,11 +21,12 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..calculation_required_inputs import calculation_required_inputs
 from ..work_form_models import ModeloFormOrigin, ModeloFormStanding, ModeloWorkForm, section_fields
@@ -49,11 +50,13 @@ _DIRECT_ESTIMATION: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _ECONOMIC_ACTIVITY: BindingId = "renta-profile-has-economic-activity"
 
 
-def _calculation_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    return operation.snapshot("100", filing_year=_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+def _calculation_snapshot(operation: PinnedAuthorityOperation, year: int = _YEAR) -> RegistrySnapshot:
+    return operation.snapshot("100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None) -> None:
+def _calculate_without(
+    snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None, year: int = _YEAR
+) -> None:
     """Run the engine over every binding's neutral answer, leaving ``omitted`` unanswered."""
     decimals, booleans, dates, enums = neutral_binding_values(
         binding for binding in snapshot.revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
@@ -70,7 +73,7 @@ def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: B
             _SALARY: Decimal("30000.00"),
             **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, decimals),
         },
-        date_context={"filing_period": date(_YEAR, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values=decimals,
         enum_binding_values=enums,
         relation_values={
@@ -82,9 +85,9 @@ def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: B
     )
 
 
-def _refused_binding(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId) -> str:
+def _refused_binding(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId, year: int = _YEAR) -> str:
     with pytest.raises(RegistryValidationError) as refused:
-        _calculate_without(snapshot, activity=activity, omitted=omitted)
+        _calculate_without(snapshot, activity=activity, omitted=omitted, year=year)
     assert refused.value.translated_message in {
         "errors.calc.binding_value_missing",
         "errors.calc.bound_casilla_binding_value_missing",
@@ -112,10 +115,19 @@ def test_the_engine_refuses_without_any_earlier_negative_base_whoever_the_filer_
 def test_the_engine_refuses_without_the_direct_estimation_answer_only_for_a_filer_with_an_activity(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = _calculation_snapshot(operation)
-
-    assert _refused_binding(snapshot, activity=True, omitted=_DIRECT_ESTIMATION) == _DIRECT_ESTIMATION
-    _calculate_without(snapshot, activity=False, omitted=_DIRECT_ESTIMATION)
+    """An employee calculates without the modality and an autonomo still needs it, in every supported year."""
+    support = published_supported_filing_years()
+    assert support is not None
+    checked = 0
+    for year in sorted(support.years):
+        try:
+            snapshot = _calculation_snapshot(operation, year)
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        assert _refused_binding(snapshot, activity=True, omitted=_DIRECT_ESTIMATION, year=year) == _DIRECT_ESTIMATION
+        _calculate_without(snapshot, activity=False, omitted=_DIRECT_ESTIMATION, year=year)
+        checked += 1
+    assert checked
 
 
 # -- what the registry says the form must ask for -------------------------------

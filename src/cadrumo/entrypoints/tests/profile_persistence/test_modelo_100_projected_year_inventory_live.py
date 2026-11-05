@@ -168,7 +168,6 @@ def _calculate(secure_objects: SecureObjectRepository, *, filing_year: int) -> B
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
             clock=_CLOCK,
         )
 

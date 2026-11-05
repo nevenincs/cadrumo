@@ -200,7 +200,6 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero: this persona files no other income and has no
@@ -554,7 +553,6 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "retencion_soportada",
         )
     }
-    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 

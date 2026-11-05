@@ -97,10 +97,6 @@ _DERIVED_PATH = f"renta_family.descendientes_minimos_aggregate_{_YEAR}"
 _SENTINEL = Decimal("4321.37")
 
 
-#: The single binding the M100 estimación-directa régimen predicate needs set for
-#: the annual revision to reach the mínimo casillas at all.
-_ESTIMACION_DIRECTA_NORMAL: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
-
 #: Sources the live mesh resolves from bucket state. Bindings owned by these are
 #: left to the mesh; everything else is zero-defaulted so the calculation reaches
 #: 0513 rather than failing on an unrelated unresolved slot.
@@ -134,7 +130,6 @@ def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
-    values[_ESTIMACION_DIRECTA_NORMAL] = Decimal("1")
     values.update(dict.fromkeys(_UNRELATED_PROFILE_BINDINGS, Decimal("0")))
     return values
 
