@@ -57,6 +57,9 @@ _OPERATOR_FACTS = {
     "withholding.colegio_concertado": "false",
 }
 
+# The operator pays an employee with retencion, so Modelo 111 applies to the profile.
+_EMPLOYER_FACTS = {**_OPERATOR_FACTS, "withholding.has_employees": "true"}
+
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
     "taxpayer_type.legal_entity_form": "sl",
@@ -592,7 +595,7 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
     on calculation inputs.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
     work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
@@ -617,7 +620,7 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
     prior-period data.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
     work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],

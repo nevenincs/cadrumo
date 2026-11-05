@@ -1180,8 +1180,15 @@ _test-registry-load:
 _test-registry-calculations-parallel:
     @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
 
+# The desktop request tests bundle frontend sources that import the generated
+# window projections; test processes never seed, so the lane produces the families
+# they read first. A current family is left unchanged.
 [private]
-_test-registry-conformance:
+_test-registry-seed:
+    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words
+
+[private]
+_test-registry-conformance: _test-registry-seed
     @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
