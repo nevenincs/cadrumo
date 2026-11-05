@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2a96f4e36ebbb876e11e4e5f862e2d317366e4bd89f047f85388b3896d9caaf'
+body_hash: 'sha256:d14f8334bbd1fe4f94a2e1eda7e5ccb4b3656fe0954a6331036ad9857dc683eb'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -928,6 +928,105 @@ related:
 - `S16` `verify:` `lint-imports` -> `pass`
 - `S16` `verify:` `dev.quality.types` -> `fail`
 - `S16` `by:` `vaultspec-standard-executor`
+- `S24` `A` `dev/docs/sequences/tests/test_seed_generator.py`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/documents.toml`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/expectations.toml`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/ledger.csv`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/persona.toml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-01.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-02.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-03.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-04.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-05.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-06.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-07.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-08.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-09.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-10.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-11.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-12.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-1.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-2.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-3.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-4.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-1.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-2.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-3.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-4.xml`
+- `S24` `A` `src/cadrumo/entrypoints/tests/test_persona_invoices.py`
+- `S24` `A` `src/cadrumo/tests/persona_invoices.py`
+- `S24` `M` `dev/docs/sequences/_seeds.py`
+- `S24` `M` `dev/docs/sequences/cli.py`
+- `S24` `M` `dev/docs/sequences/persona_profile.py`
+- `S24` `M` `dev/docs/sequences/seed_generator.py`
+- `S24` `M` `dev/docs/sequences/tests/test_seed_generator.py`
+- `S24` `M` `dev/fixtures/personas/autonomo-alta-reciente/documents.toml`
+- `S24` `M` `dev/fixtures/personas/autonomo-alta-reciente/ledger.csv`
+- `S24` `M` `dev/fixtures/personas/autonomo-fontanero/documents.toml`
+- `S24` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S24` `M` `dev/fixtures/personas/identities.toml`
+- `S24` `M` `dev/fixtures/personas/README.md`
+- `S24` `M` `docs/_sequences/contracts/how-to/censo-update/censo-update-create-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-confirm-readiness.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-correct.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-expense-category.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-from-csv.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-review-row.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-tax-fields.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-derive-iva.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-inspect-history.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-override.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-preflight.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-suggest.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/filing-spine/filing-spine-create-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-classify-income.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-link-invoice.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/modelo-130-first-quarter.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-check-readiness.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-classify-rows.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-diagnostics.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-preview-save.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-review-rows.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-annual-preflight.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-130/modelo-130-quarterly.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-annual-2025.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-inspect.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-supply-binding.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-modelo-130.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-revision.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-bindings.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-manual-casilla.seq`
+- `S24` `M` `docs/_sequences/explanation/`
+- `S24` `M` `docs/_sequences/fixtures/classifications-2026-1t.csv`
+- `S24` `M` `docs/_sequences/fixtures/movimientos-2026-1t.csv`
+- `S24` `M` `docs/_sequences/how-to/`
+- `S24` `M` `docs/_sequences/seeds/autonomo-irpf-2026.seq`
+- `S24` `M` `docs/_sequences/seeds/choose-modelo-autonomo.seq`
+- `S24` `M` `docs/_sequences/seeds/filing-calendar-obligated-profile.seq`
+- `S24` `M` `docs/_sequences/seeds/filing-spine-303-ledger.seq`
+- `S24` `M` `docs/_sequences/seeds/iva-evidence-2026.seq`
+- `S24` `M` `docs/_sequences/seeds/iva-year-2025.seq`
+- `S24` `M` `docs/_sequences/seeds/quickstart-ledger.seq`
+- `S24` `M` `docs/_sequences/seeds/renta-2025.seq`
+- `S24` `M` `docs/how-to/filing-calendar.md`
+- `S24` `M` `docs/how-to/modelo-390.md`
+- `S24` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S24` `M` `src/cadrumo/tests/personas.py`
+- `S24` `verify:` `dev.docs.sequences check` -> `pass`
+- `S24` `verify:` `seeds --check` -> `pass`
+- `S24` `verify:` `persona invoices, seed generator, materialisation tests (21)` -> `pass`
+- `S24` `verify:` `lint-imports` -> `pass`
+- `S24` `by:` `vaultspec-high-executor`
+- `S05` `M` `dev/fixture_projections/cli.py`
+- `S05` `verify:` `ruff S603 resolved through dev.packaging.command_execution` -> `pass`
+- `S05` `verify:` `fixture_projections check ledger-entry-options` -> `pass`
+- `S05` `verify:` `dev.docs.sequences check` -> `pass`
+- `S05` `verify:` `modelo_fixtures double build 0 differing envelopes` -> `pass`
+- `S05` `by:` `coordinator`
 
 ## Notes
 
@@ -948,3 +1047,5 @@ related:
 - `S26` Proven at horizon-1 only; per-year registry population runs at S19. Received `domestic_exempt` rows still raise the `unrouted_declarable_quantity` advisory
 - `S15` `register_minimal_profile` and `register_cli_profile` (125 consumers) and about 15 private ready-profile helpers move in S16
 - `S16` Partial: types fail on 6 pre-existing diagnostics outside S16 files. `test_ledger_list_filter` `(FAIL_EXCHANGE_RATE_PROVIDER)` and `test_staged_check_verb` (extra inputs in LedgerStagedCheckEnvelope) fail on pre-migration content too. Remaining local builders wait for S28.
+- `S24` A problem line printed onto an advisory line hid llm-inspect-history drift from refresh. No product operation stores issued-invoice evidence, so issued invoices remain advisory.
+- `S05` The window Modelo family's check needs `node_modules` for prettier; it runs in the S19 full gates

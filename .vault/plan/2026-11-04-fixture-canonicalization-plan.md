@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:f2682401b90f04216c3158336135a15914617cd3f228c6140ac55e862613bb42'
+body_hash: 'sha256:1d4d83ed7210fc4fa966989d4b1787904d667601328e0bd07d2971ee5541049f'
 ---
 
 # `fixture-canonicalization` plan
@@ -39,7 +39,7 @@ Make existing generators deterministic and remove known stale or orphan fixture 
 
 Separate fixture seeding from testing in the justfile and CI with digest-based freshness.
 
-- [ ] `P02.S05` - Add the fixture projection registry with digest stamps and the seed, force, status, check and clean recipes; `dev/fixtures, justfile and .importlinter`.
+- [x] `P02.S05` - Add the fixture projection registry with digest stamps and the seed, force, status, check and clean recipes; `dev/fixtures, justfile and .importlinter`.
 - [x] `P02.S06` - Make frontend and native test recipes seed first, seed on setup, and run the fixture check in the local and merge gates with a per-PR frontend and Rust job; `justfile and .github/workflows`.
 
 ### Phase `P03` - Persona catalogue
@@ -54,7 +54,7 @@ Define every canonical taxpayer and flow once and seed it through production ope
 - [x] `P03.S21` - Close the persona expressiveness gaps: fix the reverse-charge category missing from the self-assessed projection, express recargo and withholding certificates through their operations, and adjust catalogue rows that use categories or counterparties the operations refuse; `registry category projection, ledger classification and invoice operations, dev/fixtures/personas`.
 - [x] `P03.S22` - Add a profile-only replay mode and a digest-keyed materialised-persona cache so consumers that need only profile facts or repeat a persona do not replay the full ledger; `src/cadrumo/entrypoints/tests persona materialisation`.
 - [x] `P03.S23` - Resolve the annual IVA simplified-regime summary only when the revision declares a binding of that source kind, so a taxpayer with no IVA composition calculates a Modelo 100; `src/cadrumo/application/modelo/calculation_source_mesh_actions.py and its tests`.
-- [ ] `P03.S24` - Seed the docs ledger, invoice, evidence and work-unit frames from a persona whose activity genuinely starts in the horizon year, so docs stop overriding persona facts and show the same flows the tests and window exercise; `dev/fixtures/personas, dev/docs/sequences, docs/_sequences`.
+- [x] `P03.S24` - Seed the docs ledger, invoice, evidence and work-unit frames from a persona whose activity genuinely starts in the horizon year, so docs stop overriding persona facts and show the same flows the tests and window exercise; `dev/fixtures/personas, dev/docs/sequences, docs/_sequences`.
 - [x] `P03.S25` - Resolve a Modelo relation whose source periods all precede the activity start as a not-applicable source rather than an unresolved requirement, so a Renta filer without earlier activity exports; `src/cadrumo/application/calculations/relation_prefill.py`.
 - [x] `P03.S26` - Keep received operations outside IVA scope out of Modelo 303 routing and verification, so a business row such as a RETA contribution passes the 303 calculation and verification; `src/cadrumo/application/aggregation, src/cadrumo/application/modelo`.
 - [ ] `P03.S27` - Replay each window filer's activity and withholding from its persona ledger and documents instead of seeding synthetic income amounts in the envelope producer, so window figures equal the persona's tested figures; `native/desktop/frontend/scripts/modelo_fixtures.py, dev/fixtures/personas`.
