@@ -25,7 +25,7 @@ from cadrumo_runtime.host.profile_login import ProfileWorkerHumanLogin
 
 from ..modelo_runtime_benchmark import (
     RuntimeBenchmarkRecorder,
-    _observe_logging,
+    observe_logging,
     observe_runtime_boundaries,
     observe_worker_composition,
     record_runtime_tree,
@@ -43,7 +43,7 @@ def test_diagnostic_timings_are_buffered_payload_free_and_restore_logger(tmp_pat
     logger.propagate = False
     original = logging.Logger._log
     with pytest.MonkeyPatch.context() as patch:
-        _observe_logging(patch, recorder)
+        observe_logging(patch, recorder)
         logger.warning("synthetic-private-log-message %s", "synthetic-private-argument")
         logger.warning("another-private-message")
         assert not recorder.path.exists()

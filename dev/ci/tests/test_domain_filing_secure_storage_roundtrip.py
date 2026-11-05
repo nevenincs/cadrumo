@@ -35,7 +35,7 @@ from cadrumo.domain.filing.schema import (
 )
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ._filing_draft_support import (
+from .filing_draft_support import (
     APPROVED_AT,
     DRAFT_TIMESTAMP,
     IVA_DEVENGADO_CASILLA,

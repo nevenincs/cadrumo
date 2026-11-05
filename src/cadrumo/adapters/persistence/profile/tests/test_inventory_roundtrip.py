@@ -44,8 +44,8 @@ from .....domain.filing_evidence import FilingEvidenceReference
 from ...storage.crypto.encrypted_columns import HashedLookup
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -208,7 +208,7 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(tmp_path: Path) -
         engine = get_engine(profile.settings)
         stmt = _inventory_row_statement()
         with session_scope(engine) as session:
-            rows = session.execute(stmt).scalars().all()
+            rows = session.execute(stmt).all()
         assert len(rows) == 1
         row = rows[0]
         assert row.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
@@ -235,9 +235,9 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(tmp_path: Path) -
 
 
 def _inventory_row_statement():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-        SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
     )
 
 
@@ -389,7 +389,7 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     layer or skews a unit_cost, the rehydrated ledger's invariant
     must trip.
 
-    Persists a populated ledger, reaches into SecureObjectRow via
+    Persists a populated ledger, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically halves the persisted
     ``opening_stock`` (breaking the value-balance), and asserts the
     load path catches the drift via the model_validator.

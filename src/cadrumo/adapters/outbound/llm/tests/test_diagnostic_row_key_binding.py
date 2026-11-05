@@ -29,9 +29,9 @@ from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.secure_object_namespaces import LLM_RUN_RECORD_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
-from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
+from .engine_binding_fixtures import ENGINE_HOLDER, bind_engine
 
-__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
+__all__ = ["ENGINE_HOLDER", "bind_engine"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -75,26 +75,30 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
     its stored bytes are a digest and a raw-bytes WHERE clause is not a
     narrower query but a different one.
     """
-    from sqlalchemy import select
+    from sqlalchemy import select, update
 
     from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql.tables import secure_objects_table
 
-    engine = _ENGINE_HOLDER[0]
+    engine = ENGINE_HOLDER[0]
     with session_scope(engine) as session:
-        rows = list(session.execute(select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)).scalars())
+        rows = list(session.execute(select(secure_objects_table).where(secure_objects_table.c.namespace == namespace)))
         decoded = []
         for row in rows:
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             decoded.append((row, aad, decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)))
         donor = next(plain for _, _, plain in decoded if donor_marker in plain.decode("utf-8"))
         victim, victim_aad, _ = next(item for item in decoded if victim_marker in item[2].decode("utf-8"))
-        victim.payload = encrypt_secure_object_payload(donor, associated_data=victim_aad)
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == victim.id)
+            .values(payload=encrypt_secure_object_payload(donor, associated_data=victim_aad)),
+        )
 
 
 def test_a_substituted_usage_row_is_refused_on_read(tmp_path: Path) -> None:
@@ -151,19 +155,19 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql.tables import secure_objects_table
 
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
     recorder.record(_usage("old-request", _OLD))
     _substitute(LLM_USAGE_NAMESPACE.namespace, victim_marker="recent-request", donor_marker="old-request")
 
-    with session_scope(_ENGINE_HOLDER[0]) as session:
+    with session_scope(ENGINE_HOLDER[0]) as session:
         request_ids = []
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_USAGE_NAMESPACE.namespace),
-        ).scalars():
+            select(secure_objects_table).where(secure_objects_table.c.namespace == LLM_USAGE_NAMESPACE.namespace),
+        ):
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
             payload = json.loads(plain.decode("utf-8"))

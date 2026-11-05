@@ -31,8 +31,8 @@ from ......core.classification.policies import SensitivityClass
 from ...errors import SecureObjectUnreadableError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectUnreadable
-from ._secure_objects_support import (
-    _repo_at,
+from .secure_objects_support import (
+    repo_at,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -43,7 +43,7 @@ _LINEAGE_REASON = "revision lineage self-consistency check failed"
 
 
 def _seed(db_path: Path) -> None:
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         repo.save(
             namespace=_NAMESPACE,
             object_key=_KEY,
@@ -77,7 +77,7 @@ def _break_ciphertext(db_path: Path) -> None:
 
 
 def _batch_outcome(db_path: Path) -> object:
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         outcomes = tuple(
             repo.iter_records_with_failures(
                 _NAMESPACE,
@@ -127,7 +127,7 @@ def test_both_surfaces_attribute_a_doubly_broken_row_identically(tmp_path: Path)
         _break_lineage(db_path)
         _break_ciphertext(db_path)
 
-        with _repo_at(db_path) as repo, pytest.raises(SecureObjectUnreadableError):
+        with repo_at(db_path) as repo, pytest.raises(SecureObjectUnreadableError):
             repo.load(_NAMESPACE, _KEY, expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
 
         outcome = _batch_outcome(db_path)
@@ -181,7 +181,7 @@ def test_both_read_surfaces_route_through_the_one_decode_core() -> None:
     surface reproduces every behavioural result above, because it computes the
     same answers twice. This is what notices the copy.
     """
-    from .. import _secure_object_row_codec as codec
+    from .. import secure_object_row_codec as codec
 
     for surface in (codec.secure_object_record_from_row, codec.secure_object_list_item_from_raw_row):
         source = inspect.getsource(surface)
@@ -207,7 +207,7 @@ def test_the_decode_core_checks_lineage_before_it_decrypts() -> None:
     mark a row readable, skip a later check, or select a decode branch would be
     exploitable, so the source is pinned rather than inferred.
     """
-    from .. import _secure_object_row_codec as codec
+    from .. import secure_object_row_codec as codec
 
     source = inspect.getsource(codec.decode_secure_object_row)
     lineage_at = source.index("verify_revision_self_consistency(")
@@ -221,7 +221,7 @@ def test_the_decode_core_checks_lineage_before_it_decrypts() -> None:
 
 
 def _seed_second_row(db_path: Path, *, object_key: str) -> None:
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         repo.save(
             namespace=_NAMESPACE,
             object_key=object_key,
@@ -269,7 +269,7 @@ def test_malformed_row_metadata_is_isolated_to_its_own_row(
             (value, target_id),
         )
 
-    with provider, _repo_at(db_path) as repo:
+    with provider, repo_at(db_path) as repo:
         outcomes = tuple(
             repo.iter_records_with_failures(
                 _NAMESPACE,
@@ -294,7 +294,7 @@ def test_an_untampered_namespace_still_scans_clean(tmp_path: Path) -> None:
         _seed(db_path)
         _seed_second_row(db_path, object_key="decode-order-sibling")
 
-    with provider, _repo_at(db_path) as repo:
+    with provider, repo_at(db_path) as repo:
         outcomes = tuple(
             repo.iter_records_with_failures(
                 _NAMESPACE,

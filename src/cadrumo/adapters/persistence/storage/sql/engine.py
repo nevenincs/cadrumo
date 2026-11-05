@@ -96,7 +96,7 @@ def _route_marker(url: str) -> str:
     return sha256_hex(url.encode(UTF_8_ENCODING))[:16]
 
 
-def _normalize_sqlite_url(url: str) -> str:
+def normalize_sqlite_url(url: str) -> str:
     """Anchor relative SQLite database files to the application data root.
 
     Args:
@@ -162,7 +162,7 @@ def _ensure_sqlite_parent(url: str) -> None:
     Args:
         url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
     """
-    parsed = make_url(_normalize_sqlite_url(url))
+    parsed = make_url(normalize_sqlite_url(url))
     database = parsed.database
     if (database is not None and database) and database != ":memory:":
         parent = Path(database).parent
@@ -254,7 +254,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
             translated_message="errors.storage.engine.empty_database_url",
         )
     try:
-        normalized_url = _normalize_sqlite_url(url)
+        normalized_url = normalize_sqlite_url(url)
         _refuse_former_product_database_target(normalized_url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
@@ -291,10 +291,10 @@ def get_engine(settings: Settings | None = None) -> Engine:
 
     Bucket-routed settings cache the engine under (storage root, bucket id);
     explicit-URL and root-fallback settings cache under the database URL.
-    On first access, materialises every ORM table declared on
-    :class:`~adapters.persistence.storage.sql.orm.Base.metadata`
+    On first access, materialises every table declared on
+    :data:`~adapters.persistence.storage.sql.tables.metadata`
     against the new engine. The codebase is forward-only: there is no
-    migration history; the schema is whatever the current ORM defines.
+    migration history; the schema is whatever the current tables define.
 
     Args:
         settings: Optional :class:`~core.config.Settings` override.
@@ -312,9 +312,9 @@ def get_engine(settings: Settings | None = None) -> Engine:
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
-        from .orm import Base
+        from .tables import metadata
 
-        Base.metadata.create_all(engine)
+        metadata.create_all(engine)
         _engines[key] = engine
         return engine
 

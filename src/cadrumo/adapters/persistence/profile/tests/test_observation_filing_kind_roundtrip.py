@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -98,9 +98,9 @@ def _save(repo: CalculationObservationRepository, filing_kind: ObservedFilingKin
 
 
 def _mutate(profile: Any, mutate: Any) -> None:
-    stmt = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-        SecureObjectRow.object_key == member_observation_key("130", _PERIOD, _MEMBER),
+    stmt = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+        secure_objects_table.c.object_key == member_observation_key("130", _PERIOD, _MEMBER),
     )
     mutate_encrypted_secure_object_json(profile.repository._engine, row_statement=stmt, mutate=mutate)
 

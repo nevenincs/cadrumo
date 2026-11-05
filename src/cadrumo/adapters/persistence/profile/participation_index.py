@@ -203,7 +203,7 @@ class TransactionParticipationIndexRepository:
         participations the authoritative catalogue no longer records.
 
         Every upsert and every stale-row removal commits in one
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
         unit of work, so a crash mid-replace rolls back to the previous complete
         index rather than a half-pruned one.
 

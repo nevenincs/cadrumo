@@ -26,10 +26,10 @@ from pydantic import BaseModel, ConfigDict
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ...sql.engine import create_engine_from_settings
-from ...sql.orm import Base
 from ...sql.secure_objects import SecureObjectRepository
+from ...sql.tables import metadata
 from ..secure_bound_repository import SecureBoundRepository
-from ._repository_contract_support import (
+from .repository_contract_support import (
     EXPECTED_CHECK_COUNT,
     SecureRepositoryContractCase,
     assert_secure_repository_contract,
@@ -125,7 +125,7 @@ def test_contract_repository_engine_is_real_sqlite(tmp_path: Path) -> None:
     )
     try:
         assert isinstance(engine, Engine)
-        Base.metadata.create_all(engine)
+        metadata.create_all(engine)
         assert SecureObjectRepository(engine=engine) is not None
     finally:
         engine.dispose()

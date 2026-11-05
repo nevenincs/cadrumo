@@ -19,7 +19,7 @@ from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     TestRuntimeProfile,
     mutate_encrypted_secure_object_json,
@@ -61,9 +61,9 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
     repository.save(InventoryLedgerDocument(ledgers=(zeta, alpha)))
     complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
 
-    statement = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-        SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+    statement = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
     )
 
     def orphan_authority(document: dict[str, Any]) -> None:

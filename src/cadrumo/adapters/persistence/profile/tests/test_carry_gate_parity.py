@@ -43,7 +43,7 @@ from .....domain.calculations.registry.authority import (
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -179,9 +179,9 @@ def _public_carry_outcomes(
             stamped_revision_id=canonical_stamp,
         )
         if stamped_revision_id != canonical_stamp:
-            statement = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-                SecureObjectRow.object_key
+            statement = select(secure_objects_table).where(
+                secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+                secure_objects_table.c.object_key
                 == observation_key(
                     _MODELO,
                     Period.from_year_and_code(_YEAR, _SOURCE_PERIOD),

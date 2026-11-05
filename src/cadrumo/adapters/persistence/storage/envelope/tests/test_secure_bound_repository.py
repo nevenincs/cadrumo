@@ -72,8 +72,8 @@ def _bound_repo_with_engine(tmp_path: Path) -> Generator[tuple[_RoundtripReposit
     """Build an isolated SQLite engine + repository against ``tmp_path``.
 
     A context manager so engine disposal is guaranteed on every exit path,
-    including a failing assertion -- mirroring the sibling ``_repo_at`` /
-    ``_ephemeral_secure_repo`` helpers elsewhere in this adapter's tests,
+    including a failing assertion -- mirroring the sibling ``repo_at`` /
+    ``ephemeral_secure_repo`` helpers elsewhere in this adapter's tests,
     rather than leaving each of this module's call sites to repeat its own
     ``try/finally: engine.dispose()``.
     """

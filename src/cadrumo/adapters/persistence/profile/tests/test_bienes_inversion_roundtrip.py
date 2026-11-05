@@ -98,7 +98,7 @@ def test_register_add_refuses_duplicate_identifier(tmp_path: Path) -> None:
 def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology: corrupting a persisted percentage must surface at load.
 
-    Persists a populated register, reaches into the encrypted SecureObjectRow,
+    Persists a populated register, reaches into the encrypted ``secure_objects`` row,
     rewrites the first record's ``prorrata_inicial_pct`` to a different value,
     and asserts the strict-equality witness flags the drift after reload. If this
     ever passes silently, the register boundary is tautological.
@@ -106,7 +106,7 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="95f73d79-f5cb-4bb7-984d-0991c85c698d") as profile:
         engine = get_engine(profile.settings)
@@ -114,9 +114,10 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
         original = _populated_register()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key
+            == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def mutate(document):
@@ -141,16 +142,17 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="736f0917-5f82-4fad-9731-22994886baf9") as profile:
         engine = get_engine(profile.settings)
         repo = BienesInversionIvaRegisterRepository()
         repo.save(_populated_register())
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key
+            == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def mutate(document):

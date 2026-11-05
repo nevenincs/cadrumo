@@ -12,7 +12,7 @@ from typing import Any, ClassVar
 from uuid import UUID
 
 import pytest
-from sqlalchemy import Engine, Select, event
+from sqlalchemy import Engine, Select, event, update
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
@@ -35,9 +35,9 @@ from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime import StorageRuntime, inspect_storage_runtime
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import create_engine_from_settings, dispose_engine
-from ..sql.orm import Base, SecureObjectRow
 from ..sql.secure_objects import SecureObjectRepository
 from ..sql.session import session_scope
+from ..sql.tables import metadata, secure_objects_table
 from ..storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from .ephemeral_bucket_session import EphemeralBucketSession
 from .profile_capsule_runtime import provision_test_profile_bucket_session
@@ -213,7 +213,7 @@ def read_db_at_rest_bytes(db_path: Path) -> bytes:
 def mutate_encrypted_secure_object_json(
     engine: Engine,
     *,
-    row_statement: Select[SecureObjectRow],
+    row_statement: Select[Any],
     mutate: Callable[[dict[str, Any]], None],
 ) -> None:
     """Mutate one real secure-object JSON document while preserving its AEAD binding.
@@ -225,7 +225,7 @@ def mutate_encrypted_secure_object_json(
     decoded JSON document, and re-encrypt it under that unchanged binding.
     """
     with session_scope(engine) as session:
-        row = session.execute(row_statement).scalar_one()
+        row = session.execute(row_statement).one()
         associated_data = secure_object_payload_aad(
             row.namespace,
             bytes(row.object_key),
@@ -239,16 +239,22 @@ def mutate_encrypted_secure_object_json(
         )
         assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
         mutate(document)
-        row.payload = encrypt_secure_object_payload(
-            json.dumps(document).encode("utf-8"),
-            associated_data=associated_data,
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(
+                payload=encrypt_secure_object_payload(
+                    json.dumps(document).encode("utf-8"),
+                    associated_data=associated_data,
+                ),
+            ),
         )
 
 
 def restamp_secure_object_schema_version(
     engine: Engine,
     *,
-    row_statement: Select[SecureObjectRow],
+    row_statement: Select[Any],
     schema_version: int,
     mutate: Callable[[dict[str, Any]], None],
 ) -> None:
@@ -260,7 +266,7 @@ def restamp_secure_object_schema_version(
     the current build cannot have written, produced without bypassing the AEAD.
     """
     with session_scope(engine) as session:
-        row = session.execute(row_statement).scalar_one()
+        row = session.execute(row_statement).one()
         object_key = bytes(row.object_key)
         document = json.loads(
             decrypt_secure_object_payload(
@@ -270,11 +276,17 @@ def restamp_secure_object_schema_version(
         )
         assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
         mutate(document)
-        row.payload = encrypt_secure_object_payload(
-            json.dumps(document).encode("utf-8"),
-            associated_data=secure_object_payload_aad(row.namespace, object_key, schema_version),
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(
+                payload=encrypt_secure_object_payload(
+                    json.dumps(document).encode("utf-8"),
+                    associated_data=secure_object_payload_aad(row.namespace, object_key, schema_version),
+                ),
+                schema_version=schema_version,
+            ),
         )
-        row.schema_version = schema_version
 
 
 def reset_secure_object_store(repository: SecureObjectRepository) -> None:
@@ -328,7 +340,7 @@ def isolated_injected_secure_object_repository(
 
     settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / database_name).as_posix()}")
     engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
+    metadata.create_all(engine)
     try:
         yield SecureObjectRepository(
             engine=engine,

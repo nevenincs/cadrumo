@@ -12,9 +12,9 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 from functools import cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import select
+from sqlalchemy import Row, select
 
 from cadrumo.adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from cadrumo.adapters.outbound.aeat.sede.notifications import (
@@ -27,8 +27,8 @@ from cadrumo.adapters.persistence.profile.snapshots import SecureSnapshotReposit
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.notification_documents import (
@@ -44,7 +44,7 @@ from cadrumo.tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FI
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
+    from sqlalchemy import Connection
 
 BUCKET_ID = "61616161-6161-4161-8161-616161616161"
 DOCUMENT_NAMESPACE = "cadrumo.application.live.notification_document"
@@ -163,7 +163,7 @@ def build_service(
 
 
 @contextmanager
-def stored_document_row(profile: TestRuntimeProfile, *, certificado_id: str = CERT_READ) -> Generator[SecureObjectRow]:
+def stored_document_row(profile: TestRuntimeProfile, *, certificado_id: str = CERT_READ) -> Generator[Row[Any]]:
     """Yield the encrypted secure-object row holding one document record.
 
     Both suites reach the raw row for different reasons — one mutates it to
@@ -171,10 +171,10 @@ def stored_document_row(profile: TestRuntimeProfile, *, certificado_id: str = CE
     prove a no-op wrote nothing — so the row lookup itself lives once.
     """
     object_key = notification_document_object_key(BUCKET_ID, certificado_id)
-    session: Session
+    session: Connection
     with session_scope(profile.repository.engine) as session:
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == DOCUMENT_NAMESPACE,
+            secure_objects_table.c.object_key == object_key,
         )
-        yield session.execute(stmt).scalar_one()
+        yield session.execute(stmt).one()

@@ -1,8 +1,8 @@
 """Tests for the hashed-lookup TypeDecorator.
 
-The tests run against a real in-memory SQLAlchemy session bound to
-a deliberately-isolated declarative base so we never touch the live
-``cadrumo.adapters.persistence.storage._orm`` schema. The master key is supplied by an
+The tests run against a real in-memory SQLite connection over a
+deliberately-isolated Core table so we never touch the live
+``cadrumo.adapters.persistence.storage.sql.tables`` schema. The master key is supplied by an
 :class:`EphemeralBucketSession` whose ``__enter__`` activates a
 :class:`BucketSession` for the duration of the test.
 """
@@ -12,11 +12,9 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator
 from operator import methodcaller
-from typing import Annotated
 
 import pytest
-from sqlalchemy import Engine, create_engine, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+from sqlalchemy import Column, Connection, Engine, Integer, MetaData, Table, create_engine, insert, select
 
 from ......tests.log_records import delivered_records
 from ...errors import StorageValidationError
@@ -26,21 +24,15 @@ from ..encrypted_columns import HashedLookup
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-class _TestBase(DeclarativeBase):
-    """Declarative base local to this test module — never touches the live schema."""
+_metadata = MetaData()
+"""Metadata local to this test module — never touches the live schema."""
 
-
-_intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
-_lookup_key = Annotated[bytes | None, mapped_column(HashedLookup, nullable=True, index=True)]
-
-
-class _CryptoRow(_TestBase):
-    """One mapper class exercising the hashed lookup type."""
-
-    __tablename__ = "encrypted_column_smoke"
-
-    id: Mapped[_intpk]
-    lookup_key: Mapped[_lookup_key]
+_crypto_table = Table(
+    "encrypted_column_smoke",
+    _metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("lookup_key", HashedLookup, nullable=True, index=True),
+)
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +46,7 @@ def _patch_master_key(fixed_master_key: bytes) -> Iterator[None]:
 def engine() -> Iterator[Engine]:
     """Yield a clean in-memory SQLite engine bound to the test schema."""
     eng = create_engine("sqlite:///:memory:", future=True)
-    _TestBase.metadata.create_all(eng)
+    _metadata.create_all(eng)
     try:
         yield eng
     finally:
@@ -62,15 +54,15 @@ def engine() -> Iterator[Engine]:
 
 
 @pytest.fixture
-def session(engine: Engine) -> Iterator[Session]:
-    with Session(engine) as sess:
-        yield sess
+def connection(engine: Engine) -> Iterator[Connection]:
+    with engine.connect() as conn:
+        yield conn
 
 
 class TestHashedLookup:
     """The deterministic HMAC keeps equality semantics without leaking plaintext."""
 
-    def test_same_plaintext_same_digest(self, session: Session) -> None:
+    def test_same_plaintext_same_digest(self) -> None:
         digest_a = HashedLookup.compute("operator-secret-key")
         digest_b = HashedLookup.compute("operator-secret-key")
         assert digest_a == digest_b
@@ -96,31 +88,26 @@ class TestHashedLookup:
             if record.name == "cadrumo.adapters.persistence.storage.crypto.encrypted_columns"
         ]
 
-    def test_round_trip_via_sqlalchemy(self, session: Session) -> None:
-        row = _CryptoRow(lookup_key="natural-key-1")
-        session.add(row)
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
+    def test_round_trip_via_sqlalchemy(self, connection: Connection) -> None:
+        connection.execute(insert(_crypto_table).values(lookup_key="natural-key-1"))
+        connection.commit()
+        loaded = connection.execute(select(_crypto_table.c.lookup_key)).scalar_one()
         # The stored representation is the digest, not the plaintext.
-        assert loaded.lookup_key == HashedLookup.compute("natural-key-1")
+        assert loaded == HashedLookup.compute("natural-key-1")
 
-    def test_query_by_natural_key(self, session: Session) -> None:
-        session.add_all(
-            [
-                _CryptoRow(lookup_key="alpha"),
-                _CryptoRow(lookup_key="beta"),
-                _CryptoRow(lookup_key="gamma"),
-            ],
+    def test_query_by_natural_key(self, connection: Connection) -> None:
+        connection.execute(
+            insert(_crypto_table),
+            [{"lookup_key": "alpha"}, {"lookup_key": "beta"}, {"lookup_key": "gamma"}],
         )
-        session.commit()
+        connection.commit()
         # The decorator digests the bound parameter, so consumers can
         # query with the natural-key plaintext rather than precomputing
         # the digest themselves.
-        match = session.execute(
-            select(_CryptoRow).where(_CryptoRow.lookup_key == "beta"),
+        match = connection.execute(
+            select(_crypto_table.c.lookup_key).where(_crypto_table.c.lookup_key == "beta"),
         ).scalar_one()
-        assert match.lookup_key == HashedLookup.compute("beta")
+        assert match == HashedLookup.compute("beta")
 
     def test_digest_changes_with_master_key(self) -> None:
         digest_a = HashedLookup.compute("payload")
@@ -138,9 +125,8 @@ class TestHashedLookup:
 class TestNullSafety:
     """The decorator's bind/result handlers return None for None inputs."""
 
-    def test_string_none(self, session: Session) -> None:
-        session.add(_CryptoRow())
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.lookup_key is None
+    def test_string_none(self, connection: Connection) -> None:
+        connection.execute(insert(_crypto_table).values(lookup_key=None))
+        connection.commit()
+        loaded = connection.execute(select(_crypto_table.c.lookup_key)).scalar_one()
+        assert loaded is None

@@ -24,7 +24,7 @@ from ......core.config import Settings
 from ......tests.env_scope import scoped_env_var
 from ......tests.log_records import delivered_records
 from ...errors import StorageError
-from ..engine import _normalize_sqlite_url, create_engine_from_settings, dispose_engine
+from ..engine import create_engine_from_settings, dispose_engine, normalize_sqlite_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _ENGINE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.engine"
@@ -234,7 +234,7 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
             scoped_env_var("XDG_DATA_HOME", str(isolated_app_data)),
             scoped_env_var("HOME", str(isolated_app_data)),
         ):
-            normalized = make_url(_normalize_sqlite_url(f"sqlite:///{relative_db.as_posix()}"))
+            normalized = make_url(normalize_sqlite_url(f"sqlite:///{relative_db.as_posix()}"))
             anchored_db = Path(normalized.database or "")
             assert anchored_db == storage_root / relative_db
             assert not anchored_db.is_relative_to(cwd_marker)

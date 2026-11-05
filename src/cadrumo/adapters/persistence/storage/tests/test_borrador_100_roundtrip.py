@@ -233,7 +233,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -245,9 +245,9 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         # persisted JSON envelope payload, then attempt to load. The
         # column accessor handles encrypt/decrypt automatically.
         object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(decoded):
@@ -353,7 +353,7 @@ def test_borrador_100_snapshot_id_tells_text_nine_from_decimal_nine() -> None:
 def _restamp_as_earlier_schema(profile, bucket_id: str, snapshot_id: str) -> None:
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 
     def to_earlier_shape(document):
         document["schema_version"] = 1
@@ -362,9 +362,9 @@ def _restamp_as_earlier_schema(profile, bucket_id: str, snapshot_id: str) -> Non
 
     restamp_secure_object_schema_version(
         profile.repository._engine,
-        row_statement=select(SecureObjectRow).where(
-            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
-            SecureObjectRow.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
+        row_statement=select(secure_objects_table).where(
+            secure_objects_table.c.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
         ),
         schema_version=1,
         mutate=to_earlier_shape,
@@ -401,12 +401,12 @@ def test_borrador_100_row_unreadable_for_another_reason_still_raises(tmp_path: P
 
         from sqlalchemy import select
 
-        from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+        from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 
         restamp_secure_object_schema_version(
             profile.repository._engine,
-            row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            row_statement=select(secure_objects_table).where(
+                secure_objects_table.c.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
             ),
             schema_version=LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.schema_version + 1,
             mutate=lambda document: None,
@@ -417,19 +417,22 @@ def test_borrador_100_row_unreadable_for_another_reason_still_raises(tmp_path: P
 
 
 def _tamper_row(profile, bucket_id: str, snapshot_id: str, mutate) -> None:
-    from sqlalchemy import select
+    """Overwrite the columns ``mutate`` derives from the stored snapshot row."""
+    from sqlalchemy import select, update
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
     from cadrumo.adapters.persistence.storage.sql.session import session_scope
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 
     with session_scope(profile.repository._engine) as session:
         row = session.execute(
-            select(SecureObjectRow).where(
-                SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
-                SecureObjectRow.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
+            select(secure_objects_table).where(
+                secure_objects_table.c.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+                secure_objects_table.c.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
             )
-        ).scalar_one()
-        mutate(row)
+        ).one()
+        session.execute(
+            update(secure_objects_table).where(secure_objects_table.c.id == row.id).values(**mutate(row)),
+        )
 
 
 def test_borrador_100_earlier_schema_row_with_another_classification_is_not_counted(tmp_path: Path) -> None:
@@ -442,8 +445,8 @@ def test_borrador_100_earlier_schema_row_with_another_classification_is_not_coun
         repo.save(earlier)
         _restamp_as_earlier_schema(profile, bucket_id, earlier.snapshot_id)
 
-        def reclassify(row) -> None:
-            row.classification = "not-a-classification"
+        def reclassify(_row) -> dict[str, object]:
+            return {"classification": "not-a-classification"}
 
         _tamper_row(profile, bucket_id, earlier.snapshot_id, reclassify)
 
@@ -460,10 +463,10 @@ def test_borrador_100_current_schema_row_with_tampered_ciphertext_raises_rather_
         snapshot = _snapshot_with_values(bucket_id=bucket_id, source_digit="9", binding_values={_RESIDENCE: "09"})
         repo.save(snapshot)
 
-        def flip_last_byte(row) -> None:
+        def flip_last_byte(row) -> dict[str, object]:
             payload = bytearray(bytes(row.payload))
             payload[-1] ^= 0x01
-            row.payload = bytes(payload)
+            return {"payload": bytes(payload)}
 
         _tamper_row(profile, bucket_id, snapshot.snapshot_id, flip_last_byte)
 

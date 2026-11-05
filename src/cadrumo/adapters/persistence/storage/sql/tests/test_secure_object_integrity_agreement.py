@@ -26,8 +26,8 @@ from cadrumo.adapters.persistence.storage.tests.source_call_support import sourc
 
 from ......core.classification.policies import SensitivityClass
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from ._secure_objects_support import (
-    _repo_at,
+from .secure_objects_support import (
+    repo_at,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -47,7 +47,7 @@ def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
     times again. This assertion is what notices, and it is therefore the one
     that proves the deduplication rather than merely the behaviour.
     """
-    from .. import _secure_object_integrity as integrity_module
+    from .. import secure_object_integrity as integrity_module
 
     surfaces = (
         integrity_module.quarantine_unreadable_rows,
@@ -80,7 +80,7 @@ def _seed_mixed_namespace(db_path: Path) -> None:
     is what produces a genuine MIX under a single master key, so surface
     agreement is a real partition rather than an all-or-nothing answer.
     """
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         for key in (*_READABLE_KEYS, _CORRUPT_KEY):
             repo.save(
                 namespace=_NAMESPACE,
@@ -112,7 +112,7 @@ def test_count_and_enumeration_surfaces_agree(tmp_path: Path) -> None:
     db_path = tmp_path / "agreement-count.db"
     with provider:
         _seed_mixed_namespace(db_path)
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             counted = repo.probe_namespace_integrity(_NAMESPACE)
             enumerated = tuple(repo.iter_namespace_decryptability(_NAMESPACE))
 
@@ -139,7 +139,7 @@ def test_quarantine_moves_exactly_the_rows_the_probes_flag(tmp_path: Path) -> No
     db_path = tmp_path / "agreement-quarantine.db"
     with provider:
         _seed_mixed_namespace(db_path)
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             enumerated = tuple(repo.iter_namespace_decryptability(_NAMESPACE))
             flagged_keys = {row.object_key for row in enumerated if not row.readable}
             report = repo.quarantine_unreadable_rows()
@@ -177,7 +177,7 @@ def test_quarantine_preserves_the_probed_bytes(tmp_path: Path) -> None:
                 "SELECT object_key, payload FROM secure_objects WHERE namespace = ? ORDER BY id",
                 (_NAMESPACE,),
             ).fetchall()
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             repo.quarantine_unreadable_rows()
         with sqlite3.connect(db_path) as con:
             archived = con.execute(
@@ -204,7 +204,7 @@ def test_all_rows_readable_reports_clean_across_surfaces(tmp_path: Path) -> None
     provider = EphemeralBucketSession()
     db_path = tmp_path / "agreement-clean.db"
     with provider:
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             for key in _READABLE_KEYS:
                 repo.save(
                     namespace=_NAMESPACE,
@@ -214,7 +214,7 @@ def test_all_rows_readable_reports_clean_across_surfaces(tmp_path: Path) -> None
                     written_at=datetime.now(UTC),
                     payload=f"clean-{key}".encode(),
                 )
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             counted = repo.probe_namespace_integrity(_NAMESPACE)
             enumerated = tuple(repo.iter_namespace_decryptability(_NAMESPACE))
             report = repo.quarantine_unreadable_rows()

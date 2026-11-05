@@ -18,15 +18,15 @@ from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 if TYPE_CHECKING:
     from sqlalchemy import Engine
 
-_ENGINE_HOLDER: list[Engine] = []
+ENGINE_HOLDER: list[Engine] = []
 
 
 @pytest.fixture(autouse=True)
-def _bind_engine(secure_object_test_profile: TestRuntimeProfile) -> Iterator[None]:
-    _ENGINE_HOLDER.clear()
-    _ENGINE_HOLDER.append(secure_object_test_profile.repository._engine)
+def bind_engine(secure_object_test_profile: TestRuntimeProfile) -> Iterator[None]:
+    ENGINE_HOLDER.clear()
+    ENGINE_HOLDER.append(secure_object_test_profile.repository._engine)
     yield
-    _ENGINE_HOLDER.clear()
+    ENGINE_HOLDER.clear()
 
 
-__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
+__all__ = ["ENGINE_HOLDER", "bind_engine"]

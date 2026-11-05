@@ -40,8 +40,8 @@ from cadrumo.adapters.persistence.storage.errors import DecryptionError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -111,8 +111,8 @@ def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
-            ).scalar_one()
+                select(secure_objects_table).where(secure_objects_table.c.namespace == _NAMESPACE.namespace),
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
     assert nonce_hex.encode("utf-8") not in ciphertext_bytes
@@ -235,12 +235,12 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
-            ).scalar_one()
+                select(secure_objects_table).where(secure_objects_table.c.namespace == _NAMESPACE.namespace),
+            ).one()
             corrupted_payload = bytes(row.payload)[:-1] + bytes([bytes(row.payload)[-1] ^ 0xFF])
             session.execute(
-                update(SecureObjectRow)
-                .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
+                update(secure_objects_table)
+                .where(secure_objects_table.c.namespace == _NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
 

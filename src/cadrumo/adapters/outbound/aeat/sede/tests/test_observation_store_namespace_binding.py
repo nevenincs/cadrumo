@@ -11,7 +11,7 @@ MUST be single-sourced from its
 the store module.
 
 This is a write-path proof, not a constant-equality assertion: it persists one
-row of each family through the store and reads the raw ``SecureObjectRow`` back
+row of each family through the store and reads the raw the ``secure_objects`` row back
 from the encrypted SQL backend, asserting the persisted ``classification`` and
 ``schema_version`` equal exactly what the registry definition declares. If the
 store ever re-hardcoded a divergent sensitivity or version, the persisted row
@@ -33,8 +33,8 @@ from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
 )
-from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
+from .....persistence.storage.sql.tables import secure_objects_table
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..observation_store import FiledDeclaracionObservationStore
 from .observation_store_support import (
@@ -74,7 +74,7 @@ def test_persisted_rows_carry_registry_declared_classification_and_version(
         }
 
         with session_scope(profile.repository._engine) as session:
-            rows = session.execute(select(SecureObjectRow)).scalars().all()
+            rows = session.execute(select(secure_objects_table)).all()
             observed = {row.namespace for row in rows}
             assert expected_by_namespace.keys() <= observed, (
                 f"expected all three sede namespaces persisted, saw {sorted(observed)}"

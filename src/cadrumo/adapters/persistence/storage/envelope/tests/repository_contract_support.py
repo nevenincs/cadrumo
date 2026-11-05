@@ -57,7 +57,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ...errors import ClassificationError, PathContainmentError
 from ...sql.engine import create_engine_from_settings, dispose_engine
-from ...sql.orm import Base, SecureObjectRow
+from ...sql.tables import metadata, secure_objects_table
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ...tests.secure_sql import mutate_encrypted_secure_object_json
 from ..contract import Envelope
@@ -132,7 +132,7 @@ def _activated_engine(db_path: Path):
 
     Disposes cached engines, binds the database and storage-root settings through
     the canonical ContextVar-backed settings surface, then yields a fresh engine
-    whose schema is materialised against ``Base.metadata``.
+    whose schema is materialised against ``metadata``.
     """
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
@@ -142,7 +142,7 @@ def _activated_engine(db_path: Path):
     ) as settings:
         engine = create_engine_from_settings(settings)
         try:
-            Base.metadata.create_all(engine)
+            metadata.create_all(engine)
             yield engine
         finally:
             engine.dispose()
@@ -277,7 +277,7 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     baseline = repo.load(identifier)
     assert baseline == case.first_payload
 
-    stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == repo.namespace).limit(1)
+    stmt = select(secure_objects_table).where(secure_objects_table.c.namespace == repo.namespace).limit(1)
 
     def mutate(decoded: dict[str, Any]) -> None:
         assert case.mutation_field in decoded["payload"], (

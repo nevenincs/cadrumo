@@ -240,7 +240,7 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
     That means the decrypting read path's
     :func:`~adapters.persistence.storage.sql.secure_object_crypto.verify_revision_self_consistency`
     call — which the decode core runs before every decrypt
-    (:func:`~adapters.persistence.storage.sql._secure_object_row_codec.decode_secure_object_row`)
+    (:func:`~adapters.persistence.storage.sql.secure_object_row_codec.decode_secure_object_row`)
     — never otherwise runs on these raw rows at all. Recomputing it here, in
     this raw-read/mirror-preflight boundary, before a row's stored lineage
     metadata seeds a manifest or reaches the remote provider, closes that gap

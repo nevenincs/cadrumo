@@ -11,7 +11,7 @@ literals and integer versions in the adapter modules.
 This is a write-path proof, not a bare constant-equality assertion: it drives
 the exact production recorder each caller uses (``LLMCache.write``,
 ``UsageRecorder.record``, ``LLMRunRecorder.record``), then reads the
-raw :class:`SecureObjectRow` back from the encrypted SQL backend and asserts the
+raw ``secure_objects`` row back from the encrypted SQL backend and asserts the
 persisted classification and schema_version equal exactly what the registry def
 declares. If any LLM consumer re-hardcoded a metadata value that diverged from
 the def, the substrate write policy would refuse the save (surfacing here as an
@@ -23,9 +23,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import Row, select
 
 from .....core.config_support import LLMProvider
 from ....persistence.llm.cache import LLMCache
@@ -36,8 +37,8 @@ from ....persistence.storage.secure_object_namespaces import (
     LLM_RUN_RECORD_NAMESPACE,
     LLM_USAGE_NAMESPACE,
 )
-from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
+from ....persistence.storage.sql.tables import secure_objects_table
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..models import LLMRequest, LLMResponse, UsageRecord
 
@@ -46,9 +47,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _WHEN = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
 
 
-def _rows_for(profile: TestRuntimeProfile, namespace: str) -> list[SecureObjectRow]:
+def _rows_for(profile: TestRuntimeProfile, namespace: str) -> list[Row[Any]]:
     with session_scope(profile.repository._engine) as session:
-        return [row for row in session.execute(select(SecureObjectRow)).scalars().all() if row.namespace == namespace]
+        return [row for row in session.execute(select(secure_objects_table)).all() if row.namespace == namespace]
 
 
 def test_llm_cache_row_carries_registry_declared_metadata(
