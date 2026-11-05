@@ -147,19 +147,19 @@ required_text = ["modelo 303"]
 [revisions.2022.bindings.aggregation]
 op = "sum"
 
-# Casilla 59, base-only informativa for exempt entregas intracomunitarias
-# (LIVA art. 25). The official box is titled "Entregas intracomunitarias de
-# bienes y servicios", but the selector deliberately admits ONLY
-# intra_community_supply, and the title is NOT authority to widen it: a plain
-# B2B service supplied to an EU-established taxable person is located outside
-# the TAI by art. 69.Uno.1, so it is not subject in Spain and belongs in
-# casilla 61 (operaciones no sujetas), never here. Only a service with a
-# Spanish fiscal adjustment point under art. 25 belongs in casilla 59, and the
-# operator declares that by tagging intra_community_supply explicitly. Adding
-# a not-subject services category to this selector would over-declare.
+# Casilla 59, "Entregas intracomunitarias de bienes y servicios": the base of the
+# exempt intra-Community supplies of goods (LIVA art. 25) and of the intra-Community
+# supplies of services, which are the services located in another Member State under
+# LIVA art. 69.Uno.1 for a businessman established there and reported in Modelo 349
+# with clave S. The bundled Modelo 322 instructions word the same box as "el importe
+# de las entregas intracomunitarias de bienes exentas, [...] segun lo dispuesto en el
+# articulo 25 [...] y el importe de las prestaciones de servicios intracomunitarias del
+# periodo de liquidacion"; no copy of the Modelo 303 instructions is bundled. Casilla 120
+# therefore keeps only the other not-subject-by-location operations, which the ledger
+# categories do not model, so it is entered by the operator.
 [[revisions.2022.bindings]]
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply"], rate_kinds = ["zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply", "intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
@@ -733,49 +733,6 @@ required_text = ["modelo 303"]
 
 [revisions.2022.bindings.aggregation]
 op = "sum"
-# Casilla 120, "Operaciones no sujetas por reglas de localización (excepto las
-# incluidas en la casilla 123)": base-only volumen for supplies that Spain does
-# not tax because the place-of-supply rules put them elsewhere.
-#
-# The category is intra_community_service_supply: a B2B service supplied to a
-# taxable person established in another Member State. LIVA art. 69.Uno.1 locates
-# that operation where the RECIPIENT is established, so it is NO SUJETA in Spain
-# — not exempt. The distinction matters for grounding: an exemption presupposes
-# a taxable operation that the law then relieves, and this operation never
-# entered the Spanish hecho imponible at all.
-#
-# ONLY THAT CATEGORY. Two neighbours read as eligible and are not:
-#   - operacion_no_sujeta is LIVA art. 7, not subject by NATURE (transmisión de
-#     empresa, ciertos autoconsumos). Not a localización case, wrong box.
-#   - domestic_not_subject is domestic, so localización is not what excludes it.
-# Admitting either would report volume the taxpayer never located abroad.
-#
-# THE "EXCEPTO LA CASILLA 123" CARVE-OUT IS NOT MODELLED, and that is honest
-# rather than overlooked: casilla 123 is the ventanilla-única variant, and the
-# category axis carries no OSS member at all, so no row can currently BE a 123
-# row. Nothing can leak from 120 into a box that cannot be populated. When OSS
-# is modelled this selector must be narrowed at the same time, or the two boxes
-# will double-count.
-#
-# flow_direction is repercutido: the taxpayer SUPPLIES. Unlike the domestic
-# reverse charge in fragment 0007 there is no separate supplier-side flow,
-# because nothing is being self-assessed by anyone in Spain.
-[[revisions.2022.bindings]]
-id = "modelo-303-casilla-120-no-sujetas-localizacion-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-# Every rate kind, for the reason fragment 0007 states: the discriminator is
-# (category, flow), the operation is not zero-rated, and pinning "zero" would
-# silently drop rows whose line recorded a tier.
-[revisions.2022.bindings.aggregation]
-op = "sum"
-
 # The 2022 design (aeat-dr-303-2022, DP30301 fields 40-42) already prints
 # the base/rate/cuota rung [16]/[17]/[18], and field 51 adds [18] to [27].
 # Its rate field is free rather than a design constant; LIVA art. 161.3 still

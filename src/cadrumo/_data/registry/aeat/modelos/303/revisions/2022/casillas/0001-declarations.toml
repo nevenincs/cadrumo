@@ -405,8 +405,6 @@ number = "120"
 section = ["iva", "resultado"]
 semantic_role = "dr303_120"
 continuidad_id = "dr303-120"
-input_kind = "bound"
-binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
 legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints this box at position 63, length 17, as

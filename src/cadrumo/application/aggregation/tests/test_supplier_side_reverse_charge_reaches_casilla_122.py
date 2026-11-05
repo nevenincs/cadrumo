@@ -211,35 +211,31 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
     assert not bool(reverse_charge.get(_CASILLA_60)), "a domestic reverse charge is not an export"
 
 
-_CASILLA_120 = "modelo-303-casilla-120-no-sujetas-localizacion-base"
-
-
-def test_an_eu_b2b_service_base_reaches_casilla_120(
+def test_an_eu_b2b_service_base_reaches_casilla_59(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A service located where the EU recipient is established is volumen, not silence.
+    """A service located where the EU recipient is established is an intra-Community supply of services.
 
-    LIVA art. 69.Uno.1 puts the operation outside the Spanish hecho imponible,
-    so it is NO SUJETA rather than exempt and carries no cuota. It is still
-    turnover, and M303 names a box for it. Before this it reached nothing: the
-    line has no cuota, so rate-slot classification replaced the declared
-    category before any binding could select it -- the same upstream loss that
-    kept casilla 122 blank.
+    LIVA art. 69.Uno.1 puts the operation outside the Spanish hecho imponible and
+    Modelo 349 reports it with clave S. The box titled "Entregas intracomunitarias
+    de bienes y servicios" takes its base. The line has no cuota, so rate-slot
+    classification replaced the declared category before any binding could select
+    it -- the same upstream loss that kept casilla 122 blank.
     """
     resolved = resolved_for(
         _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
 
-    assert resolved.get(_CASILLA_120) == _BASE, (
-        f"the not-subject service base never reached casilla 120: {resolved.get(_CASILLA_120)!r}"
+    assert resolved.get(_CASILLA_59) == _BASE, (
+        f"the intra-Community service base never reached casilla 59: {resolved.get(_CASILLA_59)!r}"
     )
 
 
-def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
+def test_casillas_59_and_122_do_not_collect_each_other(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Casillas 120 and 122 declare different operations and must not cross.
+    """Casillas 59 and 122 declare different operations and must not cross.
 
     Run as a pair rather than as two separate positives: a selector keyed on
     "issued and no cuota" would fill BOTH boxes from either invoice and satisfy
@@ -255,26 +251,25 @@ def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
         operation=authority_operation,
     )
 
-    assert service.get(_CASILLA_120) == _BASE
+    assert service.get(_CASILLA_59) == _BASE
     assert not bool(service.get(_CASILLA_122)), "a not-subject service is not a reverse charge"
     assert reverse_charge.get(_CASILLA_122) == _BASE
-    assert not bool(reverse_charge.get(_CASILLA_120)), "a reverse charge IS subject; it is not a localizacion case"
+    assert not bool(reverse_charge.get(_CASILLA_59)), "a domestic reverse charge is not an intra-community supply"
 
 
-def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
+def test_an_article_7_not_subject_operation_does_not_reach_casilla_59(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Discrimination control: not-subject BY NATURE is not not-subject BY LOCATION.
+    """Discrimination control: not-subject BY NATURE is not an intra-Community supply.
 
     LIVA art. 7 excludes operations such as the transmision of a going concern.
-    They carry no cuota and are issued, exactly like the art. 69 case, but the
-    box says "por reglas de localizacion" and art. 7 is not one of those rules.
-    Routing them here would report as located abroad an operation that was never
-    located anywhere else.
+    They carry no cuota and are issued, exactly like the art. 69 case, but they are
+    not supplied to a businessman in another Member State, so the box titled
+    "Entregas intracomunitarias de bienes y servicios" must not take them.
     """
     resolved = resolved_for(
         _invoice(category=IvaCategory("operacion_no_sujeta"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
 
-    assert not bool(resolved.get(_CASILLA_120))
+    assert not bool(resolved.get(_CASILLA_59))

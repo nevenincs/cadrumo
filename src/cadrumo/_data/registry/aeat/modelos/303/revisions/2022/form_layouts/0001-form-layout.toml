@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of BOE-A-2021-10509 AnnexII, printed75943-75948. First five pages are the taxpayer copy; sixth is the administration/financial-institution copy. Bank fields are owned by the historical result record and appear on page3 and the administration copy. Activity projections are bounded to the one record declared by this edition. No later boxes109/150-158 or rectificativa controls. Outstanding: signature/place/date and repeated filing coordinates on administration copy; compensation72 and unnumbered refund amount; actual payment evidence; complementaria and no-activity markers; annual activity descriptions; non-IBAN account detail. No operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "5824205a5bc36f021512a94e7c51f05641c7a797a6219501c4d103a9c9c0d377"
+source_state_digest = "4625b4c36b417ddfb58c219723966339df280347014ca7ab795d61f25da1d8b1"
 design_sources = [
     { source_ref = "aeat-dr-303-2022", sha256 = "7a3559edf6b57bedaf48bb7e71084bff08972553f6c1ae62497ca5d1be88adbb" },
     { source_ref = "boe-modelo-303-2021-form-pdf", sha256 = "215afcbf4fda0dc396c6ba6efe90d083d91c64710b966ffe278786830a6cc559" },
