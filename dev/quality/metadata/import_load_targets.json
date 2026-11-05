@@ -4619,6 +4619,7 @@
         "dev.fixture_projections",
         "dev.fixture_projections.__main__",
         "dev.fixture_projections.cli",
+        "dev.fixture_projections.location",
         "dev.fixture_projections.personas",
         "dev.fixture_projections.producer_output",
         "dev.fixture_projections.registry",

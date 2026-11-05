@@ -1,5 +1,6 @@
 import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
+import { windowFixtures } from "./scripts/fixture-paths.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { chromeCatalogueModule } from "./dev/chrome-catalogue.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
@@ -20,6 +21,10 @@ const source = fileURLToPath(new URL("./src", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
+// The generated window projections, which `just fixtures-seed` writes into the
+// host's build tree and which tsconfig.json resolves by the same alias. A
+// missing directory is reported by the file that imports from it.
+const fixtures = windowFixtures();
 
 // The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are
@@ -109,7 +114,7 @@ export default defineConfig(({ command, mode }) => {
       strictPort: true,
       // The shell's typefaces are the documentation's own files, outside
       // this project, so that directory of public assets is served as well.
-      fs: { allow: [root, docsStatic, generated] },
+      fs: { allow: [root, docsStatic, generated, fixtures] },
     },
     preview: {
       host: ports.host,
@@ -118,7 +123,7 @@ export default defineConfig(({ command, mode }) => {
       strictPort: true,
     },
     resolve: {
-      alias: { "@": source },
+      alias: { "@": source, "@fixtures": fixtures },
       // Each Radix primitive keeps its layer stack, focus-scope stack and
       // portal state in module scope, so a dialog, a popover and a menu
       // nested in one another only agree on who is on top when they all

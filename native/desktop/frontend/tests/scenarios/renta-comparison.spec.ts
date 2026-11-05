@@ -4,6 +4,7 @@ import type { BorradorComparison } from "../../src/shell/borrador";
 import type { LedgerErrorDetail } from "../../src/shell/ledger";
 import type { ModeloTaxationComparisonProjection } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // The comparisons of the 2025 Modelo 100: joint against individual filing, and
 // the AEAT draft against the saved calculation. Every amount, status, reason
@@ -247,8 +248,8 @@ const servedDraft = (state: string, language: Language): BorradorComparison =>
   JSON.parse(
     readFileSync(
       new URL(
-        `../../src/dev/fixtures/modelo/borrador-100-0A-${state}-${language}.json`,
-        import.meta.url,
+        `borrador-100-0A-${state}-${language}.json`,
+        MODELO_FIXTURES,
       ),
       "utf8",
     ),

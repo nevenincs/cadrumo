@@ -18,6 +18,7 @@ import {
   type TaxationComparisonRead,
 } from "./taxationComparisonRead";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { byName } from "@/dev/globByName";
 
 // The comparison of joint and individual filing on what the application read
 // for synthetic households through `modelo.work.compare_taxation`, in every
@@ -33,13 +34,17 @@ const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 const QUARTERLY_UNIT =
   "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3";
 
-const projections = import.meta.glob<ModeloTaxationComparisonProjection>(
-  "../../../dev/fixtures/modelo/compare-100-0A-*.json",
-  { import: "default" },
+const projections = byName(
+  import.meta.glob<ModeloTaxationComparisonProjection>(
+    "@fixtures/modelo/compare-100-0A-*.json",
+    { import: "default" },
+  ),
 );
-const refusals = import.meta.glob<LedgerErrorDetail>(
-  "../../../dev/fixtures/modelo/refusal-compare-100-0A*.json",
-  { import: "default" },
+const refusals = byName(
+  import.meta.glob<LedgerErrorDetail>(
+    "@fixtures/modelo/refusal-compare-100-0A*.json",
+    { import: "default" },
+  ),
 );
 
 const language = (globals: Record<string, unknown>) =>
@@ -72,10 +77,7 @@ function Element({
       if (kind === "reading") return setRead({ phase: "reading" });
       if (kind === "failed") return setRead({ phase: "failed" });
       if (kind === "answer") {
-        const load =
-          projections[
-            `../../../dev/fixtures/modelo/compare-100-0A-${state}-${locale}.json`
-          ];
+        const load = projections[`compare-100-0A-${state}-${locale}`];
         if (!load) throw new Error(`No comparison is stored as ${state}`);
         return setRead({
           phase: "ready",
@@ -83,10 +85,7 @@ function Element({
         });
       }
       const key = state === "" ? "" : `-${state}`;
-      const load =
-        refusals[
-          `../../../dev/fixtures/modelo/refusal-compare-100-0A${key}-${locale}.json`
-        ];
+      const load = refusals[`refusal-compare-100-0A${key}-${locale}`];
       if (!load) throw new Error(`No refusal is stored as ${state}`);
       const detail = structuredClone(await load());
       setRead(refusedRead(servedRefusalWords(detail), detail));
@@ -198,10 +197,7 @@ async function served(
   state: string,
   locale: OutputLanguage,
 ): Promise<ModeloTaxationComparisonProjection> {
-  const load =
-    projections[
-      `../../../dev/fixtures/modelo/compare-100-0A-${state}-${locale}.json`
-    ];
+  const load = projections[`compare-100-0A-${state}-${locale}`];
   if (!load) throw new Error(`No comparison is stored as ${state}`);
   return load();
 }
@@ -211,10 +207,7 @@ async function servedRefusal(
   locale: OutputLanguage,
 ): Promise<LedgerErrorDetail> {
   const key = state === "" ? "" : `-${state}`;
-  const load =
-    refusals[
-      `../../../dev/fixtures/modelo/refusal-compare-100-0A${key}-${locale}.json`
-    ];
+  const load = refusals[`refusal-compare-100-0A${key}-${locale}`];
   if (!load) throw new Error(`No refusal is stored as ${state}`);
   return load();
 }

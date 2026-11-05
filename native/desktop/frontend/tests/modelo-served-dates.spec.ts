@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { formatDay } from "../src/shared/dateFormats";
 import type { ModeloDeclarationsListProjectionV1 } from "../src/shell/modeloContract";
+import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 // A date the application words reads as the window writes one in the same
 // language, on the envelopes the application's read path produced.
@@ -10,8 +11,8 @@ const list = (language: string) =>
   JSON.parse(
     readFileSync(
       new URL(
-        `../src/dev/fixtures/modelo/declarations-${language}.json`,
-        import.meta.url,
+        `declarations-${language}.json`,
+        MODELO_FIXTURES,
       ),
       "utf8",
     ),

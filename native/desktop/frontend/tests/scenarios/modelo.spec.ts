@@ -11,6 +11,7 @@ import type {
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 declare global {
   interface Window {
@@ -30,7 +31,7 @@ declare global {
 }
 
 // The Modelo workspace across its states, over the envelopes the
-// application read for a synthetic taxpayer (src/dev/fixtures/modelo/):
+// application read for a synthetic taxpayer (the generated envelopes):
 // a modelo whose rules are incomplete, a filled Modelo 130 with held zeros,
 // the check's findings, a file for the AEAT left out of date by a later
 // change, a filing recorded with and without a verified receipt, the list's
@@ -42,9 +43,7 @@ declare global {
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
 
-const FIXTURES = fileURLToPath(
-  new URL("../../src/dev/fixtures/modelo/", import.meta.url),
-);
+const FIXTURES = fileURLToPath(MODELO_FIXTURES);
 const envelope = <Envelope>(name: string): Envelope =>
   JSON.parse(readFileSync(`${FIXTURES}${name}.json`, "utf8")) as Envelope;
 const form = (name: string, language: Language = "en") =>
@@ -964,7 +963,7 @@ test("the gate sees a raw key, an identifier and an enum token", async ({
 
 // -- writes ------------------------------------------------------------------
 // Each write answers what the application answered for it (envelopes under
-// src/dev/fixtures/modelo/ read through the registered operations); a write
+// the generated envelopes read through the registered operations); a write
 // whose settlement was not seen, or that was refused before it ran, is the
 // host's own answer.
 

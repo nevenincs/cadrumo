@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from ..first_party_source import PRODUCT_SOURCE_ROOTS
+from .location import window_projections
 
 PYTHON: Final[str] = "{python}"
 OUTPUT: Final[str] = "{output}"
@@ -172,35 +173,51 @@ def _script(
 
 
 _MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
+_MODELO_DRIVER: Final = f"{_SCRIPTS}/modelo-fixtures.mjs"
+#: The Modelo wire types and the envelopes read the same application, host sources and personas.
+_MODELO_INPUTS: Final = (
+    *_common(_MODELO_PRODUCER, _MODELO_DRIVER),
+    InputGroup(
+        "host-source",
+        (
+            "native/desktop/src-tauri/src/shell/modelo",
+            "native/desktop/src-tauri/src/shell/relay.rs",
+            "native/desktop/src-tauri/src/agent/person.rs",
+            "native/application/src/person_operations.rs",
+            "native/application/src/person_operations",
+        ),
+    ),
+    _FRONTEND_LOCK,
+)
 _LEDGER_TESTS: Final = "src/cadrumo/application/ledger/tests"
 _ASSET_TESTS: Final = "src/cadrumo/application/actividad_asset/tests"
 
 FAMILIES: Final[tuple[FixtureFamily, ...]] = (
     FixtureFamily(
         name="modelo-envelopes",
-        summary="The window's Modelo wire types, relay bounds and scenario envelopes, read through the application.",
-        inputs=(
-            *_common(_MODELO_PRODUCER, f"{_SCRIPTS}/modelo-fixtures.mjs"),
-            InputGroup(
-                "host-source",
-                (
-                    "native/desktop/src-tauri/src/shell/modelo",
-                    "native/desktop/src-tauri/src/shell/relay.rs",
-                    "native/desktop/src-tauri/src/agent/person.rs",
-                    "native/application/src/person_operations.rs",
-                    "native/application/src/person_operations",
-                ),
-            ),
-            _FRONTEND_LOCK,
-        ),
-        producer=Command(("node", f"{_SCRIPTS}/modelo-fixtures.mjs")),
-        # Its check renders the wire types and bounds afresh but only validates
-        # the stored envelopes against their models, so it does not prove their bytes.
-        check=(Command(("node", f"{_SCRIPTS}/modelo-fixtures.mjs", "--check")),),
-        output_root=f"{FRONTEND}/src",
-        outputs=("dev/fixtures/modelo/*.json", "shell/modeloContract.ts", "shell/relayBounds.ts"),
+        summary="The window's Modelo scenario envelopes, read through the application for the catalogue's personas.",
+        inputs=_MODELO_INPUTS,
+        producer=Command(("node", _MODELO_DRIVER, "--envelopes")),
+        # Its check validates a seeded envelope against its model, and has nothing to check while none is seeded;
+        # it does not prove the stored bytes, which the determinism build and the tests that read them do.
+        check=(Command(("node", _MODELO_DRIVER, "--envelopes", "--check")),),
+        output_root=window_projections(),
+        outputs=("modelo/*.json",),
+        committed=False,
         determinism=Command(_python_script(_MODELO_PRODUCER, "envelopes", OUTPUT)),
         prerequisites=(_FRONTEND_PACKAGES,),
+    ),
+    FixtureFamily(
+        name="modelo-wire-types",
+        summary="The window's Modelo wire types and relay bounds, generated from the registered contracts.",
+        inputs=_MODELO_INPUTS,
+        producer=Command(("node", _MODELO_DRIVER, "--contract")),
+        check=(Command(("node", _MODELO_DRIVER, "--contract", "--check")),),
+        output_root=f"{FRONTEND}/src",
+        outputs=("shell/modeloContract.ts", "shell/relayBounds.ts"),
+        determinism=Command(("node", _MODELO_DRIVER, "--contract", "--output", OUTPUT)),
+        prerequisites=(_FRONTEND_PACKAGES,),
+        check_proves_outputs=True,
     ),
     _script(
         "ledger-served-words",

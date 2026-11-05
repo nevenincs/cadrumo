@@ -10,6 +10,7 @@ import { translator } from "../../../shell/strings";
 import { BorradorComparison } from "./BorradorComparison";
 import type { BorradorComparisonRead } from "./borradorComparisonRead";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { byName } from "@/dev/globByName";
 
 // The year's AEAT draft beside the saved Modelo 100 calculation, on what the
 // application read for a synthetic filer through
@@ -22,9 +23,11 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
-const envelopes = import.meta.glob<Comparison>(
-  "../../../dev/fixtures/modelo/borrador-100-0A-*.json",
-  { import: "default" },
+const envelopes = byName(
+  import.meta.glob<Comparison>(
+    "@fixtures/modelo/borrador-100-0A-*.json",
+    { import: "default" },
+  ),
 );
 
 const language = (globals: Record<string, unknown>) =>
@@ -34,10 +37,7 @@ async function served(
   state: string,
   locale: OutputLanguage,
 ): Promise<Comparison> {
-  const load =
-    envelopes[
-      `../../../dev/fixtures/modelo/borrador-100-0A-${state}-${locale}.json`
-    ];
+  const load = envelopes[`borrador-100-0A-${state}-${locale}`];
   if (!load) throw new Error(`No comparison is stored as ${state}`);
   return structuredClone(await load());
 }

@@ -18,6 +18,7 @@ import type {
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { byName } from "@/dev/globByName";
 
 // What the Modelo 100 of each supported filing year offers, in the real
 // workspace over the envelopes the application read for the same couple in
@@ -32,17 +33,23 @@ type View = "form" | "compare" | "credits" | "file";
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en") as OutputLanguage;
 
-const comparisons = import.meta.glob<ModeloTaxationComparisonProjection>(
-  "../../../dev/fixtures/modelo/compare-100-0A-*.json",
-  { import: "default" },
+const comparisons = byName(
+  import.meta.glob<ModeloTaxationComparisonProjection>(
+    "@fixtures/modelo/compare-100-0A-*.json",
+    { import: "default" },
+  ),
 );
-const refusals = import.meta.glob<LedgerErrorDetail>(
-  "../../../dev/fixtures/modelo/refusal-compare-100-0A-*.json",
-  { import: "default" },
+const refusals = byName(
+  import.meta.glob<LedgerErrorDetail>(
+    "@fixtures/modelo/refusal-compare-100-0A-*.json",
+    { import: "default" },
+  ),
 );
-const offers = import.meta.glob<PublicModeloFormExportOffer>(
-  "../../../dev/fixtures/modelo/settlement-100-0A-*.json",
-  { import: "default" },
+const offers = byName(
+  import.meta.glob<PublicModeloFormExportOffer>(
+    "@fixtures/modelo/settlement-100-0A-*.json",
+    { import: "default" },
+  ),
 );
 
 const filerOf = (shape: ModeloShape) => shape.slice("renta-".length);
@@ -178,7 +185,7 @@ export const EveryYearOffersWhatItServes: Story = {
       const filer = filerOf(served.shape);
       const answer =
         comparisons[
-          `../../../dev/fixtures/modelo/compare-100-0A-${filer}-${locale}.json`
+          `compare-100-0A-${filer}-${locale}`
         ];
       if (answer) {
         const projection = await answer();
@@ -207,7 +214,7 @@ export const EveryYearOffersWhatItServes: Story = {
       }
       const refusal =
         refusals[
-          `../../../dev/fixtures/modelo/refusal-compare-100-0A-${filer}-${locale}.json`
+          `refusal-compare-100-0A-${filer}-${locale}`
         ];
       if (!refusal) throw new Error(`No comparison is stored for ${filer}`);
       const detail = await refusal();

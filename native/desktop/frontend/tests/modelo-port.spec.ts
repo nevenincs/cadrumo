@@ -21,6 +21,7 @@ import {
   type ModeloEnvelopes,
   type ModeloShape,
 } from "../src/dev/modeloFixture";
+import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 // The modelo port: the Tauri adapter's command lines, and the scenario
 // host's answers from the envelopes the application's read path produced.
@@ -134,9 +135,7 @@ test("an edit body is zeroed even when it is never sent", async () => {
 
 // The development server's glob is not available here, so the scenario
 // reads the same envelopes from disk.
-const FIXTURES = fileURLToPath(
-  new URL("../src/dev/fixtures/modelo/", import.meta.url),
-);
+const FIXTURES = fileURLToPath(MODELO_FIXTURES);
 const ENVELOPES: ModeloEnvelopes = Object.fromEntries(
   readdirSync(FIXTURES)
     .filter((name) => name.endsWith(".json"))

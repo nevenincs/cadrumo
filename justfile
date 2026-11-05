@@ -398,7 +398,10 @@ check-operation-contract-manifest:
 # ── Generated fixture projections ───────────────────────────────────────────
 # Every family is declared once in dev/fixture_projections/registry.py. A digest
 # stamp records the content each family's outputs were produced from, so
-# freshness never reads a modification time. Test processes never seed.
+# freshness never reads a modification time. Test processes never seed. The
+# window's Modelo envelopes are generated into build/<preset>/fixtures/window,
+# which the frontend resolves through the @fixtures alias and CMake hands to the
+# Rust tests; they are never committed.
 
 [doc('Produce the fixture projections that are not fresh, adopting unstamped outputs their check proves; FAMILY narrows to one.')]
 [group('generate')]
@@ -810,8 +813,8 @@ test-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_nati
 # The host's Rust unit tests are the CTest cases named `*.rust`; the bundle,
 # staged-package and external-tool cases stay with test-native-bundle. Of the
 # projections they read only the Modelo envelopes, so only that family is
-# seeded. Its producer formats the wire types it also writes with the
-# frontend's formatter, so the frontend packages come first.
+# seeded, into the host's build tree, and CMake names that directory to the
+# tests. Its producer runs from the frontend's packages, so they come first.
 [doc('Seed the Modelo envelopes, then run the native Rust unit tests (CTest cases ending in .rust) without building the bundle.')]
 [group('test')]
 test-native CONFIGURATION="Debug": setup-desktop-frontend (fixtures-seed "modelo-envelopes") (_native-configure CONFIGURATION)

@@ -2,9 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
 
-// A form envelope of ./fixtures/modelo/, read when a story asks for it: the
+// A form envelope of @fixtures/modelo/, read when a story asks for it: the
 // largest are over a megabyte, and a story needs one of four languages.
-const found = import.meta.glob<unknown>("./fixtures/modelo/modelo-*.json", {
+const found = import.meta.glob<unknown>("@fixtures/modelo/modelo-*.json", {
   import: "default",
 });
 const envelopes = wholeEnvelopes(

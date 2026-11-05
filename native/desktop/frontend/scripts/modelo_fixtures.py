@@ -5,7 +5,7 @@ request and result the desktop's admitted ``modelo.*`` definitions register,
 plus the edit operator input the financial body carries.
 ``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
 Rust sources state them. The envelopes under
-``src/dev/fixtures/modelo/`` are read through the application's own read path
+``build/<preset>/fixtures/window/modelo/`` are read through the application's own read path
 for the catalogue's personas, each replayed into a throwaway profile over the
 published authority, with each scenario's own state stated over it through the
 profile operations.
@@ -42,6 +42,8 @@ from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
 
+from dev._paths import REPO_ROOT
+from dev.fixture_projections.location import window_projections
 from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -53,7 +55,8 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import newest_
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 FRONTEND = Path(__file__).resolve().parents[1]
-FIXTURES = FRONTEND / "src" / "dev" / "fixtures" / "modelo"
+#: The scenario envelopes are build output in the host's build tree, never committed.
+FIXTURES = REPO_ROOT / window_projections() / "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -3375,8 +3378,12 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate() -> int:
-    """Whether the host's admitted list and every stored envelope still match the registered models."""
+def validate(*, envelopes: bool = True) -> int:
+    """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    Raises:
+        SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
+    """
     failures: list[str] = []
     registered, admitted = definitions(), admitted_by_host()
     if registered != admitted:
@@ -3385,7 +3392,9 @@ def validate() -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    for pattern, model in _fixture_models():
+    if envelopes and not any(FIXTURES.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    for pattern, model in _fixture_models() if envelopes else ():
         paths = sorted(FIXTURES.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
@@ -3407,6 +3416,9 @@ def main() -> int:
     parser.add_argument(
         "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
     )
+    parser.add_argument(
+        "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
+    )
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(render_contract())
@@ -3420,7 +3432,7 @@ def main() -> int:
     if args.step == "pack":
         pack_envelopes(args.directory)
         return 0
-    return validate()
+    return validate(envelopes=not args.definitions)
 
 
 if __name__ == "__main__":

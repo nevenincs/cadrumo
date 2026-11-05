@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import type { ModeloWorkCalculatePublicResultV3 } from "../src/shell/modeloContract";
+import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 // What the calculation of a Modelo 130 said it could give no value for, drawn
 // from the envelope the application served, in its own words and apart from
@@ -13,7 +14,7 @@ import type { ModeloWorkCalculatePublicResultV3 } from "../src/shell/modeloContr
 
 const served = JSON.parse(
   readFileSync(
-    new URL("../src/dev/fixtures/modelo/calculate-130.json", import.meta.url),
+    new URL("calculate-130.json", MODELO_FIXTURES),
     "utf8",
   ),
 ) as ModeloWorkCalculatePublicResultV3;

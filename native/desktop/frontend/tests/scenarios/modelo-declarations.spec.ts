@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 declare global {
   interface Window {
@@ -35,8 +36,8 @@ const listed = (shape = "") =>
   JSON.parse(
     readFileSync(
       new URL(
-        `../../src/dev/fixtures/modelo/declarations${shape ? `-${shape}` : ""}-en.json`,
-        import.meta.url,
+        `declarations${shape ? `-${shape}` : ""}-en.json`,
+        MODELO_FIXTURES,
       ),
       "utf8",
     ),

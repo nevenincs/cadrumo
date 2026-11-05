@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 type Language = "en" | "es" | "ca" | "hu";
 declare global {
@@ -28,7 +29,7 @@ type Written = {
 const served = <T>(name: string): T =>
   JSON.parse(
     readFileSync(
-      new URL(`../../src/dev/fixtures/modelo/${name}.json`, import.meta.url),
+      new URL(`${name}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   ) as T;

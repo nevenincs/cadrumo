@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // One declaration's workspace over the scenario's modelo family, which
 // answers the forms the application read for a synthetic taxpayer: the
@@ -39,7 +40,7 @@ test("the header states the read model's result, deadline and next action", asyn
 }) => {
   const served = JSON.parse(
     readFileSync(
-      new URL("../../src/dev/fixtures/modelo/modelo-130-1T-en.json", import.meta.url),
+      new URL("modelo-130-1T-en.json", MODELO_FIXTURES),
       "utf8",
     ),
   ) as ModeloWorkbenchFormProjectionV1;
@@ -181,8 +182,8 @@ test("what the calculation noted about a box is said beside it, at its level", a
   const read = JSON.parse(
     readFileSync(
       new URL(
-        "../../src/dev/fixtures/modelo/modelo-130-1T-income-en.json",
-        import.meta.url,
+        "modelo-130-1T-income-en.json",
+        MODELO_FIXTURES,
       ),
       "utf8",
     ),

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   clearIntent,
   confirmIntent,
@@ -24,6 +23,7 @@ import {
 import { mayRenew } from "../src/components/modelo/dialogs/operationRun";
 import { stagedText } from "../src/components/modelo/form/stagedWords";
 import type { Translate } from "../src/shell/strings";
+import { MODELO_FIXTURES } from "./support/windowFixtures";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
@@ -36,7 +36,7 @@ import type {
 const envelope = (name: string) =>
   JSON.parse(
     readFileSync(
-      resolve(import.meta.dirname, `../src/dev/fixtures/modelo/${name}.json`),
+      new URL(`${name}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   ) as ModeloWorkbenchFormProjectionV1;
