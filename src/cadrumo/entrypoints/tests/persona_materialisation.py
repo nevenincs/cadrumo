@@ -1124,6 +1124,85 @@ def _capture_rent_withholding(
                 )
 
 
+_PROFESSIONAL_WITHHOLDING_MODELO = "111"
+_PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
+
+
+def _professional_fee_payments(persona: Persona) -> list[LedgerRow]:
+    """The received ledger rows carrying a retención that pay no leased premises: a professional's fees.
+
+    A received invoice bears a retención the taxpayer practises only as the
+    payer of rent or of professional fees; with no employees, the rows that pay
+    no landlord are the professional fees.
+    """
+    landlords = {premises.landlord for premises in persona.leased_premises}
+    return [
+        row
+        for row in persona.ledger
+        if row.invoice_kind == "received"
+        and row.counterparty not in landlords
+        and row.retencion_amount is not None
+        and row.retencion_amount > 0
+    ]
+
+
+def _professional_fee_capture(
+    persona: Persona,
+    world: PersonaWorld,
+    row: LedgerRow,
+    *,
+    transactions: Mapping[str, str],
+    invoices: Mapping[str, str],
+) -> ModeloInvoiceWithholdingCaptureRequest:
+    """The withholding capture of one professional's invoice paid by the taxpayer, for the Modelo 111 of its quarter.
+
+    The persona's professionals are resident individuals taxed under the IRPF,
+    the only recipients whose fees carry the retención of RIRPF art. 95.
+    """
+    if row.taxable_base is None or row.retencion_amount is None:
+        raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a professional fee states its base and retención")
+    paid_on = row.operation_date(world.envelope)
+    with validating_governed_facts(world.operation):
+        evidence = InvoiceWithholdingEvidenceRequest(
+            invoice_id=invoices[row.ref],
+            income_kind=WithholdingIncomeKind.PROFESSIONAL,
+            scheme=_PROFESSIONAL_SCHEME,
+            recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+            recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+            payment_event_id=transactions[row.ref],
+            payment_occurred_on=paid_on,
+            allocation_id=row.ref,
+            allocated_base=row.taxable_base,
+            allocated_withholding=row.retencion_amount,
+            allocated_settlement=abs(row.amount),
+            idempotency_key=f"{persona.id}:{row.ref}",
+        )
+    quarter = Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
+    return ModeloInvoiceWithholdingCaptureRequest.from_inputs(
+        profile_id=world.profile_id,
+        command=PerModeloAggregationCommand(modelo=_PROFESSIONAL_WITHHOLDING_MODELO, period=quarter),
+        evidence=evidence,
+    )
+
+
+def _capture_professional_withholding(
+    persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
+) -> None:
+    """Capture the retención the taxpayer withheld on every professional's invoice, as Modelo 111 evidence."""
+    for row in _professional_fee_payments(persona):
+        captured = run_operation(
+            world,
+            MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
+            _professional_fee_capture(persona, world, row, transactions=transactions, invoices=invoices),
+            ModeloInvoiceWithholdingCaptureProjection,
+        )
+        if captured.outcome != "captured":
+            raise PersonaMaterialisationError(
+                f"{persona.id} {row.ref}: professional withholding refused ({captured.refusal_reason}, "
+                f"{captured.refusal_defects})"
+            )
+
+
 def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
     """The bindings and boxes a calculation left without a value, named for a refusal message; empty when none."""
     names = [f"binding {row.binding_id}" for row in calculated.unresolved_bindings]
@@ -1136,7 +1215,8 @@ def _replay_history(
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
 
-    The local observations and rent withholding are recorded first. Then each
+    The local observations and the rent and professional withholding are
+    recorded first. Then each
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
@@ -1148,6 +1228,7 @@ def _replay_history(
     _seed_compensation_carried_in(persona, world)
     _record_local_observations(persona, world)
     _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
     for year, period, filed in _history_periods(persona, world.envelope):
