@@ -7,7 +7,7 @@ revision_id = "2020"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "fefb7fe9d9e514d150504eda9c50cd70d42ab3799b16a21e6ae93bc7fdef87fb"
+source_state_digest = "f68147448ffac274d7940c5c7f70328452bc730efbe4f95b3f46eb0cefddcf4c"
 design_sources = [
     { source_ref = "aeat-dr-100-2020-dictionary", sha256 = "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f" },
 ]
@@ -3497,15 +3497,4 @@ blocks = [
     { kind = "field", id = "field-158", casilla_id = "1389" },
     { kind = "field", id = "field-159", casilla_id = "1390" },
     { kind = "field", id = "field-160", casilla_id = "1391" },
-]
-
-[[revisions.2020.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.100.form.page.other-inputs.heading"
-
-[[revisions.2020.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.100.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["renta-modelo-100-estimacion-directa-es-normal"] },
 ]

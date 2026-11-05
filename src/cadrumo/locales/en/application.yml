@@ -2008,6 +2008,9 @@ application:
         your active profile (a date about you such as the birth date); it cannot be
         supplied through --binding, which carries only decimal and enum values. Save
         it in your profile and recalculate.
+      calculate_binding_is_profile_derived: --binding %{key} is a yes or no value
+        derived from your active profile; it cannot be supplied through --binding.
+        Change the profile fact it comes from and recalculate.
       calculate_binding_unknown: '--binding %{key} does not match any value source
         id in this version of the modelo. Accepted ids: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'The value for %{key} is a decimal-encoded

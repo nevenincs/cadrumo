@@ -144,6 +144,24 @@ def family_fact_context(
     )
 
 
+def inject_derived_estimation_modality_fact(
+    fact_index: dict[str, UserProfileFactValue],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """State casilla 0168's modality from the declared estimation regime.
+
+    Normal and simplified direct estimation are the two values of one box, so the declared
+    regime answers it; any other or undeclared regime leaves the box unresolved rather than
+    stating a modality the taxpayer did not choose.
+    """
+    regime = str(fact_index.get("irpf.estimation_regime", ""))
+    normal = str(irpf_estimation_regime_directa_normal_token(authority=operation))
+    simplified = str(irpf_estimation_regime_directa_simplificada_token(authority=operation))
+    if regime in {normal, simplified}:
+        fact_index["irpf.estimation_directa_normal"] = regime == normal
+
+
 def inject_derived_cash_election_fact(
     fact_index: dict[str, UserProfileFactValue],
     record: object,

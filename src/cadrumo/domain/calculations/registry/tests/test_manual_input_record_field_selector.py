@@ -89,9 +89,8 @@ def test_a_casilla_shape_manual_input_binding_is_not_applicable() -> None:
                 "false_value": "S",
             },
             "value": {
-                "data_type": "enum",
-                "channel": "enum",
-                "typed_enum": "EstimacionDirectaModalidad",
+                "data_type": "boolean",
+                "channel": "boolean",
             },
             "aggregation": {
                 "op": "copy",

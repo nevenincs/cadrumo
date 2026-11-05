@@ -2114,6 +2114,9 @@ application:
         que es pren del teu perfil actiu (una dada de data teva, com la data de naixement);
         no es pot aportar mitjançant --binding, que només admet valors decimals i
         d'enumeració. Desa'l al teu perfil i torna a calcular.
+      calculate_binding_is_profile_derived: --binding %{key} és un valor de sí o no
+        que es deriva del teu perfil actiu; no es pot aportar mitjançant --binding.
+        Canvia la dada del perfil de la qual procedeix i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap id d''origen
         de valor d''aquesta versió del model. Ids acceptats: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'El valor de %{key} és un indicador

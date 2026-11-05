@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "a9fc509da65edf6b34d30dfeba2ecf05dcf5034f38b38cf8be46a2a57200053f"
+source_state_digest = "acb44192e2a48c086c0f2d828fdcd5ba89e3b9ddf7971e817c12464acabc7d6f"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
     { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
@@ -4336,15 +4336,4 @@ blocks = [
     { kind = "field", id = "field-169", casilla_id = "1855" },
     { kind = "field", id = "field-170", casilla_id = "1856" },
     { kind = "field", id = "field-171", casilla_id = "1857" },
-]
-
-[[revisions.2022.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.100.form.page.other-inputs.heading"
-
-[[revisions.2022.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.100.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["renta-modelo-100-estimacion-directa-es-normal"] },
 ]

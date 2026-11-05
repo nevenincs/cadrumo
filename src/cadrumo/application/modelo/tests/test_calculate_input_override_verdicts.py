@@ -31,7 +31,7 @@ from ....domain.calculations.registry.casilla_membership import (
     row_field_template_records_by_casilla,
 )
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -177,13 +177,28 @@ def test_boolean_binding_encoding_refusal_carries_its_bindings_list_verdict() ->
     revision = _revision("100")
     enum_ids = enum_consumed_binding_ids(revision)
     date_ids = revision_date_binding_ids(revision)
-    boolean_decimal_bindings = [
-        binding
-        for binding in revision.bindings
-        if boolean_binding_encoded_values(binding) and binding.id not in enum_ids and binding.id not in date_ids
-    ]
-    assert boolean_decimal_bindings, "the published revision no longer declares a decimal-encoded boolean binding"
-    binding = boolean_decimal_bindings[0]
+    # No published binding is still a decimal-encoded flag, so the revision gains one declared exactly as the
+    # registry declares a boolean manual input; the resolver under test is the real one.
+    binding = BindingDefinition.model_validate(
+        {
+            "id": "synthetic-boolean-flag",
+            "provider": {
+                "kind": "manual_input",
+                "casilla_id": "0168",
+                "data_type": "boolean",
+                "true_value": "N",
+                "false_value": "S",
+            },
+            "value": {"data_type": "boolean", "channel": "boolean"},
+            "aggregation": {"op": "copy"},
+            "legal_refs": revision.bindings[0].legal_refs,
+            "source_refs": revision.bindings[0].source_refs,
+        },
+    )
+    revision = revision.model_copy(update={"bindings": (*revision.bindings, binding)})
+    assert binding.id not in enum_ids
+    assert binding.id not in date_ids
+    assert boolean_binding_encoded_values(binding)
     accepted = ", ".join(option.encoded_value for option in boolean_binding_encoded_values(binding))
 
     with pytest.raises(ModeloCalculateDecimalInputError) as exc_info:

@@ -7,10 +7,12 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, NoReturn
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
@@ -427,6 +429,16 @@ def validated_binding_input_channel(
                 },
                 with_registry_listing=True,
             ),
+        )
+    if any(
+        binding.id == key
+        and binding.source is BindingSourceKind.PROFILE
+        and binding.value.channel is BindingValueChannel.BOOLEAN
+        for binding in revision.bindings
+    ):
+        raise ModeloCalculateBindingInputError(
+            context={"key": key},
+            translated_message="application.modelo.errors.calculate_binding_is_profile_derived",
         )
     return key, "enum" if key in enum_channel_ids else "decimal"
 

@@ -167,14 +167,13 @@ HELP_BOXES: Mapping[str, tuple[str, ...]] = {
 RENTA_YEAR = newest_authored_edition("100")
 RENTA_PERIOD = "0A"
 #: What the filer answers for that Renta: the earlier year's negative general base, the negative general base
-#: still pending at the start of each of the three years before, and whether direct estimation is normal. The
+#: still pending at the start of each of the three years before. The
 #: calculation refuses without all of them.
 RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
     ("renta-base-liquidable-negativa-general-anterior", "0"),
     ("renta-base-liquidable-negativa-general-em4-pendiente-inicio", "0"),
     ("renta-base-liquidable-negativa-general-em3-pendiente-inicio", "0"),
     ("renta-base-liquidable-negativa-general-em2-pendiente-inicio", "0"),
-    ("renta-modelo-100-estimacion-directa-es-normal", "1"),
 )
 #: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
 RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")

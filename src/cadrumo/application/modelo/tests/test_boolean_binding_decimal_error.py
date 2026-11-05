@@ -34,9 +34,8 @@ def _boolean_binding() -> BindingDefinition:
                 "false_value": "S",
             },
             "value": {
-                "data_type": "enum",
-                "channel": "enum",
-                "typed_enum": "EstimacionDirectaModalidad",
+                "data_type": "boolean",
+                "channel": "boolean",
             },
             "aggregation": {
                 "op": "copy",

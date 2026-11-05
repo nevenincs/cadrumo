@@ -39,9 +39,8 @@ def _boolean_binding() -> BindingDefinition:
                 "false_value": "S",
             },
             "value": {
-                "data_type": "enum",
-                "channel": "enum",
-                "typed_enum": "EstimacionDirectaModalidad",
+                "data_type": "boolean",
+                "channel": "boolean",
             },
             "aggregation": {
                 "op": "copy",
@@ -120,9 +119,8 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
                     "false_value": "S",
                 },
                 "value": {
-                    "data_type": "enum",
-                    "channel": "enum",
-                    "typed_enum": "EstimacionDirectaModalidad",
+                    "data_type": "boolean",
+                    "channel": "boolean",
                 },
                 "aggregation": {
                     "op": "copy",
