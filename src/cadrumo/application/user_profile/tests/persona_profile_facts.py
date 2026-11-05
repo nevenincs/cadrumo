@@ -83,8 +83,8 @@ _ACTIVITY_ROWS: Final = "activities."
 
 
 @cache
-def _persona_facts() -> tuple[UserProfileFact, ...]:
-    return persona_profile_facts(DIRECTA_NORMAL_PERSONA)
+def _persona_facts(persona_id: str) -> tuple[UserProfileFact, ...]:
+    return persona_profile_facts(persona_id)
 
 
 def _omitted(path: str, without: Collection[str]) -> bool:
@@ -92,9 +92,14 @@ def _omitted(path: str, without: Collection[str]) -> bool:
 
 
 def persona_facts_beneath(
-    stated: Iterable[UserProfileFact] = (), *, without: Collection[str] = ()
+    stated: Iterable[UserProfileFact] = (),
+    *,
+    without: Collection[str] = (),
+    persona_id: str = DIRECTA_NORMAL_PERSONA,
 ) -> tuple[UserProfileFact, ...]:
     """Return the persona's facts, then ``stated``, which replaces the persona's value for a path.
+
+    ``persona_id`` names the persona; it defaults to the canonical estimación directa normal one.
 
     A suite that states an ``activities.`` path the persona does not state
     states its own activity rows, so the persona's rows are left out. ``without`` names the paths, or
@@ -103,11 +108,12 @@ def persona_facts_beneath(
     stated = tuple(stated)
     paths = {fact.path for fact in stated if fact.valid_from is None and fact.valid_to is None}
     all_paths = {fact.path for fact in stated}
-    persona_paths = {fact.path for fact in _persona_facts()}
+    base = _persona_facts(persona_id)
+    persona_paths = {fact.path for fact in base}
     own_activity_rows = any(path.startswith(_ACTIVITY_ROWS) and path not in persona_paths for path in all_paths)
     kept = tuple(
         fact
-        for fact in _persona_facts()
+        for fact in base
         if fact.path not in paths
         and not _omitted(fact.path, without)
         and not (own_activity_rows and fact.path.startswith(_ACTIVITY_ROWS))
@@ -115,7 +121,12 @@ def persona_facts_beneath(
     return (*kept, *stated)
 
 
-def persona_fact_strings(stated: Mapping[str, str] | None = None, *, without: Collection[str] = ()) -> dict[str, str]:
+def persona_fact_strings(
+    stated: Mapping[str, str] | None = None,
+    *,
+    without: Collection[str] = (),
+    persona_id: str = DIRECTA_NORMAL_PERSONA,
+) -> dict[str, str]:
     """Return the persona's facts, with the colegio-concertado attestation and ``stated``, as the string values a profile seed takes."""
     facts = persona_facts_beneath(
         (
@@ -123,10 +134,11 @@ def persona_fact_strings(stated: Mapping[str, str] | None = None, *, without: Co
             *(UserProfileFact(path=path, value=value) for path, value in (stated or {}).items()),
         ),
         without=without,
+        persona_id=persona_id,
     )
     return {fact.path: str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value) for fact in facts}
 
 
 def directa_normal_tax_id() -> str:
     """Return the identifier the canonical estimación directa normal persona states."""
-    return next(str(fact.value) for fact in _persona_facts() if fact.path == "identity.tax_id")
+    return next(str(fact.value) for fact in _persona_facts(DIRECTA_NORMAL_PERSONA) if fact.path == "identity.tax_id")
