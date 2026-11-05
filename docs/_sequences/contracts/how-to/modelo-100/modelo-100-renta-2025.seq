@@ -3,7 +3,7 @@
 aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
 @capture work_unit_id result.work_unit_id
 @step Record the payer's withholding from the employee's own declaration of it.
-@setup aeat --format json app ledger retencion-soportada record B00000000 --ejercicio 2025 --income-class trabajo --origin operator_declaration --retencion 2400 --ingreso-a-cuenta 0 --importe-integro 24000 --payer-name "Pagador Sintetico SL"
+@setup aeat --format json app ledger retencion-soportada record B00010009 --ejercicio 2025 --income-class trabajo --origin operator_declaration --retencion 2400 --ingreso-a-cuenta 0 --importe-integro 24000 --payer-name "Pagador Sintetico SL"
 @step Calculate, supplying this employee filer's salary income by hand, with a zero prior-year negative-base carry for a first filing.
 aeat --format json app modelo work calculate {work_unit_id} --casilla 0003=24000 --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0
 @capture calculation_revision_id result.calculation_revision_id

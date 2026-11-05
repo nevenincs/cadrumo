@@ -58,11 +58,11 @@
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:7a828de5",
-            "third_party_transactions_above_347_threshold": false
+            "third_party_transactions_above_347_threshold": ""
           },
-          "rationale": "Applicability cannot be determined for this modelo from the declared taxpayer model: it depends on a fact the profile does not express with certainty. The modelo is asserted applicable only when that fact is positively declared; otherwise no obligation is presumed. Fact required for this modelo: carries out intra-community transactions.",
+          "rationale": "Modelo 349 no aplica: la declaración recapitulativa solo corresponde a quien realiza operaciones intracomunitarias.",
           "scheduling_rationale": null,
-          "verdict": "incomplete",
+          "verdict": "not_applicable",
           "year": 2026
         },
         "schema_version": "2",

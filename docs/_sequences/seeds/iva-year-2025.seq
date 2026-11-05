@@ -5,7 +5,7 @@
 :file: 303
 @step State the plumber's identity and activity, active since years before the filing year.
 :generated: begin
-@setup aeat config profile edit docs-sequence-sandbox --quiet --tax-id 12345678Z --name Javier --surnames "Montero Alcaraz" --activity-start-date 2017-03-01 --pays-rent-with-retencion --third-party-transactions-above-347-threshold
+@setup aeat config profile edit docs-sequence-sandbox --quiet --tax-id 00000026A --name Javier --surnames "Montero Alcaraz" --activity-start-date 2017-03-01 --pays-rent-with-retencion --third-party-transactions-above-347-threshold
 @step Record FON-ALQ-01, Alquiler nave taller, with its tax fields.
 @setup aeat --format json app ledger add --date 2025-01-01 --amount 612.00 --direction OUTGOING --description "Alquiler nave taller" --currency EUR --counterparty "Tomás Lozano Prieto" --classification BUSINESS --category-id arrendamiento_local --irpf-category arrendamiento_local --iva-category domestic_general --taxable-base 600.00 --iva-rate 0.21 --iva-amount 126.00 --deduction-kind domestic_current --idempotency-key FON-ALQ-01
 @capture fon_alq_01 result.transaction_id

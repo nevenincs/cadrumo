@@ -75,7 +75,7 @@
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:7a828de5",
-            "third_party_transactions_above_347_threshold": false
+            "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
           "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
