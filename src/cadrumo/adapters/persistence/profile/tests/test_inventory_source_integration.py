@@ -11,6 +11,9 @@ from sqlalchemy import select
 from .....application.aggregation.inventory import InventorySourceResolver
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.tests.test_inventory_source import inventory_ledger
+from .....application.aggregation.tests.withholding_filer_profile_support import (
+    published_work_profile_declaring_activities,
+)
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
@@ -39,13 +42,14 @@ def _revision() -> ModeloRevision:
     return published_authority_operation().snapshot("100", filing_year=2025, period="0A").revision
 
 
-def _context(revision: ModeloRevision) -> CalculationSourceContext:
+def _context(revision: ModeloRevision, *, activities: int) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
         revision=revision,
+        profile=published_work_profile_declaring_activities(activities),
     )
 
 
@@ -55,11 +59,11 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
 ) -> None:
     repository = InventoryLedgerRepository(objects=runtime_profile.repository)
     revision = _revision()
-    absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    absent = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
     alpha = inventory_ledger("alpha", physical_closing=Decimal("250.00"))
     zeta = inventory_ledger("zeta")
     repository.save(InventoryLedgerDocument(ledgers=(zeta, alpha)))
-    complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    complete = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
     statement = select(SecureObjectRow).where(
         SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
@@ -77,7 +81,7 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
         row_statement=statement,
         mutate=orphan_authority,
     )
-    corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+    corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision, activities=2))
 
     assert absent.row_binding_values == {}
     assert absent.diagnostics[0].reason == "source_domain_not_ready"

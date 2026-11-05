@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import ClassVar, Protocol, get_args
 
@@ -32,6 +33,8 @@ from .source_mesh import (
 )
 
 _SOURCE = BindingSourceKind.INVENTORY
+_ACTIVITIES_SECTION = "activities"
+_ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
 _OWNED_SOURCES = (_SOURCE,)
 _VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
     "complete_acquisition_cost": "complete_acquisition_total",
@@ -73,6 +76,122 @@ def _profile_declares_no_activity_income(context: CalculationSourceContext) -> b
 
     taxpayer = projection_for_taxpayer(context.profile.record, schema=context.profile.profile_decode_context.schema)
     return derive_taxpayer_files_economic_activity(taxpayer) is False
+
+
+@dataclass(frozen=True, slots=True)
+class _DirectEstimationActivities:
+    """The activities the ejercicio holds in the direct-estimation activity block.
+
+    ``regime_undeclared`` means an activity is in force on a day the profile states no estimation
+    regime, so whether that activity belongs in the block is unknown and ``count`` is not final.
+    """
+
+    count: int
+    regime_undeclared: bool
+
+
+def _direct_estimation_activities(context: CalculationSourceContext) -> _DirectEstimationActivities | None:
+    """Count the activities the ejercicio holds in the direct-estimation activity block.
+
+    The block (ActividadEstDirecta) holds only activities in estimacion directa, so an activity
+    counts on the days the profile's estimation regime is a direct-estimation one. Each activity
+    is identified by its row together with the identifying values the row holds that day, so a
+    row whose description or epigraph changes within the year counts once per identity: its two
+    halves are two activities, of which one book can describe only one. The year is read on its
+    first and last day and on each day a dated fact of the profile starts, or ends the day
+    before; between those days no fact changes. ``None`` means no profile was read.
+
+    Books are matched to these activities by count, not identity, because a book names its
+    activity by the operator's own free-text identifier: two books for one activity of two
+    still resolve here, and the export then refuses to choose between their two occurrences.
+    """
+    if context.profile is None:
+        return None
+    from ...domain.calculations.registry.irpf_regimes import (
+        irpf_estimation_regime_directa_normal_token,
+        irpf_estimation_regime_directa_simplificada_token,
+        irpf_estimation_regime_tokens,
+    )
+    from ..user_profile.completeness import profile_section_rows, profile_value_is_present
+    from ..user_profile.projections import record_to_path_values
+
+    declared = {str(token) for token in irpf_estimation_regime_tokens()}
+    direct = {
+        str(irpf_estimation_regime_directa_normal_token()),
+        str(irpf_estimation_regime_directa_simplificada_token()),
+    }
+    record = context.profile.record
+    first, last = date(context.filing_year, 1, 1), date(context.filing_year, 12, 31)
+    days = {first, last}
+    for fact in record.facts:
+        if fact.valid_from is not None and first <= fact.valid_from <= last:
+            days.add(fact.valid_from)
+        if fact.valid_to is not None and first <= fact.valid_to < last:
+            days.add(fact.valid_to + timedelta(days=1))
+    activities: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
+    regime_undeclared = False
+    for day in days:
+        values = record_to_path_values(record, as_of=day)
+        present = [path for path, value in values.items() if profile_value_is_present(value)]
+        rows = profile_section_rows(_ACTIVITIES_SECTION, present)
+        regime = values.get(_ESTIMATION_REGIME_PATH, "").strip()
+        if rows and regime not in declared:
+            regime_undeclared = True
+        if regime not in direct:
+            continue
+        for row, fields in rows.items():
+            prefix = f"{_ACTIVITIES_SECTION}.{row}" if row else _ACTIVITIES_SECTION
+            # Every populated field identifies the activity, so a later dated field that does not
+            # identify it still splits the row in two and refuses rather than mismatching a book.
+            activities.add((row, tuple(sorted((field, values[f"{prefix}.{field}"].strip()) for field in fields))))
+    return _DirectEstimationActivities(count=len(activities), regime_undeclared=regime_undeclared)
+
+
+def _activity_books_refusal(
+    activities: _DirectEstimationActivities | None,
+    books: int,
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    if activities is not None and activities.regime_undeclared:
+        diagnostic = _diagnostic(
+            reason="source_domain_not_ready",
+            state="estimation_regime_undeclared",
+            message=(
+                f"{books} {filing_year} inventory activity books are kept and the profile states no estimation "
+                "regime on a day an activity is in force"
+            ),
+            remedy=(
+                "Declare in the profile the IRPF estimation regime of the activities for every day of the "
+                "ejercicio they are in force, so the Anexo D rows hold only activities in estimacion directa."
+            ),
+        )
+    else:
+        declared = (
+            "no profile was read"
+            if activities is None
+            else f"the profile declares {activities.count} activities in estimacion directa"
+        )
+        diagnostic = _diagnostic(
+            reason="source_domain_not_ready",
+            state="activity_books_do_not_match_activities",
+            message=f"{books} {filing_year} inventory activity books are kept and {declared} for the ejercicio",
+            remedy=(
+                "Keep one inventory book for each activity in estimacion directa in the ejercicio, a book "
+                "with no existencias included, and none for an activity in estimacion objetiva. Declare in "
+                "the profile the estimation regime and each such activity, with the dates an activity's "
+                "description or epigraph changed, so each Anexo D row is one activity's."
+            ),
+        )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(diagnostic,),
+    )
 
 
 def _diagnostic(
@@ -487,6 +606,19 @@ class InventorySourceResolver:
         )
         if isinstance(ledgers, CalculationSourceResolution):
             return ledgers
+        # Each row is one book and the activity block of the return is one activity, so a row is
+        # an activity's only when every declared activity keeps its book. One book among several
+        # activities would otherwise read as the return's one activity.
+        activities = _direct_estimation_activities(context)
+        if activities is None or activities.regime_undeclared or activities.count != len(ledgers):
+            return _activity_books_refusal(
+                activities,
+                len(ledgers),
+                binding_ids=binding_ids,
+                filing_year=context.filing_year,
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+            )
         return _resolve_inventory_rows(
             ledgers,
             binding_ids=binding_ids,

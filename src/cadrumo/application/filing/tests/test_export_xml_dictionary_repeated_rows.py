@@ -18,10 +18,14 @@ from defusedxml import ElementTree
 
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 
+from ....core.aggregation import BindingAggregationOp
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ....domain.filing.errors import FilingExportValidationError
@@ -33,7 +37,7 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
 from ...aggregation.tests.ledger_transaction_support import renta_acquisition_row
-from .._export_xml_dictionary import render_xml_dictionary_layout
+from .._export_xml_dictionary import render_xml_dictionary_layout, xml_dictionary_repeated_rows
 from ..draft_construction import build_draft
 from ..export import export_draft
 from ..export_verification import verify_export
@@ -251,6 +255,38 @@ def test_a_value_on_another_box_of_the_element_refuses_rather_than_landing_on_a_
 
     with pytest.raises(FilingExportValidationError, match="do not add up"):
         _render(provider, _draft(provider, 2025, inputs))
+
+
+def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """One sale is still not the box's: only rows declared one per activity take a box held for the element."""
+    year = operation.supported_filing_years().floor
+    provider = _provider(operation, year)
+    revision = provider.get_snapshot("100").revision
+    layout = revision.export_layouts[0]
+    entries = xml_dictionary_entries(layout, sources=provider.sources, source_payloads=provider.source_payloads)
+    element = f"/{_ELEMENT_PATH}"
+    stray = next(entry for entry in entries if entry.casilla_id == "1652")
+    column = next(
+        binding_id
+        for binding_id, binding in sorted(revision_bindings_by_id(revision).items())
+        if binding_aggregation_op(binding) is BindingAggregationOp.ROWS
+        and binding.value.data_type == "money"
+        and any(
+            entry.casilla_id == selector_as_dict(binding).get("target_casilla_id") and entry.path.startswith(element)
+            for entry in entries
+        )
+    )
+    draft = _draft(provider, year, {column: {"1": Decimal("40.00")}, "1652": Decimal("10.00")})
+
+    with pytest.raises(FilingExportValidationError, match="box 1652 holds"):
+        _render(provider, draft)
+    (rows,) = xml_dictionary_repeated_rows(layout, draft=draft, entries=entries, schema_provider=provider)
+    assert rows.element_path == element
+    assert len(rows.occurrences) == 1
+    assert stray.path not in rows.occurrences[0]
+    assert not rows.activity_grained
 
 
 def test_more_sales_than_the_schema_admits_refuses(operation: PinnedAuthorityOperation) -> None:

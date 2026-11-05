@@ -10,23 +10,30 @@ instructions, never read from a run of the product:
   (Ley 35/2006, art. 99.1; Reglamento, arts. 7 and 110.3.a).
 * Each Modelo 130 quarter is 20 % of the cumulative net income, less the earlier quarters' positive results
   and the cumulative retention (Reglamento, art. 110.3.a). Under the simplified modality the instructions of
-  casilla 02 add the gastos de dificil justificacion of Reglamento art. 30.2.4a, 5 % of the net income
-  before them (7 % for the periodo impositivo 2023, Ley 35/2006 disposicion adicional quincuagesima sexta),
-  capped at 2.000,00 a year.
+  casilla 02 add the gastos de dificil justificacion of Reglamento art. 30.2.4a, the percentage the year's
+  official Renta manual states of the net income before them, capped at 2.000,00 a year.
+* A fee paid to an independent professional for the activity is a deductible expense of it, at its base
+  without the deductible IVA and before the retention practised on it (Ley 35/2006, art. 28.1, which takes
+  the net income from the Impuesto sobre Sociedades rules, Ley 27/2014, art. 10.3).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+import re
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
+from importlib.resources import files
+from typing import Final
 
 from .scenario import CENT, PERIODS, ExpenseInvoice, IssuedInvoice, money
 
-SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE = Decimal("0.05")
-#: Ley 35/2006, disposicion adicional quincuagesima sexta: "durante el periodo impositivo 2023, del 7 por ciento".
-SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE_2023 = Decimal("0.07")
 SIMPLIFIED_DIFFICULT_JUSTIFICATION_CAP = Decimal("2000.00")
+# The manual's own sentence under "Modalidad simplificada", which states the year's percentage in every edition.
+_DIFFICULT_JUSTIFICATION_SENTENCE: Final[re.Pattern[str]] = re.compile(
+    r"gastos de dificil justificacion se cuantificaran exclusivamente aplicando el porcentaje del (\d+) por 100"
+)
 PAGO_FRACCIONADO_RATE = Decimal("0.20")
 
 #: Synthetic CIFs whose control digit is hand-derived (digits zero but the last: 8 for 1, 6 for 2).
@@ -128,16 +135,33 @@ class AutonomoOracle:
     total_pagos_a_cuenta: Decimal
 
 
+def stated_difficult_justification_rate(manual_text: str) -> Decimal:
+    """The art. 30.2.4a percentage a Renta manual states, refusing a manual that states none or several."""
+    stated = set(_DIFFICULT_JUSTIFICATION_SENTENCE.findall(manual_text))
+    if len(stated) != 1:
+        raise LookupError(f"the manual states {sorted(stated)} as the dificil justificacion percentage")
+    return Decimal(stated.pop()) / 100
+
+
 def simplified_difficult_justification_rate(year: int) -> Decimal:
-    """The art. 30.2.4a percentage of the year: 7 % in 2023 by the disposicion adicional, 5 % otherwise."""
-    return SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE_2023 if year == 2023 else SIMPLIFIED_DIFFICULT_JUSTIFICATION_RATE
+    """The art. 30.2.4a percentage of ``year``, read from that year's official Renta manual.
+
+    The percentage is the law's, not the product's: it comes from the AEAT manual's text for the periodo
+    impositivo, never from the registry the calculation reads. A year whose manual is not bundled has no
+    grounded expectation and is refused.
+    """
+    manual = files("cadrumo").joinpath(
+        "_data", "manual_corpus_text", "manuals", "renta", str(year), "part1", "source.pdf.corpus_text.json"
+    )
+    if not manual.is_file():
+        raise LookupError(f"no official Renta manual is bundled for the periodo impositivo {year}")
+    return stated_difficult_justification_rate(json.loads(manual.read_text(encoding="utf-8"))["normalised_text"])
 
 
 def simplified_quarters(
-    income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...], *, year: int
+    income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...], *, rate: Decimal
 ) -> tuple[SimplifiedQuarter, ...]:
-    """Work the four cumulative quarters of a simplified-modality taxpayer from the ledger rows."""
-    rate = simplified_difficult_justification_rate(year)
+    """Work the four cumulative quarters of a simplified-modality taxpayer at the year's art. 30.2.4a ``rate``."""
     rows: list[SimplifiedQuarter] = []
     prior = Decimal()
     for index, period in enumerate(PERIODS, start=1):
@@ -168,14 +192,19 @@ def simplified_quarters(
 
 
 def build_autonomo_oracle(year: int) -> AutonomoOracle:
+    """Build the employee-autonomo of ``year`` at the percentage that year's official manual states."""
+    return autonomo_oracle(year, rate=simplified_difficult_justification_rate(year))
+
+
+def autonomo_oracle(year: int, *, rate: Decimal) -> AutonomoOracle:
     """Build the employee-autonomo of the persona: 15 % and 7 % invoices, four expenses and one employer.
 
     Invoices (Reglamento art. 95.1): 4.000,00 and 3.500,00 at 15 %, 2.000,00 and 2.500,00 at 7 %, so the
     withholding is 600,00 + 525,00 + 140,00 + 175,00 = 1.440,00. Expenses are 500,00, 700,00, 300,00 and
     900,00. The employer certifies 3.000,00 on 24.000,00 of pay.
 
-    Hand-worked simplified quarters for any year but 2023 (income, expenses, 5 % of the difference,
-    cumulative retention); 2023 takes 7 % of the same differences instead:
+    Hand-worked simplified quarters at a 5 % manual percentage (income, expenses, the percentage of the
+    difference, cumulative retention); a year whose manual states another percentage applies it instead:
 
         1T  4.000  500  175  600  -> 20 % of 3.325 = 665   - 0   - 600   =  65
         2T  7.500 1.200 315 1.125  -> 20 % of 5.985 = 1.197 - 65  - 1.125 =   7
@@ -219,7 +248,7 @@ def build_autonomo_oracle(year: int) -> AutonomoOracle:
             strict=True,
         )
     )
-    quarters = simplified_quarters(income, spent, year=year)
+    quarters = simplified_quarters(income, spent, rate=rate)
     employer = EmployerCertificate(EMPLOYER_A, importe_integro=Decimal("24000.00"), retencion=Decimal("3000.00"))
     withholding = sum((item.withholding for item in income), Decimal())
     payments = sum((max(item.result, Decimal()) for item in quarters), Decimal())
@@ -256,3 +285,32 @@ def build_payer_side(year: int) -> PayerSideRetention:
     """The first-quarter professional fee the persona pays a freelancer: 1.000,00 at 15 %, 150,00 withheld."""
     del year
     return PayerSideRetention(modelo="111", period="1T", base=Decimal("1000.00"), rate=Decimal("0.15"))
+
+
+def build_payer_oracle(year: int) -> AutonomoOracle:
+    """Build the payer of ``year`` at the percentage that year's official manual states."""
+    return payer_oracle(year, rate=simplified_difficult_justification_rate(year))
+
+
+def payer_oracle(year: int, *, rate: Decimal) -> AutonomoOracle:
+    """The employee-autonomo who also paid the freelancer's fee, booked after the four 130s were filed.
+
+    The fee is an expense of the activity at its 1.000,00 base (Ley 35/2006, art. 28.1; Ley 27/2014,
+    art. 10.3): the 150,00 retention is part of what the persona owes the freelancer, and the IVA is
+    deductible, so neither changes the expense. The filed 130s stand as filed, so the quarters, the 0604
+    pagos fraccionados and the credits are the employee-autonomo's; only the annual yield takes the fee.
+    At a 5 % manual percentage the annual chain is:
+
+        income 12.000 - expenses 2.400 - fee 1.000 = 8.600; 5 % of 8.600 = 430; 8.600 - 430 = 8.170,00
+    """
+    oracle = autonomo_oracle(year, rate=rate)
+    fee = build_payer_side(year)
+    income = sum((item.taxable_base for item in oracle.income), Decimal())
+    expenses = sum((item.taxable_base for item in oracle.expenses), Decimal()) + fee.base
+    difficult = money(
+        min(
+            max((income - expenses) * rate, Decimal()),
+            SIMPLIFIED_DIFFICULT_JUSTIFICATION_CAP,
+        )
+    )
+    return replace(oracle, activity_net_income=income - expenses - difficult)
