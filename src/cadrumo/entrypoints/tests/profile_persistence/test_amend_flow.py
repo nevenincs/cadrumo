@@ -133,6 +133,8 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="file-flow"),
+        # The taxpayer pays rent with retencion, so Modelo 180 applies to the profile.
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
     )
 )
 

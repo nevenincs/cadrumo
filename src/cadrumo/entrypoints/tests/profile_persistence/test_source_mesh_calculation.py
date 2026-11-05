@@ -61,6 +61,8 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
         UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        # The ledger holds intra-Community acquisitions, so the taxpayer conducts intra-Community operations.
+        UserProfileFact(path="iva.does_intracomunitario", value=True),
     )
 )
 
