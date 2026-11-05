@@ -2207,6 +2207,7 @@
         "cadrumo.core.prorrata_register",
         "cadrumo.core.prose_elision",
         "cadrumo.core.provenance_stamp",
+        "cadrumo.core.pydantic_plugins",
         "cadrumo.core.record_design_epoch",
         "cadrumo.core.redaction",
         "cadrumo.core.redaction.patterns",

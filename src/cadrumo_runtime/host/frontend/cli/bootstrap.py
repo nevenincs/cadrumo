@@ -2,18 +2,12 @@
 
 from __future__ import annotations
 
-import os
+from cadrumo.core.pydantic_plugins import disable_pydantic_plugins
 
 
 def main() -> None:
     """Defer file-backed logging until parsed CLI preflight authorizes it."""
-    # Pydantic scans every installed distribution's entry points on its first
-    # model build, which costs about a tenth of a second in a process that
-    # builds models before it has parsed a command. Cadrumo declares no
-    # pydantic plugin, and a third-party one would observe taxpayer models it
-    # has no business seeing. ``setdefault`` leaves an operator's explicit
-    # value alone.
-    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    disable_pydantic_plugins()
 
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
