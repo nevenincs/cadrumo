@@ -10,15 +10,17 @@ from collections.abc import Mapping
 
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldDefinition, ProfileFieldType
+from ..values import UserProfileFactValue
+from .general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 # This is a stable, schema-valid test identifier.  Keep test data independent
 # of the registry authority so importing schema-only fixtures remains pure.
 _PLACEHOLDER_TAX_ID = "12345678Z"
 _PLACEHOLDER_DATE = "1990-01-01"
-_PLACEHOLDER_BOOLEAN = "false"
+_PLACEHOLDER_BOOLEAN = False
 
 
-def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
+def schema_valid_placeholder(field: ProfileFieldDefinition) -> str | bool:
     """Return a value admitted by ``field`` for an unrelated test axis."""
     if field.enum_values:
         return field.enum_values[0]
@@ -42,22 +44,12 @@ def _numeric_placeholder(field: ProfileFieldDefinition) -> str:
     return "1"
 
 
-REQUIRED_PROFILE_PLACEHOLDERS: Mapping[str, str] = {
+REQUIRED_PROFILE_PLACEHOLDERS: Mapping[str, UserProfileFactValue] = {
     "identity.name": "Test Operator",
     "identity.surnames": "Test Operator",
-    "tax_residence.ccaa": "madrid",
-    "tax_residence.jurisdiction_scope": "common_regime",
     "activities.description": "economic activity",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     "provenance.source": PROVENANCE_SOURCE_MANUAL_CLI,
-    "taxpayer_type.entity_type": "natural_person",
-    "taxpayer_type.irpf_income_categories": "actividad_economica",
-    "irpf.estimation_regime": "directa_normal",
+    **{fact.path: fact.value for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS},
 }
 
 

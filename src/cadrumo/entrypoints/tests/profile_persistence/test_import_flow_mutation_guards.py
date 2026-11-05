@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.aggregation.retenciones import RetencionObservation
@@ -67,7 +68,6 @@ from .import_flow_support import (
     _seed_local_filing_record,
     _seed_work_unit,
     repos,
-    seed_ready_profile,
 )
 
 __all__ = ["repos"]
@@ -287,7 +287,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     calculation-revision addressing helpers in this same package do.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
-        seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
+        seed_ready_profile(bucket_id=_GUARD_BUCKET_B, at=_T0)
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)

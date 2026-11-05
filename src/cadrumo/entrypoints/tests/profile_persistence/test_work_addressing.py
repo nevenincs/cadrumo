@@ -63,7 +63,7 @@ _ADDRESSING_PROFILE_ID = "13000000-0000-4000-8000-000000000230"
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_ready_profile(bucket_id=bucket_id, surnames="Modelo Work", at=_T0)
+    seed_ready_profile(bucket_id=bucket_id, at=_T0)
 
 
 _OUTPUT_CASILLA: CasillaId = validated_casilla_id("01")

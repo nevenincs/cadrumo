@@ -47,6 +47,7 @@ from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support im
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_303_justificante_observation as _stored_303_justificante_observation,
 )
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.live.errors import LiveApplicationError
@@ -62,7 +63,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import _T0
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -74,7 +75,7 @@ _EXPENSE = validated_casilla_id("02")
 @pytest.fixture
 def runtime_profile(tmp_path: Path, operation: PinnedAuthorityOperation) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0)
         yield profile
 
 
