@@ -33,6 +33,7 @@ def calculate(
         inputs=inputs,
         date_context={"filing_period": FILING_DATE},
         binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),

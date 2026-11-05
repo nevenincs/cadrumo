@@ -163,6 +163,7 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
             ),
         },
         binding_values={
+            "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),

@@ -75,6 +75,7 @@ def prior_base_binding_values(
     *, certificado_trabajo: Decimal | None = None, certificado_capital: Decimal | None = None
 ) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
+        "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),

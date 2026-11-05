@@ -220,6 +220,7 @@ PERE_AGE_70_BIRTH_DATE_BINDINGS: dict[BindingId, date] = {
 
 def base_binding_values() -> dict[BindingId, Decimal]:
     return {
+        "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
