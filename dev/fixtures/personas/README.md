@@ -79,10 +79,17 @@ guarantee: no official reserved NIF/NIE/CIF range exists.
 
 | kind | pattern |
 | --- | --- |
-| `nif` | `12345678Z` (the single primary taxpayer identity), otherwise an eight-digit zero counter `00000000T`, `00000001R`, ... with the NIF control letter |
-| `nie` | `Y0000000Z`, `Z0000000M` (counter zero) and `X0000001R` (counter one, because `X0000000T` is the registry's development mock developer identity) |
+| `nif` | an eight-digit zero counter `00000001R`, `00000002W`, ... below `00001000` with the NIF control letter |
+| `nie` | `Y0000000Z` (counter zero) and `X0000001R` (counter one, because `X0000000T` is the registry's development mock developer identity) |
 | `cif` | letter + seven-digit counter from `0000001` + control: digit for A, B, E, H; letter for P, Q, R, S, N, W; C, D, F, G, J, U, V take either and this catalogue uses the digit (`B00000018`, `H00000018`, `Q0000001H`) |
-| `vat_eu` | member-state prefix + zeros + counter digit, shaped to that state's structure (`DE000000001`, `FR00000000001`, `IE0000001A`); never validated against VIES |
+| `vat_eu` | member-state prefix + zeros + counter digit, shaped to that state's structure (`DE000000001`, `FR15000000001`, `IE0000001A`; the French key follows (12 + 3 * (SIREN mod 97)) mod 97); never validated against VIES |
+
+`[convention.generic_pool]` reserves values for tests that need any valid
+identifier and no persona: `12345678Z`, `00000000T` and counter ranges above
+every persona counter. `[convention.generated_projections]` lists the path
+prefixes of projections derived from the personas. `just check-identity`
+accepts an identifier in tests and fixtures only as a role value inside its own
+persona or a projection, a pool member or a refusal.
 
 `[[identities]]` fields:
 
@@ -103,7 +110,7 @@ companies, reserved live-probe values) and random-looking checksum-valid values
 are never added.
 
 `[[refusals]]` lists checksum-invalid values (`B00000001`, `B12345678`,
-`12345678A`) with the mismatch they exhibit. They are never a role and never
+`12345678A`, `B00000282`) with the mismatch they exhibit. They are never a role and never
 appear in a persona; identifier-refusal tests take them from here.
 
 ## persona.toml
