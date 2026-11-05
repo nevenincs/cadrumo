@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:513efe33c06a5cb1a4f83ef1662578d29bf151a00311372bf84ded54ff07b54c'
+body_hash: 'sha256:32f2cec6c6b0eddb5b6d9208be8edc2b58c14e20532ac954caba455c74d48e9c'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1060,6 +1060,9 @@ related:
 - `S06` `M` `.github/workflows/code-health-report.yml`
 - `S06` `M` `.github/actions/setup/action.yml`
 - `S06` `verify:` `check-workflows, check-workflow-security, just --list, pytest check-set/precommit/native-build-recipes` -> `pass`
+- `S17` `M` `.vault/plan/2026-11-04-fixture-canonicalization-plan.md`
+- `S17` `verify:` `sweep of src and dev tests for direct taxpayer storage writes` -> `pass`
+- `S17` `by:` `sonnet`
 
 ## Notes
 
@@ -1085,3 +1088,4 @@ related:
 - `S04` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
 - `S24` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
 - `S06` desktop job not yet run on a real runner and kept out of verdict.needs; stagedCheck.ts tsc/eslint/prettier deferred under the CHECKS2 machine conditions
+- `S17` no code change: every taxpayer seeder writes through the production repository writers; remaining direct SQL is storage-layer subject or fault injection; hand-built fact tuples restating taxpayer meaning belong to S16

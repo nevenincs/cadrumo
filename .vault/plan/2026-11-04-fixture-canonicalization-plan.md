@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:b084e132e16e7d6dc31a5d7450c3b96449a939fd84c1a9d086516d3f009e4511'
+body_hash: 'sha256:fb2ccd23c681ef3c9e9aac071c0853667e3fc42ad54220b0cf77381cd0f8473a'
 ---
 
 # `fixture-canonicalization` plan
@@ -73,7 +73,7 @@ Move the backend test profile builders onto the persona catalogue and remove res
 
 - [x] `P05.S15` - Migrate the shared profile builders and their consumers onto personas and remove the duplicate ready-profile seeder and string boolean placeholders; `src/cadrumo user_profile, profile_persistence and profile persistence test support`.
 - [ ] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
-- [ ] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
+- [x] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
 - [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures, accept a match only by the catalogue convention, flag any catalogue value used outside its bound persona role, and replace the remaining hand-made identifiers; `dev/identity and test and fixture identifiers`.
 - [ ] `P05.S28` - Close the persona gaps the builder migration found: author an estimación directa normal autónomo, state the fontanero household and Renta attestations and the sociedad-limitada tributación al Estado percentage truthfully, and an established filer with prior-year activity start and Modelo 130 history, then repoint the remaining local builders and remove the interim fact overlays; `dev/fixtures/personas and src test support`.
 
@@ -93,7 +93,7 @@ P01 Steps are independent and may run in parallel. P02 follows P01.S01. P03.S07 
 - Every generator output is byte-identical across two consecutive runs (`fixtures-check-determinism`, run at plan close); `fixtures-check` stays the fast check.
 - No tracked file under `native/desktop/frontend/src/dev/fixtures/modelo/` or other declared projection paths; no hand copy of a projection anywhere.
 - One identity per role: no persona identity appears in a second role across `dev/fixtures/personas/`, tests, docs or window fixtures.
-- No persona is seeded by a direct storage write; no year literal in persona files.
+- No persona is seeded by a direct storage write: seeding goes through production operations or the production repository writers, while storage-layer subject tests and fault-injection tests keep their deliberate direct writes; no year literal in persona files.
 - `just fixtures-status` reports fresh after `just setup`; `just test-frontend` and `just test-native` seed on a cold tree.
 - Final gates green once at the end: import boundaries, style, format, types, `test-unit`, integration lanes, registry gate, docs sequence check, frontend check and native host tests. Regressions are reported separately from evidenced pre-existing failures.
 - Final integrated review passes.
