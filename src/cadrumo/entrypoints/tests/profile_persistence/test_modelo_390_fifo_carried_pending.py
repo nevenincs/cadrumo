@@ -64,19 +64,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -91,10 +87,7 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_local_m303_compensacion_filings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -188,19 +181,7 @@ _NAIVE_BOX_662 = sum(  # sum(1T-3T) = 130.00, blind to the 60.00 consumed
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_BUCKET_ID,
-                facts=general_iva_profile_facts(
-                    tax_id="12345678Z",
-                    activity_start_date="2020-01-01",
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 

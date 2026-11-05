@@ -43,6 +43,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -94,28 +95,6 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET_ID = "34900000-0000-4000-8000-000000000349"
 
 
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="source-boundary"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value="false"),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-    # carries the row as filer data, so it must be stated rather than assumed.
-    # False is the truthful value for this natural-person filer.
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
 _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="E12345674"),
     UserProfileFact(path="identity.name", value="Ready CB"),
@@ -153,19 +132,6 @@ _ATTRIBUTION_PROFILE_FACTS = (
 )
 
 
-def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
@@ -182,7 +148,7 @@ def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 
@@ -683,7 +649,7 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         _register_sole_holder(observations, objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),

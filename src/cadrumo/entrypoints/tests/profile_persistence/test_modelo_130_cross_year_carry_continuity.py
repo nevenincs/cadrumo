@@ -46,9 +46,6 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
     seed_m130_expense_transaction,
     seed_m130_income_transaction,
 )
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -56,7 +53,7 @@ from ....adapters.persistence.profile.iva_compensation_history import IvaCompens
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....application.modelo.calculation_bucket_actions import (
@@ -71,10 +68,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -143,28 +137,12 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
-def _seed_ready_profile() -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_PROFILE_ID,
-            facts=general_iva_profile_facts(
-                tax_id="12345678Z",
-                activity_start_date="2020-01-01",
-            ),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
