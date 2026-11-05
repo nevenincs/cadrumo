@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
-from ..design_scheme_period_fields import _DESIGN_SCHEME_PERIOD_FIELDS, design_scheme_period_fields_for
+from ..design_scheme_period_fields import DESIGN_SCHEME_PERIOD_FIELDS, design_scheme_period_fields_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -29,7 +29,7 @@ _DESIGN = (
     "files",
     "01-369-regimenes-especiales-aplicables-a-los-ser.xlsx",
 )
-_DECLARATION = _DESIGN_SCHEME_PERIOD_FIELDS["aeat-dr-369-2021"]
+_DECLARATION = DESIGN_SCHEME_PERIOD_FIELDS["aeat-dr-369-2021"]
 _REVISIONS = (("esquema-exterior", "EXT-1T"), ("esquema-union", "1T"), ("esquema-importacion", "01"))
 
 

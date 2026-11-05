@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.modelo_projections import projected_parameter_ids
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -69,7 +69,7 @@ _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024",
 
 
 def _modelo_100():
-    return _committed_modelo("100")
+    return committed_modelo("100")
 
 
 def test_top_level_cuota_chain_targets_present_in_every_supported_revision() -> None:

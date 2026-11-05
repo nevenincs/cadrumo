@@ -15,7 +15,7 @@ from dev.registry import edition_delta_row_delta_common as delta_row_delta_commo
 from dev.registry import edition_delta_source as delta_source
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.conformance.loader_directory_mode_support import write_standard_manifest
-from dev.registry.tests.test_restated_family_merge import _build_modelo
+from dev.registry.tests.test_restated_family_merge import build_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELO_100 = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100"
@@ -36,34 +36,34 @@ def test_canonical_shape_reader_keeps_singletons_and_keyed_members_distinct() ->
     singleton = {"status": "complete", "gaps": []}
     keyed = [{"id": "a", "nested": {"enabled": False}}, {"id": "b"}]
 
-    assert delta_source._members({"completeness_manifest": singleton}, "completeness_manifest", singleton=True) == (
+    assert delta_source.members({"completeness_manifest": singleton}, "completeness_manifest", singleton=True) == (
         singleton,
     )
-    assert delta_source._members({"formulas": keyed}, "formulas") == tuple(keyed)
-    assert delta_source._members({"formulas": singleton}, "formulas") is None
+    assert delta_source.members({"formulas": keyed}, "formulas") == tuple(keyed)
+    assert delta_source.members({"formulas": singleton}, "formulas") is None
 
 
 def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -> None:
-    assert not delta_payload._typed_equal(False, 0)
-    assert not delta_payload._typed_equal({}, [])
-    assert not delta_payload._typed_equal(["a", "b"], ["b", "a"])
-    assert not delta_payload._typed_equal({"present": []}, {})
-    assert delta_payload._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
+    assert not delta_payload.typed_equal(False, 0)
+    assert not delta_payload.typed_equal({}, [])
+    assert not delta_payload.typed_equal(["a", "b"], ["b", "a"])
+    assert not delta_payload.typed_equal({"present": []}, {})
+    assert delta_payload.typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
 
 
 def test_typed_comparison_reads_a_tables_keys_as_fields_not_as_a_sequence() -> None:
     """Key order is how a table was written, not what it means; member order in an array still is."""
-    assert delta_payload._typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
-    assert delta_payload._typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
-    assert not delta_payload._typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
-    assert not delta_payload._typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
+    assert delta_payload.typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
+    assert delta_payload.typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
+    assert not delta_payload.typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
+    assert not delta_payload.typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
 
 
 def test_typed_comparison_matches_an_authored_token_to_its_typed_enum() -> None:
     """Authored TOML states the token; the typed model holds the enum. Both are one fact."""
-    assert delta_payload._typed_equal("computed", InputKind.COMPUTED)
-    assert delta_payload._typed_equal(InputKind.BOUND, "bound")
-    assert not delta_payload._typed_equal("bound", InputKind.COMPUTED)
+    assert delta_payload.typed_equal("computed", InputKind.COMPUTED)
+    assert delta_payload.typed_equal(InputKind.BOUND, "bound")
+    assert not delta_payload.typed_equal("bound", InputKind.COMPUTED)
 
 
 def test_only_converter_failure_roots_are_reassessed_against_the_adjacent_revision() -> None:
@@ -91,7 +91,7 @@ def test_a_roots_prose_never_decides_whether_it_is_reconsidered() -> None:
 
 
 def test_nested_values_have_stable_leaf_counting_and_locations() -> None:
-    leaves = delta_payload._leaf_values({"provider": {"options": {"enabled": False}}, "order": ["a", "b"]})
+    leaves = delta_payload.leaf_values({"provider": {"options": {"enabled": False}}, "order": ["a", "b"]})
 
     assert leaves == {
         ("provider", "options", "enabled"): False,
@@ -100,7 +100,7 @@ def test_nested_values_have_stable_leaf_counting_and_locations() -> None:
 
 
 def test_live_modelo_100_assessment_covers_singleton_scalars_and_is_read_only() -> None:
-    before = delta_assessment._file_fingerprints(_MODELO_100)
+    before = delta_assessment.file_fingerprints(_MODELO_100)
 
     assessment = delta_assessment.assess_migration_state(_MODELO_100)
 
@@ -111,13 +111,13 @@ def test_live_modelo_100_assessment_covers_singleton_scalars_and_is_read_only() 
     assert all(_positive(row["genuine_overrides"]) for row in completeness[1:])
     assert all(_positive(row["authored_payload_fields"]) for row in scalars)
     assert assessment.inputs_stable
-    assert assessment.input_fingerprints == before == delta_assessment._file_fingerprints(_MODELO_100)
+    assert assessment.input_fingerprints == before == delta_assessment.file_fingerprints(_MODELO_100)
     assert assessment.redundant_overrides == 0
     assert assessment.minimal
 
 
 def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatch) -> None:
-    original = delta_assessment._file_fingerprints
+    original = delta_assessment.file_fingerprints
     calls = 0
 
     def changing(path: Path) -> tuple[dict[str, str], ...]:
@@ -128,7 +128,7 @@ def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatc
             return captured
         return (*captured, {"path": "mutated", "sha256": "changed"})
 
-    monkeypatch.setattr(delta_assessment, "_file_fingerprints", changing)
+    monkeypatch.setattr(delta_assessment, "file_fingerprints", changing)
 
     assessment = delta_assessment.assess_migration_state(_MODELO_100)
 
@@ -138,7 +138,7 @@ def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatc
 
 
 def test_real_loader_assessment_distinguishes_restatement_from_inheritance(tmp_path: Path) -> None:
-    modelo = _build_modelo(tmp_path)
+    modelo = build_modelo(tmp_path)
 
     assessment = delta_assessment.assess_migration_state(modelo)
 
@@ -149,8 +149,8 @@ def test_real_loader_assessment_distinguishes_restatement_from_inheritance(tmp_p
     inherited_formula = next(item for item in loaded.revisions["2024"].formulas if item.id == "modelo-999-cuota")
     inherited_fields = sum(
         1
-        for path in delta_payload._leaf_values(delta_payload._model_value(inherited_formula))
-        if path and path[0] not in delta_payload._STRUCTURAL_FIELDS
+        for path in delta_payload.leaf_values(delta_payload.model_value(inherited_formula))
+        if path and path[0] not in delta_payload.STRUCTURAL_FIELDS
     )
     exact = [
         item
@@ -173,7 +173,7 @@ def test_nested_family_override_detector_is_independent_and_exact(
         'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
         f'fields = {{ expression = {{ literal = "{literal}" }} }}\n'
     )
-    assessment = delta_assessment.assess_migration_state(_build_modelo(tmp_path, successor_extra=declaration))
+    assessment = delta_assessment.assess_migration_state(build_modelo(tmp_path, successor_extra=declaration))
     matches = [
         item
         for item in assessment.unresolved_duplication
@@ -201,7 +201,7 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
         'id = "modelo-999-recargo"\n'
         "position = 0\n"
     )
-    modelo = _build_modelo(tmp_path, successor_extra=declaration)
+    modelo = build_modelo(tmp_path, successor_extra=declaration)
     successor_constructs = modelo / "revisions" / "2025" / "constructs"
     for path in successor_constructs.glob("*.toml"):
         path.unlink()
@@ -225,7 +225,7 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
 
 
 def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_visible(tmp_path: Path) -> None:
-    modelo = _build_modelo(tmp_path)
+    modelo = build_modelo(tmp_path)
     formulas = modelo / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
     formulas.write_text(
         formulas.read_text(encoding="utf-8").replace(
@@ -253,7 +253,7 @@ def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_vi
 
 
 def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydration(tmp_path: Path) -> None:
-    modelo = _build_modelo(tmp_path)
+    modelo = build_modelo(tmp_path)
     formulas = modelo / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
     formulas.write_text(
         '[revisions."2025".formulas]\nid = "unsupported-mapping-shape"\n',

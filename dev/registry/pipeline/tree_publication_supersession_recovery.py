@@ -14,27 +14,27 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from .tree_publication_artifacts import (
-    _require_complete_regular_tree,
+    require_complete_regular_tree,
     verify_generated_export_package,
 )
 from .tree_publication_contracts import (
-    _MODELO_ID_ADAPTER,
-    _REVISION_ID_ADAPTER,
+    MODELO_ID_ADAPTER,
+    REVISION_ID_ADAPTER,
     GeneratedExportPublicationJournal,
     GeneratedExportTransactionPaths,
-    _require_single_path_component,
     export_provenance_file_sha256,
+    require_single_path_component,
 )
 from .tree_publication_journal import (
-    _delete_journal,
-    _journal_supersession_backup_revision_path,
-    _journal_supersession_candidate_revision_path,
+    delete_journal,
+    journal_supersession_backup_revision_path,
+    journal_supersession_candidate_revision_path,
     load_generated_export_publication_journal,
 )
-from .tree_publication_paths import _require_narrow_root
+from .tree_publication_paths import require_narrow_root
 from .tree_publication_supersession import (
-    _delete_opaque_transaction_tree,
-    _delete_opaque_transaction_tree_allow_partial,
+    delete_opaque_transaction_tree,
+    delete_opaque_transaction_tree_allow_partial,
 )
 
 
@@ -47,15 +47,15 @@ def recover_interrupted_supersession_bundle(*, target_root: Path, modelo: str, r
     when the canonical revision path is temporarily absent.
     """
     try:
-        validated_modelo = _MODELO_ID_ADAPTER.validate_python(modelo, strict=True)
-        validated_revision = _REVISION_ID_ADAPTER.validate_python(revision, strict=True)
-        _require_single_path_component(validated_modelo, subject="modelo")
-        _require_single_path_component(validated_revision, subject="revision")
+        validated_modelo = MODELO_ID_ADAPTER.validate_python(modelo, strict=True)
+        validated_revision = REVISION_ID_ADAPTER.validate_python(revision, strict=True)
+        require_single_path_component(validated_modelo, subject="modelo")
+        require_single_path_component(validated_revision, subject="revision")
     except (ValidationError, ValueError) as exc:
         raise RegistryValidationError(
             "generated supersession recovery requires valid ModeloId and path-safe RevisionId values",
         ) from exc
-    resolved_target_root = _require_narrow_root(target_root, subject="generated publication target root")
+    resolved_target_root = require_narrow_root(target_root, subject="generated publication target root")
     paths = GeneratedExportTransactionPaths(
         target_root=resolved_target_root,
         modelo=validated_modelo,
@@ -71,14 +71,14 @@ def recover_interrupted_supersession_bundle(*, target_root: Path, modelo: str, r
             )
         if not journal.is_revision_bundle:
             return False
-        return _recover_interrupted_supersession_bundle_locked(
+        return recover_interrupted_supersession_bundle_locked(
             journal=journal,
             journal_path=paths.journal,
             transaction_paths=paths,
         )
 
 
-def _recover_interrupted_supersession_bundle_locked(
+def recover_interrupted_supersession_bundle_locked(
     *,
     journal: GeneratedExportPublicationJournal,
     journal_path: Path,
@@ -96,8 +96,8 @@ def _recover_interrupted_supersession_bundle_locked(
         transaction_paths.target_root / "modelos" / journal.modelo / "revisions" / journal.revision_id
     )
     target_export_root = target_revision_root / "export"
-    candidate_revision_root = _journal_supersession_candidate_revision_path(journal, transaction_paths)
-    backup_revision_root = _journal_supersession_backup_revision_path(journal, transaction_paths)
+    candidate_revision_root = journal_supersession_candidate_revision_path(journal, transaction_paths)
+    backup_revision_root = journal_supersession_backup_revision_path(journal, transaction_paths)
     if journal.state == "committed":
         return _recover_committed_supersession_bundle(
             journal=journal,
@@ -155,7 +155,7 @@ def _recover_committed_supersession_bundle(
         journal=journal,
         source_sha256=source_sha256,
     )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return True
 
 
@@ -169,7 +169,7 @@ def _remove_committed_supersession_backup(
     if not backup_revision_root.exists():
         return
     if journal.cleanup_started is not True:
-        _require_complete_regular_tree(
+        require_complete_regular_tree(
             backup_revision_root,
             subject="committed generated supersession rollback revision",
         )
@@ -177,7 +177,7 @@ def _remove_committed_supersession_backup(
             raise RegistryValidationError(
                 "committed supersession rollback revision changed before cleanup; preserving it and the journal",
             )
-    _delete_opaque_transaction_tree_allow_partial(
+    delete_opaque_transaction_tree_allow_partial(
         backup_revision_root,
         target_root=transaction_paths.transaction_root,
         prefix=transaction_paths.bundle_backup_prefix,
@@ -248,7 +248,7 @@ def _recover_uncommitted_supersession_with_live_target(
         changed_error="uncommitted supersession staging revision changed; preserving it and the journal",
         subject="abandoned generated supersession candidate revision",
     )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return False
 
 
@@ -265,7 +265,7 @@ def _restore_supersession_source_after_candidate_cutover(
         raise RegistryValidationError(
             "uncommitted supersession candidate is live without its rollback revision; preserving it and journal",
         )
-    _require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
+    require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
     if bootstrap_layout_supersession_fingerprint(backup_revision_root) != source_sha256:
         raise RegistryValidationError(
             "uncommitted supersession rollback revision changed; preserving candidate, backup and journal",
@@ -278,13 +278,13 @@ def _restore_supersession_source_after_candidate_cutover(
     fsync_parent_dir(target_revision_root)
     if bootstrap_layout_supersession_fingerprint(target_revision_root) != source_sha256:
         raise RegistryValidationError("supersession rollback did not restore the pinned source revision")
-    _delete_opaque_transaction_tree(
+    delete_opaque_transaction_tree(
         candidate_revision_root,
         target_root=transaction_paths.transaction_root,
         prefix=transaction_paths.bundle_staging_prefix,
         subject="failed generated supersession candidate revision",
     )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return False
 
 
@@ -301,7 +301,7 @@ def _restore_uncommitted_supersession_without_live_target(
         raise RegistryValidationError(
             "uncommitted supersession lost both the live and rollback revision; preserving journal"
         )
-    _require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
+    require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
     # A vacant canonical path permits restoration without overwriting a writer's
     # tree. Preserve the captured bytes even if a race changed them after pinning.
     os.replace(backup_revision_root, target_revision_root)
@@ -313,7 +313,7 @@ def _restore_uncommitted_supersession_without_live_target(
         changed_error="restored supersession source, but staging candidate changed; preserving candidate and journal",
         subject="failed generated supersession candidate revision",
     )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return False
 
 
@@ -329,7 +329,7 @@ def _remove_candidate_revision(
         return
     if bootstrap_layout_supersession_fingerprint(candidate_revision_root) != expected_sha256:
         raise RegistryValidationError(changed_error)
-    _delete_opaque_transaction_tree(
+    delete_opaque_transaction_tree(
         candidate_revision_root,
         target_root=transaction_paths.transaction_root,
         prefix=transaction_paths.bundle_staging_prefix,

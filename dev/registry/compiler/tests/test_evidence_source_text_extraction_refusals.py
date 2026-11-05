@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ..validate_evidence import _extract_pdf_text_impl, _extract_xlsx_text_impl
+from ..validate_evidence import extract_pdf_text_impl, extract_xlsx_text_impl
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,7 +26,7 @@ def test_non_xlsx_payload_is_reported_as_an_unreadable_xlsx_source(tmp_path: Pat
     source.write_text("this is not a zip container", encoding="utf-8")
 
     with pytest.raises(OSError) as caught:
-        _extract_xlsx_text_impl(str(source))
+        extract_xlsx_text_impl(str(source))
 
     assert f"could not extract text from XLSX source {source}" in str(caught.value)
 
@@ -35,7 +35,7 @@ def test_absent_xlsx_source_propagates_its_own_filesystem_error(tmp_path: Path) 
     source = tmp_path / "absent.xlsx"
 
     with pytest.raises(FileNotFoundError) as caught:
-        _extract_xlsx_text_impl(str(source))
+        extract_xlsx_text_impl(str(source))
 
     assert "could not extract text from XLSX source" not in str(caught.value)
 
@@ -49,7 +49,7 @@ def test_unrelated_xlsx_reader_failure_propagates_with_its_own_type_and_message(
         raise _UnrelatedReaderError("openpyxl worksheet helper was removed")
 
     with pytest.raises(_UnrelatedReaderError) as caught:
-        _extract_xlsx_text_impl(str(source), open_workbook=broken_open)  # ty: ignore[invalid-argument-type]
+        extract_xlsx_text_impl(str(source), open_workbook=broken_open)  # ty: ignore[invalid-argument-type]
 
     assert str(caught.value) == "openpyxl worksheet helper was removed"
     assert "could not extract text from XLSX source" not in str(caught.value)
@@ -60,7 +60,7 @@ def test_non_pdf_payload_is_reported_as_an_unreadable_pdf_source(tmp_path: Path)
     source.write_text("this is not a PDF document", encoding="utf-8")
 
     with pytest.raises(OSError) as caught:
-        _extract_pdf_text_impl(str(source))
+        extract_pdf_text_impl(str(source))
 
     assert f"could not extract text from manual PDF {source}" in str(caught.value)
     assert str(caught.value) != f"could not extract text from manual PDF {source}"
@@ -75,7 +75,7 @@ def test_unrelated_pdf_reader_failure_propagates_with_its_own_type_and_message(t
         raise _UnrelatedReaderError("pdfium text-page helper was removed")
 
     with pytest.raises(_UnrelatedReaderError) as caught:
-        _extract_pdf_text_impl(str(source), open_document=broken_open)  # ty: ignore[invalid-argument-type]
+        extract_pdf_text_impl(str(source), open_document=broken_open)  # ty: ignore[invalid-argument-type]
 
     assert str(caught.value) == "pdfium text-page helper was removed"
     assert "could not extract text from manual PDF" not in str(caught.value)

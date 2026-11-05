@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -90,7 +90,7 @@ def _tree(
 ) -> Path:
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     revision_dir = modelo_dir / "revisions" / _REVISION
     for family in ("casillas", "bindings", "formulas"):
         (revision_dir / family).mkdir(parents=True)

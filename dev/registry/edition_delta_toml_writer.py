@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
+from . import edition_delta_errors, edition_delta_fields
 
 
 def toml_string(value: str) -> str:
     """Render ``value`` as a TOML basic string, escaping control characters."""
     escaped = "".join(
-        _edition_delta_fields._TOML_ESCAPES.get(
+        edition_delta_fields.TOML_ESCAPES.get(
             char, f"\\u{ord(char):04x}" if ord(char) < 0x20 or ord(char) == 0x7F else char
         )
         for char in value
@@ -31,4 +30,4 @@ def toml_value(value: object) -> str:
         return "[" + ", ".join(toml_value(item) for item in value) + "]"
     if isinstance(value, Mapping):
         return "{ " + ", ".join(f"{key} = {toml_value(item)}" for key, item in value.items()) + " }"
-    raise _edition_delta_errors.MigrationRefusedError(f"cannot render {type(value).__name__} as a manifest value")
+    raise edition_delta_errors.MigrationRefusedError(f"cannot render {type(value).__name__} as a manifest value")

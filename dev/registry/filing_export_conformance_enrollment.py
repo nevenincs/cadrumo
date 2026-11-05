@@ -24,9 +24,9 @@ from .diagnostic_classification import (
     UnvalidatedRegistryClassification,
     derive_filing_revision_classifications,
 )
-from .filing_export_conformance import _CONFORMANCE_AUTHORITY_ID
+from .filing_export_conformance import CONFORMANCE_AUTHORITY_ID
 from .filing_export_conformance_vectors import FilingExportConformanceVector
-from .filing_export_generated_verification import _ConformanceGenerationEntry, _verify_generated_revision
+from .filing_export_generated_verification import ConformanceGenerationEntry, verify_generated_revision
 from .filing_export_proof_contracts import (
     FilingExportConformanceVectorEvidence,
     FilingExportGeneratedOutput,
@@ -119,7 +119,7 @@ def derive_filing_export_conformance_enrollment(
     vectors: tuple[FilingExportConformanceVector, ...],
 ) -> FilingExportConformanceEnrollmentReport:
     """Classify validated filing revisions through the canonical static path."""
-    return _derive_static_filing_export_conformance_enrollment(
+    return derive_static_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
@@ -139,7 +139,7 @@ def derive_diagnostic_filing_export_conformance_enrollment(
     vectors: tuple[FilingExportConformanceVector, ...],
 ) -> FilingExportConformanceEnrollmentReport:
     """Classify static diagnostic facts into residue only after strict failure."""
-    return _derive_static_filing_export_conformance_enrollment(
+    return derive_static_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
@@ -150,7 +150,7 @@ def derive_diagnostic_filing_export_conformance_enrollment(
     )
 
 
-def _derive_static_filing_export_conformance_enrollment(
+def derive_static_filing_export_conformance_enrollment(
     *,
     workspace_root: Path,
     registry_root: Path,
@@ -371,7 +371,7 @@ def _static_conformance_evidence(
     probes: tuple[FilingExportOfficialProbe, ...],
 ) -> FilingExportConformanceVectorEvidence:
     return FilingExportConformanceVectorEvidence(
-        authority_id=_CONFORMANCE_AUTHORITY_ID,
+        authority_id=CONFORMANCE_AUTHORITY_ID,
         coordinate=FilingExportProofCoordinate(
             modelo=selected.modelo,
             revision=selected.revision,
@@ -547,13 +547,13 @@ def _verify_static_generated_provenance(
     manifest = load_export_fragment_provenance_manifest(manifest_raw)
     if manifest.modelo != selected.modelo or manifest.revision_id != selected.revision:
         raise RegistryValidationError("generated provenance identity conflicts with the law-selected revision")
-    _verify_generated_revision(
+    verify_generated_revision(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
         authority=authority,
         inspection=inspection,
-        entry=_ConformanceGenerationEntry(
+        entry=ConformanceGenerationEntry(
             modelo=selected.modelo,
             revision=selected.revision,
             design_epoch=manifest.design_epoch,

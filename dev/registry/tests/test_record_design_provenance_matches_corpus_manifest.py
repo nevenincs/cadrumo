@@ -39,7 +39,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import catalogue_verification_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +64,11 @@ def _capture_records() -> Mapping[Path, Mapping[str, Any]]:
 
 
 def _registered_designs() -> tuple[Any, ...]:
-    return tuple(source for source in _catalogues().sources.values() if "disenos_registro" in source.corpus_path)
+    return tuple(
+        source
+        for source in catalogue_verification_catalogues().sources.values()
+        if "disenos_registro" in source.corpus_path
+    )
 
 
 def test_the_comparison_reaches_designs_across_many_modelos() -> None:

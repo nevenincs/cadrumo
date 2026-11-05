@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import selector
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,7 +50,7 @@ _RELATION_BACKED_FEEDER_SUMMARY_CHAINS = tuple(
 
 
 def _registry() -> dict[str, ModeloDefinition]:
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}
 
 

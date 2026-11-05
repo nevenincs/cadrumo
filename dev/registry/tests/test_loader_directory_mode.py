@@ -29,40 +29,18 @@ from ..compiler.loader import (
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..conformance.loader_directory_mode_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_modelo_sources as _committed_modelo_sources,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_modelo_sources_by_id as _committed_modelo_sources_by_id,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_modelos_dir as _committed_modelos_dir,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_registry_modelos as _committed_registry_modelos,
-)
-from ..conformance.loader_directory_mode_support import (
-    minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text as _standard_manifest_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_fragmented_modelo as _write_fragmented_modelo,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_fragmented_revision as _write_fragmented_revision,
-)
-from ..conformance.loader_directory_mode_support import (
+    committed_modelo,
+    committed_modelo_sources,
+    committed_modelo_sources_by_id,
+    committed_modelos_dir,
+    committed_registry_modelos,
+    minimal_fragment_revision_layout,
+    standard_manifest_text,
+    standard_revision_preamble_text,
+    write_fragmented_modelo,
+    write_fragmented_revision,
     write_minimal_shared_catalogues,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_standard_manifest as _write_standard_manifest,
+    write_standard_manifest,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -91,7 +69,7 @@ def test_directory_mode_rejects_inline_section_in_revision_manifest(tmp_path: Pa
     """
 
     target = tmp_path / "inline_section_manifest"
-    revision_dir = _minimal_fragment_revision_layout(target)
+    revision_dir = minimal_fragment_revision_layout(target)
     (revision_dir / "revision.toml").write_text(
         '[revisions."2025"]\n'
         "valid_from = 2025-01-01\n"
@@ -108,7 +86,7 @@ def test_directory_mode_rejects_inline_formulas_section_in_revision_manifest(tmp
     """The manifest refusal covers every section field, including formulas."""
 
     target = tmp_path / "inline_formulas_manifest"
-    revision_dir = _minimal_fragment_revision_layout(target)
+    revision_dir = minimal_fragment_revision_layout(target)
     (revision_dir / "revision.toml").write_text(
         '[revisions."2025"]\n'
         "valid_from = 2025-01-01\n"
@@ -124,11 +102,11 @@ def test_directory_mode_rejects_inline_formulas_section_in_revision_manifest(tmp
 def test_directory_mode_rejects_malformed_casilla_id_before_locale_key_authority(tmp_path: Path) -> None:
     """Raw TOML casilla ids must be validated before they seed loader authority sets."""
 
-    target = _write_fragmented_modelo(
+    target = write_fragmented_modelo(
         tmp_path / "malformed_casilla_id",
-        manifest_text=_standard_manifest_text("Malformed casilla id test"),
+        manifest_text=standard_manifest_text("Malformed casilla id test"),
         revisions={
-            "2025": _standard_revision_preamble_text()
+            "2025": standard_revision_preamble_text()
             + """
 
 [[revisions."2025".casillas]]
@@ -146,11 +124,11 @@ source_refs = ["aeat-manual"]
 
 
 def test_directory_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path: Path) -> None:
-    target = _write_fragmented_modelo(
+    target = write_fragmented_modelo(
         tmp_path / "999",
-        manifest_text=_standard_manifest_text("Ambiguous casilla identity test"),
+        manifest_text=standard_manifest_text("Ambiguous casilla identity test"),
         revisions={
-            "2025": _standard_revision_preamble_text()
+            "2025": standard_revision_preamble_text()
             + """
 
 [[revisions."2025".casillas]]
@@ -197,12 +175,12 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
 def test_committed_registry_tree_loads_directory_modelos() -> None:
     """Registry discovery must load every committed directory-form modelo."""
 
-    sources = _committed_modelo_sources()
-    modelos = _committed_registry_modelos()
+    sources = committed_modelo_sources()
+    modelos = committed_registry_modelos()
     loaded_ids = {modelo.id for modelo in modelos}
 
     assert loaded_ids == {source.modelo_id for source in sources}
-    assert {_committed_modelo(source.modelo_id).id for source in sources} == loaded_ids
+    assert {committed_modelo(source.modelo_id).id for source in sources} == loaded_ids
     assert sources
 
 
@@ -306,11 +284,11 @@ reviewed_by = "registry-test"
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:
     """Key committed modelos use the same generic directory-source contract."""
 
-    sources = _committed_modelo_sources_by_id()
+    sources = committed_modelo_sources_by_id()
 
     for modelo_id in ("036", "100", "200", "303"):
         source = sources[modelo_id]
-        modelo = _committed_modelo(modelo_id)
+        modelo = committed_modelo(modelo_id)
 
         assert source.path.name == modelo_id
         assert modelo.id == modelo_id
@@ -336,10 +314,10 @@ def test_registry_tree_cache_invalidates_when_a_revision_directory_is_added_insi
     )
     modelos_dir.mkdir()
 
-    modelo_dir = _write_fragmented_modelo(
+    modelo_dir = write_fragmented_modelo(
         modelos_dir / "999",
-        manifest_text=_standard_manifest_text("Cache invalidation before"),
-        revisions={"2025": _standard_revision_preamble_text(source_ref="cache-before")},
+        manifest_text=standard_manifest_text("Cache invalidation before"),
+        revisions={"2025": standard_revision_preamble_text(source_ref="cache-before")},
     )
 
     clear_fingerprint_cache()
@@ -350,9 +328,9 @@ def test_registry_tree_cache_invalidates_when_a_revision_directory_is_added_insi
     assert first_catalogues.supported_filing_years is not None
     assert first_catalogues.supported_filing_years.years == (2025,)
 
-    _write_fragmented_revision(
+    write_fragmented_revision(
         modelo_dir / "revisions" / "2026",
-        _standard_revision_preamble_text(source_ref="cache-after").replace('"2025"', '"2026"'),
+        standard_revision_preamble_text(source_ref="cache-after").replace('"2025"', '"2026"'),
     )
 
     second_modelos, _second_catalogues = load_registry_tree(registry_root)
@@ -410,8 +388,8 @@ def test_fragmented_revision_directories_are_schema_owned() -> None:
     """Every committed revision fragment directory has a schema manifest and loads."""
 
     checked: list[str] = []
-    for source in _committed_modelo_sources():
-        modelo = _committed_modelo(source.modelo_id)
+    for source in committed_modelo_sources():
+        modelo = committed_modelo(source.modelo_id)
         for revision_source in source.revision_sources:
             checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
             assert (revision_source.path / "revision.toml").is_file()
@@ -425,7 +403,7 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
     """Discovery exposes each current revision manifest and direct section TOML fragment."""
 
     checked: list[str] = []
-    sources = discover_modelo_sources(_committed_modelos_dir())
+    sources = discover_modelo_sources(committed_modelos_dir())
     for source in sources:
         revision_dirs = scan_directory(
             source.path / "revisions",
@@ -468,7 +446,7 @@ def _live_revision_fragment_paths(revision_dir: Path) -> set[Path]:
 def test_revision_fragment_inventory_uses_live_sections_and_excludes_locales(tmp_path: Path) -> None:
     modelos_dir = tmp_path / "modelos"
     modelo_dir = modelos_dir / "999"
-    revision_dir = _minimal_fragment_revision_layout(
+    revision_dir = minimal_fragment_revision_layout(
         modelo_dir,
         fragment_dirs=("casillas", "export", "locales"),
     )
@@ -488,7 +466,7 @@ def test_revision_fragment_inventory_uses_live_sections_and_excludes_locales(tmp
 def test_committed_authored_sections_are_consolidated() -> None:
     """Non-generated sections have one declaration file, independent of row count."""
     split_sections: list[str] = []
-    modelos_dir = _committed_modelos_dir()
+    modelos_dir = committed_modelos_dir()
     for section in modelos_dir.glob("*/revisions/*/*"):
         if not section.is_dir() or section.name in {"export", "locales"}:
             continue
@@ -504,7 +482,7 @@ def test_discovery_refuses_a_single_file_modelo(tmp_path: Path) -> None:
     modelos_dir.mkdir()
     single_file = modelos_dir / "999.toml"
     single_file.write_text(
-        _standard_manifest_text("Retired single-file layout") + "\n" + _standard_revision_preamble_text(),
+        standard_manifest_text("Retired single-file layout") + "\n" + standard_revision_preamble_text(),
         encoding="utf-8",
     )
 
@@ -521,7 +499,7 @@ def test_load_modelo_source_refuses_a_single_file_modelo(tmp_path: Path) -> None
 
     single_file = tmp_path / "999.toml"
     single_file.write_text(
-        _standard_manifest_text("Retired single-file layout") + "\n" + _standard_revision_preamble_text(),
+        standard_manifest_text("Retired single-file layout") + "\n" + standard_revision_preamble_text(),
         encoding="utf-8",
     )
 
@@ -534,9 +512,9 @@ def test_directory_mode_refuses_a_revision_file(tmp_path: Path) -> None:
 
     target = tmp_path / "999"
     (target / "revisions").mkdir(parents=True)
-    _write_standard_manifest(target, "Retired revision-file layout")
+    write_standard_manifest(target, "Retired revision-file layout")
     revision_file = target / "revisions" / "2025.toml"
-    revision_file.write_text(_standard_revision_preamble_text(), encoding="utf-8")
+    revision_file.write_text(standard_revision_preamble_text(), encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="revision files are not a supported layout") as exc_info:
         load_modelo_directory(target)
@@ -552,9 +530,9 @@ def test_discovery_refuses_a_revision_file(tmp_path: Path) -> None:
     modelos_dir = tmp_path / "modelos"
     target = modelos_dir / "999"
     (target / "revisions").mkdir(parents=True)
-    _write_standard_manifest(target, "Retired revision-file layout")
+    write_standard_manifest(target, "Retired revision-file layout")
     revision_file = target / "revisions" / "2025.toml"
-    revision_file.write_text(_standard_revision_preamble_text(), encoding="utf-8")
+    revision_file.write_text(standard_revision_preamble_text(), encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="revision files are not a supported layout"):
         discover_modelo_sources(modelos_dir)

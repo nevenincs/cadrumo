@@ -61,13 +61,9 @@ from ..compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints,
 )
 from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text as _standard_manifest_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_fragmented_modelo as _write_fragmented_modelo,
+    standard_manifest_text,
+    standard_revision_preamble_text,
+    write_fragmented_modelo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -490,10 +486,10 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     )
     modelos_dir = registry_root / "modelos"
     modelos_dir.mkdir()
-    _write_fragmented_modelo(
+    write_fragmented_modelo(
         modelos_dir / "999",
-        manifest_text=_standard_manifest_text("Synthetic disk-cache isolation test"),
-        revisions={"2025": _standard_revision_preamble_text()},
+        manifest_text=standard_manifest_text("Synthetic disk-cache isolation test"),
+        revisions={"2025": standard_revision_preamble_text()},
     )
     assert is_bundled_registry_root(registry_root.resolve()) is False
 

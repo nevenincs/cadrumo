@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.formula_expression import evaluate_exp
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,7 +40,7 @@ _MANUAL_EXAMPLE_YEARS = (2022, 2023, 2024, 2025)
 
 
 def _revisions() -> dict[int, ModeloRevision]:
-    return {int(revision_id): revision for revision_id, revision in _loaded_registry()[0]["100"].revisions.items()}
+    return {int(revision_id): revision for revision_id, revision in loaded_registry()[0]["100"].revisions.items()}
 
 
 def _casilla(casilla_id: str) -> CasillaId:

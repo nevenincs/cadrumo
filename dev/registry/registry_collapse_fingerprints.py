@@ -70,7 +70,7 @@ def fingerprint_digest(entries: Iterable[FingerprintEntry]) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
-def _file_change_count(before: tuple[FingerprintEntry, ...], after: tuple[FingerprintEntry, ...]) -> int:
+def file_change_count(before: tuple[FingerprintEntry, ...], after: tuple[FingerprintEntry, ...]) -> int:
     left = {item.path: item.sha256 for item in before}
     right = {item.path: item.sha256 for item in after}
     return sum(left.get(path) != right.get(path) for path in set(left) | set(right))

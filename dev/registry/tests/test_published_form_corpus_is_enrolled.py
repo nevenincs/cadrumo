@@ -32,7 +32,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import catalogue_verification_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -136,7 +136,7 @@ def test_every_bundled_published_form_is_enrolled_by_a_source() -> None:
     than on a declaration. Close a gap by authoring the missing
     ``[sources."..."]`` entry, never by narrowing this enumeration.
     """
-    enrolled = frozenset(source.corpus_path for source in _catalogues().sources.values())
+    enrolled = frozenset(source.corpus_path for source in catalogue_verification_catalogues().sources.values())
     payloads = _bundled_form_payloads()
     unenrolled = [
         path.relative_to(bundled_path()).as_posix()
@@ -159,7 +159,7 @@ def test_every_enrolled_published_form_verifies_against_its_declaration() -> Non
     """
     root_relative = {path.relative_to(bundled_path()).as_posix(): path for path in _bundled_form_payloads()}
     mismatched: list[str] = []
-    for source in _catalogues().sources.values():
+    for source in catalogue_verification_catalogues().sources.values():
         payload = root_relative.get(source.corpus_path)
         if payload is None:
             continue

@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.loader import load_modelo_directory
-from . import constants as _constants
+from . import constants
 from .adjudications import AdjudicationSet
 from .identity import derive_slug
 from .types import AeipEvent, AeipInventory, AeipOccurrence
@@ -49,7 +49,7 @@ def extract_occurrences(
     modelos_root: Path,
     *,
     modelo_id: str = "100",
-    locale: str = _constants.SOURCE_LOCALE,
+    locale: str = constants.SOURCE_LOCALE,
 ) -> tuple[tuple[AeipOccurrence, ...], dict[str, int]]:
     """Read every anexo-A AEIP event row through the registry loader.
 
@@ -70,13 +70,13 @@ def extract_occurrences(
     category_counts: dict[str, int] = defaultdict(int)
     for revision in definition.revisions.values():
         for casilla in revision.casillas:
-            if _constants.ANEXO_A_SECTION_LEAF not in tuple(casilla.section or ()):
+            if constants.ANEXO_A_SECTION_LEAF not in tuple(casilla.section or ()):
                 continue
             role = str(casilla.semantic_role or "")
-            if role == _constants.CATEGORY_SEMANTIC_ROLE:
+            if role == constants.CATEGORY_SEMANTIC_ROLE:
                 category_counts[revision.id] += 1
                 continue
-            if role != _constants.EVENT_SEMANTIC_ROLE:
+            if role != constants.EVENT_SEMANTIC_ROLE:
                 continue
             occurrences.append(_event_occurrence(revision.id, casilla, locale))
     return tuple(occurrences), dict(category_counts)

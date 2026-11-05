@@ -42,7 +42,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
+from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

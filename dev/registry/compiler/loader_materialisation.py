@@ -17,12 +17,6 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistryLoadError,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
-)
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_MANIFEST_ONLY_FIELDS as _REVISION_MANIFEST_ONLY_FIELDS,
-)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import (
     RegistryCatalogues,
@@ -31,57 +25,37 @@ from cadrumo.domain.calculations.registry.schema_catalogues import (
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
-from ._loader_revision_fragments import (
-    merge_revision_fragment as _merge_revision_fragment,
-)
-from ._loader_revision_fragments import (
-    merge_revision_manifest as _merge_revision_manifest,
-)
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .loader_cache import (
-    ModeloRevisionSource as _ModeloRevisionSource,
-)
 from .loader_cache import (
     toml_file_fingerprint,
-)
-from .loader_fingerprints import (
-    clear_fingerprint_cache as _clear_fingerprint_cache,
 )
 from .loader_fingerprints import (
     collect_modelo_directory_fingerprints,
     collect_registry_tree_fingerprints,
 )
 from .loader_grammar import revision_section_fragment_paths
-from .revision_definition import _build_modelo_definition_from_data
-
-ModeloRevisionSource = _ModeloRevisionSource
-
-
-clear_fingerprint_cache = _clear_fingerprint_cache
-
-
-REVISION_GOVERNANCE_FIELDS = _REVISION_GOVERNANCE_FIELDS
-
-
-REVISION_MANIFEST_ONLY_FIELDS = _REVISION_MANIFEST_ONLY_FIELDS
-
+from .loader_revision_fragments import (
+    merge_revision_fragment,
+    merge_revision_manifest,
+)
+from .revision_definition import build_modelo_definition_from_data
+from .toml_helpers import as_toml_table
 
 type _RegistryPathFingerprint = tuple[str, int, int, str]
 
 
-type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
+type RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
 
 @lru_cache(maxsize=64)
-def _load_modelo_directory_cached(
+def load_modelo_directory_cached(
     directory: str,
-    fingerprints: _RegistryPathFingerprints,
+    fingerprints: RegistryPathFingerprints,
     tax_id_format: object | None = None,
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
-    manifest_data = _load_modelo_manifest(resolved)
-    merged_revisions = _load_modelo_revisions(resolved)
+    manifest_data = load_modelo_manifest(resolved)
+    merged_revisions = load_modelo_revisions(resolved)
     if not merged_revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
     merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
@@ -90,10 +64,10 @@ def _load_modelo_directory_cached(
         from cadrumo.core.identity.documents import TAX_ID_FORMAT_CONTEXT
 
         validation_context = {TAX_ID_FORMAT_CONTEXT: tax_id_format}
-    return _build_modelo_definition_from_data(resolved, merged, validation_context=validation_context)
+    return build_modelo_definition_from_data(resolved, merged, validation_context=validation_context)
 
 
-def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
+def load_modelo_manifest(resolved: Path) -> dict[str, object]:
     """Load the directory-mode manifest.toml and reject inlined [revisions]."""
     manifest_path = resolved / "manifest.toml"
     manifest_data = freeze_toml(read_toml(manifest_path, error_factory=RegistryLoadError))
@@ -105,7 +79,7 @@ def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
     return manifest_data
 
 
-def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
+def load_modelo_revisions(resolved: Path) -> dict[str, object]:
     """Merge every ``revisions/<id>/`` fragment directory into one ``{revision_id: raw}`` map.
 
     A missing ``revisions/`` directory returns an empty dict; the caller raises
@@ -137,9 +111,9 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
     section_fragments = revision_section_fragment_paths(_revision_section_directories(path))
     merged_revision: dict[str, object] = {}
-    _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
+    merge_revision_manifest(revision_manifest, revision_id, merged_revision)
     for fragment_path in section_fragments:
-        _merge_revision_fragment(fragment_path, revision_id, merged_revision)
+        merge_revision_fragment(fragment_path, revision_id, merged_revision)
     merged_revisions[revision_id] = merged_revision
 
 
@@ -156,7 +130,7 @@ def _revision_section_directories(path: Path) -> tuple[Path, ...]:
 
 
 @lru_cache(maxsize=128)
-def _load_catalogue_file_cached(
+def load_catalogue_file_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
@@ -225,12 +199,12 @@ def validate_catalogue_section[T: BaseModel](
     ``RegistryLoadError`` envelope so the catalogue loader's failure
     mode stays uniform across the legal and source sections.
     """
-    table = _as_toml_table(raw)
+    table = as_toml_table(raw)
     if table is None:
         return {}
     out: dict[str, T] = {}
     for ref_id, payload in table.items():
-        payload_table = _as_toml_table(payload)
+        payload_table = as_toml_table(payload)
         if payload_table is None:
             raise RegistryLoadError(f"{source_path}: malformed {kind} entry")
         try:
@@ -240,7 +214,7 @@ def validate_catalogue_section[T: BaseModel](
     return out
 
 
-def _validate_legal_directory(legal_dir: Path) -> None:
+def validate_legal_directory(legal_dir: Path) -> None:
     """Require the shared legal catalogue to remain one flat TOML directory."""
     if not legal_dir.is_dir():
         return
@@ -253,10 +227,10 @@ def _validate_legal_directory(legal_dir: Path) -> None:
             )
 
 
-def _refresh_modelo_directory_fingerprints_after_load_error(
+def refresh_modelo_directory_fingerprints_after_load_error(
     resolved: Path,
     initial_error: RegistryLoadError,
-) -> _RegistryPathFingerprints:
+) -> RegistryPathFingerprints:
     try:
         return collect_modelo_directory_fingerprints(resolved)
     except RegistryLoadError as refresh_error:
@@ -274,10 +248,10 @@ def _refresh_modelo_directory_fingerprints_after_load_error(
         ) from refresh_error
 
 
-def _refresh_registry_tree_fingerprints_after_load_error(
+def refresh_registry_tree_fingerprints_after_load_error(
     resolved: Path,
     initial_error: RegistryLoadError,
-) -> _RegistryPathFingerprints:
+) -> RegistryPathFingerprints:
     try:
         return collect_registry_tree_fingerprints(resolved, use_cache=False)
     except RegistryLoadError as refresh_error:
@@ -291,7 +265,7 @@ def _refresh_registry_tree_fingerprints_after_load_error(
         ) from refresh_error
 
 
-def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
+def toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one TOML file.
 
     Delegates to :func:`~dev.registry.compiler.loader_cache.toml_file_fingerprint`,
@@ -304,12 +278,12 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
 
 #: The module boundary used by the public loader for directory compilation.
 __all__ = [
-    "_RegistryPathFingerprints",
-    "_load_catalogue_file_cached",
-    "_load_modelo_directory_cached",
-    "_refresh_modelo_directory_fingerprints_after_load_error",
-    "_refresh_registry_tree_fingerprints_after_load_error",
-    "_toml_fingerprint",
-    "_validate_legal_directory",
+    "RegistryPathFingerprints",
+    "load_catalogue_file_cached",
+    "load_modelo_directory_cached",
+    "refresh_modelo_directory_fingerprints_after_load_error",
+    "refresh_registry_tree_fingerprints_after_load_error",
+    "toml_fingerprint",
     "validate_catalogue_section",
+    "validate_legal_directory",
 ]

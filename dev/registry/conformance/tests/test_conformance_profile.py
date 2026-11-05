@@ -56,7 +56,7 @@ from ..profile import (
     build_registry_conformance_profile,
 )
 from ..registry_classification_coherence import build_classification_coherence_audit
-from ._conformance_profile_fixtures import degraded_profile, validated_profile
+from .conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 

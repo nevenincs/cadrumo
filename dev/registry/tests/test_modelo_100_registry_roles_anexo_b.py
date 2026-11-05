@@ -4,43 +4,43 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _ANEXO_B_AAV_AMOUNT_ROWS,
-    _ANEXO_B_AAV_SECTION,
-    _ANEXO_B_ACCOUNT_ROWS,
-    _ANEXO_B_ACCOUNT_SECTION,
-    _ANEXO_B_BALEARES_NACIMIENTO_ROWS,
-    _ANEXO_B_BALEARES_NACIMIENTO_SECTION,
-    _ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL,
-    _ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE,
-    _ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE,
-    _ANEXO_B_CONTRIBUYENTE_DERECHO_LABEL,
-    _ANEXO_B_EPS_SECTION,
-    _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL,
-    _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE,
-    _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS,
-    _ANEXO_B_IMPORTE_SATISFECHO_LABEL,
-    _ANEXO_B_IMPORTE_SATISFECHO_ROLE,
-    _ANEXO_B_IMPORTE_SATISFECHO_SECTIONS,
-    _ANEXO_B_INVERSION_IMPORTE_LABEL,
-    _ANEXO_B_INVERSION_IMPORTE_ROLE,
-    _ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX,
-    _ANEXO_B_INVERSION_TOTAL_ROLE,
-    _ANEXO_B_INVERSION_TOTAL_SECTIONS,
-    _ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE,
-    _ANEXO_B_OTROS_GASTOS_LABELS,
-    _ANEXO_B_OTROS_GASTOS_SECTION,
-    _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE,
-    _ANEXO_B_PRIMA_SEGURO_LABEL,
-    _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE,
-    _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_LABEL,
-    _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE,
-    _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS,
-    _ANEXO_B_TOTAL_SATISFECHO_ROLE,
-    _ANEXO_B_TOTAL_SATISFECHO_SECTIONS,
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
+from .modelo_100_registry_support import (
+    ANEXO_B_AAV_AMOUNT_ROWS,
+    ANEXO_B_AAV_SECTION,
+    ANEXO_B_ACCOUNT_ROWS,
+    ANEXO_B_ACCOUNT_SECTION,
+    ANEXO_B_BALEARES_NACIMIENTO_ROWS,
+    ANEXO_B_BALEARES_NACIMIENTO_SECTION,
+    ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL,
+    ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE,
+    ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE,
+    ANEXO_B_CONTRIBUYENTE_DERECHO_LABEL,
+    ANEXO_B_EPS_SECTION,
+    ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL,
+    ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE,
+    ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS,
+    ANEXO_B_IMPORTE_SATISFECHO_LABEL,
+    ANEXO_B_IMPORTE_SATISFECHO_ROLE,
+    ANEXO_B_IMPORTE_SATISFECHO_SECTIONS,
+    ANEXO_B_INVERSION_IMPORTE_LABEL,
+    ANEXO_B_INVERSION_IMPORTE_ROLE,
+    ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX,
+    ANEXO_B_INVERSION_TOTAL_ROLE,
+    ANEXO_B_INVERSION_TOTAL_SECTIONS,
+    ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE,
+    ANEXO_B_OTROS_GASTOS_LABELS,
+    ANEXO_B_OTROS_GASTOS_SECTION,
+    ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE,
+    ANEXO_B_PRIMA_SEGURO_LABEL,
+    ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE,
+    ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_LABEL,
+    ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE,
+    ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS,
+    ANEXO_B_TOTAL_SATISFECHO_ROLE,
+    ANEXO_B_TOTAL_SATISFECHO_SECTIONS,
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    modelo_100_revision,
+    modelo_100_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -55,132 +55,132 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> 
         (2024, 5),
         (2025, 7),
     ):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_IMPORTE_SATISFECHO_LABEL
+            if casilla.label == ANEXO_B_IMPORTE_SATISFECHO_LABEL
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_IMPORTE_SATISFECHO_SECTIONS
+            and casilla.section[2] in ANEXO_B_IMPORTE_SATISFECHO_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_IMPORTE_SATISFECHO_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_IMPORTE_SATISFECHO_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -> None:
     for filing_year, expected_count in ((2024, 24), (2025, 32)):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL
-            and casilla.semantic_role == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
+            if casilla.label == ANEXO_B_IMPORTE_ANUAL_SATISFECHO_LABEL
+            and casilla.semantic_role == ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
+            and casilla.section[2] in ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_IMPORTE_ANUAL_SATISFECHO_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_anual() -> None:
     for filing_year in (2024, 2025):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         casilla = next(casilla for casilla in revision.casillas if casilla.id == "2140")
 
-        assert casilla.label == _ANEXO_B_OTROS_GASTOS_LABELS[filing_year]
-        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", _ANEXO_B_OTROS_GASTOS_SECTION)
-        assert casilla.semantic_role == _ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE
-        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+        assert casilla.label == ANEXO_B_OTROS_GASTOS_LABELS[filing_year]
+        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", ANEXO_B_OTROS_GASTOS_SECTION)
+        assert casilla.semantic_role == ANEXO_B_OTROS_GASTOS_IMPORTE_ANUAL_ROLE
+        assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -> None:
-    revision = _modelo_100_snapshot(2025).revision
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_AAV_AMOUNT_ROWS}
+    revision = modelo_100_snapshot(2025).revision
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_AAV_AMOUNT_ROWS}
 
-    assert set(casillas_by_id) == set(_ANEXO_B_AAV_AMOUNT_ROWS)
-    for casilla_id, (expected_label, expected_role) in _ANEXO_B_AAV_AMOUNT_ROWS.items():
+    assert set(casillas_by_id) == set(ANEXO_B_AAV_AMOUNT_ROWS)
+    for casilla_id, (expected_label, expected_role) in ANEXO_B_AAV_AMOUNT_ROWS.items():
         casilla = casillas_by_id[casilla_id]
         assert casilla.label == expected_label
-        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", _ANEXO_B_AAV_SECTION)
+        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", ANEXO_B_AAV_SECTION)
         assert casilla.semantic_role == expected_role
-        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+        assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> None:
-    revision = _modelo_100_snapshot(2025).revision
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_ACCOUNT_ROWS}
+    revision = modelo_100_snapshot(2025).revision
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_ACCOUNT_ROWS}
 
-    assert set(casillas_by_id) == set(_ANEXO_B_ACCOUNT_ROWS)
-    for casilla_id, (expected_label, expected_role) in _ANEXO_B_ACCOUNT_ROWS.items():
+    assert set(casillas_by_id) == set(ANEXO_B_ACCOUNT_ROWS)
+    for casilla_id, (expected_label, expected_role) in ANEXO_B_ACCOUNT_ROWS.items():
         casilla = casillas_by_id[casilla_id]
         assert casilla.label == expected_label
-        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", _ANEXO_B_ACCOUNT_SECTION)
+        assert tuple(casilla.section) == ("resultados", "datos_adicionales_anexo_b", ANEXO_B_ACCOUNT_SECTION)
         assert casilla.semantic_role == expected_role
-        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+        assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded() -> None:
     for filing_year in (2023, 2024, 2025):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         casillas_by_id = {
-            casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
+            casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_BALEARES_NACIMIENTO_ROWS
         }
 
-        assert set(casillas_by_id) == set(_ANEXO_B_BALEARES_NACIMIENTO_ROWS), filing_year
-        for casilla_id, (expected_label, expected_role) in _ANEXO_B_BALEARES_NACIMIENTO_ROWS.items():
+        assert set(casillas_by_id) == set(ANEXO_B_BALEARES_NACIMIENTO_ROWS), filing_year
+        for casilla_id, (expected_label, expected_role) in ANEXO_B_BALEARES_NACIMIENTO_ROWS.items():
             casilla = casillas_by_id[casilla_id]
             assert casilla.label == expected_label
             assert tuple(casilla.section) == (
                 "resultados",
                 "datos_adicionales_anexo_b",
-                _ANEXO_B_BALEARES_NACIMIENTO_SECTION,
+                ANEXO_B_BALEARES_NACIMIENTO_SECTION,
             )
             assert casilla.semantic_role == expected_role
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee() -> None:
     for filing_year, expected_count in ((2024, 3), (2025, 3)):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_LABEL
+            if casilla.label == ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_LABEL
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS
+            and casilla.section[2] in ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_SERVICE_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_TOTAL_CANTIDADES_INVERTIDAS_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code() -> None:
     for filing_year, expected_count in ((2024, 3), (2025, 4)):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_CONTRIBUYENTE_DERECHO_LABEL
+            if casilla.label == ANEXO_B_CONTRIBUYENTE_DERECHO_LABEL
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
+            and casilla.section[2] in ANEXO_B_IMPORTE_ANUAL_SATISFECHO_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_CONTRIBUYENTE_DERECHO_CLAVE_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amount() -> None:
@@ -192,21 +192,21 @@ def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amoun
         (2024, 16),
         (2025, 22),
     ):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_INVERSION_IMPORTE_LABEL
-            and casilla.semantic_role == _ANEXO_B_INVERSION_IMPORTE_ROLE
+            if casilla.label == ANEXO_B_INVERSION_IMPORTE_LABEL
+            and casilla.semantic_role == ANEXO_B_INVERSION_IMPORTE_ROLE
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_INVERSION_TOTAL_SECTIONS
+            and casilla.section[2] in ANEXO_B_INVERSION_TOTAL_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_INVERSION_IMPORTE_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_INVERSION_IMPORTE_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -> None:
@@ -218,58 +218,58 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -
         (2024, 8),
         (2025, 10),
     ):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label.startswith(_ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX)
-            and casilla.semantic_role == _ANEXO_B_INVERSION_TOTAL_ROLE
+            if casilla.label.startswith(ANEXO_B_INVERSION_TOTAL_LABEL_PREFIX)
+            and casilla.semantic_role == ANEXO_B_INVERSION_TOTAL_ROLE
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_INVERSION_TOTAL_SECTIONS
+            and casilla.section[2] in ANEXO_B_INVERSION_TOTAL_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_INVERSION_TOTAL_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_INVERSION_TOTAL_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_PRIMA_SEGURO_LABEL
-            and casilla.semantic_role == _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
+            if casilla.label == ANEXO_B_PRIMA_SEGURO_LABEL
+            and casilla.semantic_role == ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] == _ANEXO_B_EPS_SECTION
+            and casilla.section[2] == ANEXO_B_EPS_SECTION
         ]
 
         assert len(checked) == 3, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_PRIMA_SEGURO_CREDITO_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.semantic_role == _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
+            if casilla.semantic_role == ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] == _ANEXO_B_EPS_SECTION
+            and casilla.section[2] == ANEXO_B_EPS_SECTION
         ]
 
         assert len(checked) == 1, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_PRIMAS_SEGURO_TOTAL_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific() -> None:
@@ -281,20 +281,20 @@ def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific() -> No
         (2024, 2),
         (2025, 3),
     ):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
             if casilla.label.startswith("Importe total satisfecho")
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_TOTAL_SATISFECHO_SECTIONS
+            and casilla.section[2] in ANEXO_B_TOTAL_SATISFECHO_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_TOTAL_SATISFECHO_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_TOTAL_SATISFECHO_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean() -> None:
@@ -306,17 +306,17 @@ def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean() -
         (2024, 2),
         (2025, 3),
     ):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
-            if casilla.label == _ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL
+            if casilla.label == ANEXO_B_CANTIDADES_DEDUCIBLES_LABEL
             and len(casilla.section) >= 3
             and tuple(casilla.section[:2]) == ("resultados", "datos_adicionales_anexo_b")
-            and casilla.section[2] in _ANEXO_B_TOTAL_SATISFECHO_SECTIONS
+            and casilla.section[2] in ANEXO_B_TOTAL_SATISFECHO_SECTIONS
         ]
 
         assert len(checked) == expected_count, filing_year
         for casilla in checked:
-            assert casilla.semantic_role == _ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert casilla.semantic_role == ANEXO_B_CANTIDADES_DEDUCIBLES_ROLE
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs

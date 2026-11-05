@@ -22,10 +22,10 @@ __all__ = [
 REGISTRY_TEST_ROOT: Final[Path] = REPO_ROOT / "dev" / "registry" / "tests"
 
 
-_MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
+MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
 
 
-_REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
+REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
 
 
 @dataclass(frozen=True, order=True, slots=True)

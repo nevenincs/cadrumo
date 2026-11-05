@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.schema_extraction import ExtractionPro
 
 from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +42,7 @@ def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     # The validator also checks compiled facts/runtime catalogues. Their exact
     # legal/source closure must travel with them; filtering only modelo refs
     # creates an invalid candidate before the corpus-profile gate can run.
-    return _committed_modelo("130")
+    return committed_modelo("130")
 
 
 @pytest.fixture(autouse=True)

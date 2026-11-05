@@ -157,43 +157,41 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
-    NON_EJERCICIO_COVERAGE_AXIS as _NON_EJERCICIO_COVERAGE_AXIS,
-)
-from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
-    OPEN_BOUNDED_ERA_DESIGNS as _OPEN_BOUNDED_ERA_DESIGNS,
+    NON_EJERCICIO_COVERAGE_AXIS,
+    OPEN_BOUNDED_ERA_DESIGNS,
 )
 
-from ._revision_span_boundary_support import (
-    _DESCRIPTION_ONLY,
-    _boundaries_for,
-    _boundary_label,
-    _compare_design_pair,
-    _description_flip_evidence,
+from .revision_span_boundary_support import (
+    DESCRIPTION_ONLY,
+    boundaries_for,
+    boundary_label,
+    compare_design_pair,
+    description_flip_evidence,
 )
-from ._revision_span_design_support import (
-    _BOX_MARKER,
-    _DESIGN_ROOT_PARTS,
-    _DESIGN_SUFFIXES,
-    _authority,
-    _claimed_years,
-    _constant_ejercicio_years,
-    _content_ejercicio_years,
-    _coverage_start_period,
-    _declared_revisions,
-    _design_coverage_years,
-    _design_dir,
-    _design_sheets,
-    _design_sources,
-    _design_years,
-    _designs_by_year,
-    _designs_in_publication_order,
-    _filing_revisions,
-    _layout_authority_receipts,
-    _occupancy,
-    _page_lengths,
-    _parse_design,
-    _sources_by_year,
-    _title_ejercicio_years,
+from .revision_span_design_support import (
+    BOX_MARKER,
+    DESIGN_ROOT_PARTS,
+    DESIGN_SUFFIXES,
+    authority,
+    constant_ejercicio_years,
+    content_ejercicio_years,
+    coverage_start_period,
+    declared_revisions,
+    design_coverage_years,
+    design_dir,
+    design_sheets,
+    design_sources,
+    designs_by_year,
+    designs_in_publication_order,
+    layout_authority_receipts,
+    occupancy,
+    page_lengths,
+    parse_design,
+    revision_span_design_claimed_years,
+    revision_span_design_design_years,
+    revision_span_design_filing_revisions,
+    sources_by_year,
+    title_ejercicio_years,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -217,12 +215,12 @@ def test_no_revision_spans_a_design_relayout() -> None:
 
     def description_suffix(evidence: tuple[str, ...]) -> str:
         if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
-            return " " + _DESCRIPTION_ONLY
+            return " " + DESCRIPTION_ONLY
         return ""
 
     violations: list[str] = []
-    for modelo, revision_id, revision in _filing_revisions():
-        boundaries = _boundaries_for(modelo.id, revision)
+    for modelo, revision_id, revision in revision_span_design_filing_revisions():
+        boundaries = boundaries_for(modelo.id, revision)
         if not boundaries:
             continue
         detail = "; ".join(
@@ -277,10 +275,10 @@ def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
     """
     retired_seen: list[str] = []
     revived_seen: list[str] = []
-    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in _declared_revisions()}):
-        sources = dict(_sources_by_year(modelo_id))
+    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in declared_revisions()}):
+        sources = dict(sources_by_year(modelo_id))
         for earlier, later in pairwise(sorted(sources)):
-            before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
+            before, after = occupancy(sources[earlier]), occupancy(sources[later])
             shared = set(before) & set(after)
             retired_seen.extend(
                 f"modelo {modelo_id} {earlier}/{later} {slot[0]} offset {slot[1]}"
@@ -314,7 +312,7 @@ def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
     built by globbing a directory, and a glob that matches nothing would satisfy
     every ``for`` below vacuously.
     """
-    by_year = _designs_by_year("303")
+    by_year = designs_by_year("303")
     assert by_year, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
     for year in (2015, 2016, 2019, 2020):
         assert year in by_year, f"{year} is covered by a bundled design but attributed to nothing"
@@ -331,7 +329,7 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
     twice under names differing only by a truncated extension, and a path count
     would report the duplicate as a second design and pass while proving nothing.
     """
-    by_year = _designs_by_year("303")
+    by_year = designs_by_year("303")
     assert by_year, "no Modelo 303 design was enumerated at all"
     for year in (2018, 2021, 2024):
         distinct = {path.read_bytes() for path in by_year.get(year, ())}
@@ -362,9 +360,9 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
     keys zero boxes is not clean, it is unread, and it reports identically to a modelo
     with nothing to find.
     """
-    from ._revision_span_design_support import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
+    from .revision_span_design_support import CASILLA_TAG_RE
 
-    assert _BOX_MARKER is _CANONICAL_TAG_RE, (
+    assert BOX_MARKER is CASILLA_TAG_RE, (
         "this module re-declared the bracketed box-number pattern instead of using the registry's "
         "canonical one; two definitions of one concept is how the four-digit cap survived while "
         "production already read five"
@@ -372,16 +370,16 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
 
     unread: list[str] = []
     measured = 0
-    for modelo_id in sorted({modelo.id for modelo, _, _ in _filing_revisions()}):
-        ordered, _unorderable = _designs_in_publication_order(modelo_id)
+    for modelo_id in sorted({modelo.id for modelo, _, _ in revision_span_design_filing_revisions()}):
+        ordered, _unorderable = designs_in_publication_order(modelo_id)
         for path in ordered:
             bracketed = any(
-                re.search(r"\[\d+\]", field.description) for sheet in _design_sheets(path) for field in sheet.fields
+                re.search(r"\[\d+\]", field.description) for sheet in design_sheets(path) for field in sheet.fields
             )
             if not bracketed:
                 continue
             measured += 1
-            if not _parse_design(path):
+            if not parse_design(path):
                 unread.append(f"modelo {modelo_id} design {path.name!r}")
     assert measured, "no bundled design brackets a box number at all; the assertion below would be vacuous"
     assert not unread, (
@@ -414,13 +412,13 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     """
     positive: list[str] = []
     alone: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in _declared_revisions()}):
-        ordered, _unorderable = _designs_in_publication_order(modelo_id)
+    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in declared_revisions()}):
+        ordered, _unorderable = designs_in_publication_order(modelo_id)
         for earlier, later in pairwise(ordered):
-            if bool(_description_flip_evidence(earlier, later)):
-                positive.append(f"modelo {modelo_id} {_boundary_label(earlier, later)}")
-    for modelo, revision_id, revision in _declared_revisions():
-        for key, evidence in _boundaries_for(modelo.id, revision).items():
+            if bool(description_flip_evidence(earlier, later)):
+                positive.append(f"modelo {modelo_id} {boundary_label(earlier, later)}")
+    for modelo, revision_id, revision in declared_revisions():
+        for key, evidence in boundaries_for(modelo.id, revision).items():
             if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
                 alone.append((modelo.id, revision_id, key))
 
@@ -433,16 +431,16 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     for modelo_id, revision_id, key in alone:
         modelo, revision = next(
             (candidate, current)
-            for candidate, current_id, current in _declared_revisions()
+            for candidate, current_id, current in declared_revisions()
             if candidate.id == modelo_id and current_id == revision_id
         )
-        boundaries = _boundaries_for(modelo.id, revision)
+        boundaries = boundaries_for(modelo.id, revision)
         rendered = "; ".join(
             f"{f'{a} mid-year' if a == b else f'{a}/{b}'}"
-            f"{' ' + _DESCRIPTION_ONLY if len(ev) == 1 and 'unnumbered slot(s) re-described' in ev[0] else ''}"
+            f"{' ' + DESCRIPTION_ONLY if len(ev) == 1 and 'unnumbered slot(s) re-described' in ev[0] else ''}"
             for (a, b), ev in sorted(boundaries.items())
         )
-        assert _DESCRIPTION_ONLY in rendered, (
+        assert DESCRIPTION_ONLY in rendered, (
             f"modelo {modelo_id} revision {revision_id!r} boundary {key} rests only on the "
             "description-keyed pass, which runs roughly one false positive in three, and the "
             "verdict does not mark it as such -- a reader cannot tell which boundaries to judge "
@@ -465,7 +463,7 @@ def _era_ordered_registered_designs(modelo_id: str) -> tuple[Path, ...]:
     catalogue states rather than a filename implies.
     """
     entries = []
-    for source in _authority().catalogues.sources.values():
+    for source in authority().catalogues.sources.values():
         if getattr(source, "kind", None) != "record_design" or source.applies_from is None:
             continue
         posix = Path(str(source.corpus_path)).as_posix()
@@ -475,7 +473,7 @@ def _era_ordered_registered_designs(modelo_id: str) -> tuple[Path, ...]:
         if posix.split(marker, 1)[1].split("/", 1)[0] != modelo_id:
             continue
         path = bundled_path() / source.corpus_path
-        if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES:
+        if path.is_file() and path.suffix.lower() in DESIGN_SUFFIXES:
             entries.append((source.applies_from, source.id, path))
     return tuple(path for _, _, path in sorted(entries))
 
@@ -483,9 +481,9 @@ def _era_ordered_registered_designs(modelo_id: str) -> tuple[Path, ...]:
 def _membership_only_design_pairs() -> tuple[tuple[str, Path, Path], ...]:
     """Consecutive registered designs whose ONLY difference is which boxes exist."""
     found: list[tuple[str, Path, Path]] = []
-    for modelo in _authority().modelos:
+    for modelo in authority().modelos:
         for earlier, later in pairwise(_era_ordered_registered_designs(str(modelo.id))):
-            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
+            before_boxes, after_boxes = parse_design(earlier), parse_design(later)
             if not before_boxes or not after_boxes:
                 continue
             shared = set(before_boxes) & set(after_boxes)
@@ -493,10 +491,10 @@ def _membership_only_design_pairs() -> tuple[tuple[str, Path, Path], ...]:
                 continue
             if set(before_boxes) == set(after_boxes):
                 continue
-            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+            before_lengths, after_lengths = page_lengths(earlier), page_lengths(later)
             if before_lengths and after_lengths and before_lengths != after_lengths:
                 continue
-            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
+            before_occupancy, after_occupancy = occupancy(earlier), occupancy(later)
             if any(
                 before_occupancy[slot] != after_occupancy[slot] for slot in set(before_occupancy) & set(after_occupancy)
             ):
@@ -546,7 +544,7 @@ def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
         "would be vacuous -- the corpus that made the membership signal necessary has changed"
     )
     for modelo_id, earlier, later in membership_only:
-        evidence = _compare_design_pair(earlier, later)
+        evidence = compare_design_pair(earlier, later)
         assert any("box SET changed" in item for item in evidence), (
             f"modelo {modelo_id}: {earlier.name} and {later.name} differ only in which boxes they "
             "declare -- no box moved, no page length changed, no slot changed occupancy -- and the "
@@ -585,7 +583,7 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
     # not been generated yet. That is a blind spot rather than bad luck: a guard that
     # cannot run while another part of the tree is mid-edit is unavailable exactly when
     # a withheld file is most likely to slip in unnoticed.
-    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    design_root = bundled_path(*DESIGN_ROOT_PARTS)
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
         # Recursive, matching _design_sources. The two derivations stayed independent
@@ -596,12 +594,12 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
         on_disk = {
             path
             for path in scan_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
-            if path.suffix.lower() in _DESIGN_SUFFIXES
+            if path.suffix.lower() in DESIGN_SUFFIXES
         }
         if not on_disk:
             continue
         seen_any += len(on_disk)
-        enumerated = set(_design_sources(modelo_id))
+        enumerated = set(design_sources(modelo_id))
         missing.extend(f"modelo {modelo_id} design {path.name!r}" for path in sorted(on_disk - enumerated))
     assert seen_any, "no bundled design file was found on disk at all; the corpus path has moved"
     assert not missing, (
@@ -634,17 +632,19 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
     """
     mid_split_available: list[str] = []
     mid_course_reported: list[str] = []
-    for modelo, revision_id, revision in _filing_revisions():
+    for modelo, revision_id, revision in revision_span_design_filing_revisions():
         # The availability side is derived from the raw publication-order enumeration
         # rather than from the span helper the verdict uses. Deriving both sides from one
         # function makes this test notice only that the function changed, so a defect in
         # it would red the vacuity guard and never reach the assertion that matters.
-        ordered, _unorderable = _designs_in_publication_order(modelo.id)
-        claimed_years = _claimed_years(revision, {year for path in ordered for year in _design_coverage_years(path)})
+        ordered, _unorderable = designs_in_publication_order(modelo.id)
+        claimed_years = revision_span_design_claimed_years(
+            revision, {year for path in ordered for year in design_coverage_years(path)}
+        )
         by_year: dict[int, int] = {}
         for path in ordered:
-            opening = min(_design_coverage_years(path))
-            if set(_design_coverage_years(path)) & claimed_years:
+            opening = min(design_coverage_years(path))
+            if set(design_coverage_years(path)) & claimed_years:
                 by_year[opening] = by_year.get(opening, 0) + 1
         mid_split_available.extend(
             f"modelo {modelo.id} revision {revision_id!r} ejercicio {year}"
@@ -653,7 +653,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
         )
         mid_course_reported.extend(
             f"modelo {modelo.id} revision {revision_id!r} ejercicio {earlier}"
-            for earlier, later in _boundaries_for(modelo.id, revision)
+            for earlier, later in boundaries_for(modelo.id, revision)
             if earlier == later
         )
 
@@ -674,7 +674,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
     # protection the original assertion gave when the tree still carried a
     # spanning revision.
     widened_reported: list[str] = []
-    for modelo, revision_id, revision in _filing_revisions():
+    for modelo, revision_id, revision in revision_span_design_filing_revisions():
         if revision.valid_to is None:
             continue
         if revision.valid_from.year != revision.valid_to.year:
@@ -689,7 +689,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
         )
         widened_reported.extend(
             f"modelo {modelo.id} revision {revision_id!r} ejercicio {earlier}"
-            for earlier, later in _boundaries_for(modelo.id, widened)
+            for earlier, later in boundaries_for(modelo.id, widened)
             if earlier == later
         )
 
@@ -716,19 +716,19 @@ def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_fil
     A year whose designs do not all declare a bound must be REPORTED as unorderable
     rather than ordered on a guess. Modelo 303's 2018 pair is the live case.
     """
-    ordered, unorderable = _designs_in_publication_order("303")
+    ordered, unorderable = designs_in_publication_order("303")
     assert ordered, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
 
     grouped: dict[int, list[Path]] = {}
     for path in ordered:
-        grouped.setdefault(min(_design_coverage_years(path)), []).append(path)
+        grouped.setdefault(min(design_coverage_years(path)), []).append(path)
     multi = {year: paths for year, paths in grouped.items() if len(paths) > 1}
     assert multi, "no ejercicio carries two designs, so this ordering assertion would be vacuous"
 
     for year, paths in sorted(multi.items()):
         if year in unorderable:
             continue
-        declared = [_coverage_start_period(path.name) for path in paths]
+        declared = [coverage_start_period(path.name) for path in paths]
         # A year reported orderable must have a bound on every member; otherwise the
         # unorderable report is itself wrong and the comparisons below are meaningless.
         assert all(start is not None for start in declared), (
@@ -775,9 +775,9 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
 
     def numbered(path: Path) -> set[str]:
         found: set[str] = set()
-        for sheet in _design_sheets(path):
+        for sheet in design_sheets(path):
             for field in sheet.fields:
-                boxes = _BOX_MARKER.findall(field.description)
+                boxes = BOX_MARKER.findall(field.description)
                 if boxes:
                     found.add(boxes[-1])
         return found
@@ -785,13 +785,13 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
     # Walk the ORDERED sequence adjacently, exactly as a boundary-deriving consumer
     # does. Re-deriving the order here from the coverage helper would make this test
     # insensitive to the ordering function it exists to guard.
-    ordered, _unorderable = _designs_in_publication_order("303")
-    window = [path for path in ordered if min(_design_coverage_years(path)) >= 2023]
+    ordered, _unorderable = designs_in_publication_order("303")
+    window = [path for path in ordered if min(design_coverage_years(path)) >= 2023]
     assert len(window) >= 3, "fewer than three Modelo 303 designs from 2023 on; this assertion would be vacuous"
 
     introduced: dict[str, set[str]] = {}
     for earlier, later in pairwise(window):
-        left, right = max(_design_coverage_years(earlier)), min(_design_coverage_years(later))
+        left, right = max(design_coverage_years(earlier)), min(design_coverage_years(later))
         label = f"{left} mid-year" if left == right else f"{left}/{right}"
         introduced[label] = numbered(later) - numbered(earlier)
 
@@ -818,10 +818,17 @@ def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:
     rather than scanning for four-digit runs is what keeps a legislative
     instrument's own year out of the coverage map.
     """
-    assert _design_years("13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo.xlsx") == (2018,)
-    assert _design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (2015, 2016)
-    assert _design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (2022,)
-    assert _design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()
+    assert revision_span_design_design_years(
+        "13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo.xlsx"
+    ) == (2018,)
+    assert revision_span_design_design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (
+        2015,
+        2016,
+    )
+    assert revision_span_design_design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (
+        2022,
+    )
+    assert revision_span_design_design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()
 
 
 def test_the_plural_and_range_naming_variants_are_read() -> None:
@@ -833,14 +840,21 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     unenumerated design is indistinguishable from an absent one.
     """
     # plural, single year
-    assert _design_years("01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+    assert revision_span_design_design_years("01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes.xlsx") == (2019,)
     # "y" is AND -- two discrete years, nothing between them
-    assert _design_years("10-303-ejercicio-2015-y-2016.xlsx") == (2015, 2016)
+    assert revision_span_design_design_years("10-303-ejercicio-2015-y-2016.xlsx") == (2015, 2016)
     # "a" and "hasta" are THROUGH -- an inclusive range
-    assert _design_years("02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf") == (2004, 2005, 2006, 2007, 2008, 2009)
-    assert _design_years("06-111-ejercicios-2016-hasta-2018.pdf") == (2016, 2017, 2018)
+    assert revision_span_design_design_years("02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf") == (
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+    )
+    assert revision_span_design_design_years("06-111-ejercicios-2016-hasta-2018.pdf") == (2016, 2017, 2018)
     # the orden year is still never coverage
-    assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+    assert revision_span_design_design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
 
 
 def test_a_period_qualified_designation_yields_its_ejercicio() -> None:
@@ -852,14 +866,21 @@ def test_a_period_qualified_designation_yields_its_ejercicio() -> None:
     relaxation: the anchor is still an explicit coverage designation, which is why
     the negative controls below keep passing.
     """
-    assert _design_years("07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx") == (2016,)
-    assert _design_years("09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf") == (2013, 2014)
-    assert _design_years("10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx") == (2016,)
+    assert revision_span_design_design_years("07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx") == (
+        2016,
+    )
+    assert revision_span_design_design_years("09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf") == (
+        2013,
+        2014,
+    )
+    assert revision_span_design_design_years("10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx") == (2016,)
     # An orden number carries no period token, so it still supplies no year, and a
     # period-scoped span with no year attached still enumerates nothing rather than
     # borrowing the update year beside it.
-    assert _design_years("14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente.pdf") == ()
-    assert _design_years("01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx") == ()
+    assert (
+        revision_span_design_design_years("14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente.pdf") == ()
+    )
+    assert revision_span_design_design_years("01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx") == ()
 
 
 def test_a_design_title_is_read_as_coverage_where_the_filename_states_nothing() -> None:
@@ -871,21 +892,21 @@ def test_a_design_title_is_read_as_coverage_where_the_filename_states_nothing() 
     and their modelo's ``boundaries`` was empty for want of anything to compare
     rather than for want of a boundary.
     """
-    m180 = _design_dir("180") / "files" / "03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf"
-    m303 = _design_dir("303") / "files" / "07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf"
+    m180 = design_dir("180") / "files" / "03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf"
+    m303 = design_dir("303") / "files" / "07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf"
     for path in (m180, m303):
         assert path.is_file(), f"corpus anchor moved: {path}"
 
     # The filename rule refuses both, exactly as it should.
-    assert _design_years(m180.name) == ()
-    assert _design_years(m303.name) == ()
+    assert revision_span_design_design_years(m180.name) == ()
+    assert revision_span_design_design_years(m303.name) == ()
     # The document states what the filename does not, and the orden year is NOT it:
     # 2014 -> 2021 is a seven-year divergence, which is why the filename cannot be
     # trusted to supply it by proximity or by sequence.
-    assert _title_ejercicio_years(m180) == (2021,)
-    assert _title_ejercicio_years(m303) == (2009,)
-    assert _design_coverage_years(m180) == (2021,)
-    assert _design_coverage_years(m303) == (2009,)
+    assert title_ejercicio_years(m180) == (2021,)
+    assert title_ejercicio_years(m303) == (2009,)
+    assert design_coverage_years(m180) == (2021,)
+    assert design_coverage_years(m303) == (2009,)
 
 
 def test_a_filename_carrying_only_an_orden_year_is_still_attributed_nothing() -> None:
@@ -897,14 +918,14 @@ def test_a_filename_carrying_only_an_orden_year_is_still_attributed_nothing() ->
     offers nothing, and inferring 2003 from the orden is the precise regression the
     filename rule exists to prevent.
     """
-    m840 = _design_dir("840") / "files" / "01-840-orden-hac-2572-2003-99-kb-pdf.pdf"
-    m720 = _design_dir("720") / "files" / "01-720-599-kb-pdf.pdf"
+    m840 = design_dir("840") / "files" / "01-840-orden-hac-2572-2003-99-kb-pdf.pdf"
+    m720 = design_dir("720") / "files" / "01-720-599-kb-pdf.pdf"
     for path in (m840, m720):
         assert path.is_file(), f"corpus anchor moved: {path}"
     for path in (m840, m720):
-        assert _design_years(path.name) == ()
-        assert _content_ejercicio_years(path) == ()
-        assert _design_coverage_years(path) == ()
+        assert revision_span_design_design_years(path.name) == ()
+        assert content_ejercicio_years(path) == ()
+        assert design_coverage_years(path) == ()
 
 
 def test_a_constant_ejercicio_slot_is_read_and_a_filer_supplied_one_is_not() -> None:
@@ -920,20 +941,20 @@ def test_a_constant_ejercicio_slot_is_read_and_a_filer_supplied_one_is_not() -> 
     designs to whatever year sat beside that slot; keyed on the constant, it
     attributes none of them and their filenames continue to carry the coverage.
     """
-    m714 = _design_dir("714") / "files" / "DR714_2025.xls"
+    m714 = design_dir("714") / "files" / "DR714_2025.xls"
     assert m714.is_file(), f"corpus anchor moved: {m714}"
-    assert _design_years(m714.name) == ()
-    assert _title_ejercicio_years(m714) == ()
-    assert _constant_ejercicio_years(m714) == (2025,)
-    assert _design_coverage_years(m714) == (2025,)
+    assert revision_span_design_design_years(m714.name) == ()
+    assert title_ejercicio_years(m714) == ()
+    assert constant_ejercicio_years(m714) == (2025,)
+    assert design_coverage_years(m714) == (2025,)
 
-    m303 = _design_dir("303") / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+    m303 = design_dir("303") / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
     assert m303.is_file(), f"corpus anchor moved: {m303}"
-    assert _constant_ejercicio_years(m303) == (), (
+    assert constant_ejercicio_years(m303) == (), (
         "Modelo 303's 'Ejercicio de devengo' slot is filled by the FILER, so reading it as "
         "the design's own coverage would attribute the design to an arbitrary year"
     )
-    assert _design_coverage_years(m303) == (2026,)
+    assert design_coverage_years(m303) == (2026,)
 
 
 def test_a_title_naming_one_ejercicio_does_not_shorten_a_filename_naming_a_span() -> None:
@@ -956,19 +977,19 @@ def test_a_title_naming_one_ejercicio_does_not_shorten_a_filename_naming_a_span(
     }
     checked = 0
     for modelo_id, filename in spans.items():
-        path = _design_dir(modelo_id) / "files" / filename
+        path = design_dir(modelo_id) / "files" / filename
         assert path.is_file(), f"corpus anchor moved: {path}"
-        filename_years = set(_design_years(path.name))
-        content_years = set(_content_ejercicio_years(path))
+        filename_years = set(revision_span_design_design_years(path.name))
+        content_years = set(content_ejercicio_years(path))
         assert len(filename_years) > 1, f"{filename!r} no longer names a span; pick another anchor"
         assert content_years, f"{filename!r} no longer states an ejercicio in its content; pick another anchor"
         assert content_years < filename_years, (
             f"{filename!r} no longer has the shape this guards -- its content used to name FEWER "
             "years than its filename, which is what makes preferring the content lossy"
         )
-        assert filename_years <= set(_design_coverage_years(path)), (
+        assert filename_years <= set(design_coverage_years(path)), (
             f"attribution DROPPED years for {filename!r}: filename claims {sorted(filename_years)} "
-            f"but coverage resolved to {list(_design_coverage_years(path))}. A content signal may "
+            f"but coverage resolved to {list(design_coverage_years(path))}. A content signal may "
             "add coverage; it may never take it away."
         )
         checked += 1
@@ -994,12 +1015,12 @@ def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
     """
     compared = 0
     conflicts: list[str] = []
-    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    design_root = bundled_path(*DESIGN_ROOT_PARTS)
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
-        for path in _design_sources(modelo_id):
-            filename_years = set(_design_years(path.name))
-            content_years = set(_content_ejercicio_years(path))
+        for path in design_sources(modelo_id):
+            filename_years = set(revision_span_design_design_years(path.name))
+            content_years = set(content_ejercicio_years(path))
             if not filename_years or not content_years:
                 continue
             compared += 1
@@ -1049,33 +1070,33 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     """
     unattributed: list[str] = []
     attributed = 0
-    filing_revisions = _filing_revisions()
+    filing_revisions = revision_span_design_filing_revisions()
     filing_modelos = {modelo.id for modelo, _revision_id, _revision in filing_revisions}
     cited_design_sources = {
         str(source.corpus_path): source
         for _modelo, _revision_id, revision in filing_revisions
-        for source in _layout_authority_receipts(_modelo.id, revision)
+        for source in layout_authority_receipts(_modelo.id, revision)
         if source.kind == "record_design"
     }
-    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    design_root = bundled_path(*DESIGN_ROOT_PARTS)
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
         if modelo_id not in filing_modelos:
             continue
-        for path in _design_sources(modelo_id):
+        for path in design_sources(modelo_id):
             relative = path.relative_to(bundled_path()).as_posix()
             source_receipt = cited_design_sources.get(relative)
             if source_receipt is None:
                 continue
-            if _design_coverage_years(path):
+            if design_coverage_years(path):
                 attributed += 1
                 continue
             if source_receipt.record_design_epoch is not None:
                 attributed += 1
                 continue  # catalogue receipt states the epoch the filename omits
-            if (modelo_id, path.name) in _NON_EJERCICIO_COVERAGE_AXIS:
+            if (modelo_id, path.name) in NON_EJERCICIO_COVERAGE_AXIS:
                 continue  # coverage stated on a declared non-ejercicio axis
-            if (modelo_id, path.name) in _OPEN_BOUNDED_ERA_DESIGNS:
+            if (modelo_id, path.name) in OPEN_BOUNDED_ERA_DESIGNS:
                 continue  # era stated, but open on one side and so not enumerable
             unattributed.append(f"modelo {modelo_id} design {path.name!r}")
     assert attributed, "no bundled design could be attributed to any year at all; attribution has broken"

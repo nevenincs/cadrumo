@@ -30,13 +30,13 @@ from ..compiler.corpus_catalogue import (
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _catalogues() -> RegistryCatalogues:
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     return catalogues
 
 

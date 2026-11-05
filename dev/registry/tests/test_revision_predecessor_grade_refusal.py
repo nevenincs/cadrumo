@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,7 +62,7 @@ def _two_edition_modelo(
     """A three-row 2024 edition and a 2025 edition stating one new row."""
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     _write_edition(
         modelo_dir,
         "2024",

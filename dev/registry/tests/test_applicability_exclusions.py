@@ -37,7 +37,7 @@ from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validate_applicability_section import validate_applicability_section
-from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
+from .referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

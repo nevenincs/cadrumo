@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..historical_static_repair import _REVIEWED_TARGETS, _validate_repair_findings, validated_historical_repair_source
+from ..historical_static_repair import REVIEWED_TARGETS, validate_repair_findings, validated_historical_repair_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -25,18 +25,18 @@ _M720_PRODUCER_TARGET = (
 
 
 def test_m720_exact_findings_cover_both_retired_constant_pairs_and_owned_companions() -> None:
-    target = _REVIEWED_TARGETS[_M720_TARGET]
+    target = REVIEWED_TARGETS[_M720_TARGET]
     assert target.exact_findings is not None
     findings = tuple(sorted(target.exact_findings))
     assert len(findings) == 6
     assert sum("references unknown binding" in finding for finding in findings) == 4
     assert sum("form layout is stale" in finding for finding in findings) == 1
     assert sum("2 design record(s)" in finding for finding in findings) == 1
-    _validate_repair_findings(target, findings)
+    validate_repair_findings(target, findings)
 
 
 def test_m720_producer_findings_cover_only_the_five_duplicate_inputs_and_form() -> None:
-    target = _REVIEWED_TARGETS[_M720_PRODUCER_TARGET]
+    target = REVIEWED_TARGETS[_M720_PRODUCER_TARGET]
     assert target.exact_findings is not None
     findings = tuple(sorted(target.exact_findings))
     assert len(findings) == 9
@@ -44,7 +44,7 @@ def test_m720_producer_findings_cover_only_the_five_duplicate_inputs_and_form() 
     assert sum("form layout is stale" in finding for finding in findings) == 1
     assert sum("shows binding" in finding for finding in findings) == 3
     assert all("design record(s)" not in finding for finding in findings)
-    _validate_repair_findings(target, findings)
+    validate_repair_findings(target, findings)
 
 
 @pytest.mark.parametrize("target_key", [_M720_TARGET, _M720_PRODUCER_TARGET])
@@ -52,7 +52,7 @@ def test_m720_producer_findings_cover_only_the_five_duplicate_inputs_and_form() 
 def test_m720_findings_refuse_every_unreviewed_change(
     change: str, target_key: tuple[str, str, str, int, str, str]
 ) -> None:
-    target = _REVIEWED_TARGETS[target_key]
+    target = REVIEWED_TARGETS[target_key]
     assert target.exact_findings is not None
     findings = list(sorted(target.exact_findings))
     if change == "missing":
@@ -67,7 +67,7 @@ def test_m720_findings_refuse_every_unreviewed_change(
     else:
         findings[0] = findings[0].replace("modelo 720", "modelo 714")
     with pytest.raises(RegistryValidationError, match="beyond the reviewed target defects"):
-        _validate_repair_findings(target, tuple(findings))
+        validate_repair_findings(target, tuple(findings))
 
 
 @pytest.mark.parametrize("digest", [None, "0" * 64])

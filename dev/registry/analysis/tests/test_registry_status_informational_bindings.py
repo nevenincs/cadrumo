@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..registry_status import RegistryStatus, _payload
+from ..registry_status import RegistryStatus, registry_status_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -33,14 +33,14 @@ def _status(*, informational: tuple[tuple[str, int], ...]) -> RegistryStatus:
 
 def test_payload_reports_informational_bindings_per_modelo() -> None:
     """The informational line carries its own total and per-modelo breakdown."""
-    payload = _payload(_status(informational=(("303", 4), ("390", 1))), blocking=False)
+    payload = registry_status_payload(_status(informational=(("303", 4), ("390", 1))), blocking=False)
 
     assert payload["informational_bindings"] == {"total": 5, "by_modelo": {"303": 4, "390": 1}}
 
 
 def test_informational_bindings_do_not_make_any_lane_partial() -> None:
     """A dispositioned row is classified, not counted against any coverage lane."""
-    payload = _payload(_status(informational=(("303", 4),)), blocking=False)
+    payload = registry_status_payload(_status(informational=(("303", 4),)), blocking=False)
 
     informational = payload["informational_bindings"]
     assert isinstance(informational, dict)
@@ -50,14 +50,14 @@ def test_informational_bindings_do_not_make_any_lane_partial() -> None:
 
 def test_an_empty_corpus_reports_the_line_as_zero() -> None:
     """The line is always present, so silence is reported rather than omitted."""
-    payload = _payload(_status(informational=()), blocking=False)
+    payload = registry_status_payload(_status(informational=()), blocking=False)
 
     assert payload["informational_bindings"] == {"total": 0, "by_modelo": {}}
 
 
 def test_the_retired_unreferenced_advisory_is_not_reported() -> None:
     """Unreferenced bindings refuse the registry, so neither a line nor a lane remains."""
-    payload = _payload(_status(informational=()), blocking=False)
+    payload = registry_status_payload(_status(informational=()), blocking=False)
 
     lanes = payload["lanes"]
     assert isinstance(lanes, dict)

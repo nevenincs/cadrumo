@@ -91,7 +91,7 @@ def _sheet_constants(sheet: RecordDesignSheet, *, source: SourceReference | None
     return {
         (field.offset, field.length): corrections.get((field.offset, field.length), value)
         for field in sheet.fields
-        if (value := _field_constant(field)) is not None
+        if (value := field_constant(field)) is not None
     }
 
 
@@ -146,7 +146,7 @@ def _resolve_adjudicated_constant(
         source_cell=declaration.source_cell,
         published_content=declaration.published_content,
     )
-    if value is None or len(value.encode("iso-8859-1")) != field.length or _field_constant(field) is None:
+    if value is None or len(value.encode("iso-8859-1")) != field.length or field_constant(field) is None:
         raise RegistryValidationError(
             f"source-defect declaration for {source.id!r} sheet {sheet.name!r} "
             f"cell {declaration.source_cell!r} no longer matches its constant geometry"
@@ -154,7 +154,7 @@ def _resolve_adjudicated_constant(
     return field, value
 
 
-def _require_adjudicated_source_sheets(source: SourceReference, sheets: Sequence[RecordDesignSheet]) -> None:
+def require_adjudicated_source_sheets(source: SourceReference, sheets: Sequence[RecordDesignSheet]) -> None:
     """A parser revision must not silently drop a sheet carrying a pinned correction."""
     names = {sheet.name for sheet in sheets}
     for declaration in source_defects_for(str(source.id)):
@@ -184,7 +184,7 @@ def _identity_constants(
     }
 
 
-def _field_constant(field: RecordDesignField) -> str | None:
+def field_constant(field: RecordDesignField) -> str | None:
     """Return one field's constant, keeping identifier rows on their own grammar."""
     cells = (field.content, field.description)
     if any(text and _IDENTIFIER_VOCABULARY.search(text) for text in cells):
@@ -216,7 +216,7 @@ def _quoted_constant(cells: tuple[str | None, str | None]) -> str | None:
     return None
 
 
-def _design_constant_values(revision: ModeloRevision) -> Mapping[str, str]:
+def design_constant_values(revision: ModeloRevision) -> Mapping[str, str]:
     """Return each ``design_constant`` binding's declared value, keyed by binding id.
 
     A design constant is a DECLARED constant that simply does not live on an
@@ -288,7 +288,7 @@ def _bound_record_literals(
     return literals
 
 
-def _written_bytes(fields: Iterable[ExportFieldDefinition], *, data_only: bool) -> set[int]:
+def written_bytes(fields: Iterable[ExportFieldDefinition], *, data_only: bool) -> set[int]:
     """Return every byte ``fields`` writes, optionally counting only real data.
 
     ``data_only`` drops :attr:`~.CasillaFieldKind.FILLER` slots. A filler emits
@@ -315,16 +315,16 @@ def _administration_reserved_bytes(sheet: RecordDesignSheet) -> dict[int, str]:
     reserved: dict[int, str] = {}
     for field in sheet.fields:
         for candidate in (field, *field.components):
-            if requirements._OBLIGATORIO.search(candidate.validation or ""):
+            if requirements.OBLIGATORIO.search(candidate.validation or ""):
                 continue
-            if not requirements._administration_reserved(candidate):
+            if not requirements.administration_reserved(candidate):
                 continue
             for byte in range(candidate.offset, candidate.offset + candidate.length):
                 reserved[byte] = candidate.description
     return reserved
 
 
-def _reserved_write_failures(
+def reserved_write_failures(
     sheet: RecordDesignSheet,
     fields: Iterable[ExportFieldDefinition],
     *,
@@ -384,7 +384,7 @@ def _reserved_field_write_failure(
     )
 
 
-def _covers(position: requirements._RequiredPosition, data_bytes: set[int], fill_bytes: set[int]) -> bool:
+def covers(position: requirements.RequiredPosition, data_bytes: set[int], fill_bytes: set[int]) -> bool:
     """Whether the layout can really write every byte of ``position``.
 
     Coverage is measured by BYTE EXTENT, not by ``(offset, length)`` identity,
@@ -435,7 +435,7 @@ def _covers(position: requirements._RequiredPosition, data_bytes: set[int], fill
     return all(byte in countable for byte in range(position.offset, position.offset + position.length))
 
 
-def _belongs_to_layout(
+def belongs_to_layout(
     sheet: RecordDesignSheet,
     records: Sequence[ExportRecordDefinition],
     constants_by_binding: Mapping[str, str] | None = None,
@@ -511,10 +511,10 @@ def _sheet_run_is_filler(sheet: RecordDesignSheet, offset: int, length: int) -> 
         # whether it is blank. Silence over any byte of the run is silence over
         # the run.
         return None
-    return all(_field_is_filler(item) for item in covering)
+    return all(field_is_filler(item) for item in covering)
 
 
-def _field_is_filler(field: RecordDesignField) -> bool:
+def field_is_filler(field: RecordDesignField) -> bool:
     """Whether AEAT describes one field as a filler run."""
     return any(
         text is not None and _FILLER_RUN_RE.match(str(text).strip()) is not None
@@ -548,7 +548,7 @@ def _discriminator_prefers(
     return is_filler if discriminator.requires == "blank" else not is_filler
 
 
-def _join_record(
+def join_record(
     sheet: RecordDesignSheet,
     records: Sequence[ExportRecordDefinition],
     constants_by_binding: Mapping[str, str] | None = None,
@@ -625,7 +625,7 @@ def _record_constant_agreement(
     return len(shared)
 
 
-def _design_sources(
+def design_sources(
     layout: ExportLayoutDefinition,
     source_refs: Mapping[str, SourceReference],
 ) -> tuple[SourceReference, ...]:
@@ -636,7 +636,7 @@ def _design_sources(
     )
 
 
-def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...] | str:
+def read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...] | str:
     """Return the source's sheets, or the reason no complete design could be read.
 
     ``require_complete`` rather than ``accept_partial``: a coverage figure
@@ -662,7 +662,7 @@ def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...
         )
 
 
-def _envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
+def envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
     """Return every byte the filing envelope's prefix fields write.
 
     Every prefix field carries a real declared value, so none is filler and the

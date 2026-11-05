@@ -5,17 +5,17 @@ from __future__ import annotations
 import re
 
 from .record_design_pdf_repairs import (
-    _ANY_CASILLA_TAG_RE,
-    _BARE_COORDINATE_LOOKAHEAD,
-    _BARE_COORDINATE_LOOKBEHIND,
-    _BARE_COORDINATE_TRIPLE_RE,
-    _COORDINATE_STUTTER_RE,
-    _DOUBLED_COORDINATE_ROW_RE,
-    _NATURALEZA_HEAD_RE,
-    _ORPHAN_MEASURE_RE,
-    _STUTTERED_PDF_ROW_RE,
-    _continues,
-    _previous_parsed_row,
+    ANY_CASILLA_TAG_RE,
+    BARE_COORDINATE_LOOKAHEAD,
+    BARE_COORDINATE_LOOKBEHIND,
+    BARE_COORDINATE_TRIPLE_RE,
+    COORDINATE_STUTTER_RE,
+    DOUBLED_COORDINATE_ROW_RE,
+    NATURALEZA_HEAD_RE,
+    ORPHAN_MEASURE_RE,
+    STUTTERED_PDF_ROW_RE,
+    continues,
+    previous_parsed_row,
 )
 from .record_design_pdf_rows import PdfRow, parse_pdf_row
 
@@ -36,7 +36,7 @@ def collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
     """
     return tuple(
         f"{match.group('indent')}{match.group('ordinal')} {match.group('offset')} {match.group('rest')}"
-        if (match := _STUTTERED_PDF_ROW_RE.match(line)) is not None
+        if (match := STUTTERED_PDF_ROW_RE.match(line)) is not None
         else line
         for line in lines
     )
@@ -51,7 +51,7 @@ def _coordinate_stutter_donor(
     """Return the donor's length, naturaleza, and description when usable."""
     donor = parsed[donor_index]
     if donor is None:
-        measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
+        measure = ORPHAN_MEASURE_RE.match(lines[donor_index])
         if measure is None:
             return None
         return (
@@ -59,7 +59,7 @@ def _coordinate_stutter_donor(
             str(measure.group("naturaleza")),
             str(measure.group("description")),
         )
-    if _continues(anchor, donor.ordinal or "", donor.offset):
+    if continues(anchor, donor.ordinal or "", donor.offset):
         return None
     return str(donor.length), donor.type_code, donor.description
 
@@ -72,19 +72,19 @@ def _coordinate_stutter_candidate(
     dropped: set[int],
 ) -> tuple[int, str] | None:
     """Build a coordinate-stutter row only when both halves are evidenced."""
-    stutter = _COORDINATE_STUTTER_RE.match(lines[index])
-    if stutter is None or not _ANY_CASILLA_TAG_RE.search(lines[index]):
+    stutter = COORDINATE_STUTTER_RE.match(lines[index])
+    if stutter is None or not ANY_CASILLA_TAG_RE.search(lines[index]):
         return None
     donor_index = index - 1
     if donor_index in dropped or donor_index in rebuilt:
         return None
-    anchor = _previous_parsed_row(parsed, donor_index)
+    anchor = previous_parsed_row(parsed, donor_index)
     donor = _coordinate_stutter_donor(lines, parsed, donor_index, anchor)
     if donor is None:
         return None
     ordinal = stutter.group("ordinal")
     offset = int(stutter.group("offset"))
-    if not _continues(anchor, ordinal, offset):
+    if not continues(anchor, ordinal, offset):
         return None
     length, naturaleza, description = donor
     return donor_index, f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
@@ -135,13 +135,13 @@ def _bare_coordinate_naturaleza_half(
 ) -> tuple[re.Match[str], int] | None:
     """Locate the naturaleza half, below first and then above a bare triple."""
     head_index = index + 1
-    head = _NATURALEZA_HEAD_RE.match(lines[head_index])
+    head = NATURALEZA_HEAD_RE.match(lines[head_index])
     if head is not None:
         return head, head_index
-    for candidate in range(index - 1, max(-1, index - 1 - _BARE_COORDINATE_LOOKBEHIND), -1):
+    for candidate in range(index - 1, max(-1, index - 1 - BARE_COORDINATE_LOOKBEHIND), -1):
         if parsed[candidate] is not None:
             break
-        found = _NATURALEZA_HEAD_RE.match(lines[candidate])
+        found = NATURALEZA_HEAD_RE.match(lines[candidate])
         if found is not None:
             return found, candidate
     return None
@@ -153,7 +153,7 @@ def _bare_coordinate_successor(
     line_count: int,
 ) -> tuple[int, PdfRow] | None:
     """Find the first parsed row after a bare triple within the bounded window."""
-    for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, line_count)):
+    for candidate in range(index + 2, min(index + 2 + BARE_COORDINATE_LOOKAHEAD, line_count)):
         successor = parsed[candidate]
         if successor is not None:
             return candidate, successor
@@ -166,7 +166,7 @@ def _bare_coordinate_triple(
     index: int,
 ) -> re.Match[str] | None:
     """Return a bare triple only when the following line is not a row."""
-    triple = _BARE_COORDINATE_TRIPLE_RE.match(lines[index])
+    triple = BARE_COORDINATE_TRIPLE_RE.match(lines[index])
     if triple is None:
         return None
     if parsed[index + 1] is not None:
@@ -310,13 +310,13 @@ def collapse_doubled_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             collapsed.append(line)
             continue
-        doubled = _DOUBLED_COORDINATE_ROW_RE.match(line)
+        doubled = DOUBLED_COORDINATE_ROW_RE.match(line)
         if (
             doubled is not None
             and previous is not None
             and previous.ordinal is not None
             and previous.ordinal.isdigit()
-            and _continues(previous, doubled.group("ordinal"), int(doubled.group("offset")))
+            and continues(previous, doubled.group("ordinal"), int(doubled.group("offset")))
         ):
             rebuilt = (
                 f"{doubled.group('ordinal')} {doubled.group('offset')} {doubled.group('length')} "

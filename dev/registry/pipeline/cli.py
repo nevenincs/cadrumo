@@ -26,11 +26,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryV
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ._export_tree import render_complete_export_tree
-from ._form_layout_companion import prepare_generated_form_layout_companion
-from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_publication import publish_validated_generated_export_tree
-from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .authored_form_bridge import AuthoredFormBridge, prepare_authored_form_bridge
 from .authority_cli import publish_authority
 from .bootstrap_supersession import (
@@ -42,7 +37,9 @@ from .bootstrap_targets import GeneratedExportBootstrapTarget, generated_export_
 from .candidate_source_chain import requires_source_chain
 from .candidate_staging import stage_generated_export_candidate
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
+from .export_tree import render_complete_export_tree
 from .export_tree_models import RenderedExportTree
+from .form_layout_companion import prepare_generated_form_layout_companion
 from .generated_export_inheritance import (
     generated_export_source_chain_fingerprint,
     select_generated_export_inheritance,
@@ -65,12 +62,15 @@ from .render_check import (
     select_revision_record_design_source,
 )
 from .source_defects import source_defects_for
+from .tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
+from .tree_publication import publish_validated_generated_export_tree
 from .tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
 )
 from .tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
+from .tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 
 app = typer.Typer(
     name="pipeline",
@@ -329,7 +329,7 @@ def prepare_generated_tree_invocation(
     )
 
 
-def _render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExportTree:
+def render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExportTree:
     """Render one candidate export tree into the staged revision."""
     candidate_export_root = (
         prepared.candidate_root
@@ -372,7 +372,7 @@ def check_prepared_invocation(
         ),
     )
     if not prepared.target_export_root.exists():
-        rendered = _render_candidate(prepared)
+        rendered = render_candidate(prepared)
         validate_generated_export_tree(
             context=prepared.validation,
             joined=prepared.inputs.joined,
@@ -419,7 +419,7 @@ def publish_prepared_invocation(
             final_live_validator=(
                 (lambda: generated_form_bridge.require_export_cutover(prepared.target_root))
                 if generated_form_bridge is not None
-                else (lambda: _validate_final_live_target(prepared))
+                else (lambda: validate_final_live_target(prepared))
             ),
         ),
         joined=prepared.inputs.joined,
@@ -430,7 +430,7 @@ def publish_prepared_invocation(
     )
 
 
-def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
+def validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
     """Compile the complete live registry with the installed export before commit.
 
     The publisher has already proved the live export is byte-identical to the
@@ -571,7 +571,7 @@ def _validate_record_disposition(
 
 def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
     """Replace one stale manifest only after an exact target-bound safety proof."""
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     candidate_export_root = (
         prepared.candidate_root
         / "modelos"
@@ -591,7 +591,7 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
     # any cutover; the eligibility proof below needs only the byte comparison.
     generated_form_bridge = None
     if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
-        _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
+        require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
     else:
         require_republication_eligibility(
             prepared.invocation,
@@ -623,14 +623,14 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         )
     publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=generated_form_bridge)
     if generated_form_bridge is not None:
-        _finish_form_republication(
+        finish_form_republication(
             prepared.target_root,
             generated_form_bridge,
-            final_live_validator=lambda: _validate_final_live_target(prepared),
+            final_live_validator=lambda: validate_final_live_target(prepared),
         )
 
 
-def _finish_form_republication(
+def finish_form_republication(
     registry_root: Path,
     bridge: GeneratedFormBridge | AuthoredFormBridge,
     *,
@@ -647,7 +647,7 @@ def _finish_form_republication(
         ) from error
 
 
-def _require_storage_equivalent_republication(
+def require_storage_equivalent_republication(
     prepared: PreparedGeneratedTreeInvocation,
     rendered: RenderedExportTree,
     target_state: GeneratedExportTreeTargetStateReceipt,
@@ -746,7 +746,7 @@ def _reconcile_authored_form(
         reconcile_scalar_sources,
     )
     target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     if correcting_producers:
         comparison = compare_export_tree_roots(
             modelo=invocation.modelo,
@@ -780,12 +780,12 @@ def _reconcile_authored_form(
         scalar_sources=reconcile_scalar_sources,
     )
     publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=bridge)
-    _finish_form_republication(
-        prepared.target_root, bridge, final_live_validator=lambda: _validate_final_live_target(prepared)
+    finish_form_republication(
+        prepared.target_root, bridge, final_live_validator=lambda: validate_final_live_target(prepared)
     )
 
 
-def _run(
+def run(
     invocation: GeneratedTreeInvocation,
     *,
     action: Literal["check", "publish", "republish"],
@@ -953,7 +953,7 @@ def _classify_target_currentness_failure(
     comparison: RenderComparison | None = None
     try:
         if not candidate_export_root.exists():
-            _render_candidate(prepared)
+            render_candidate(prepared)
         comparison = compare_export_tree_roots(
             modelo=modelo,
             revision=revision,
@@ -1043,7 +1043,7 @@ def publish_target_command(
     ] = False,
 ) -> None:
     """Check, then transactionally publish one named static target tree."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
         action="publish",
         reconcile_authored_form=reconcile_authored_form,
@@ -1093,7 +1093,7 @@ def republish_target_command(
     ] = False,
 ) -> None:
     """Digest-bound republish of one named target after its exact state was reviewed."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
         reconcile_authored_form=reconcile_unreferenced_producers,
@@ -1120,7 +1120,7 @@ def check_command(
     ] = None,
 ) -> None:
     """Regenerate and validate one target without changing the published registry."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="check",
     )
@@ -1135,7 +1135,7 @@ def publish_command(
     period: _PERIOD,
 ) -> None:
     """Check, then transactionally publish one target through the canonical authority."""
-    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
+    run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
     typer.echo(f"published modelo={modelo} revision={revision} source={source_ref}")
 
 
@@ -1152,7 +1152,7 @@ def republish_command(
     ],
 ) -> None:
     """Replace one digest-pinned tree only when its records reproduce semantically."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
     )

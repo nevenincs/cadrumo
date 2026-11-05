@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import legal_reference
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
@@ -24,7 +24,7 @@ _APPROVING_ORDEN_APPLIES_FROM = legal_reference("orden-eha-789-2010:art-1").effe
 
 
 def _load_modelo_360() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("360")
+    return committed_modelo("360")
 
 
 def test_modelo_360_validator_accepts_committed_definition() -> None:

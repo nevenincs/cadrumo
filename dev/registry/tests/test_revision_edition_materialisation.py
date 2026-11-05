@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_overrides import CasillaFieldOverride
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,7 +40,7 @@ _NO_PREDECESSOR = (
 )
 
 
-def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | None, extra: str = "") -> str:
+def casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | None, extra: str = "") -> str:
     lineage_line = f'continuidad_id = "{lineage}"\n' if lineage is not None else ""
     return (
         f'[[revisions."{revision_id}".casillas]]\n'
@@ -54,7 +54,7 @@ def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | N
     )
 
 
-def _retirement(revision_id: str, *, lineage: str, from_revision: str) -> str:
+def retirement(revision_id: str, *, lineage: str, from_revision: str) -> str:
     return (
         f'[[revisions."{revision_id}".casilla_continuidad_evolutions]]\n'
         f'id = "retire-{lineage}"\n'
@@ -67,7 +67,7 @@ def _retirement(revision_id: str, *, lineage: str, from_revision: str) -> str:
     )
 
 
-def _write_edition(
+def write_edition(
     modelo_dir: Path,
     revision_id: str,
     *,
@@ -102,41 +102,41 @@ def _write_edition(
 
 
 def _predecessor_2024(modelo_dir: Path, *, manifest_extra: str = "") -> None:
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         manifest_extra=manifest_extra,
         casillas=(
-            _casilla("2024", "0001", number="1", lineage="base-imponible")
-            + _casilla("2024", "0002", number="2", lineage="cuota-integra")
-            + _casilla("2024", "0003", number="3", lineage="deduccion-retirada")
-            + _casilla("2024", "0004", number="4", lineage=None)
+            casilla("2024", "0001", number="1", lineage="base-imponible")
+            + casilla("2024", "0002", number="2", lineage="cuota-integra")
+            + casilla("2024", "0003", number="3", lineage="deduccion-retirada")
+            + casilla("2024", "0004", number="4", lineage=None)
         ),
     )
 
 
-def _modelo_root(root: Path) -> Path:
+def modelo_root(root: Path) -> Path:
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     return modelo_dir
 
 
 def _delta_successor_modelo(root: Path, *, declare_predecessor: bool) -> Path:
     """A 2024 edition and a 2025 edition stating one changed row, one new row and one retirement."""
-    modelo_dir = _modelo_root(root)
+    modelo_dir = modelo_root(root)
     _predecessor_2024(modelo_dir)
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
         manifest_extra='predecessor = "2024"\n' if declare_predecessor else "",
         casillas=(
-            _casilla("2025", "0005", number="5", lineage="recargo-nuevo")
-            + _casilla("2025", "0002", number="22", lineage="cuota-integra")
+            casilla("2025", "0005", number="5", lineage="recargo-nuevo")
+            + casilla("2025", "0002", number="22", lineage="cuota-integra")
         ),
-        evolutions=_retirement("2025", lineage="deduccion-retirada", from_revision="2024"),
+        evolutions=retirement("2025", lineage="deduccion-retirada", from_revision="2024"),
     )
     return modelo_dir
 
@@ -175,13 +175,13 @@ def test_a_declared_predecessor_is_inherited_with_stated_rows_overriding_by_line
 
 
 def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zero(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         casillas=(
-            _casilla(
+            casilla(
                 "2024",
                 "0001",
                 number="1",
@@ -192,10 +192,10 @@ def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zer
                     'source_refs = ["aeat-manual"] }\n'
                 ),
             )
-            + _casilla("2024", "0002", number="2", lineage=None)
+            + casilla("2024", "0002", number="2", lineage=None)
         ),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
@@ -210,7 +210,7 @@ def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zer
             '[[revisions."2025".casilla_removals]]\n'
             'selector = { revision = "2024", id = "0002" }\n'
         ),
-        casillas=_casilla("2025", "0003", number="3", lineage=None),
+        casillas=casilla("2025", "0003", number="3", lineage=None),
     )
 
     successor = load_modelo_directory(modelo_dir).revisions["2025"]
@@ -226,13 +226,13 @@ def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zer
 
 
 def test_field_delta_removes_a_nested_constraint_storage_field(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         manifest_extra='casilla_source_refs = ["aeat-old"]\n',
-        casillas=_casilla(
+        casillas=casilla(
             "2024",
             "0001",
             number="1",
@@ -243,7 +243,7 @@ def test_field_delta_removes_a_nested_constraint_storage_field(tmp_path: Path) -
             ),
         ),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
@@ -283,14 +283,14 @@ def test_nested_constraint_removal_contract_fails_closed(fields: object, removed
 
 
 def test_a_source_only_change_authors_only_source_refs_and_the_selector(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
-        casillas=_casilla("2024", "0001", number="1", lineage=None),
+        casillas=casilla("2024", "0001", number="1", lineage=None),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
@@ -311,14 +311,14 @@ def test_a_source_only_change_authors_only_source_refs_and_the_selector(tmp_path
 
 
 def test_storage_reuse_preserves_a_successors_missing_continuity_id(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
-        casillas=_casilla("2024", "0456", number="456", lineage="annualidades-alimentos"),
+        casillas=casilla("2024", "0456", number="456", lineage="annualidades-alimentos"),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
@@ -354,12 +354,12 @@ def test_an_inherited_row_takes_the_successor_editions_locale_key(tmp_path: Path
 def test_a_chain_of_predecessors_resolves_transitively(tmp_path: Path) -> None:
     """A third edition inherits what the second inherited, including the second's overrides."""
     modelo_dir = _delta_successor_modelo(tmp_path, declare_predecessor=True)
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2026",
         year=2026,
         manifest_extra='predecessor = "2025"\n',
-        casillas=_casilla("2026", "0001", number="11", lineage="base-imponible"),
+        casillas=casilla("2026", "0001", number="11", lineage="base-imponible"),
     )
 
     assert _rows(load_modelo_directory(modelo_dir).revisions["2026"]) == [
@@ -373,12 +373,12 @@ def test_a_chain_of_predecessors_resolves_transitively(tmp_path: Path) -> None:
 def test_every_inherited_row_is_marked_with_the_edition_that_last_stated_it(tmp_path: Path) -> None:
     """The marker follows the edition that stated the row, down the chain, and a stated row carries none."""
     modelo_dir = _delta_successor_modelo(tmp_path, declare_predecessor=True)
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2026",
         year=2026,
         manifest_extra='predecessor = "2025"\n',
-        casillas=_casilla("2026", "0001", number="11", lineage="base-imponible"),
+        casillas=casilla("2026", "0001", number="11", lineage="base-imponible"),
     )
     definition = load_modelo_directory(modelo_dir)
 
@@ -417,23 +417,23 @@ def test_an_inherited_row_never_carries_its_predecessors_lineage_claims(tmp_path
     successor is the merge's doing; a superseding row keeps the claims it
     states itself.
     """
-    modelo_dir = _modelo_root(tmp_path)
+    modelo_dir = modelo_root(tmp_path)
     claims = f'continuidad_origin = "new_on_form"\ncontinuidad_evidence = "{_EVIDENCE}"\n'
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         casillas=(
-            _casilla("2024", "0001", number="1", lineage="base-imponible", extra=claims)
-            + _casilla("2024", "0002", number="2", lineage="cuota-integra", extra=claims)
+            casilla("2024", "0001", number="1", lineage="base-imponible", extra=claims)
+            + casilla("2024", "0002", number="2", lineage="cuota-integra", extra=claims)
         ),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
         manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "0002", number="22", lineage="cuota-integra", extra=claims),
+        casillas=casilla("2025", "0002", number="22", lineage="cuota-integra", extra=claims),
     )
     definition = load_modelo_directory(modelo_dir)
 
@@ -448,14 +448,14 @@ def test_an_inherited_row_never_carries_its_predecessors_lineage_claims(tmp_path
 
 
 def test_an_edition_declaring_no_predecessor_inherits_nothing(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
+    modelo_dir = modelo_root(tmp_path)
     _predecessor_2024(modelo_dir)
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
         manifest_extra=_NO_PREDECESSOR,
-        casillas=_casilla("2025", "0009", number="9", lineage="variante"),
+        casillas=casilla("2025", "0009", number="9", lineage="variante"),
     )
 
     assert _rows(load_modelo_directory(modelo_dir).revisions["2025"]) == [("0009", "9", "variante")]
@@ -465,25 +465,25 @@ def test_an_edition_declaring_no_predecessor_inherits_nothing(tmp_path: Path) ->
     ("stated", "refusal"),
     [
         pytest.param(
-            _casilla("2025", "0001", number="1", lineage="otro-concepto"),
+            casilla("2025", "0001", number="1", lineage="otro-concepto"),
             r"stated casilla '0001' of lineage 'otro-concepto' collides with the inherited casilla '0001' "
             r"of lineage 'base-imponible'",
             id="undeclared-repurpose",
         ),
         pytest.param(
-            _casilla("2025", "0004", number="4", lineage=None),
+            casilla("2025", "0004", number="4", lineage=None),
             r"stated casilla '0004' of lineage \(none declared\) collides with the inherited casilla '0004' "
             r"of lineage \(none declared\)",
             id="collision-without-lineage",
         ),
         pytest.param(
-            _casilla("2025", "0007", number="7", lineage="cuota-integra")
-            + _casilla("2025", "0008", number="8", lineage="cuota-integra"),
+            casilla("2025", "0007", number="7", lineage="cuota-integra")
+            + casilla("2025", "0008", number="8", lineage="cuota-integra"),
             r"states more than one casilla of lineage 'cuota-integra'",
             id="two-stated-rows-one-lineage",
         ),
         pytest.param(
-            _casilla("2025", "0003", number="3", lineage="deduccion-retirada"),
+            casilla("2025", "0003", number="3", lineage="deduccion-retirada"),
             r"states a casilla of lineage 'deduccion-retirada', which the same edition retires",
             id="stated-and-retired",
         ),
@@ -510,22 +510,22 @@ def test_an_ambiguous_override_is_refused_and_the_repaired_tree_loads(
 
 
 def test_a_predecessor_carrying_one_lineage_twice_cannot_be_superseded(tmp_path: Path) -> None:
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         casillas=(
-            _casilla("2024", "0001", number="1", lineage="repetida")
-            + _casilla("2024", "0002", number="2", lineage="repetida")
+            casilla("2024", "0001", number="1", lineage="repetida")
+            + casilla("2024", "0002", number="2", lineage="repetida")
         ),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
         manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "0001", number="10", lineage="repetida"),
+        casillas=casilla("2025", "0001", number="10", lineage="repetida"),
     )
 
     with pytest.raises(RegistryLoadError, match=r"carries lineage \['repetida'\] on more than one row"):
@@ -534,14 +534,14 @@ def test_a_predecessor_carrying_one_lineage_twice_cannot_be_superseded(tmp_path:
 
 def test_a_predecessor_cycle_is_refused_before_anything_is_inherited(tmp_path: Path) -> None:
     """The forest check runs on the raw declarations, so a cycle never reaches the recursion."""
-    modelo_dir = _modelo_root(tmp_path)
+    modelo_dir = modelo_root(tmp_path)
     _predecessor_2024(modelo_dir, manifest_extra='predecessor = "2025"\n')
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,
         manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+        casillas=casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 
     with pytest.raises(RegistryLoadError, match="predecessor declarations form a cycle"):
@@ -567,25 +567,25 @@ def test_an_edge_claim_section_is_never_carried_into_the_inheriting_edition(tmp_
     that inherited nothing at all would satisfy the emptiness above for
     entirely the wrong reason.
     """
-    modelo_dir = _modelo_root(tmp_path)
-    _write_edition(
+    modelo_dir = modelo_root(tmp_path)
+    write_edition(
         modelo_dir,
         "2023",
         year=2023,
         casillas=(
-            _casilla("2023", "0001", number="1", lineage="base-imponible")
-            + _casilla("2023", "0002", number="2", lineage="deduccion-retirada")
+            casilla("2023", "0001", number="1", lineage="base-imponible")
+            + casilla("2023", "0002", number="2", lineage="deduccion-retirada")
         ),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2024",
         year=2024,
         manifest_extra='predecessor = "2023"\n',
         casillas="",
-        evolutions=_retirement("2024", lineage="deduccion-retirada", from_revision="2023"),
+        evolutions=retirement("2024", lineage="deduccion-retirada", from_revision="2023"),
     )
-    _write_edition(
+    write_edition(
         modelo_dir,
         "2025",
         year=2025,

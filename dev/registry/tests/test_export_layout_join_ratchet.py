@@ -131,23 +131,23 @@ def _scan() -> tuple[
                 # Read the SAME constant channels the coverage checker reads. A
                 # ratchet seeing fewer would pin sheets the checker joins fine
                 # and report debt that does not exist.
-                constants = coverage_records._design_constant_values(revision)
+                constants = coverage_records.design_constant_values(revision)
                 for layout in getattr(revision, "export_layouts", ()) or ():
-                    for source in coverage_records._design_sources(layout, source_refs):
-                        sheets = coverage_records._read_design_sheets(source)
+                    for source in coverage_records.design_sources(layout, source_refs):
+                        sheets = coverage_records.read_design_sheets(source)
                         if isinstance(sheets, str):
                             raise AssertionError(
                                 f"cannot assess official design sheets for modelo {modelo_id} revision {revision_id} "
                                 f"layout {layout.id} source {source.id}: {sheets}"
                             )
                         for sheet in sheets:
-                            if not coverage_records._belongs_to_layout(sheet, layout.records, constants, source=source):
+                            if not coverage_records.belongs_to_layout(sheet, layout.records, constants, source=source):
                                 continue
                             key = (modelo_id, str(revision_id), sheet.name)
                             if key in _UNJOINED_DESIGN_SHEETS and sheet.auxiliary_envelope_header is not None:
                                 misfiled.append(f"{key[0]} {key[1]} {key[2]!r}")
                             if (
-                                coverage_records._join_record(sheet, layout.records, constants, source=source)
+                                coverage_records.join_record(sheet, layout.records, constants, source=source)
                                 is not None
                             ):
                                 continue

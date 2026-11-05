@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
+from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

@@ -16,8 +16,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.i18n.render import MissingTranslationError
+from cadrumo.domain.calculations.registry import revision_order
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.revision_order import revisions_overlap as _revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
@@ -110,7 +110,7 @@ def _pair_field_divergences(
     right_sig: tuple[object, ...],
     evolutions: _EvolutionsByLineage,
 ) -> Iterator[CrossRevisionCasillaDivergence]:
-    revisions_overlap = _revisions_overlap(left_revision, right_revision)
+    revisions_overlap = revision_order.revisions_overlap(left_revision, right_revision)
     for field, left_value, right_value in zip(
         _CROSS_REVISION_CASILLA_FIELDS,
         left_sig,

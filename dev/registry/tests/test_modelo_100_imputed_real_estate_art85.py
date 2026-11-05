@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalcula
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ._modelo_100_registry_support import (
-    _m100_2024_deduccion_maternidad_bindings,
+from .modelo_100_registry_support import (
+    m100_2024_deduccion_maternidad_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -69,7 +69,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values["renta-maritime-qualifying-days"] = Decimal("0")
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
-        values.update(_m100_2024_deduccion_maternidad_bindings())
+        values.update(m100_2024_deduccion_maternidad_bindings())
     if year == 2024:
         values.update(
             {
@@ -80,7 +80,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
                 # an art. 85 imputed-real-estate example and claims no
                 # maternity deducción. It joined the 2024 closure after the
                 # others and was the only one left unsupplied.
-                **_m100_2024_deduccion_maternidad_bindings(),
+                **m100_2024_deduccion_maternidad_bindings(),
             },
         )
     return values

@@ -22,7 +22,7 @@ def column_form_heading_key(modelo_id: str, key: str) -> str:
     return form_heading_key(modelo_id, "column", key)
 
 
-def _unique(base: str, used: set[str]) -> str:
+def unique(base: str, used: set[str]) -> str:
     candidate, counter = base, 2
     while candidate in used:
         candidate = f"{base}-{counter}"

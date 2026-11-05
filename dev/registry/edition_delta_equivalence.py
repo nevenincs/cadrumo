@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from . import edition_delta_chain_materialisation as _edition_delta_chain_materialisation
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_proof_source as _edition_delta_proof_source
+from . import edition_delta_chain_materialisation, edition_delta_errors, edition_delta_proof_source
 from .edition_round_trip import RoundTripFindingKind, RoundTripReport
 
 
-def _prove_chain(
+def prove_chain(
     *,
     reference_modelo_dir,
     staged_modelo_dir,
@@ -19,18 +17,18 @@ def _prove_chain(
 ) -> RoundTripReport:
     """Require staged storage to materialise to the exact bytes planned from."""
     for revision_id in revision_ids:
-        before = _edition_delta_proof_source.read_staged_edition(reference_modelo_dir, revision_id, side="reference")
-        after = _edition_delta_proof_source.read_staged_edition(staged_modelo_dir, revision_id, side="staged")
-        difference = _member_difference(
-            _edition_delta_chain_materialisation.member_identities(before),
-            _edition_delta_chain_materialisation.member_identities(after),
+        before = edition_delta_proof_source.read_staged_edition(reference_modelo_dir, revision_id, side="reference")
+        after = edition_delta_proof_source.read_staged_edition(staged_modelo_dir, revision_id, side="staged")
+        difference = member_difference(
+            edition_delta_chain_materialisation.member_identities(before),
+            edition_delta_chain_materialisation.member_identities(after),
         )
         if difference is not None:
-            raise _edition_delta_errors.MigrationRefusedError(f"edition {revision_id!r}: {difference}")
-        before_bytes = _edition_delta_chain_materialisation.chain_materialisation(before)
-        after_bytes = _edition_delta_chain_materialisation.chain_materialisation(after)
+            raise edition_delta_errors.MigrationRefusedError(f"edition {revision_id!r}: {difference}")
+        before_bytes = edition_delta_chain_materialisation.chain_materialisation(before)
+        after_bytes = edition_delta_chain_materialisation.chain_materialisation(after)
         if before_bytes != after_bytes:
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"edition {revision_id!r}: the staged tree materialises to different bytes than the tree it was "
                 "planned from, so the lift is not an identity and cannot be proven",
             )
@@ -44,7 +42,7 @@ def _prove_chain(
     )
 
 
-def _member_difference(
+def member_difference(
     reference_members: Mapping[str, tuple[str, ...]],
     staged_members: Mapping[str, tuple[str, ...]],
 ) -> str | None:

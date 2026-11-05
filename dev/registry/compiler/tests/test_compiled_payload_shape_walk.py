@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from cadrumo.core.frozen_mapping import FrozenMapping
 
-from .._compiled_cache import _INERT_LEAF_TYPES, _has_current_pydantic_shape
+from ..compiled_cache_support import INERT_LEAF_TYPES, has_current_pydantic_shape
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,7 +53,7 @@ def _stale_leaf() -> _Leaf:
 def test_a_current_graph_of_every_container_kind_is_accepted() -> None:
     """The normal path: nothing is missing, through every container the walk knows."""
     leaf = _Leaf(identifier="present")
-    assert _has_current_pydantic_shape(
+    assert has_current_pydantic_shape(
         (
             _Branch(label="b", leaf=leaf),
             {"key": leaf},
@@ -100,7 +100,7 @@ def test_a_stale_model_is_reached_behind_each_container(container: Callable[[_Le
     """
     stale = _stale_leaf()
     assert "identifier" not in stale.__dict__, "sanity: the plant must actually omit the field"
-    assert _has_current_pydantic_shape((container(stale),)) is False
+    assert has_current_pydantic_shape((container(stale),)) is False
 
 
 def test_every_exempt_type_is_one_the_walk_would_treat_as_a_leaf_anyway() -> None:
@@ -114,7 +114,7 @@ def test_every_exempt_type_is_one_the_walk_would_treat_as_a_leaf_anyway() -> Non
     calculation months later.
     """
     descended = (BaseModel, Mapping, tuple, list, set, frozenset)
-    wrongly_exempt = [exempt_type.__name__ for exempt_type in _INERT_LEAF_TYPES if issubclass(exempt_type, descended)]
+    wrongly_exempt = [exempt_type.__name__ for exempt_type in INERT_LEAF_TYPES if issubclass(exempt_type, descended)]
     assert not wrongly_exempt, f"these exempt types are containers the walk must open: {wrongly_exempt}"
 
 
@@ -130,5 +130,5 @@ def test_the_bail_out_keys_on_the_exact_class_so_a_subclass_keeps_the_full_path(
     class _Labels(tuple[object, ...]):
         """A ``tuple`` subclass: a container whose exact class is not ``tuple``."""
 
-    assert _Labels not in _INERT_LEAF_TYPES
-    assert _has_current_pydantic_shape((_Labels((_stale_leaf(),)),)) is False
+    assert _Labels not in INERT_LEAF_TYPES
+    assert has_current_pydantic_shape((_Labels((_stale_leaf(),)),)) is False

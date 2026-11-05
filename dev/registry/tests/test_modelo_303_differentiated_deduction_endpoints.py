@@ -34,9 +34,7 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInve
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
@@ -55,7 +53,7 @@ from cadrumo.domain.prorrata_register.register import ProrrataRegister, Prorrata
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -87,7 +85,7 @@ _DESIGNS = (
 
 
 def _revision():
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T").revision
 
 
@@ -294,7 +292,7 @@ def test_projection_refuses_incomplete_or_double_consumed_sources(
 
 
 def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         provenance = IvaDeductionClassificationProvenance(
             authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator="invoice:sector-a",
@@ -360,7 +358,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
 def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_rows(
     rows: tuple[tuple[str, str | None], ...], message: str
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         observations = tuple(_observation(ledger_id, sector_id=sector_id) for ledger_id, sector_id in rows)
         with pytest.raises(ValueError, match=message):
             resolve_iva_differentiated_deduction_contributions(
@@ -370,7 +368,7 @@ def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_
 
 def test_especial_common_use_must_be_explicit() -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(ValueError, match="common-use classification must be explicit"),
     ):
         resolve_iva_differentiated_deduction_contributions(

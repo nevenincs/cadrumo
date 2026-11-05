@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 from cadrumo.domain.calculations.registry.schema import REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -119,7 +119,7 @@ def _write_edition(
 def _modelo(tmp_path: Path) -> Path:
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     return modelo_dir
 
 

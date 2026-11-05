@@ -121,7 +121,7 @@ def verify_legal_reference_grounding(reference: LegalReference, *, source_root: 
             f"legal reference {reference.id!r} declares Python control code as corpus evidence"
         )
     if reference.kind == "manual":
-        _validate_manual_legal_reference(reference, source_root)
+        validate_manual_legal_reference(reference, source_root)
     _validate_legal_corpus_provenance(reference, source_root)
     if reference.required_text or reference.forbidden_text:
         _validate_legal_corpus_clauses(reference, source_root)
@@ -273,7 +273,7 @@ def _grounding_evidence(reference: LegalReference, source_root: Path, path_text:
     reference to the full proof so its refusal is raised there.
     """
     root = _resolved_source_root(source_root)
-    document, annotation, sidecar = _resolved_corpus_paths(root, path_text)
+    document, annotation, sidecar = resolved_corpus_paths(root, path_text)
     try:
         normative = resolve_normative_corpus_path(source_root, reference.corpus_ref)
         companion = (
@@ -318,7 +318,7 @@ def published_legal_evidence_text(reference: LegalReference, *, source_root: Pat
     return _legal_corpus_text(source_root, reference)
 
 
-def _validate_manual_legal_reference(reference: LegalReference, source_root: Path) -> None:
+def validate_manual_legal_reference(reference: LegalReference, source_root: Path) -> None:
     path = (source_root / reference.corpus_ref.split("#", 1)[0]).resolve()
     if not path.is_file():
         return
@@ -410,7 +410,7 @@ def _resolved_source_root(source_root: Path) -> Path:
 
 
 @lru_cache(maxsize=1024)
-def _resolved_corpus_paths(root: Path, path_text: str) -> tuple[Path, Path, Path]:
+def resolved_corpus_paths(root: Path, path_text: str) -> tuple[Path, Path, Path]:
     """Resolve one corpus path and its two sidecars, once per distinct path.
 
     ``Path.resolve`` is a syscall per call, and every reference citing a file
@@ -430,7 +430,7 @@ def _resolved_corpus_paths(root: Path, path_text: str) -> tuple[Path, Path, Path
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path_text, _, anchor = reference.corpus_ref.partition("#")
     root = _resolved_source_root(source_root)
-    path, annotation, sidecar = _resolved_corpus_paths(root, path_text)
+    path, annotation, sidecar = resolved_corpus_paths(root, path_text)
     if root not in path.parents and path != root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
     if path.suffix.casefold() == ".xml":
@@ -570,10 +570,10 @@ def _unique_xml_corpus_unit(
     return matches[0]
 
 
-_REDACTION_MARK_COUNTS: dict[str, int] = {}
+REDACTION_MARK_COUNTS: dict[str, int] = {}
 
 
-def _corpus_redaction_mark_count(document: Path) -> int:
+def corpus_redaction_mark_count(document: Path) -> int:
     """Count one corpus document's dated redactions, once per distinct content.
 
     The count is decided by the document's bytes but was asked per REFERENCE,
@@ -583,13 +583,13 @@ def _corpus_redaction_mark_count(document: Path) -> int:
     the digest of the bytes it was decided from, so a rewrite that preserves
     size and mtime is still recounted.
     """
-    count = _REDACTION_MARK_COUNTS.get(corpus_content_digest(document))
+    count = REDACTION_MARK_COUNTS.get(corpus_content_digest(document))
     if count is None:
         payload = document.read_bytes()
         # Universal newlines, as a text-mode read decodes the document.
         text = payload.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
         count = len(corpus_redaction_marks(text))
-        _REDACTION_MARK_COUNTS[blake2b_hex(payload)] = count
+        REDACTION_MARK_COUNTS[blake2b_hex(payload)] = count
     return count
 
 
@@ -597,7 +597,7 @@ def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: L
     if not document.is_file():
         return
     try:
-        mark_count = _corpus_redaction_mark_count(document)
+        mark_count = corpus_redaction_mark_count(document)
     except OSError as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} corpus document {path_text!r} could not be read: {exc}"

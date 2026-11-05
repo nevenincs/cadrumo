@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
-from ._validate_helpers import missing_refs
+from .validate_helpers import missing_refs
 
 
 def validate_applicability_section(

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
 
-from .casilla_lineage_seed_paths import _UTF_8, LEDGER_PATH
+from .casilla_lineage_seed_paths import LEDGER_PATH, UTF_8
 from .casilla_lineage_seed_types import (
     EXCLUDED_MODELOS,
     CarriedRefusal,
@@ -36,7 +36,7 @@ def load_previous_ledger(path: Path = LEDGER_PATH) -> PreviousLedger:
     """
     if not path.is_file():
         return PreviousLedger(judged_at="", refusals={})
-    document = parse_toml(path.read_text(encoding=_UTF_8))
+    document = parse_toml(path.read_text(encoding=UTF_8))
     run = document.get("run")
     judged_at = run.get("judged_at", "") if isinstance(run, Mapping) else ""
     by_modelo: dict[str, list[Mapping[str, object]]] = collections.defaultdict(list)

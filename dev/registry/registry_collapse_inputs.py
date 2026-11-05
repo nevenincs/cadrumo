@@ -129,7 +129,7 @@ def _import_from_base(node: ast.ImportFrom, package: tuple[str, ...]) -> str:
     return ".".join((*prefix, *(node.module.split(".") if (node.module is not None and node.module) else ())))
 
 
-def _tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
+def tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
     """Rediscover registry interpreters and their local import closure.
 
     The package census catches new or removed helpers, including dynamically
@@ -157,7 +157,7 @@ def _tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(paths))
 
 
-def _source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
+def source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
     """Enumerate every non-registry compiler input that must be isolated."""
     evidence = tuple(
         Path(path) for path, _size, _modified_ns in collect_source_evidence_fingerprints(source_root, use_cache=False)
@@ -167,7 +167,7 @@ def _source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(set((*evidence, *profiles))))
 
 
-def _copy_source_dependencies(paths: Iterable[Path], *, source_root: Path, destination: Path) -> None:
+def copy_source_dependencies(paths: Iterable[Path], *, source_root: Path, destination: Path) -> None:
     """Copy exact compiler inputs while retaining source-root-relative paths."""
     resolved_root = source_root.resolve(strict=True)
     for source in paths:

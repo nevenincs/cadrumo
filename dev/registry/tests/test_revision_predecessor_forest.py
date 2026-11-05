@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,7 +57,7 @@ def _write_editions(root: Path, *editions: _Edition) -> Path:
     """Materialise modelo ``999`` with one fragmented directory per edition."""
     modelo_dir = root / "999"
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     for edition in editions:
         _write_edition(modelo_dir, edition)
     return modelo_dir

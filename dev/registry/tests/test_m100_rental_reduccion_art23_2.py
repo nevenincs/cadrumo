@@ -21,10 +21,14 @@ from cadrumo.domain.calculations.registry.schema_formula import FormulaExpressio
 from cadrumo.domain.calculations.registry.tests import m100_rental_reduccion_art23_2_scenarios as scenarios
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority
@@ -113,7 +117,7 @@ def m100_2024_compiled_snapshot() -> RegistrySnapshot:
 
 def _tier_profile_record(tier: RentalReductionArt232Tier) -> UserProfileRecord:
     moment = datetime(2025, 5, 21, 10, 0, 0, tzinfo=UTC)
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -123,7 +127,7 @@ def _tier_profile_record(tier: RentalReductionArt232Tier) -> UserProfileRecord:
         ),
         created_at=moment,
         updated_at=moment,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
 

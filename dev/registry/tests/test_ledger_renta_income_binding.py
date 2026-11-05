@@ -46,7 +46,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -81,7 +81,7 @@ def _tx(suffix: str) -> str:
 
 
 def _modelo_130_snapshot():
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,

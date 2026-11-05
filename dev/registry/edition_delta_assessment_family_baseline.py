@@ -11,7 +11,7 @@ from .edition_delta_assessment_lineage import technical_root
 from .edition_delta_assessment_state import FamilyBaseline, FamilyRun
 
 
-def _baseline(family: FamilyRun) -> FamilyBaseline:
+def baseline(family: FamilyRun) -> FamilyBaseline:
     spec = family.spec
     declared_predecessor = family.raw.get("predecessor")
     storage_baseline = family.raw.get(
@@ -46,7 +46,7 @@ def _adjacent_revision(family: FamilyRun, stated_root: bool) -> str | None:
     return family.previous
 
 
-def _typed_family_members(
+def typed_family_members(
     family: FamilyRun,
     predecessor: object,
 ) -> tuple[object, ...] | None:
@@ -64,7 +64,7 @@ def _typed_family_members(
     return None
 
 
-def _current_family_members(family: FamilyRun) -> tuple[object, ...] | None:
+def current_family_members(family: FamilyRun) -> tuple[object, ...] | None:
     value = getattr(family.revision, family.spec.section, None)
     members = _typed_members_value(value, family.spec.singleton)
     return tuple(members) if isinstance(members, list | tuple) else None
@@ -74,12 +74,12 @@ def _typed_members_value(value: object, singleton: bool) -> object:
     return (() if value is None else (value,)) if singleton else value
 
 
-def _family_index(members: tuple[object, ...], family: FamilyRun) -> dict[object, object]:
-    identity = _identity_path(family)
+def family_index(members: tuple[object, ...], family: FamilyRun) -> dict[object, object]:
+    identity = identity_path(family)
     return {family_identity_value(member, identity): member for member in members}
 
 
-def _identity_path(family: FamilyRun) -> str:
+def identity_path(family: FamilyRun) -> str:
     if family.spec.section == CASILLAS_FAMILY or family.spec.identity is None:
         return family.spec.storage_identity
     return family.spec.identity

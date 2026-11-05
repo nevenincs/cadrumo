@@ -23,9 +23,9 @@ from ..registry_status import (
     EXPORT_PLACEMENT_POPULATION,
     ExportPlacementCensus,
     RegistryStatus,
-    _payload,
-    _render_export_placement,
     export_placement_census,
+    registry_status_payload,
+    render_export_placement,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +82,7 @@ def test_a_planted_overlap_fails_the_lane(tmp_path: Path) -> None:
     census = export_placement_census((_modelo_296(tmp_path / "planted", second_field_length=5),))
 
     assert census.overlaps == 1
-    lanes = _payload(_status(export_placement=census), blocking=False)["lanes"]
+    lanes = registry_status_payload(_status(export_placement=census), blocking=False)["lanes"]
     assert isinstance(lanes, dict)
     assert lanes["export_placement_coverage"] == "failed"
 
@@ -116,7 +116,7 @@ def test_the_shipped_carrier_walks_records_and_finds_neither_defect(tmp_path: Pa
 
 def test_the_payload_carries_the_findings_with_their_denominators() -> None:
     """Counts alone cannot be read: zero findings over zero records is not health."""
-    payload = _payload(
+    payload = registry_status_payload(
         _status(export_placement=ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639)),
         blocking=False,
     )
@@ -133,7 +133,9 @@ def test_the_payload_carries_the_findings_with_their_denominators() -> None:
 
 def test_a_gap_only_census_is_partial_and_does_not_fail_the_report() -> None:
     """The lane mirrors the compiler's posture: a gap is advisory, not a failure."""
-    payload = _payload(_status(export_placement=ExportPlacementCensus(gaps=115, records=415)), blocking=False)
+    payload = registry_status_payload(
+        _status(export_placement=ExportPlacementCensus(gaps=115, records=415)), blocking=False
+    )
 
     lanes = payload["lanes"]
     assert isinstance(lanes, dict)
@@ -146,7 +148,7 @@ def test_a_gap_only_census_is_partial_and_does_not_fail_the_report() -> None:
 
 def test_a_status_assembled_without_a_census_reports_walking_nothing() -> None:
     """The default census must not read as a clean sweep of the whole corpus."""
-    payload = _payload(_status(export_placement=ExportPlacementCensus()), blocking=False)
+    payload = registry_status_payload(_status(export_placement=ExportPlacementCensus()), blocking=False)
 
     assert payload["export_placement"] == {
         "population": EXPORT_PLACEMENT_POPULATION,
@@ -166,7 +168,7 @@ def test_the_rendered_line_names_the_population_it_counted(capsys: pytest.Captur
     numbers without saying which population they belong to is how a reader
     concludes the registry lost a few hundred records.
     """
-    _render_export_placement(ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639))
+    render_export_placement(ExportPlacementCensus(overlaps=0, gaps=115, records=415, fields=27639))
 
     rendered = capsys.readouterr().out.strip()
     assert rendered.startswith(f"export_placement({EXPORT_PLACEMENT_POPULATION}): ")

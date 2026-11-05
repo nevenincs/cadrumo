@@ -44,7 +44,7 @@ from ..workbook_demo_records import (
     financial_asset_records,
     member_attribution_records,
 )
-from ._workbook_demo_oracle_support import expected_result, numeric_inputs
+from .workbook_demo_oracle_support import expected_result, numeric_inputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

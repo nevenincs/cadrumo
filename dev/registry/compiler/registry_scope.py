@@ -9,28 +9,22 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates as _duplicates
+from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
 
 from . import validate_cross_revision as cross_revision_validation
-from ._validate_credit_filed_observation_sources import credit_filed_observation_source_failures
-from ._validate_previous_filing_sources import validate_previous_filing_binding_closure
-from ._validate_semantic_role_required import required_role_declaration_failures as _validate_required_role_declarations
+from .validate_credit_filed_observation_sources import credit_filed_observation_source_failures
 from .validate_cross_revision import (
-    cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
-)
-from .validate_cross_revision import (
-    strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
+    cross_revision_casilla_consistency_failures,
+    strict_cross_revision_casilla_continuity_failures,
 )
 from .validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
 from .validate_label_artifacts import validate_no_label_artifacts
+from .validate_previous_filing_sources import validate_previous_filing_binding_closure
+from .validate_semantic_role_required import required_role_declaration_failures
 from .validate_semantic_roles import (
-    semantic_role_cardinality_failures as _validate_semantic_role_cardinality,
-)
-from .validate_semantic_roles import (
-    semantic_role_consistency_failures as _validate_semantic_role_consistency,
-)
-from .validate_semantic_roles import (
-    semantic_role_typo_twin_failures as _validate_semantic_role_typo_twins,
+    semantic_role_cardinality_failures,
+    semantic_role_consistency_failures,
+    semantic_role_typo_twin_failures,
 )
 
 
@@ -43,7 +37,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     modelo_tuple = tuple(modelos)
     failures: list[str] = []
     modelo_ids = [modelo.id for modelo in modelo_tuple]
-    for duplicate in sorted(_duplicates(modelo_ids)):
+    for duplicate in sorted(duplicates(modelo_ids)):
         failures.append(f"registry: duplicate modelo id {duplicate!r}")
 
     modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
@@ -53,21 +47,21 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
         failures.extend(credit_filed_observation_source_failures(modelo_tuple, modelos_by_id))
 
     failures.extend(_validate_binding_selector_shapes(modelo_tuple))
-    failures.extend(_validate_semantic_role_consistency(modelo_tuple))
-    failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
-    failures.extend(_validate_required_role_declarations(modelo_tuple))
-    failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
+    failures.extend(semantic_role_consistency_failures(modelo_tuple))
+    failures.extend(semantic_role_cardinality_failures(modelo_tuple))
+    failures.extend(required_role_declaration_failures(modelo_tuple))
+    failures.extend(cross_revision_casilla_consistency_failures(modelo_tuple))
     failures.extend(
         cross_revision_validation.declared_cross_revision_continuity_semantic_linkage_failures(modelo_tuple)
     )
     # This is the surface-scoped strict continuity gate; it complements,
     # but does not replace, the overlap-aware repeated-id hard gate above.
-    failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
+    failures.extend(strict_cross_revision_casilla_continuity_failures(modelo_tuple))
     for modelo in modelo_tuple:
         failures.extend(lineage_origin_continuity_failures(modelo))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
     if _tree_can_answer_role_singleton_questions(modelo_tuple):
-        failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))
+        failures.extend(semantic_role_typo_twin_failures(modelo_tuple))
     return tuple(failures)
 
 

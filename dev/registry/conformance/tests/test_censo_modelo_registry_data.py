@@ -21,13 +21,13 @@ from ...compiler.corpus_catalogue import verify_source_file
 from ...compiler.loader import load_modelo_directory
 from ...compiler.loader_cache import discover_modelo_sources
 from ..coverage import build_model_law_coverage_ledger
-from ..registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos_by_id() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}, catalogues
 
 

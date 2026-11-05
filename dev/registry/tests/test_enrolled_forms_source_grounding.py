@@ -8,10 +8,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_registry_tree as _committed_registry_tree,
+    committed_modelo,
+    committed_registry_tree,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -30,7 +28,7 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
     modelo_id: str,
     procedure_code: str,
 ) -> None:
-    modelo, catalogues = _committed_modelo(modelo_id)
+    modelo, catalogues = committed_modelo(modelo_id)
     procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
 
@@ -64,7 +62,7 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
 
 
 def test_deenrolled_modelo_198_has_no_registry_sources() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
 
     assert all(modelo.id != "198" for modelo in modelos)
     assert "aeat-modelo-198-procedure" not in catalogues.sources
@@ -176,7 +174,7 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
     formula_specs: dict[str, tuple[str, str, tuple[str, ...]]],
     closure_casillas: tuple[str, ...],
 ) -> None:
-    modelo, catalogues = _committed_modelo(modelo_id)
+    modelo, catalogues = committed_modelo(modelo_id)
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
     text_ref = f"boe-modelo-{modelo_id}-form-text"
     stale_prefix = f"enrolled-modelo-{modelo_id}-"

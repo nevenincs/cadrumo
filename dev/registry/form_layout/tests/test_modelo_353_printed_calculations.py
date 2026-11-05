@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.schema import FormulaDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ...compiler.loader import load_modelo_directory
-from ._formula_evaluation_support import evaluate_formula
+from .formula_evaluation_support import evaluate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

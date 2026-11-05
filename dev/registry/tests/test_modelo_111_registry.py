@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -107,7 +107,7 @@ _MONTHLY_DEADLINES = {
 
 @pytest.fixture(scope="module")
 def modelo_111_registry():
-    return _committed_modelo("111")
+    return committed_modelo("111")
 
 
 @pytest.mark.parametrize("period", ["1T", "01"])

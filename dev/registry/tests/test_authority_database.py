@@ -43,7 +43,7 @@ from ..compiler import authority_database as authority_database_compiler
 from ..compiler.authority_database import build_authority_database, require_acyclic_authority_dependencies
 from ..pipeline import authority_publication
 from ..pipeline.authority_publication import install_validated_authority_database, promote_accepted_authority_database
-from ._authority_generation_support import synthetic_authority_artifact
+from .authority_generation_support import synthetic_authority_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -108,8 +108,8 @@ def test_publication_refuses_a_cyclic_candidate_before_writing_a_descriptor(
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_reverse_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_reverse_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="dependency cycle"):
@@ -134,8 +134,8 @@ def test_publication_refuses_a_candidate_with_a_dangling_dependency(
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_dangling_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="authority database compilation failed"):
@@ -165,13 +165,13 @@ def test_publication_foreign_key_check_refuses_an_unenforced_dangling_dependency
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_create_schema",
-        _followed_by(authority_database_compiler._create_schema, disable_enforcement),
+        "create_schema",
+        _followed_by(authority_database_compiler.create_schema, disable_enforcement),
     )
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_dangling_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="foreign-key closure failed"):
@@ -503,7 +503,7 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
         return prepared_candidate
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", prepare_candidate)
-    monkeypatch.setattr(authority_publication, "_require_candidate_receipt", lambda candidate: None)
+    monkeypatch.setattr(authority_publication, "require_candidate_receipt", lambda candidate: None)
     monkeypatch.setattr(
         authority_publication.AuthorityDescriptor,
         "read",
@@ -511,7 +511,7 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
     )
     monkeypatch.setattr(
         authority_publication,
-        "_install_authority_database",
+        "install_authority_database",
         lambda staged_database, logical_generation, *, destination, require_current: published_descriptor,
     )
     destination = tmp_path / "published"
@@ -556,12 +556,12 @@ def test_receipt_drift_after_preparation_refuses_before_installation(
     )
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", lambda **_kwargs: prepared_candidate)
-    monkeypatch.setattr(authority_publication, "_capture_receipt", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(authority_publication, "capture_receipt", lambda *_args, **_kwargs: object())
 
     def unexpected_install(*_args: object, **_kwargs: object) -> None:
         pytest.fail("receipt drift must refuse before database installation")
 
-    monkeypatch.setattr(authority_publication, "_install_authority_database", unexpected_install)
+    monkeypatch.setattr(authority_publication, "install_authority_database", unexpected_install)
 
     with pytest.raises(RegistryValidationError, match="input receipt changed") as refusal:
         authority_publication.publish_sqlite_authority_candidate(

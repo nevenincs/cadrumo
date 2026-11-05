@@ -10,9 +10,7 @@ import pytest
 from cadrumo.core.citation_grounding import CitationGrounding
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from cadrumo.domain.iva.schema import IvaCatalogue, IvaCategory
@@ -24,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def operation() -> Iterator[PinnedAuthorityOperation]:
     """Pin one canonical authority generation for the catalogue projections."""
-    with _indexed_authority_for_test().operation() as pinned:
+    with bundled_indexed_authority().operation() as pinned:
         yield pinned
 
 

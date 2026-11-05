@@ -47,7 +47,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
 from cadrumo.domain.calculations.registry.tests.snapshot_proof_support import count_cross_checks
 
 from ..pipeline.authority_publication import install_validated_authority_database
-from ._authority_generation_support import synthetic_authority_artifact
+from .authority_generation_support import synthetic_authority_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

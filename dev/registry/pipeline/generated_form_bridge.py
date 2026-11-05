@@ -28,13 +28,13 @@ from ..form_layout.cli import synchronise_form_layouts, synchronise_selected_for
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ..registry_collapse_fingerprints import fingerprint_digest, fingerprint_paths, fingerprint_tree
-from ..registry_collapse_inputs import _tool_input_paths
+from ..registry_collapse_inputs import tool_input_paths
 from .export_fragment_provenance import ExportFragmentProvenanceManifest
 from .tree_publication_artifacts import verify_generated_export_package
 from .tree_publication_contracts import GeneratedExportPublicationJournal, GeneratedExportTransactionPaths
-from .tree_publication_journal import _journal_backup_path, load_generated_export_publication_journal
+from .tree_publication_journal import journal_backup_path, load_generated_export_publication_journal
 
-_REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
+REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
     ("720", "2013-y-siguientes"): (
         "aeat-dr-720",
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
@@ -74,15 +74,15 @@ _REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
 }
 
 
-def _sha(path: Path) -> str:
+def sha(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
 
 
-def _other_files(root: Path, modelo: str, revision: str, *, transaction_backup: Path | None = None) -> dict[str, str]:
+def other_files(root: Path, modelo: str, revision: str, *, transaction_backup: Path | None = None) -> dict[str, str]:
     prefix = f"modelos/{modelo}/revisions/{revision}/export/"
     form = f"modelos/{modelo}/revisions/{revision}/form_layouts/0001-form-layout.toml"
     return {
-        relative: _sha(path)
+        relative: sha(path)
         for path in root.rglob("*")
         if path.is_file()
         and not (relative := path.relative_to(root).as_posix()).startswith(prefix)
@@ -91,7 +91,7 @@ def _other_files(root: Path, modelo: str, revision: str, *, transaction_backup: 
     }
 
 
-def _active_verified_backup(
+def active_verified_backup(
     registry_root: Path,
     modelo: str,
     revision: str,
@@ -109,16 +109,16 @@ def _active_verified_backup(
     staged = paths.target_root / journal.candidate_export
     if not staged.name.startswith(paths.staging_prefix) or staged.exists():
         raise RegistryValidationError("Generated export cutover journal has no consumed target-scoped candidate")
-    backup = _journal_backup_path(
+    backup = journal_backup_path(
         journal, registry_root / "modelos" / modelo / "revisions" / revision / "export", paths.target_root
     )
     if is_link_like(backup) or not backup.is_dir():
         raise RegistryValidationError("Generated export cutover backup is not a regular directory")
     old_manifest = old_manifest_sha256
-    if _sha(backup / "_generation.provenance.json") != old_manifest:
+    if sha(backup / "_generation.provenance.json") != old_manifest:
         raise RegistryValidationError("Generated export cutover backup differs from reviewed old manifest")
     old_package = verify_generated_export_package(backup)
-    source_ref, source_sha256 = reviewed_source or _REVIEWED[(modelo, revision)][:2]
+    source_ref, source_sha256 = reviewed_source or REVIEWED[(modelo, revision)][:2]
     if (
         str(old_package.modelo),
         str(old_package.revision_id),
@@ -154,7 +154,7 @@ def generated_form_interpreting_input_digest(modelo: str) -> str:
         for path in directory.rglob("*")
         if path.is_file()
     )
-    return fingerprint_digest(fingerprint_paths((*_tool_input_paths(repo_root), *authored), relative_to=repo_root))
+    return fingerprint_digest(fingerprint_paths((*tool_input_paths(repo_root), *authored), relative_to=repo_root))
 
 
 def registry_evidence_content_digest(source_root: Path) -> str:
@@ -165,7 +165,7 @@ def registry_evidence_content_digest(source_root: Path) -> str:
     return fingerprint_digest(fingerprint_paths(paths, relative_to=source_root))
 
 
-def _candidate_generated_form_bytes(candidate_root: Path, modelo_id: str, revision_id: str, source_root: Path) -> bytes:
+def candidate_generated_form_bytes(candidate_root: Path, modelo_id: str, revision_id: str, source_root: Path) -> bytes:
     """Reproduce the staged form through its owner, including detached editions.
 
     A detached candidate may hold the form in ``0001-complete-edition.toml``.
@@ -214,7 +214,7 @@ def generated_form_companion_changed(registry_root: Path, candidate_root: Path, 
     # candidate stages its form inside a complete edition, so compare meaning.
     if _loaded_form_layouts(candidate_root, modelo, revision) == _loaded_form_layouts(registry_root, modelo, revision):
         return False
-    return old_form.read_bytes() != _candidate_generated_form_bytes(candidate_root, modelo, revision, bundled_path())
+    return old_form.read_bytes() != candidate_generated_form_bytes(candidate_root, modelo, revision, bundled_path())
 
 
 def _loaded_form_layouts(root: Path, modelo_id: str, revision_id: str) -> tuple[FormLayoutDefinition, ...]:
@@ -259,13 +259,13 @@ class GeneratedFormBridge:
         manifest = revision_root / "export" / "_generation.provenance.json"
         form = form_layout_fragment_path(revision_root)
         self._require_dependencies_current(bundled_path())
-        backup = _active_verified_backup(
+        backup = active_verified_backup(
             registry_root, self.modelo, self.revision, self.candidate_manifest_sha256, self.old_manifest_sha256
         )
         if (
-            _sha(manifest) != self.candidate_manifest_sha256
-            or _sha(form) != self.old_form_sha256
-            or _other_files(registry_root, self.modelo, self.revision, transaction_backup=backup) != self.other_files
+            sha(manifest) != self.candidate_manifest_sha256
+            or sha(form) != self.old_form_sha256
+            or other_files(registry_root, self.modelo, self.revision, transaction_backup=backup) != self.other_files
         ):
             raise RegistryValidationError(
                 "Generated export cutover changed the target package, old form, or other source"
@@ -298,11 +298,11 @@ class GeneratedFormBridge:
         self._require_finished_form(registry_root, source_root, target_form)
 
     def _require_finished_form(self, registry_root: Path, source_root: Path, target_form: Path) -> None:
-        if _sha(target_form) != self.candidate_form_sha256:
+        if sha(target_form) != self.candidate_form_sha256:
             raise RegistryValidationError(
                 "Generated canonical form owner output differs from the prevalidated candidate"
             )
-        if _other_files(registry_root, self.modelo, self.revision) != self.other_files:
+        if other_files(registry_root, self.modelo, self.revision) != self.other_files:
             raise RegistryValidationError("Generated form cutover changed another registry source member")
         stale_after, undeclared_after = synchronise_form_layouts(
             registry_root, source_root, modelos=(self.modelo,), check=True
@@ -322,7 +322,7 @@ def prepare_generated_form_bridge(
     expected_manifest_sha256: str | None,
 ) -> GeneratedFormBridge:
     """Prove full export+form source validity before the export-only journal."""
-    reviewed = _REVIEWED.get((modelo, revision))
+    reviewed = REVIEWED.get((modelo, revision))
     if reviewed is None or (source_ref, source_sha256, expected_manifest_sha256) != reviewed[:3]:
         raise RegistryValidationError("Generated form bridge requires one exact reviewed source and old target")
     source_root = bundled_path()
@@ -334,13 +334,13 @@ def prepare_generated_form_bridge(
     old_form = form_layout_fragment_path(live_revision)
     old_manifest = live_revision / "export" / "_generation.provenance.json"
     new_manifest = candidate_revision / "export" / "_generation.provenance.json"
-    if _sha(old_manifest) != expected_manifest_sha256 or _sha(old_form) != reviewed[3]:
+    if sha(old_manifest) != expected_manifest_sha256 or sha(old_form) != reviewed[3]:
         raise RegistryValidationError("Generated form bridge old manifest or form differs from reviewed bytes")
     old_package = verify_generated_export_package(live_revision / "export")
     new_package = verify_generated_export_package(candidate_revision / "export")
     _require_reviewed_package_identities(old_package, new_package, modelo, revision, source_ref, source_sha256)
-    generated_form_bytes = _candidate_generated_form_bytes(candidate_root, modelo, revision, source_root)
-    other = _other_files(registry_root, modelo, revision)
+    generated_form_bytes = candidate_generated_form_bytes(candidate_root, modelo, revision, source_root)
+    other = other_files(registry_root, modelo, revision)
     with tempfile.TemporaryDirectory(prefix="cadrumo-generated-form-bridge-", dir=prepare_temp_root()) as scratch:
         overlay = Path(scratch) / "registry" / "aeat"
         shutil.copytree(registry_root, overlay)
@@ -351,7 +351,7 @@ def prepare_generated_form_bridge(
         shutil.rmtree(overlay_export)
         shutil.copytree(candidate_revision / "export", overlay_export)
         form_layout_fragment_path(overlay_revision).write_bytes(generated_form_bytes)
-        if _other_files(overlay, modelo, revision) != other:
+        if other_files(overlay, modelo, revision) != other:
             raise RegistryValidationError("Generated form bridge overlay changed another registry member")
         compile_validated_authority(
             overlay,
@@ -359,7 +359,7 @@ def prepare_generated_form_bridge(
             complete_validation=True,
             verify_evidence_bytes=True,
         )
-    if _other_files(registry_root, modelo, revision) != other or _sha(old_manifest) != expected_manifest_sha256:
+    if other_files(registry_root, modelo, revision) != other or sha(old_manifest) != expected_manifest_sha256:
         raise RegistryValidationError("Generated form bridge live source changed during complete validation")
     _require_bridge_inputs_stable(
         modelo, source_root, interpreting_digest, evidence_content_digest, profile_fingerprint
@@ -372,7 +372,7 @@ def prepare_generated_form_bridge(
         source_sha256=source_sha256,
         old_form_sha256=reviewed[3],
         candidate_form_sha256=sha256(generated_form_bytes).hexdigest(),
-        candidate_manifest_sha256=_sha(new_manifest),
+        candidate_manifest_sha256=sha(new_manifest),
         other_files=other,
         interpreting_digest=interpreting_digest,
         evidence_content_digest=evidence_content_digest,

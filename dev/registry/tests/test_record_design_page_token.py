@@ -28,14 +28,14 @@ from __future__ import annotations
 import pytest
 
 from ..compiler.record_design import extract_record_design
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_the_bundled_modelo_390_design_names_its_eight_page_records() -> None:
     """The real corpus case: seven of these were anonymous before the split."""
-    matches = [path for path in _bundled_designs() if path.name.startswith("08-390-ejercicio-2015")]
+    matches = [path for path in bundled_designs() if path.name.startswith("08-390-ejercicio-2015")]
     assert matches, "the bundled modelo 390 2015 design is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

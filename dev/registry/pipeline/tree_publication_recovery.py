@@ -17,9 +17,9 @@ from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .tree_publication_artifacts import (
-    _require_complete_regular_tree,
-    _verify_post_cutover_target,
-    _verify_recovery_package_against_current_authorities,
+    require_complete_regular_tree,
+    verify_post_cutover_target,
+    verify_recovery_package_against_current_authorities,
 )
 from .tree_publication_contracts import (
     GeneratedExportPublicationJournal,
@@ -27,14 +27,14 @@ from .tree_publication_contracts import (
     GeneratedExportTreePublicationContext,
 )
 from .tree_publication_journal import (
-    _delete_journal,
-    _journal_backup_path,
-    _journal_staged_candidate_path,
-    _matches_journal_candidate,
+    delete_journal,
+    journal_backup_path,
+    journal_staged_candidate_path,
     load_generated_export_publication_journal,
+    matches_journal_candidate,
 )
-from .tree_publication_supersession import _delete_opaque_transaction_tree
-from .tree_publication_supersession_recovery import _recover_interrupted_supersession_bundle_locked
+from .tree_publication_supersession import delete_opaque_transaction_tree
+from .tree_publication_supersession_recovery import recover_interrupted_supersession_bundle_locked
 
 
 def recover_interrupted_publication(
@@ -55,7 +55,7 @@ def recover_interrupted_publication(
     _require_recovery_journal_target(journal, context, journal_path)
     publication_target_root = context.target_root.resolve()
     if journal.is_revision_bundle:
-        return _recover_interrupted_supersession_bundle_locked(
+        return recover_interrupted_supersession_bundle_locked(
             journal=journal,
             journal_path=journal_path,
             transaction_paths=GeneratedExportTransactionPaths(
@@ -65,13 +65,13 @@ def recover_interrupted_publication(
             ),
         )
 
-    backup_export_root = _journal_backup_path(journal, target_export_root, publication_target_root)
-    staged_candidate_export_root = _journal_staged_candidate_path(journal, publication_target_root)
-    candidate_is_verified = staged_candidate_export_root.exists() and _matches_journal_candidate(
+    backup_export_root = journal_backup_path(journal, target_export_root, publication_target_root)
+    staged_candidate_export_root = journal_staged_candidate_path(journal, publication_target_root)
+    candidate_is_verified = staged_candidate_export_root.exists() and matches_journal_candidate(
         staged_candidate_export_root,
         journal,
     )
-    target_is_verified = target_export_root.exists() and _matches_journal_candidate(target_export_root, journal)
+    target_is_verified = target_export_root.exists() and matches_journal_candidate(target_export_root, journal)
     if target_is_verified:
         _finalize_verified_live_candidate(
             context=context,
@@ -150,13 +150,13 @@ def _finalize_verified_live_candidate(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
-    _verify_post_cutover_target(
+    verify_post_cutover_target(
         target_export_root,
         expected_manifest_sha256=journal.candidate_manifest_sha256,
         expected_manifest=target_manifest,
     )
     _delete_opaque_rollback_if_present(backup_export_root)
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
 
 
 def _recover_with_existing_backup(
@@ -196,7 +196,7 @@ def _recover_with_existing_backup(
         )
     context.replace_export_directory(backup_export_root, target_export_root)
     fsync_parent_dir(target_export_root)
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return False
 
 
@@ -231,13 +231,13 @@ def _install_recovered_candidate(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
-    _verify_post_cutover_target(
+    verify_post_cutover_target(
         target_export_root,
         expected_manifest_sha256=journal.candidate_manifest_sha256,
         expected_manifest=candidate_manifest,
     )
-    _delete_opaque_rollback_tree(backup_export_root)
-    _delete_journal(journal_path)
+    delete_opaque_rollback_tree(backup_export_root)
+    delete_journal(journal_path)
 
 
 def _recover_without_backup(
@@ -267,15 +267,15 @@ def _recover_without_backup(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
-        _verify_post_cutover_target(
+        verify_post_cutover_target(
             target_export_root,
             expected_manifest_sha256=journal.candidate_manifest_sha256,
             expected_manifest=candidate_manifest,
         )
-        _delete_journal(journal_path)
+        delete_journal(journal_path)
         return True
     if target_export_root.exists():
-        _delete_journal(journal_path)
+        delete_journal(journal_path)
         return False
     raise RegistryValidationError(f"generated publication journal cannot recover a live export: {journal_path}")
 
@@ -293,7 +293,7 @@ def _verify_recovered_candidate(
 ) -> ExportFragmentProvenanceManifest:
     # The authority check needs `revision.export_layouts` from the canonical
     # `export/` path, so staged content is admitted only after its cutover.
-    return _verify_recovery_package_against_current_authorities(
+    return verify_recovery_package_against_current_authorities(
         target_export_root,
         context=context,
         modelo_root=target_export_root.parent.parent.parent,
@@ -305,7 +305,7 @@ def _verify_recovered_candidate(
     )
 
 
-def _restore_backup_or_raise(
+def restore_backup_or_raise(
     *,
     target_export_root: Path,
     backup_export_root: Path,
@@ -325,7 +325,7 @@ def _restore_backup_or_raise(
     return None
 
 
-def _restore_failed_export_cutover(
+def restore_failed_export_cutover(
     *,
     context: GeneratedExportTreePublicationContext,
     target_export_root: Path,
@@ -345,7 +345,7 @@ def _restore_failed_export_cutover(
         context.replace_export_directory(backup_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
     if failed_candidate is not None:
-        _delete_opaque_transaction_tree(
+        delete_opaque_transaction_tree(
             failed_candidate,
             target_root=transaction_paths.target_root,
             prefix=transaction_paths.staging_prefix,
@@ -355,11 +355,11 @@ def _restore_failed_export_cutover(
 
 def _delete_opaque_rollback_if_present(backup_export_root: Path) -> None:
     if backup_export_root.exists():
-        _delete_opaque_rollback_tree(backup_export_root)
+        delete_opaque_rollback_tree(backup_export_root)
 
 
-def _delete_opaque_rollback_tree(backup_export_root: Path) -> None:
-    _require_complete_regular_tree(backup_export_root, subject="generated export rollback directory")
+def delete_opaque_rollback_tree(backup_export_root: Path) -> None:
+    require_complete_regular_tree(backup_export_root, subject="generated export rollback directory")
     try:
         shutil.rmtree(backup_export_root)
     except OSError as exc:
@@ -378,7 +378,7 @@ def _move_failed_candidate_aside(
     failed = target_export_root.with_name(f".{target_export_root.name}.generator-invalid-{secrets.token_hex(16)}")
     replace_export_directory(target_export_root, failed)
     try:
-        _delete_opaque_rollback_tree(failed)
+        delete_opaque_rollback_tree(failed)
     except BaseException:
         if not target_export_root.exists() and failed.exists():
             replace_export_directory(failed, target_export_root)

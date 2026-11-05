@@ -9,7 +9,7 @@ import pytest
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 
 from ...compiler.authority import compiled_bundled_authority
-from .._export_tree import render_complete_export_tree
+from ..export_tree import render_complete_export_tree
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

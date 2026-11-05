@@ -34,8 +34,8 @@ from datetime import date
 
 import pytest
 
-from ._revision_span_boundary_support import _boundaries_for, _mid_year_span
-from ._revision_span_design_support import _declared_revisions, _filing_revisions
+from .revision_span_boundary_support import boundaries_for, mid_year_span
+from .revision_span_design_support import declared_revisions, revision_span_design_filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -59,7 +59,10 @@ _CROSS_YEAR_SPANS: set[tuple[str, str]] = set()
 
 
 def _by_subject() -> dict[tuple[str, str], dict[tuple[int, int], list[str]]]:
-    return {(modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _filing_revisions()}
+    return {
+        (modelo.id, rid): boundaries_for(modelo.id, revision)
+        for modelo, rid, revision in revision_span_design_filing_revisions()
+    }
 
 
 def test_a_half_year_revision_reports_no_boundary_inside_its_own_year() -> None:
@@ -82,7 +85,7 @@ def test_a_genuine_cross_year_span_still_reports() -> None:
     a control naming one reads that absence as a regression.
     """
     all_subjects = {
-        (modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _declared_revisions()
+        (modelo.id, rid): boundaries_for(modelo.id, revision) for modelo, rid, revision in declared_revisions()
     }
 
     cross_year = {
@@ -98,7 +101,9 @@ def test_a_genuine_cross_year_span_still_reports() -> None:
 
 def test_only_a_partial_span_inside_one_year_is_narrowed() -> None:
     """Full-year, multi-year and open-ended revisions are untouched by construction."""
-    spans = {(modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _filing_revisions()}
+    spans = {
+        (modelo.id, rid): mid_year_span(revision) for modelo, rid, revision in revision_span_design_filing_revisions()
+    }
 
     # This is a filing-support gate.  Historical/inspection-only halves remain
     # useful registry data, but are intentionally outside this cohort.
@@ -119,7 +124,7 @@ def test_a_multi_year_span_ending_mid_course_claims_only_its_cited_design_at_tha
     edge. Anti-vacuity: at least one revision must exercise the difference.
     """
     differing: list[tuple[str, str]] = []
-    for modelo, revision_id, revision in _declared_revisions():
+    for modelo, revision_id, revision in declared_revisions():
         valid_from, valid_to = revision.valid_from, revision.valid_to
         if valid_to is None or valid_from.year == valid_to.year:
             continue
@@ -128,8 +133,8 @@ def test_a_multi_year_span_ending_mid_course_claims_only_its_cited_design_at_tha
         )
         if stretched == revision:
             continue
-        narrowed = _boundaries_for(modelo.id, revision)
-        widened = _boundaries_for(modelo.id, stretched)
+        narrowed = boundaries_for(modelo.id, revision)
+        widened = boundaries_for(modelo.id, stretched)
         if narrowed == widened:
             continue
         differing.append((modelo.id, revision_id))

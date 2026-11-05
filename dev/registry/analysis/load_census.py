@@ -785,11 +785,11 @@ def build_reference_map() -> ReferenceMap:
         The reference map, with production and test consumers kept apart so a
         module reachable only from a quality gate is visible as such.
     """
-    return _reference_map_for(REFERENCE_SCAN_ROOTS)
+    return reference_map_for(REFERENCE_SCAN_ROOTS)
 
 
 @lru_cache(maxsize=8)
-def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
+def reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
     """Build the map for one set of scan roots, once per process.
 
     The scan reads and AST-parses every source file under the roots, and the
@@ -924,7 +924,7 @@ def _is_unreferenced_module(module: str, graph: RuntimeImportGraph, reference_ma
     return not in_package and not direct_tests and not reference_map.consumers(module)
 
 
-def _trace_script(regime: str) -> str:
+def trace_script(regime: str) -> str:
     snapshot_block = ""
     if regime == "inspection_snapshot":
         snapshot_block = """
@@ -1022,7 +1022,7 @@ def trace_regime(regime: str) -> frozenset[str]:
         area = Path(workspace)
         output = area / "executed.json"
         script = area / "trace.py"
-        script.write_text(_trace_script(regime), encoding="utf-8", newline="\n")
+        script.write_text(trace_script(regime), encoding="utf-8", newline="\n")
         environment = None
         if regime == "cold":
             import os

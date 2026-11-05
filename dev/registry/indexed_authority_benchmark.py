@@ -324,7 +324,7 @@ def _paired_semantics(
     return paired
 
 
-def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
+def summary(samples: list[dict[str, object]]) -> dict[str, object]:
     """Keep backend/workload medians and semantic parity separate."""
     grouped = _group_samples(samples)
     result: dict[str, object] = {
@@ -360,7 +360,7 @@ def _print_benchmark_samples(
     ]
     with get_context("spawn").Pool(processes=1, maxtasksperchild=1) as workers:
         samples = workers.map(_measure_sample, specifications, chunksize=1)
-    print(json.dumps({"samples": samples, "summary": _summary(samples)}, indent=2, sort_keys=True))
+    print(json.dumps({"samples": samples, "summary": summary(samples)}, indent=2, sort_keys=True))
 
 
 def main() -> None:

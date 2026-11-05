@@ -8,7 +8,7 @@ from cadrumo.domain.calculations.registry.design_constant_bindings import Design
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
 from ..authority import compiled_bundled_authority
-from ..export_layout_record_join import _design_constant_values
+from ..export_layout_record_join import design_constant_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -22,5 +22,5 @@ def test_design_constant_bindings_contribute_only_their_own_declared_identity() 
             )
         }
     )
-    assert _design_constant_values(revision.model_copy(update={"bindings": (binding,)})) == {str(binding.id): "720"}
-    assert _design_constant_values(revision.model_copy(update={"bindings": ()})) == {}
+    assert design_constant_values(revision.model_copy(update={"bindings": (binding,)})) == {str(binding.id): "720"}
+    assert design_constant_values(revision.model_copy(update={"bindings": ()})) == {}

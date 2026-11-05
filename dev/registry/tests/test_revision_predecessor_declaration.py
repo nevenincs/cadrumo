@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..conformance.loader_directory_mode_support import write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,7 +63,7 @@ def _write_two_edition_modelo(root: Path, *, successor_manifest_extra: str = "")
     ``successor_manifest_extra`` is appended to the 2025 ``revision.toml``, the
     one place a test plants or removes a predecessor declaration.
     """
-    modelo_dir = _shared_write_modelo(
+    modelo_dir = write_modelo(
         root,
         casilla_fragment=_casilla_fragment(_SUCCESSOR_ID),
         revision_id=_SUCCESSOR_ID,

@@ -38,7 +38,8 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 )
 
 from ..compiler.validator import RegistryValidator
-from ._referential_integrity_support import (
+from .profile_schema_support import load_user_profile_schema
+from .referential_integrity_support import (
     EXTRA_LEGAL_ID,
     EXTRA_SOURCE_ID,
     NUMERIC_CASILLA_01,
@@ -60,7 +61,6 @@ from ._referential_integrity_support import (
     snapshot_for_revision,
     supported_filing_year,
 )
-from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [
     pytest.mark.unit,

@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -67,7 +67,7 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
     mid: str, rev: str, approval: str, plazo: str, doc: str, domain: TaxDomain
 ) -> None:
     """Each cadence-dependent tail modelo validates without fabricated deadline windows."""
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain == domain
     committed_registry_validator(catalogues).validate_modelo(modelo)
@@ -82,7 +82,7 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
 
 def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_design() -> None:
     """Historical corpus selection keeps the legal form separate from the later writer."""
-    modelo, _catalogues = _committed_modelo("576")
+    modelo, _catalogues = committed_modelo("576")
 
     historical = select_revision(
         modelo,
@@ -130,7 +130,7 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
 
 def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal() -> None:
     """The historical revision still fails the generic writer-capability check."""
-    modelo, _catalogues = _committed_modelo("576")
+    modelo, _catalogues = committed_modelo("576")
     historical = modelo.revisions["2007"]
     promoted = historical.model_copy(
         update={

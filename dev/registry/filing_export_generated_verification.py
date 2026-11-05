@@ -34,19 +34,19 @@ from .pipeline.semantic_map_validation import verify_requirement_statements
 
 
 @dataclass(frozen=True, slots=True)
-class _ConformanceGenerationEntry:
+class ConformanceGenerationEntry:
     modelo: ModeloId
     revision: RevisionId
     design_epoch: str
     filing_year: int
 
 
-def _verify_generated_revision(
+def verify_generated_revision(
     *,
     workspace_root: Path,
     source_root: Path,
     inspection: GeneratedArtifactInspection,
-    entry: _ConformanceGenerationEntry,
+    entry: ConformanceGenerationEntry,
     layout: ExportLayoutDefinition,
     registry_root: Path | None = None,
     authority: ValidatedRegistryAuthority | None = None,

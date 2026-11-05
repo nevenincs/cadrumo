@@ -49,7 +49,7 @@ def generated_export_bootstrap_target(
         return None
     if len(matches) != 1:
         raise ValueError(f"multiple generated-export bootstrap targets match {modelo}/{revision}/{source_ref}")
-    return _bootstrap_target_from_row(matches[0])
+    return bootstrap_target_from_row(matches[0])
 
 
 def _matching_bootstrap_targets(
@@ -71,7 +71,7 @@ def _matching_bootstrap_targets(
     ]
 
 
-def _bootstrap_target_from_row(row: Mapping[str, object]) -> GeneratedExportBootstrapTarget:
+def bootstrap_target_from_row(row: Mapping[str, object]) -> GeneratedExportBootstrapTarget:
     accepted_line_ending = _accepted_bootstrap_line_ending(row)
     supersedes_layout_id = _validated_superseded_layout_id(row)
     superseded_construct_references = _validated_superseded_construct_references(row, supersedes_layout_id)

@@ -9,8 +9,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ._revision_span_boundary_support import _boundaries_for
-from ._revision_span_design_support import _declared_revisions, _filing_revisions
+from .revision_span_boundary_support import boundaries_for
+from .revision_span_design_support import declared_revisions, revision_span_design_filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -59,11 +59,11 @@ def _requestable_filing_year(revision: ModeloRevision, *, floor: int) -> int | N
 
 
 def _unsupported_spans() -> set[tuple[str, str]]:
-    filing = {(modelo.id, revision_id) for modelo, revision_id, _revision in _filing_revisions()}
+    filing = {(modelo.id, revision_id) for modelo, revision_id, _revision in revision_span_design_filing_revisions()}
     return {
         (modelo.id, revision_id)
-        for modelo, revision_id, revision in _declared_revisions()
-        if (modelo.id, revision_id) not in filing and _boundaries_for(modelo.id, revision)
+        for modelo, revision_id, revision in declared_revisions()
+        if (modelo.id, revision_id) not in filing and boundaries_for(modelo.id, revision)
     }
 
 
@@ -85,7 +85,7 @@ def test_a_below_filing_span_refuses_a_filing_request_at_the_authority_boundary(
     authority = compiled_bundled_authority()
     below_filing = sorted(
         (modelo.id, revision_id, revision)
-        for modelo, revision_id, revision in _declared_revisions()
+        for modelo, revision_id, revision in declared_revisions()
         if (modelo.id, revision_id) in _KNOWN_UNSUPPORTED_SPANS
     )
     assert below_filing, "no pinned unsupported span resolved, so no refusal is exercised"

@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from ...compiler.loader import load_shared_catalogues
 from ..joined_record_design import JoinedRecordDesignField, design_view
 from ..record_design_intermediate import load_record_design_intermediate
-from ..render_profile_validation import _field_anchor
+from ..render_profile_validation import field_anchor
 from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -218,6 +218,6 @@ def test_reviewed_pdf_parts_have_distinct_derived_profile_anchors() -> None:
     sign_view = design_view(JoinedRecordDesignField(parser_field=parent, semantic_entry=sign))
     magnitude_view = design_view(JoinedRecordDesignField(parser_field=parent, semantic_entry=magnitude))
     assert (sign_view.semantic_part_offset, magnitude_view.semantic_part_offset) == (81, 82)
-    assert _field_anchor(sign_view) != _field_anchor(magnitude_view)
+    assert field_anchor(sign_view) != field_anchor(magnitude_view)
     assert parent.semantic_part_offset is None
     assert "semantic_part_offset" not in parent.model_dump(mode="json")

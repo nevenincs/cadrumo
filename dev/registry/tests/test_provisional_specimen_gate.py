@@ -21,8 +21,8 @@ from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatal
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from ._gate_support import catalogues_for_m130_gate_tests
+from ..conformance.registry_schema_support import committed_modelo
+from .gate_support import catalogues_for_m130_gate_tests
 from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -36,7 +36,7 @@ _JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justific
 
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return modelo, catalogues_for_m130_gate_tests(catalogues)
 
 

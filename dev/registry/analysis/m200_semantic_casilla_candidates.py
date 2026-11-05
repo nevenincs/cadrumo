@@ -104,7 +104,7 @@ def classify_m200_casilla_candidates(
         field = target_fields[key]
         sibling_field = sibling_fields.get(key)
         sibling_entry = sibling_entries.get(key)
-        disposition, reason, proposed_id, proposed_kind = _classify_sibling(
+        disposition, reason, proposed_id, proposed_kind = classify_sibling(
             field,
             sibling_field,
             sibling_entry,
@@ -193,7 +193,7 @@ def _load_bundled_candidates() -> tuple[M200CasillaCandidate, ...]:
     )
 
 
-def _classify_sibling(
+def classify_sibling(
     target_field: RecordDesignIntermediateField,
     sibling_field: RecordDesignIntermediateField | None,
     sibling_entry: SemanticMapEntry | None,

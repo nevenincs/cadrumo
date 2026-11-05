@@ -36,8 +36,8 @@ from ..diagnostic_classification import (
 from ..export_proof import FilingExportProofChannel
 from ..filing_export_conformance_enrollment import (
     FilingExportConformanceEnrollmentReport,
-    _derive_static_filing_export_conformance_enrollment,
     derive_diagnostic_filing_export_conformance_enrollment,
+    derive_static_filing_export_conformance_enrollment,
 )
 from ..filing_export_conformance_vectors import (
     FilingExportConformanceVector,
@@ -290,7 +290,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
         refusal_reason="law_selection_failed",
         refusal_detail="synthetic static selection failure",
     )
-    strict_report = _derive_static_filing_export_conformance_enrollment(
+    strict_report = derive_static_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -299,7 +299,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
         strict_validation_error=None,
         validated_authority=None,
     )
-    diagnostic_report = _derive_static_filing_export_conformance_enrollment(
+    diagnostic_report = derive_static_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),

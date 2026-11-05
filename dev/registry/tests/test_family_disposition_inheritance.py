@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.schema_family_coverage import build_revision_coverage_manifest
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -123,7 +123,7 @@ def _chain(tmp_path: Path, *editions: tuple[str, str], link: str = "predecessor"
     """Write the editions in order; each later one links to the one before it."""
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     previous: str | None = None
     for revision_id, extra in editions:
         link_line = "" if previous is None else f'{link} = "{previous}"\n'

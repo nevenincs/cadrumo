@@ -12,9 +12,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from dev.registry.analysis.casilla_lineage_seed_design import (
-    _DESIGN_BOX,
+    DESIGN_BOX,
     DesignInventory,
-    _defined_box,
+    defined_box,
     parse_design_inventory,
     printed_box,
 )
@@ -39,42 +39,42 @@ def _boxed_casilla(number: str) -> CasillaDefinition:
 
 
 def test_reads_a_five_digit_printed_box() -> None:
-    assert _DESIGN_BOX.findall("Base imponible [00101] del ejercicio") == ["00101"]
+    assert DESIGN_BOX.findall("Base imponible [00101] del ejercicio") == ["00101"]
 
 
 def test_still_reads_shorter_printed_boxes() -> None:
-    assert _DESIGN_BOX.findall("[1] [07] [123] [4567]") == ["1", "07", "123", "4567"]
+    assert DESIGN_BOX.findall("[1] [07] [123] [4567]") == ["1", "07", "123", "4567"]
 
 
 def test_reads_every_box_on_a_line_of_five_digit_numbering() -> None:
     line = "[00101] + [00102] - [03442] = [00955]"
-    assert _DESIGN_BOX.findall(line) == ["00101", "00102", "03442", "00955"]
+    assert DESIGN_BOX.findall(line) == ["00101", "00102", "03442", "00955"]
 
 
 def test_refuses_a_run_longer_than_the_widest_numbering() -> None:
-    assert _DESIGN_BOX.findall("[123456]") == []
+    assert DESIGN_BOX.findall("[123456]") == []
 
 
 def test_reads_the_lettered_boxes_modelo_036_prints() -> None:
     line = "Casilla [A4] y casilla [A72] | [B38] | [B3B] | [C71] | [C70] | [B9] | [B8] | [B10]"
-    assert _DESIGN_BOX.findall(line) == ["A4", "A72", "B38", "B3B", "C71", "C70", "B9", "B8", "B10"]
+    assert DESIGN_BOX.findall(line) == ["A4", "A72", "B38", "B3B", "C71", "C70", "B9", "B8", "B10"]
 
 
 def test_reads_the_suffixed_boxes_modelo_036_prints() -> None:
     line = "[412bis] | [433bis] | [454bis] | [4774bis] | [716.a] | [717.b]"
-    assert _DESIGN_BOX.findall(line) == ["412bis", "433bis", "454bis", "4774bis", "716.a", "717.b"]
+    assert DESIGN_BOX.findall(line) == ["412bis", "433bis", "454bis", "4774bis", "716.a", "717.b"]
 
 
 @pytest.mark.parametrize("number", ["A4", "A72", "B3B", "412bis", "4774bis", "716.a"])
 def test_a_non_numeric_box_matches_the_row_numbered_with_it(number: str) -> None:
-    printed = _defined_box(f"Denominacion social [{number}]")
+    printed = defined_box(f"Denominacion social [{number}]")
     assert printed == number
     assert printed == printed_box(_boxed_casilla(number))
 
 
 @pytest.mark.parametrize("cell", ["[AB12]", "[A123]", "[a4]", "[123456]", "[412ter]", "[716.ab]"])
 def test_refuses_a_shape_the_record_designs_do_not_print(cell: str) -> None:
-    assert _DESIGN_BOX.findall(cell) == []
+    assert DESIGN_BOX.findall(cell) == []
 
 
 _COMPONENT_DESIGN = """# Pag. 3

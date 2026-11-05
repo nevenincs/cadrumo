@@ -31,7 +31,7 @@ class NoteAbsentFillDeclaration(BaseModel):
     fill: Literal["spaces"]
 
 
-_NOTE_ABSENT_FILLS: Final[dict[str, NoteAbsentFillDeclaration]] = {
+NOTE_ABSENT_FILLS: Final[dict[str, NoteAbsentFillDeclaration]] = {
     "aeat-dr-369-2021": NoteAbsentFillDeclaration(
         source_ref="aeat-dr-369-2021",
         source_sha256="b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
@@ -54,7 +54,7 @@ _NOTE_ABSENT_FILLS: Final[dict[str, NoteAbsentFillDeclaration]] = {
 
 def note_absent_fill_for(source: RecordDesignIntermediateSource) -> NoteAbsentFillDeclaration | None:
     """Return the reading only when it matches the parser-read source identity."""
-    declaration = _NOTE_ABSENT_FILLS.get(str(source.source_ref))
+    declaration = NOTE_ABSENT_FILLS.get(str(source.source_ref))
     if declaration is not None and declaration.source_sha256 != source.source_sha256:
         raise RegistryValidationError("absent-fill note is not pinned to the parser-read source SHA-256")
     return declaration

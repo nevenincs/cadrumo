@@ -17,9 +17,7 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ..compiler.authority import compiled_bundled_authority
@@ -233,7 +231,7 @@ def test_a_revision_without_a_generated_layout_is_refused_by_name(
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         without_layout = [
             (modelo, revision_id)
             for modelo in sorted(str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test))
@@ -271,7 +269,7 @@ def test_a_cited_source_of_the_wrong_kind_is_refused_by_name_not_treated_as_the_
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
     sources = authority.catalogues.sources
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         candidates = [
             (modelo, revision_id, str(ref))
             for modelo in sorted(str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test))

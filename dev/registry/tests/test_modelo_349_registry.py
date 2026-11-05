@@ -20,85 +20,33 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    DECL_IMPORTE_OPERACIONES_CASILLA as _DECL_IMPORTE_OPERACIONES_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    DECL_IMPORTE_RECTIFICACIONES_CASILLA as _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    DECL_NUMERO_OPERADORES_CASILLA as _DECL_NUMERO_OPERADORES_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    DECL_NUMERO_RECTIFICACIONES_CASILLA as _DECL_NUMERO_RECTIFICACIONES_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    DECLARANT_SUMMARY_CASILLAS as _DECLARANT_SUMMARY_CASILLAS,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_CADENCE_LEGAL_REF as _M349_CADENCE_LEGAL_REF,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_CADENCE_REQUIRED_TEXT as _M349_CADENCE_REQUIRED_TEXT,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_GB_XI_ORDINARY_BINDINGS as _M349_GB_XI_ORDINARY_BINDINGS,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_GB_XI_ORDINARY_REQUIRED_TEXT as _M349_GB_XI_ORDINARY_REQUIRED_TEXT,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_GB_XI_RECTIFICATION_BINDINGS as _M349_GB_XI_RECTIFICATION_BINDINGS,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_GB_XI_RECTIFICATION_REQUIRED_TEXT as _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    M349_GB_XI_SOURCE_REF as _M349_GB_XI_SOURCE_REF,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OFFICIAL_FIELD_POSITIONS as _OFFICIAL_FIELD_POSITIONS,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OFFICIAL_FIELD_WIDTHS as _OFFICIAL_FIELD_WIDTHS,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OP_APELLIDOS_RAZON_SOCIAL_CASILLA as _OP_APELLIDOS_RAZON_SOCIAL_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OP_BASE_IMPONIBLE_CASILLA as _OP_BASE_IMPONIBLE_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OP_CLAVE_OPERACION_CASILLA as _OP_CLAVE_OPERACION_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OP_CODIGO_PAIS_CASILLA as _OP_CODIGO_PAIS_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    OP_NIF_COMUNITARIO_CASILLA as _OP_NIF_COMUNITARIO_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    RECT_BASE_ANTERIOR_CASILLA as _RECT_BASE_ANTERIOR_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    RECT_BASE_RECTIFICADA_CASILLA as _RECT_BASE_RECTIFICADA_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    RECT_EJERCICIO_RECTIFICADO_CASILLA as _RECT_EJERCICIO_RECTIFICADO_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    RECT_PERIODO_RECTIFICADO_CASILLA as _RECT_PERIODO_RECTIFICADO_CASILLA,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    WWW6_HOST as _WWW6_HOST,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    fixed_width_record as _fixed_width_record,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    load_modelo_349 as _load_modelo_349,
-)
-from cadrumo.domain.calculations.registry.tests.modelo_349_registry_support import (
-    modelo_349_revision as _modelo_349_revision,
+    DECL_IMPORTE_OPERACIONES_CASILLA,
+    DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+    DECL_NUMERO_OPERADORES_CASILLA,
+    DECL_NUMERO_RECTIFICACIONES_CASILLA,
+    DECLARANT_SUMMARY_CASILLAS,
+    M349_CADENCE_LEGAL_REF,
+    M349_CADENCE_REQUIRED_TEXT,
+    M349_GB_XI_ORDINARY_BINDINGS,
+    M349_GB_XI_ORDINARY_REQUIRED_TEXT,
+    M349_GB_XI_RECTIFICATION_BINDINGS,
+    M349_GB_XI_RECTIFICATION_REQUIRED_TEXT,
+    M349_GB_XI_SOURCE_REF,
+    OFFICIAL_FIELD_POSITIONS,
+    OFFICIAL_FIELD_WIDTHS,
+    OP_APELLIDOS_RAZON_SOCIAL_CASILLA,
+    OP_BASE_IMPONIBLE_CASILLA,
+    OP_CLAVE_OPERACION_CASILLA,
+    OP_CODIGO_PAIS_CASILLA,
+    OP_NIF_COMUNITARIO_CASILLA,
+    RECT_BASE_ANTERIOR_CASILLA,
+    RECT_BASE_RECTIFICADA_CASILLA,
+    RECT_EJERCICIO_RECTIFICADO_CASILLA,
+    RECT_PERIODO_RECTIFICADO_CASILLA,
+    WWW6_HOST,
+    fixed_width_record,
+    load_modelo_349,
+    modelo_349_revision,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
@@ -114,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 @cache
 def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
     return build_snapshot(
         modelo,
         catalogues,
@@ -125,7 +73,7 @@ def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
 
 
 def test_committed_modelo_349_validates_against_catalogues() -> None:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
 
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
@@ -153,7 +101,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
 
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
-    modelo, _ = _load_modelo_349()
+    modelo, _ = load_modelo_349()
     snapshot = _snapshot_349(2026, "01")
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
@@ -181,10 +129,10 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
 
 
 def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    for casilla_id, (expected_start, expected_end) in _OFFICIAL_FIELD_POSITIONS.items():
+    for casilla_id, (expected_start, expected_end) in OFFICIAL_FIELD_POSITIONS.items():
         assert casilla_id in casillas_by_id, f"missing casilla {casilla_id!r}"
         casilla = casillas_by_id[casilla_id]
         expected_number = str(expected_start) if expected_start == expected_end else f"{expected_start}-{expected_end}"
@@ -196,21 +144,21 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
 
 def test_committed_modelo_349_casilla_data_types_match_official_record_design() -> None:
     expected_types = (
-        (_DECL_NUMERO_OPERADORES_CASILLA, "integer"),
-        (_DECL_IMPORTE_OPERACIONES_CASILLA, "money"),
-        (_DECL_NUMERO_RECTIFICACIONES_CASILLA, "integer"),
-        (_DECL_IMPORTE_RECTIFICACIONES_CASILLA, "money"),
-        (_OP_CODIGO_PAIS_CASILLA, "country_code"),
-        (_OP_NIF_COMUNITARIO_CASILLA, "nif_iva"),
-        (_OP_APELLIDOS_RAZON_SOCIAL_CASILLA, "text"),
-        (_OP_CLAVE_OPERACION_CASILLA, "text"),
-        (_OP_BASE_IMPONIBLE_CASILLA, "money"),
-        (_RECT_EJERCICIO_RECTIFICADO_CASILLA, "year"),
-        (_RECT_PERIODO_RECTIFICADO_CASILLA, "period_code"),
-        (_RECT_BASE_RECTIFICADA_CASILLA, "money"),
-        (_RECT_BASE_ANTERIOR_CASILLA, "money"),
+        (DECL_NUMERO_OPERADORES_CASILLA, "integer"),
+        (DECL_IMPORTE_OPERACIONES_CASILLA, "money"),
+        (DECL_NUMERO_RECTIFICACIONES_CASILLA, "integer"),
+        (DECL_IMPORTE_RECTIFICACIONES_CASILLA, "money"),
+        (OP_CODIGO_PAIS_CASILLA, "country_code"),
+        (OP_NIF_COMUNITARIO_CASILLA, "nif_iva"),
+        (OP_APELLIDOS_RAZON_SOCIAL_CASILLA, "text"),
+        (OP_CLAVE_OPERACION_CASILLA, "text"),
+        (OP_BASE_IMPONIBLE_CASILLA, "money"),
+        (RECT_EJERCICIO_RECTIFICADO_CASILLA, "year"),
+        (RECT_PERIODO_RECTIFICADO_CASILLA, "period_code"),
+        (RECT_BASE_RECTIFICADA_CASILLA, "money"),
+        (RECT_BASE_ANTERIOR_CASILLA, "money"),
     )
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     for casilla_id, expected_data_type in expected_types:
         casilla = next(item for item in revision.casillas if item.id == casilla_id)
@@ -218,12 +166,12 @@ def test_committed_modelo_349_casilla_data_types_match_official_record_design() 
 
 
 def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     expected_ids = {
-        _OP_BASE_IMPONIBLE_CASILLA,
-        _RECT_BASE_RECTIFICADA_CASILLA,
-        _RECT_BASE_ANTERIOR_CASILLA,
+        OP_BASE_IMPONIBLE_CASILLA,
+        RECT_BASE_RECTIFICADA_CASILLA,
+        RECT_BASE_ANTERIOR_CASILLA,
     }
 
     found_ids = {casilla.id for casilla in revision.casillas if casilla.semantic_role == "base_intracomunitaria"}
@@ -240,23 +188,23 @@ def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
 
 
 def test_committed_modelo_349_casilla_widths_match_official_record_design() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     for casilla in revision.casillas:
-        if casilla.id not in _OFFICIAL_FIELD_WIDTHS:
+        if casilla.id not in OFFICIAL_FIELD_WIDTHS:
             continue
         if "-" in casilla.number:
             start, end = casilla.number.split("-", 1)
             actual_length = int(end) - int(start) + 1
         else:
             actual_length = 1
-        assert actual_length == _OFFICIAL_FIELD_WIDTHS[casilla.id], (
+        assert actual_length == OFFICIAL_FIELD_WIDTHS[casilla.id], (
             f"casilla {casilla.id!r} byte length {actual_length} does not match official "
-            f"record-design length {_OFFICIAL_FIELD_WIDTHS[casilla.id]}"
+            f"record-design length {OFFICIAL_FIELD_WIDTHS[casilla.id]}"
         )
 
 
 def test_committed_modelo_349_authenticated_read_surface_contract() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
     assert auth_surface.surface == "authenticated_read_surface"
@@ -275,13 +223,13 @@ def test_committed_modelo_349_authenticated_read_surface_contract() -> None:
         "document-submission",
         "declaration-submission",
     } <= forbidden, "missing forbidden actions: required - forbidden"
-    assert _WWW6_HOST in auth_surface.allowed_hosts
+    assert WWW6_HOST in auth_surface.allowed_hosts
     for host in auth_surface.allowed_hosts:
         assert host.endswith(AEAT_HOST_SUFFIX_EXPECTED), f"non-AEAT host allowed: {host!r}"
 
 
 def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> None:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
     assert len(revision.workbook_parity_refs) == 1
@@ -297,9 +245,9 @@ def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> N
 
 
 def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instructions() -> None:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    source = catalogues.sources[_M349_GB_XI_SOURCE_REF]
+    source = catalogues.sources[M349_GB_XI_SOURCE_REF]
     layout_source = catalogues.sources["boe-modelo-349-form-2010"]
 
     assert source.evidence_tier == "official_source_guidance"
@@ -312,46 +260,46 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     verify_source_file(REPO_ROOT, source)
 
     source_text = normalise_corpus_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
-    for required_text in _M349_GB_XI_ORDINARY_REQUIRED_TEXT + _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT:
+    for required_text in M349_GB_XI_ORDINARY_REQUIRED_TEXT + M349_GB_XI_RECTIFICATION_REQUIRED_TEXT:
         assert normalise_corpus_text(required_text) in source_text
 
     bindings = {binding.id: binding for binding in revision.bindings}
     expected_by_binding = {
-        **{binding_id: _M349_GB_XI_ORDINARY_REQUIRED_TEXT for binding_id in _M349_GB_XI_ORDINARY_BINDINGS},
-        **{binding_id: _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT for binding_id in _M349_GB_XI_RECTIFICATION_BINDINGS},
+        **{binding_id: M349_GB_XI_ORDINARY_REQUIRED_TEXT for binding_id in M349_GB_XI_ORDINARY_BINDINGS},
+        **{binding_id: M349_GB_XI_RECTIFICATION_REQUIRED_TEXT for binding_id in M349_GB_XI_RECTIFICATION_BINDINGS},
     }
     for binding_id, expected_required_text in expected_by_binding.items():
         binding = bindings[binding_id]
-        assert _M349_GB_XI_SOURCE_REF in binding.source_refs
+        assert M349_GB_XI_SOURCE_REF in binding.source_refs
         instruction_required_texts = {
             citation.required_text
             for citation in binding.source_citations
-            if citation.source_ref == _M349_GB_XI_SOURCE_REF
+            if citation.source_ref == M349_GB_XI_SOURCE_REF
         }
         assert expected_required_text in instruction_required_texts
 
 
 def test_committed_modelo_349_cadence_threshold_links_to_riva_art_81_corpus() -> None:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    reference = catalogues.legal[_M349_CADENCE_LEGAL_REF]
+    reference = catalogues.legal[M349_CADENCE_LEGAL_REF]
 
-    assert _M349_CADENCE_LEGAL_REF in modelo.legal_refs
-    assert _M349_CADENCE_LEGAL_REF in revision.legal_refs
-    assert _M349_CADENCE_LEGAL_REF in revision.constructs[0].legal_refs
+    assert M349_CADENCE_LEGAL_REF in modelo.legal_refs
+    assert M349_CADENCE_LEGAL_REF in revision.legal_refs
+    assert M349_CADENCE_LEGAL_REF in revision.constructs[0].legal_refs
     assert reference.corpus_ref == "corpus/normatives/html/rd-1624-1992-art-81.html#a81"
     assert reference.effective_from == date(2020, 3, 1)
-    assert reference.required_text == _M349_CADENCE_REQUIRED_TEXT
+    assert reference.required_text == M349_CADENCE_REQUIRED_TEXT
 
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
     corpus_path_text = reference.corpus_ref.split("#", 1)[0]
     corpus_text = normalise_corpus_text((bundled_path() / corpus_path_text).read_text(encoding="utf-8"))
-    for required_text in _M349_CADENCE_REQUIRED_TEXT:
+    for required_text in M349_CADENCE_REQUIRED_TEXT:
         assert normalise_corpus_text(required_text) in corpus_text
 
 
 def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     assert len(revision.constructs) == 1
     construct = revision.constructs[0]
 
@@ -364,7 +312,7 @@ def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
 
 
 def test_committed_modelo_349_filing_schedules_split_monthly_and_quarterly_by_threshold() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     schedules_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
     assert set(schedules_by_id) == {"modelo-349-trimestral", "modelo-349-mensual"}
@@ -373,27 +321,27 @@ def test_committed_modelo_349_filing_schedules_split_monthly_and_quarterly_by_th
     assert quarterly.period_kind == "quarterly"
     assert quarterly.periods == ("1T", "2T", "3T", "4T")
     assert quarterly.profile_condition_mode == "all"
-    assert _M349_CADENCE_LEGAL_REF in quarterly.legal_refs
+    assert M349_CADENCE_LEGAL_REF in quarterly.legal_refs
     quarterly_predicates = {condition.field: condition for condition in quarterly.profile_conditions}
     assert quarterly_predicates["does_intracomunitario"].value is True
     quarterly_threshold = quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"]
     assert quarterly_threshold.op == "equals"
     assert quarterly_threshold.value is False
-    assert _M349_CADENCE_LEGAL_REF in quarterly_threshold.legal_refs
+    assert M349_CADENCE_LEGAL_REF in quarterly_threshold.legal_refs
 
     monthly = schedules_by_id["modelo-349-mensual"]
     assert monthly.period_kind == "monthly"
     assert monthly.periods == ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
-    assert _M349_CADENCE_LEGAL_REF in monthly.legal_refs
+    assert M349_CADENCE_LEGAL_REF in monthly.legal_refs
     monthly_predicates = {condition.field: condition for condition in monthly.profile_conditions}
     assert monthly_predicates["does_intracomunitario"].value is True
     monthly_threshold = monthly_predicates["iva.intracommunity_operations_exceed_50000_eur"]
     assert monthly_threshold.value is True
-    assert _M349_CADENCE_LEGAL_REF in monthly_threshold.legal_refs
+    assert M349_CADENCE_LEGAL_REF in monthly_threshold.legal_refs
 
 
 def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_year() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     expected_periods = {f"{m:02d}" for m in range(1, 13)} | {f"{q}T" for q in range(1, 5)}
     by_year: dict[int, set[str]] = {}
@@ -503,7 +451,7 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
             ("4T", date(2027, 2, 1)),
         ),
     }
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     actual = {
         year: tuple(
@@ -520,7 +468,7 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
 
 
 def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_projection() -> None:
-    modelo, _ = _load_modelo_349()
+    modelo, _ = load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
     expected_periods = {f"{month:02d}" for month in range(1, 13)} | {f"{quarter}T" for quarter in range(1, 5)}
 
@@ -554,7 +502,7 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
 
 
 def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     seen: set[tuple[int, str]] = set()
     for window in revision.deadline_windows:
         key = (window.period.filing_year, window.period.registry_token)
@@ -563,7 +511,7 @@ def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
 
 
 def test_committed_modelo_349_deadline_app_link_is_registered() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     deadline_links = [link for link in revision.application_links if link.surface == "deadline"]
     assert len(deadline_links) == 1
     assert deadline_links[0].id == "modelo-349-deadline"
@@ -571,7 +519,7 @@ def test_committed_modelo_349_deadline_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_export_layout_declares_three_fixed_width_records() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     assert len(revision.export_layouts) == 1
     layout = revision.export_layouts[0]
     assert layout.id == "modelo-349-fichero"
@@ -585,7 +533,7 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
 
 
 def test_committed_modelo_349_export_records_match_fixed_width_contract() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     # The DERIVED layout, not the raw one. `revision.export_layouts` holds only
     # the INLINE fields; M349's declarante record takes positions 1..58 from
     # bindings, so the raw record starts at offset 59 and the contiguity walk
@@ -633,7 +581,7 @@ def test_committed_modelo_349_export_records_match_fixed_width_contract() -> Non
 
 
 def test_committed_modelo_349_export_app_link_is_registered() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     export_links = [link for link in revision.application_links if link.surface == "export"]
     assert len(export_links) == 1
     assert export_links[0].id == "modelo-349-export"
@@ -641,13 +589,13 @@ def test_committed_modelo_349_export_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_construct_includes_export_layout() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     construct = revision.constructs[0]
     assert set(construct.export_layouts) == {layout.id for layout in revision.export_layouts}
 
 
 def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casillas() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     profiles_by_id = {profile.id: profile for profile in revision.extraction_profiles}
     assert set(profiles_by_id) == {"modelo-349-declaracion-pdf", "modelo-349-submitted-file"}
@@ -656,7 +604,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
     assert pdf_profile.surface == "declaracion_pdf"
     assert pdf_profile.parser == "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
     assert pdf_profile.failure_semantics == "fail_hard"
-    assert {t.casilla_id for t in pdf_profile.target_casillas} == set(_DECLARANT_SUMMARY_CASILLAS)
+    assert {t.casilla_id for t in pdf_profile.target_casillas} == set(DECLARANT_SUMMARY_CASILLAS)
 
     submitted_profile = profiles_by_id["modelo-349-submitted-file"]
     assert submitted_profile.surface == "export_record"
@@ -667,7 +615,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
 
 
 def test_committed_modelo_349_extractor_app_link_is_registered() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     extractor_links = [link for link in revision.application_links if link.surface == "extractor"]
     assert len(extractor_links) == 1
     assert extractor_links[0].id == "modelo-349-extractor"
@@ -675,7 +623,7 @@ def test_committed_modelo_349_extractor_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     construct = revision.constructs[0]
     assert set(construct.extraction_profiles) == {profile.id for profile in revision.extraction_profiles}
 
@@ -684,7 +632,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
     snapshot = _snapshot_349(2026, "1T")
     layout = resolve_export_layout(snapshot).layout
 
-    declarante = _fixed_width_record(
+    declarante = fixed_width_record(
         500,
         {
             (1, 1): "1",
@@ -705,7 +653,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
             (171, 185): "10000".zfill(15),
         },
     )
-    operador = _fixed_width_record(
+    operador = fixed_width_record(
         500,
         {
             (1, 1): "2",
@@ -719,7 +667,7 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
             (134, 146): "150050".zfill(13),
         },
     )
-    rectificacion = _fixed_width_record(
+    rectificacion = fixed_width_record(
         500,
         {
             (1, 1): "2",
@@ -749,10 +697,10 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
     rect = "modelo-349-rectificacion"
 
     # Declarant casillas remain casilla-kind fields and parse via casilla_id.
-    assert by_record_casilla[(decl, _DECL_NUMERO_OPERADORES_CASILLA)] == Decimal("2")
-    assert by_record_casilla[(decl, _DECL_IMPORTE_OPERACIONES_CASILLA)] == Decimal("1500.50")
-    assert by_record_casilla[(decl, _DECL_NUMERO_RECTIFICACIONES_CASILLA)] == Decimal("1")
-    assert by_record_casilla[(decl, _DECL_IMPORTE_RECTIFICACIONES_CASILLA)] == Decimal("100.00")
+    assert by_record_casilla[(decl, DECL_NUMERO_OPERADORES_CASILLA)] == Decimal("2")
+    assert by_record_casilla[(decl, DECL_IMPORTE_OPERACIONES_CASILLA)] == Decimal("1500.50")
+    assert by_record_casilla[(decl, DECL_NUMERO_RECTIFICACIONES_CASILLA)] == Decimal("1")
+    assert by_record_casilla[(decl, DECL_IMPORTE_RECTIFICACIONES_CASILLA)] == Decimal("100.00")
 
     # Operador and rectificacion records render via binding-row fields and the
     # parser distinguishes them via the rectification-block discriminator

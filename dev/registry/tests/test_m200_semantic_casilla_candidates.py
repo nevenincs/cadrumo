@@ -229,7 +229,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
     # `_classify_sibling` does not read the sibling field or entry once the
     # current printed identity resolves, which the two `None`s below assert:
     # the classification below holds with no sibling evidence at all.
-    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+    disposition, reason, proposed_id, _kind = subject.classify_sibling(
         target_field,
         None,
         None,
@@ -245,7 +245,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
 def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     target_field = _record_design_field(normalized_description="Importe [01683]")
 
-    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+    disposition, reason, proposed_id, _kind = subject.classify_sibling(
         target_field,
         None,
         None,
@@ -398,18 +398,18 @@ def test_printed_identity_equal_after_padding_is_not_diagnosed_but_a_different_o
     four_digit = _record_design_field(normalized_description="Importe [1501]")
     three_digit = _record_design_field(normalized_description="Importe [387]")
 
-    assert identity_subject._printed_target_number(four_digit) == "1501"
-    assert identity_subject._printed_target_number(three_digit) == "387"
+    assert identity_subject.printed_target_number(four_digit) == "1501"
+    assert identity_subject.printed_target_number(three_digit) == "387"
     matches = identity_subject.M200PrintedIdentityState.MATCHES_MAP_OWNER
-    assert identity_subject._printed_identity_state("1501", "01501", proposal=None) is matches
-    assert identity_subject._printed_identity_state("1501", "1501", proposal=None) is matches
-    assert identity_subject._printed_identity_state("387", "00387", proposal=None) is matches
+    assert identity_subject.printed_identity_state("1501", "01501", proposal=None) is matches
+    assert identity_subject.printed_identity_state("1501", "1501", proposal=None) is matches
+    assert identity_subject.printed_identity_state("387", "00387", proposal=None) is matches
     assert (
-        identity_subject._printed_identity_state("1501", "01502", proposal=None)
+        identity_subject.printed_identity_state("1501", "01502", proposal=None)
         is identity_subject.M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
     )
     assert (
-        identity_subject._printed_identity_state(None, "01501", proposal=None)
+        identity_subject.printed_identity_state(None, "01501", proposal=None)
         is identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY
     )
 
@@ -458,13 +458,13 @@ def test_target_identity_classifier_proposes_only_the_unique_segment_qualified_o
     entry = _casilla_entries(target_map)[0].model_copy(update={"casilla_id": "588"})
     field = _record_design_field(normalized_description="Importe", record_identity="DP200018")
 
-    disposition, proposed = identity_subject._classify_noncanonical_map_owner(
+    disposition, proposed = identity_subject.classify_noncanonical_map_owner(
         entry, target_map, field=field, known_ids=frozenset({"DP200018:00588", "DP200014B:00588"})
     )
     assert disposition is identity_subject.M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL
     assert proposed == "DP200018:00588"
 
     with pytest.raises(ValueError, match="ambiguous or missing"):
-        identity_subject._classify_noncanonical_map_owner(
+        identity_subject.classify_noncanonical_map_owner(
             entry, target_map, field=field, known_ids=frozenset({"DP200014B:00588"})
         )

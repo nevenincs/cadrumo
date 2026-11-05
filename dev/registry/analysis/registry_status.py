@@ -434,16 +434,16 @@ def collect_registry_status(
     resolved_source_root = source_root or bundled_path()
     resolved_descriptor = authority_descriptor or bundled_authority_descriptor_path()
     details: list[str] = []
-    authority, valid = _collect_registry_validity(resolved_registry_root, resolved_source_root, details)
-    oracles = _collect_oracle_status(resolved_registry_root, details)
-    target_census_failed, targets, target_findings = _collect_target_axis(
+    authority, valid = collect_registry_validity(resolved_registry_root, resolved_source_root, details)
+    oracles = collect_oracle_status(resolved_registry_root, details)
+    target_census_failed, targets, target_findings = collect_target_axis(
         authority,
         resolved_registry_root,
         disposition_ledger,
         details,
         resolved_source_root,
     )
-    authority_status, recorded_digest, candidate_digest = _collect_authority_currency(
+    authority_status, recorded_digest, candidate_digest = collect_authority_currency(
         resolved_descriptor,
         resolved_registry_root,
         resolved_source_root,
@@ -475,7 +475,7 @@ def collect_registry_status(
     )
 
 
-def _collect_registry_validity(
+def collect_registry_validity(
     registry_root: Path,
     source_root: Path,
     details: list[str],
@@ -488,7 +488,7 @@ def _collect_registry_validity(
         return None, False
 
 
-def _collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
+def collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
     """Audit source oracles independently from the registry validity axis."""
     try:
         oracle_report = audit_registry_oracles(registry_root, environment=OracleEnvironment.PRODUCTION)
@@ -501,7 +501,7 @@ def _collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
         return False
 
 
-def _collect_target_axis(
+def collect_target_axis(
     authority: ValidatedRegistryAuthority | None,
     registry_root: Path,
     disposition_ledger: Path | None,
@@ -599,7 +599,7 @@ def _project_generated_targets(
     )
 
 
-def _collect_authority_currency(
+def collect_authority_currency(
     descriptor: Path,
     registry_root: Path,
     source_root: Path,
@@ -752,7 +752,7 @@ def _export_placement_lane(census: ExportPlacementCensus) -> str:
     return "partial" if census.gaps else "passed"
 
 
-def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
+def registry_status_payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
     """Build the stable status envelope from independently projected report sections."""
     target_counts = dict(status.targets)
     lanes = _status_lanes(status, target_counts)
@@ -978,7 +978,7 @@ def _export_placement_payload(census: ExportPlacementCensus) -> dict[str, object
     }
 
 
-def _render_export_placement(census: ExportPlacementCensus) -> None:
+def render_export_placement(census: ExportPlacementCensus) -> None:
     """Print the placement census beside the name of the population it counted."""
     print(
         f"export_placement({EXPORT_PLACEMENT_POPULATION}): overlaps={census.overlaps} "
@@ -1000,7 +1000,7 @@ def main(argv: list[str] | None = None) -> int:
         source_root=args.source_root,
         authority_descriptor=args.authority_descriptor,
     )
-    payload = _payload(status, blocking=args.check)
+    payload = registry_status_payload(status, blocking=args.check)
     if args.json:
         _print_json_status(status, payload)
     else:
@@ -1028,7 +1028,7 @@ def _print_text_status(status: RegistryStatus) -> None:
     print(f"TARGETS\t{target_values or 'unreadable=1'}")
     print(f"AUTHORITY\t{status.authority}")
     print(f"LOADABLE\t{'pass' if status.loadable else 'fail'}")
-    _render_export_placement(status.export_placement)
+    render_export_placement(status.export_placement)
     for detail in status.details:
         print(f"DETAIL\t{detail}")
 

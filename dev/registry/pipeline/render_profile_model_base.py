@@ -10,13 +10,13 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 
 
-class _StrictModel(BaseModel):
+class StrictModel(BaseModel):
     """Frozen authored boundary with unknown keys forbidden."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-class RenderProfileDesignIdentity(_StrictModel):
+class RenderProfileDesignIdentity(StrictModel):
     """Identity of the exact official design to which rules apply."""
 
     modelo: ModeloId
@@ -25,7 +25,7 @@ class RenderProfileDesignIdentity(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
-class RenderProfileAnchor(_StrictModel):
+class RenderProfileAnchor(StrictModel):
     """Complete parser-owned field identity; no selector or wildcard exists."""
 
     sheet: str = Field(min_length=1)

@@ -9,7 +9,7 @@ import pytest
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from ..semantic_map import SemanticMapEntry
 from ..source_defects import source_defects_for
-from ._m390_semantic_map_support import (
+from .m390_semantic_map_support import (
     assert_page_07_close,
     load_edition_pair,
     render_edition,

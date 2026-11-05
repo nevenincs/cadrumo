@@ -13,22 +13,21 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from dev.registry.compiler.identifier_lineage import identifier_lineage
 
-from . import casilla_identity as _casilla_identity
-from . import revision_materialisation as _revision_materialisation
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .casilla_inheritance import _LabelOrigins
+from . import casilla_identity, revision_materialisation
+from .casilla_inheritance import LabelOrigins
 from .loader_fields import (
-    _INHERITED_SECTION,
-    _REFERENCE_SECTIONS,
+    INHERITED_SECTION,
+    REFERENCE_SECTIONS,
 )
+from .toml_helpers import as_toml_table
 
 
-def _resolve_inherited_references(
+def resolve_inherited_references(
     source_path: Path,
     *,
     revision_id: str,
     table: Mapping[str, object],
-    label_origins: _LabelOrigins,
+    label_origins: LabelOrigins,
 ) -> Mapping[str, object]:
     """Point every inherited casilla's formula and binding references at this edition's own declarations.
 
@@ -50,7 +49,7 @@ def _resolve_inherited_references(
     reference resolves to itself.
     """
     context = f"{source_path}: revision {revision_id!r}"
-    rows = _revision_materialisation._raw_casilla_rows(source_path, revision_id, table)
+    rows = revision_materialisation.raw_casilla_rows(source_path, revision_id, table)
     if len(rows) != len(label_origins):
         raise RegistryLoadError(
             f"{context}: label origins cover {len(label_origins)} of the edition's {len(rows)} casillas",
@@ -64,7 +63,7 @@ def _resolve_inherited_references(
     )
     if all(new is old for new, old in zip(resolved, rows, strict=True)):
         return table
-    return {**table, _INHERITED_SECTION: resolved}
+    return {**table, INHERITED_SECTION: resolved}
 
 
 def edition_reference_declarations(
@@ -77,7 +76,7 @@ def edition_reference_declarations(
     inherited row's references against. ``table`` is the frozen materialised
     edition.
     """
-    return {section: _declarations_by_lineage(table, section, revision_id) for section in _REFERENCE_SECTIONS.values()}
+    return {section: _declarations_by_lineage(table, section, revision_id) for section in REFERENCE_SECTIONS.values()}
 
 
 def _declarations_by_lineage(
@@ -88,7 +87,7 @@ def _declarations_by_lineage(
     """Group the edition's declared identifiers of one section by lineage."""
     by_lineage: dict[str, dict[str, None]] = {}
     for raw in as_toml_array(table.get(section, ())) or ():
-        declaration_id = _casilla_identity._row_id(raw)
+        declaration_id = casilla_identity.casilla_identity_row_id(raw)
         if declaration_id is not None:
             by_lineage.setdefault(identifier_lineage(declaration_id, revision_id), {})[declaration_id] = None
     return {lineage: tuple(ids) for lineage, ids in by_lineage.items()}
@@ -106,12 +105,12 @@ def resolve_row_references(
 
     ``row`` is frozen TOML: a reference array is a tuple, and a list is left unresolved.
     """
-    table = _as_toml_table(row)
+    table = as_toml_table(row)
     if table is None:
         return row
-    casilla_id = _casilla_identity._row_id(table)
+    casilla_id = casilla_identity.casilla_identity_row_id(table)
     updates: dict[str, object] = {}
-    for field, section in _REFERENCE_SECTIONS.items():
+    for field, section in REFERENCE_SECTIONS.items():
         value = table.get(field)
 
         def resolve(reference: str, *, field: str = field, section: str = section) -> str:

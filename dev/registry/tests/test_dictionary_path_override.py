@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, XmlDictionaryPathOverride
 
-from ._modelo_100_registry_support import _loaded_registry, _source_root
+from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,17 +36,17 @@ _PH18_ATTRIBUTE_PATH = "/DatosIdentificativos/Hijos/@PH18"
 
 
 def _modelo_100_layout(filing_year: int) -> ExportLayoutDefinition:
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     return modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
 
 
 def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
-    _modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = loaded_registry()
     return xml_dictionary_entries(
         _modelo_100_layout(filing_year),
         sources=catalogues.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
     )
 
@@ -76,10 +76,10 @@ def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     there, this also fails -- which is the outcome we want, because that would
     destroy the provenance the corpus exists to carry.
     """
-    _modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = loaded_registry()
     layout = _modelo_100_layout(filing_year)
     source = catalogues.sources[str(layout.dictionary_source_ref)]
-    published = (_source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
+    published = (source_root() / source.corpus_path).read_text(encoding="iso-8859-1")
 
     assert "PH18=[/DatosIdentificativos/Hijos/PH18]" in published
 
@@ -130,7 +130,7 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
     Without this, a typo leaves the defect shipping while the registry carries a
     declaration that looks like the fix.
     """
-    _modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = loaded_registry()
     typo = _modelo_100_layout(2024).model_copy(
         update={
             "dictionary_path_overrides": (
@@ -148,7 +148,7 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
             typo,
             sources=catalogues.sources,
             source_payloads={
-                str(source.id): (_source_root() / source.corpus_path).read_bytes()
+                str(source.id): (source_root() / source.corpus_path).read_bytes()
                 for source in catalogues.sources.values()
             },
         )
@@ -160,7 +160,7 @@ def test_a_fixed_width_layout_may_not_declare_an_override() -> None:
     The refusal is raised by a model validator, so pydantic re-wraps it; the
     registry message is what carries the reason and is matched here.
     """
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     layout = next(layout for revision in modelos_by_id["303"].revisions.values() for layout in revision.export_layouts)
 
     with pytest.raises(ValidationError, match="reads no dictionary"):

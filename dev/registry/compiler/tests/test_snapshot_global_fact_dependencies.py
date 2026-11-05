@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.authority_component_codec import (
 from cadrumo.domain.calculations.registry.snapshot_globals import SnapshotGlobalCatalogues
 
 from ..authority import compiled_bundled_authority
-from ..authority_database import _decoded_fact_dependencies
+from ..authority_database import decoded_fact_dependencies
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,7 +30,7 @@ def test_snapshot_globals_enrolls_the_fact_required_by_annual_orden_validation()
     fact_queries = tuple(GovernedFactComponentQuery(fact_id) for fact_id in sorted(facts))
     fact_values = tuple(facts[item.fact_id] for item in fact_queries)
 
-    dependencies = _decoded_fact_dependencies(query, payload, fact_queries, fact_values)
+    dependencies = decoded_fact_dependencies(query, payload, fact_queries, fact_values)
 
     # The form geometry is checked when the registry compiles, so loading needs no fact for it.
     assert GovernedFactComponentQuery("form-row-codes") not in dependencies

@@ -12,8 +12,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .record_design_intermediate import RecordDesignIntermediateField
 from .render_profile_eligibility import (
     RenderProfileEligibility,
-    _has_absent_naturaleza,
-    _is_numeric_aeat_type,
+    has_absent_naturaleza,
+    is_numeric_aeat_type,
     normalise_aeat_type,
 )
 from .render_profile_evidence import (
@@ -26,7 +26,7 @@ from .render_profile_rules import (
     SignedMonetaryCompositeRule,
     SingletonNumericRule,
 )
-from .render_profile_validation import _anchor_key, _duplicates, _field_anchor
+from .render_profile_validation import anchor_key, field_anchor, render_profile_validation_duplicates
 from .source_defects import adjudicated_integer_range_for
 from .source_stated_composites import source_stated_composite_integer_digits_for
 
@@ -40,9 +40,9 @@ def validate_render_profile_authority(
     """Validate a complete profile against source-owned identity and eligibility."""
     _require_profile_identities(profile, expected_identity, source_evidence)
     _validate_reviewed_evidence(profile, source_evidence)
-    fixed = {_field_anchor(field): field for field in eligibility.fixed_fields}
+    fixed = {field_anchor(field): field for field in eligibility.fixed_fields}
     _validate_literal_numeric_authority(profile, fixed)
-    eligible = {_field_anchor(field): field for field in eligibility.all_fields}
+    eligible = {field_anchor(field): field for field in eligibility.all_fields}
     _require_exact_profile_coverage(profile, eligible)
     _validate_width_17_authority(profile, eligibility, eligible)
     _validate_singleton_authority(profile, eligible)
@@ -70,11 +70,11 @@ def _validate_literal_numeric_authority(
     fixed: Mapping[RenderProfileAnchor, RecordDesignIntermediateField],
 ) -> None:
     literal_anchors = tuple(rule.anchor for rule in profile.literal_numeric_rules)
-    if _duplicates(literal_anchors):
+    if render_profile_validation_duplicates(literal_anchors):
         raise RegistryValidationError("literal numeric rules contain duplicate exact anchors")
     for rule in profile.literal_numeric_rules:
         field = fixed.get(rule.anchor)
-        if field is None or not _is_numeric_aeat_type(field.aeat_type) or field.length != len(rule.literal):
+        if field is None or not is_numeric_aeat_type(field.aeat_type) or field.length != len(rule.literal):
             raise RegistryValidationError("literal numeric rule conflicts with its official numeric slot")
 
 
@@ -87,14 +87,14 @@ def _require_exact_profile_coverage(
         + tuple(rule.anchor for rule in profile.singleton_rules)
         + tuple(rule.anchor for rule in profile.signed_composite_rules)
     )
-    duplicates = _duplicates(governed)
+    duplicates = render_profile_validation_duplicates(governed)
     if duplicates:
         raise RegistryValidationError(f"render profile contains duplicate or overlapping exact anchors: {duplicates!r}")
     governed_set = set(governed)
     eligible_set = set(eligible)
     if governed_set != eligible_set:
-        missing = sorted(eligible_set - governed_set, key=_anchor_key)
-        unknown = sorted(governed_set - eligible_set, key=_anchor_key)
+        missing = sorted(eligible_set - governed_set, key=anchor_key)
+        unknown = sorted(governed_set - eligible_set, key=anchor_key)
         raise RegistryValidationError(
             "render profile must cover exactly the eligible blank numeric fields; "
             f"missing={missing!r}, unknown={unknown!r}",
@@ -107,7 +107,7 @@ def _validate_width_17_authority(
     eligible: Mapping[RenderProfileAnchor, RecordDesignIntermediateField],
 ) -> None:
     width_17_types = tuple(rule.aeat_type for rule in profile.width_17_rules)
-    duplicate_width_17_types = _duplicates(width_17_types)
+    duplicate_width_17_types = render_profile_validation_duplicates(width_17_types)
     if duplicate_width_17_types:
         raise RegistryValidationError(
             "render profile splits one width-17 AEAT type across multiple membership rules: "
@@ -141,7 +141,7 @@ def _validate_one_singleton_authority(
 ) -> None:
     # PDF numeric spellings canonicalize to ``Numerico``; blank naturezas are
     # eligible for reviewed rules because the source states no type to compare.
-    if field.length == 17 or not (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field)):
+    if field.length == 17 or not (is_numeric_aeat_type(field.aeat_type) or has_absent_naturaleza(field)):
         raise RegistryValidationError(f"smaller singleton rule conflicts with official field at {rule.anchor!r}")
     if (field.aeat_type == "N") != (rule.aeat_type == "N"):
         raise RegistryValidationError(f"singleton sign conflicts with official type at {rule.anchor!r}")
@@ -162,7 +162,7 @@ def _validate_signed_composite_authority(
     eligible: Mapping[RenderProfileAnchor, RecordDesignIntermediateField],
 ) -> None:
     for rule in profile.signed_composite_rules:
-        _validate_signed_composite_source_agreement(rule, eligible[rule.anchor], profile.design_identity)
+        validate_signed_composite_source_agreement(rule, eligible[rule.anchor], profile.design_identity)
 
 
 def _validate_reviewed_evidence(
@@ -294,7 +294,7 @@ _COMPOSITE_DESCRIPTIVE_WIRE_TERMS: Final[re.Pattern[str]] = re.compile(
 )
 
 
-def _validate_signed_composite_source_agreement(
+def validate_signed_composite_source_agreement(
     rule: SignedMonetaryCompositeRule,
     field: RecordDesignIntermediateField,
     identity: RenderProfileDesignIdentity,

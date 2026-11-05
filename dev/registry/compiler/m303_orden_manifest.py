@@ -26,17 +26,17 @@ from cadrumo.domain.calculations.registry.m303_orden_projection_models import (
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ._m303_orden_legal import compile_annual_orden_legal_references
-from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection, require_single_page_edition
-from ._m303_orden_source import (
-    extract_m303_annual_orden_source,
-    validate_m303_annual_orden_lorca_projection,
-)
 from .m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
 )
+from .m303_orden_legal import compile_annual_orden_legal_references
+from .m303_orden_projection_compiler import compile_m303_annual_orden_projection, require_single_page_edition
 from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from .m303_orden_source import (
+    extract_m303_annual_orden_source,
+    validate_m303_annual_orden_lorca_projection,
+)
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloDefinition
@@ -68,7 +68,7 @@ def generate_manifest_with_censuses(
     shipped = load_m303_annual_orden_censuses(registry_root, sources=sources) if registry_root is not None else None
     ejercicios = _annual_orden_years_from_sources(sources) if supported_filing_years is None else supported_filing_years
     for ejercicio in ejercicios:
-        source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
+        source = single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
         census = None if shipped is None else shipped.get(source.id)
         if census is None or census.ejercicio != ejercicio:
             census = extract_m303_annual_orden_source(
@@ -417,7 +417,7 @@ def _annual_orden_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
     return str(path), stat.st_size, stat.st_mtime_ns, digest
 
 
-def _single_annual_orden_source_for_year(
+def single_annual_orden_source_for_year(
     sources: Mapping[SourceRefId, SourceReference],
     *,
     ejercicio: int,

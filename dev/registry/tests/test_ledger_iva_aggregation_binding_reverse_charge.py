@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
@@ -26,17 +26,17 @@ from cadrumo.domain.iva.flow import IvaFlowDirection, derive_flow_for_classifica
 from cadrumo.domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 
 from .ledger_iva_aggregation_support import (
-    _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
-    _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    _M303_SOPORTADO_IMPORTACIONES_CASILLA,
-    _binding,
-    _calculate_303_from_observations,
-    _modelo_303_revision,
-    _observation,
-    _revision_with_bindings,
+    M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
+    M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
+    M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+    M303_SOPORTADO_IMPORTACIONES_CASILLA,
+    calculate_303_from_observations,
+    ledger_iva_aggregation_binding,
+    ledger_iva_aggregation_observation,
+    modelo_303_revision,
+    revision_with_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -63,12 +63,12 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
     nets to zero — mirroring the autorepercutido-interior pair. A ``SOPORTADO``
     domestic recipient reverse-charge row must NOT leak in (different category).
     """
-    revision = _revision_with_bindings(
-        _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
-        _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
+    revision = revision_with_bindings(
+        ledger_iva_aggregation_binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
+        ledger_iva_aggregation_binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
     )
     observations = [
-        _observation(
+        ledger_iva_aggregation_observation(
             applied_rate=Decimal("0.21"),
             ledger_id="aic-isp",
             category=IvaCategory("intra_community_acquisition_reverse_charge"),
@@ -76,7 +76,7 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
             iva=Decimal("84.00"),
             deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
         ),
-        _observation(
+        ledger_iva_aggregation_observation(
             applied_rate=Decimal("0.21"),
             ledger_id="domestic-isp-stray",
             category=IvaCategory("domestic_reverse_charge"),
@@ -110,23 +110,23 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
     (aeat-quality-gates).
     """
     aic_cuota = Decimal("84.00")
-    domestic_only = _calculate_303_from_observations(
+    domestic_only = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
             ),
         ),
     )
-    with_aic = _calculate_303_from_observations(
+    with_aic = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
             ),
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-isp",
                 txn_date=date(2025, 3, 1),
@@ -137,14 +137,14 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
             ),
         ),
     )
-    assert with_aic.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA] == aic_cuota
-    assert with_aic.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA] == aic_cuota
+    assert with_aic.values[M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA] == aic_cuota
+    assert with_aic.values[M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA] == aic_cuota
     # The AIC contribution nets to zero in the resultado (the semantic
     # intracomunitaria casilla feeds both totals equally); the parity casillas
     # are pure official-box exposure, not in the resultado formula.
     assert (
-        with_aic.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
-        == domestic_only.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        with_aic.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        == domestic_only.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     )
 
 
@@ -191,7 +191,7 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
     (``aeat-quality-gates``). Dropping either category from the
     selectors, or splitting them onto separate casillas, breaks this.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         goods = classify_iva(
             _received_from_eu_criteria(kind=TransactionKind("goods")), operation=_authority_operation_for_test
         )
@@ -208,12 +208,12 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
         goods_cuota = Decimal("63.00")
         services_cuota = Decimal("21.00")
         combined = goods_cuota + services_cuota
-        revision = _revision_with_bindings(
-            _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
-            _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
+        revision = revision_with_bindings(
+            ledger_iva_aggregation_binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
+            ledger_iva_aggregation_binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
         )
         observations = [
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-goods-leg",
                 category=goods.category,
@@ -221,7 +221,7 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
                 iva=goods_cuota,
                 deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-services-leg",
                 category=services.category,
@@ -247,9 +247,9 @@ def test_resolve_import_third_country_routes_deducible_only() -> None:
     reverse-charge pairs this is NOT net-zero: there is no offsetting devengado
     binding for imports.
     """
-    revision = _revision_with_bindings(_binding("modelo-303-iva-soportado-importaciones-cuota"))
+    revision = revision_with_bindings(ledger_iva_aggregation_binding("modelo-303-iva-soportado-importaciones-cuota"))
     observations = [
-        _observation(
+        ledger_iva_aggregation_observation(
             applied_rate=Decimal("0.21"),
             ledger_id="import",
             category=IvaCategory("import_third_country"),
@@ -272,23 +272,23 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
     import. Both deltas are computed by comparison, not by summing literals.
     """
     import_cuota = Decimal("33.00")
-    without_import = _calculate_303_from_observations(
+    without_import = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
             ),
         ),
     )
-    with_import = _calculate_303_from_observations(
+    with_import = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
             ),
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="import",
                 txn_date=date(2025, 3, 1),
@@ -299,15 +299,15 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
             ),
         ),
     )
-    assert with_import.values[_M303_SOPORTADO_IMPORTACIONES_CASILLA] == import_cuota
+    assert with_import.values[M303_SOPORTADO_IMPORTACIONES_CASILLA] == import_cuota
     assert (
-        with_import.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
-        - without_import.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        with_import.values[M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        - without_import.values[M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
         == import_cuota
     )
     assert (
-        without_import.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
-        - with_import.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        without_import.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        - with_import.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
         == import_cuota
     )
 
@@ -320,8 +320,8 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
     ``IMPORT_THIRD_COUNTRY`` SOPORTADO observation are both consumed by a binding,
     so neither appears in the unconsumed-declarable advisory's flagged set.
     """
-    revision = _modelo_303_revision()
-    aic = _observation(
+    revision = modelo_303_revision()
+    aic = ledger_iva_aggregation_observation(
         applied_rate=Decimal("0.21"),
         ledger_id="aic",
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
@@ -329,7 +329,7 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
         iva=Decimal("84.00"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
     )
-    import_row = _observation(
+    import_row = ledger_iva_aggregation_observation(
         applied_rate=Decimal("0.21"),
         ledger_id="import",
         category=IvaCategory("import_third_country"),
@@ -357,8 +357,8 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     and sales are issued), so the projection matches what the live classifier
     would emit rather than an impossible combination.
     """
-    revision = _modelo_303_revision()
-    with _indexed_authority_for_test().operation() as operation:
+    revision = modelo_303_revision()
+    with bundled_indexed_authority().operation() as operation:
         categories = resolve_iva_category_catalogue(
             effective_date=revision.valid_from,
             authority=operation,
@@ -418,7 +418,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
                 continue
         flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
         probe_tier = rate_for_category.get(category, IvaRateKind("general"))
-        observation = _observation(
+        observation = ledger_iva_aggregation_observation(
             ledger_id=f"probe-{category.value}",
             category=category,
             rate_kind=probe_tier,
@@ -454,20 +454,20 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
     comparing two calculates, never by summing literals.
     """
     service_cuota = Decimal("21.00")
-    sale = _observation(
+    sale = ledger_iva_aggregation_observation(
         applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
     )
-    without_service = _calculate_303_from_observations(
+    without_service = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(sale,),
     )
-    with_service = _calculate_303_from_observations(
+    with_service = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
             sale,
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 1),
@@ -489,18 +489,18 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
     )
     # Both declared figures move; only the resultado stays put.
     assert (
-        with_service.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
-        - without_service.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        with_service.values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        - without_service.values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
         == service_cuota
     )
     assert (
-        with_service.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
-        - without_service.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        with_service.values[M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        - without_service.values[M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
         == service_cuota
     )
     assert (
-        with_service.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
-        == without_service.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        with_service.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        == without_service.values[M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     )
 
 
@@ -518,14 +518,14 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
     goods_cuota = Decimal("63.00")
     service_cuota = Decimal("21.00")
     combined = goods_cuota + service_cuota
-    result = _calculate_303_from_observations(
+    result = calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
             ),
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
                 txn_date=date(2025, 3, 1),
@@ -534,7 +534,7 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
                 iva=goods_cuota,
                 deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
-            _observation(
+            ledger_iva_aggregation_observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 2),

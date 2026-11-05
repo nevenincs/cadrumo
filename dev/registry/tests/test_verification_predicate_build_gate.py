@@ -37,8 +37,7 @@ from ..compiler.validate_verification_predicates import (
     BLOCKING_ONLY_OPERATORS,
     CASILLA_LIST_OPERATORS,
 )
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from ..conformance.registry_schema_support import with_revision as _with_revision
+from ..conformance.registry_schema_support import committed_modelo, with_revision
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -128,7 +127,7 @@ def _unknown_casilla_cases() -> list[object]:
 
 
 def _gate_message(expression: str, finding_kind: VerificationFindingKind) -> str:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="build-gate:probe",
@@ -150,7 +149,7 @@ def _gate_message(expression: str, finding_kind: VerificationFindingKind) -> str
         },
     )
     try:
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
     except RegistryValidationError as error:
         return str(error)
     return ""
@@ -161,7 +160,7 @@ def _gate_failures(expression: str, finding_kind: VerificationFindingKind) -> li
 
 
 def _assert_locator(failures: list[str], expression: str) -> None:
-    modelo, _ = _committed_modelo("130")
+    modelo, _ = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     assert failures, f"expected the build gate to refuse {expression!r}"
     for failure in failures:

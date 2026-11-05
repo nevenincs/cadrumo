@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
+from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,7 +49,7 @@ _ANCHOR_MODELO = "840"
 
 def _claims() -> list[tuple[str, str, str, int]]:
     """Return ``(modelo, revision, family, formula count)`` for every strong claim."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     found: list[tuple[str, str, str, int]] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
@@ -98,7 +98,7 @@ def test_the_anchor_modelo_really_derives_nothing() -> None:
     Read from the revision rather than from its own prose: no formula, and the
     formulas family itself disposed rather than merely empty.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     modelo = next(m for m in modelos if m.id == _ANCHOR_MODELO)
     revision = modelo.revisions["2003-y-siguientes"]
 

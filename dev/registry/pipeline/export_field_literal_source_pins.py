@@ -30,7 +30,7 @@ _M190_TRANSPORT_SHAS: Final[dict[str, str]] = {
 }
 
 
-def _source_pinned_194_transport_constant(
+def source_pinned_194_transport_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read the sole telematic code in the exact 2024 M194 design."""
@@ -78,7 +78,7 @@ def _source_pinned_194_transport_constant(
     return "T"
 
 
-def _source_pinned_341_pdf_constant(
+def source_pinned_341_pdf_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Adjudicate two exact historical PDF constants with unusual print spelling."""
@@ -128,7 +128,7 @@ def _m341_field_matches(
     )
 
 
-def _source_pinned_349_constant(
+def source_pinned_349_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read four exact PDF prose constants without admitting a general prose grammar."""
@@ -150,7 +150,7 @@ def _source_pinned_349_constant(
     return expected_literal
 
 
-def _source_pinned_190_transport_constant(
+def source_pinned_190_transport_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read the sole T code stated at four exact M190 transport rows."""
@@ -195,7 +195,7 @@ def _m190_transport_field_matches(
     )
 
 
-def _source_pinned_345_transport_constant(
+def source_pinned_345_transport_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read M345's single printed telematic code at its exact PDF anchor."""
@@ -239,7 +239,7 @@ def _m345_transport_field_matches(
     )
 
 
-def _source_pinned_270_transport_constant(
+def source_pinned_270_transport_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read M270's single printed telematic code at its exact PDF anchor."""
@@ -283,7 +283,7 @@ def _m270_transport_field_matches(
     )
 
 
-def _source_pinned_165_transport_constant(
+def source_pinned_165_transport_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:
     """Read the sole T code from M165's two exact official PDF editions."""
@@ -334,7 +334,7 @@ def _m165_transport_field_matches(
     )
 
 
-def _source_pinned_280_transport_without_parsed_content(
+def source_pinned_280_transport_without_parsed_content(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile
 ) -> str | None:
     """Adjudicate a PDF page-break row whose following printed lines say T only.

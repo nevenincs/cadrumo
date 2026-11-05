@@ -19,8 +19,8 @@ from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants im
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ._modelo_303_registry_support import load_modelo_303
 from .authored_edition_support import source_first_exercise, source_with_sha256
+from .modelo_303_registry_support import load_modelo_303
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]

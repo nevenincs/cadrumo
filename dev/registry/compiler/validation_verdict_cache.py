@@ -47,7 +47,7 @@ from dev.cache_root import dev_cache_dir
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _SCHEMA: Final = "registry-validation-verdict/v1"
 #: No validation runs this long; an older lock is abandoned whoever stamped it.
-_LOCK_STALE_SECONDS: Final = 900.0
+LOCK_STALE_SECONDS: Final = 900.0
 #: Waiting longer than this for a peer costs more than validating again.
 _LOCK_WAIT_CEILING_SECONDS: Final = 300.0
 _LOCK_POLL_SECONDS: Final = 0.25
@@ -271,7 +271,7 @@ def _abandoned(path: Path) -> bool:
 def _older_than_stale(path: Path) -> bool:
     """Whether ``path`` has outlived any validation that could still be running."""
     try:
-        return time.time() - path.stat().st_mtime > _LOCK_STALE_SECONDS
+        return time.time() - path.stat().st_mtime > LOCK_STALE_SECONDS
     except OSError:
         return False
 

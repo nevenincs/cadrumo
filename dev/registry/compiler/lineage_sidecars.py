@@ -8,11 +8,9 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.keyed_families import (
-    INHERITED_FAMILY_SPECS as _CANONICAL_INHERITED_FAMILY_SPECS,
-)
-from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
-from cadrumo.domain.calculations.registry.keyed_families import (
-    family_identity_value as _family_identity_value,
+    INHERITED_FAMILY_SPECS,
+    KeyedFamilySpec,
+    family_identity_value,
 )
 from cadrumo.domain.calculations.registry.lineage_attestation import (
     LineageAttestation,
@@ -23,11 +21,11 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 
 from .loader_fields import (
-    _INHERITED_SECTION,
+    INHERITED_SECTION,
 )
 
 
-def _with_lineage_claims(revision: ModeloRevision) -> ModeloRevision:
+def with_lineage_claims(revision: ModeloRevision) -> ModeloRevision:
     """Expose target-edge claims to typed consumers, never to the inheritance input.
 
     Sidecars have already passed membership, uniqueness and exact-edge validation.
@@ -37,7 +35,7 @@ def _with_lineage_claims(revision: ModeloRevision) -> ModeloRevision:
     claims = {
         attestation.identity: attestation
         for attestation in revision.lineage_attestations
-        if attestation.family == _INHERITED_SECTION
+        if attestation.family == INHERITED_SECTION
     }
     if not claims:
         return revision
@@ -60,7 +58,7 @@ def _with_lineage_claims(revision: ModeloRevision) -> ModeloRevision:
     return revision.model_copy(update={"casillas": tuple(rows)})
 
 
-def _validate_lineage_sidecars(
+def validate_lineage_sidecars(
     revisions: Mapping[str, ModeloRevision],
     *,
     predecessors: Mapping[str, str],
@@ -98,13 +96,11 @@ def _lineage_snapshot(
 def _revision_members(revision: ModeloRevision) -> dict[str, tuple[str, ...]]:
     """Index casilla and keyed-family identities from one materialised revision."""
     families = {
-        _INHERITED_SECTION: tuple(
+        INHERITED_SECTION: tuple(
             str(member.continuidad_id) for member in revision.casillas if member.continuidad_id is not None
         )
     }
-    families.update(
-        (family.section, _keyed_family_identities(revision, family)) for family in _CANONICAL_INHERITED_FAMILY_SPECS
-    )
+    families.update((family.section, _keyed_family_identities(revision, family)) for family in INHERITED_FAMILY_SPECS)
     return families
 
 
@@ -115,7 +111,7 @@ def _keyed_family_identities(revision: ModeloRevision, family: KeyedFamilySpec) 
     return tuple(
         str(identity)
         for member in members
-        if family.identity is not None and (identity := _family_identity_value(member, family.identity)) is not None
+        if family.identity is not None and (identity := family_identity_value(member, family.identity)) is not None
     )
 
 

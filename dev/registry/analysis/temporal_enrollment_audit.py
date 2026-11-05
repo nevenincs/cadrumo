@@ -8,7 +8,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from dev.paths import REPO_ROOT
 
 from ..temporal_coverage import compose_temporal_coverage
-from .temporal_enrollment_findings import ENROLLMENT_EXCLUSION_PINS, _declaration_finding
+from .temporal_enrollment_findings import ENROLLMENT_EXCLUSION_PINS, declaration_finding
 from .temporal_enrollment_models import (
     REGISTRY_TEST_ROOT,
     LiteralEnrollmentAudit,
@@ -17,7 +17,7 @@ from .temporal_enrollment_models import (
     RegistryRevisionSubject,
     TemporalEnrollmentExclusionPin,
 )
-from .temporal_enrollment_source import _literal_enrollment_declarations
+from .temporal_enrollment_source import literal_enrollment_declarations
 
 __all__ = [
     "audit_registry_test_enrollment_literals",
@@ -95,12 +95,12 @@ def audit_temporal_enrollment_source(
     ``None`` means no completeness is claimed, and only the identities the rows
     name are checked.
     """
-    declarations = _literal_enrollment_declarations(source, path=path, authority=authority)
+    declarations = literal_enrollment_declarations(source, path=path, authority=authority)
     findings = tuple(
         finding
         for declaration in declarations
         if (
-            finding := _declaration_finding(
+            finding := declaration_finding(
                 declaration,
                 expected=expected,
                 authority=authority,

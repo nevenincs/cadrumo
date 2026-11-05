@@ -229,7 +229,7 @@ def test_one_file_cited_at_several_anchors_is_classified_once(tmp_path: Path, mo
     validation pass scan 415 MB of a 36.8 MB corpus.
     """
     path = _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
-    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
+    corpus_provenance.PROVENANCE_BY_CONTENT.clear()
     reads = _count_reads(monkeypatch)
 
     with corpus_digest_pass():
@@ -245,7 +245,7 @@ def test_one_file_cited_at_several_anchors_is_classified_once(tmp_path: Path, mo
 def test_a_stat_preserving_rewrite_is_reclassified(tmp_path: Path) -> None:
     """The verdict is keyed on content, so a rewrite that forges size and mtime is not served stale."""
     path = _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
-    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
+    corpus_provenance.PROVENANCE_BY_CONTENT.clear()
     ref = "corpus/normatives/html/ley.html#art-1"
     original = path.stat()
 
@@ -261,10 +261,10 @@ def test_a_stat_preserving_rewrite_is_reclassified(tmp_path: Path) -> None:
 
 def test_an_out_of_scope_reference_reads_nothing(tmp_path: Path) -> None:
     """A path outside the normative tree is classified without reading any file."""
-    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
+    corpus_provenance.PROVENANCE_BY_CONTENT.clear()
 
     assert (
         classify_normative_corpus_provenance(tmp_path, "corpus/manuals/renta/2025/part1/source.pdf")
         is NormativeCorpusProvenance.OUT_OF_SCOPE
     )
-    assert not corpus_provenance._PROVENANCE_BY_CONTENT
+    assert not corpus_provenance.PROVENANCE_BY_CONTENT

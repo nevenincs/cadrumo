@@ -12,10 +12,10 @@ from cadrumo.domain.calculations.registry.export_value_policy import (
 )
 
 from .render_profile_evidence import ReviewedEvidence, ReviewedPolicyDecision, SourceStatedCompositeEvidence
-from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, _StrictModel
+from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, StrictModel
 
 
-class Width17MembershipRule(_StrictModel):
+class Width17MembershipRule(StrictModel):
     """Reviewed enumeration of width-17 amount anchors of one AEAT type."""
 
     rule_kind: Literal["width_17_membership"]
@@ -44,7 +44,7 @@ class Width17MembershipRule(_StrictModel):
         return self
 
 
-class SingletonNumericRule(_StrictModel):
+class SingletonNumericRule(StrictModel):
     """One reviewed smaller numeric field; grouping is deliberately impossible."""
 
     rule_kind: Literal["singleton_numeric"]
@@ -240,7 +240,7 @@ def _validate_singleton_evidence(rule: SingletonNumericRule) -> None:
         raise ValueError("reviewed policy must name the exact governed anchor")
 
 
-class LiteralNumericRule(_StrictModel):
+class LiteralNumericRule(StrictModel):
     """The reviewed numeric scale of one exact constant; its wire bytes stay literal."""
 
     rule_kind: Literal["literal_numeric"]
@@ -258,7 +258,7 @@ class LiteralNumericRule(_StrictModel):
         return self
 
 
-class SignedMonetaryCompositeRule(_StrictModel):
+class SignedMonetaryCompositeRule(StrictModel):
     """One reviewed unsplit PDF amount with a reserved blank-or-N leading sign."""
 
     rule_kind: Literal["signed_monetary_composite"]
@@ -275,7 +275,7 @@ class SignedMonetaryCompositeRule(_StrictModel):
         return self
 
 
-class TelematicTransportChoiceRule(_StrictModel):
+class TelematicTransportChoiceRule(StrictModel):
     """A source-pinned choice of the official telematic transport code."""
 
     rule_kind: Literal["telematic_transport_choice"]
@@ -297,7 +297,7 @@ class TelematicTransportChoiceRule(_StrictModel):
         return self
 
 
-class RenderProfileFragment(_StrictModel):
+class RenderProfileFragment(StrictModel):
     """One deterministic, independently reviewable profile fragment."""
 
     schema_version: Literal[1]

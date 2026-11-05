@@ -16,10 +16,6 @@ from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENA
 from ..compiler.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ..form_layout.serialization import FORM_LAYOUT_DIRECTORY, FORM_LAYOUT_FRAGMENT
-from ._tree_validation import (
-    ValidatedGeneratedExportTree,
-    ValidatedHistoricalStaticGeneratedExportTree,
-)
 from .bootstrap_construct_retarget import retarget_bootstrap_constructs_in_revision
 from .bootstrap_supersession import (
     bootstrap_layout_supersession_fingerprint,
@@ -35,15 +31,15 @@ from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .tree_publication_artifacts import (
-    _delete_verified_staged_candidate_if_present,
-    _require_complete_regular_tree,
-    _require_link_free_regular_members_allow_empty,
-    _verify_generated_export_companion,
-    _verify_post_cutover_target,
-    _verify_recovery_package_against_current_authorities,
+    delete_verified_staged_candidate_if_present,
+    require_complete_regular_tree,
+    require_link_free_regular_members_allow_empty,
+    verify_generated_export_companion,
+    verify_post_cutover_target,
+    verify_recovery_package_against_current_authorities,
 )
 from .tree_publication_contracts import (
-    _JOURNAL_SCHEMA_VERSION,
+    JOURNAL_SCHEMA_VERSION,
     GeneratedExportPublicationJournal,
     GeneratedExportSupersession,
     GeneratedExportTransactionPaths,
@@ -51,12 +47,16 @@ from .tree_publication_contracts import (
     PublishedGeneratedExportTree,
 )
 from .tree_publication_journal import (
-    _delete_journal,
+    delete_journal,
     write_generated_export_publication_journal,
+)
+from .tree_validation import (
+    ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
 )
 
 
-def _publish_superseding_revision_bundle(
+def publish_superseding_revision_bundle(
     *,
     context: GeneratedExportTreePublicationContext,
     target_export_root: Path,
@@ -110,7 +110,7 @@ def _publish_superseding_revision_bundle(
             supersession=supersession,
             candidate_revision_sha256=candidate_revision_sha256,
         )
-        journal = _cut_over_supersession_revision(
+        journal = cut_over_supersession_revision(
             context=context,
             target_revision_root=target_revision_root,
             staged_revision_root=staged_revision_root,
@@ -135,7 +135,7 @@ def _publish_superseding_revision_bundle(
             context.final_live_validator()
     except BaseException as error:
         try:
-            _rollback_supersession_bundle(
+            rollback_supersession_bundle(
                 context=context,
                 target_revision_root=target_revision_root,
                 backup_revision_root=backup_revision_root,
@@ -153,7 +153,7 @@ def _publish_superseding_revision_bundle(
             f"generated export supersession failed; the previous revision was restored: {error}",
         ) from error
 
-    journal = _commit_supersession_revision(
+    journal = commit_supersession_revision(
         journal=journal,
         journal_path=journal_path,
         backup_revision_root=backup_revision_root,
@@ -197,10 +197,10 @@ def _require_reviewed_supersession(
             manual_origin_revision=supersession.manual_origin_revision,
         )
     except (OSError, ValueError) as exc:
-        _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
+        delete_verified_staged_candidate_if_present(staged_candidate_export_root)
         raise RegistryValidationError(f"generated export supersession source is no longer admissible: {exc}") from exc
     if source_state_sha256 != supersession.source_state_sha256:
-        _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
+        delete_verified_staged_candidate_if_present(staged_candidate_export_root)
         raise RegistryValidationError("generated export supersession source changed before candidate cutover")
     return supersession, revision_id, modelo_id, target_revision_root, source_modelo_root
 
@@ -232,9 +232,9 @@ def _stage_supersession_revision(
             candidate_manifest_sha256=candidate_manifest_sha256,
         )
     except BaseException:
-        _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
+        delete_verified_staged_candidate_if_present(staged_candidate_export_root)
         if staged_revision_root.exists():
-            _delete_opaque_transaction_tree(
+            delete_opaque_transaction_tree(
                 staged_revision_root,
                 target_root=transaction_paths.transaction_root,
                 prefix=transaction_paths.bundle_staging_prefix,
@@ -256,7 +256,7 @@ def _build_supersession_candidate_revision(
     candidate_manifest: ExportFragmentProvenanceManifest,
     candidate_manifest_sha256: str,
 ) -> str:
-    _require_complete_regular_tree(target_revision_root, subject="generated target revision bundle")
+    require_complete_regular_tree(target_revision_root, subject="generated target revision bundle")
     if bootstrap_layout_supersession_fingerprint(target_revision_root) != supersession.source_state_sha256:
         raise RegistryValidationError("generated export supersession source changed before candidate copy")
     shutil.copytree(target_revision_root, staged_revision_root)
@@ -270,8 +270,8 @@ def _build_supersession_candidate_revision(
             revision=revision_id,
             superseded_layout_id=supersession.superseded_layout_id,
         )
-    _retarget_reviewed_constructs(staged_revision_root, revision_id=revision_id, supersession=supersession)
-    _install_generated_form_companion(
+    retarget_reviewed_constructs(staged_revision_root, revision_id=revision_id, supersession=supersession)
+    install_generated_form_companion(
         context=context,
         staged_revision_root=staged_revision_root,
         source_modelo_root=source_modelo_root,
@@ -279,16 +279,16 @@ def _build_supersession_candidate_revision(
     )
     os.replace(staged_candidate_export_root, staged_revision_root / "export")
     fsync_parent_dir(staged_revision_root / "export")
-    _verify_generated_export_companion(
+    verify_generated_export_companion(
         staged_revision_root / "export",
         expected_manifest_sha256=candidate_manifest_sha256,
         expected_manifest=candidate_manifest,
     )
-    _require_complete_regular_tree(staged_revision_root, subject="generated supersession candidate revision")
+    require_complete_regular_tree(staged_revision_root, subject="generated supersession candidate revision")
     return bootstrap_layout_supersession_fingerprint(staged_revision_root)
 
 
-def _retarget_reviewed_constructs(
+def retarget_reviewed_constructs(
     staged_revision_root: Path, *, revision_id: str, supersession: GeneratedExportSupersession
 ) -> None:
     """Keep stable references as stored; require a local keyed delta for any changed inherited id."""
@@ -319,7 +319,7 @@ def _write_supersession_intent_journal(
     journal_path: Path,
 ) -> GeneratedExportPublicationJournal:
     journal = GeneratedExportPublicationJournal(
-        schema_version=_JOURNAL_SCHEMA_VERSION,
+        schema_version=JOURNAL_SCHEMA_VERSION,
         state="intent",
         modelo=modelo_id,
         revision_id=revision_id,
@@ -366,7 +366,7 @@ def _require_supersession_source_at_cutover(
         raise RegistryValidationError("generated supersession candidate revision changed before cutover")
 
 
-def _cut_over_supersession_revision(
+def cut_over_supersession_revision(
     *,
     context: GeneratedExportTreePublicationContext,
     target_revision_root: Path,
@@ -396,7 +396,7 @@ def _cut_over_supersession_revision(
     return journal
 
 
-def _commit_supersession_revision(
+def commit_supersession_revision(
     *,
     journal: GeneratedExportPublicationJournal,
     journal_path: Path,
@@ -417,24 +417,24 @@ def _commit_supersession_revision(
         ) from error
     reset_conformance_cache()
     if backup_revision_root.exists():
-        _require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
+        require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
         if bootstrap_layout_supersession_fingerprint(backup_revision_root) != source_sha256:
             raise RegistryValidationError(
                 "generated supersession committed, but its rollback revision changed; the journal was retained",
             )
         journal = journal.model_copy(update={"cleanup_started": True})
         write_generated_export_publication_journal(journal_path, journal)
-        _delete_opaque_transaction_tree_allow_partial(
+        delete_opaque_transaction_tree_allow_partial(
             backup_revision_root,
             target_root=transaction_paths.transaction_root,
             prefix=transaction_paths.bundle_backup_prefix,
             subject="generated supersession rollback revision",
         )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
     return journal
 
 
-def _install_generated_form_companion(
+def install_generated_form_companion(
     *,
     context: GeneratedExportTreePublicationContext,
     staged_revision_root: Path,
@@ -494,7 +494,7 @@ def _verify_supersession_cutover(
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> None:
     """Verify the live bundle through current generation authority and the production loader."""
-    _verify_recovery_package_against_current_authorities(
+    verify_recovery_package_against_current_authorities(
         target_export_root,
         context=context,
         modelo_root=target_export_root.parent.parent.parent,
@@ -504,14 +504,14 @@ def _verify_supersession_cutover(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
-    _verify_post_cutover_target(
+    verify_post_cutover_target(
         target_export_root,
         expected_manifest_sha256=candidate_manifest_sha256,
         expected_manifest=candidate_manifest,
     )
 
 
-def _rollback_supersession_bundle(
+def rollback_supersession_bundle(
     *,
     context: GeneratedExportTreePublicationContext,
     target_revision_root: Path,
@@ -553,13 +553,13 @@ def _rollback_supersession_bundle(
             "restored supersession revision differs from its source pin; preserving the journal",
         )
     if staged_revision_root.exists():
-        _delete_opaque_transaction_tree(
+        delete_opaque_transaction_tree(
             staged_revision_root,
             target_root=transaction_paths.transaction_root,
             prefix=transaction_paths.bundle_staging_prefix,
             subject="failed generated supersession candidate revision",
         )
-    _delete_journal(journal_path)
+    delete_journal(journal_path)
 
 
 def _require_pinned_supersession_stage(staged_revision_root: Path, candidate_sha256: str) -> None:
@@ -586,13 +586,13 @@ def _rollback_live_supersession_revision(
     target_sha256 = bootstrap_layout_supersession_fingerprint(target_revision_root)
     if target_sha256 == source_sha256 and not backup_revision_root.exists():
         if staged_revision_root.exists():
-            _delete_opaque_transaction_tree(
+            delete_opaque_transaction_tree(
                 staged_revision_root,
                 target_root=transaction_paths.transaction_root,
                 prefix=transaction_paths.bundle_staging_prefix,
                 subject="generated supersession staging revision",
             )
-        _delete_journal(journal_path)
+        delete_journal(journal_path)
         return None
     if target_sha256 != candidate_sha256:
         raise RegistryValidationError(
@@ -623,20 +623,20 @@ def _restore_supersession_backup_if_vacant(
 ) -> None:
     if not target_revision_root.exists() and backup_revision_root.exists():
         # A vacant destination preserves captured bytes without overwriting a writer's tree.
-        _require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
+        require_complete_regular_tree(backup_revision_root, subject="generated supersession rollback revision")
         context.replace_export_directory(backup_revision_root, target_revision_root)
         fsync_parent_dir(target_revision_root)
     elif not target_revision_root.exists():
         raise RegistryValidationError("generated supersession lost both the live and rollback revision")
 
 
-def _delete_opaque_transaction_tree(path: Path, *, target_root: Path, prefix: str, subject: str) -> None:
+def delete_opaque_transaction_tree(path: Path, *, target_root: Path, prefix: str, subject: str) -> None:
     """Delete a transaction-owned tree only after proving its exact registry-root sibling identity."""
     resolved_target_root = target_root.resolve()
     resolved = path.resolve()
     if resolved.parent != resolved_target_root or not resolved.name.startswith(prefix) or is_link_like(path):
         raise RegistryValidationError(f"{subject} is not an owned sibling of the target registry root: {path}")
-    _require_complete_regular_tree(resolved, subject=subject)
+    require_complete_regular_tree(resolved, subject=subject)
     try:
         shutil.rmtree(resolved)
     except OSError as exc:
@@ -645,7 +645,7 @@ def _delete_opaque_transaction_tree(path: Path, *, target_root: Path, prefix: st
         raise RegistryValidationError(f"{subject} remains after deletion: {resolved}")
 
 
-def _delete_opaque_transaction_tree_allow_partial(
+def delete_opaque_transaction_tree_allow_partial(
     path: Path,
     *,
     target_root: Path,
@@ -659,7 +659,7 @@ def _delete_opaque_transaction_tree_allow_partial(
         raise RegistryValidationError(f"{subject} is not an owned sibling of the target registry root: {path}")
     if not resolved.exists():
         return
-    _require_link_free_regular_members_allow_empty(resolved, subject=subject)
+    require_link_free_regular_members_allow_empty(resolved, subject=subject)
     try:
         shutil.rmtree(resolved)
     except OSError as exc:

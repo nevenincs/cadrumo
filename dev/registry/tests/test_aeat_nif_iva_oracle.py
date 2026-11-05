@@ -20,13 +20,13 @@ from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
 from ..parity.live_parity import LiveParityOracle
-from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .aeat_nif_iva_oracle import (
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
     register_default,
 )
 from .checker_replay_driver import CheckerReplayDriver
+from .remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

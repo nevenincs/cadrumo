@@ -14,9 +14,9 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFa
 
 from ...compiler.authority import compile_validated_authority
 from ...compiler.registry_scope import validate_registry_scope
-from .._tree_validation import _candidate_scope_modelos
 from ..candidate_staging import stage_generated_export_candidate
 from ..cli import GeneratedTreeInvocation, check_prepared_invocation, prepare_generated_tree_invocation
+from ..tree_validation import candidate_scope_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -47,7 +47,7 @@ def _candidate(authority: ValidatedRegistryAuthority):
 
 def test_shared_role_scope_keeps_fresh_candidate_and_other_source_revisions(scope_authority) -> None:
     candidate = _candidate(scope_authority)
-    scoped = _candidate_scope_modelos(scope_authority, (candidate,), modelo_id="123", revision_id="2019-2023")
+    scoped = candidate_scope_modelos(scope_authority, (candidate,), modelo_id="123", revision_id="2019-2023")
     target = next(modelo for modelo in scoped if str(modelo.id) == "123")
     assert target.revisions["2019-2023"].reviewed_by == "candidate-scope-proof"
     assert target.revisions["2024-y-siguientes"] == scope_authority.modelo("123").revisions["2024-y-siguientes"]
@@ -75,7 +75,7 @@ def test_source_scope_cannot_hide_a_candidate_role_typo(scope_authority) -> None
             }
         }
     )
-    scoped = _candidate_scope_modelos(scope_authority, (broken,), modelo_id="123", revision_id="2019-2023")
+    scoped = candidate_scope_modelos(scope_authority, (broken,), modelo_id="123", revision_id="2019-2023")
     with validating_governed_facts(
         CandidateFactAuthority(scope_authority.catalogues.facts, scope_authority.supported_filing_years())
     ):
@@ -85,7 +85,7 @@ def test_source_scope_cannot_hide_a_candidate_role_typo(scope_authority) -> None
 def test_scope_refuses_changed_modelo_metadata_and_supporting_facts(scope_authority) -> None:
     candidate = _candidate(scope_authority)
     with pytest.raises(RegistryValidationError, match="modelo metadata"):
-        _candidate_scope_modelos(
+        candidate_scope_modelos(
             scope_authority,
             (candidate.model_copy(update={"source_refs": ()}),),
             modelo_id="123",
@@ -94,7 +94,7 @@ def test_scope_refuses_changed_modelo_metadata_and_supporting_facts(scope_author
     support = scope_authority.modelo("115")
     altered = support.model_copy(update={"source_refs": ()})
     with pytest.raises(RegistryValidationError, match="supporting modelo facts"):
-        _candidate_scope_modelos(scope_authority, (candidate, altered), modelo_id="123", revision_id="2019-2023")
+        candidate_scope_modelos(scope_authority, (candidate, altered), modelo_id="123", revision_id="2019-2023")
 
 
 def test_real_123_bootstrap_candidate_uses_validated_shared_role_scope(scope_authority, tmp_path: Path) -> None:

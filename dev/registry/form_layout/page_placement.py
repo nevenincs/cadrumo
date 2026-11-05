@@ -17,11 +17,11 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .generation_models import _Build
-from .position_anchoring import _casilla_box
+from .generation_models import Build
+from .position_anchoring import casilla_box
 
 
-def _block_casillas(blocks: Iterable[FormBlockDefinition]) -> set[str]:
+def block_casillas(blocks: Iterable[FormBlockDefinition]) -> set[str]:
     return {casilla_id for block in blocks for casilla_id in _casillas_in_block(block)}
 
 
@@ -35,7 +35,7 @@ def _casillas_in_block(block: FormBlockDefinition) -> set[str]:
     return set()
 
 
-def _block_bindings(blocks: Iterable[FormBlockDefinition]) -> set[str]:
+def block_bindings(blocks: Iterable[FormBlockDefinition]) -> set[str]:
     return {binding_id for block in blocks for binding_id in _bindings_in_block(block)}
 
 
@@ -48,7 +48,7 @@ def _bindings_in_block(block: FormBlockDefinition) -> set[str]:
 
 
 def _on_form_placement(
-    build: _Build,
+    build: Build,
     casilla_id: str,
     anchors: Sequence[int],
     box: str | None,
@@ -71,13 +71,13 @@ def _on_form_placement(
     )
 
 
-def _placement_box(build: _Build, casilla: CasillaDefinition, anchors: Sequence[int]) -> str | None:
-    box = _casilla_box(casilla.number, casilla.form_number)
+def _placement_box(build: Build, casilla: CasillaDefinition, anchors: Sequence[int]) -> str | None:
+    box = casilla_box(casilla.number, casilla.form_number)
     return build.positions[anchors[0]].box if box is None and anchors else box
 
 
 def _placement_for_casilla(
-    build: _Build,
+    build: Build,
     casilla: CasillaDefinition,
     section_of: Mapping[int, tuple[str, str]],
     shown: set[str],
@@ -104,8 +104,8 @@ def _placement_for_casilla(
     )
 
 
-def _placements(
-    build: _Build,
+def placements(
+    build: Build,
     section_of: Mapping[int, tuple[str, str]],
     shown: set[str],
     continued_aliases: Mapping[str, tuple[FormAliasPosition, ...]],

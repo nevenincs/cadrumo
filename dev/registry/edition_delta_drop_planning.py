@@ -11,64 +11,66 @@ from cadrumo.domain.calculations.registry.lineage_attestation import LineageAtte
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from . import edition_delta_chain_materialisation as _edition_delta_chain_materialisation
-from . import edition_delta_drop_scope as _edition_delta_drop_scope
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_lineage_attestation as _edition_delta_lineage_attestation
-from . import edition_delta_source as _edition_delta_source
+from . import (
+    edition_delta_chain_materialisation,
+    edition_delta_drop_scope,
+    edition_delta_errors,
+    edition_delta_fields,
+    edition_delta_lineage_attestation,
+    edition_delta_source,
+)
 from .compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 from .compiler.casilla_inheritance import without_lineage_claims
-from .edition_delta_drop_types import DropPlan, EditionDrop, FamilyDrop, _FamilyDropState, _MemberFragment
+from .edition_delta_drop_types import DropPlan, EditionDrop, FamilyDrop, FamilyDropState, MemberFragment
 
 __all__ = ("plan_drop",)
 
 
 def _family_header(section: str) -> re.Pattern[str]:
-    return re.compile(rf"^\[\[revisions\.{_edition_delta_fields._REVISION_SEGMENT}\.{re.escape(section)}\]\]\s*$")
+    return re.compile(rf"^\[\[revisions\.{edition_delta_fields.REVISION_SEGMENT}\.{re.escape(section)}\]\]\s*$")
 
 
-def _read_family_fragments(edition_dir: Path, section: str) -> tuple[_MemberFragment, ...]:
+def read_family_fragments(edition_dir: Path, section: str) -> tuple[MemberFragment, ...]:
     """Read one family's fragment directory, which is laid out exactly as ``casillas`` is."""
     header = _family_header(section)
-    fragments: list[_MemberFragment] = []
+    fragments: list[MemberFragment] = []
     for path in sorted((edition_dir / section).glob("*.toml")):
-        preamble, texts = _edition_delta_source._split_blocks(path.read_text(encoding="utf-8"), header)
+        preamble, texts = edition_delta_source.split_blocks(path.read_text(encoding="utf-8"), header)
         blocks = tuple(
-            _edition_delta_source._Block(text, _edition_delta_source._block_row(text, section)) for text in texts
+            edition_delta_source.Block(text, edition_delta_source.block_row(text, section)) for text in texts
         )
-        fragments.append(_MemberFragment(path, preamble, blocks))
+        fragments.append(MemberFragment(path, preamble, blocks))
     return tuple(fragments)
 
 
-def _identity_of(member: Mapping[str, object], family: _edition_delta_drop_scope._DroppableFamily) -> str | None:
+def identity_of(member: Mapping[str, object], family: edition_delta_drop_scope.DroppableFamily) -> str | None:
     value = member.get(family.identity)
     return value if isinstance(value, str) else None
 
 
-def _materialised_members(table: Mapping[str, object], section: str) -> tuple[_edition_delta_source._Row, ...]:
+def materialised_members(table: Mapping[str, object], section: str) -> tuple[edition_delta_source.Row, ...]:
     raw = table.get(section, ())
-    return tuple(_edition_delta_source._as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
+    return tuple(edition_delta_source.as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
 
 
 def _stated_identity(
     member: Mapping[str, object],
-    family: _edition_delta_drop_scope._DroppableFamily,
+    family: edition_delta_drop_scope.DroppableFamily,
     revision_id: str,
     seen: set[str],
-    state: _FamilyDropState,
+    state: FamilyDropState,
 ) -> str | None:
-    identity = _identity_of(member, family)
+    identity = identity_of(member, family)
     if identity is None:
-        if family.section == _edition_delta_fields._CASILLAS:
+        if family.section == edition_delta_fields.CASILLAS:
             state.kept_no_identity += 1
             return None
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"edition {revision_id!r}: states a {family.section} member carrying no {family.identity!r}, so it "
             "cannot be matched to an inherited member",
         )
     if identity in seen:
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"edition {revision_id!r}: states more than one {family.section} member under {family.identity} "
             f"{identity!r}, so neither can be said to restate the inherited member",
         )
@@ -79,7 +81,7 @@ def _stated_identity(
 def _identity_fields_match(
     member: Mapping[str, object],
     candidate: Mapping[str, object],
-    family: _edition_delta_drop_scope._DroppableFamily,
+    family: edition_delta_drop_scope.DroppableFamily,
 ) -> bool:
     return all(
         family_identity_value(member, name) == family_identity_value(candidate, name) for name in family.identity_fields
@@ -87,31 +89,31 @@ def _identity_fields_match(
 
 
 def _comparable_member(
-    member: Mapping[str, object], family: _edition_delta_drop_scope._DroppableFamily, revision_id: str, identity: str
+    member: Mapping[str, object], family: edition_delta_drop_scope.DroppableFamily, revision_id: str, identity: str
 ) -> object:
     compared = (
-        _edition_delta_source._as_row(without_lineage_claims(member))
-        if family.section == _edition_delta_fields._CASILLAS
+        edition_delta_source.as_row(without_lineage_claims(member))
+        if family.section == edition_delta_fields.CASILLAS
         else member
     )
-    return _edition_delta_chain_materialisation.comparable(
+    return edition_delta_chain_materialisation.comparable(
         compared, revision_id=revision_id, path=f"{family.section}.{identity}"
     )
 
 
 def _drop_attestation(
     member: Mapping[str, object],
-    family: _edition_delta_drop_scope._DroppableFamily,
+    family: edition_delta_drop_scope.DroppableFamily,
     revision_id: str,
     predecessor_revision_id: str,
     manifest: Mapping[str, object],
 ) -> LineageAttestation | bool | None:
-    needs_attestation = family.section == _edition_delta_fields._CASILLAS and any(
+    needs_attestation = family.section == edition_delta_fields.CASILLAS and any(
         claim in member for claim in LINEAGE_CLAIM_FIELDS
     )
     if not needs_attestation:
         return None
-    attestation = _edition_delta_lineage_attestation._lineage_attestation(
+    attestation = edition_delta_lineage_attestation.lineage_attestation(
         member=member,
         manifest=manifest,
         predecessor_revision_id=predecessor_revision_id,
@@ -123,12 +125,12 @@ def _drop_attestation(
 def _record_candidate_match(
     member: Mapping[str, object],
     candidate: Mapping[str, object],
-    family: _edition_delta_drop_scope._DroppableFamily,
+    family: edition_delta_drop_scope.DroppableFamily,
     revision_id: str,
     predecessor_revision_id: str,
     manifest: Mapping[str, object],
     identity: str,
-    state: _FamilyDropState,
+    state: FamilyDropState,
 ) -> None:
     if not _identity_fields_match(member, candidate, family):
         state.kept_differs.append(identity)
@@ -149,12 +151,12 @@ def _record_candidate_match(
 
 def _plan_family_drop(
     *,
-    family: _edition_delta_drop_scope._DroppableFamily,
+    family: edition_delta_drop_scope.DroppableFamily,
     revision_id: str,
     predecessor_revision_id: str,
     manifest: Mapping[str, object],
-    stated: Sequence[_edition_delta_source._Block],
-    inherited: Sequence[_edition_delta_source._Row],
+    stated: Sequence[edition_delta_source.Block],
+    inherited: Sequence[edition_delta_source.Row],
 ) -> FamilyDrop:
     """Decide which of one family's stated members restate exactly what the edition would inherit.
 
@@ -170,12 +172,12 @@ def _plan_family_drop(
             edition states two members under one identity, either of which would
             make the member that supersedes the inherited one a guess.
     """
-    by_identity: dict[str, list[_edition_delta_source._Row]] = {}
+    by_identity: dict[str, list[edition_delta_source.Row]] = {}
     for member in inherited:
-        identity = _identity_of(member, family)
+        identity = identity_of(member, family)
         if identity is not None:
             by_identity.setdefault(identity, []).append(member)
-    state = _FamilyDropState()
+    state = FamilyDropState()
     seen: set[str] = set()
     for block in stated:
         member = block.row
@@ -207,18 +209,18 @@ def _plan_family_drop(
     )
 
 
-def _plan_edition_drop(
+def plan_edition_drop(
     modelo_dir: Path,
     revision_id: str,
     *,
-    families: Sequence[_edition_delta_drop_scope._DroppableFamily],
+    families: Sequence[edition_delta_drop_scope.DroppableFamily],
 ) -> EditionDrop:
     """Decide what one edition would stop stating, reading the tree and writing nothing."""
     edition_dir = modelo_dir / "revisions" / revision_id
-    source = _edition_delta_source._read_edition(modelo_dir, revision_id)
-    predecessor = _edition_delta_drop_scope._declared_predecessor(source.manifest)
+    source = edition_delta_source.read_edition(modelo_dir, revision_id)
+    predecessor = edition_delta_drop_scope.declared_predecessor(source.manifest)
     baselines = {
-        family.section: _edition_delta_drop_scope._family_storage_baseline(source.manifest, family.section)
+        family.section: edition_delta_drop_scope.family_storage_baseline(source.manifest, family.section)
         for family in families
     }
     if not any(baselines.values()):
@@ -234,20 +236,18 @@ def _plan_edition_drop(
         baseline = baselines[family.section]
         if baseline is None:
             continue
-        stated = [
-            block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks
-        ]
+        stated = [block for fragment in read_family_fragments(edition_dir, family.section) for block in fragment.blocks]
         if not stated:
             continue
         if baseline not in inherited_tables:
-            inherited_tables[baseline] = _edition_delta_source._read_edition(modelo_dir, baseline).table
+            inherited_tables[baseline] = edition_delta_source.read_edition(modelo_dir, baseline).table
         drop = _plan_family_drop(
             family=family,
             revision_id=revision_id,
             predecessor_revision_id=baseline,
             manifest=source.manifest,
             stated=stated,
-            inherited=_materialised_members(inherited_tables[baseline], family.section),
+            inherited=materialised_members(inherited_tables[baseline], family.section),
         )
         if drop.stated:
             drops.append(drop)
@@ -258,13 +258,13 @@ def plan_drop(
     modelo_dir: Path,
     definition: ModeloDefinition,
     *,
-    families: Sequence[_edition_delta_drop_scope._DroppableFamily] = _edition_delta_drop_scope._DROPPABLE_FAMILIES,
+    families: Sequence[edition_delta_drop_scope.DroppableFamily] = edition_delta_drop_scope.DROPPABLE_FAMILIES,
 ) -> DropPlan:
     """Decide every edition's droppable restatement for one modelo, writing nothing."""
     return DropPlan(
         modelo_id=str(definition.id),
         editions=tuple(
-            _plan_edition_drop(modelo_dir, str(revision.id), families=families)
+            plan_edition_drop(modelo_dir, str(revision.id), families=families)
             for revision in ordered_revisions(definition)
         ),
     )

@@ -18,7 +18,7 @@ import pytest
 from ..render_profile_model import RenderProfile
 from ..render_profile_model_base import RenderProfileAnchor
 from ..render_profile_rules import SingletonNumericRule, Width17MembershipRule
-from .test_render_profile import _anchor, _design_identity, _profile, _singleton, _width_rule
+from .test_render_profile import design_identity, render_profile, render_profile_anchor, singleton, width_rule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,18 +35,18 @@ def _scanned_singleton_rule(profile: RenderProfile, anchor: RenderProfileAnchor)
 @pytest.mark.parametrize("row", [10, 11, 12, 13])
 def test_the_index_selects_exactly_what_the_scan_selected(row: int) -> None:
     """Covered anchors and an uncovered one both agree with the oracle."""
-    profile = _profile()
-    anchor = _anchor(row)
+    profile = render_profile()
+    anchor = render_profile_anchor(row)
 
     assert profile.width_17_rule_by_anchor.get(anchor) == _scanned_width_rule(profile, anchor)
     assert profile.singleton_rule_by_anchor.get(anchor) == _scanned_singleton_rule(profile, anchor)
 
 
 def test_an_uncovered_anchor_resolves_to_nothing() -> None:
-    profile = _profile()
+    profile = render_profile()
 
-    assert profile.width_17_rule_by_anchor.get(_anchor(99)) is None
-    assert profile.singleton_rule_by_anchor.get(_anchor(99)) is None
+    assert profile.width_17_rule_by_anchor.get(render_profile_anchor(99)) is None
+    assert profile.singleton_rule_by_anchor.get(render_profile_anchor(99)) is None
 
 
 def test_two_rules_claiming_one_anchor_keep_the_first() -> None:
@@ -54,12 +54,12 @@ def test_two_rules_claiming_one_anchor_keep_the_first() -> None:
 
     The index must not silently promote it, which a last-wins fill would do.
     """
-    shared = _anchor(10)
-    first = _width_rule("Num", shared)
-    second = _width_rule("N", shared)
+    shared = render_profile_anchor(10)
+    first = width_rule("Num", shared)
+    second = width_rule("N", shared)
     profile = RenderProfile(
         schema_version=1,
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         fragment_ids=("width-17",),
         width_17_rules=(first, second),
         singleton_rules=(),
@@ -71,11 +71,11 @@ def test_two_rules_claiming_one_anchor_keep_the_first() -> None:
 
 def test_a_rule_covering_several_anchors_is_reachable_from_each() -> None:
     """A membership rule carries a tuple of anchors; every one must index to it."""
-    covered = (_anchor(10), _anchor(11), _anchor(12))
-    rule = _width_rule("Num", covered[0]).model_copy(update={"anchors": covered})
+    covered = (render_profile_anchor(10), render_profile_anchor(11), render_profile_anchor(12))
+    rule = width_rule("Num", covered[0]).model_copy(update={"anchors": covered})
     profile = RenderProfile(
         schema_version=1,
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         fragment_ids=("width-17",),
         width_17_rules=(rule,),
         singleton_rules=(),
@@ -86,7 +86,7 @@ def test_a_rule_covering_several_anchors_is_reachable_from_each() -> None:
 
 def test_the_index_is_built_once_per_profile() -> None:
     """Repeated lookups must not rebuild it; that would only move the cost."""
-    profile = _profile()
+    profile = render_profile()
 
     first = profile.width_17_rule_by_anchor
     second = profile.width_17_rule_by_anchor
@@ -97,13 +97,13 @@ def test_the_index_is_built_once_per_profile() -> None:
 
 def test_two_profiles_index_separately() -> None:
     """The cache lives on the instance, so profiles cannot share one answer."""
-    one = _profile()
+    one = render_profile()
     other = RenderProfile(
         schema_version=1,
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         fragment_ids=("smaller-fields",),
         width_17_rules=(),
-        singleton_rules=(_singleton(_anchor(20)),),
+        singleton_rules=(singleton(render_profile_anchor(20)),),
     )
 
     assert one.singleton_rule_by_anchor.keys() != other.singleton_rule_by_anchor.keys()

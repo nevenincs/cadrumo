@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.external_constants import XLSX_EXTENSION
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
@@ -26,9 +26,9 @@ from dev.temporary_output import prepare_temp_root
 from .workbook_parity_models import (
     WorkbookCellRef,
 )
-from .workbook_parity_output_ids import _workbook_output_id_set
-from .workbook_parity_runner_resolution import _resolve_libreoffice_runner
-from .workbook_parity_values import _coerce_excel_result, _excel_value
+from .workbook_parity_output_ids import workbook_output_id_set
+from .workbook_parity_runner_resolution import resolve_libreoffice_runner
+from .workbook_parity_values import coerce_excel_result, excel_value
 
 if TYPE_CHECKING:
     # Annotation-only: ``from __future__ import annotations`` above makes every
@@ -71,7 +71,7 @@ class LibreOfficeFailureCause(StrEnum):
     NO_OUTPUT = "no_output"
 
 
-class _LibreOfficeConversionError(RuntimeError):
+class LibreOfficeConversionError(RuntimeError):
     """Failure raised once a resolved LibreOffice runner is asked to convert a workbook."""
 
     def __init__(self, cause: LibreOfficeFailureCause, message: str) -> None:
@@ -104,7 +104,7 @@ def _run_libreoffice(command: Sequence[str], *, timeout_seconds: float) -> Comma
     return completed
 
 
-def _subprocess_failure_detail(completed: subprocess.CalledProcessError | CommandResult) -> str:
+def subprocess_failure_detail(completed: subprocess.CalledProcessError | CommandResult) -> str:
     """Summarize a failed LibreOffice invocation from fields this project owns.
 
     ``completed.stdout``/``completed.stderr`` are text the external LibreOffice
@@ -132,37 +132,37 @@ def run_workbook_with_libreoffice(
     """Run a local XLSX workbook with LibreOffice headless and return outputs."""
     from openpyxl import load_workbook
 
-    _workbook_output_id_set("workbook output cells", outputs)
-    runner = _resolve_libreoffice_runner(executable)
+    workbook_output_id_set("workbook output cells", outputs)
+    runner = resolve_libreoffice_runner(executable)
     resolved = workbook_path.resolve()
     if not resolved.is_file():
         raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
-    if resolved.suffix.lower() != _XLSX_EXTENSION:
+    if resolved.suffix.lower() != XLSX_EXTENSION:
         raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
 
-    with _libreoffice_workspace() as workspace:
-        working_copy = workspace.root / f"in{_XLSX_EXTENSION}"
+    with libreoffice_workspace() as workspace:
+        working_copy = workspace.root / f"in{XLSX_EXTENSION}"
         shutil.copy2(resolved, working_copy)
         workbook = load_workbook(working_copy)
         try:
             for cell, value in inputs.items():
-                workbook[cell.sheet][cell.coordinate] = _excel_value(value)
+                workbook[cell.sheet][cell.coordinate] = excel_value(value)
             workbook.save(working_copy)
         finally:
             workbook.close()
         try:
-            recalculated_path = _convert_with_libreoffice(
+            recalculated_path = convert_with_libreoffice(
                 runner,
                 working_copy,
                 workspace=workspace,
                 operation="workbook recalculation",
             )
-        except _LibreOfficeConversionError as exc:
+        except LibreOfficeConversionError as exc:
             raise exc.as_registry_error() from exc
         recalculated = load_workbook(recalculated_path, data_only=True, read_only=True)
         try:
             return {
-                output_id: _coerce_excel_result(recalculated[cell.sheet][cell.coordinate].value)
+                output_id: coerce_excel_result(recalculated[cell.sheet][cell.coordinate].value)
                 for output_id, cell in outputs.items()
             }
         finally:
@@ -170,7 +170,7 @@ def run_workbook_with_libreoffice(
 
 
 @contextmanager
-def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
+def libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
     """Yield a private scratch tree holding the input copy, profile and output of one call.
 
     The tree uses the controlled temporary root with one-letter member names
@@ -185,7 +185,7 @@ def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
         yield _LibreOfficeWorkspace(root=root, profile=root / "p", output=output)
 
 
-def _convert_with_libreoffice(
+def convert_with_libreoffice(
     runner: Path,
     source: Path,
     *,
@@ -200,7 +200,7 @@ def _convert_with_libreoffice(
     """
     profile_chars = len(str(workspace.profile))
     if _LIBREOFFICE_PROFILE_ROOT_MAX_CHARS is not None and profile_chars > _LIBREOFFICE_PROFILE_ROOT_MAX_CHARS:
-        raise _LibreOfficeConversionError(
+        raise LibreOfficeConversionError(
             LibreOfficeFailureCause.PROFILE_PATH_TOO_LONG,
             f"LibreOffice {operation} refused: its user profile root would be {profile_chars} characters "
             f"long, above the {_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS} LibreOffice can initialise on this "
@@ -224,21 +224,21 @@ def _convert_with_libreoffice(
             timeout_seconds=_LIBREOFFICE_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired as exc:
-        raise _LibreOfficeConversionError(
+        raise LibreOfficeConversionError(
             LibreOfficeFailureCause.TIMED_OUT,
             f"LibreOffice {operation} timed out after {_LIBREOFFICE_TIMEOUT_SECONDS:.0f}s",
         ) from exc
     except subprocess.CalledProcessError as exc:
-        raise _LibreOfficeConversionError(
+        raise LibreOfficeConversionError(
             LibreOfficeFailureCause.EXITED_NONZERO,
-            f"LibreOffice {operation} failed: {_subprocess_failure_detail(exc)}",
+            f"LibreOffice {operation} failed: {subprocess_failure_detail(exc)}",
         ) from exc
-    outputs = scan_directory(workspace.output, pattern=f"*{_XLSX_EXTENSION}")
+    outputs = scan_directory(workspace.output, pattern=f"*{XLSX_EXTENSION}")
     if len(outputs) != 1:
-        raise _LibreOfficeConversionError(
+        raise LibreOfficeConversionError(
             LibreOfficeFailureCause.NO_OUTPUT,
             f"LibreOffice {operation} produced {len(outputs)} XLSX workbooks instead of one "
-            f"({_subprocess_failure_detail(completed)}); soffice reports success without converting "
+            f"({subprocess_failure_detail(completed)}); soffice reports success without converting "
             "when its user profile cannot be initialised or another instance took the request",
         )
     return outputs[0]

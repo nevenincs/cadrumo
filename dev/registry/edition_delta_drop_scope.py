@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 
 
 @dataclass(frozen=True, slots=True)
-class _DroppableFamily:
+class DroppableFamily:
     """One family whose restated members a successor edition may stop declaring.
 
     ``section`` is the table key and the fragment directory, ``identity`` the
@@ -30,8 +30,8 @@ class _DroppableFamily:
     identity_fields: tuple[str, ...] = ()
 
 
-_DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = tuple(
-    _DroppableFamily(
+DROPPABLE_FAMILIES: Final[tuple[DroppableFamily, ...]] = tuple(
+    DroppableFamily(
         section=spec.section,
         identity=spec.identity,
         identity_fields=spec.identity_fields,
@@ -40,12 +40,12 @@ _DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = tuple(
     if spec.identity is not None
 )
 
-_HELD_BACK_FAMILIES: Final[Mapping[str, str]] = HELD_BACK_FAMILY_REASONS
+HELD_BACK_FAMILIES: Final[Mapping[str, str]] = HELD_BACK_FAMILY_REASONS
 
 _NEVER_STRIPPED_SCALARS: Final[frozenset[str]] = frozenset({"orden_aplicabilidad", "casilla_source_refs"})
 
 
-def _family_storage_baseline(manifest: Mapping[str, object], section: str) -> str | None:
+def family_storage_baseline(manifest: Mapping[str, object], section: str) -> str | None:
     """The edition a family's stated members inherit from, or ``None`` when the family inherits nothing.
 
     A storage baseline names the payload ancestry a family is stored against,
@@ -57,10 +57,10 @@ def _family_storage_baseline(manifest: Mapping[str, object], section: str) -> st
     baseline = manifest.get(key)
     if isinstance(baseline, str):
         return baseline
-    return _declared_predecessor(manifest)
+    return declared_predecessor(manifest)
 
 
-def _declared_predecessor(manifest: Mapping[str, object]) -> str | None:
+def declared_predecessor(manifest: Mapping[str, object]) -> str | None:
     """The predecessor this edition names, or ``None`` for a root or an undeclared edition.
 
     A ``predecessor`` table rather than a string is the explicit no-predecessor

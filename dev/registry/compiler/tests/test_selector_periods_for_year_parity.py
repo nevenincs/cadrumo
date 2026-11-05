@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 
-from ..keyed_family_period_scope import _selector_periods_for_year
+from ..keyed_family_period_scope import selector_periods_for_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +42,7 @@ def _raw(selector: PeriodSelector) -> dict[str, object]:
 
 def _read(selector: PeriodSelector, year: int) -> tuple[str, ...]:
     """The loader's answer for ``year``, normalised to the typed method's shape."""
-    periods = _selector_periods_for_year(_raw(selector), year)
+    periods = selector_periods_for_year(_raw(selector), year)
     assert isinstance(periods, list)
     return tuple(str(token) for token in periods)
 

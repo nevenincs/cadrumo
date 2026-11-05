@@ -107,7 +107,7 @@ def _contains_whole_sequence(paths: Sequence[str], sequence: str) -> bool:
     return any(path == sequence or path.startswith(f"{sequence}.") for path in paths)
 
 
-def _digest(root: Path) -> str:
+def digest(root: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         digest.update(path.relative_to(root).as_posix().encode())
@@ -115,11 +115,11 @@ def _digest(root: Path) -> str:
     return digest.hexdigest()
 
 
-def _effective(value: object) -> object:
+def effective(value: object) -> object:
     if isinstance(value, Mapping):
-        return {key: _effective(item) for key, item in value.items() if key not in _REPRESENTATION_FIELDS}
+        return {key: effective(item) for key, item in value.items() if key not in _REPRESENTATION_FIELDS}
     if isinstance(value, list | tuple):
-        return [_effective(item) for item in value]
+        return [effective(item) for item in value]
     return value
 
 
@@ -132,15 +132,15 @@ def _plain(value: object) -> object:
     return value
 
 
-def _payload_field_count(value: object) -> int:
+def payload_field_count(value: object) -> int:
     if isinstance(value, Mapping):
-        return sum(_payload_field_count(item) for item in value.values())
+        return sum(payload_field_count(item) for item in value.values())
     if isinstance(value, list | tuple):
-        return sum(_payload_field_count(item) for item in value)
+        return sum(payload_field_count(item) for item in value)
     return 1
 
 
-def _remove_members(
+def remove_members(
     revision_dir: Path,
     revision_id: str,
     family: str,
@@ -183,7 +183,7 @@ def _remove_empty_section(section_dir: Path) -> None:
         section_dir.rmdir()
 
 
-def _state_members(revision_dir: Path, revision_id: str, family: str, members: Sequence[Mapping[str, object]]) -> None:
+def state_members(revision_dir: Path, revision_id: str, family: str, members: Sequence[Mapping[str, object]]) -> None:
     """State ``members`` in the family's fragment, appending to the one already authored."""
     section_dir = revision_dir / family
     fragments = sorted(section_dir.glob("*.toml")) if section_dir.is_dir() else []
@@ -203,14 +203,14 @@ def _state_members(revision_dir: Path, revision_id: str, family: str, members: S
     path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
 
 
-def _table(value: Mapping[str, object]) -> object:
+def table(value: Mapping[str, object]) -> object:
     table = tomlkit.inline_table()
     for key, item in value.items():
         table[key] = item
     return table
 
 
-def _authored_member_order(revision_dir: Path, revision_id: str, family: str, identity: str) -> list[str]:
+def authored_member_order(revision_dir: Path, revision_id: str, family: str, identity: str) -> list[str]:
     """Return identities physically stated in one family directory, in the order the loader reads them."""
     identities: list[str] = []
     for path in sorted((revision_dir / family).glob("*.toml")):
@@ -221,7 +221,7 @@ def _authored_member_order(revision_dir: Path, revision_id: str, family: str, id
     return identities
 
 
-def _restated_sections(revision: Mapping[str, object]) -> set[str]:
+def restated_sections(revision: Mapping[str, object]) -> set[str]:
     """Return the keyed families one edition restates in full rather than inherits."""
     declared = revision.get("restated_families") or ()
     if not isinstance(declared, list | tuple):
@@ -229,7 +229,7 @@ def _restated_sections(revision: Mapping[str, object]) -> set[str]:
     return {str(entry["family"]) for entry in declared if isinstance(entry, Mapping) and "family" in entry}
 
 
-def _drop_restatement(revision: MutableMapping[str, object], section: str) -> None:
+def drop_restatement(revision: MutableMapping[str, object], section: str) -> None:
     """Remove one family's restatement, and the declaration once it restates nothing."""
     declared = revision["restated_families"]
     if not isinstance(declared, list):
@@ -242,7 +242,7 @@ def _drop_restatement(revision: MutableMapping[str, object], section: str) -> No
         del revision["restated_families"]
 
 
-def _family_baseline(authored: Mapping[str, object], planned: Mapping[str, object]) -> str | None:
+def family_baseline(authored: Mapping[str, object], planned: Mapping[str, object]) -> str | None:
     """The edition a revision's keyed families are stored against, or ``None`` when they stay as authored.
 
     The authored tree decides, in the loader's order: a named predecessor, then
@@ -264,7 +264,7 @@ def _family_baseline(authored: Mapping[str, object], planned: Mapping[str, objec
     return None
 
 
-def _family_members(table: Mapping[str, object], spec: KeyedFamilySpec) -> tuple[Mapping[str, object], ...]:
+def family_members(table: Mapping[str, object], spec: KeyedFamilySpec) -> tuple[Mapping[str, object], ...]:
     raw = table.get(spec.section)
     candidates: tuple[object, ...] = (raw,) if spec.singleton else tuple(raw) if isinstance(raw, list | tuple) else ()
     members: list[Mapping[str, object]] = []
@@ -274,13 +274,13 @@ def _family_members(table: Mapping[str, object], spec: KeyedFamilySpec) -> tuple
     return tuple(members)
 
 
-def _selector_id(operation: object) -> str | None:
+def selector_id(operation: object) -> str | None:
     selector = operation.get("selector") if isinstance(operation, Mapping) else None
     member = selector.get("id") if isinstance(selector, Mapping) else None
     return None if member is None else str(member)
 
 
-def _replace_operations(operations: list[object], retained: Sequence[object]) -> bool:
+def replace_operations(operations: list[object], retained: Sequence[object]) -> bool:
     """Keep only ``retained`` in ``operations``; return whether anything was dropped."""
     if len(retained) == len(operations):
         return False

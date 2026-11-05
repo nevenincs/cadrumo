@@ -9,8 +9,8 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from .casilla_lineage_seed_chain_state import _ChainState
-from .casilla_lineage_seed_rules import _CONTINUIDAD_ID, _role_derived, _slug
+from .casilla_lineage_seed_chain_state import ChainState
+from .casilla_lineage_seed_rules import CONTINUIDAD_ID, role_derived, slug
 from .casilla_lineage_seed_types import LineagePlan, PartialStamping, Ruling
 
 type _Row = tuple[str, str]
@@ -24,7 +24,7 @@ class _PlannerContext(Protocol):
     modelo: ModeloDefinition
     plan: LineagePlan
     rulings: dict[_Pair, Ruling]
-    state: _ChainState
+    state: ChainState
 
 
 def settle_partial_stamps(planner: _PlannerContext) -> frozenset[str]:
@@ -111,10 +111,10 @@ def _apply_chain_starts(planner: _PlannerContext, starts: list[_Row]) -> None:
 
 def _fresh_chain_id(planner: _PlannerContext, revision: str, casilla_id: str) -> str:
     role = planner.state.roles[(revision, casilla_id)]
-    candidates: list[str] = [_role_derived(role)] if role is not None else []
-    candidates += [_slug(casilla_id), _slug(f"{casilla_id}-{revision}")]
+    candidates: list[str] = [role_derived(role)] if role is not None else []
+    candidates += [slug(casilla_id), slug(f"{casilla_id}-{revision}")]
     for candidate in candidates:
-        if candidate and _CONTINUIDAD_ID.match(candidate) and not bool(planner.state.members.get(candidate)):
+        if candidate and CONTINUIDAD_ID.match(candidate) and not bool(planner.state.members.get(candidate)):
             return candidate
     raise ValueError(f"modelo {planner.modelo_id}: no free continuidad_id for {revision}/{casilla_id}")
 

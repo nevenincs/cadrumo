@@ -8,7 +8,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.temporal import select_revision_for_year
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -18,7 +18,7 @@ _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA
 
 
 def _load_modelo_296():
-    return _committed_modelo("296")
+    return committed_modelo("296")
 
 
 def test_modelo_296_validator_accepts_committed_definition() -> None:
@@ -84,7 +84,7 @@ def test_every_modelo_216_relation_reads_a_casilla_the_source_edition_prints() -
     02 and 03 as operator input.
     """
     modelo, _ = _load_modelo_296()
-    source, _ = _committed_modelo("216")
+    source, _ = committed_modelo("216")
     checked = 0
     for revision in modelo.revisions.values():
         selector = revision.period_selector

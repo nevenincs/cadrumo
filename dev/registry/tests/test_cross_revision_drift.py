@@ -40,18 +40,18 @@ from ..compiler.validate_cross_revision import (
     declared_cross_revision_continuity_semantic_linkage_failures,
 )
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
-from ._synthetic_locale_fixtures import (
-    _synthetic_locale_scope,
-    _write_test_label,
-    synthetic_locale_state,
-)
+from ..conformance.registry_schema_support import committed_registry_tree
 from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
+from .synthetic_locale_fixtures import (
+    synthetic_locale_scope,
+    synthetic_locale_state,
+    write_test_label,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-__all__ = ["_synthetic_locale_scope"]
+__all__ = ["synthetic_locale_scope"]
 
 
 def _casilla(
@@ -73,7 +73,7 @@ def _casilla(
     payload = {
         "id": cid,
         "number": cid,
-        "localization_keys": (_write_test_label(label),),
+        "localization_keys": (write_test_label(label),),
         "section": section,
         "data_type": data_type,
         "semantic_role": resolved_semantic_role,
@@ -240,7 +240,7 @@ def _evolutions(*payloads: dict[str, object]) -> dict[str, tuple[dict[str, objec
 
 @pytest.fixture(scope="module")
 def committed_registry() -> Iterator[tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]]:
-    corpus = _committed_registry_tree()
+    corpus = committed_registry_tree()
     with validating_governed_facts(CandidateFactAuthority(corpus[1].facts, committed_supported_filing_years())):
         yield corpus
 
@@ -358,8 +358,8 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    _write_test_label("Old")
-    _write_test_label("New")
+    write_test_label("Old")
+    write_test_label("New")
     for revision_id, label in (("2024", "Old"), ("2025", "New")):
         key = casilla_occurrence_locale_key("999", revision_id, "0700", ModeloLocalizationFieldKind.LABEL)
         if synthetic_locale_state.root is not None:

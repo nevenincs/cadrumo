@@ -13,17 +13,17 @@ from cadrumo.domain.calculations.registry.schema_overrides import (
     CasillaMemberPosition,
     CasillaMemberRemoval,
 )
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from . import casilla_identity as _casilla_identity
+from . import casilla_identity
 from .casilla_identity import LINEAGE_CLAIM_FIELDS
-from .keyed_family_storage_delta import _patch_family_table
-from .loader_fields import _ROW_SOURCE_ADDITIONS_FIELD, _ROW_SOURCE_FIELD
+from .keyed_family_storage_delta import patch_family_table
+from .loader_fields import ROW_SOURCE_ADDITIONS_FIELD, ROW_SOURCE_FIELD
 
 _ROW_LABEL_IDENTITY_FIELDS = frozenset({"id", "number", "continuidad_id"})
 
 
-def _apply_casilla_storage_delta(
+def apply_casilla_storage_delta(
     context: str,
     *,
     predecessor_id: str,
@@ -60,7 +60,7 @@ def _validated_casilla_storage_declarations(
 def _index_inherited_casillas(context: str, inherited: tuple[object, ...]) -> dict[str, int]:
     by_id: dict[str, int] = {}
     for index, row in enumerate(inherited):
-        row_id = _casilla_identity._row_id(row)
+        row_id = casilla_identity.casilla_identity_row_id(row)
         if row_id is None:
             continue
         if row_id in by_id:
@@ -123,16 +123,16 @@ def _patch_casilla_override(
     origins: list[tuple[str | None, str | None]],
 ) -> tuple[str | None, bool]:
     identity, index = _casilla_override_target(context, predecessor_id, declaration, by_id, seen)
-    table = _as_toml_table(result[index])
+    table = as_toml_table(result[index])
     if table is None:
         raise RegistryLoadError(f"{context}: selected casilla {identity!r} is not a table")
     patched = {key: value for key, value in table.items() if key not in LINEAGE_CLAIM_FIELDS}
-    if _ROW_SOURCE_FIELD in declaration.fields:
-        patched.pop(_ROW_SOURCE_ADDITIONS_FIELD, None)
-    result[index] = _patch_family_table(
+    if ROW_SOURCE_FIELD in declaration.fields:
+        patched.pop(ROW_SOURCE_ADDITIONS_FIELD, None)
+    result[index] = patch_family_table(
         f"{context}: casilla {identity!r}", patched, declaration.fields, declaration.removed_fields
     )
-    resulting_id = _casilla_identity._row_id(result[index])
+    resulting_id = casilla_identity.casilla_identity_row_id(result[index])
     changed_label = bool(
         _ROW_LABEL_IDENTITY_FIELDS.intersection(declaration.fields)
         or _ROW_LABEL_IDENTITY_FIELDS.intersection(declaration.removed_fields)
@@ -166,11 +166,15 @@ def _remove_casilla_rows(
     origins: list[tuple[str | None, str | None]],
     removed: set[str],
 ) -> tuple[tuple[object, ...], list[tuple[str | None, str | None]]]:
-    kept_indexes = [index for index, row in enumerate(result) if (_casilla_identity._row_id(row) or "") not in removed]
+    kept_indexes = [
+        index
+        for index, row in enumerate(result)
+        if (casilla_identity.casilla_identity_row_id(row) or "") not in removed
+    ]
     return tuple(result[index] for index in kept_indexes), [origins[index] for index in kept_indexes]
 
 
-def _apply_casilla_positions[OriginT](
+def apply_casilla_positions[OriginT](
     context: str,
     rows: list[object],
     origins: list[OriginT],
@@ -193,7 +197,7 @@ def _apply_casilla_positions[OriginT](
 
     # quadratic in its member count.
 
-    row_ids: list[str | None] = [_casilla_identity._row_id(row) for row in rows]
+    row_ids: list[str | None] = [casilla_identity.casilla_identity_row_id(row) for row in rows]
 
     for declaration in positions:
         identity = str(declaration.id)

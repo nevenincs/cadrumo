@@ -34,9 +34,9 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.tests.formula_runtime_support import evaluate as _evaluate
+from cadrumo.domain.calculations.registry.tests.formula_runtime_support import evaluate
 
-from ._registry_schema_support import _committed_modelo
+from .registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,7 +52,7 @@ _ART_19_2F_OTROS_GASTOS_EUR = Decimal("2000")
 
 @lru_cache
 def _revision(year: str):
-    modelo = _committed_modelo("100")
+    modelo = committed_modelo("100")
     return modelo.revisions[year]
 
 
@@ -94,9 +94,9 @@ def test_casilla_0019_auto_applies_the_2000_euro_otros_gastos() -> None:
     """
     for year in _IN_SCOPE_REVISIONS:
         expression = _formula_for_target(_revision(year), "0019").expression
-        assert _evaluate(expression, {"0018": Decimal("5000")}) == _ART_19_2F_OTROS_GASTOS_EUR, year
-        assert _evaluate(expression, {"0018": Decimal("1200")}) == Decimal("1200"), year
-        assert _evaluate(expression, {"0018": Decimal("0")}) == Decimal("0"), year
+        assert evaluate(expression, {"0018": Decimal("5000")}) == _ART_19_2F_OTROS_GASTOS_EUR, year
+        assert evaluate(expression, {"0018": Decimal("1200")}) == Decimal("1200"), year
+        assert evaluate(expression, {"0018": Decimal("0")}) == Decimal("0"), year
 
 
 def test_casilla_0022_clamps_net_and_enforces_letter_f_cap() -> None:
@@ -123,7 +123,7 @@ def test_casilla_0022_clamps_net_and_enforces_letter_f_cap() -> None:
             "0020": Decimal("0"),
             "0021": Decimal("0"),
         }
-        assert _evaluate(expression, base) == Decimal("3000"), year
+        assert evaluate(expression, base) == Decimal("3000"), year
 
         over_entered = {
             "0018": Decimal("5000"),
@@ -131,7 +131,7 @@ def test_casilla_0022_clamps_net_and_enforces_letter_f_cap() -> None:
             "0020": Decimal("4000"),
             "0021": Decimal("0"),
         }
-        assert _evaluate(expression, over_entered) == Decimal("0"), year
+        assert evaluate(expression, over_entered) == Decimal("0"), year
 
 
 def test_otros_gastos_feeds_net_end_to_end() -> None:
@@ -148,6 +148,6 @@ def test_otros_gastos_feeds_net_end_to_end() -> None:
         neto = _formula_for_target(revision, "0022").expression
 
         values: dict[CasillaId, Decimal] = {"0018": Decimal("5000"), "0020": Decimal("0"), "0021": Decimal("0")}
-        values["0019"] = _evaluate(otros, values)
+        values["0019"] = evaluate(otros, values)
         assert values["0019"] == _ART_19_2F_OTROS_GASTOS_EUR, year
-        assert _evaluate(neto, values) == Decimal("3000"), year
+        assert evaluate(neto, values) == Decimal("3000"), year

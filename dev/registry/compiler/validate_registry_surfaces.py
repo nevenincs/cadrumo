@@ -24,20 +24,20 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     verification_predicate_operator_name,
 )
 
-from ._validate_helpers import missing_refs as _missing_refs
 from .validate_evidence import EvidenceValidator
+from .validate_helpers import missing_refs
 from .validate_official_source_guidance_content import deadline_window_content_failures
 from .validate_verification_predicates import (
     CASILLA_LIST_OPERATORS,
-    _advisory_when_ratio_ge_predicate_failures,
-    _casilla_equals_implies_diverges_predicate_failures,
-    _casilla_equals_implies_numeric_predicate_failures,
-    _casilla_equals_implies_profile_flag_predicate_failures,
-    _casilla_list_predicate_failures,
-    _deduccion_requires_adquisicion_before_predicate_failures,
-    _finding_kind_failures,
-    _profile_field_required_predicate_failures,
-    _profile_flag_enabled_predicate_failures,
+    advisory_when_ratio_ge_predicate_failures,
+    casilla_equals_implies_diverges_predicate_failures,
+    casilla_equals_implies_numeric_predicate_failures,
+    casilla_equals_implies_profile_flag_predicate_failures,
+    casilla_list_predicate_failures,
+    deduccion_requires_adquisicion_before_predicate_failures,
+    finding_kind_failures,
+    profile_field_required_predicate_failures,
+    profile_flag_enabled_predicate_failures,
 )
 
 # Operators mixing casilla ids with literal tokens, so they cannot route through the
@@ -49,22 +49,22 @@ MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
     Callable[[str, str, str, set[CasillaId], Mapping[CasillaId, CasillaDefinition]], list[str]],
 ] = {
     "casilla_equals_implies_nonzero": partial(
-        _casilla_equals_implies_numeric_predicate_failures,
+        casilla_equals_implies_numeric_predicate_failures,
         operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
     ),
     "casilla_equals_implies_zero": partial(
-        _casilla_equals_implies_numeric_predicate_failures,
+        casilla_equals_implies_numeric_predicate_failures,
         operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
     ),
-    "casilla_equals_implies_profile_flag": _casilla_equals_implies_profile_flag_predicate_failures,
-    "casilla_equals_implies_diverges": _casilla_equals_implies_diverges_predicate_failures,
-    "deduccion_requires_adquisicion_before": _deduccion_requires_adquisicion_before_predicate_failures,
-    "advisory_when_ratio_ge": _advisory_when_ratio_ge_predicate_failures,
+    "casilla_equals_implies_profile_flag": casilla_equals_implies_profile_flag_predicate_failures,
+    "casilla_equals_implies_diverges": casilla_equals_implies_diverges_predicate_failures,
+    "deduccion_requires_adquisicion_before": deduccion_requires_adquisicion_before_predicate_failures,
+    "advisory_when_ratio_ge": advisory_when_ratio_ge_predicate_failures,
 }
 
 PROFILE_PREDICATE_VALIDATORS: dict[str, Callable[[str, str, str], list[str]]] = {
-    "profile_flag_enabled": _profile_flag_enabled_predicate_failures,
-    "profile_field_required": _profile_field_required_predicate_failures,
+    "profile_flag_enabled": profile_flag_enabled_predicate_failures,
+    "profile_field_required": profile_field_required_predicate_failures,
 }
 
 
@@ -81,8 +81,8 @@ def validate_cross_reference_section(
     oracle_bindings: dict[str, str] = {}
     for cross_reference in revision.live_cross_references:
         owner = f"cross-reference {cross_reference.id}"
-        failures.extend(_missing_refs(prefix, owner, cross_reference.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, cross_reference.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, cross_reference.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, cross_reference.source_refs, source_refs, "source"))
         failures.extend(
             evidence.require_source_tier(
                 prefix,
@@ -93,8 +93,8 @@ def validate_cross_reference_section(
         )
         for predicate in cross_reference.applicability_predicates:
             predicate_owner = f"{owner} applicability predicate {predicate.field!r}"
-            failures.extend(_missing_refs(prefix, predicate_owner, predicate.legal_refs, legal_refs, "legal"))
-            failures.extend(_missing_refs(prefix, predicate_owner, predicate.source_refs, source_refs, "source"))
+            failures.extend(missing_refs(prefix, predicate_owner, predicate.legal_refs, legal_refs, "legal"))
+            failures.extend(missing_refs(prefix, predicate_owner, predicate.source_refs, source_refs, "source"))
             failures.extend(
                 evidence.require_source_tier(
                     prefix,
@@ -127,8 +127,8 @@ def validate_workbook_parity_section(
     failures: list[str] = []
     for workbook in revision.workbook_parity_refs:
         owner = f"workbook parity {workbook.id}"
-        failures.extend(_missing_refs(prefix, owner, workbook.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, workbook.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, workbook.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, workbook.source_refs, source_refs, "source"))
         if workbook.workbook_source not in source_refs:
             failures.append(
                 f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}",
@@ -195,8 +195,8 @@ def validate_verification_expectation_section(
 
     for expectation in revision.verification_expectations:
         owner = f"verification expectation {expectation.id}"
-        failures.extend(_missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, expectation.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, expectation.source_refs, source_refs, "source"))
         failures.extend(
             evidence.require_source_tier(
                 prefix,
@@ -209,7 +209,7 @@ def validate_verification_expectation_section(
 
     for predicate in revision.verification_predicates:
         owner = f"verification predicate {predicate.predicate_id}"
-        failures.extend(_missing_refs(prefix, owner, predicate.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, predicate.legal_refs, legal_refs, "legal"))
         failures.extend(
             _verification_predicate_expression_failures(
                 prefix,
@@ -319,7 +319,7 @@ def _verification_predicate_family_failures(
             f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}",
         ]
     operator = VerificationPredicateOperator(op_name)
-    failures = _finding_kind_failures(prefix, owner, operator, finding_kind)
+    failures = finding_kind_failures(prefix, owner, operator, finding_kind)
     mixed_token_validator = MIXED_TOKEN_PREDICATE_VALIDATORS.get(op_name)
     if mixed_token_validator is not None:
         return [*failures, *mixed_token_validator(prefix, owner, expression, casillas, casilla_by_id)]
@@ -332,7 +332,7 @@ def _verification_predicate_family_failures(
         # publication, where runtime evaluation would refuse it with a ModeloError.
         return [
             *failures,
-            *_casilla_list_predicate_failures(
+            *casilla_list_predicate_failures(
                 prefix,
                 owner,
                 expression,
@@ -360,8 +360,8 @@ def validate_application_link_section(
     failures: list[str] = []
     for link in revision.application_links:
         owner = f"application link {link.id}"
-        failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, link.source_refs, source_refs, "source"))
         if _allowed_application_link_source_tiers(link.surface) == _DEFAULT_APPLICATION_LINK_SOURCE_TIERS:
             failures.extend(
                 evidence.require_procedural_evidence(
@@ -398,8 +398,8 @@ def validate_deadline_window_section(
     failures: list[str] = []
     for window in revision.deadline_windows:
         owner = f"deadline window {window.id}"
-        failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
         failures.extend(
             evidence.require_procedural_evidence(
                 prefix,
@@ -439,8 +439,8 @@ def validate_deadline_window_section(
                 )
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
-            failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
-            failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
+            failures.extend(missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
             failures.extend(
                 evidence.require_source_tier(
                     prefix,

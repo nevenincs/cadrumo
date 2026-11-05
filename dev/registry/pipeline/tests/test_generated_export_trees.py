@@ -41,13 +41,6 @@ from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import (
     load_modelo_directory,
 )
-from .._export_tree import render_complete_export_tree
-from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from .._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedHistoricalStaticGeneratedExportTree,
-    validate_generated_export_tree,
-)
 from ..cli import GeneratedTreeInvocation, prepare_generated_tree_invocation
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
@@ -57,6 +50,7 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
 )
 from ..export_fragment_provenance_projection import loader_semantic_digest
+from ..export_tree import render_complete_export_tree
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
@@ -67,7 +61,13 @@ from ..render_check import (
     select_revision_record_design_source,
 )
 from ..source_defects import source_defects_for
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos, tree_inheritance
+from ..tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
+from ..tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedHistoricalStaticGeneratedExportTree,
+    validate_generated_export_tree,
+)
+from .generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos, tree_inheritance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 

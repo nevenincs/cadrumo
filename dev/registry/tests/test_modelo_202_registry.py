@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.schema_formula import FormulaExpressio
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -90,7 +90,7 @@ _M202_CLOSED_REVISION_SOURCE_CASES = (
 
 @lru_cache
 def _load_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("202")
+    return committed_modelo("202")
 
 
 def test_committed_modelo_202_validates_against_catalogues() -> None:
@@ -274,7 +274,7 @@ def test_committed_modelo_202_art_40_2_base_reads_the_modelo_200_box_net_of_rete
     edition computes nothing, so a relation reading it takes the filed value.
     """
     modelo, _catalogues = _load_modelo_202()
-    modelo_200, _ = _committed_modelo("200")
+    modelo_200, _ = committed_modelo("200")
     relation_sources: set[str] = set()
     for revision in modelo.revisions.values():
         for binding, provider in relation_prefill_bindings_for_period(revision):

@@ -18,8 +18,9 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
-from ._referential_integrity_support import (
+from ..conformance.registry_schema_support import committed_registry_tree
+from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
+from .referential_integrity_support import (
     EXTRA_LEGAL_ID,
     EXTRA_SOURCE_ID,
     NUMERIC_CASILLA_01,
@@ -44,7 +45,6 @@ from ._referential_integrity_support import (
     segmented_casilla,
     single_segment_casilla,
 )
-from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
 
 pytestmark = [
     pytest.mark.unit,
@@ -236,7 +236,7 @@ def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
 
 def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None:
     """A bundled-corpus manifest cannot omit one of its non-internal closure casillas."""
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "200")
     revision = next(revision for revision in modelo.revisions.values() if revision.completeness_manifest is not None)
     manifest = revision.completeness_manifest
@@ -276,7 +276,7 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
 
 def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_required() -> None:
     """The resolved E5AF formulas and reviewed manifests agree for 2022-2024."""
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
     expected_by_revision = {
         "2022": frozenset({"0160"}),
@@ -321,7 +321,7 @@ def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_
 
 def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:
     """Internal calculation nodes cannot become official manifest denominator rows."""
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "200")
     revision = next(revision for revision in modelo.revisions.values() if revision.completeness_manifest is not None)
     manifest = revision.completeness_manifest

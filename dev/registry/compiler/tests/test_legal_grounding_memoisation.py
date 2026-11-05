@@ -22,8 +22,8 @@ from dev.corpus.text import corpus_redaction_marks
 from .. import legal_grounding
 from ..corpus_provenance import corpus_content_digest, corpus_digest_pass
 from ..legal_grounding import (
-    _corpus_redaction_mark_count,
-    _resolved_corpus_paths,
+    corpus_redaction_mark_count,
+    resolved_corpus_paths,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -92,12 +92,12 @@ def test_a_documents_redactions_are_counted_once_and_match_the_marks(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     path = _document(tmp_path, "ley.html", _REDACTION_DOCUMENT)
-    legal_grounding._REDACTION_MARK_COUNTS.clear()
+    legal_grounding.REDACTION_MARK_COUNTS.clear()
     expected = len(corpus_redaction_marks(path.read_text(encoding="utf-8", errors="replace")))
     reads = _count_reads(monkeypatch)
 
     with corpus_digest_pass():
-        counts = {_corpus_redaction_mark_count(path) for _ in range(4)}
+        counts = {corpus_redaction_mark_count(path) for _ in range(4)}
 
     assert counts == {expected}, "the memo must not change the count the refusal reports"
     assert reads.count(path) == 2, "one digest read and one decoding read, however many references ask"
@@ -105,12 +105,12 @@ def test_a_documents_redactions_are_counted_once_and_match_the_marks(
 
 def test_a_stat_preserving_rewrite_is_recounted(tmp_path: Path) -> None:
     path = _document(tmp_path, "ley.html", _REDACTION_DOCUMENT)
-    legal_grounding._REDACTION_MARK_COUNTS.clear()
-    before = _corpus_redaction_mark_count(path)
+    legal_grounding.REDACTION_MARK_COUNTS.clear()
+    before = corpus_redaction_mark_count(path)
 
     _forge_stat_preserving_rewrite(path, b"<p>one consolidated text</p>")
 
-    after = _corpus_redaction_mark_count(path)
+    after = corpus_redaction_mark_count(path)
     assert before >= 2, "the fixture must start fused, or the invalidation proves nothing"
     assert after < 2
 
@@ -118,16 +118,16 @@ def test_a_stat_preserving_rewrite_is_recounted(tmp_path: Path) -> None:
 def test_one_corpus_path_resolves_its_sidecars_once(tmp_path: Path) -> None:
     _document(tmp_path, "ley.html", b"<p>text</p>")
     root = tmp_path.resolve()
-    _resolved_corpus_paths.cache_clear()
+    resolved_corpus_paths.cache_clear()
 
-    results = {_resolved_corpus_paths(root, "corpus/normatives/html/ley.html") for _ in range(6)}
+    results = {resolved_corpus_paths(root, "corpus/normatives/html/ley.html") for _ in range(6)}
 
     (document, annotation, sidecar) = next(iter(results))
     assert len(results) == 1
     assert document.name == "ley.html"
     assert annotation.name == "ley.html.annotation.json"
     assert sidecar.name == "ley.html.extracted.json"
-    info = _resolved_corpus_paths.cache_info()
+    info = resolved_corpus_paths.cache_info()
     assert info.misses == 1, "one path must reach the filesystem resolver exactly once"
     assert info.hits == 5
 
@@ -136,10 +136,10 @@ def test_a_different_root_resolves_separately(tmp_path: Path) -> None:
     """The memo keys on the root too, so two roots cannot share one answer."""
     other = tmp_path / "other"
     other.mkdir()
-    _resolved_corpus_paths.cache_clear()
+    resolved_corpus_paths.cache_clear()
 
-    first = _resolved_corpus_paths(tmp_path.resolve(), "corpus/normatives/html/ley.html")
-    second = _resolved_corpus_paths(other.resolve(), "corpus/normatives/html/ley.html")
+    first = resolved_corpus_paths(tmp_path.resolve(), "corpus/normatives/html/ley.html")
+    second = resolved_corpus_paths(other.resolve(), "corpus/normatives/html/ley.html")
 
     assert first != second
-    assert _resolved_corpus_paths.cache_info().misses == 2
+    assert resolved_corpus_paths.cache_info().misses == 2

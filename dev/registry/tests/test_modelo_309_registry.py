@@ -20,7 +20,7 @@ from ..compiler.loader import (
     load_modelo_directory,
     load_shared_catalogues,
 )
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -162,7 +162,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
             base_amount=Decimal("25000"),
             iva_amount=Decimal("5250"),
             deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-            deduction_provenance=_deduction_provenance(
+            deduction_provenance=ledger_iva_aggregation_deduction_provenance(
                 IvaDeductionFactKind.from_registry("intra_eu_current"),
                 source_locator="self-assessment:vehicle-acquisition",
             ),

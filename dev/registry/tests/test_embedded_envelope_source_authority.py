@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validate_exports import validate_embedded_envelope_source_authority
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,7 +48,7 @@ def _case_modelo_and_revision(
     embedded_envelope_case: tuple[str, int, str, str],
 ):  # type: ignore[no-untyped-def]  # reason: test-local tuple unpacking preserves the concrete registry model types at every mutation site
     modelo_id, filing_year, period, declaration_name = embedded_envelope_case
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
     # The revision the build coordinate selects, so every mutation reaches the
     # snapshot the build composes rather than an era it never reads.

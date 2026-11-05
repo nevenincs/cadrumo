@@ -20,25 +20,23 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .loader_fields import (
-    _EXPORT_REFS_FIELD,
-    _INHERITED_SECTION,
+    EXPORT_REFS_FIELD,
+    INHERITED_SECTION,
 )
 from .loader_semantics import (
     compile_export_semantic_field,
     compile_projection_endpoint_declaration,
     passthrough_toml_row,
 )
+from .toml_helpers import as_toml_table
 
 
-def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
+def refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
     """Refuse a casilla row that declares ``export_refs``, which the loader derives from the layouts."""
-    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    rows = as_toml_array(payload.get(INHERITED_SECTION, ())) or ()
     authored = sorted(
-        str(table.get("id"))
-        for row in rows
-        if (table := _as_toml_table(row)) is not None and _EXPORT_REFS_FIELD in table
+        str(table.get("id")) for row in rows if (table := as_toml_table(row)) is not None and EXPORT_REFS_FIELD in table
     )
     if authored:
         raise RegistryLoadError(
@@ -47,7 +45,7 @@ def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: M
         )
 
 
-def _with_derived_export_refs(
+def with_derived_export_refs(
     source_path: Path,
     revision: ModeloRevision,
     payload: Mapping[str, object],
@@ -68,7 +66,7 @@ def _with_derived_export_refs(
         return revision
     _require_declared_export_targets(source_path, revision, derived)
     casillas = _casillas_with_export_references(source_path, revision, payload, derived)
-    return revision.model_copy(update={_INHERITED_SECTION: casillas})
+    return revision.model_copy(update={INHERITED_SECTION: casillas})
 
 
 def _require_declared_export_targets(
@@ -91,23 +89,23 @@ def _casillas_with_export_references(
     payload: Mapping[str, object],
     derived: Mapping[str, object],
 ) -> tuple[CasillaDefinition, ...]:
-    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    rows = as_toml_array(payload.get(INHERITED_SECTION, ())) or ()
     casillas: list[CasillaDefinition] = []
     for casilla, row in zip(revision.casillas, rows, strict=True):
         refs = derived.get(casilla.id)
-        table = _as_toml_table(row)
+        table = as_toml_table(row)
         if refs is None or table is None:
             casillas.append(casilla)
             continue
         try:
-            casillas.append(CasillaDefinition.model_validate({**table, _EXPORT_REFS_FIELD: refs}))
+            casillas.append(CasillaDefinition.model_validate({**table, EXPORT_REFS_FIELD: refs}))
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
     return tuple(casillas)
 
 
 def _compile_revision_projection_record(source_path: Path, raw_record: object) -> dict[str, object]:
-    record = _as_toml_table(raw_record)
+    record = as_toml_table(raw_record)
     if record is None:
         return passthrough_toml_row(raw_record)
     compiled = dict(record)
@@ -118,7 +116,7 @@ def _compile_revision_projection_record(source_path: Path, raw_record: object) -
 
 
 def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -> dict[str, object]:
-    layout = _as_toml_table(raw_layout)
+    layout = as_toml_table(raw_layout)
     if layout is None:
         return passthrough_toml_row(raw_layout)
     compiled = dict(layout)
@@ -130,7 +128,7 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
     return compiled
 
 
-def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
+def compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
     """Compile revision-owned typed tokens before schema construction."""
     compiled = dict(payload)
     declarations = as_toml_array(payload.get("projection_endpoints"))

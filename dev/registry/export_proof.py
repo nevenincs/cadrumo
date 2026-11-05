@@ -10,16 +10,12 @@ from pydantic import BaseModel, model_validator
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from .filing_export_proof_contracts import (
-    FilingExportProof as _FilingExportProof,
-)
-from .filing_export_proof_contracts import (
-    FilingExportProofCoordinate as _FilingExportProofCoordinate,
-)
-from .filing_export_proof_contracts import (
-    FilingExportProofToken as _FilingExportProofToken,
+    FilingExportProof,
+    FilingExportProofCoordinate,
+    FilingExportProofToken,
 )
 
-_Token = _FilingExportProofToken
+_Token = FilingExportProofToken
 
 
 class FilingExportProofChannel(StrEnum):
@@ -46,7 +42,7 @@ class FilingExportProofRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    coordinate: _FilingExportProofCoordinate
+    coordinate: FilingExportProofCoordinate
     channel: FilingExportProofChannel
     reason: FilingExportProofRefusalReason
     authority_id: _Token | None = None
@@ -57,8 +53,8 @@ class FilingExportProofAssessment(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    coordinate: _FilingExportProofCoordinate
-    proof: _FilingExportProof | None = None
+    coordinate: FilingExportProofCoordinate
+    proof: FilingExportProof | None = None
     refusals: tuple[FilingExportProofRefusal, ...] = ()
 
     @model_validator(mode="after")
@@ -79,7 +75,7 @@ class FilingExportProofAssessment(BaseModel):
 class FilingExportProofAuthority(Protocol):
     """Composite authority consumed by dynamic release assessment."""
 
-    def assess_for(self, coordinate: _FilingExportProofCoordinate) -> FilingExportProofAssessment:
+    def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
         """Return complete two-channel proof or explicit per-channel refusal."""
         ...
 

@@ -53,13 +53,13 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import validate_binding_registration_section
 from .ledger_iva_aggregation_support import (
-    _calculate_303_from_observations,
-    _calculate_390_from_observations_and_303_filings,
-    _category,
-    _deduction_kind,
-    _deduction_provenance,
-    _flow,
-    _rate_kind,
+    calculate_303_from_observations,
+    calculate_390_from_observations_and_303_filings,
+    deduction_kind,
+    ledger_iva_aggregation_category,
+    ledger_iva_aggregation_deduction_provenance,
+    ledger_iva_aggregation_flow,
+    ledger_iva_aggregation_rate_kind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -220,19 +220,21 @@ _INVESTMENT_KINDS = frozenset({"domestic_investment", "import_investment", "intr
 
 def _ledger_row(row: _Row, *, ledger_id: str, on: date, applied_rate: Decimal | None) -> IvaLedgerObservation:
     """Build one row as the ledger projection emits it, asset id included for a bien de inversion."""
-    kind = None if row.kind is None else _deduction_kind(row.kind, effective_date=on)
+    kind = None if row.kind is None else deduction_kind(row.kind, effective_date=on)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=on,
-        category=_category(row.category, effective_date=on),
-        rate_kind=_rate_kind("general" if row.rate == _GENERAL else "reduced", effective_date=on),
-        flow_direction=_flow(row.flow, effective_date=on),
+        category=ledger_iva_aggregation_category(row.category, effective_date=on),
+        rate_kind=ledger_iva_aggregation_rate_kind("general" if row.rate == _GENERAL else "reduced", effective_date=on),
+        flow_direction=ledger_iva_aggregation_flow(row.flow, effective_date=on),
         base_amount=Decimal(row.base),
         iva_amount=Decimal(row.cuota),
         applied_rate=applied_rate,
         deduction_fact_kind=kind,
         deduction_provenance=(
-            None if kind is None else _deduction_provenance(kind, source_locator=f"test-ledger:{ledger_id}")
+            None
+            if kind is None
+            else ledger_iva_aggregation_deduction_provenance(kind, source_locator=f"test-ledger:{ledger_id}")
         ),
         investment_asset_id=f"BI-{ledger_id}" if row.kind in _INVESTMENT_KINDS else None,
         rectifies_ledger_id=(None if row.rectifies is None else f"{on.year}-1T-{row.rectifies}"),
@@ -262,13 +264,13 @@ def _file_year(year: int) -> _Year:
     for period in _QUARTER_MONTH:
         quarter_rows = _rows_for(year, period)
         rows += quarter_rows
-        quarters[period] = _calculate_303_from_observations(
+        quarters[period] = calculate_303_from_observations(
             filing_year=year,
             period=period,
             observations=quarter_rows,
             operator_inputs={_casilla("42"): Decimal(_REAGP_BY_QUARTER[period])},
         )
-    annual = _calculate_390_from_observations_and_303_filings(
+    annual = calculate_390_from_observations_and_303_filings(
         filing_year=year,
         observations=rows,
         quarterly_results=quarters,

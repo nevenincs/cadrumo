@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupport
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import oldest_authored_edition
 from .modelo_registry_surface_support import (
     FORBIDDEN_REMOTE_ACTIONS,
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def _load_modelo_347():
-    return _committed_modelo("347")
+    return committed_modelo("347")
 
 
 def test_committed_modelo_347_validates_against_catalogues() -> None:

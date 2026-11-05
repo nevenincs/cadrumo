@@ -85,7 +85,7 @@ def _prepare_publication_context(
     replace_tree: Callable[[Path, Path], None] | None,
 ) -> tuple[Callable[[Path, Path], None], Path, Path]:
     _require_regular_tree(casillas_root, subject="canonical casilla tree")
-    replace = _replace_tree if replace_tree is None else replace_tree
+    replace = casilla_tree_transaction_replace_tree if replace_tree is None else replace_tree
     _require_transaction_token(journal_name, subject="journal name")
     _require_transaction_token(stage_prefix, subject="stage prefix")
     _require_transaction_token(backup_prefix, subject="backup prefix")
@@ -238,7 +238,7 @@ def _recover_transaction_state(
             backup,
             workspace=workspace,
             stage_prefix=stage_prefix,
-            replace_tree=_replace_tree,
+            replace_tree=casilla_tree_transaction_replace_tree,
         )
     elif journal["state"] != "intent" and not casillas_root.exists():
         raise RegistryValidationError(f"casilla publication cannot recover missing canonical tree: {journal_path}")
@@ -306,7 +306,7 @@ def _recover_live_candidate(
             backup,
             workspace=workspace,
             stage_prefix=stage_prefix,
-            replace_tree=_replace_tree,
+            replace_tree=casilla_tree_transaction_replace_tree,
         )
     else:
         if backup.exists():
@@ -358,7 +358,7 @@ def _require_regular_tree(path: Path, *, subject: str) -> None:
             raise RegistryValidationError(f"{subject} contains a non-regular or hard-linked member: {child}")
 
 
-def _replace_tree(source: Path, destination: Path) -> None:
+def casilla_tree_transaction_replace_tree(source: Path, destination: Path) -> None:
     os.replace(source, destination)
     fsync_parent_dir(destination)
 

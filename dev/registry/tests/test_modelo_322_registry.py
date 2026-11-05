@@ -17,9 +17,9 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import source_first_exercise, source_with_sha256
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -34,7 +34,7 @@ _LEGACY_MONTHLY_REVISION = "2008-2022"
 
 
 def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("322")
+    return committed_modelo("322")
 
 
 def test_modelo_322_validator_accepts_committed_definition() -> None:
@@ -353,7 +353,7 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
             base_amount=Decimal("2000"),
             iva_amount=Decimal("420"),
             deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_provenance=_deduction_provenance(
+            deduction_provenance=ledger_iva_aggregation_deduction_provenance(
                 IvaDeductionFactKind.from_registry("domestic_current"),
                 source_locator="invoice:sop-1",
             ),

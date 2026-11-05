@@ -27,17 +27,17 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_equivalence import (
-    _prove_chain,
+    prove_chain,
 )
 from ..edition_delta_migration import main, migrate_modelo
 from ..edition_delta_order_restoration import (
     OrderRestoration,
-    _prove_order_restoration,
-    _write_order_restorations,
     declared_order_restorations,
+    prove_order_restoration,
+    write_order_restorations,
 )
-from ..edition_delta_planning import _plan
-from ..edition_delta_writer import _write_edition
+from ..edition_delta_planning import edition_delta_planning_plan
+from ..edition_delta_writer import write_edition
 from ..edition_family_delta_collapse import collapse_keyed_families
 from ..edition_round_trip import RoundTripReport, copy_registry_tree
 
@@ -174,22 +174,22 @@ def _stated_formula_order() -> list[str]:
 def _declared_copy(modelo_dir: Path, destination: Path) -> tuple[Path, tuple[OrderRestoration, ...]]:
     restorations = declared_order_restorations(modelo_dir)
     declared_dir = shutil.copytree(modelo_dir, destination / _MODELO_ID)
-    _write_order_restorations(declared_dir, restorations)
+    write_order_restorations(declared_dir, restorations)
     return declared_dir, restorations
 
 
 def _stage_migration(planned_from: Path, staged_root: Path) -> Path:
     """Plan the modelo and write the casilla delta and the family collapse into a copy of its tree."""
-    _plan_result, works = _plan(planned_from, _definition(planned_from))
+    _plan_result, works = edition_delta_planning_plan(planned_from, _definition(planned_from))
     staged_dir = shutil.copytree(planned_from, staged_root / _MODELO_ID)
     for work in works:
-        _write_edition(staged_dir / "revisions" / work.plan.revision_id, work)
+        write_edition(staged_dir / "revisions" / work.plan.revision_id, work)
     collapse_keyed_families(planned_from, staged_dir)
     return staged_dir
 
 
 def _prove(reference_dir: Path, staged_dir: Path) -> RoundTripReport:
-    return _prove_chain(
+    return prove_chain(
         reference_modelo_dir=reference_dir,
         staged_modelo_dir=staged_dir,
         revision_ids=(_BASELINE, _EDITION),
@@ -276,7 +276,7 @@ def test_a_complete_statement_over_a_baseline_is_restored_to_its_stated_order(tm
     assert _casilla_order(declared_dir) == _stated_casilla_order()
     assert _formula_order(declared_dir) == _stated_formula_order()
     assert set(
-        _prove_order_restoration(
+        prove_order_restoration(
             reference_modelo_dir=modelo_dir, declared_modelo_dir=declared_dir, restorations=restorations
         )
     ) == {(_EDITION, "casillas"), (_EDITION, "formulas")}
@@ -342,7 +342,7 @@ def test_a_restoration_that_changes_a_member_is_refused(tmp_path: Path) -> None:
     fragment.write_text(text.replace('number = "4"', 'number = "44"'), encoding="utf-8", newline="\n")
 
     with pytest.raises(RegistryError, match="changed more than the order of its members"):
-        _prove_order_restoration(
+        prove_order_restoration(
             reference_modelo_dir=modelo_dir, declared_modelo_dir=declared_dir, restorations=restorations
         )
 

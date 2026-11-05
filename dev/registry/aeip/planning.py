@@ -9,7 +9,7 @@ from itertools import pairwise
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from .adjudications import AdjudicationSet
-from .identity import CHAIN_ID_MAX_LENGTH, _normalise, chain_id_for, chain_id_is_wellformed
+from .identity import CHAIN_ID_MAX_LENGTH, chain_id_for, chain_id_is_wellformed, normalise
 from .types import AeipAmbiguity, AeipEvent, AeipInventory, AeipOccurrence, ChainPlan, ChainPlanEntry, EvolutionPair
 
 __all__ = ("plan_chains", "render_evolution_record")
@@ -158,7 +158,7 @@ def _title_variant_ambiguities(
     # relabelled or two successive designations; the distinction is legal.
     masked: dict[str, list[AeipEvent]] = defaultdict(list)
     for event in inventory.events:
-        masked[_YEAR_TOKEN.sub("Y", _normalise(event.title))].append(event)
+        masked[_YEAR_TOKEN.sub("Y", normalise(event.title))].append(event)
     found: list[AeipAmbiguity] = []
     for variants in masked.values():
         if len(variants) < 2:
@@ -190,7 +190,7 @@ def _classify_pair(earlier: AeipOccurrence, later: AeipOccurrence) -> str:
     recording it as ``unchanged`` would be a drift the strict cross-revision
     validator refuses. A retirement is planned separately.
     """
-    label_moved = _normalise(earlier.label) != _normalise(later.label)
+    label_moved = normalise(earlier.label) != normalise(later.label)
     refs_moved = tuple(earlier.legal_refs) != tuple(later.legal_refs)
     if label_moved and refs_moved:
         return "label_and_legal_refs_evolved"
@@ -201,7 +201,7 @@ def _classify_pair(earlier: AeipOccurrence, later: AeipOccurrence) -> str:
     return "unchanged"
 
 
-def _merge_source_refs(*occurrences: AeipOccurrence | None) -> tuple[str, ...]:
+def merge_source_refs(*occurrences: AeipOccurrence | None) -> tuple[str, ...]:
     """Return validated occurrence source ids in stable, duplicate-free order."""
     refs: list[str] = []
     for occurrence in occurrences:
@@ -275,7 +275,7 @@ def _adjacent_evolutions(chain_id: str, rows: list[AeipOccurrence]) -> tuple[Evo
             to_revision=later.revision_id,
             evolution_kind=_classify_pair(earlier, later),
             legal_refs=later.legal_refs,
-            source_refs=_merge_source_refs(earlier, later),
+            source_refs=merge_source_refs(earlier, later),
         )
         for earlier, later in pairwise(rows)
     )
@@ -298,7 +298,7 @@ def _retirement_evolution(
             to_revision=revisions[last_index + 1],
             evolution_kind="retired",
             legal_refs=last.legal_refs,
-            source_refs=_merge_source_refs(last),
+            source_refs=merge_source_refs(last),
         ),
     )
 

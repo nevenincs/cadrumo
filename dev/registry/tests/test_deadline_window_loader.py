@@ -11,10 +11,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text as _standard_manifest_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
+    standard_manifest_text,
+    standard_revision_preamble_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,8 +37,8 @@ def _write_deadline_modelo(root: Path, title: str, window_text: str) -> Path:
     revision_dir = modelo_dir / "revisions" / "2025"
     deadline_dir = revision_dir / "deadline_windows"
     deadline_dir.mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(_standard_manifest_text(title), encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(_standard_revision_preamble_text(), encoding="utf-8")
+    (modelo_dir / "manifest.toml").write_text(standard_manifest_text(title), encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(standard_revision_preamble_text(), encoding="utf-8")
     (deadline_dir / "0001-deadline-windows.toml").write_text(window_text, encoding="utf-8")
     return modelo_dir
 
@@ -63,7 +61,7 @@ def test_revision_level_deadline_qualifier_is_refused_outside_deadline_window_ro
     modelo_dir = _write_deadline_modelo(tmp_path, "misplaced qualifier", _QUALIFIED_WINDOW)
     revision_manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
     revision_manifest.write_text(
-        _standard_revision_preamble_text() + f"{qualifier} = {value}\n",
+        standard_revision_preamble_text() + f"{qualifier} = {value}\n",
         encoding="utf-8",
     )
 

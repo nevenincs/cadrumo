@@ -54,7 +54,7 @@ from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
+from .gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [
     pytest.mark.integration,

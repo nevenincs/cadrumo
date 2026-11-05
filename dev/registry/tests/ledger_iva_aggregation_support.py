@@ -73,7 +73,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _deduction_provenance(
+def ledger_iva_aggregation_deduction_provenance(
     kind: IvaDeductionFactKind,
     *,
     source_locator: str,
@@ -114,7 +114,7 @@ def general_settlement_observations(
             base_amount=Decimal("0"),
             iva_amount=deducible,
             deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_provenance=_deduction_provenance(
+            deduction_provenance=ledger_iva_aggregation_deduction_provenance(
                 IvaDeductionFactKind.from_registry("domestic_current"),
                 source_locator=f"invoice:{ledger_id_prefix}deducible-general",
             ),
@@ -123,59 +123,59 @@ def general_settlement_observations(
     )
 
 
-_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.interior.devengado"
 )
-_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.interior.deducible"
 )
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.intracomunitaria.devengado"
 )
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.intracomunitaria.deducible"
 )
-_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.importaciones")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
-_M303_COMPENSACION_GENERADA_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
-_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
-_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
-_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
-_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
-_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
-_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
-_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = validated_casilla_id(
+M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.importaciones")
+M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+M303_COMPENSACION_GENERADA_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
+M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
+M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
+M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
+M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-ultimo-periodo-97"
 )
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
+M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
-_M303_REPERCUTIDO_GENERAL_BASE_CASILLA: CasillaId = validated_casilla_id("07")
-_M303_SOPORTADO_INTERIORES_BASE_CASILLA: CasillaId = validated_casilla_id("28")
-_M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA: CasillaId = validated_casilla_id("09")
-_M303_SOPORTADO_INTERIORES_CUOTA_CASILLA: CasillaId = validated_casilla_id("29")
-_M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("01")
-_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
+M303_REPERCUTIDO_GENERAL_BASE_CASILLA: CasillaId = validated_casilla_id("07")
+M303_SOPORTADO_INTERIORES_BASE_CASILLA: CasillaId = validated_casilla_id("28")
+M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA: CasillaId = validated_casilla_id("09")
+M303_SOPORTADO_INTERIORES_CUOTA_CASILLA: CasillaId = validated_casilla_id("29")
+M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("01")
+M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 
 
 @lru_cache(maxsize=1)
-def _modelo_303_revision() -> ModeloRevision:
+def modelo_303_revision() -> ModeloRevision:
     modelo = compiled_bundled_authority().modelo("303")
     return modelo.revisions["2022"]
 
 
-def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> BindingDefinition:
-    return next(item for item in _modelo_303_revision().bindings if item.id == binding_id)
+def ledger_iva_aggregation_binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> BindingDefinition:
+    return next(item for item in modelo_303_revision().bindings if item.id == binding_id)
 
 
-def _with_selector(binding: BindingDefinition, **updates: object) -> BindingDefinition:
+def with_selector(binding: BindingDefinition, **updates: object) -> BindingDefinition:
     provider = provider_member(binding, LedgerIvaProvider)
     return binding.model_copy(update={"provider": provider.model_copy(update=updates)})
 
 
-def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> BindingDefinition:
+def with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> BindingDefinition:
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
@@ -199,37 +199,37 @@ def _filing_result_disposition(
 _DOMESTIC_RATE_TIERS: Final[frozenset[str]] = frozenset({"general", "reduced", "super_reduced"})
 
 
-def _rate_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaRateKind:
+def ledger_iva_aggregation_rate_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaRateKind:
     """Resolve a fixture token through the same dated governed catalogue as production."""
     return require_iva_rate_kind(value, effective_date=effective_date)
 
 
-def _category(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCategory:
+def ledger_iva_aggregation_category(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCategory:
     """Resolve a fixture category through the dated governed catalogue."""
     return require_iva_category(value, effective_date=effective_date)
 
 
-def _flow(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaFlowDirection:
+def ledger_iva_aggregation_flow(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaFlowDirection:
     """Resolve a fixture flow through the dated governed catalogue."""
     return require_iva_flow_direction(value, effective_date=effective_date)
 
 
-def _exemption(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaExemptionArticle:
+def exemption(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaExemptionArticle:
     """Resolve a fixture exemption through the dated governed catalogue."""
     return require_iva_exemption_article(value, effective_date=effective_date)
 
 
-def _cash_treatment(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCashAccountingTreatment:
+def cash_treatment(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaCashAccountingTreatment:
     """Resolve a fixture cash treatment through the dated governed catalogue."""
     return require_iva_cash_accounting_treatment(value, effective_date=effective_date)
 
 
-def _deduction_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaDeductionFactKind:
+def deduction_kind(value: str, *, effective_date: date = date(2025, 6, 15)) -> IvaDeductionFactKind:
     """Resolve a fixture deduction kind through the dated governed catalogue."""
     return require_iva_deduction_fact_kind(value, effective_date=effective_date)
 
 
-def _deduction_authority(
+def deduction_authority(
     value: str,
     *,
     effective_date: date = date(2025, 6, 15),
@@ -238,7 +238,7 @@ def _deduction_authority(
     return require_iva_deduction_evidence_authority(value, effective_date=effective_date)
 
 
-def _observation(
+def ledger_iva_aggregation_observation(
     *,
     ledger_id: str = "ledger-1",
     txn_date: date = date(2025, 6, 15),
@@ -275,9 +275,9 @@ def _observation(
     Left optional for every other tier, where production legitimately leaves it
     unset: an exempt or not-subject line carries no rate to state.
     """
-    selected_rate_kind = rate_kind or _rate_kind("general", effective_date=txn_date)
-    selected_category = category or _category("domestic_general", effective_date=txn_date)
-    selected_flow = flow or _flow("repercutido", effective_date=txn_date)
+    selected_rate_kind = rate_kind or ledger_iva_aggregation_rate_kind("general", effective_date=txn_date)
+    selected_category = category or ledger_iva_aggregation_category("domestic_general", effective_date=txn_date)
+    selected_flow = flow or ledger_iva_aggregation_flow("repercutido", effective_date=txn_date)
     if selected_rate_kind in _DOMESTIC_RATE_TIERS and applied_rate is None:
         raise AssertionError(
             f"fixture builds a {selected_rate_kind.value} observation with no applied_rate; "
@@ -292,7 +292,7 @@ def _observation(
     }:
         raise AssertionError("fixture deduction authority disagrees with the production kind-to-authority contract")
     deduction_provenance = (
-        _deduction_provenance(
+        ledger_iva_aggregation_deduction_provenance(
             deduction_fact_kind,
             source_locator=f"test-ledger:{ledger_id}",
         )
@@ -316,11 +316,11 @@ def _observation(
     )
 
 
-def _revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevision:
-    return _modelo_303_revision().model_copy(update={"bindings": bindings})
+def revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevision:
+    return modelo_303_revision().model_copy(update={"bindings": bindings})
 
 
-def _calculate_303_from_observations(
+def calculate_303_from_observations(
     *,
     filing_year: int,
     period: str,
@@ -382,7 +382,7 @@ def _empty_register_bienes_inversion_binding_values(
     }
 
 
-def _calculate_390_from_observations_and_303_filings(
+def calculate_390_from_observations_and_303_filings(
     *,
     filing_year: int,
     observations: tuple[IvaLedgerObservation, ...],

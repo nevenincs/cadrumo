@@ -37,7 +37,7 @@ from cadrumo.domain.deadlines.models import (
 )
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -98,7 +98,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 
     assert derive_modelo_applicability.__module__ == ("cadrumo.domain.calculations.registry.applicability")
 
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     authored = {
         modelo.id for modelo in modelos if any(revision.applicability for revision in modelo.revisions.values())
     }

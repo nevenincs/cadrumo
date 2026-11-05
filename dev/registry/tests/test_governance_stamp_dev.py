@@ -24,8 +24,7 @@ from cadrumo.domain.calculations.registry.schema_governance import (
 )
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.loader_directory_mode_support import load_revision as _shared_load_revision
-from dev.registry.conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
+from dev.registry.conformance.loader_directory_mode_support import load_revision, write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,7 +52,7 @@ def _write_modelo(
     manifest_extra: str = "",
     fragment_extra: str = "",
 ) -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -63,7 +62,7 @@ def _write_modelo(
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _revision_manifest(modelo_dir: Path) -> Path:

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    modelo_100_revision,
+    modelo_100_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +56,7 @@ _EXPECTED_MURCIA_MU4_LABELS = {
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
 def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(filing_year: int) -> None:
-    revision = _modelo_100_revision(filing_year)
+    revision = modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1055", "2038", "2039"}}
     legacy_roles = [
         casilla.semantic_role
@@ -72,30 +72,30 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     assert parent.label.startswith(expected_labels["1055"])
     assert tuple(parent.section) == _MURCIA_DEDUCTION_SECTION
     assert parent.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["2038"]
     assert generated.label == expected_labels["2038"]
     assert tuple(generated.section) == _MURCIA_DEDUCTION_SECTION
     assert generated.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["2039"]
     assert pending.label == expected_labels["2039"]
     assert tuple(pending.section) == _MURCIA_DEDUCTION_SECTION
     assert pending.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
 def _assert_murcia_deduction_casilla(casilla, *, label: str, role: str) -> None:
     assert casilla.label == label
     assert tuple(casilla.section) == _MURCIA_DEDUCTION_SECTION
     assert casilla.semantic_role == role
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_ids = {"2155", "2156", "2157", "2162", "2163", "2164", "2165", "2166"}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_ids}
     legacy_roles = [

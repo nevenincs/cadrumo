@@ -281,7 +281,7 @@ _PROBE_LOCALIZATION_KEY: Final = "probe"
 
 
 @dataclass(frozen=True, slots=True)
-class _Stamp:
+class Stamp:
     """The four governance scalars, typed, as declared or as intended.
 
     ``review_status`` stays a plain string until the schema probe hydrates it:
@@ -484,7 +484,7 @@ def stamp_revision(
 
     manifest = revision_manifest_path(modelo, revision, registry_root=registry_root)
     modelo_dir = manifest.parent.parent.parent
-    compiled = _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
+    compiled = assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
 
     # BYTES, not text. ``read_text`` decodes under universal newlines and
     # ``write_text`` re-encodes under the platform's, so a read/write pair on
@@ -495,7 +495,7 @@ def stamp_revision(
     # whole-file rewrite, which is how it survived three review rounds.
     original_bytes = manifest.read_bytes()
     original = original_bytes.decode(UTF_8_ENCODING)
-    declared = _declared_governance(manifest, original, revision)
+    declared = declared_governance(manifest, original, revision)
     _assert_review_axis_is_writable(
         compiled.review_status,
         manifest=manifest,
@@ -511,7 +511,7 @@ def stamp_revision(
         reviewed_at=reviewed_at,
         scope=compiled.predecessor.revision_id if isinstance(compiled.predecessor, DeclaredPredecessor) else None,
     )
-    _assert_schema_accepts(revision, resolved, predecessor=compiled.predecessor)
+    assert_schema_accepts(revision, resolved, predecessor=compiled.predecessor)
 
     rendered = resolved.rendered()
     dropped = declared.declared_keys() - resolved.declared_keys()
@@ -519,7 +519,7 @@ def stamp_revision(
     manifest.write_bytes(apply_governance(original, revision, rendered).encode(UTF_8_ENCODING))
 
     try:
-        _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
+        assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
     except StampError:
         manifest.write_bytes(original_bytes)
         raise
@@ -651,7 +651,7 @@ def _assert_review_axis_is_writable(
 
 
 def _assert_a_new_reviewer_restates_the_date(
-    declared: _Stamp,
+    declared: Stamp,
     *,
     reviewed_by: str | None,
     reviewed_at: date | None,
@@ -825,7 +825,7 @@ def _safe_exception_detail(exc: BaseException) -> str:
     return "; ".join(error["msg"] for error in validation_error.errors(include_url=False, include_input=False))
 
 
-def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
+def assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
     """Confirm the revision exists as a COMPILED record, never as a directory listing.
 
     A subdirectory-blind read of this registry has twice produced wrong verdicts,
@@ -853,7 +853,7 @@ def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str
     return compiled
 
 
-def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
+def declared_governance(manifest: Path, text: str, revision: str) -> Stamp:
     """Read the governance scalars the manifest already declares."""
     try:
         parsed = parse_toml(text)
@@ -880,7 +880,7 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
         table_raw,
         error_factory=lambda message: StampError(f"{manifest}: {message}"),
     )
-    return _Stamp(
+    return Stamp(
         engineered_by=_declared_text(manifest, table, "engineered_by"),
         review_status=_declared_text(manifest, table, "review_status"),
         reviewed_by=_declared_text(manifest, table, "reviewed_by"),
@@ -913,7 +913,7 @@ def _declared_date(manifest: Path, table: dict[str, object]) -> date | None:
 
 
 def _resolve_stamp(
-    declared: _Stamp,
+    declared: Stamp,
     *,
     engineered_by: str | None,
     clear_engineered_by: bool,
@@ -921,7 +921,7 @@ def _resolve_stamp(
     reviewed_by: str | None,
     reviewed_at: date | None,
     scope: str | None,
-) -> _Stamp:
+) -> Stamp:
     """Merge the requested changes onto what the manifest already declares.
 
     ``scope`` is the predecessor the COMPILED edition declares, or ``None`` when
@@ -951,14 +951,14 @@ def _resolve_stamp(
                 f"attached to a review the status denies. Record the review by also passing "
                 f"review_status={StampableReviewStatus.AGENT_REVIEWED.value!r}",
             )
-        return _Stamp(
+        return Stamp(
             engineered_by=author,
             review_status=status,
             reviewed_by=None,
             reviewed_at=None,
             reviewed_against=None,
         )
-    return _Stamp(
+    return Stamp(
         engineered_by=author,
         review_status=status,
         reviewed_by=reviewed_by if reviewed_by is not None else declared.reviewed_by,
@@ -967,9 +967,9 @@ def _resolve_stamp(
     )
 
 
-def _assert_schema_accepts(
+def assert_schema_accepts(
     revision: str,
-    resolved: _Stamp,
+    resolved: Stamp,
     *,
     predecessor: DeclaredPredecessor | NoPredecessor | None,
 ) -> None:

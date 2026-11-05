@@ -62,22 +62,20 @@ from .loader_cache import (
 from .loader_fingerprints import (
     collect_modelo_directory_fingerprints,
     collect_registry_tree_fingerprints,
-)
-from .loader_fingerprints import (
-    refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
+    refresh_toml_fingerprint_after_load_error,
 )
 from .loader_materialisation import (
-    _load_catalogue_file_cached,
-    _load_modelo_directory_cached,
-    _load_modelo_manifest,
-    _load_modelo_revisions,
-    _refresh_modelo_directory_fingerprints_after_load_error,
-    _refresh_registry_tree_fingerprints_after_load_error,
-    _RegistryPathFingerprints,
-    _toml_fingerprint,
-    _validate_legal_directory,
+    RegistryPathFingerprints,
+    load_catalogue_file_cached,
+    load_modelo_directory_cached,
+    load_modelo_manifest,
+    load_modelo_revisions,
+    refresh_modelo_directory_fingerprints_after_load_error,
+    refresh_registry_tree_fingerprints_after_load_error,
+    toml_fingerprint,
+    validate_legal_directory,
 )
-from .revision_materialisation import _materialise_revisions
+from .revision_materialisation import materialise_revisions
 
 
 def _authored_facts_fingerprint(facts_directory: Path) -> tuple[tuple[str, int, int], ...]:
@@ -153,8 +151,8 @@ def load_modelo_declarations(directory: Path) -> dict[str, object]:
     """
     resolved = directory.resolve()
     validate_modelo_directory_source(resolved)
-    manifest = _load_modelo_manifest(resolved)
-    revisions = _load_modelo_revisions(resolved)
+    manifest = load_modelo_manifest(resolved)
+    revisions = load_modelo_revisions(resolved)
     if not revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
     return {**manifest, "revisions": revisions}
@@ -171,12 +169,12 @@ def load_modelo_directory(directory: Path, *, tax_id_format: SpanishTaxIdFormat 
     fingerprints = collect_modelo_directory_fingerprints(resolved)
     with _modelo_facts_in_scope(resolved):
         try:
-            return _load_modelo_directory_cached(str(resolved), fingerprints, tax_id_format)
+            return load_modelo_directory_cached(str(resolved), fingerprints, tax_id_format)
         except RegistryLoadError as exc:
-            refreshed = _refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
+            refreshed = refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
             if refreshed == fingerprints:
                 raise
-            return _load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
+            return load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
 
 
 def load_modelo_source(source: ModeloSource, *, tax_id_format: SpanishTaxIdFormat | None = None) -> ModeloDefinition:
@@ -206,16 +204,16 @@ def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
 
     keys: set[str] = set()
     for source in sources:
-        manifest = _load_modelo_manifest(source.path)
+        manifest = load_modelo_manifest(source.path)
         modelo_table = _raw_table(manifest.get("modelo"))
         if modelo_table is None:
             raise RegistryLoadError(f"{source.manifest_path}: missing [modelo] table")
         modelo_id = _required_identity(modelo_table.get("id"), f"{source.manifest_path}: [modelo].id")
-        revisions = _load_modelo_revisions(source.path)
+        revisions = load_modelo_revisions(source.path)
         if not revisions:
             raise RegistryLoadError(f"{source.path}: no revisions found in revisions/")
         _validate_predecessor_references(source.path, revisions)
-        materialisation = _materialise_revisions(source.path, modelo_id, revisions)
+        materialisation = materialise_revisions(source.path, modelo_id, revisions)
         materialised = materialisation.revisions
 
         keys.add(modelo_locale_key(modelo_id, "title"))
@@ -423,20 +421,20 @@ def _project_one_casilla_locale_keys(
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
     """Compile one mutable shared catalogue TOML file."""
     resolved = path.resolve()
-    fingerprint = _toml_fingerprint(resolved)
+    fingerprint = toml_fingerprint(resolved)
     try:
-        return _load_catalogue_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
+        return load_catalogue_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
     except RegistryLoadError as exc:
-        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
+        refreshed = refresh_toml_fingerprint_after_load_error(resolved, exc)
         if refreshed == fingerprint:
             raise
-        return _load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
+        return load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
 
 
 def load_shared_catalogues(root: Path) -> RegistryCatalogues:
     """Compile shared catalogues without compiling modelos."""
     legal_dir = root.resolve() / "legal"
-    _validate_legal_directory(legal_dir)
+    validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
@@ -522,13 +520,13 @@ def load_registry_tree(
         identity = resolve_registry_identity(resolved, collect_fingerprints=collect_registry_tree_fingerprints)
     if identity.is_stamped:
         return load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity), tax_id_format)
-    _validate_legal_directory(resolved / "legal")
+    validate_legal_directory(resolved / "legal")
     discover_modelo_sources(resolved / "modelos")
     fingerprints = collect_registry_tree_fingerprints(resolved)
     try:
         return load_registry_tree_cached(str(resolved), fingerprints, tax_id_format)
     except RegistryLoadError as exc:
-        refreshed = _refresh_registry_tree_fingerprints_after_load_error(resolved, exc)
+        refreshed = refresh_registry_tree_fingerprints_after_load_error(resolved, exc)
         if refreshed == fingerprints:
             raise
         return load_registry_tree_cached(str(resolved), refreshed, tax_id_format)
@@ -536,7 +534,7 @@ def load_registry_tree(
 
 @lru_cache(maxsize=32)
 def load_registry_tree_cached(
-    root: str, fingerprints: _RegistryPathFingerprints, tax_id_format: SpanishTaxIdFormat | None = None
+    root: str, fingerprints: RegistryPathFingerprints, tax_id_format: SpanishTaxIdFormat | None = None
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Load one fingerprinted tree, optionally under an explicit tax-ID format."""
     resolved = Path(root)

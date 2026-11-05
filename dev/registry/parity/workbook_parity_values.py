@@ -18,13 +18,13 @@ if TYPE_CHECKING:
     pass
 
 
-def _excel_value(value: Decimal | int | str | bool) -> str | int | bool:
+def excel_value(value: Decimal | int | str | bool) -> str | int | bool:
     if isinstance(value, Decimal):
         return str(value)
     return value
 
 
-def _coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
+def coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
     if value is None or isinstance(value, str | bool):
         return value
     if isinstance(value, int):

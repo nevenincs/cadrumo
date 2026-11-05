@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -40,7 +40,7 @@ _SOURCE_REFS = frozenset(
 
 
 def test_modelo_136_current_revision_is_grounded_in_model_specific_catalogues() -> None:
-    modelo, catalogues = _committed_modelo("136")
+    modelo, catalogues = committed_modelo("136")
 
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
@@ -83,7 +83,7 @@ def test_modelo_136_current_revision_is_grounded_in_model_specific_catalogues() 
 
 
 def test_modelo_136_formula_graph_matches_current_form_rows() -> None:
-    modelo, _catalogues = _committed_modelo("136")
+    modelo, _catalogues = committed_modelo("136")
     revision = modelo.revisions["2026"]
 
     casillas = {casilla.id: casilla for casilla in revision.casillas}

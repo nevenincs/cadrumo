@@ -17,9 +17,9 @@ from .. import export_layout_record_join as record_join
 from ..loader import load_modelo_directory, load_shared_catalogues
 from ..record_design_schema import RecordDesignSheet
 from ..validate_export_layout_coverage import (
-    _joined_variable_header_coverage_inputs,
-    _layout_failure,
-    _missing_report,
+    joined_variable_header_coverage_inputs,
+    layout_failure,
+    missing_report,
     validate_export_layout_record_coverage,
 )
 from ..validate_exports import validate_embedded_envelope_source_authority
@@ -43,7 +43,7 @@ def _layout(modelo: str, revision: str) -> ExportLayoutDefinition:
 
 def _sheet(source_ref: str, sheet_name: str) -> RecordDesignSheet:
     source = _catalogue()[source_ref]
-    sheets = record_join._read_design_sheets(source)
+    sheets = record_join.read_design_sheets(source)
     assert not isinstance(sheets, str)
     return next(sheet for sheet in sheets if sheet.name == sheet_name)
 
@@ -98,7 +98,7 @@ def test_source_joined_header_refuses_changed_prefix_claim(change: str) -> None:
     sheet = _sheet("aeat-dr-122-2016", "Pag. 0")
     layout = _layout("122", "2017-y-siguientes")
     source = _catalogue()["aeat-dr-122-2016"]
-    joined = record_join._join_record(sheet, layout.records, source=source)
+    joined = record_join.join_record(sheet, layout.records, source=source)
     assert joined is not None
     target = {"geometry": 23, "literal": 323, "filler": 23}[change]
 
@@ -116,7 +116,7 @@ def test_source_joined_header_refuses_changed_prefix_claim(change: str) -> None:
 
     fields = tuple(changed(field) for field in joined.fields)
     with pytest.raises(RegistryValidationError, match="contradict the source"):
-        _joined_variable_header_coverage_inputs(sheet, joined.model_copy(update={"fields": fields}))
+        joined_variable_header_coverage_inputs(sheet, joined.model_copy(update={"fields": fields}))
 
 
 @pytest.mark.parametrize("change", ("absent", "source", "hash", "identity", "extent", "equal_length_roles"))
@@ -157,7 +157,7 @@ def test_m232_variable_prefix_refuses_missing_or_changed_envelope_claim(change: 
         assert any("does not match canonical catalogue digest" in failure for failure in failures)
     else:
         changed = layout.model_copy(update={"filing_envelope": replacement})
-        failure = _layout_failure(prefix="modelo 232", layout=changed, source_refs=_catalogue())
+        failure = layout_failure(prefix="modelo 232", layout=changed, source_refs=_catalogue())
         assert failure is not None
         assert "DR23200" in failure
 
@@ -166,8 +166,8 @@ def test_modelo_390_page_seven_joins_only_with_its_exact_source_adjudication() -
     source = _catalogue()["aeat-dr-390-2022"]
     assert source.sha256 == "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
     sheet = _sheet("aeat-dr-390-2022", "Pág. 7")
-    assert record_join._join_record(sheet, _layout("390", "2022").records) is None
-    joined = record_join._join_record(sheet, _layout("390", "2022").records, source=source)
+    assert record_join.join_record(sheet, _layout("390", "2022").records) is None
+    joined = record_join.join_record(sheet, _layout("390", "2022").records, source=source)
     assert joined is not None
     assert joined.record_type == "page_07"
 
@@ -176,7 +176,7 @@ def test_source_adjudication_refuses_a_parser_that_drops_its_pinned_sheet() -> N
     source = _catalogue()["aeat-dr-390-2022"]
     other_sheet = _sheet("aeat-dr-390-2022", "Pág. 1")
     with pytest.raises(RegistryValidationError, match=r"names missing sheet 'Pág. 7'"):
-        record_join._require_adjudicated_source_sheets(source, (other_sheet,))
+        record_join.require_adjudicated_source_sheets(source, (other_sheet,))
 
 
 @pytest.mark.parametrize("change", ("hash", "content", "width"))
@@ -199,7 +199,7 @@ def test_modelo_390_adjudication_refuses_stale_source_or_changed_cell(change: st
         )
         sheet = sheet.model_copy(update={"fields": fields})
     with pytest.raises(RegistryValidationError, match="source-defect declaration"):
-        record_join._join_record(sheet, _layout("390", "2022").records, source=source)
+        record_join.join_record(sheet, _layout("390", "2022").records, source=source)
 
 
 def test_ambiguous_multi_record_sheet_cannot_pass_from_layout_wide_bytes() -> None:
@@ -210,8 +210,8 @@ def test_ambiguous_multi_record_sheet_cannot_pass_from_layout_wide_bytes() -> No
     )
     ambiguous = sheet.model_copy(update={"fields": fields})
     layout = _layout("390", "2022")
-    assert record_join._join_record(ambiguous, layout.records, source=source) is None
-    _required, _missing, unresolved, lines = _missing_report(((ambiguous, source),), layout.records)
+    assert record_join.join_record(ambiguous, layout.records, source=source) is None
+    _required, _missing, unresolved, lines = missing_report(((ambiguous, source),), layout.records)
     assert unresolved == 1
     assert any("layout-wide byte coverage cannot verify this record" in line for line in lines)
 
@@ -220,9 +220,9 @@ def test_matched_fixed_record_still_refuses_real_reserved_byte_intrusion() -> No
     source = _catalogue()["aeat-dr-232-2016"]
     sheet = _sheet("aeat-dr-232-2016", "DR23201")
     layout = _layout("232", "2016-2017")
-    matched = record_join._join_record(sheet, layout.records, source=source)
+    matched = record_join.join_record(sheet, layout.records, source=source)
     assert matched is not None
-    assert record_join._reserved_write_failures(sheet, matched.fields, source=source) == []
+    assert record_join.reserved_write_failures(sheet, matched.fields, source=source) == []
     intruding_fields = tuple(
         field.model_copy(update={"kind": CasillaFieldKind.HEADER})
         if field.offset == 220 and field.length == 20
@@ -231,8 +231,8 @@ def test_matched_fixed_record_still_refuses_real_reserved_byte_intrusion() -> No
     )
     intruding = matched.model_copy(update={"fields": intruding_fields})
     amended_records = tuple(intruding if record is matched else record for record in layout.records)
-    assert record_join._join_record(sheet, amended_records, source=source) is intruding
-    failures = record_join._reserved_write_failures(sheet, intruding.fields, source=source)
+    assert record_join.join_record(sheet, amended_records, source=source) is intruding
+    failures = record_join.reserved_write_failures(sheet, intruding.fields, source=source)
     assert len(failures) == 1
     assert "@220..239" in failures[0]
 
@@ -241,12 +241,12 @@ def test_unjoined_single_record_checks_its_own_reserved_bytes() -> None:
     source = _catalogue()["aeat-dr-232-2016"]
     sheet = _sheet("aeat-dr-232-2016", "DR23201")
     layout = _layout("232", "2016-2017")
-    matched = record_join._join_record(sheet, layout.records, source=source)
+    matched = record_join.join_record(sheet, layout.records, source=source)
     assert matched is not None
     without_identity = sheet.model_copy(
         update={"fields": tuple(field.model_copy(update={"content": None}) for field in sheet.fields)}
     )
-    assert record_join._join_record(without_identity, (matched,), source=source) is None
+    assert record_join.join_record(without_identity, (matched,), source=source) is None
     intruding_fields = tuple(
         field.model_copy(update={"kind": CasillaFieldKind.HEADER})
         if field.offset == 220 and field.length == 20
@@ -254,7 +254,7 @@ def test_unjoined_single_record_checks_its_own_reserved_bytes() -> None:
         for field in matched.fields
     )
     intruding = matched.model_copy(update={"fields": intruding_fields})
-    _required, missing, unresolved, lines = _missing_report(((without_identity, source),), (intruding,))
+    _required, missing, unresolved, lines = missing_report(((without_identity, source),), (intruding,))
     assert missing >= 1
     assert unresolved == 0
     assert any("@220..239" in line for line in lines)

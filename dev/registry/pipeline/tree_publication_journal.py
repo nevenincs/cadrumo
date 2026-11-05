@@ -22,7 +22,7 @@ from .tree_publication_contracts import (
 )
 
 
-def _journal_supersession_candidate_revision_path(
+def journal_supersession_candidate_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
@@ -34,7 +34,7 @@ def _journal_supersession_candidate_revision_path(
     return candidate
 
 
-def _journal_supersession_backup_revision_path(
+def journal_supersession_backup_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
@@ -46,7 +46,7 @@ def _journal_supersession_backup_revision_path(
     return backup
 
 
-def _matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
+def matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
     try:
         verify_generated_export_package(export_root)
         return (
@@ -57,7 +57,7 @@ def _matches_journal_candidate(export_root: Path, journal: GeneratedExportPublic
         return False
 
 
-def _journal_backup_path(
+def journal_backup_path(
     journal: GeneratedExportPublicationJournal,
     target_export_root: Path,
     target_root: Path,
@@ -73,7 +73,7 @@ def _journal_backup_path(
     return backup
 
 
-def _journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
+def journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
     candidate = target_root / journal.candidate_export
     prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
@@ -159,7 +159,7 @@ def _require_clearance_journal_shape(journal: GeneratedExportPublicationJournal)
         raise RegistryValidationError("generated clearance cleanup cannot begin before commit")
 
 
-def _delete_journal(path: Path) -> None:
+def delete_journal(path: Path) -> None:
     if path.exists():
         path.unlink()
         fsync_parent_dir(path)

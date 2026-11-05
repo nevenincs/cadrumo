@@ -97,7 +97,7 @@ def validate_semantic_map(
     the selected revision's immutable admission facts without constructing a
     snapshot or crossing the filing/legal-review gate.
     """
-    return _validate_semantic_map_with_admissions(
+    return validate_semantic_map_with_admissions(
         semantic_map,
         intermediate,
         inspection,
@@ -105,7 +105,7 @@ def validate_semantic_map(
     ).semantic_map
 
 
-def _validate_semantic_map_with_admissions(
+def validate_semantic_map_with_admissions(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
     inspection: GeneratedArtifactInspection,
@@ -119,7 +119,7 @@ def _validate_semantic_map_with_admissions(
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
-    _validate_variable_envelope_boundary(semantic_map, intermediate)
+    validate_variable_envelope_boundary(semantic_map, intermediate)
     _validate_envelope_casilla_references(semantic_map, casilla_ids=inspection.casilla_ids)
     _validate_record_gate_casilla_references(semantic_map, casilla_ids=inspection.casilla_ids)
     resolved_map = _resolve_semantic_map_casilla_tokens(
@@ -281,7 +281,7 @@ def _validate_anomaly_exceptions(
             )
 
 
-def _validate_variable_envelope_boundary(
+def validate_variable_envelope_boundary(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
 ) -> None:
@@ -607,10 +607,10 @@ def _validate_projection_ref_admission(
     if any(projection_ref is None for projection_ref in projection_refs):
         raise RegistryValidationError("projection semantic-map entries must carry a typed projection_ref")
     typed_refs = tuple(projection_ref for projection_ref in projection_refs if projection_ref is not None)
-    _validate_projection_ref_bijection(typed_refs, projection_endpoints=projection_endpoints)
+    validate_projection_ref_bijection(typed_refs, projection_endpoints=projection_endpoints)
 
 
-def _validate_projection_ref_bijection(
+def validate_projection_ref_bijection(
     projection_refs: tuple[FilingProjectionRef, ...],
     *,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],

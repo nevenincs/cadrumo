@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import ZERO_PADDED_EXPORT_DATA_TYPES
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ..note_absent_fill import _NOTE_ABSENT_FILLS, note_absent_fill_for
+from ..note_absent_fill import NOTE_ABSENT_FILLS, note_absent_fill_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -33,7 +33,7 @@ _REVISIONS = (
 
 
 def test_the_declared_notes_are_the_official_design_cells_verbatim() -> None:
-    declaration = _NOTE_ABSENT_FILLS["aeat-dr-369-2021"]
+    declaration = NOTE_ABSENT_FILLS["aeat-dr-369-2021"]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         workbook = openpyxl.load_workbook(bundled_path(*_DESIGN), data_only=True, read_only=False)
@@ -42,7 +42,7 @@ def test_the_declared_notes_are_the_official_design_cells_verbatim() -> None:
 
 
 def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
-    declaration = _NOTE_ABSENT_FILLS["aeat-dr-369-2021"]
+    declaration = NOTE_ABSENT_FILLS["aeat-dr-369-2021"]
     source = RecordDesignIntermediateSource.model_construct(source_ref=declaration.source_ref, source_sha256="0" * 64)
     with pytest.raises(RegistryValidationError, match="not pinned"):
         note_absent_fill_for(source)

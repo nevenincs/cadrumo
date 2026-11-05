@@ -12,23 +12,21 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
-    NON_EJERCICIO_COVERAGE_AXIS as _NON_EJERCICIO_COVERAGE_AXIS,
-)
-from cadrumo.domain.calculations.registry.tests.revision_span_declaration_support import (
-    OPEN_BOUNDED_ERA_DESIGNS as _OPEN_BOUNDED_ERA_DESIGNS,
+    NON_EJERCICIO_COVERAGE_AXIS,
+    OPEN_BOUNDED_ERA_DESIGNS,
 )
 
-from ._revision_span_coverage_support import (
-    _covers_year,
-    _current_filing_year,
-    _earliest_declared_year,
-    _offset_annual_modelo,
-    _period_overlap,
+from .revision_span_coverage_support import (
+    covers_year,
+    current_filing_year,
+    earliest_declared_year,
+    offset_annual_modelo,
+    period_overlap,
 )
-from ._revision_span_design_support import (
-    _DESIGN_ROOT_PARTS,
-    _design_coverage_years,
-    _design_sources,
+from .revision_span_design_support import (
+    DESIGN_ROOT_PARTS,
+    design_coverage_years,
+    design_sources,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -128,22 +126,22 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     way, computed from ``date.today()`` on every run, never pinned.
     """
     modelos, _catalogues = bundled_registry_tree()
-    today_year = _current_filing_year()
+    today_year = current_filing_year()
 
     holes: list[str] = []
     overlaps: list[str] = []
     for modelo in modelos:
         revisions = list(modelo.revisions.items())
-        earliest = _earliest_declared_year(revisions)
+        earliest = earliest_declared_year(revisions)
         if earliest is None:
             continue
         # An annual-in-arrears modelo's most recent FILEABLE ejercicio is last
         # year, not this one -- its filing window for this year's ejercicio has
         # not opened yet, arithmetic derived from the declared period cadence
         # (see :func:`_offset_annual_modelo`), never a stored exemption.
-        horizon = today_year - 1 if _offset_annual_modelo(revisions) else today_year
+        horizon = today_year - 1 if offset_annual_modelo(revisions) else today_year
         for year in range(earliest, horizon + 1):
-            covering = [(rid, rev) for rid, rev in revisions if _covers_year(rev, year)]
+            covering = [(rid, rev) for rid, rev in revisions if covers_year(rev, year)]
             if not covering:
                 holes.append(f"modelo {modelo.id}: no revision resolves filing year {year}")
                 continue
@@ -160,7 +158,7 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
                 # message for the collisions that survive it.
                 if not revisions_coexist(rev_a, rev_b):
                     continue
-                collision = _period_overlap(id_a, rev_a.period_selector.periods, id_b, rev_b.period_selector.periods)
+                collision = period_overlap(id_a, rev_a.period_selector.periods, id_b, rev_b.period_selector.periods)
                 if collision is not None and collision:
                     overlaps.append(f"modelo {modelo.id} filing year {year}: {collision}")
 
@@ -189,28 +187,28 @@ def test_every_non_ejercicio_declaration_is_still_earned() -> None:
     Keyed by ``(modelo, filename)`` so a rename fails loudly instead of drifting onto
     whatever file happens to sit at some position.
     """
-    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    design_root = bundled_path(*DESIGN_ROOT_PARTS)
     on_disk: dict[tuple[str, str], Path] = {}
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
-        for path in _design_sources(modelo_id):
+        for path in design_sources(modelo_id):
             on_disk[(modelo_id, path.name)] = path
 
-    assert _NON_EJERCICIO_COVERAGE_AXIS, "the declaration is empty; this audit would be vacuous"
+    assert NON_EJERCICIO_COVERAGE_AXIS, "the declaration is empty; this audit would be vacuous"
 
-    missing = sorted(key for key in _NON_EJERCICIO_COVERAGE_AXIS if key not in on_disk)
+    missing = sorted(key for key in NON_EJERCICIO_COVERAGE_AXIS if key not in on_disk)
     assert not missing, (
         "these designs are declared non-ejercicio-scoped but are no longer bundled under that "
         f"name, so the declaration excuses nothing: {missing}"
     )
 
-    now_attributable = sorted(key for key in _NON_EJERCICIO_COVERAGE_AXIS if _design_coverage_years(on_disk[key]))
+    now_attributable = sorted(key for key in NON_EJERCICIO_COVERAGE_AXIS if design_coverage_years(on_disk[key]))
     assert not now_attributable, (
         "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
         f"the module can measure -- remove the entry: {now_attributable}"
     )
 
-    unreasoned = sorted(k for k, why in _NON_EJERCICIO_COVERAGE_AXIS.items() if len(why.strip()) < 30)
+    unreasoned = sorted(k for k, why in NON_EJERCICIO_COVERAGE_AXIS.items() if len(why.strip()) < 30)
     assert not unreasoned, f"every entry must state the axis the file itself uses: {unreasoned}"
 
 
@@ -224,25 +222,25 @@ def test_every_open_bounded_era_declaration_is_still_earned() -> None:
     the two declarations answer different questions and a single audit would let an
     entry drift between them unnoticed.
     """
-    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    design_root = bundled_path(*DESIGN_ROOT_PARTS)
     on_disk: dict[tuple[str, str], Path] = {}
     for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
-        for path in _design_sources(modelo_id):
+        for path in design_sources(modelo_id):
             on_disk[(modelo_id, path.name)] = path
 
-    assert _OPEN_BOUNDED_ERA_DESIGNS, "the declaration is empty; this audit would be vacuous"
+    assert OPEN_BOUNDED_ERA_DESIGNS, "the declaration is empty; this audit would be vacuous"
 
-    overlap = sorted(set(_OPEN_BOUNDED_ERA_DESIGNS) & set(_NON_EJERCICIO_COVERAGE_AXIS))
+    overlap = sorted(set(OPEN_BOUNDED_ERA_DESIGNS) & set(NON_EJERCICIO_COVERAGE_AXIS))
     assert not overlap, f"these designs are declared under BOTH classifications, so one of them is wrong: {overlap}"
 
-    missing = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if key not in on_disk)
+    missing = sorted(key for key in OPEN_BOUNDED_ERA_DESIGNS if key not in on_disk)
     assert not missing, (
         "these designs are declared as open-bounded but are no longer bundled under that name, "
         f"so the declaration excuses nothing: {missing}"
     )
 
-    now_attributable = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if _design_coverage_years(on_disk[key]))
+    now_attributable = sorted(key for key in OPEN_BOUNDED_ERA_DESIGNS if design_coverage_years(on_disk[key]))
     assert not now_attributable, (
         "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
         f"the module can measure -- remove the entry: {now_attributable}"

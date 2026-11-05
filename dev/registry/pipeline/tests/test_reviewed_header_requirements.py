@@ -19,12 +19,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..export_field_schema import _combined_requirement
+from ..export_field_schema import combined_requirement
 from ..joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate
 from ..semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRequirement, load_semantic_map
 from ..semantic_map_validation import verify_requirement_statements
-from ._generated_tree_test_support import bundled_revision_inspection
+from .generated_tree_test_support import bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -100,13 +100,13 @@ def test_modelo_111_identifying_fields_carry_the_instructions_requirement() -> N
 def test_a_reviewed_requirement_fills_the_design_silence_it_cites() -> None:
     """The design states nothing for these slots, so the reviewed requirement decides them."""
     assert _field("modelo-111-page-01-apellidos").parser_field.validation is None
-    assert _combined_requirement(_field("modelo-111-page-01-apellidos"), design_required=False) == (True, None)
-    assert _combined_requirement(_field("modelo-111-page-01-ejercicio"), design_required=False) == (True, None)
-    assert _combined_requirement(_field("modelo-111-page-01-nombre"), design_required=False) == (
+    assert combined_requirement(_field("modelo-111-page-01-apellidos"), design_required=False) == (True, None)
+    assert combined_requirement(_field("modelo-111-page-01-ejercicio"), design_required=False) == (True, None)
+    assert combined_requirement(_field("modelo-111-page-01-nombre"), design_required=False) == (
         False,
         "natural_person",
     )
-    assert _combined_requirement(_field("modelo-111-page-01-tipo-declaracion"), design_required=False) == (
+    assert combined_requirement(_field("modelo-111-page-01-tipo-declaracion"), design_required=False) == (
         False,
         None,
     )
@@ -121,7 +121,7 @@ def test_a_reviewed_requirement_restating_the_design_refuses(validation: str) ->
     )
 
     with pytest.raises(RegistryValidationError, match="design already states one"):
-        _combined_requirement(restated, design_required=validation == "Obligatorio")
+        combined_requirement(restated, design_required=validation == "Obligatorio")
 
 
 def test_every_modelo_111_quotation_is_found_in_the_cited_instructions() -> None:

@@ -21,7 +21,7 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -211,7 +211,7 @@ def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
 
 
 def test_binding_legal_refs_resolve_against_catalogue_and_corpus() -> None:
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     refs = {legal_ref for binding in _load_trabajador_del_mar_bindings() for legal_ref in binding.get("legal_refs", [])}
 
     assert refs == {

@@ -15,16 +15,16 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .casilla_lineage_seed_design import identity_box
-from .casilla_lineage_seed_paths import _UTF_8, RULINGS_PATH
+from .casilla_lineage_seed_paths import RULINGS_PATH, UTF_8
 from .casilla_lineage_seed_types import LineageRefusalCategory, Ruling
 
-_CONTINUIDAD_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$")
+CONTINUIDAD_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$")
 
 _MIN_POSITIONAL_SPACE = 5
 
 _MAX_POSITIONAL_EXPANSION = 3.0
 
-_PARTIAL_STAMP = (
+PARTIAL_STAMP = (
     "another occurrence of this identifier cannot carry a continuidad_id, and the registry refuses an identifier "
     "stamped in only part of its occurrences"
 )
@@ -40,7 +40,7 @@ def load_rulings(path: Path = RULINGS_PATH) -> dict[str, list[Ruling]]:
     Rulings for an excluded modelo are applied to its data by whoever owns that
     modelo; this seeder reads them only to name its residual refusals precisely.
     """
-    document = parse_toml(path.read_text(encoding=_UTF_8))
+    document = parse_toml(path.read_text(encoding=UTF_8))
     rulings: dict[str, list[Ruling]] = collections.defaultdict(list)
     for entry in document["ruling"]:
         rulings[entry["modelo"]].append(
@@ -148,10 +148,10 @@ def _section_overlap(previous: ModeloRevision, successor: ModeloRevision) -> flo
     return len(prev_sections & succ_sections) / len(prev_sections | succ_sections)
 
 
-def _slug(value: str) -> str:
+def slug(value: str) -> str:
     slug = re.sub(r"[^a-z0-9_-]+", "-", value.lower()).strip("-_")
     return slug[:128].rstrip("-_")
 
 
-def _role_derived(role: str) -> str:
+def role_derived(role: str) -> str:
     return role.lower().replace("_", "-")

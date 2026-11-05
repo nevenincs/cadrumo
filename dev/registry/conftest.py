@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _isolate_registry_caches() -> Iterator[None]:
+def isolate_registry_caches() -> Iterator[None]:
     """Clear development compiler caches at each pytest session boundary."""
     from .compiler.loader import load_registry_tree_cached
     from .compiler.loader_fingerprints import clear_fingerprint_cache

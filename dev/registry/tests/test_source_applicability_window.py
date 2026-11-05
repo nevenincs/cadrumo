@@ -32,10 +32,8 @@ from cadrumo.domain.calculations.registry.snapshot_references import collect_sna
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_snapshot as _committed_snapshot,
+    committed_modelo,
+    committed_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +45,7 @@ _REVISION = "2025"
 
 
 def _modelo_and_catalogues() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo(_MODELO)
+    return committed_modelo(_MODELO)
 
 
 def _revision_scoped_source_ids(modelo: ModeloDefinition) -> set[str]:
@@ -164,7 +162,7 @@ def _rebuild_with_source_window(
 
 def test_shipped_registry_snapshot_builds_with_every_evidence_window_intact() -> None:
     """The positive control: the real corpus satisfies the gate unmodified."""
-    snapshot = _committed_snapshot(_MODELO, _FILING_YEAR, _PERIOD)
+    snapshot = committed_snapshot(_MODELO, _FILING_YEAR, _PERIOD)
 
     assert snapshot.revision.id == _REVISION
     assert snapshot.legal, "the snapshot must carry the legal authority it grounds on"
@@ -403,7 +401,7 @@ def _rebuild_m123_with_source_window(
     applies_to: date | None,
 ) -> RegistrySnapshot:
     """Rebuild the M123 2023 4T snapshot with one source moved into a new window."""
-    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    modelo, catalogues = committed_modelo(_DEADLINE_MODELO)
     source = catalogues.sources[source_id]
     restaged = source.model_copy(update={"applies_from": applies_from, "applies_to": applies_to})
     catalogues = catalogues.model_copy(
@@ -425,7 +423,7 @@ def test_a_deadline_window_source_is_validated_against_the_window_not_the_revisi
     stopped starting after the revision closed, this test would pass while
     proving nothing about the axis.
     """
-    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    modelo, catalogues = committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
     calendario = catalogues.sources[_NEXT_YEAR_CALENDARIO]
 
@@ -438,14 +436,14 @@ def test_a_deadline_window_source_is_validated_against_the_window_not_the_revisi
     assert _NEXT_YEAR_CALENDARIO in fourth_quarter.source_refs
     assert fourth_quarter.closes_on > revision.valid_to
 
-    snapshot = _committed_snapshot(_DEADLINE_MODELO, _DEADLINE_FILING_YEAR, _DEADLINE_PERIOD)
+    snapshot = committed_snapshot(_DEADLINE_MODELO, _DEADLINE_FILING_YEAR, _DEADLINE_PERIOD)
 
     assert snapshot.revision.id == _DEADLINE_REVISION
 
 
 def test_construct_deadline_closure_does_not_reclassify_its_calendar_as_a_generic_source() -> None:
     """Construct aggregation preserves the member deadline's presentation axis."""
-    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    modelo, catalogues = committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
     window = next(item for item in revision.deadline_windows if item.id.endswith("2023-4t"))
     construct = revision.constructs[0]
@@ -476,7 +474,7 @@ def test_construct_deadline_closure_does_not_reclassify_its_calendar_as_a_generi
 
 def test_construct_owned_source_without_deadline_member_provenance_keeps_revision_axis() -> None:
     """A construct-only source cannot borrow an unrelated deadline member's axis."""
-    modelo, catalogues = _committed_modelo(_DEADLINE_MODELO)
+    modelo, catalogues = committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
     construct = revision.constructs[0]
     stale_id = "aeat-calendario-contribuyente-2026"
@@ -523,7 +521,7 @@ def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() ->
     earns it nothing: it still has to overlap the revision it grounds.
     """
     design_source = "aeat-dr-123-2019-2023-v13-form-text"
-    modelo, _catalogues = _committed_modelo(_DEADLINE_MODELO)
+    modelo, _catalogues = committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
     window_source_ids = {ref for window in revision.deadline_windows for ref in window.source_refs}
     assert design_source not in window_source_ids
@@ -548,7 +546,7 @@ _RETRO_LEGAL_ID = "real-decreto-ley-13-2025:art-2"
 
 def _rebuild_m190_with_legal_reach(**update: object) -> RegistrySnapshot:
     """Rebuild the M190 2024 snapshot with the retroactive RDL's reach restaged."""
-    modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    modelo, catalogues = committed_modelo(_RETRO_MODELO)
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     restaged = reference.model_copy(update=update)
     catalogues = catalogues.model_copy(
@@ -570,7 +568,7 @@ def test_a_declared_retroactive_provision_grounds_a_devengo_before_it_took_force
     2024 devengo, and its declared reach covers it. If either stopped being true
     the test would pass while proving nothing about the axis.
     """
-    modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    modelo, catalogues = committed_modelo(_RETRO_MODELO)
     revision = modelo.revisions[_RETRO_REVISION]
     reference = catalogues.legal[_RETRO_LEGAL_ID]
 
@@ -582,7 +580,7 @@ def test_a_declared_retroactive_provision_grounds_a_devengo_before_it_took_force
     assert reference.governs_periods_from is not None
     assert reference.governs_periods_from <= revision.valid_to
 
-    snapshot = _committed_snapshot(_RETRO_MODELO, _RETRO_FILING_YEAR, _RETRO_PERIOD)
+    snapshot = committed_snapshot(_RETRO_MODELO, _RETRO_FILING_YEAR, _RETRO_PERIOD)
 
     assert snapshot.revision.id == _RETRO_REVISION
 
@@ -604,7 +602,7 @@ def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> No
     A forward value would let a citation ground a period its norm never governed
     -- the same failure the gate exists to catch, smuggled through the exemption.
     """
-    _modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    _modelo, catalogues = committed_modelo(_RETRO_MODELO)
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     forward = reference.model_dump() | {"governs_periods_from": date(2026, 1, 1)}
 
@@ -614,7 +612,7 @@ def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> No
 
 def test_a_governed_period_end_without_a_start_is_refused() -> None:
     """``governs_periods_to`` alone states a reach with no beginning."""
-    _modelo, catalogues = _committed_modelo(_RETRO_MODELO)
+    _modelo, catalogues = committed_modelo(_RETRO_MODELO)
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     dangling = reference.model_dump() | {"governs_periods_from": None}
 

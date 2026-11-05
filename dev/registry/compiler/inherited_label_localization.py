@@ -11,20 +11,20 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .casilla_inheritance import _LabelOrigins
+from .casilla_inheritance import LabelOrigins
 from .loader_fields import (
-    _INHERITED_SECTION,
-    _ROW_INHERITED_FROM_FIELD,
+    INHERITED_SECTION,
+    ROW_INHERITED_FROM_FIELD,
 )
+from .toml_helpers import as_toml_table
 
 
-def _enroll_inherited_label_fallbacks(
+def enroll_inherited_label_fallbacks(
     context: str,
     *,
     modelo_id: str,
     payload: dict[str, object],
-    label_origins: _LabelOrigins,
+    label_origins: LabelOrigins,
 ) -> dict[str, object]:
     """Give every inherited casilla the occurrence key of the edition that last stated it.
 
@@ -41,7 +41,7 @@ def _enroll_inherited_label_fallbacks(
     carries aliases is refused here instead of loading with alias labels that
     raise on first read.
     """
-    casillas = as_toml_array(payload.get(_INHERITED_SECTION))
+    casillas = as_toml_array(payload.get(INHERITED_SECTION))
     if casillas is None or len(casillas) != len(label_origins):
         raise RegistryLoadError(
             f"{context}: label origins cover {len(label_origins)} casillas but enrolment produced "
@@ -51,7 +51,7 @@ def _enroll_inherited_label_fallbacks(
         _enroll_label_fallback(context, modelo_id, casilla, origin)
         for casilla, origin in zip(casillas, label_origins, strict=True)
     )
-    return {**payload, _INHERITED_SECTION: enrolled}
+    return {**payload, INHERITED_SECTION: enrolled}
 
 
 def _enroll_label_fallback(
@@ -60,7 +60,7 @@ def _enroll_label_fallback(
     casilla: object,
     origin: str | None,
 ) -> object:
-    table = None if origin is None else _as_toml_table(casilla)
+    table = None if origin is None else as_toml_table(casilla)
     if table is None or origin is None:
         return casilla
     keys = table.get("localization_keys")
@@ -77,11 +77,11 @@ def _enroll_label_fallback(
     return {**table, "localization_keys": (*keys[:1], fallback, *keys[1:])}
 
 
-def _mark_inherited_casillas(
+def mark_inherited_casillas(
     context: str,
     *,
     payload: dict[str, object],
-    label_origins: _LabelOrigins | None,
+    label_origins: LabelOrigins | None,
 ) -> dict[str, object]:
     """Give every inherited casilla the ``inherited_from`` marker naming the edition that last stated it.
 
@@ -94,11 +94,11 @@ def _mark_inherited_casillas(
         RegistryLoadError: When any casilla row authors the marker, since only
             materialisation knows where a row is stated.
     """
-    casillas = as_toml_array(payload.get(_INHERITED_SECTION)) or ()
+    casillas = as_toml_array(payload.get(INHERITED_SECTION)) or ()
     authored = _authored_inheritance_markers(casillas)
     if authored:
         raise RegistryLoadError(
-            f"{context}: casillas {authored!r} author {_ROW_INHERITED_FROM_FIELD}, which the loader sets on the "
+            f"{context}: casillas {authored!r} author {ROW_INHERITED_FROM_FIELD}, which the loader sets on the "
             "rows an edition inherits from its declared predecessor; remove it",
         )
     if label_origins is None:
@@ -108,20 +108,20 @@ def _mark_inherited_casillas(
             f"{context}: label origins cover {len(label_origins)} of the edition's {len(casillas)} casillas",
         )
     marked = _marked_casillas(casillas, label_origins)
-    return {**payload, _INHERITED_SECTION: marked}
+    return {**payload, INHERITED_SECTION: marked}
 
 
 def _authored_inheritance_markers(casillas: tuple[object, ...]) -> list[str]:
     return sorted(
         str(table.get("id"))
         for row in casillas
-        if (table := _as_toml_table(row)) is not None and _ROW_INHERITED_FROM_FIELD in table
+        if (table := as_toml_table(row)) is not None and ROW_INHERITED_FROM_FIELD in table
     )
 
 
-def _marked_casillas(casillas: tuple[object, ...], origins: _LabelOrigins) -> tuple[object, ...]:
+def _marked_casillas(casillas: tuple[object, ...], origins: LabelOrigins) -> tuple[object, ...]:
     marked: list[object] = []
     for casilla, origin in zip(casillas, origins, strict=True):
-        table = None if origin is None else _as_toml_table(casilla)
-        marked.append(casilla if table is None else {**table, _ROW_INHERITED_FROM_FIELD: origin})
+        table = None if origin is None else as_toml_table(casilla)
+        marked.append(casilla if table is None else {**table, ROW_INHERITED_FROM_FIELD: origin})
     return tuple(marked)

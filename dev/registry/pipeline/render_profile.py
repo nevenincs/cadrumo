@@ -20,7 +20,7 @@ from .render_profile_evidence import (
 from .render_profile_loading import load_render_profile
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
-from .render_profile_validation import _anchor_key, _anchor_key_tuple, _duplicates, _field_anchor
+from .render_profile_validation import anchor_key, anchor_key_tuple, field_anchor, render_profile_validation_duplicates
 
 
 def load_and_validate_render_profile(
@@ -46,7 +46,7 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
-    composite_keys = frozenset(_anchor_key_tuple(rule.anchor) for rule in profile.signed_composite_rules)
+    composite_keys = frozenset(anchor_key_tuple(rule.anchor) for rule in profile.signed_composite_rules)
     eligibility = resolve_render_profile_eligibility(
         (design_view(joined_field) for joined_field in joined.fields),
         joined.source,
@@ -56,7 +56,7 @@ def validate_render_profile(
         raise RegistryValidationError("empty render profile contradicts canonical eligible policy slots")
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
     literal_anchors = {
-        _field_anchor(design_view(field)) for field in joined.fields if field.semantic_entry.kind.value == "literal"
+        field_anchor(design_view(field)) for field in joined.fields if field.semantic_entry.kind.value == "literal"
     }
     if any(rule.anchor not in literal_anchors for rule in profile.literal_numeric_rules):
         raise RegistryValidationError("literal numeric rules must address literal semantic fields")
@@ -79,9 +79,9 @@ class _TelematicTransportChoice(Protocol):
 
 def _validate_telematic_transport_choice_rules(profile: RenderProfile, joined: JoinedRecordDesign) -> None:
     rules = profile.telematic_transport_choice_rules
-    if _duplicates(rule.anchor for rule in rules):
+    if render_profile_validation_duplicates(rule.anchor for rule in rules):
         raise RegistryValidationError("telematic transport choices contain duplicate exact anchors")
-    by_anchor = {_field_anchor(design_view(field)): field for field in joined.fields}
+    by_anchor = {field_anchor(design_view(field)): field for field in joined.fields}
     for rule in rules:
         _validate_telematic_transport_choice(rule, by_anchor)
 
@@ -105,7 +105,7 @@ def _validate_telematic_transport_choice(
     )
     folded = cast(str, content).translate(str.maketrans({'"': "'", "“": "'", "”": "'", "«": "'", "»": "'"}))
     _validate_telematic_transport_alternatives(rule, folded)
-    _validate_telematic_transport_condition(folded)
+    validate_telematic_transport_condition(folded)
 
 
 def _validate_telematic_transport_slot(
@@ -140,7 +140,7 @@ def _validate_telematic_transport_alternatives(rule: _TelematicTransportChoice, 
         raise RegistryValidationError("telematic transport choice does not enumerate the exact official alternatives")
 
 
-def _validate_telematic_transport_condition(folded: str) -> None:
+def validate_telematic_transport_condition(folded: str) -> None:
     if re.search(r"'T'\s*:\s*(?:Transmisi[oó]n|Si es presentaci[oó]n) telem[aá]tica", folded, re.IGNORECASE) is None:
         raise RegistryValidationError("telematic transport choice lacks the official telematic condition")
 
@@ -178,7 +178,7 @@ def _width_17_digest_rules(profile: RenderProfile) -> list[dict[str, object]]:
     return [
         {
             **rule.model_dump(mode="json", exclude={"anchors"}),
-            "anchors": [anchor.model_dump(mode="json") for anchor in sorted(rule.anchors, key=_anchor_key)],
+            "anchors": [anchor.model_dump(mode="json") for anchor in sorted(rule.anchors, key=anchor_key)],
         }
         for rule in sorted(profile.width_17_rules, key=lambda item: item.aeat_type)
     ]
@@ -190,7 +190,7 @@ def _singleton_digest_rules(profile: RenderProfile) -> list[dict[str, object]]:
             **rule.model_dump(mode="json", exclude={"allowed_values"}),
             "allowed_values": sorted(rule.allowed_values),
         }
-        for rule in sorted(profile.singleton_rules, key=lambda item: _anchor_key(item.anchor))
+        for rule in sorted(profile.singleton_rules, key=lambda item: anchor_key(item.anchor))
     ]
 
 
@@ -208,17 +208,17 @@ def _append_optional_digest_fields(profile: RenderProfile, digest_payload: dict[
     if profile.signed_composite_rules:
         digest_payload["signed_composite_rules"] = [
             rule.model_dump(mode="json")
-            for rule in sorted(profile.signed_composite_rules, key=lambda item: _anchor_key(item.anchor))
+            for rule in sorted(profile.signed_composite_rules, key=lambda item: anchor_key(item.anchor))
         ]
     if profile.literal_numeric_rules:
         digest_payload["literal_numeric_rules"] = [
             rule.model_dump(mode="json")
-            for rule in sorted(profile.literal_numeric_rules, key=lambda item: _anchor_key(item.anchor))
+            for rule in sorted(profile.literal_numeric_rules, key=lambda item: anchor_key(item.anchor))
         ]
     if profile.telematic_transport_choice_rules:
         digest_payload["telematic_transport_choice_rules"] = [
             rule.model_dump(mode="json")
-            for rule in sorted(profile.telematic_transport_choice_rules, key=lambda item: _anchor_key(item.anchor))
+            for rule in sorted(profile.telematic_transport_choice_rules, key=lambda item: anchor_key(item.anchor))
         ]
     if profile.empty_rule_assertion is not None:
         digest_payload["empty_rule_assertion"] = profile.empty_rule_assertion

@@ -27,7 +27,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 from .authored_edition_support import legal_text_match, source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
@@ -73,7 +73,7 @@ _M194_DESIGN_ERAS = (
 
 @pytest.mark.parametrize("modelo_id", _MODELOS)
 def test_modelo_187_188_194_validators_accept_committed_definitions(modelo_id: str) -> None:
-    modelo, catalogues = _committed_modelo(modelo_id)
+    modelo, catalogues = committed_modelo(modelo_id)
     assert modelo.id == modelo_id
     assert modelo.revisions, f"{modelo_id} must declare at least one revision"
     committed_registry_validator(catalogues).validate_modelo(modelo)
@@ -86,7 +86,7 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
     M194 now routes positive bases, withheld amounts and negative-base magnitudes
     from their own signed-operation summaries. M187/M188 remain manual.
     """
-    modelo, _ = _committed_modelo(modelo_id)
+    modelo, _ = committed_modelo(modelo_id)
     revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
     if modelo_id == "194":
@@ -110,7 +110,7 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
 
 def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
     """The retained withholding selector must not erase Article 42 RGAT filers."""
-    modelo, catalogues = _committed_modelo("187")
+    modelo, catalogues = committed_modelo("187")
     revision = modelo.revisions["2022-y-siguientes"]
     (rule,) = revision.applicability
 
@@ -125,7 +125,7 @@ def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
 
 def test_modelo_187_selects_only_its_evidenced_design_era() -> None:
     """The current record design cannot be backdated to the unevidenced years."""
-    modelo, catalogues = _committed_modelo("187")
+    modelo, catalogues = committed_modelo("187")
     revision = modelo.revisions[_REVISION_BY_MODELO["187"]]
     first = _M187_DESIGN_EXERCISE
 
@@ -147,7 +147,7 @@ def test_modelo_187_selects_only_its_evidenced_design_era() -> None:
 
 def test_modelo_188_selects_only_its_evidenced_design_era() -> None:
     """The sole hash-pinned design cannot establish earlier years."""
-    modelo, catalogues = _committed_modelo("188")
+    modelo, catalogues = committed_modelo("188")
     revision = modelo.revisions[_REVISION_BY_MODELO["188"]]
     first = _M188_DESIGN_EXERCISE
 
@@ -169,7 +169,7 @@ def test_modelo_188_selects_only_its_evidenced_design_era() -> None:
 
 def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
     """Each declared Modelo 194 year resolves to its own official binary."""
-    modelo, catalogues = _committed_modelo("194")
+    modelo, catalogues = committed_modelo("194")
 
     assert set(modelo.revisions) == {"2019", "2023", "2024"}
     for filing_year, last_year, source_ref, amendment_ref, commencement_ref in _M194_DESIGN_ERAS:
@@ -235,7 +235,7 @@ def test_modelo_194_refuses_a_mutated_superseded_selector_past_its_source_window
     than dropped -- 2023/2024 IS still a real closed boundary, because HAC/1504/2024
     supersedes the 2023 edition, so the same over-reach is still provably refused.
     """
-    modelo, catalogues = _committed_modelo("194")
+    modelo, catalogues = committed_modelo("194")
     superseded_id = str(_M194_SUPERSEDED_EDITION)
     successor = _M194_SUPERSEDED_EDITION + 1
     revision = modelo.revisions[superseded_id]
@@ -263,7 +263,7 @@ def test_modelo_194_refuses_a_mutated_superseded_selector_past_its_source_window
 
 def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:
     """The exact era selector also verifies the bytes of its named source."""
-    _modelo, catalogues = _committed_modelo("194")
+    _modelo, catalogues = committed_modelo("194")
     source_ref = "aeat-dr-194-2024"
     sources = dict(catalogues.sources)
     sources[source_ref] = sources[source_ref].model_copy(update={"sha256": "0" * 64})
@@ -289,7 +289,7 @@ def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:
 )
 def test_modelo_187_188_194_summary_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
     """Summary boxes remain distinct from the separately authored recipient detail."""
-    modelo, _ = _committed_modelo(modelo_id)
+    modelo, _ = committed_modelo(modelo_id)
     revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
     summary = tuple(

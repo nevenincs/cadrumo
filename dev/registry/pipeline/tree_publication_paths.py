@@ -14,7 +14,7 @@ from .export_fragment_provenance import (
     collect_export_fragment_output_digests,
 )
 from .tree_paths import contains
-from .tree_publication_artifacts import _require_complete_regular_tree
+from .tree_publication_artifacts import require_complete_regular_tree
 from .tree_publication_contracts import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
@@ -22,10 +22,10 @@ from .tree_publication_contracts import (
 )
 
 
-def _prepare_candidate_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
+def prepare_candidate_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
     """Admit only caller-owned candidate state before destination lock acquisition."""
-    temporary_root = _require_narrow_root(context.temporary_root, subject="generated temporary root")
-    target_root = _require_narrow_root(context.target_root, subject="generated publication target root")
+    temporary_root = require_narrow_root(context.temporary_root, subject="generated temporary root")
+    target_root = require_narrow_root(context.target_root, subject="generated publication target root")
     _require_disjoint_roots(temporary_root, target_root)
     origin_root = context.validation.source_chain_registry_root
     if origin_root is not None and origin_root.resolve() != target_root:
@@ -42,14 +42,14 @@ def _prepare_candidate_publication_path(context: GeneratedExportTreePublicationC
         root=temporary_root,
         subject="generated candidate export root",
     )
-    _require_no_stale_sibling_manifest(candidate_export_root.parent, subject="generated candidate revision")
-    _require_complete_regular_tree(candidate_export_root, subject="generated candidate export root")
+    require_no_stale_sibling_manifest(candidate_export_root.parent, subject="generated candidate revision")
+    require_complete_regular_tree(candidate_export_root, subject="generated candidate export root")
     return candidate_export_root
 
 
-def _admit_target_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
+def admit_target_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
     """Admit destination-owned state while holding its publication lock."""
-    target_root = _require_narrow_root(context.target_root, subject="generated publication target root")
+    target_root = require_narrow_root(context.target_root, subject="generated publication target root")
     modelo_id = str(context.validation.target.modelo)
     revision_id = str(context.validation.target.revision_id)
     target_export_root = _require_target_export_root(
@@ -58,9 +58,9 @@ def _admit_target_publication_path(context: GeneratedExportTreePublicationContex
         modelo_id=modelo_id,
         revision_id=revision_id,
     )
-    _require_no_stale_sibling_manifest(target_export_root.parent, subject="generated target revision")
+    require_no_stale_sibling_manifest(target_export_root.parent, subject="generated target revision")
     if target_export_root.exists():
-        _require_complete_regular_tree(target_export_root, subject="generated target export root")
+        require_complete_regular_tree(target_export_root, subject="generated target export root")
     return target_export_root
 
 
@@ -120,7 +120,7 @@ def _require_supersession_source_receipt(
         raise RegistryValidationError("generated export supersession source changed after check")
 
 
-def _require_narrow_root(path: Path, *, subject: str) -> Path:
+def require_narrow_root(path: Path, *, subject: str) -> Path:
     if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be an existing non-linked directory: {path}")
     resolved = path.resolve()
@@ -189,7 +189,7 @@ def _require_existing_link_free_path(path: Path, *, root: Path, subject: str) ->
             raise RegistryValidationError(f"{subject} contains a symbolic link or junction: {cursor}")
 
 
-def _require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
+def require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
     stale = revision_root / LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if stale.exists() or is_link_like(stale):
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")

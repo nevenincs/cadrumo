@@ -20,7 +20,7 @@ from .filing_export_proof_contracts import (
 )
 
 
-def _export(
+def export(
     proof_input: FilingExportConformanceRenderInputs | FilingExportSecureReplayEvidence,
     *,
     output_path: Path,
@@ -30,12 +30,12 @@ def _export(
         proof_input.draft,
         output_path=output_path,
         producer_snapshot=proof_input.producer_snapshot,
-        dictionary_values=_dictionary_mapping(proof_input.dictionary_values),
+        dictionary_values=dictionary_mapping(proof_input.dictionary_values),
         prior_domiciliation_election=proof_input.prior_domiciliation_election,
         product_software_identity=proof_input.product_software_identity,
         schema_provider=schema_provider,
     )
 
 
-def _dictionary_mapping(values: tuple[FilingExportDictionaryValue, ...]) -> Mapping[str, object] | None:
+def dictionary_mapping(values: tuple[FilingExportDictionaryValue, ...]) -> Mapping[str, object] | None:
     return {item.field_id: item.value for item in values} or None

@@ -28,8 +28,8 @@ from pathlib import Path
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
-from ._revision_span_design_support import _design_coverage_years, _design_sources
+from .registry_schema_support import committed_registry_tree
+from .revision_span_design_support import design_coverage_years, design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -55,7 +55,7 @@ def _registered_designs(catalogues) -> dict[str, str]:
 def _paths_by_name() -> dict[str, Path]:
     found: dict[str, Path] = {}
     for modelo_id in ("036", "210"):
-        for path in _design_sources(modelo_id):
+        for path in design_sources(modelo_id):
             found[path.name] = path
     return found
 
@@ -73,7 +73,7 @@ def test_no_ejercicio_has_been_back_filled(name: str) -> None:
     """The guard proper: the ledger must not have been shortened by inventing years."""
     path = _paths_by_name()[name]
 
-    years = _design_coverage_years(path)
+    years = design_coverage_years(path)
 
     assert years == (), (
         f"{name} is scoped by {_NON_EJERCICIO_AXIS[name]}, not by ejercicio, yet it now claims "
@@ -97,7 +97,7 @@ def test_a_registered_design_states_its_coverage_on_its_own_axis() -> None:
     Each half is asserted in its own direction, so neither reading can be
     reached by leaving a field blank.
     """
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     registered = _registered_designs(catalogues)
 
     selectable = 0
@@ -139,7 +139,7 @@ def test_only_the_provisional_design_is_pinned_rather_than_selectable() -> None:
     Pinned as an equality so the set cannot grow silently: a second design
     demoted out of selection would be a new gap wearing this one's explanation.
     """
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     registered = _registered_designs(catalogues)
 
     assert not set(_NON_EJERCICIO_AXIS) - set(registered), (
@@ -160,7 +160,7 @@ def test_only_the_provisional_design_is_pinned_rather_than_selectable() -> None:
 def test_the_bundled_corpus_still_attributes_the_ordinary_designs() -> None:
     """Non-vacuity: attribution works generally, so the empty results above are meaningful."""
     attributed = [
-        path.name for modelo_id in ("303", "347") for path in _design_sources(modelo_id) if _design_coverage_years(path)
+        path.name for modelo_id in ("303", "347") for path in design_sources(modelo_id) if design_coverage_years(path)
     ]
 
     assert attributed, "no design in the sample modelos attributes to any year; attribution has broken"

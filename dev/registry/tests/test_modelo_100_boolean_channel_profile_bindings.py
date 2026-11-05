@@ -28,7 +28,7 @@ import pytest
 
 from cadrumo.application.modelo.profile_binding import resolve_profile_binding_value
 from cadrumo.application.modelo.profile_derived_facts import inject_derived_anualidades_eligibility_facts
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
@@ -76,7 +76,7 @@ def test_anualidades_injector_emits_a_real_bool_for_both_truth_values(year: int)
     the two encodings apart; identity can, which is why both branches assert
     ``is``.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot(year)
 
         eligible: dict[str, object] = {

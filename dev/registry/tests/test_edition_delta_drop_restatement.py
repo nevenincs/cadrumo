@@ -31,15 +31,15 @@ _SECTION = "casillas"
 def _storage_rooted_edition(modelo_dir: Path) -> tuple[str, str]:
     """An edition declaring a no-predecessor root while storing casillas against a baseline."""
     for revision_dir in sorted((modelo_dir / "revisions").iterdir()):
-        manifest = delta_source._read_edition(modelo_dir, revision_dir.name).manifest
+        manifest = delta_source.read_edition(modelo_dir, revision_dir.name).manifest
         baseline = manifest.get("casilla_storage_baseline")
-        if drop_scope._declared_predecessor(manifest) is None and isinstance(baseline, str):
+        if drop_scope.declared_predecessor(manifest) is None and isinstance(baseline, str):
             return revision_dir.name, baseline
     raise LookupError(f"modelo {_MODELO} has no storage-rooted edition")
 
 
-def _family() -> drop_scope._DroppableFamily:
-    return next(family for family in drop_scope._DROPPABLE_FAMILIES if family.section == _SECTION)
+def _family() -> drop_scope.DroppableFamily:
+    return next(family for family in drop_scope.DROPPABLE_FAMILIES if family.section == _SECTION)
 
 
 def _copied_modelo(tmp_path: Path) -> Path:
@@ -52,7 +52,7 @@ def test_a_storage_rooted_edition_is_assessed_rather_than_skipped_as_a_root(tmp_
     modelo_dir = _copied_modelo(tmp_path)
     revision_id, _baseline = _storage_rooted_edition(modelo_dir)
 
-    drop = delta_drop_planning._plan_edition_drop(modelo_dir, revision_id, families=drop_scope._DROPPABLE_FAMILIES)
+    drop = delta_drop_planning.plan_edition_drop(modelo_dir, revision_id, families=drop_scope.DROPPABLE_FAMILIES)
 
     assert drop.skipped is None
     assert all(not family.dropped for family in drop.families)
@@ -63,24 +63,24 @@ def test_a_member_restated_from_the_storage_baseline_is_planned_as_dropped(tmp_p
     revision_id, _baseline = _storage_rooted_edition(modelo_dir)
     family = _family()
     stated = {
-        delta_drop_planning._identity_of(block.row, family)
-        for fragment in delta_drop_planning._read_family_fragments(modelo_dir / "revisions" / revision_id, _SECTION)
+        delta_drop_planning.identity_of(block.row, family)
+        for fragment in delta_drop_planning.read_family_fragments(modelo_dir / "revisions" / revision_id, _SECTION)
         for block in fragment.blocks
     }
     inherited = [
         member
-        for member in delta_drop_planning._materialised_members(
-            delta_source._read_edition(modelo_dir, revision_id).table, _SECTION
+        for member in delta_drop_planning.materialised_members(
+            delta_source.read_edition(modelo_dir, revision_id).table, _SECTION
         )
-        if delta_drop_planning._identity_of(member, family) not in stated
+        if delta_drop_planning.identity_of(member, family) not in stated
     ]
     member = inherited[0]
-    (fragment, *_rest) = delta_drop_planning._read_family_fragments(modelo_dir / "revisions" / revision_id, _SECTION)
+    (fragment, *_rest) = delta_drop_planning.read_family_fragments(modelo_dir / "revisions" / revision_id, _SECTION)
     document = tomlkit.parse(fragment.path.read_text(encoding="utf-8"))
     document["revisions"][revision_id][_SECTION].append(member)
     fragment.path.write_text(tomlkit.dumps(document), encoding="utf-8")
 
-    drop = delta_drop_planning._plan_edition_drop(modelo_dir, revision_id, families=drop_scope._DROPPABLE_FAMILIES)
+    drop = delta_drop_planning.plan_edition_drop(modelo_dir, revision_id, families=drop_scope.DROPPABLE_FAMILIES)
 
     (casillas,) = [planned for planned in drop.families if planned.section == _SECTION]
-    assert delta_drop_planning._identity_of(member, family) in casillas.dropped
+    assert delta_drop_planning.identity_of(member, family) in casillas.dropped

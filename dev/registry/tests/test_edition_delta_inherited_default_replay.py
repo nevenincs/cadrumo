@@ -7,10 +7,10 @@ import pytest
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError as MigrationRefusedError
 
-from ..edition_delta_manifest_writer import _replace_authored_overrides
+from ..edition_delta_manifest_writer import replace_authored_overrides
 from ..edition_delta_row_delta_preserving import normalize_authored_override_removals, preserve_inherited_rows
-from ..edition_delta_row_delta_reconstruction import _simulate_storage_output
-from ..edition_delta_source import _Defaults, _EditionSource, _EditionWork, _effective, _Placed
+from ..edition_delta_row_delta_reconstruction import simulate_storage_output
+from ..edition_delta_source import Defaults, EditionSource, EditionWork, Placed, edition_delta_source_effective
 from ..edition_delta_types import EditionPlan, LiftCounts, PredecessorBasis
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -25,7 +25,7 @@ def test_an_exact_authored_claim_does_not_generate_a_second_lineage_selector() -
         "continuidad_origin": "grounded",
         "continuidad_evidence": "existing validated evidence",
     }
-    source = _EditionSource(
+    source = EditionSource(
         revision_id="2025",
         manifest_text="",
         manifest={
@@ -44,13 +44,13 @@ def test_an_exact_authored_claim_does_not_generate_a_second_lineage_selector() -
         revision_id="2025",
         predecessor="2024",
         inherited=(
-            _Placed({"id": "170", "continuidad_id": "previous-lineage"}, "2024"),
-            _Placed({"id": "175", "continuidad_id": lineage}, "2024"),
+            Placed({"id": "170", "continuidad_id": "previous-lineage"}, "2024"),
+            Placed({"id": "175", "continuidad_id": lineage}, "2024"),
         ),
         full_rows=(target,),
         source=source,
-        defaults=_Defaults(source_refs=None, orden=()),
-        current_output=(_Placed(dict(target), "2025"),),
+        defaults=Defaults(source_refs=None, orden=()),
+        current_output=(Placed(dict(target), "2025"),),
     )
 
     assert appended == ()
@@ -58,13 +58,13 @@ def test_an_exact_authored_claim_does_not_generate_a_second_lineage_selector() -
 
 
 def test_authored_override_composes_default_preservation_for_unstated_inherited_row() -> None:
-    inherited = _Placed({"id": "170", "required": False}, "2024")
+    inherited = Placed({"id": "170", "required": False}, "2024")
     existing_override = {
         "selector": {"revision": "2024", "id": "170"},
         "fields": {"required": True},
         "removed_fields": [],
     }
-    source = _EditionSource(
+    source = EditionSource(
         revision_id="2025",
         manifest_text="",
         manifest={"casilla_overrides": [existing_override]},
@@ -77,7 +77,7 @@ def test_authored_override_composes_default_preservation_for_unstated_inherited_
         family_defaults={},
     )
     target: dict[str, object] = {"id": "170", "required": True, "source_refs": ["parent-source"]}
-    current = _Placed({"id": "170", "required": True}, "2024")
+    current = Placed({"id": "170", "required": True}, "2024")
 
     appended, replacements = preserve_inherited_rows(
         revision_id="2025",
@@ -85,7 +85,7 @@ def test_authored_override_composes_default_preservation_for_unstated_inherited_
         inherited=(inherited,),
         full_rows=(target,),
         source=source,
-        defaults=_Defaults(source_refs=("child-source",), orden=()),
+        defaults=Defaults(source_refs=("child-source",), orden=()),
         current_output=(current,),
     )
 
@@ -104,7 +104,7 @@ def test_authored_override_composes_default_preservation_for_unstated_inherited_
         "fields = { required = true }\n"
         "removed_fields = []\n"
     )
-    work = _EditionWork(
+    work = EditionWork(
         plan=EditionPlan(
             revision_id="2025",
             basis=PredecessorBasis.LIFT_ONLY,
@@ -126,10 +126,10 @@ def test_authored_override_composes_default_preservation_for_unstated_inherited_
         root_declaration=None,
         casilla_override_replacements=replacements,
     )
-    rewritten = _replace_authored_overrides(text, work)
+    rewritten = replace_authored_overrides(text, work)
     parsed = parse_toml(rewritten)["revisions"]["2025"]["casilla_overrides"]
     assert parsed == list(replacements)
-    replayed = _simulate_storage_output(
+    replayed = simulate_storage_output(
         revision_id="2025",
         predecessor="2024",
         inherited=(inherited,),
@@ -139,19 +139,19 @@ def test_authored_override_composes_default_preservation_for_unstated_inherited_
         removals=(),
     )
     assert len(replayed) == 1
-    effective = _effective(
+    effective = edition_delta_source_effective(
         replayed[0].row,
         origin=replayed[0].origin,
         revision_id="2025",
-        defaults=_Defaults(source_refs=("child-source",), orden=()),
+        defaults=Defaults(source_refs=("child-source",), orden=()),
         declarations={},
     )
     assert effective == target, effective
 
 
 def test_authored_removal_cannot_claim_an_inherited_target_row() -> None:
-    inherited = _Placed({"id": "170", "required": False}, "2024")
-    source = _EditionSource(
+    inherited = Placed({"id": "170", "required": False}, "2024")
+    source = EditionSource(
         revision_id="2025",
         manifest_text="",
         manifest={"casilla_removals": [{"selector": {"revision": "2024", "id": "170"}}]},
@@ -172,14 +172,14 @@ def test_authored_removal_cannot_claim_an_inherited_target_row() -> None:
             inherited=(inherited,),
             full_rows=(target,),
             source=source,
-            defaults=_Defaults(source_refs=("child-source",), orden=()),
+            defaults=Defaults(source_refs=("child-source",), orden=()),
             current_output=(),
         )
 
 
 def test_stale_authored_field_removal_is_recomposed_against_planned_raw_parent() -> None:
-    inherited = _Placed({"id": "170-old", "required": False}, "2024")
-    source = _EditionSource(
+    inherited = Placed({"id": "170-old", "required": False}, "2024")
+    source = EditionSource(
         revision_id="2025",
         manifest_text="",
         manifest={
@@ -201,7 +201,7 @@ def test_stale_authored_field_removal_is_recomposed_against_planned_raw_parent()
         family_defaults={},
     )
     target: dict[str, object] = {"id": "170", "required": True, "source_refs": ["parent-source"]}
-    defaults = _Defaults(source_refs=("child-source",), orden=())
+    defaults = Defaults(source_refs=("child-source",), orden=())
 
     replacements = normalize_authored_override_removals(
         revision_id="2025",
@@ -220,7 +220,7 @@ def test_stale_authored_field_removal_is_recomposed_against_planned_raw_parent()
     }
     assert replacements[0]["removed_fields"] == []
     assert replacements[0]["restate_provenance"] is True
-    replayed = _simulate_storage_output(
+    replayed = simulate_storage_output(
         revision_id="2025",
         predecessor="2024",
         inherited=(inherited,),
@@ -231,7 +231,7 @@ def test_stale_authored_field_removal_is_recomposed_against_planned_raw_parent()
     )
     assert len(replayed) == 1
     assert (
-        _effective(
+        edition_delta_source_effective(
             replayed[0].row,
             origin=replayed[0].origin,
             revision_id="2025",

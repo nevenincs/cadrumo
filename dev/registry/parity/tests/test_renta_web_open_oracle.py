@@ -25,9 +25,9 @@ from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from ..live_parity import ParityFieldComparison, ParityVerdictKind
 from ..renta_web_open_oracle import (
     RentaWebOpenOracle,
-    _overall_verdict,
-    _parse_decimal_text,
     equivalent_renta_web_open_value,
+    overall_verdict,
+    parse_decimal_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -186,7 +186,7 @@ def test_parse_decimal_text_handles_spanish_locale_and_invalid_inputs() -> None:
         ("12,34,56", None),
         ("1.234.567,89", Decimal("1234567.89")),
     ):
-        assert _parse_decimal_text(raw) == expected, raw
+        assert parse_decimal_text(raw) == expected, raw
 
 
 @pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity", "sNaN", "  Infinity  "])
@@ -196,7 +196,7 @@ def test_parse_decimal_text_refuses_non_finite_tokens(token: str) -> None:
     Calling ``Decimal`` directly let the tokens through as if they were amounts,
     so the parser now routes through the canonical finite coercion.
     """
-    assert _parse_decimal_text(token) is None
+    assert parse_decimal_text(token) is None
 
 
 @pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
@@ -213,8 +213,8 @@ def test_finite_locale_controls_survive_the_non_finite_refusal() -> None:
     Without this, every refusal above would still pass if the parser had simply
     stopped accepting amounts altogether.
     """
-    assert _parse_decimal_text("1.234,56") == Decimal("1234.56")
-    assert _parse_decimal_text("1\xa0234,56") == Decimal("1234.56")
+    assert parse_decimal_text("1.234,56") == Decimal("1234.56")
+    assert parse_decimal_text("1\xa0234,56") == Decimal("1234.56")
     assert equivalent_renta_web_open_value("5550.00", "5.550,00") is True
 
 
@@ -263,7 +263,7 @@ def test_overall_verdict_applies_match_unverifiable_mismatch_precedence() -> Non
         ((_UNVERIFIABLE_FIELD, _MISMATCH_FIELD), "mismatch"),
         ((_MATCH_FIELD, _UNVERIFIABLE_FIELD, _MISMATCH_FIELD), "mismatch"),
     ):
-        assert _overall_verdict(fields) == expected_verdict, fields
+        assert overall_verdict(fields) == expected_verdict, fields
 
 
 # ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@ class DesignSchemePeriodFieldsDeclaration(BaseModel):
     ordinal_description: str = Field(min_length=1)
 
 
-_DESIGN_SCHEME_PERIOD_FIELDS: Final[dict[str, DesignSchemePeriodFieldsDeclaration]] = {
+DESIGN_SCHEME_PERIOD_FIELDS: Final[dict[str, DesignSchemePeriodFieldsDeclaration]] = {
     "aeat-dr-369-2021": DesignSchemePeriodFieldsDeclaration(
         source_ref="aeat-dr-369-2021",
         source_sha256="b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
@@ -55,7 +55,7 @@ def design_scheme_period_fields_for(
     source: RecordDesignIntermediateSource,
 ) -> DesignSchemePeriodFieldsDeclaration | None:
     """Return the reading only when it matches the parser-read source identity."""
-    declaration = _DESIGN_SCHEME_PERIOD_FIELDS.get(str(source.source_ref))
+    declaration = DESIGN_SCHEME_PERIOD_FIELDS.get(str(source.source_ref))
     if declaration is not None and declaration.source_sha256 != source.source_sha256:
         raise RegistryValidationError("scheme-period reading is not pinned to the parser-read source SHA-256")
     return declaration

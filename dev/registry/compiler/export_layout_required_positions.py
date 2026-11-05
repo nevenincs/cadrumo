@@ -13,7 +13,7 @@ from .record_design_schema import RecordDesignField, RecordDesignSheet
 #: ``Oblig.`` (which the parser lands in ``RecordDesignField.validation``).
 #: Matched with word boundaries so a prose "no obligatorio" elsewhere in a
 #: validation cell is not mistaken for the marking itself.
-_OBLIGATORIO: Final = re.compile(r"\bOBLIGATORI[OA]\b", re.IGNORECASE)
+OBLIGATORIO: Final = re.compile(r"\bOBLIGATORI[OA]\b", re.IGNORECASE)
 
 #: The word by which AEAT names a slot it reserves. Necessary but NOT sufficient
 #: on its own -- see :func:`_administration_reserved` for the two signals that
@@ -77,7 +77,7 @@ _DECLARED_FILL: Final = re.compile(
 
 
 @dataclass(frozen=True, slots=True)
-class _RequiredPosition:
+class RequiredPosition:
     """One official position an authored layout must be able to write."""
 
     sheet: str
@@ -92,7 +92,7 @@ class _RequiredPosition:
     declared_blank: bool
 
 
-def _administration_reserved(field: RecordDesignField) -> bool:
+def administration_reserved(field: RecordDesignField) -> bool:
     """Return whether AEAT reserves this position for itself.
 
     The word "Reservado" alone does not settle it, and reading it as though it
@@ -251,9 +251,9 @@ def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None 
     that can turn a real gap into a pass, so it is deliberately the hardest
     thing to trip.
     """
-    if _OBLIGATORIO.search(field.validation or ""):
+    if OBLIGATORIO.search(field.validation or ""):
         return None
-    if _administration_reserved(field):
+    if administration_reserved(field):
         return "reserved for the Administración"
     if (sealed := _aeat_program_sealed_reason(field)) is not None:
         return sealed
@@ -306,14 +306,14 @@ def _declared_fill_naturaleza(field: RecordDesignField) -> bool:
     return naturaleza_or_none(field.type_code or "") == "Blancos"
 
 
-def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
+def _position(sheet_name: str, field: RecordDesignField) -> RequiredPosition:
     description_tail = re.split(r"[.;:]\s*", field.description.strip())[-1] if field.description else ""
-    return _RequiredPosition(
+    return RequiredPosition(
         sheet=sheet_name,
         offset=field.offset,
         length=field.length,
         description=field.description,
-        obligatorio=bool(_OBLIGATORIO.search(field.validation or "")),
+        obligatorio=bool(OBLIGATORIO.search(field.validation or "")),
         declared_blank=bool(
             (field.content and _DECLARED_FILL.match(field.content.strip()))
             or (description_tail and _DECLARED_FILL.match(description_tail))
@@ -321,7 +321,7 @@ def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
     )
 
 
-def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ...]:
+def required_positions(sheet: RecordDesignSheet) -> tuple[RequiredPosition, ...]:
     """Return every position of ``sheet`` an authored layout must be able to write.
 
     Where AEAT *desglosa* a printed field into sub-fields, THE SUB-FIELDS ARE THE
@@ -345,7 +345,7 @@ def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ..
     takes its whole span out with it: nothing inside a span reserved for the
     Administración is a datum the filer may write.
     """
-    positions: list[_RequiredPosition] = []
+    positions: list[RequiredPosition] = []
     for field in sheet.fields:
         if _omissible_reason(field, sheet) is not None:
             continue

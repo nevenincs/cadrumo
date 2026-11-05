@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.relations import relation_prefill_bind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -81,7 +81,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
     or, if the relation is a supplementary cross-check, declare it
     ``dependency_role = "factual_evidence"``.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     gaps: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
@@ -114,7 +114,7 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     Evidence relations that are alternate binding channels remain honestly
     classified as consumed by the production index.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     unconsumed_roles: set[str] = set()
     for modelo in modelos:
         for _revision_id, revision in modelo.revisions.items():

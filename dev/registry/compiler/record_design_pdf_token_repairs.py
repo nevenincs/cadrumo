@@ -6,12 +6,12 @@ import re
 from collections.abc import Sequence
 
 from .record_design_pdf_repairs import (
-    _FUSED_ORDINAL_POSITION_RE,
-    _FUSED_ROW_RE,
-    _GLUED_NATURALEZA_ROW_RE,
-    _STRANDED_COORDINATE_PAIR_RE,
-    _continues,
-    _previous_parsed_row,
+    FUSED_ORDINAL_POSITION_RE,
+    FUSED_ROW_RE,
+    GLUED_NATURALEZA_ROW_RE,
+    STRANDED_COORDINATE_PAIR_RE,
+    continues,
+    previous_parsed_row,
 )
 from .record_design_pdf_rows import PdfRow, parse_pdf_row
 
@@ -50,7 +50,7 @@ def split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, ..
             previous = parsed
             split.append(line)
             continue
-        fused = _FUSED_ORDINAL_POSITION_RE.match(line)
+        fused = FUSED_ORDINAL_POSITION_RE.match(line)
         if fused is None or previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
             split.append(line)
             continue
@@ -102,11 +102,11 @@ def split_glued_naturaleza_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             split.append(line)
             continue
-        glued = _GLUED_NATURALEZA_ROW_RE.match(line)
+        glued = GLUED_NATURALEZA_ROW_RE.match(line)
         if glued is None or previous is None:
             split.append(line)
             continue
-        if not _continues(previous, glued.group("ordinal"), int(glued.group("offset"))):
+        if not continues(previous, glued.group("ordinal"), int(glued.group("offset"))):
             split.append(line)
             continue
         rebuilt = (
@@ -128,13 +128,13 @@ def _truncated_offset_candidate(
     index: int,
 ) -> str | None:
     """Build a corrected row when its stranded pair proves the offset."""
-    pair = _STRANDED_COORDINATE_PAIR_RE.match(lines[index])
+    pair = STRANDED_COORDINATE_PAIR_RE.match(lines[index])
     if pair is None:
         return None
     damaged = parsed[index - 1]
     if damaged is None or damaged.ordinal is None or damaged.ordinal != pair.group("ordinal"):
         return None
-    anchor = _previous_parsed_row(parsed, index - 1)
+    anchor = previous_parsed_row(parsed, index - 1)
     if anchor is None:
         return None
     stated = int(pair.group("offset"))
@@ -218,7 +218,7 @@ def split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             split.append(line)
             continue
-        fused = _FUSED_ROW_RE.match(line)
+        fused = FUSED_ROW_RE.match(line)
         if fused is not None and previous is not None and previous.ordinal is not None and previous.ordinal.isdigit():
             ordinal = int(previous.ordinal) + 1
             offset = previous.offset + previous.length

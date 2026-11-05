@@ -26,7 +26,7 @@ from .render_profile_rules import (
     TelematicTransportChoiceRule,
     Width17MembershipRule,
 )
-from .render_profile_validation import _duplicates
+from .render_profile_validation import render_profile_validation_duplicates
 
 RENDER_PROFILE_SCHEMA_VERSION: Final[Literal[1]] = 1
 
@@ -182,7 +182,7 @@ def _ordered_profile_fragments(fragments: Iterable[RenderProfileFragment]) -> tu
 
 
 def _require_unique_fragment_ids(ids: tuple[str, ...]) -> None:
-    duplicate_ids = _duplicates(ids)
+    duplicate_ids = render_profile_validation_duplicates(ids)
     if duplicate_ids:
         raise RegistryValidationError(f"render profile contains duplicate fragment ids: {duplicate_ids!r}")
 
@@ -206,7 +206,7 @@ def _require_fragment_identity(
 #: must not silently reorder generated output. It is held exhaustive against that
 #: annotation by the owning test, so widening the type without extending this
 #: tuple -- which would drop the new type's rules here in silence -- fails.
-_WIDTH_17_TYPE_ORDER: Final[tuple[str, ...]] = ("Num", "N")
+WIDTH_17_TYPE_ORDER: Final[tuple[str, ...]] = ("Num", "N")
 
 
 def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Width17MembershipRule, ...]:
@@ -214,7 +214,7 @@ def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Wid
     for rule in rules:
         by_type.setdefault(rule.aeat_type, []).append(rule)
     compiled: list[Width17MembershipRule] = []
-    for aeat_type in _WIDTH_17_TYPE_ORDER:
+    for aeat_type in WIDTH_17_TYPE_ORDER:
         type_rules = by_type.get(aeat_type, [])
         if not type_rules:
             continue

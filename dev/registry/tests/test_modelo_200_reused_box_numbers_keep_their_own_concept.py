@@ -48,7 +48,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
-from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS as _ECHOES
+from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..edition_export_scenarios import m200_export_scenario
 from ..edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 from ..pipeline.semantic_map import SemanticMap, load_semantic_map
@@ -164,7 +164,7 @@ def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
 @pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) -> None:
     semantic_map = _semantic_map(str(_design_source(revision).record_design_epoch))
-    expected = _ECHOES
+    expected = MODELO_200_ECHO_CELLS
     assert set(foreign_sheet_cells(_semantic_map_cells(semantic_map), _casillas(revision))) == expected
     if revision.export_layouts:
         assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == expected
@@ -226,7 +226,7 @@ def test_a_cell_remapped_to_the_liquidacion_box_is_caught(tmp_path: Path) -> Non
 
     found = foreign_sheet_cells(_semantic_map_cells(load_semantic_map(copy)), casillas)
 
-    assert set(found) - _ECHOES == {("DP200042", "DP200014:00547")}
+    assert set(found) - MODELO_200_ECHO_CELLS == {("DP200042", "DP200014:00547")}
     assert found[("DP200042", "DP200014:00547")] == [str(entry.export_field_id)]
 
 
@@ -259,7 +259,7 @@ def test_dp200014b_box_remapped_to_the_capital_risk_flag_is_caught(revision: Mod
 
     found = foreign_sheet_cells(_semantic_map_cells(load_semantic_map(copy)), casillas)
 
-    assert set(found) - _ECHOES == {("DP200014B", "DP200001:00031")}
+    assert set(found) - MODELO_200_ECHO_CELLS == {("DP200014B", "DP200001:00031")}
     assert found[("DP200014B", "DP200001:00031")] == [str(entry.export_field_id)]
 
 

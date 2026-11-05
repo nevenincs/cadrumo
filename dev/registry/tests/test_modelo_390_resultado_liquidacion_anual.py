@@ -28,11 +28,11 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import (
-    _calculate_303_from_observations,
-    _calculate_390_from_observations_and_303_filings,
-    _deduction_kind,
-    _flow,
-    _observation,
+    calculate_303_from_observations,
+    calculate_390_from_observations_and_303_filings,
+    deduction_kind,
+    ledger_iva_aggregation_flow,
+    ledger_iva_aggregation_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -106,21 +106,21 @@ def _quarter_rows(year: int, period: str, quarter: _Quarter) -> tuple[IvaLedgerO
     sale_date = date(year, month, 10)
     purchase_date = date(year, month, 11)
     return (
-        _observation(
+        ledger_iva_aggregation_observation(
             ledger_id=f"{year}-{period}-sale",
             txn_date=sale_date,
             base=quarter.sales_base,
             iva=(quarter.sales_base * _RATE).quantize(Decimal("0.01")),
             applied_rate=_RATE,
         ),
-        _observation(
+        ledger_iva_aggregation_observation(
             ledger_id=f"{year}-{period}-purchase",
             txn_date=purchase_date,
-            flow=_flow("soportado", effective_date=purchase_date),
+            flow=ledger_iva_aggregation_flow("soportado", effective_date=purchase_date),
             base=quarter.purchases_base,
             iva=(quarter.purchases_base * _RATE).quantize(Decimal("0.01")),
             applied_rate=_RATE,
-            deduction_fact_kind=_deduction_kind("domestic_current", effective_date=purchase_date),
+            deduction_fact_kind=deduction_kind("domestic_current", effective_date=purchase_date),
         ),
     )
 
@@ -139,7 +139,7 @@ def _file_year(
     for period, quarter in quarters.items():
         rows = _quarter_rows(year, period, quarter)
         observations += rows
-        result = _calculate_303_from_observations(
+        result = calculate_303_from_observations(
             filing_year=year,
             period=period,
             observations=rows,
@@ -148,7 +148,7 @@ def _file_year(
         )
         results[period] = result
         pending = result.values[_M303_PENDIENTE_FIN_PERIODO]
-    annual = _calculate_390_from_observations_and_303_filings(
+    annual = calculate_390_from_observations_and_303_filings(
         filing_year=year,
         observations=observations,
         quarterly_results=results,

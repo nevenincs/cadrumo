@@ -32,19 +32,19 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.packaging.command_execution import CommandResult
 
-from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .. import workbook_parity_libreoffice as _libreoffice
-from .._parity_tapes import ParityScenario
+from ...conformance.registry_schema_support import committed_modelo
+from .. import workbook_parity_libreoffice
+from ..parity_tapes import ParityScenario
 from ..workbook_parity_binary_conversion import (
     convert_binary_xls_with_libreoffice,
     converted_binary_xls_with_libreoffice,
 )
 from ..workbook_parity_libreoffice import (
     LIBREOFFICE_FAILURE_CONTEXT_KEY,
+    LibreOfficeConversionError,
     LibreOfficeFailureCause,
-    _LibreOfficeConversionError,
-    _subprocess_failure_detail,
     run_workbook_with_libreoffice,
+    subprocess_failure_detail,
 )
 from ..workbook_parity_models import (
     SyntheticInputSet,
@@ -109,7 +109,7 @@ def _write_static_workbook(path: Path) -> None:
 
 
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     return build_snapshot(
         modelo,
         catalogues,
@@ -617,7 +617,7 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
 
 
 def test_libreoffice_conversion_error_carries_its_cause_into_the_registry_error() -> None:
-    registry_error = _LibreOfficeConversionError(LibreOfficeFailureCause.NO_OUTPUT, "no workbook").as_registry_error()
+    registry_error = LibreOfficeConversionError(LibreOfficeFailureCause.NO_OUTPUT, "no workbook").as_registry_error()
 
     assert isinstance(registry_error, RegistryValidationError)
     assert str(registry_error) == "no workbook"
@@ -643,7 +643,7 @@ def test_libreoffice_refuses_a_profile_root_too_deep_to_initialise(
     shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
     deep_temp_root = tmp_path / ("t" * 150)
     deep_temp_root.mkdir()
-    monkeypatch.setattr(_libreoffice, "prepare_temp_root", lambda: deep_temp_root)
+    monkeypatch.setattr(workbook_parity_libreoffice, "prepare_temp_root", lambda: deep_temp_root)
 
     with pytest.raises(RegistryValidationError, match="user profile root") as excinfo:
         run_workbook_with_libreoffice(
@@ -781,7 +781,7 @@ def test_subprocess_failure_detail_omits_raw_stdout_stderr_content() -> None:
     assert "some-real-user" in exc.stdout, "premise: CalledProcessError.stdout must actually carry the raw text"
     assert "SECRET_TOKEN=abc123" in exc.stderr, "premise: CalledProcessError.stderr must actually carry the raw text"
 
-    detail = _subprocess_failure_detail(exc)
+    detail = subprocess_failure_detail(exc)
 
     assert "some-real-user" not in detail
     assert "SECRET_TOKEN" not in detail
@@ -800,4 +800,4 @@ def test_subprocess_failure_detail_handles_completed_process_without_exception()
         stderr="",
     )
 
-    assert _subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"
+    assert subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"

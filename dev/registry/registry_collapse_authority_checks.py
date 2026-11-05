@@ -20,15 +20,15 @@ from dev.registry.compiler.loader import clear_registry_tree_cache
 from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate
 
 from .registry_collapse_authority_queries import (
-    _fact_queries,
-    _fact_result,
-    _indexed_complete_revision,
-    _indexed_selection_result,
-    _snapshot_result,
+    fact_queries,
+    fact_result,
+    indexed_complete_revision,
+    indexed_selection_result,
+    snapshot_result,
 )
-from .registry_collapse_comparison import _first_difference, _typed_projection
+from .registry_collapse_comparison import first_difference, typed_projection
 from .registry_collapse_models import CheckStatus, RequestCoordinate
-from .registry_collapse_requests import _selection_result, request_matrix
+from .registry_collapse_requests import request_matrix, selection_result
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,7 +59,7 @@ class _IndexedParity:
     detail: str | None = None
 
 
-def _authority_checks(
+def authority_checks(
     source_registry: Path,
     candidate_registry: Path,
     *,
@@ -71,7 +71,7 @@ def _authority_checks(
         authorities = _compile_authority_pair(source_registry, candidate_registry, source_root)
     except Exception as exc:
         return _authority_prerequisite_failure(exc)
-    authority_difference = _first_difference(authorities.source_cold, authorities.candidate_cold)
+    authority_difference = first_difference(authorities.source_cold, authorities.candidate_cold)
     cache_difference = _authority_cache_difference(authorities)
     facts = _compare_fact_authorities(authorities.source, authorities.candidate)
     indexed = _indexed_authority_parity(
@@ -136,11 +136,11 @@ def _compile_authority_pair(
 ) -> _AuthorityPair:
     clear_registry_tree_cache()
     source = compile_validated_authority(source_registry, source_root)
-    source_cold = _typed_projection(source.modelos)
-    source_warm = _typed_projection(compile_validated_authority(source_registry, source_root).modelos)
+    source_cold = typed_projection(source.modelos)
+    source_warm = typed_projection(compile_validated_authority(source_registry, source_root).modelos)
     candidate = compile_validated_authority(candidate_registry, source_root)
-    candidate_cold = _typed_projection(candidate.modelos)
-    candidate_warm = _typed_projection(compile_validated_authority(candidate_registry, source_root).modelos)
+    candidate_cold = typed_projection(candidate.modelos)
+    candidate_warm = typed_projection(compile_validated_authority(candidate_registry, source_root).modelos)
     return _AuthorityPair(source, candidate, source_cold, source_warm, candidate_cold, candidate_warm)
 
 
@@ -156,7 +156,7 @@ def _authority_prerequisite_failure(error: Exception) -> dict[str, object]:
 
 
 def _authority_cache_difference(authorities: _AuthorityPair) -> Mapping[str, object] | None:
-    return _first_difference(authorities.source_cold, authorities.source_warm) or _first_difference(
+    return first_difference(authorities.source_cold, authorities.source_warm) or first_difference(
         authorities.candidate_cold,
         authorities.candidate_warm,
     )
@@ -166,11 +166,11 @@ def _compare_fact_authorities(
     source: ValidatedRegistryAuthority,
     candidate: ValidatedRegistryAuthority,
 ) -> _FactParity:
-    difference = _first_difference(
-        _typed_projection(source.catalogues.facts),
-        _typed_projection(candidate.catalogues.facts),
+    difference = first_difference(
+        typed_projection(source.catalogues.facts),
+        typed_projection(candidate.catalogues.facts),
     )
-    queries = _fact_queries(source)
+    queries = fact_queries(source)
     checked = 0
     if difference is None:
         difference, checked = _first_fact_difference(
@@ -189,9 +189,9 @@ def _first_fact_difference(
     path_prefix: str,
 ) -> tuple[Mapping[str, object] | None, int]:
     for checked, query in enumerate(queries, start=1):
-        difference = _first_difference(
-            _fact_result(left_resolver, query),
-            _fact_result(right_resolver, query),
+        difference = first_difference(
+            fact_result(left_resolver, query),
+            fact_result(right_resolver, query),
             f"{path_prefix}.{query.fact_id}",
         )
         if difference is not None:
@@ -266,7 +266,7 @@ def _indexed_revision_ids_difference(
     operation: PinnedAuthorityOperation,
     expected_ids: tuple[tuple[str, str], ...],
 ) -> Mapping[str, object] | None:
-    return _first_difference(expected_ids, tuple(sorted(operation.revision_ids())), "$.revision_ids")
+    return first_difference(expected_ids, tuple(sorted(operation.revision_ids())), "$.revision_ids")
 
 
 def _indexed_revision_difference(
@@ -277,11 +277,11 @@ def _indexed_revision_difference(
     checked = 0
     for modelo_id, revision_id in expected_ids:
         expected = candidate.modelo(modelo_id).revisions[revision_id]
-        actual = _indexed_complete_revision(operation, modelo_id, revision_id)
+        actual = indexed_complete_revision(operation, modelo_id, revision_id)
         checked += 1
-        difference = _first_difference(
-            _typed_projection(expected),
-            _typed_projection(actual),
+        difference = first_difference(
+            typed_projection(expected),
+            typed_projection(actual),
             f"$.{modelo_id}.{revision_id}",
         )
         if difference is not None:
@@ -352,9 +352,9 @@ def _indexed_temporal_difference(
     coordinate: RequestCoordinate,
     support: SupportedFilingYearsCatalogue,
 ) -> Mapping[str, object] | None:
-    return _first_difference(
-        _selection_result(source_modelo, coordinate, support),
-        _indexed_selection_result(operation, modelo_id, coordinate),
+    return first_difference(
+        selection_result(source_modelo, coordinate, support),
+        indexed_selection_result(operation, modelo_id, coordinate),
         f"$.temporal.{modelo_id}",
     )
 
@@ -366,19 +366,19 @@ def _indexed_capability_difference(
     modelo_id: str,
     coordinate: RequestCoordinate,
 ) -> Mapping[str, object] | None:
-    source_snapshot = _snapshot_result(source_authority.snapshot, modelo_id, coordinate)
-    candidate_snapshot = _snapshot_result(candidate_authority.snapshot, modelo_id, coordinate)
-    indexed_snapshot = _snapshot_result(
+    source_snapshot = snapshot_result(source_authority.snapshot, modelo_id, coordinate)
+    candidate_snapshot = snapshot_result(candidate_authority.snapshot, modelo_id, coordinate)
+    indexed_snapshot = snapshot_result(
         operation.snapshot,
         modelo_id,
         coordinate,
         indexed_form_layout=operation.form_layout,
     )
-    return _first_difference(
+    return first_difference(
         source_snapshot,
         candidate_snapshot,
         f"$.capability.source_candidate.{modelo_id}",
-    ) or _first_difference(
+    ) or first_difference(
         candidate_snapshot,
         indexed_snapshot,
         f"$.capability.candidate_indexed.{modelo_id}",

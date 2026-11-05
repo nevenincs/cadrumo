@@ -100,7 +100,7 @@ def test_pipeline_help_exposes_distinct_lifecycle_entry_points() -> None:
 
 
 def test_target_mutation_reports_follow_up_currentness_and_publication(monkeypatch) -> None:
-    monkeypatch.setattr(pipeline_cli, "_run", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(pipeline_cli, "run", lambda *_args, **_kwargs: None)
 
     result = CliRunner().invoke(
         pipeline_cli.app,

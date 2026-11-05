@@ -31,13 +31,13 @@ from cadrumo.tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_C
 from ..checker_oracle_flow import CheckerObservation
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
 from ..parity.live_parity import LiveParityOracle
-from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .checker_replay_driver import CheckerReplayDriver
 from .groi_oracle import (
     GROI_ORACLE_ID,
     GroiOracle,
     register_default,
 )
+from .remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

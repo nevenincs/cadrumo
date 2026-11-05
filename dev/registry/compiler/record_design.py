@@ -26,10 +26,7 @@ if TYPE_CHECKING:
     # must not pay for a PDF/XLS parser stack no calculation touches.
     pass
 
-from cadrumo.core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
-from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from cadrumo.core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.paths import path_stat_fingerprint
@@ -59,7 +56,7 @@ from .record_design_workbook import extract_sheet, extract_xls_sheet
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
-_EXTRACTABLE_SUFFIXES = frozenset({_PDF_EXTENSION, _XLSX_EXTENSION, _XLSM_EXTENSION, _XLS_EXTENSION})
+_EXTRACTABLE_SUFFIXES = frozenset({PDF_EXTENSION, XLSX_EXTENSION, XLSM_EXTENSION, XLS_EXTENSION})
 
 
 def extract_record_design(path: Path) -> RecordDesignExtraction:
@@ -148,11 +145,11 @@ def _extract_record_design_cached(
 ) -> RecordDesignExtraction:
     source_path = Path(path)
     suffix = source_path.suffix.lower()
-    if suffix == _PDF_EXTENSION:
+    if suffix == PDF_EXTENSION:
         extractor = extract_record_design_pdf
-    elif suffix in {_XLSX_EXTENSION, _XLSM_EXTENSION}:
+    elif suffix in {XLSX_EXTENSION, XLSM_EXTENSION}:
         extractor = extract_record_design_workbook
-    elif suffix == _XLS_EXTENSION:
+    elif suffix == XLS_EXTENSION:
         extractor = extract_record_design_xls_workbook
     else:
         raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")

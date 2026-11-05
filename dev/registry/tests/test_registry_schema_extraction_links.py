@@ -30,25 +30,15 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 
 from ..conformance.registry_schema_support import (
-    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
+    NUMERIC_CASILLA_01,
+    as_communication_revision,
+    committed_modelo,
+    committed_registry,
+    keyed_bracket,
+    with_revision,
 )
 from ..conformance.registry_schema_support import (
-    as_communication_revision as _as_communication_revision,
-)
-from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_registry as _committed_registry,
-)
-from ..conformance.registry_schema_support import (
-    keyed_bracket as _keyed_bracket,
-)
-from ..conformance.registry_schema_support import (
-    revision as _revision,
-)
-from ..conformance.registry_schema_support import (
-    with_revision as _with_revision,
+    revision as committed_revision,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -107,12 +97,12 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
-                    casilla_id=_NUMERIC_CASILLA_01,
+                    casilla_id=NUMERIC_CASILLA_01,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
                 ExtractionTargetDefinition(
-                    casilla_id=_NUMERIC_CASILLA_01,
+                    casilla_id=NUMERIC_CASILLA_01,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
@@ -137,7 +127,7 @@ def test_extraction_profile_rejects_zero_minimum_coverage() -> None:
             parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
-                    casilla_id=_NUMERIC_CASILLA_01,
+                    casilla_id=NUMERIC_CASILLA_01,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
@@ -157,8 +147,8 @@ def test_calculation_completeness_manifest_rejects_duplicate_casilla_id() -> Non
         CalculationCompletenessManifest(
             source_ref="aeat-dr-130-2019-v12",
             casillas=(
-                CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
-                CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="02"),
+                CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),
+                CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="02"),
             ),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-dr-130-2019-v12",),
@@ -177,18 +167,18 @@ def test_validator_rejects_extraction_profile_parser_that_is_not_a_dotted_callab
     domain layer is a pure structural-shape check: the string must have the
     ``module.attribute`` dotted-callable shape.
     """
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     profile = revision.extraction_profiles[0].model_copy(update={"parser": "not_a_dotted_path"})
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match=r"must be a dotted callable path"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_extraction_profile_without_layout_authority_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     profile = next(item for item in revision.extraction_profiles if item.source_refs)
     sources = dict(catalogues.sources)
     for source_ref in profile.source_refs:
@@ -203,29 +193,29 @@ def test_validator_rejects_extraction_profile_without_layout_authority_source() 
 
 
 def test_validator_requires_application_link_for_extraction_profile() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     links = tuple(link for link in revision.application_links if link.surface != "extractor")
     mutated = revision.model_copy(update={"application_links": links})
 
     with pytest.raises(RegistryValidationError, match="extraction profiles require an extractor application link"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_requires_application_link_for_formulas() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     links = tuple(link for link in revision.application_links if link.surface != "calculation")
     mutated = revision.model_copy(update={"application_links": links})
 
     with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas() -> None:
-    modelo, catalogues = _committed_modelo("036")
+    modelo, catalogues = committed_modelo("036")
     revision = _filing_and_workflow_revision(modelo)
-    communication = _as_communication_revision(revision)
+    communication = as_communication_revision(revision)
     # A pure communication-only modelo does not file declarations and
     # therefore has no PDF-extraction surface; strip extraction_profiles
     # and their corpus-PDF requirements from the mutated revision.
@@ -256,15 +246,15 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
 
 
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
-    modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
+    modelo, catalogues = committed_modelo("036")
+    revision = as_communication_revision(_filing_and_workflow_revision(modelo))
 
     with pytest.raises(RegistryValidationError, match="communication application links are only valid for Modelo 145"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, revision))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, revision))
 
 
 def test_validator_rejects_communication_link_combined_with_filing() -> None:
-    modelo, catalogues = _committed_modelo("036")
+    modelo, catalogues = committed_modelo("036")
     revision = _filing_and_workflow_revision(modelo)
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
@@ -276,32 +266,32 @@ def test_validator_rejects_communication_link_combined_with_filing() -> None:
         RegistryValidationError,
         match="communication application links must not be combined with filing",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_modelo_145_without_communication_link() -> None:
-    modelo, catalogues = _committed_modelo("036")
+    modelo, catalogues = committed_modelo("036")
     revision = _filing_and_workflow_revision(modelo)
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
     with pytest.raises(RegistryValidationError, match="Modelo 145 requires a communication application link"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo_145, revision))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo_145, revision))
 
 
 def test_validator_rejects_communication_link_with_deadline_surface() -> None:
-    modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
+    modelo, catalogues = committed_modelo("036")
+    revision = as_communication_revision(_filing_and_workflow_revision(modelo))
     workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
     deadline_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-deadline", "surface": "deadline"})
     mutated = revision.model_copy(update={"application_links": (*revision.application_links, deadline_link)})
 
     with pytest.raises(RegistryValidationError, match="communication application links must not declare deadline"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_communication_link_with_portal_surface() -> None:
-    modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
+    modelo, catalogues = committed_modelo("036")
+    revision = as_communication_revision(_filing_and_workflow_revision(modelo))
     workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
     portal_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-portal", "surface": "portal"})
     mutated = revision.model_copy(update={"application_links": (*revision.application_links, portal_link)})
@@ -310,11 +300,11 @@ def test_validator_rejects_communication_link_with_portal_surface() -> None:
         RegistryValidationError,
         match="communication application links must not declare live or portal",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_communication_link_with_filing_schedule() -> None:
-    modelo, catalogues = _committed_modelo("036")
+    modelo, catalogues = committed_modelo("036")
     revision = _filing_and_workflow_revision(modelo)
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
@@ -346,12 +336,12 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
         RegistryValidationError,
         match="communication application links must not declare filing schedules",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_application_link_legal_ref_without_legal_authority() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     link = next(item for item in revision.application_links if item.legal_refs)
     legal = dict(catalogues.legal)
     legal_ref = link.legal_refs[0]
@@ -366,8 +356,8 @@ def test_validator_rejects_application_link_legal_ref_without_legal_authority() 
 
 
 def test_validator_rejects_application_link_without_required_official_guidance_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     link = next(item for item in revision.application_links if item.id == "modelo-130-calculation")
     mutated_link = link.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
     mutated = revision.model_copy(
@@ -382,12 +372,12 @@ def test_validator_rejects_application_link_without_required_official_guidance_s
         RegistryValidationError,
         match=r"application link modelo-130-calculation requires official_source_guidance source evidence",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_export_application_link_without_layout_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     link = next(item for item in revision.application_links if item.id == "modelo-130-export")
     mutated_link = link.model_copy(update={"source_refs": ("aeat-modelo-130-instructions",)})
     mutated = revision.model_copy(
@@ -402,12 +392,12 @@ def test_validator_rejects_export_application_link_without_layout_source() -> No
         RegistryValidationError,
         match=r"application link modelo-130-export requires layout_authority source evidence",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     target = next(casilla for casilla in revision.casillas if casilla.export_refs)
     casillas = tuple(
         casilla.model_copy(update={"export_refs": (*casilla.export_refs, "missing-export-field")})
@@ -418,12 +408,12 @@ def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
     mutated = revision.model_copy(update={"casillas": casillas})
 
     with pytest.raises(RegistryValidationError, match="but the export fields resolving to it are"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     exported = next(
         field
         for layout in revision.export_layouts
@@ -440,12 +430,12 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
     mutated = revision.model_copy(update={"casillas": casillas})
 
     with pytest.raises(RegistryValidationError, match="but the export fields resolving to it are"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_export_field_without_layout_authority_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     target_layout = next(
         layout for layout in revision.export_layouts if any(record.fields for record in layout.records)
     )
@@ -475,11 +465,11 @@ def test_validator_rejects_export_field_without_layout_authority_source() -> Non
     mutated = revision.model_copy(update={"export_layouts": export_layouts})
 
     with pytest.raises(RegistryValidationError, match="requires layout_authority source evidence"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> None:
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
     profile = next(item for item in revision.extraction_profiles if item.surface == "export_record")
     target = profile.target_casillas[0].casilla_id
@@ -514,24 +504,24 @@ def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> 
     mutated = revision.model_copy(update={"casillas": casillas, "export_layouts": export_layouts})
 
     with pytest.raises(RegistryValidationError, match="targets casillas without export fields"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     expectation = revision.verification_expectations[0].model_copy(
         update={"reconciliation_total_casilla_ids": {"ingresar": "missing"}},
     )
     mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
 
     with pytest.raises(RegistryValidationError, match="reconciliation total 'ingresar' references unknown casilla"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_requires_reconciliation_total_to_be_computed() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     expectation = revision.verification_expectations[0].model_copy(
         update={"reconciliation_total_casilla_ids": {"ingresar": "01"}},
     )
@@ -541,7 +531,7 @@ def test_validator_requires_reconciliation_total_to_be_computed() -> None:
         RegistryValidationError,
         match="reconciliation total 'ingresar' must be one of computed_casilla_ids",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tuple[object, bool]:
@@ -578,7 +568,7 @@ def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tupl
 def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> None:
     """The lookup_bracket_by_ccaa dispatch_table leaf must resolve every value
     to a declared parameter; otherwise the registry would only fault at runtime."""
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     revision = modelo.revisions["2025"]
     formula = next(item for item in revision.formulas if item.target_casilla_id == "0529")
     mutated_expression, corrupted = _corrupt_first_ccaa_dispatch(
@@ -597,13 +587,13 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
         r"'renta-2025-not-a-declared-parameter'",
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )
 
 
 def test_deadline_window_any_mode_requires_conditions() -> None:
-    modelo, _catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, _catalogues = committed_registry()
+    revision = committed_revision(modelo)
     window = revision.deadline_windows[0]
     payload = window.model_dump()
     payload.update(
@@ -691,8 +681,8 @@ def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
         data_type="keyed_bracket_table",
         unit="percent",
         keyed_brackets=(
-            _keyed_bracket("general", "0.24"),
-            _keyed_bracket("ue_residente", "0.19"),
+            keyed_bracket("general", "0.24"),
+            keyed_bracket("ue_residente", "0.19"),
         ),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
         source_refs=("aeat-modelo-210-procedure",),
@@ -728,8 +718,8 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
             data_type="keyed_bracket_table",
             unit="percent",
             keyed_brackets=(
-                _keyed_bracket("general", "0.24"),
-                _keyed_bracket("general", "0.30"),
+                keyed_bracket("general", "0.24"),
+                keyed_bracket("general", "0.30"),
             ),
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
@@ -826,9 +816,9 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
     ambiguous lookup contract; the validator rejects it at
     construction time.
     """
-    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry as _BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry
 
-    numeric_bracket = _BracketEntry(
+    numeric_bracket = BracketEntry(
         lower_bound=Decimal("0"),
         upper_bound=Decimal("12450"),
         fixed_addition=Decimal("0"),
@@ -842,7 +832,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
             data_type="keyed_bracket_table",
             unit="percent",
             brackets=(numeric_bracket,),
-            keyed_brackets=(_keyed_bracket("general", "0.24"),),
+            keyed_brackets=(keyed_bracket("general", "0.24"),),
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )

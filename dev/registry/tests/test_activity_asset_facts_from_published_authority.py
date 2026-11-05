@@ -27,8 +27,8 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 )
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from ._activity_asset_schedule_support import _asset, _linear
-from .test_activity_asset_schedule_authority_methods import _GROWING, _employment
+from .activity_asset_schedule_support import activity_asset_schedule_asset, activity_asset_schedule_linear
+from .test_activity_asset_schedule_authority_methods import GROWING, employment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -43,9 +43,9 @@ def test_the_published_2025_edition_supplies_the_boxes_and_the_workforce_cap() -
         authority = resolve_activity_asset_schedule_authority(
             modelo_100,
             tax_year=2025,
-            asset_revision=_asset(_employment(), basis="200000", in_service=date(2025, 3, 1)),
+            asset_revision=activity_asset_schedule_asset(employment(), basis="200000", in_service=date(2025, 3, 1)),
             authority_generation=operation.pin().logical_generation,
-            workforce=_GROWING,
+            workforce=GROWING,
             legal_reference=operation.legal_reference,
         )
 
@@ -68,7 +68,7 @@ def test_the_published_period_decides_a_sale_after_a_later_affectation(
         bounds = resolve_activity_asset_disposal_bounds(
             operation.revision_for_context("100", filing_year=2025, period="0A"),
             tax_year=2025,
-            asset_revision=_asset(_linear("maquinaria"), basis="1000"),
+            asset_revision=activity_asset_schedule_asset(activity_asset_schedule_linear("maquinaria"), basis="1000"),
         )
 
     # Three years from the affectation end on the same day of 2025: the sale of 30 June 2025 is within

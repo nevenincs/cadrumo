@@ -13,15 +13,15 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportSignPosition,
 )
 
-from .export_field_numeric_derivation import _DATE_FORMAT_BY_POLICY
-from .export_field_schema import _is_required, _schema_field
+from .export_field_numeric_derivation import DATE_FORMAT_BY_POLICY
+from .export_field_schema import is_required, schema_field
 from .export_fragment_provenance import ExportFieldDerivation
 from .joined_record_design import JoinedRecordDesignField
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileAnchor
 from .render_profile_rules import SignedMonetaryCompositeRule, SingletonNumericRule, Width17MembershipRule
 
-_SINGLETON_POLICY_SHAPES: Final[
+SINGLETON_POLICY_SHAPES: Final[
     Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity", "text"]]
 ] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
@@ -54,10 +54,10 @@ _SINGLETON_POLICY_SHAPES: Final[
 #: ``Width17MembershipRule.sign_policy`` without a decision here would not refuse;
 #: it would render as an unsigned decimal carrying the rule's scale, wrong in all
 #: three at once. The owning test holds this pair exhaustive against that field.
-_WIDTH_17_SIGNED_POLICY: Final[str] = "n-prefix-negative-blank-nonnegative"
+WIDTH_17_SIGNED_POLICY: Final[str] = "n-prefix-negative-blank-nonnegative"
 
 
-_WIDTH_17_UNSIGNED_POLICY: Final[str] = "unsigned"
+WIDTH_17_UNSIGNED_POLICY: Final[str] = "unsigned"
 
 
 type _SingletonNumericShape = tuple[
@@ -70,18 +70,18 @@ type _SingletonNumericShape = tuple[
 ]
 
 
-def _render_profile_numeric_derivation(
+def render_profile_numeric_derivation(
     joined_field: JoinedRecordDesignField,
     profile: RenderProfile,
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
-    anchor = _render_profile_anchor(joined_field)
+    anchor = render_profile_anchor(joined_field)
     # The sign subdivision is stated in the cell prose, so a composite governs
     # its anchor even where the naturaleza column prints the slot as numeric.
     composite = profile.signed_composite_rule_by_anchor.get(anchor)
     if composite is not None:
-        return _profile_signed_composite_derivation(joined_field, composite, export_record_id=export_record_id)
+        return profile_signed_composite_derivation(joined_field, composite, export_record_id=export_record_id)
     # Indexed on the profile, not scanned here: a scan compared this anchor
     # against every anchor of every rule, and anchors are pydantic models whose
     # equality is not cheap.
@@ -97,7 +97,7 @@ def _render_profile_numeric_derivation(
         raise RegistryValidationError(
             f"validated render profile has no exact rule for blank numeric anchor {anchor!r}",
         )
-    return _profile_singleton_derivation(
+    return profile_singleton_derivation(
         joined_field,
         singleton,
         export_record_id=export_record_id,
@@ -110,11 +110,11 @@ def _profile_width_17_derivation(
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
-    signed = rule.sign_policy == _WIDTH_17_SIGNED_POLICY
-    return _schema_field(
+    signed = rule.sign_policy == WIDTH_17_SIGNED_POLICY
+    return schema_field(
         joined_field,
         data_type="money" if signed else "decimal",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=signed,
@@ -128,7 +128,7 @@ def _profile_width_17_derivation(
     )
 
 
-def _profile_singleton_derivation(
+def profile_singleton_derivation(
     joined_field: JoinedRecordDesignField,
     rule: SingletonNumericRule,
     *,
@@ -136,10 +136,10 @@ def _profile_singleton_derivation(
 ) -> ExportFieldDerivation:
     data_type, padding, justification, date_format, decimals, signed = _singleton_numeric_shape(rule)
     allowed_values = rule.allowed_values or None if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS else None
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type=data_type,
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=padding,
         justification=justification,
         signed=signed,
@@ -157,7 +157,7 @@ def _singleton_numeric_shape(
 ) -> _SingletonNumericShape:
     """Resolve a reviewed singleton's closed value policy to its wire shape."""
     signed = rule.aeat_type == "N"
-    policy_shape = _SINGLETON_POLICY_SHAPES.get(rule.value_policy)
+    policy_shape = SINGLETON_POLICY_SHAPES.get(rule.value_policy)
     if policy_shape is None:
         raise RegistryValidationError(f"unsupported singleton export value policy {rule.value_policy!r}")
     if policy_shape == "date":
@@ -174,7 +174,7 @@ def _singleton_numeric_shape(
 
 
 def _date_singleton_shape(rule: SingletonNumericRule, signed: bool) -> _SingletonNumericShape:
-    date_format = _DATE_FORMAT_BY_POLICY.get(rule.value_policy)
+    date_format = DATE_FORMAT_BY_POLICY.get(rule.value_policy)
     if date_format is None:
         raise RegistryValidationError(f"date singleton export policy lacks a date format {rule.value_policy!r}")
     return "date", ExportPadding.NONE, ExportJustification.NONE, date_format, None, signed
@@ -187,16 +187,16 @@ def _decimal_singleton_shape(rule: SingletonNumericRule, signed: bool) -> _Singl
     return data_type, ExportPadding.LEFT_ZERO, ExportJustification.RIGHT, None, decimals, signed
 
 
-def _profile_signed_composite_derivation(
+def profile_signed_composite_derivation(
     joined_field: JoinedRecordDesignField,
     rule: SignedMonetaryCompositeRule,
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="money",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=True,
@@ -206,7 +206,7 @@ def _profile_signed_composite_derivation(
     )
 
 
-def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
+def render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
     field = joined_field.parser_field
     # DERIVED, not authored: this anchor is built from the parser field, so a
     # missing ordinal is an observed fact about the design rather than a claim,

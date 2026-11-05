@@ -8,61 +8,63 @@ from collections.abc import Mapping, Sequence
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
-from . import edition_delta_row_delta_selection as _edition_delta_row_delta_selection
-from . import edition_delta_source as _edition_delta_source
-from . import edition_delta_types as _edition_delta_types
+from . import (
+    edition_delta_row_delta_reconstruction,
+    edition_delta_row_delta_selection,
+    edition_delta_source,
+    edition_delta_types,
+)
 
 
 def _unretired_withdrawal(
-    inherited: Sequence[_edition_delta_source._Placed],
-    full_rows: Sequence[_edition_delta_source._Row],
-    source: _edition_delta_source._EditionSource,
+    inherited: Sequence[edition_delta_source.Placed],
+    full_rows: Sequence[edition_delta_source.Row],
+    source: edition_delta_source.EditionSource,
     storage_only: bool,
 ) -> bool:
     if storage_only:
         return False
-    stated_lineages = {_edition_delta_source._lineage(row) for row in full_rows}
+    stated_lineages = {edition_delta_source.lineage(row) for row in full_rows}
     return any(
-        (lineage := _edition_delta_source._lineage(placed.row)) is not None
+        (lineage := edition_delta_source.lineage(placed.row)) is not None
         and lineage not in stated_lineages
         and lineage not in source.retired
         for placed in inherited
     )
 
 
-def _choose_drops(
+def choose_drops(
     *,
     definition: ModeloDefinition,
     revision_id: str,
     predecessor: str,
-    inherited: Sequence[_edition_delta_source._Placed],
-    full_rows: Sequence[_edition_delta_source._Row],
-    lifts: Mapping[str, _edition_delta_source._Lift],
-    source: _edition_delta_source._EditionSource,
-    defaults: _edition_delta_source._Defaults,
+    inherited: Sequence[edition_delta_source.Placed],
+    full_rows: Sequence[edition_delta_source.Row],
+    lifts: Mapping[str, edition_delta_source.Lift],
+    source: edition_delta_source.EditionSource,
+    defaults: edition_delta_source.Defaults,
     normalise_order: bool = False,
     storage_only: bool = False,
 ) -> tuple[
-    list[_edition_delta_types.BlockedCause],
+    list[edition_delta_types.BlockedCause],
     set[str],
-    Counter[_edition_delta_types.KeptReason],
+    Counter[edition_delta_types.KeptReason],
     list[str],
-    tuple[_edition_delta_source._Row, ...],
-    tuple[_edition_delta_source._Row, ...],
-    tuple[_edition_delta_source._Row, ...],
+    tuple[edition_delta_source.Row, ...],
+    tuple[edition_delta_source.Row, ...],
+    tuple[edition_delta_source.Row, ...],
     tuple[LineageAttestation, ...],
     tuple[str, ...],
     bool,
 ]:
     del definition  # Materialisation and identity are supplied by the typed source rows.
     if _unretired_withdrawal(inherited, full_rows, source, storage_only):
-        return [_edition_delta_types.BlockedCause.UNRETIRED_WITHDRAWAL], set(), Counter(), [], (), (), (), (), (), False
-    context = _edition_delta_row_delta_selection.selection_context(
+        return [edition_delta_types.BlockedCause.UNRETIRED_WITHDRAWAL], set(), Counter(), [], (), (), (), (), (), False
+    context = edition_delta_row_delta_selection.selection_context(
         revision_id, predecessor, inherited, lifts, source, defaults, storage_only
     )
-    selection = _edition_delta_row_delta_selection.select_drops(context, full_rows)
-    removals, positions, reconstructed_order = _edition_delta_row_delta_reconstruction.reconstruct_drops(
+    selection = edition_delta_row_delta_selection.select_drops(context, full_rows)
+    removals, positions, reconstructed_order = edition_delta_row_delta_reconstruction.reconstruct_drops(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=inherited,

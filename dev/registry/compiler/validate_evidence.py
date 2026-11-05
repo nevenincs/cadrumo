@@ -172,13 +172,13 @@ def _read_source_text(source: SourceReference, source_path: Path, *, source_root
         sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path, source_root=source_root)
         if sidecar_text is not None:
             return sidecar_text
-        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_pdf_text_impl(str(source_path)))
     if source_path.suffix.casefold() == ".xlsx":
-        return normalise_corpus_text(_extract_xlsx_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_xlsx_text_impl(str(source_path)))
     if source_path.suffix.casefold() == ".pdf":
         # A record-design PDF is compressed; its citations are against the text
         # it renders, never against the raw bytes.
-        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+        return normalise_corpus_text(extract_pdf_text_impl(str(source_path)))
     if source.kind is RegistrySourceKind.DICTIONARY and source_path.suffix.casefold() == ".properties":
         try:
             return normalise_corpus_text(decode_dictionary_text(source_path.read_bytes()))
@@ -210,7 +210,7 @@ def _xlsx_workbook_text(workbook: Workbook, path: str) -> str:
     return "\n".join(cells)
 
 
-def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
+def extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
     """Return cell text from an enrolled XLSX record-design authority.
 
     Only a workbook the reader itself rejects is relabelled as an unreadable
@@ -311,7 +311,7 @@ def _persisted_corpus_text(cache_key: str) -> str | None:
         return None
 
 
-def _source_text_cache_key(
+def source_text_cache_key(
     source: SourceReference,
     source_path: Path,
     source_root: Path,
@@ -372,7 +372,7 @@ def _remember_normalised_source_text(
     _pending_entries[cache_key] = normalised
 
 
-def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
+def extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
     """Return page text from an enrolled manual PDF authority.
 
     Only a document pdfium itself rejects, or a filesystem failure reading it,
@@ -626,7 +626,7 @@ class EvidenceValidator:
         if source_root is None:
             return ""
         source_path = _resolve_source_path(source, source_root)
-        source_key = _source_text_cache_key(source, source_path, source_root, source_path.stat())
+        source_key = source_text_cache_key(source, source_path, source_root, source_path.stat())
         cache_hit, cached_text, cache_key = _lookup_normalised_source_text(
             source.id, source_key, self._source_text_cache
         )

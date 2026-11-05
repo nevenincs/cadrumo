@@ -37,9 +37,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
-from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_producer_inventory import validate_producer_inventory
-from ._validate_revision_sections import validate_revision_definition
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
@@ -59,10 +56,12 @@ from .source_evidence_fingerprint import (
 )
 from .validate_evidence import EvidenceValidator, flush_corpus_text_cache
 from .validate_form_geometry import validate_form_geometry
+from .validate_helpers import missing_refs
 from .validate_household_row_owners import validate_household_row_owners
 from .validate_inherited_family_pairing import inherited_family_pairing_failures
 from .validate_layout_authority_content import validate_layout_authority_content
 from .validate_official_source_guidance_content import validate_suppression_notice_content
+from .validate_producer_inventory import validate_producer_inventory
 from .validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
@@ -76,6 +75,7 @@ from .validate_revision_rules import (
     validate_periodic_deadline_completeness,
     validate_revision_windows,
 )
+from .validate_revision_sections import validate_revision_definition
 from .validation_memoization import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
@@ -258,7 +258,7 @@ class RegistryValidator:
         return self._catalogue_failures
 
     def _runtime_catalogue_failures(self) -> list[str]:
-        return _missing_refs(
+        return missing_refs(
             "runtime catalogues",
             "published authority",
             runtime_legal_reference_ids(self._runtime),
@@ -335,8 +335,8 @@ class RegistryValidator:
         if validate_catalogues:
             failures.extend(self._validate_catalogues())
         failures.extend(iva_binding_cash_accounting_vocabulary_failures(modelo, self._facts))
-        failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
-        failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
+        failures.extend(missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         failures.extend(
             self._evidence.require_any_source_tier(
                 "modelo", modelo.id, modelo.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS

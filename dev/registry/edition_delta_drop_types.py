@@ -7,21 +7,19 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 
-from . import edition_delta_assessment as _edition_delta_assessment
-from . import edition_delta_order_restoration as _edition_delta_order_restoration
-from . import edition_delta_source as _edition_delta_source
+from . import edition_delta_assessment, edition_delta_order_restoration, edition_delta_source
 from .edition_round_trip import RoundTripFinding, RoundTripReport
 
 __all__ = ("DropOutcome", "DropPlan", "EditionDrop", "FamilyDrop")
 
 
 @dataclass(frozen=True, slots=True)
-class _MemberFragment:
+class MemberFragment:
     """One family fragment file, split into its preamble and its member blocks."""
 
     path: Path
     preamble: str
-    blocks: tuple[_edition_delta_source._Block, ...]
+    blocks: tuple[edition_delta_source.Block, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +75,7 @@ class DropPlan:
 
 
 @dataclass
-class _FamilyDropState:
+class FamilyDropState:
     dropped: list[str] = field(default_factory=list)
     kept_new: list[str] = field(default_factory=list)
     kept_differs: list[str] = field(default_factory=list)
@@ -96,7 +94,7 @@ class DropOutcome:
     applied: bool
     changed: bool
     #: Positions written so complete statements keep the order they state.
-    order_restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...] = ()
+    order_restorations: tuple[edition_delta_order_restoration.OrderRestoration, ...] = ()
     #: Every ``(revision, family)`` whose member order those positions change.
     reordered_families: tuple[tuple[str, str], ...] = ()
 
@@ -106,7 +104,7 @@ class DropOutcome:
         return (
             ()
             if self.report is None
-            else tuple(f for f in self.report.findings if _edition_delta_assessment._is_source_finding(f))
+            else tuple(f for f in self.report.findings if edition_delta_assessment.is_source_finding(f))
         )
 
     @property
@@ -115,28 +113,28 @@ class DropOutcome:
         return (
             ()
             if self.report is None
-            else tuple(f for f in self.report.findings if not _edition_delta_assessment._is_source_finding(f))
+            else tuple(f for f in self.report.findings if not edition_delta_assessment.is_source_finding(f))
         )
 
     @property
-    def source_status(self) -> _edition_delta_assessment.SourceMigrationStatus:
+    def source_status(self) -> edition_delta_assessment.SourceMigrationStatus:
         """Return the source replacement acceptance state."""
         if self.source_findings:
-            return _edition_delta_assessment.SourceMigrationStatus.REFUSED
+            return edition_delta_assessment.SourceMigrationStatus.REFUSED
         return (
-            _edition_delta_assessment.SourceMigrationStatus.APPLIED
+            edition_delta_assessment.SourceMigrationStatus.APPLIED
             if self.applied
-            else _edition_delta_assessment.SourceMigrationStatus.ACCEPTED
+            else edition_delta_assessment.SourceMigrationStatus.ACCEPTED
         )
 
     @property
-    def publication_readiness_status(self) -> _edition_delta_assessment.PublicationReadinessStatus:
+    def publication_readiness_status(self) -> edition_delta_assessment.PublicationReadinessStatus:
         """Return the separately observed authority-readiness state."""
         if self.publication_readiness_findings:
-            return _edition_delta_assessment.PublicationReadinessStatus.FAILED
-        return _edition_delta_assessment.PublicationReadinessStatus.NOT_CHECKED
+            return edition_delta_assessment.PublicationReadinessStatus.FAILED
+        return edition_delta_assessment.PublicationReadinessStatus.NOT_CHECKED
 
     @property
-    def publication_execution_status(self) -> _edition_delta_assessment.PublicationExecutionStatus:
+    def publication_execution_status(self) -> edition_delta_assessment.PublicationExecutionStatus:
         """Confirm that source migration did not execute publication."""
-        return _edition_delta_assessment.PublicationExecutionStatus.NOT_PERFORMED
+        return edition_delta_assessment.PublicationExecutionStatus.NOT_PERFORMED

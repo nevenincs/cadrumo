@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -74,7 +74,7 @@ def _write_edition(modelo_dir: Path, edition: _Edition) -> None:
 def _write_editions(root: Path, *editions: _Edition) -> Path:
     modelo_dir = root / "999"
     modelo_dir.mkdir(parents=True)
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     for edition in editions:
         _write_edition(modelo_dir, edition)
     return modelo_dir

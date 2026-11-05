@@ -121,7 +121,7 @@ from .profile import (
 
 
 @dataclass(frozen=True, slots=True)
-class _SharedModeloLocaleCoverageRecord:
+class SharedModeloLocaleCoverageRecord:
     """Shared-catalogue coverage for one Modelo revision and locale."""
 
     locale: OutputLanguage
@@ -139,7 +139,7 @@ class _SharedModeloLocaleCoverageRecord:
 
 
 #: Index of shared-catalogue translation coverage, keyed by ``(modelo, revision)``.
-LocaleCoverageIndex = Mapping[tuple[str, str], tuple[_SharedModeloLocaleCoverageRecord, ...]]
+LocaleCoverageIndex = Mapping[tuple[str, str], tuple[SharedModeloLocaleCoverageRecord, ...]]
 
 __all__ = [
     "AUDITED_LOCALES",
@@ -652,7 +652,7 @@ class CoverageReport(ConformanceModel):
 
 
 @lru_cache(maxsize=1)
-def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
+def cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     """Read shared-catalogue translation coverage for every bundled Modelo."""
     return _read_locale_coverage()
 
@@ -665,7 +665,7 @@ def reset_conformance_cache() -> None:
     state their own command just replaced. Registry profiles are recomposed on
     each read; the compiler owns caching against current source inputs.
     """
-    _cached_locale_index.cache_clear()
+    cached_locale_index.cache_clear()
 
 
 def load_locale_coverage_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
@@ -675,12 +675,12 @@ def load_locale_coverage_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
         The coverage index and modelo ids that could not be read. An unreadable
         Modelo is reported, never rendered as zero coverage.
     """
-    return _cached_locale_index()
+    return cached_locale_index()
 
 
 def _read_locale_coverage() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     """Sweep every bundled Modelo and index its shared locale-key coverage."""
-    index: dict[tuple[str, str], tuple[_SharedModeloLocaleCoverageRecord, ...]] = {}
+    index: dict[tuple[str, str], tuple[SharedModeloLocaleCoverageRecord, ...]] = {}
     unavailable: list[str] = []
     try:
         modelos = compiled_bundled_authority().modelos
@@ -708,13 +708,13 @@ def _shared_locale_coverage_record(
     modelo_id: str,
     revision_id: str,
     casillas: Sequence[object],
-) -> _SharedModeloLocaleCoverageRecord:
+) -> SharedModeloLocaleCoverageRecord:
     """Count authored values across exact and continuity candidate keys."""
     label_required = len(casillas)
     label_translated = sum(1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="label"))
     help_required = len(casillas)
     help_translated = sum(1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="help"))
-    return _SharedModeloLocaleCoverageRecord(
+    return SharedModeloLocaleCoverageRecord(
         locale=locale,
         modelo_id=modelo_id,
         revision_id=revision_id,
@@ -752,7 +752,7 @@ def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
         The projected :class:`ConformanceReport`.
     """
     profile = audit_bundled_registry_conformance(validate=validate)
-    locale_index, unavailable = _cached_locale_index()
+    locale_index, unavailable = cached_locale_index()
     annual_matrix = build_annual_coordinate_matrix() if validate else None
     return build_conformance_report(
         profile,
@@ -820,7 +820,7 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
 def build_conformance_report(
     profile: RegistryConformanceProfile,
     *,
-    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
+    locale_index: Mapping[tuple[str, str], Sequence[SharedModeloLocaleCoverageRecord]],
     locale_unavailable_modelos: Sequence[str],
     oracle_inventory: ExternalOracleInventory,
     annual_matrix: ConformanceCoordinateMatrix | None = None,
@@ -869,7 +869,7 @@ def build_conformance_report(
         bundled_oracle_payload_count=(len(oracle_inventory.evidence) + len(oracle_inventory.unattributed_payloads)),
         scope_diagnostic_count=len(profile.scope_diagnostics),
         unattributed_scope_diagnostic_count=len(profile.unattributed_scope_diagnostics),
-        locale_axis=_locale_axis_summary(locale_index),
+        locale_axis=locale_axis_summary(locale_index),
         locale_unavailable_modelos=tuple(locale_unavailable_modelos),
         annual_matrix=annual_matrix,
     )
@@ -877,7 +877,7 @@ def build_conformance_report(
 
 def _payload_rows(
     profile: RegistryConformanceProfile,
-    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
+    locale_index: Mapping[tuple[str, str], Sequence[SharedModeloLocaleCoverageRecord]],
 ) -> tuple[RevisionConformancePayload, ...]:
     return tuple(
         _payload_row(row, locale=_locale_coverage(locale_index.get((row.modelo, row.revision)))) for row in profile.rows
@@ -1140,7 +1140,7 @@ def _gap_row(payload: UnattributedOraclePayload) -> OraclePayloadGapRow:
 
 
 def _locale_coverage(
-    records: Sequence[_SharedModeloLocaleCoverageRecord] | None,
+    records: Sequence[SharedModeloLocaleCoverageRecord] | None,
 ) -> RevisionLocaleCoverage | None:
     """Fold one revision's per-locale records, or report absence as absence."""
     if not (records is not None and records):
@@ -1155,13 +1155,13 @@ def _locale_coverage(
     )
 
 
-def _stale_key_count(record: _SharedModeloLocaleCoverageRecord) -> int:
+def _stale_key_count(record: SharedModeloLocaleCoverageRecord) -> int:
     """Return zero; shared-catalogue stale keys are audited globally."""
     return 0
 
 
-def _locale_axis_summary(
-    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
+def locale_axis_summary(
+    locale_index: Mapping[tuple[str, str], Sequence[SharedModeloLocaleCoverageRecord]],
 ) -> tuple[LocaleAxisSummary, ...]:
     """Fold the locale index into one registry-wide summary per audited locale."""
     required: dict[str, int] = {}

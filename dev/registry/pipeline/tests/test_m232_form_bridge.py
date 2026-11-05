@@ -84,13 +84,13 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
     form_root = prepared.candidate_root / "modelos" / "232" / "revisions" / revision_id / "form_layouts"
     fragment = next(form_root.glob("*.toml"))
     authored_bytes = fragment.read_bytes()
-    cli._render_candidate(prepared)
+    cli.render_candidate(prepared)
     assert fragment.read_bytes() == authored_bytes
     modelos, catalogues = load_registry_tree(prepared.candidate_root)
     revision = next(modelo for modelo in modelos if str(modelo.id) == "232").revisions[revision_id]
     assert revision.form_layouts[0].seed_source is FormLayoutSeedSource.AUTHORED
     with pytest.raises(RegistryValidationError, match="candidate form differs from its fresh canonical generation"):
-        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+        generated_form_bridge.candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
 
     # The live authored form is preserved above. This detached harness supplies
     # its own generator-owned companion to exercise generated-byte verification.
@@ -104,22 +104,22 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
         fragment.rename(detached_fragment)
     fragment = detached_fragment
     assert fragment.name == "0001-complete-edition.toml"
-    generated = generated_form_bridge._candidate_generated_form_bytes(
+    generated = generated_form_bridge.candidate_generated_form_bytes(
         prepared.candidate_root, "232", revision_id, source_root
     )
     assert generated == canonical_bytes
     absent_fragment = tmp_path / "absent-form.toml"
     fragment.rename(absent_fragment)
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
-        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+        generated_form_bridge.candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
     absent_fragment.rename(fragment)
     fragment.rename(form_root / "unreviewed-form.toml")
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
-        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+        generated_form_bridge.candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
     (form_root / "unreviewed-form.toml").rename(fragment)
     (form_root / "unexpected.txt").write_text("extra staged form content", encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
-        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+        generated_form_bridge.candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
     (form_root / "unexpected.txt").unlink()
     original = fragment.read_text(encoding="utf-8")
     changed, count = re.subn(
@@ -131,7 +131,7 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
     assert count == 1
     fragment.write_text(changed, encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="candidate form differs from its fresh canonical generation"):
-        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+        generated_form_bridge.candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
 
 
 def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -205,7 +205,7 @@ def test_form_owner_failure_after_export_commit_reports_incomplete(tmp_path: Pat
     with pytest.raises(
         RegistryValidationError, match="source was installed but companion/currentness closure is incomplete"
     ):
-        cli._finish_form_republication(
+        cli.finish_form_republication(
             tmp_path,
             bridge,
             final_live_validator=full_live,
@@ -235,7 +235,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         sha256(old_bytes).hexdigest(),
         sha256(b"old form").hexdigest(),
     )
-    monkeypatch.setattr(generated_form_bridge, "_REVIEWED", {("232", "2016-2017"): reviewed})
+    monkeypatch.setattr(generated_form_bridge, "REVIEWED", {("232", "2016-2017"): reviewed})
     monkeypatch.setattr(generated_form_bridge, "bundled_path", lambda: source_root)
     monkeypatch.setattr(generated_form_bridge, "generated_form_interpreting_input_digest", lambda _modelo: "same")
     monkeypatch.setattr(generated_form_bridge, "registry_evidence_content_digest", lambda _source_root: "same")
@@ -255,7 +255,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         old_form_sha256=reviewed[3],
         candidate_form_sha256=sha256(b"new form").hexdigest(),
         candidate_manifest_sha256=sha256(new_bytes).hexdigest(),
-        other_files=generated_form_bridge._other_files(registry_root, "232", "2016-2017"),
+        other_files=generated_form_bridge.other_files(registry_root, "232", "2016-2017"),
         interpreting_digest="same",
         evidence_content_digest="same",
         profile_schema_fingerprint=generated_form_bridge.fingerprint_tree(profile_root),

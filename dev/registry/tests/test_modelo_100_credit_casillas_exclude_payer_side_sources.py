@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -158,7 +158,7 @@ def payer_side_dependencies_in_credit_set(revision: ModeloRevision) -> dict[str,
 
 
 def _modelo_100_revisions() -> dict[str, ModeloRevision]:
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     return dict(modelos_by_id["100"].revisions)
 
 

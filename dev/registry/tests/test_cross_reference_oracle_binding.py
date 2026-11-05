@@ -17,10 +17,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_registry_tree as _committed_registry_tree,
+    committed_modelo,
+    committed_registry_tree,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -30,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def _committed_cross_reference() -> LiveCrossReferenceDecision:
     """Return a real cross-reference from the committed Modelo 130 registry."""
 
-    modelo, _ = _committed_modelo("130")
+    modelo, _ = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     return revision.live_cross_references[0]
 
@@ -95,7 +93,7 @@ def _modelo_with_revision(
 
 
 def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     base_xref = revision.live_cross_references[0]
 
@@ -112,7 +110,7 @@ def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
 
 
 def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     base_xref = revision.live_cross_references[0]
 
@@ -138,7 +136,7 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
 def test_registry_accepts_no_oracle_binding_anywhere() -> None:
     """The committed registry has no oracle bindings yet; it must still validate."""
 
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     assert len(modelos) >= 5, "committed registry must declare a meaningful number of modelos"
     validator = committed_registry_validator(catalogues)
     validated = 0

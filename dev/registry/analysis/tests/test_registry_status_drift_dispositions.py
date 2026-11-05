@@ -24,9 +24,9 @@ from ..registry_status import (
     GeneratedTreeDispositionRow,
     ProjectedTargets,
     RegistryStatus,
-    _payload,
     declared_revision_filing_years,
     project_target_states,
+    registry_status_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -120,7 +120,7 @@ def _currentness(projected: ProjectedTargets) -> str:
         informational_bindings=(),
         details=projected.details,
     )
-    lanes = _payload(status, blocking=True)["lanes"]
+    lanes = registry_status_payload(status, blocking=True)["lanes"]
     assert isinstance(lanes, dict)
     return str(lanes["target_currentness"])
 

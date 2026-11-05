@@ -10,7 +10,7 @@ from typing import cast
 from dev.registry.compiler.loader import load_modelo_declarations
 from dev.registry.edition_delta_assessment import MigrationAssessment
 
-from .registry_collapse_values import _same_typed_value
+from .registry_collapse_values import same_typed_value
 
 
 def _record_override_reclassifications(
@@ -43,7 +43,7 @@ def _requires_authored_source_override(member: object, source_refs: object, defa
         isinstance(member, str)
         and isinstance(source_refs, list | tuple)
         and isinstance(default, list | tuple)
-        and not _same_typed_value(tuple(source_refs), tuple(default))
+        and not same_typed_value(tuple(source_refs), tuple(default))
     )
 
 

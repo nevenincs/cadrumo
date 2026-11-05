@@ -10,7 +10,7 @@ from dev.registry.compiler.record_design_schema import RecordDesignField, Record
 
 from .casilla_shard_design import audit_sheet, comment_line, derive_number, is_structural, normalise_for_drift
 from .casilla_shard_prior import load_prior_attributes
-from .casilla_shard_rows import _filename_stem, _render_row
+from .casilla_shard_rows import filename_stem, render_row
 from .casilla_shard_types import (
     GenerationRefusedError,
     GenerationReport,
@@ -51,7 +51,7 @@ class _RecordCounts:
     out_of_scope: int = 0
 
 
-def _emit_record(
+def emit_record(
     spec: WaveSpec,
     sheets: Mapping[str, RecordDesignSheet],
     segmento: str,
@@ -271,7 +271,7 @@ def _render_group(
     attributes: _RowAttributes,
 ) -> _RowEmission:
     row = group.members[0]
-    text = _render_row(
+    text = render_row(
         members=group.members,
         revision_id=spec.revision_id,
         segmento=attributes.segmento,
@@ -294,8 +294,8 @@ def _record_outcome(
     counts: _RecordCounts,
     hoisted: frozenset[int],
 ) -> RecordOutcome:
-    first = _filename_stem(emitted[0])
-    last = _filename_stem(emitted[-1])
+    first = filename_stem(emitted[0])
+    last = filename_stem(emitted[-1])
     filename = (
         f"c{segmento}+{first}__c{segmento}+{last}.toml"
         if spec.id_scheme == "segmento_number"

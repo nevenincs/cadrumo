@@ -29,17 +29,17 @@ from cadrumo.domain.iva.errors import IvaValidationError
 from cadrumo.domain.iva.schema import validate_orden_module_identities
 
 from ...analysis.m303_orden_anual import main
-from .._m303_orden_projection_compiler import require_declared_orden_shape
-from .._m303_orden_source import extract_m303_annual_orden_source
 from ..annual_orden_auxiliary_indicator import resolve_annual_orden_auxiliary_activity_indicators
 from ..fact_loader import load_governed_fact_file
 from ..loader import load_registry_tree
+from ..m303_orden_projection_compiler import require_declared_orden_shape
 from ..m303_orden_raw_models import (
     M303AnnualOrdenRawActivity,
     M303AnnualOrdenRawModule,
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
 )
+from ..m303_orden_source import extract_m303_annual_orden_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

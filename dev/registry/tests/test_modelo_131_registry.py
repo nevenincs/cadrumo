@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
@@ -83,7 +83,7 @@ def _refs_by_id(items: tuple[Any, ...]) -> dict[str, tuple[LegalRefId, ...]]:
 
 @pytest.fixture(scope="module")
 def modelo_131_registry():
-    return _committed_modelo("131")
+    return committed_modelo("131")
 
 
 # The AEAT calendario del contribuyente that fixes the deadline days checked below,
@@ -305,7 +305,7 @@ def test_modelo_131_current_workbook_parity_refs_carry_revision_order(
 
 
 def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
-    modelo_100, _ = _committed_modelo("100")
+    modelo_100, _ = committed_modelo("100")
 
     revision_2024 = modelo_100.revisions["2024"]
     binding_refs_2024 = _refs_by_id(revision_2024.bindings)

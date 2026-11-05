@@ -46,9 +46,9 @@ from ...tests.authored_edition_support import newest_authored_edition
 from ...tests.catalogue_verification_support import registry_tree
 from ..coverage import (
     EvidenceTierCoverageGate,
-    _snapshot_filing_review_proof,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
+    snapshot_filing_review_proof,
 )
 from ..loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
@@ -677,7 +677,7 @@ def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(
             set(inspection.legal_ref_ids),
             filing_date=date(2025, 12, 31),
         )
-    proof = _snapshot_filing_review_proof(
+    proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
@@ -685,7 +685,7 @@ def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(
         filing_date=date(2025, 12, 31),
     )
 
-    assert "check_snapshot_filing_review_tier(" in inspect.getsource(_snapshot_filing_review_proof)
+    assert "check_snapshot_filing_review_tier(" in inspect.getsource(snapshot_filing_review_proof)
     assert proof is not None
     assert proof.review_tier is snapshot_tier
 

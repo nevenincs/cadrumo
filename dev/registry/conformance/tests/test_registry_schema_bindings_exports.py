@@ -40,41 +40,37 @@ from ...compiler.validate_export_field_widths import (
 from ...compiler.validator import RegistryValidator
 from ...tests.profile_schema_support import load_user_profile_schema
 from ..registry_schema_support import (
-    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
+    NUMERIC_CASILLA_01,
+    committed_modelo,
+    committed_registry,
 )
 from ..registry_schema_support import (
-    committed_modelo as _committed_modelo,
+    revision as committed_revision,
 )
-from ..registry_schema_support import (
-    committed_registry as _committed_registry,
-)
-from ..registry_schema_support import (
-    revision as _revision,
-)
-from ._registry_schema_support import (
-    _DECL_CNAE_CASILLA,
-    _MISSING_CASILLA,
-    _NAMED_LABEL_CASILLA,
-    _committed_modelo_text,
-    _load_modelo_text,
-    _object_boundary,
-    _validate_revision,
-    _with_binding,
-    _with_first_export_field,
+from .registry_schema_support import (
+    DECL_CNAE_CASILLA,
+    MISSING_CASILLA,
+    NAMED_LABEL_CASILLA,
+    committed_modelo_text,
+    load_modelo_text,
+    object_boundary,
+    validate_revision,
+    with_binding,
+    with_first_export_field,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
-    modelo, catalogues = _committed_modelo("349")
+    modelo, catalogues = committed_modelo("349")
     revision = modelo.revisions["2020-y-siguientes"]
     binding = next(item for item in revision.bindings if item.id == "iva-349-declarante-numero-operadores")
     committed = binding.provider
     assert isinstance(committed, M349IntracommunityOperationProvider)
 
     def with_provider(provider: M349IntracommunityOperationProvider, op: BindingAggregationOp) -> ModeloRevision:
-        return _with_binding(
+        return with_binding(
             revision,
             binding.model_copy(update={"provider": provider, "aggregation": BindingAggregation(op=op)}),
         )
@@ -84,7 +80,7 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
         claves=committed.claves,
         rectification_scope=committed.rectification_scope,
     )
-    _validate_revision(modelo, catalogues, with_provider(rebuilt, BindingAggregationOp.COUNT_DISTINCT))
+    validate_revision(modelo, catalogues, with_provider(rebuilt, BindingAggregationOp.COUNT_DISTINCT))
 
     M349IntracommunityOperationProvider.model_validate_json(
         json.dumps({"fact": "operator_count", "claves": list(committed.claves)})
@@ -125,36 +121,36 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
 
     for case_id, provider, op, match in cases:
         with pytest.raises(RegistryValidationError, match=match) as excinfo:
-            _validate_revision(modelo, catalogues, with_provider(provider, op))
+            validate_revision(modelo, catalogues, with_provider(provider, op))
         assert excinfo.type is RegistryValidationError, case_id
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     revision = modelo.revisions["2025"]
     binding = next(
         item
         for item in revision.bindings
         if isinstance(item.provider, ProfileProvider) and item.provider.profile_key is not None
     )
-    _validate_revision(modelo, catalogues, revision)
+    validate_revision(modelo, catalogues, revision)
 
     unknown_key = ProfileProvider.model_validate_json(
         json.dumps({**binding.provider.model_dump(mode="json"), "profile_key": "unknown.profile"}),
     )
-    mutated = _with_binding(revision, binding.model_copy(update={"provider": unknown_key}))
+    mutated = with_binding(revision, binding.model_copy(update={"provider": unknown_key}))
 
     with pytest.raises(
         RegistryValidationError,
         match=r"user-profile schema .* selector 'unknown\.profile'",
     ):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_export_fields_can_reference_structured_bindings() -> None:
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
-    bound_revision = _with_first_export_field(
+    bound_revision = with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
             {
@@ -178,13 +174,13 @@ def test_export_fields_can_reference_structured_bindings() -> None:
     new_field = bound_revision.export_layouts[0].records[0].fields[0]
     assert new_field.kind is CasillaFieldKind.BINDING
     assert new_field.binding == revision.bindings[0].id
-    _validate_revision(modelo, catalogues, bound_revision)
+    validate_revision(modelo, catalogues, bound_revision)
 
 
 def test_validator_rejects_export_field_with_unknown_binding() -> None:
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
-    bound_revision = _with_first_export_field(
+    bound_revision = with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
             {
@@ -206,11 +202,11 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="unknown binding"):
-        _validate_revision(modelo, catalogues, bound_revision)
+        validate_revision(modelo, catalogues, bound_revision)
 
 
 def test_validator_rejects_literal_export_field_longer_than_declared_length() -> None:
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
     layout = revision.export_layouts[0]
     record = layout.records[0]
@@ -228,7 +224,7 @@ def test_validator_rejects_literal_export_field_longer_than_declared_length() ->
     mutated = revision.model_copy(update={"export_layouts": layouts})
 
     with pytest.raises(RegistryValidationError, match=r"literal length .* exceeds declared length"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 #: The Modelo 200 page 001B slot the diseño reserves for the mercantile group's
@@ -261,8 +257,8 @@ def _first_profile_tax_id_draft_field(
     for layout in revision.export_layouts:
         for record in layout.records:
             for field in record.fields:
-                kind = _object_boundary(field.kind)
-                draft_attribute = _object_boundary(field.draft_attribute)
+                kind = object_boundary(field.kind)
+                draft_attribute = object_boundary(field.draft_attribute)
                 if kind == CasillaFieldKind.DRAFT and draft_attribute == "profile_tax_id":
                     return field, record.id, layout.id
     raise AssertionError("the committed revision declares no profile_tax_id draft export field to anchor on")
@@ -333,7 +329,7 @@ def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> Non
 
 def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:
     """Deleted profile draft authority cannot be restored at any slot width."""
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
     field = (
         revision.export_layouts[0]
@@ -343,16 +339,16 @@ def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> 
             update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "profile_tax_id", "literal": None, "length": 15},
         )
     )
-    mutated = _with_first_export_field(revision, field)
+    mutated = with_first_export_field(revision, field)
 
     with pytest.raises(RegistryValidationError, match="profile_tax_id"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
     """Deleted profile draft authority is refused even at the identifier width."""
-    modelo, catalogues = _committed_modelo("131")
+    modelo, catalogues = committed_modelo("131")
     revision = modelo.revisions["2026"]
     field = (
         revision.export_layouts[0]
@@ -367,10 +363,10 @@ def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -
             },
         )
     )
-    mutated = _with_first_export_field(revision, field)
+    mutated = with_first_export_field(revision, field)
 
     with pytest.raises(RegistryValidationError, match="profile_tax_id"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def _committed_export_field(revision: ModeloRevision) -> ExportFieldDefinition:
@@ -410,7 +406,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     driven over a constructed field, because a detector proven only where the
     defect can no longer occur proves nothing.
     """
-    modelo, _catalogues = _committed_modelo("200")
+    modelo, _catalogues = committed_modelo("200")
     revision = modelo.revisions["2025-y-siguientes"]
 
     composed = tuple(
@@ -473,7 +469,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     silently, and a 15-wide slot fed a 9-character Spanish tax id is exactly the
     contradiction the detector reports.
     """
-    modelo, _catalogues = _committed_modelo("200")
+    modelo, _catalogues = committed_modelo("200")
     revision = modelo.revisions["2025-y-siguientes"]
 
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == set(ExportDraftAttribute), (
@@ -509,8 +505,8 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     parameters = tuple(
         parameter.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
         if parameter.id == "irpf.direct_estimation_fractional_payment_rate"
@@ -520,39 +516,39 @@ def test_validator_rejects_parameter_without_official_source_guidance() -> None:
     mutated = revision.model_copy(update={"parameters": parameters})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_static_cross_reference_as_executable_parity(tmp_path: Path) -> None:
-    text = _committed_modelo_text().replace(
+    text = committed_modelo_text().replace(
         'evidence_tier = "layout_authority"\nsurface = "static_official_documentation"',
         'evidence_tier = "executable_parity_evidence"\nsurface = "static_official_documentation"',
         1,
     )
 
     with pytest.raises(RegistryLoadError, match="static documentation is not executable parity evidence"):
-        _load_modelo_text(tmp_path, text)
+        load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_cross_reference_source_tier_mismatch() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     cross_reference = revision.live_cross_references[0].model_copy(update={"evidence_tier": "official_source_guidance"})
     mutated = revision.model_copy(update={"live_cross_references": (cross_reference,)})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_runner_without_formula_workbook(tmp_path: Path) -> None:
-    text = _committed_modelo_text().replace("runner_required = false", "runner_required = true", 1)
+    text = committed_modelo_text().replace("runner_required = false", "runner_required = true", 1)
 
     with pytest.raises(RegistryLoadError, match="runner requires formula coverage"):
-        _load_modelo_text(tmp_path, text)
+        load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_missing_legal_reference() -> None:
-    modelo, catalogues = _committed_registry()
+    modelo, catalogues = committed_registry()
     missing_legal = catalogues.model_copy(update={"legal": {}})
 
     with (
@@ -569,13 +565,13 @@ def test_validator_rejects_missing_legal_reference() -> None:
 
 
 def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     profile = revision.extraction_profiles[0].model_copy(
         update={
             "target_casillas": (
                 ExtractionTargetDefinition(
-                    casilla_id=_MISSING_CASILLA,
+                    casilla_id=MISSING_CASILLA,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
@@ -585,23 +581,23 @@ def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match=r"extraction profile .* unknown casilla"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     profile = revision.extraction_profiles[0].model_copy(update={"accepted_artefact_kinds": ("justificante_pdf",)})
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match="surface 'declaracion_pdf' requires"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_extraction_target_definition_roundtrip() -> None:
     """ExtractionTargetDefinition strict-frozen roundtrip with non-default fields."""
     target = ExtractionTargetDefinition(
-        casilla_id=_NAMED_LABEL_CASILLA,
+        casilla_id=NAMED_LABEL_CASILLA,
         match_strategy="named_label",
         value_kind="text",
         label_pattern=r"Mi etiqueta especial",
@@ -609,7 +605,7 @@ def test_extraction_target_definition_roundtrip() -> None:
     raw = target.model_dump()
     restored = ExtractionTargetDefinition.model_validate(raw)
     assert restored == target
-    assert restored.casilla_id == _NAMED_LABEL_CASILLA
+    assert restored.casilla_id == NAMED_LABEL_CASILLA
     assert restored.match_strategy == "named_label"
     assert restored.value_kind == "text"
     assert restored.label_pattern == r"Mi etiqueta especial"
@@ -628,7 +624,7 @@ def test_bbox_anchor_rejects_inverted_anchor_x_range() -> None:
 def test_extraction_target_definition_anti_tautology() -> None:
     """Mutating the serialised payload surfaces inequality after reload."""
     target = ExtractionTargetDefinition(
-        casilla_id=_NUMERIC_CASILLA_01,
+        casilla_id=NUMERIC_CASILLA_01,
         match_strategy="numeric_casilla",
         value_kind="amount",
     )
@@ -642,7 +638,7 @@ def test_extraction_target_definition_anti_tautology() -> None:
 def test_extraction_target_named_label_requires_label_pattern() -> None:
     with pytest.raises(ValidationError, match="named_label extraction targets require label_pattern"):
         ExtractionTargetDefinition(
-            casilla_id=_DECL_CNAE_CASILLA,
+            casilla_id=DECL_CNAE_CASILLA,
             match_strategy="named_label",
             value_kind="text",
         )
@@ -651,7 +647,7 @@ def test_extraction_target_named_label_requires_label_pattern() -> None:
 def test_extraction_target_numeric_casilla_rejects_label_pattern() -> None:
     with pytest.raises(ValidationError, match="numeric_casilla extraction targets must not define label_pattern"):
         ExtractionTargetDefinition(
-            casilla_id=_NUMERIC_CASILLA_01,
+            casilla_id=NUMERIC_CASILLA_01,
             match_strategy="numeric_casilla",
             value_kind="amount",
             label_pattern="Retenciones",

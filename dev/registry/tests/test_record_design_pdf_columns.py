@@ -12,7 +12,7 @@ from reportlab.pdfgen import canvas
 from ..compiler.record_design import extract_record_design_pdf
 from ..compiler.record_design_pdf_orchestration import extract_record_design_pdf_stream
 from ..compiler.record_design_schema import RecordDesignField
-from ._record_design_support import _record_design_pdf
+from .record_design_support import record_design_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -179,7 +179,7 @@ def test_text_in_uso_column_refuses_geometry_row(tmp_path: Path) -> None:
 
 
 def test_modelo_145_tags_are_read_from_contenido_beside_empty_uso() -> None:
-    (sheet,) = extract_record_design_pdf(_record_design_pdf("modelo_145", "dr145v20")).accept_partial()
+    (sheet,) = extract_record_design_pdf(record_design_pdf("modelo_145", "dr145v20")).accept_partial()
 
     assert len(sheet.fields) == 59
     assert sheet.total_positions == 610
@@ -194,7 +194,7 @@ def test_modelo_145_tags_are_read_from_contenido_beside_empty_uso() -> None:
 def test_modelo_360_constants_come_from_the_contenido_column() -> None:
     fields = {
         (sheet.name, field.ordinal): field
-        for sheet in extract_record_design_pdf(_record_design_pdf("modelo_360", "orden-eha-789-2010")).accept_partial()
+        for sheet in extract_record_design_pdf(record_design_pdf("modelo_360", "orden-eha-789-2010")).accept_partial()
         for field in sheet.fields
     }
 

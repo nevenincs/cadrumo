@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import (
 )
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..conformance.loader_directory_mode_support import write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,7 +57,7 @@ def _none_declaration(*, cause: str | None) -> str:
 
 
 def _write_root_modelo(root: Path, *, cause: str | None) -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -163,7 +163,7 @@ def test_a_near_miss_cause_spelling_is_refused_rather_than_normalised(tmp_path: 
 
 def test_a_cause_on_anything_but_a_none_table_is_refused(tmp_path: Path) -> None:
     """The classification belongs to the grounded root, not to a named predecessor edge."""
-    modelo_dir = _shared_write_modelo(
+    modelo_dir = write_modelo(
         tmp_path,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,

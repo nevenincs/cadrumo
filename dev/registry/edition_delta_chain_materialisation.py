@@ -12,30 +12,32 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     inline_family_source_default,
 )
 
-from . import edition_delta_drop_scope as _edition_delta_drop_scope
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_payload as _edition_delta_payload
-from . import edition_delta_source as _edition_delta_source
+from . import (
+    edition_delta_drop_scope,
+    edition_delta_errors,
+    edition_delta_fields,
+    edition_delta_payload,
+    edition_delta_source,
+)
 from .edition_delta_proof_source import read_staged_edition
 
 _DISPOSITIONS = "family_dispositions"
 _ORIGIN_MARKER = "inherited_from"
 
 
-def member_identities(source: _edition_delta_source._EditionSource) -> Mapping[str, tuple[str, ...]]:
+def member_identities(source: edition_delta_source.EditionSource) -> Mapping[str, tuple[str, ...]]:
     """Return materialised member identities in order, including every droppable family."""
     identities = {
-        _edition_delta_fields._CASILLAS: tuple(
-            f"{_edition_delta_source._row_id(row)}|{_edition_delta_source._lineage(row)}" for row in source.rows
+        edition_delta_fields.CASILLAS: tuple(
+            f"{edition_delta_source.row_id(row)}|{edition_delta_source.lineage(row)}" for row in source.rows
         )
     }
-    sections = set(_edition_delta_fields._REFERENCE_SECTIONS.values()) | {
-        family.section for family in _edition_delta_drop_scope._DROPPABLE_FAMILIES
+    sections = set(edition_delta_fields.REFERENCE_SECTIONS.values()) | {
+        family.section for family in edition_delta_drop_scope.DROPPABLE_FAMILIES
     }
-    for section in sorted(sections - {_edition_delta_fields._CASILLAS}):
+    for section in sorted(sections - {edition_delta_fields.CASILLAS}):
         identities[section] = tuple(
-            str(member.get("id")) for member in _edition_delta_source._family_members(source.table, section)
+            str(member.get("id")) for member in edition_delta_source.family_members(source.table, section)
         )
     return identities
 
@@ -51,8 +53,8 @@ def comparable(value: object, *, revision_id: str, path: str) -> object:
     if isinstance(value, list | tuple):
         return [comparable(item, revision_id=revision_id, path=f"{path}[{index}]") for index, item in enumerate(value)]
     if type(value) is datetime.date:
-        return {_edition_delta_fields._DATE_TAG: value.isoformat()}
-    raise _edition_delta_errors.MigrationRefusedError(
+        return {edition_delta_fields.DATE_TAG: value.isoformat()}
+    raise edition_delta_errors.MigrationRefusedError(
         f"edition {revision_id!r}: the value at {path} is a {type(value).__name__}, which the chain proof cannot "
         "compare; the proof is byte identity and refuses a type it has no exact rendering for",
     )
@@ -73,7 +75,7 @@ def _family_defaults_inlined(table: Mapping[str, object]) -> dict[str, object]:
     return result
 
 
-def _restore_attested_claims(source: _edition_delta_source._EditionSource, rows: list[dict[str, object]]) -> None:
+def _restore_attested_claims(source: edition_delta_source.EditionSource, rows: list[dict[str, object]]) -> None:
     raw_attestations = source.manifest.get("lineage_attestations", ())
     if not isinstance(raw_attestations, list | tuple):
         raw_attestations = ()
@@ -82,10 +84,10 @@ def _restore_attested_claims(source: _edition_delta_source._EditionSource, rows:
 
 
 def _restore_one_attested_claim(raw_attestation: object, rows: list[dict[str, object]]) -> None:
-    if not isinstance(raw_attestation, Mapping) or raw_attestation.get("family") != _edition_delta_fields._CASILLAS:
+    if not isinstance(raw_attestation, Mapping) or raw_attestation.get("family") != edition_delta_fields.CASILLAS:
         return
-    identity = raw_attestation.get(_edition_delta_fields._LINEAGE)
-    row = next((item for item in rows if item.get(_edition_delta_fields._LINEAGE) == identity), None)
+    identity = raw_attestation.get(edition_delta_fields.LINEAGE)
+    row = next((item for item in rows if item.get(edition_delta_fields.LINEAGE) == identity), None)
     if row is None:
         return
     for manifest_field, row_field in (("origin", "continuidad_origin"), ("evidence", "continuidad_evidence")):
@@ -109,36 +111,35 @@ def _without_disposition_origins(table: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _comparable_table(source: _edition_delta_source._EditionSource) -> dict[str, object]:
+def _comparable_table(source: edition_delta_source.EditionSource) -> dict[str, object]:
     effective = _without_disposition_origins(_family_defaults_inlined(source.table))
     family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
     table = {
         key: comparable(value, revision_id=source.revision_id, path=f"table.{key}")
         for key, value in effective.items()
-        if key
-        not in _edition_delta_fields._DECLARED_DEFAULT_KEYS | _edition_delta_payload._STORAGE_REPRESENTATION_FIELDS
+        if key not in edition_delta_fields.DECLARED_DEFAULT_KEYS | edition_delta_payload.STORAGE_REPRESENTATION_FIELDS
         and not (key in family_sections and isinstance(value, list | tuple) and not value)
     }
     return table
 
 
-def _effective_rows(source: _edition_delta_source._EditionSource) -> list[dict[str, object]]:
-    rows = [dict(row) for row in _edition_delta_source._effective_rows(source)]
+def _effective_rows(source: edition_delta_source.EditionSource) -> list[dict[str, object]]:
+    rows = [dict(row) for row in edition_delta_source.effective_rows(source)]
     _restore_attested_claims(source, rows)
     return rows
 
 
-def _comparable_rows(source: _edition_delta_source._EditionSource) -> list[object]:
+def _comparable_rows(source: edition_delta_source.EditionSource) -> list[object]:
     return [
-        comparable(row, revision_id=source.revision_id, path=f"table.{_edition_delta_fields._CASILLAS}[{index}]")
+        comparable(row, revision_id=source.revision_id, path=f"table.{edition_delta_fields.CASILLAS}[{index}]")
         for index, row in enumerate(_effective_rows(source))
     ]
 
 
-def chain_materialisation(source: _edition_delta_source._EditionSource) -> bytes:
+def chain_materialisation(source: edition_delta_source.EditionSource) -> bytes:
     """Materialise defaults and attestations, then serialize exact comparable bytes."""
     table = _comparable_table(source)
-    table[_edition_delta_fields._CASILLAS] = _comparable_rows(source)
+    table[edition_delta_fields.CASILLAS] = _comparable_rows(source)
     return json.dumps({"revision": source.revision_id, "table": table}, ensure_ascii=False, sort_keys=True).encode(
         "utf-8"
     )

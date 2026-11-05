@@ -33,9 +33,9 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
 from cadrumo.domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from .loader_fields import _DISPOSITION_REMOVALS_FIELD, _DISPOSITIONS_FIELD, _ROW_INHERITED_FROM_FIELD
+from .loader_fields import DISPOSITION_REMOVALS_FIELD, DISPOSITIONS_FIELD, ROW_INHERITED_FROM_FIELD
 
 
 def refuse_authored_disposition_markers(source_path: Path, raw_revisions: Mapping[str, object]) -> None:
@@ -45,15 +45,15 @@ def refuse_authored_disposition_markers(source_path: Path, raw_revisions: Mappin
         RegistryLoadError: When any edition's authored disposition names the marker.
     """
     for revision_id, raw_revision in raw_revisions.items():
-        table = _as_toml_table(raw_revision)
+        table = as_toml_table(raw_revision)
         if table is None:
             continue
-        for family, entry in (_as_toml_table(table.get(_DISPOSITIONS_FIELD)) or {}).items():
-            entry_table = _as_toml_table(entry)
-            if entry_table is not None and _ROW_INHERITED_FROM_FIELD in entry_table:
+        for family, entry in (as_toml_table(table.get(DISPOSITIONS_FIELD)) or {}).items():
+            entry_table = as_toml_table(entry)
+            if entry_table is not None and ROW_INHERITED_FROM_FIELD in entry_table:
                 raise RegistryLoadError(
                     f"{source_path}: revision {revision_id!r} family disposition {family!r} authors "
-                    f"{_ROW_INHERITED_FROM_FIELD}, which the loader sets on the dispositions an edition inherits "
+                    f"{ROW_INHERITED_FROM_FIELD}, which the loader sets on the dispositions an edition inherits "
                     "from its predecessor; remove it",
                 )
 
@@ -65,7 +65,7 @@ def refuse_removals_without_predecessor(source_path: Path, raw_revisions: Mappin
         RegistryLoadError: When any edition lists a disposition removal.
     """
     for revision_id, raw_revision in raw_revisions.items():
-        table = _as_toml_table(raw_revision)
+        table = as_toml_table(raw_revision)
         if table is not None and _removed_families(table):
             raise RegistryLoadError(
                 f"{source_path}: revision {revision_id!r} removes family dispositions "
@@ -98,7 +98,7 @@ def inherit_family_dispositions(
             inherit, repeats a family, or names a family the edition also authors,
             or when an authored disposition states the claim it would inherit.
     """
-    authored = _as_toml_table(successor.get(_DISPOSITIONS_FIELD)) or {}
+    authored = as_toml_table(successor.get(DISPOSITIONS_FIELD)) or {}
     inherited = _inheritable(baseline_id, predecessor)
     removals = _removed_families(successor)
     _refuse_invalid_removals(context, removals=removals, inherited=inherited, authored=authored)
@@ -116,17 +116,17 @@ def _inheritable(baseline_id: str | None, predecessor: Mapping[str, object] | No
     if baseline_id is None or predecessor is None:
         return {}
     inherited: dict[str, object] = {}
-    for family, entry in (_as_toml_table(predecessor.get(_DISPOSITIONS_FIELD)) or {}).items():
-        entry_table = _as_toml_table(entry)
+    for family, entry in (as_toml_table(predecessor.get(DISPOSITIONS_FIELD)) or {}).items():
+        entry_table = as_toml_table(entry)
         if entry_table is None:
             continue
-        origin = entry_table.get(_ROW_INHERITED_FROM_FIELD) or baseline_id
-        inherited[family] = {**entry_table, _ROW_INHERITED_FROM_FIELD: origin}
+        origin = entry_table.get(ROW_INHERITED_FROM_FIELD) or baseline_id
+        inherited[family] = {**entry_table, ROW_INHERITED_FROM_FIELD: origin}
     return inherited
 
 
 def _removed_families(table: Mapping[str, object]) -> list[str]:
-    removals = as_toml_array(table.get(_DISPOSITION_REMOVALS_FIELD, ())) or ()
+    removals = as_toml_array(table.get(DISPOSITION_REMOVALS_FIELD, ())) or ()
     return [removal for removal in removals if isinstance(removal, str)]
 
 
@@ -168,8 +168,8 @@ def _refuse_restated_dispositions(
         claim, carried_claim = _typed_claim(entry), _typed_claim(carried)
         if claim is None or claim != carried_claim:
             continue
-        origin = _as_toml_table(carried)
-        stated_by = None if origin is None else origin.get(_ROW_INHERITED_FROM_FIELD)
+        origin = as_toml_table(carried)
+        stated_by = None if origin is None else origin.get(ROW_INHERITED_FROM_FIELD)
         raise RegistryLoadError(
             f"{context}: modelo {modelo_id!r} family disposition {family!r} restates, unchanged, the disposition "
             f"the edition already inherits from its predecessor (stated by edition {stated_by!r}); an omitted "
@@ -183,10 +183,10 @@ def _typed_claim(entry: object) -> SchemaFamilyDispositionDeclaration | None:
     A malformed entry is left for typed construction to refuse with the schema's
     own error, so it is never reported here as a restatement.
     """
-    table = _as_toml_table(entry)
+    table = as_toml_table(entry)
     if table is None:
         return None
-    declared = {key: value for key, value in table.items() if key != _ROW_INHERITED_FROM_FIELD}
+    declared = {key: value for key, value in table.items() if key != ROW_INHERITED_FROM_FIELD}
     try:
         return SchemaFamilyDispositionDeclaration.model_validate(declared)
     except (ValidationError, RegistryValidationError):

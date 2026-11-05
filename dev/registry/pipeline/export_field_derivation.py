@@ -5,26 +5,26 @@ from __future__ import annotations
 import re
 from typing import Final
 
-_DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
+DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?P<whole>\d+|[^\W\d_]+)\s*(?:enteros?|ent\.?)\s*(?:y|\+|,)?\s*(?P<decimals>\d+|[^\W\d_]+)\s*(?:decimales?|decmales|dec\.?)"
     r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
     re.IGNORECASE,
 )
 
 
-_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
+INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\.?$",
     re.IGNORECASE,
 )
 
 
-_POSITIONED_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
+POSITIONED_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     r"^entero (?P<whole>\d+) posiciones$",
     re.IGNORECASE,
 )
 
 
-_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"(?:,\s*"\d+")*$',
 )
 
@@ -34,14 +34,14 @@ _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
 # `0,1,2`, `1,2,3,4`. Anchored whole and requiring at least two members, so it
 # cannot swallow a lone number -- a bare `1` states a constant, not a choice --
 # and the slot-width check below still refuses any value that does not fit.
-_BARE_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+BARE_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r"^\d+(?:\s*,\s*\d+)+\.?$",
 )
 
 
 # Some designs close a comma-separated numeric list with a Spanish connective.
 # The whole cell must be only that list; a condition after it stays ambiguous.
-_BARE_NUMERIC_ENUMERATION_FINAL_OR_RE: Final[re.Pattern[str]] = re.compile(
+BARE_NUMERIC_ENUMERATION_FINAL_OR_RE: Final[re.Pattern[str]] = re.compile(
     r"^\d+(?:\s*,\s*\d+)*\s+(?:o|ó)\s+\d+\.?$",
     re.IGNORECASE,
 )
@@ -60,21 +60,21 @@ _BARE_NUMERIC_ENUMERATION_FINAL_OR_RE: Final[re.Pattern[str]] = re.compile(
 # its own line after the value clause. All three annotate; none states a wire
 # fact, so the peel admits the optional bracket and verb rather than leaving a
 # design refusing as ambiguous because AEAT added two words.
-_TRAILING_NOTE_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
+TRAILING_NOTE_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
     r"[.,;\s]*\(?\s*(?:ver\s+)?\bNota\s+\d+\s*\.?\s*\)?\s*$",
     re.IGNORECASE,
 )
 
 
-_NOTE_NUMBER_RE: Final[re.Pattern[str]] = re.compile(r"Nota\s+(?P<note>\d+)", re.IGNORECASE)
+NOTE_NUMBER_RE: Final[re.Pattern[str]] = re.compile(r"Nota\s+(?P<note>\d+)", re.IGNORECASE)
 
 
-_QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*\.?$',
 )
 
 
-_QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
+QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
 
 
 # AEAT writes the SAME closed value set two ways: quoted ("1", "2") on some
@@ -88,7 +88,7 @@ _QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"
 # is a numeric RANGE ("01-12"), which states an interval rather than a closed
 # set, and reading it as an enumeration would emit two members where the design
 # means twelve.
-_DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s*(?=\D)")
+DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s*(?=\D)")
 
 
 #: A third spelling of the same closed set, label FIRST: Modelo 322 writes
@@ -97,7 +97,7 @@ _DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\
 #: a rule that accepted any non-digit before the `=` read `>= 10` as the value
 #: 10 -- three two-character "values" for a one-character slot, which the width
 #: check then refused. A formula (`[65]=[66]`) is excluded for the same reason.
-_EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
+EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:^|[\s,;])[^\W\d_][^\s,;=]*\s*=\s*(?P<value>\d+)",
 )
 
@@ -106,7 +106,7 @@ _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
 #: closed set as the SI/NO form above with a longer label: Modelo 202 writes
 #: `"0" No consta, "1" Cooperativa, "2" Otras entidades`. Only the values are
 #: quoted, so the label cannot contribute a value however many numbers it names.
-_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"[^"]*(?:"\d+"[^"]*)+$',
 )
 
@@ -117,7 +117,7 @@ _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
 #: derived through the identical enumeration path rather than a second shape.
 #: The leading parenthesis is why the quoted-labelled rule above cannot see it:
 #: that one anchors on a value at position zero.
-_PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^\(\s*"\d+"(?:\s*,\s*"\d+")+\s*\)$',
 )
 
@@ -131,13 +131,13 @@ _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compil
 #: table that could disagree with it. Case-sensitive on purpose: `MM` is the
 #: month and `mm` the minute in this vocabulary, and a slot spelling minutes is
 #: not a date this grammar should silently accept.
-_QUOTED_DATE_PATTERN_RE: Final[re.Pattern[str]] = re.compile(
+QUOTED_DATE_PATTERN_RE: Final[re.Pattern[str]] = re.compile(
     r'^formato\s*:?\s*"(?P<pattern>[dMy][dMy/.\-]*[dMy])"$',
     re.IGNORECASE,
 )
 
 
-_OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
@@ -168,7 +168,7 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: prose immediately before the connector to end in a non-quote. Direct
 #: ``Constante "E" o "S"`` alternatives remain rejected by the first branch,
 #: and a later ``... rentas. o "S"`` remains rejected by the second.
-_OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
+OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
     r"(?:\s*\.?\s*\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?"
     r"|(?:\.\s+|\s+).*?[^\s'\"]\s+\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?)$",
@@ -176,7 +176,7 @@ _OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
-_OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)(?:\.\s+|\s+)\S.*$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -189,7 +189,7 @@ _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: is what makes it unambiguous, so this pattern matches the tag itself rather
 #: than relaxing the labelled-constant pattern, which would turn every unlabelled
 #: cell on every design into a mandated literal.
-_OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
+OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
 
 
 #: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
@@ -201,7 +201,7 @@ _OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]
 #: trees, this matches ZERO fields that the quoted and bare-tag patterns did not
 #: already match, so it widens what an author may declare without moving any
 #: published tree.
-_OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante\s+(?P<literal>[^\s'\"]+?)\.?\s*$",
     re.IGNORECASE,
 )
@@ -216,7 +216,7 @@ _OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: parser merely attributed to a field could be the tail of a description, and
 #: stays refused. One token, so a cell listing alternatives ("0" "1") or carrying
 #: prose never matches.
-_OFFICIAL_BARE_CELL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"[^\s'\"]+")
+OFFICIAL_BARE_CELL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"[^\s'\"]+")
 
 
 #: What SEPARATES two quoted values in a labelled enumeration AEAT actually
@@ -231,10 +231,10 @@ _OFFICIAL_BARE_CELL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"[^\s'\"]+"
 #: newline, a dash, or a Spanish connective. Two are RANGE forms (`"01".."12"`
 #: and `"01" a "52"`), which is why `..` and ` a ` are admitted. All 28 stay
 #: admitted under this rule and the prose above does not.
-_LABELLED_ENUMERATION_VALUE_DELIMITER_RE: Final[re.Pattern[str]] = re.compile(
+LABELLED_ENUMERATION_VALUE_DELIMITER_RE: Final[re.Pattern[str]] = re.compile(
     r"[,;\n]|\s(?:o|\u00f3|u|y|e|a)\s|\s[-\u2013\u2014.]\s|\s\.-\s|\.\.",
     re.IGNORECASE,
 )
 
 
-_QUOTED_NUMERIC_VALUE_RE: Final[re.Pattern[str]] = re.compile(r'"\d+"')
+QUOTED_NUMERIC_VALUE_RE: Final[re.Pattern[str]] = re.compile(r'"\d+"')

@@ -9,27 +9,29 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
-from . import edition_delta_source as _edition_delta_source
-from . import edition_delta_toml_writer as _edition_delta_toml_writer
-from . import edition_delta_types as _edition_delta_types
+from . import (
+    edition_delta_errors,
+    edition_delta_row_delta_common,
+    edition_delta_source,
+    edition_delta_toml_writer,
+    edition_delta_types,
+)
 
 
-def _additions(work: _edition_delta_source._EditionWork) -> dict[str, object]:
+def _additions(work: edition_delta_source.EditionWork) -> dict[str, object]:
     additions = _revision_additions(work)
     additions.update(_family_default_additions(work))
     return additions
 
 
-def _revision_additions(work: _edition_delta_source._EditionWork) -> dict[str, object]:
+def _revision_additions(work: edition_delta_source.EditionWork) -> dict[str, object]:
     plan, manifest = work.plan, work.source.manifest
     additions: dict[str, object] = {}
-    if plan.predecessor is not None and plan.basis is _edition_delta_types.PredecessorBasis.ADJACENT:
+    if plan.predecessor is not None and plan.basis is edition_delta_types.PredecessorBasis.ADJACENT:
         additions["predecessor"] = plan.predecessor
     if (
         plan.predecessor is not None
-        and plan.basis is _edition_delta_types.PredecessorBasis.STORAGE
+        and plan.basis is edition_delta_types.PredecessorBasis.STORAGE
         and "casilla_storage_baseline" not in manifest
     ):
         additions["casilla_storage_baseline"] = plan.predecessor
@@ -40,7 +42,7 @@ def _revision_additions(work: _edition_delta_source._EditionWork) -> dict[str, o
     return additions
 
 
-def _family_default_additions(work: _edition_delta_source._EditionWork) -> dict[str, object]:
+def _family_default_additions(work: edition_delta_source.EditionWork) -> dict[str, object]:
     additions: dict[str, object] = {}
     manifest = work.source.manifest
     for key, default in sorted(work.source.family_defaults.items()):
@@ -50,18 +52,18 @@ def _family_default_additions(work: _edition_delta_source._EditionWork) -> dict[
 
 
 def _replace_technical_root(
-    text: str, path: Path, additions: Mapping[str, object], work: _edition_delta_source._EditionWork
+    text: str, path: Path, additions: Mapping[str, object], work: edition_delta_source.EditionWork
 ) -> str:
     if "predecessor" not in additions or not isinstance(work.source.manifest.get("predecessor"), Mapping):
         return text
     text, removed = re.subn(r"(?m)^predecessor\s*=.*(?:\r?\n|$)", "", text, count=1)
     if removed != 1:
-        raise _edition_delta_errors.MigrationRefusedError(f"{path}: cannot replace the technical predecessor root")
+        raise edition_delta_errors.MigrationRefusedError(f"{path}: cannot replace the technical predecessor root")
     return text
 
 
 def _insert_additions(
-    text: str, path: Path, additions: Mapping[str, object], work: _edition_delta_source._EditionWork
+    text: str, path: Path, additions: Mapping[str, object], work: edition_delta_source.EditionWork
 ) -> str:
     header = re.compile(
         rf'^\[revisions\.(?:"{re.escape(work.plan.revision_id)}"|{re.escape(work.plan.revision_id)})\][ \t]*\r?\n',
@@ -69,20 +71,20 @@ def _insert_additions(
     )
     match = header.search(text)
     if match is None:
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"{path}: no [revisions.{work.plan.revision_id!r}] header to declare under"
         )
-    inserted = "".join(f"{key} = {_edition_delta_toml_writer.toml_value(value)}\n" for key, value in additions.items())
+    inserted = "".join(f"{key} = {edition_delta_toml_writer.toml_value(value)}\n" for key, value in additions.items())
     rewritten = text[: match.end()] + inserted + text[match.end() :]
     expected = {**work.source.manifest, **additions}
-    if _edition_delta_source._manifest_table(rewritten, work.plan.revision_id) != expected:
-        raise _edition_delta_errors.MigrationRefusedError(
+    if edition_delta_source.manifest_table(rewritten, work.plan.revision_id) != expected:
+        raise edition_delta_errors.MigrationRefusedError(
             f"{path}: declaring {sorted(additions)!r} would change other manifest keys"
         )
     return rewritten
 
 
-def _append_casilla_storage_operations(text: str, plan: _edition_delta_types.EditionPlan) -> str:
+def _append_casilla_storage_operations(text: str, plan: edition_delta_types.EditionPlan) -> str:
     """Append generated storage operations without reformatting authored TOML."""
     operation_groups = (
         ("casilla_overrides", plan.casilla_overrides),
@@ -97,7 +99,7 @@ def _append_casilla_storage_operations(text: str, plan: _edition_delta_types.Edi
 def _append_operation_group(text: str, revision_id: str, name: str, operations: Sequence[Mapping[str, object]]) -> str:
     for operation in operations:
         block = [f'[[revisions."{revision_id}".{name}]]']
-        block.extend(f"{key} = {_edition_delta_toml_writer.toml_value(value)}" for key, value in operation.items())
+        block.extend(f"{key} = {edition_delta_toml_writer.toml_value(value)}" for key, value in operation.items())
         text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"
     return text
 
@@ -159,7 +161,7 @@ def _rewrite_operation_fields(lines: list[str], span: tuple[int, int], replaceme
         insertion = end
         while insertion > start + 1 and not lines[insertion - 1].strip():
             insertion -= 1
-        new_lines = [f"{key} = {_edition_delta_toml_writer.toml_value(updates[key])}\n" for key in missing]
+        new_lines = [f"{key} = {edition_delta_toml_writer.toml_value(updates[key])}\n" for key in missing]
         lines[insertion:insertion] = new_lines
 
 
@@ -169,21 +171,21 @@ def _rewritten_assignment(match: re.Match[str], value: object) -> str:
     newline = match.group(5) or ""
     return (
         f"{match.group(1)}{match.group(2)}{match.group(3)}"
-        f"{_edition_delta_toml_writer.toml_value(value)}"
+        f"{edition_delta_toml_writer.toml_value(value)}"
         f"{(' ' if comment and not comment.startswith(' ') else '')}{comment}{newline}"
     )
 
 
-def _replace_authored_overrides(text: str, work: _edition_delta_source._EditionWork) -> str:
+def replace_authored_overrides(text: str, work: edition_delta_source.EditionWork) -> str:
     replacements = work.casilla_override_replacements
     if not replacements:
         return text
     revision_id = work.plan.revision_id
-    authored = _edition_delta_row_delta_common.manifest_operations(work.source.manifest, "casilla_overrides")
+    authored = edition_delta_row_delta_common.manifest_operations(work.source.manifest, "casilla_overrides")
     lines = text.splitlines(keepends=True)
     spans = _operation_spans(lines, _operation_header(revision_id, "casilla_overrides"))
     if len(spans) != len(authored):
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"{work.source.revision_id}: expected {len(authored)} authored casilla override blocks, found {len(spans)}"
         )
     indexed = _indexed_override_replacements(replacements, authored, work.source.revision_id)
@@ -194,14 +196,14 @@ def _replace_authored_overrides(text: str, work: _edition_delta_source._EditionW
             replacement,
         )
     rewritten = "".join(lines)
-    actual = _edition_delta_row_delta_common.manifest_operations(
-        _edition_delta_source._manifest_table(rewritten, revision_id), "casilla_overrides"
+    actual = edition_delta_row_delta_common.manifest_operations(
+        edition_delta_source.manifest_table(rewritten, revision_id), "casilla_overrides"
     )
     for replacement in replacements:
         selector = replacement.get("selector")
         matches = [operation for operation in actual if operation.get("selector") == selector]
         if len(matches) != 1 or dict(matches[0]) != dict(replacement):
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"{work.source.revision_id}: rewriting authored override {selector!r} changed its parsed operation"
             )
     return rewritten
@@ -217,14 +219,14 @@ def _indexed_override_replacements(
         selector = replacement.get("selector")
         matching = [index for index, operation in enumerate(authored) if operation.get("selector") == selector]
         if len(matching) != 1:
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"{revision_id}: cannot locate exactly one authored override for selector {selector!r}"
             )
         indexed.append((matching[0], replacement))
     return indexed
 
 
-def _append_lineage_attestations(text: str, attestations: Sequence[LineageAttestation]) -> str:
+def append_lineage_attestations(text: str, attestations: Sequence[LineageAttestation]) -> str:
     """Append canonical TOML for claims that moved out of complete rows."""
     for attestation in attestations:
         block = _attestation_lines(attestation)
@@ -252,7 +254,7 @@ def _attestation_lines(attestation: LineageAttestation) -> list[str]:
     return block
 
 
-def write_manifest(path: Path, work: _edition_delta_source._EditionWork) -> None:
+def write_manifest(path: Path, work: edition_delta_source.EditionWork) -> None:
     """Add only declarations whose whole-chain proof succeeded."""
     plan = work.plan
     additions = _additions(work)
@@ -264,10 +266,10 @@ def write_manifest(path: Path, work: _edition_delta_source._EditionWork) -> None
     text = path.read_text(encoding="utf-8")
     text = _replace_technical_root(text, path, additions, work)
     text = _insert_additions(text, path, additions, work)
-    text = _replace_authored_overrides(text, work)
-    text = _append_lineage_attestations(text, plan.lineage_attestations)
+    text = replace_authored_overrides(text, work)
+    text = append_lineage_attestations(text, plan.lineage_attestations)
     text = _append_casilla_storage_operations(text, plan)
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
-__all__ = ("_append_lineage_attestations", "write_manifest")
+__all__ = ("append_lineage_attestations", "write_manifest")

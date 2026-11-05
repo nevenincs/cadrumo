@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.pipeline import render_check
-from dev.registry.pipeline._export_tree import render_complete_export_tree
+from dev.registry.pipeline.export_tree import render_complete_export_tree
 from dev.registry.pipeline.render_check import revision_render_inputs
 from dev.registry.pipeline.source_defects import source_defects_for
 
@@ -73,7 +73,7 @@ def test_pinned_map_renders_optional_repeated_inmueble(
     source_sha256: str,
 ) -> None:
     """Source join and production row renderer retain 0-or-many lease cardinality."""
-    monkeypatch.setattr(render_check, "_AUTHORED_ROOT", AUTHORED_ROOT)
+    monkeypatch.setattr(render_check, "AUTHORED_ROOT", AUTHORED_ROOT)
     inputs = revision_render_inputs(authority, modelo="347", revision=revision)
     assert str(inputs.joined.source.source_ref) == source_ref
     assert inputs.joined.source.source_sha256 == source_sha256
@@ -138,6 +138,6 @@ def test_changed_official_source_pin_refuses_join(
         content = fragment.read_text(encoding="utf-8")
         assert source_sha256 in content
         fragment.write_text(content.replace(source_sha256, "0" * 64), encoding="utf-8")
-    monkeypatch.setattr(render_check, "_AUTHORED_ROOT", authored)
+    monkeypatch.setattr(render_check, "AUTHORED_ROOT", authored)
     with pytest.raises(RegistryValidationError, match=r"source SHA-256|source.*digest|SHA-256.*source"):
         revision_render_inputs(authority, modelo="347", revision=revision, source_ref=source_ref)

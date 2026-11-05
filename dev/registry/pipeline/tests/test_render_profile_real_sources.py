@@ -26,14 +26,14 @@ from ..record_design_intermediate import (
 )
 from ..render_profile_authority import validate_render_profile_authority
 from ..render_profile_eligibility import (
-    _is_source_reserved_field,
+    is_source_reserved_field,
     project_render_profile_eligibility,
 )
 from ..render_profile_evidence import (
     OfficialSourceEvidence,
     ReviewedPolicyDecision,
 )
-from ..render_profile_loading import _WIDTH_17_TYPE_ORDER, load_render_profile
+from ..render_profile_loading import WIDTH_17_TYPE_ORDER, load_render_profile
 from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
 from ..render_profile_rules import Width17MembershipRule
 from ..render_profile_source_reader import load_render_profile_source_evidence
@@ -687,7 +687,7 @@ def test_a_workbook_design_keeps_its_exact_previous_eligibility(
         for field in fields
         if field.aeat_type in {"Num", "N"}
         and (field.content is None or not field.content.strip())
-        and not _is_source_reserved_field(field)
+        and not is_source_reserved_field(field)
     }
     live = {(field.record_identity, field.offset) for field in project_render_profile_eligibility(fields).all_fields}
 
@@ -714,7 +714,7 @@ def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
         f"only {len(eligible)} eligible field(s) for modelo 347; below this the reserved-slot "
         "absence below holds because nothing was eligible, not because nothing was reserved"
     )
-    reserved = [field for field in eligible if _is_source_reserved_field(field)]
+    reserved = [field for field in eligible if is_source_reserved_field(field)]
     assert not reserved, f"a slot the design reserves became eligible for a reviewed rule: {reserved}"
 
 
@@ -729,7 +729,7 @@ def test_width_17_type_order_covers_every_declared_aeat_type() -> None:
     happens, which is why this is asserted rather than left to review.
     """
     declared = set(get_args(Width17MembershipRule.model_fields["aeat_type"].annotation))
-    ordered = set(_WIDTH_17_TYPE_ORDER)
+    ordered = set(WIDTH_17_TYPE_ORDER)
     assert ordered == declared, (
         f"width-17 emit order {sorted(ordered)} does not cover the declared aeat_type set "
         f"{sorted(declared)}; a type admitted by the model but missing from the order is "

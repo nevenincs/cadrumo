@@ -121,7 +121,7 @@ DeclaredAxisStatus = Literal["exercised", "unused"]
 """Whether any TOML in the tree declares an axis, or the surface is dead."""
 
 
-def _field_max_length(model: type[BaseModel], field_name: str) -> int | None:
+def field_max_length(model: type[BaseModel], field_name: str) -> int | None:
     """Return the ``max_length`` constraint declared on ``model``'s ``field_name``.
 
     Read from the field's own constraint metadata rather than copied as a second
@@ -170,7 +170,7 @@ class ClassificationCoherenceFinding(ClassificationModel):
 #: Upper bound on a finding's ``detail``, READ FROM the field constraint above
 #: rather than duplicated as a second literal beside it. :data:`None` would mean
 #: the field declares no bound and nothing needs clamping.
-_MAX_DETAIL_LENGTH: Final[int | None] = _field_max_length(ClassificationCoherenceFinding, "detail")
+MAX_DETAIL_LENGTH: Final[int | None] = field_max_length(ClassificationCoherenceFinding, "detail")
 
 
 class DeclaredAxisUsage(ClassificationModel):
@@ -371,7 +371,7 @@ def _build_row(
                 kind="non_registry_modelo_defined_in_tree",
                 modelo=modelo.id,
                 subject=modelo.id,
-                detail=_bounded_detail(
+                detail=bounded_detail(
                     f"modelo {modelo.id} is declared to have no registry definition, yet the loaded tree "
                     "compiles one for it",
                 ),
@@ -384,7 +384,7 @@ def _build_row(
                 kind="registry_modelo_absent_from_known_codes",
                 modelo=modelo.id,
                 subject=modelo.id,
-                detail=_bounded_detail(
+                detail=bounded_detail(
                     f"modelo {modelo.id} is defined in the registry tree but absent from the supplied "
                     "authority code set, so it is unreachable through that authoritative identifier surface",
                 ),
@@ -429,7 +429,7 @@ def _informative_divergence_finding(
         kind="informative_axis_divergence",
         modelo=modelo.id,
         subject=modelo.id,
-        detail=_bounded_detail(f"modelo {modelo.id} declares {held} but {absent}; {forcing}"),
+        detail=bounded_detail(f"modelo {modelo.id} declares {held} but {absent}; {forcing}"),
         registry_validated=registry_validated,
     )
 
@@ -449,7 +449,7 @@ def _render_blockers(blockers: tuple[str, ...]) -> str:
     return f"{sample}; and {remainder} further blocker{'s' if remainder > 1 else ''}"
 
 
-def _bounded_detail(detail: str, *, max_length: int | None = _MAX_DETAIL_LENGTH) -> str:
+def bounded_detail(detail: str, *, max_length: int | None = MAX_DETAIL_LENGTH) -> str:
     """Clamp ``detail`` to the finding field's own declared bound.
 
     Defensive rather than cosmetic, and the LAST of two layers: the blocker
@@ -499,7 +499,7 @@ def _dependency_findings(modelo: ModeloDefinition, *, registry_validated: bool) 
                         kind="dependency_conditional_activity_without_filing",
                         modelo=modelo.id,
                         subject=str(dependency.id),
-                        detail=_bounded_detail(
+                        detail=bounded_detail(
                             f"modelo {modelo.id} revision {revision.id}: dependency {dependency.id} is "
                             "conditional_on_economic_activity while taxpayer_files_source is false, so it "
                             "conditions a filing the taxpayer never makes",

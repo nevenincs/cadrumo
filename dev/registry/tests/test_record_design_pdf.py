@@ -19,14 +19,14 @@ from ..compiler.record_design import (
     extract_record_design_pdf,
 )
 from ..compiler.record_design_pdf_orchestration import extract_record_design_pdf_stream
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
-from ._record_design_support import (
-    _RECORD_DESIGN_ROOT,
-    _official_record_design_sheets,
-    _official_record_designs,
-    _record_design_pdf,
-    _record_design_pdf_files,
-    _write_pdf_lines,
+from ..conformance.registry_schema_support import committed_registry_tree
+from .record_design_support import (
+    RECORD_DESIGN_ROOT,
+    official_record_design_sheets,
+    official_record_designs,
+    record_design_pdf,
+    record_design_pdf_files,
+    write_pdf_lines,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _source_record_design_pdf(source_id: str) -> Path:
     """Read the exact declared design from its canonical source identity."""
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     source = catalogues.sources[source_id]
     assert source.corpus_path is not None
     path = bundled_path(source.corpus_path)
@@ -46,7 +46,7 @@ def _source_record_design_pdf(source_id: str) -> Path:
 
 def test_modelo_840_record_design_pdf_reuses_record_design_sheet_model() -> None:
     sheets = {
-        sheet.name: sheet for sheet in _official_record_design_sheets(_record_design_pdf("modelo_840", "orden-hac"))
+        sheet.name: sheet for sheet in official_record_design_sheets(record_design_pdf("modelo_840", "orden-hac"))
     }
 
     page_one = sheets["Pág. 1"]
@@ -63,7 +63,7 @@ def test_modelo_840_record_design_pdf_reuses_record_design_sheet_model() -> None
 
 def test_generated_compact_record_design_pdf_round_trips_from_path_and_bytes(tmp_path: Path) -> None:
     pdf_path = tmp_path / "compact-record-design.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Pág 1 DISEÑO DE REGISTRO 01/12/2003",
@@ -94,7 +94,7 @@ def test_generated_compact_record_design_pdf_round_trips_from_path_and_bytes(tmp
 
 def test_generated_narrative_record_design_pdf_preserves_content_and_split_titles(tmp_path: Path) -> None:
     pdf_path = tmp_path / "narrative-record-design.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Tipo de registro 1: Registro de Declarante",
@@ -128,7 +128,7 @@ def test_generated_narrative_record_design_pdf_preserves_content_and_split_title
 
 def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: Path) -> None:
     pdf_path = tmp_path / "bad-record-design.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Tipo de registro 1: Registro de Declarante",
@@ -144,7 +144,7 @@ def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: 
 
 def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_records() -> None:
     sheets = {
-        sheet.name: sheet for sheet in _official_record_design_sheets(_source_record_design_pdf("aeat-dr-190-2025"))
+        sheet.name: sheet for sheet in official_record_design_sheets(_source_record_design_pdf("aeat-dr-190-2025"))
     }
 
     declarante = sheets["Tipo 1 - Registro De Declarante"]
@@ -170,7 +170,7 @@ def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_record
 
 def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines() -> None:
     sheets = {
-        sheet.name: sheet for sheet in _official_record_design_sheets(_source_record_design_pdf("aeat-dr-193-2025"))
+        sheet.name: sheet for sheet in official_record_design_sheets(_source_record_design_pdf("aeat-dr-193-2025"))
     }
     declarante = sheets["Tipo 1 - Registro De Declarante"]
 
@@ -182,7 +182,7 @@ def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines(
 
 
 def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
-    sheets = _official_record_design_sheets(_source_record_design_pdf("aeat-dr-347-2025"))
+    sheets = official_record_design_sheets(_source_record_design_pdf("aeat-dr-347-2025"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",
@@ -198,7 +198,7 @@ def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
 
 
 def test_modelo_347_positional_chart_pdf_extracts_reviewable_record_data() -> None:
-    sheets = _official_record_design_sheets(_record_design_pdf("modelo_347", "2008-y-2009"))
+    sheets = official_record_design_sheets(record_design_pdf("modelo_347", "2008-y-2009"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",
@@ -227,7 +227,7 @@ def test_modelo_347_positional_chart_pdf_extracts_reviewable_record_data() -> No
 
 def test_generated_non_table_pdf_does_not_activate_visual_chart_fallback(tmp_path: Path) -> None:
     pdf_path = tmp_path / "non-record-design.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "MODELO 347 REGISTRO DE TIPO 1 REGISTRO DE DECLARANTE",
@@ -261,8 +261,8 @@ _NON_FIELD_ROW_CORPUS_PDFS = frozenset(
 
 
 def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
-    pdfs = _record_design_pdf_files()
-    discovered = {path.relative_to(_RECORD_DESIGN_ROOT) for path in pdfs}
+    pdfs = record_design_pdf_files()
+    discovered = {path.relative_to(RECORD_DESIGN_ROOT) for path in pdfs}
     assert pdfs
     # Both known non-field-row artefacts must remain present in discovery, so a
     # rename/removal trips this gate rather than silently shrinking the corpus.
@@ -272,7 +272,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     # machine-readable authority, so it is discovered above but never parsed here.
     # Read from the declaration rather than from a parse failure: a failure cannot
     # tell provenance from a broken design.
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     provenance_only = {
         Path(*source.corpus_path.split("/")[3:])
         for source in catalogues.sources.values()
@@ -281,12 +281,11 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     field_row_pdfs = tuple(
         path
         for path in pdfs
-        if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
-        and path.relative_to(_RECORD_DESIGN_ROOT) not in provenance_only
+        if path.relative_to(RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+        and path.relative_to(RECORD_DESIGN_ROOT) not in provenance_only
     )
     parsed = {
-        path.relative_to(_RECORD_DESIGN_ROOT): sheets
-        for path, sheets in _official_record_designs(field_row_pdfs).items()
+        path.relative_to(RECORD_DESIGN_ROOT): sheets for path, sheets in official_record_designs(field_row_pdfs).items()
     }
 
     assert field_row_pdfs
@@ -300,7 +299,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     unexplained = sorted(
         str(path)
         for path, sheets in parsed.items()
-        if not sheets and not extract_record_design(_RECORD_DESIGN_ROOT / path).skipped
+        if not sheets and not extract_record_design(RECORD_DESIGN_ROOT / path).skipped
     )
     assert not unexplained, f"designs yielding no sheets and recording no reason: {unexplained}"
     assert any(parsed.values()), "no bundled PDF design parsed at all"
@@ -328,7 +327,7 @@ def test_every_provenance_only_design_still_earns_its_stamp() -> None:
     stamped design that reads as a complete record still reds here, which is the
     promotion criterion its sibling gate states in the same words.
     """
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     stamped = sorted(
         (source.id, bundled_path() / source.corpus_path)
         for source in catalogues.sources.values()
@@ -354,7 +353,7 @@ def test_every_provenance_only_design_still_earns_its_stamp() -> None:
 
 
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     sources = {
         source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
@@ -362,7 +361,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     }
 
     source_items = tuple(sorted(sources.items()))
-    parsed_by_path = _official_record_designs(tuple(path for _source_id, path in source_items))
+    parsed_by_path = official_record_designs(tuple(path for _source_id, path in source_items))
     parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
     assert sources
@@ -438,8 +437,8 @@ def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
     recorded reason, so its silence is always accounted for.
     """
     empty: list[str] = []
-    for path in _record_design_pdf_files():
-        relative = path.relative_to(_RECORD_DESIGN_ROOT)
+    for path in record_design_pdf_files():
+        relative = path.relative_to(RECORD_DESIGN_ROOT)
         if relative in _NON_FIELD_ROW_CORPUS_PDFS:
             continue
         try:

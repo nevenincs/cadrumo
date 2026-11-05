@@ -43,13 +43,9 @@ from dev.registry.compiler.loader import load_modelo_directory
 
 from ..compiler.validate_revision_rules import validate_revision_windows
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_registry_tree as _committed_registry_tree,
-)
-from ..conformance.registry_schema_support import (
-    committed_snapshot as _committed_snapshot,
+    committed_modelo,
+    committed_registry_tree,
+    committed_snapshot,
 )
 from .authored_edition_support import newest_authored_edition
 from .profile_schema_support import committed_supported_filing_years
@@ -252,14 +248,14 @@ def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> No
     form is resolved. Without it the snapshot disagreed with itself: its
     ``filing_period`` normalised through ``Period`` while ``period`` did not.
     """
-    snapshot = _committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     assert snapshot.period == "0A"
     assert snapshot.filing_period is not None
     assert snapshot.filing_period.code == snapshot.period
     assert (
         snapshot.revision.id
-        == _committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION).revision.id
+        == committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION).revision.id
     )
 
 
@@ -271,8 +267,8 @@ def test_case_variant_periods_activate_the_same_relation_requirements() -> None:
     snapshot and a clean-looking empty obligation set instead of the required
     cross-model inputs.
     """
-    canonical = _committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-    variant = _committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
+    canonical = committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    variant = committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     canonical_requirements = relation_source_requirements(
         canonical.revision,
@@ -490,7 +486,7 @@ def test_revision_validation_separates_meeting_windows_from_a_single_shared_day(
 
 def _declared_filing_windows() -> list[tuple[str, str, DeadlineWindowDefinition]]:
     """``(modelo id, revision id, window)`` for every filing window the corpus declares."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return [
         (modelo.id, str(revision_id), window)
         for modelo in modelos
@@ -522,7 +518,7 @@ def test_every_revision_resolves_on_the_filing_dates_it_declares() -> None:
 
     unresolvable = []
     for modelo_id, revision_id, window in windows:
-        modelo, _catalogues = _committed_modelo(modelo_id)
+        modelo, _catalogues = committed_modelo(modelo_id)
         for edge in (window.opens_on, window.closes_on):
             try:
                 selected = select_revision(
@@ -553,7 +549,7 @@ def test_a_filing_window_admits_only_the_coordinate_it_declares() -> None:
     once admitted for one would pass the sibling assertion above while quietly
     making November filable a month late.
     """
-    modelo, _catalogues = _committed_modelo("303")
+    modelo, _catalogues = committed_modelo("303")
 
     assert select_revision(modelo, filing_year=2023, period="12", on=date(2024, 1, 15)).id == "2023"
     with pytest.raises(NoRevisionForPeriodError):
@@ -567,7 +563,7 @@ def test_a_revision_is_refused_once_every_declared_window_has_closed() -> None:
     day of January, Orden EHA/3111/2009, art. 8). The 30th resolves and the 31st
     does not: the reach is the declared window, not the following year.
     """
-    modelo, _catalogues = _committed_modelo("390")
+    modelo, _catalogues = committed_modelo("390")
 
     assert select_revision(modelo, filing_year=2025, period="0A", on=date(2026, 1, 30)).id == "2025"
     with pytest.raises(NoRevisionForPeriodError):
@@ -583,7 +579,7 @@ def test_a_revision_declaring_no_filing_window_claims_no_reach_beyond_its_period
     window, and it stays refused exactly as it was before the window tier
     existed.
     """
-    modelo, _catalogues = _committed_modelo("390")
+    modelo, _catalogues = committed_modelo("390")
     revision = modelo.revisions["2021"]
     assert not revision.deadline_windows
 
@@ -601,7 +597,7 @@ def test_a_live_governed_period_outranks_a_still_open_filing_window() -> None:
     consulted only when no candidate governs the date. Both period-scoped
     answers stay reachable.
     """
-    modelo, _catalogues = _committed_modelo("303")
+    modelo, _catalogues = committed_modelo("303")
     boundary = date(2024, 9, 15)
 
     assert select_revision_for_year(modelo, filing_year=2024, on=boundary).id == "2024-desde-09-y-3t"

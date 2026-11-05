@@ -21,26 +21,26 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 )
 
 from .column_vocabulary import shared_column_key
-from .generation_models import _Build, _Item, _Position, _SectionDraft
-from .heading_keys import _unique, column_form_heading_key
+from .generation_models import Build, Item, Position, SectionDraft
+from .heading_keys import column_form_heading_key, unique
 from .official_text import description_path, node_slug
 
 
 def _repeating_record(
-    position: _Position, repeating: Mapping[str, ExportRecordDefinition]
+    position: Position, repeating: Mapping[str, ExportRecordDefinition]
 ) -> ExportRecordDefinition | None:
     return next((repeating[record_id] for record_id in position.records if record_id in repeating), None)
 
 
-def _repeating_section_items(
-    build: _Build,
-    draft: _SectionDraft,
+def repeating_section_items(
+    build: Build,
+    draft: SectionDraft,
     repeating: Mapping[str, ExportRecordDefinition],
     emitted: set[str],
     blocks: list[FormBlockDefinition],
     block_ids: set[str],
-) -> list[_Item]:
-    plain: list[_Item] = []
+) -> list[Item]:
+    plain: list[Item] = []
     for item in draft.items:
         record = _repeating_record(build.positions[item.position], repeating)
         if record is None:
@@ -49,12 +49,12 @@ def _repeating_section_items(
         if record.id in emitted:
             continue
         emitted.add(record.id)
-        block_id = _unique(node_slug(record.id), block_ids)
+        block_id = unique(node_slug(record.id), block_ids)
         blocks.append(_repeating_record_block(build, record, block_id))
     return plain
 
 
-def _repeating_record_block(build: _Build, record: ExportRecordDefinition, block_id: str) -> FormRepeatingGroupBlock:
+def _repeating_record_block(build: Build, record: ExportRecordDefinition, block_id: str) -> FormRepeatingGroupBlock:
     columns: list[FormRepeatingColumn] = []
     used: set[str] = set()
     primary = {casilla_id: anchors[0] for casilla_id, anchors in build.anchors.items()}
@@ -65,7 +65,7 @@ def _repeating_record_block(build: _Build, record: ExportRecordDefinition, block
             if primary.get(casilla_id) != index:
                 continue
             text = description_path(position.description).column
-            key = _unique(shared_column_key(text or "") or node_slug(text or casilla_id), used)
+            key = unique(shared_column_key(text or "") or node_slug(text or casilla_id), used)
             columns.append(
                 FormRepeatingColumn(
                     key=key,
@@ -82,7 +82,7 @@ def _repeating_record_block(build: _Build, record: ExportRecordDefinition, block
     )
 
 
-def _row_set_casillas(build: _Build) -> dict[str, str]:
+def _row_set_casillas(build: Build) -> dict[str, str]:
     """Map each casilla a row-set binding feeds to that binding."""
     channels = {binding.id: binding.value.channel for binding in build.revision.bindings}
     return {
@@ -92,7 +92,7 @@ def _row_set_casillas(build: _Build) -> dict[str, str]:
     }
 
 
-def _repeating_element(build: _Build, position: _Position) -> tuple[str, ...] | None:
+def _repeating_element(build: Build, position: Position) -> tuple[str, ...] | None:
     """Return the innermost official repeating element a dictionary position sits in."""
     container = position.xml_container
     if container is None:
@@ -105,7 +105,7 @@ def _repeating_element(build: _Build, position: _Position) -> tuple[str, ...] | 
 
 
 def _official_repeat_columns(
-    build: _Build, element: tuple[str, ...], row_set: Mapping[str, str], grouped: set[str]
+    build: Build, element: tuple[str, ...], row_set: Mapping[str, str], grouped: set[str]
 ) -> list[FormRepeatingColumn]:
     primary = {casilla_id: anchors[0] for casilla_id, anchors in build.anchors.items()}
     columns: list[FormRepeatingColumn] = []
@@ -128,13 +128,13 @@ def _official_repeat_columns(
     return columns
 
 
-def _official_repeat_items(
-    build: _Build,
-    items: Sequence[_Item],
+def official_repeat_items(
+    build: Build,
+    items: Sequence[Item],
     emitted: set[str],
     blocks: list[FormBlockDefinition],
     block_ids: set[str],
-) -> list[_Item]:
+) -> list[Item]:
     """Open one repeating group per official repeating element over the row-set boxes inside it.
 
     The design's XSD says which elements repeat and how often; a box a row-set
@@ -145,7 +145,7 @@ def _official_repeat_items(
         return list(items)
     row_set = _row_set_casillas(build)
     grouped = {casilla_id for columns in _row_column_groups(build).values() for _binding, casilla_id in columns}
-    plain: list[_Item] = []
+    plain: list[Item] = []
     for item in items:
         element = _repeating_element(build, build.positions[item.position])
         if element is None or item.casilla_id is None or item.casilla_id not in row_set or item.casilla_id in grouped:
@@ -158,7 +158,7 @@ def _official_repeat_items(
         columns = _official_repeat_columns(build, element, row_set, grouped)
         blocks.append(
             FormRepeatingGroupBlock(
-                id=_unique(node_slug(f"{element[-1]}-rows"), block_ids),
+                id=unique(node_slug(f"{element[-1]}-rows"), block_ids),
                 row_source=FormRepeatingRowSource.ROW_SET_BINDING,
                 binding_id=columns[0].binding_id,
                 max_rows=build.repeats[element],
@@ -168,7 +168,7 @@ def _official_repeat_items(
     return plain
 
 
-def _row_column_limit(build: _Build, columns: Sequence[tuple[str, str]]) -> int | None:
+def _row_column_limit(build: Build, columns: Sequence[tuple[str, str]]) -> int | None:
     """Return the repeat limit of the one official element every column's box sits in, if any."""
     elements = {
         _repeating_element(build, build.positions[anchors[0]])
@@ -181,7 +181,7 @@ def _row_column_limit(build: _Build, columns: Sequence[tuple[str, str]]) -> int 
     return None if element is None else build.repeats[element]
 
 
-def _row_column_groups(build: _Build) -> dict[str, list[tuple[str, str]]]:
+def _row_column_groups(build: Build) -> dict[str, list[tuple[str, str]]]:
     """Group the row columns of each per-item record, as binding and box pairs in declared order."""
     groups: dict[str, list[tuple[str, str]]] = {}
     for binding in build.revision.bindings:
@@ -192,7 +192,7 @@ def _row_column_groups(build: _Build) -> dict[str, list[tuple[str, str]]]:
     return groups
 
 
-def _row_column_block(build: _Build, record: str, columns: list[tuple[str, str]]) -> FormRepeatingGroupBlock:
+def _row_column_block(build: Build, record: str, columns: list[tuple[str, str]]) -> FormRepeatingGroupBlock:
     return FormRepeatingGroupBlock(
         id=node_slug(f"{record}-rows"),
         row_source=FormRepeatingRowSource.ROW_SET_BINDING,
@@ -210,7 +210,7 @@ def _row_column_block(build: _Build, record: str, columns: list[tuple[str, str]]
     )
 
 
-def _with_row_column_groups(build: _Build, pages: list[FormPageDefinition]) -> list[FormPageDefinition]:
+def with_row_column_groups(build: Build, pages: list[FormPageDefinition]) -> list[FormPageDefinition]:
     """Open each per-item record's rows beside the box that holds their total; the box itself stays."""
     result = list(pages)
     for record, columns in _row_column_groups(build).items():

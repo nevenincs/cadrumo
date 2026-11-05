@@ -26,7 +26,7 @@ from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, Prorr
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 from .profile_schema_support import committed_registry_validator
 
@@ -175,7 +175,7 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
     )
     assert tuple(field.offset for field in source_fields) == expected_offsets
 
-    modelo, registry_catalogues = _committed_modelo("303")
+    modelo, registry_catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         registry_catalogues,
@@ -214,7 +214,7 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
 
 def test_projection_only_endpoints_reject_direct_input_and_are_not_zero_seeded() -> None:
     """No numbered row endpoint can resurrect the deleted scalar/manual path."""
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         catalogues,
@@ -246,7 +246,7 @@ def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_ma
     _cnae_width: int,
 ) -> None:
     """Each supported record-design epoch declares every typed endpoint once."""
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         catalogues,
@@ -308,7 +308,7 @@ def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_ma
 
 def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_source() -> None:
     """A mutation cannot transplant a 2025 endpoint declaration into the 2026 revision."""
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         catalogues,
@@ -330,7 +330,7 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
     Registry validation owns the refusal; a published snapshot is built only from
     authority that already passed it.
     """
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     revision = build_snapshot(
         modelo,
         catalogues,
@@ -353,7 +353,7 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
 
 def test_real_layoutless_revision_without_projection_only_casillas_needs_no_declarations() -> None:
     """The completeness gate is scoped to the canonical projection-only capability."""
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = modelo.revisions["2019-y-siguientes"]
 
     # The claim is about PROJECTION-ONLY capability, not about layouts: a

@@ -70,7 +70,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -128,7 +128,7 @@ _OTHER_ROWS: tuple[tuple[str, Decimal, SpendingCategory], ...] = (
 
 def _modelo_100_revision() -> ModeloRevision:
     """The committed Modelo 100 revision the expense bindings resolve against."""
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     return build_snapshot(
         modelo,
         catalogues,

@@ -16,14 +16,14 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .registry_collapse_models import (
-    _REPRESENTATION_ONLY,
-    _REVISION_SOURCE_DEFAULT_FIELDS,
+    REPRESENTATION_ONLY,
+    REVISION_SOURCE_DEFAULT_FIELDS,
     CheckStatus,
     ComparisonResult,
 )
 
 
-def _typed_projection(value: object) -> object:
+def typed_projection(value: object) -> object:
     """Project a typed value to comparable JSON, members of an unordered set in canonical order.
 
     A set's iteration order follows its insertion history, so two equal sets can
@@ -36,16 +36,16 @@ def _typed_projection(value: object) -> object:
         return _project_model(value, dump)
     if isinstance(value, Mapping):
         projected = {
-            str(key): _typed_projection(child) for key, child in value.items() if str(key) not in _REPRESENTATION_ONLY
+            str(key): typed_projection(child) for key, child in value.items() if str(key) not in REPRESENTATION_ONLY
         }
         attestations = _distinct_lineage_evidence(value)
         if attestations:
-            projected["lineage_attestations"] = _typed_projection(attestations)
+            projected["lineage_attestations"] = typed_projection(attestations)
         return projected
     if isinstance(value, set | frozenset):
-        return sorted((_typed_projection(child) for child in value), key=canonical_json_bytes)
+        return sorted((typed_projection(child) for child in value), key=canonical_json_bytes)
     if isinstance(value, list | tuple):
-        return [_typed_projection(child) for child in value]
+        return [typed_projection(child) for child in value]
     return to_jsonable_python(value)
 
 
@@ -60,14 +60,14 @@ def _project_model(value: object, dump: Callable[..., object]) -> object:
     if isinstance(value, ModeloRevision):
         # Defaults are already bound onto each resolved member. Only the
         # actual revision declaration owns their representation-only role.
-        dumped = {key: child for key, child in dumped.items() if key not in _REVISION_SOURCE_DEFAULT_FIELDS}
+        dumped = {key: child for key, child in dumped.items() if key not in REVISION_SOURCE_DEFAULT_FIELDS}
     elif isinstance(value, ModeloDefinition):
         # Keep typed revision identity through the enclosing model dump.
         dumped["revisions"] = value.revisions
     elif isinstance(value, RegistrySnapshot):
         dumped["modelo"] = value.modelo
         dumped["revision"] = value.revision
-    return _typed_projection(dumped)
+    return typed_projection(dumped)
 
 
 def _distinct_lineage_evidence(revision: Mapping[object, object]) -> list[object]:
@@ -107,7 +107,7 @@ def _lineage_evidence_is_distinct(
         "source_refs": row.get("source_refs"),
     }
     sidecar_claim = {key: attestation.get(key) for key in row_claim}
-    return _typed_projection(row_claim) != _typed_projection(sidecar_claim)
+    return typed_projection(row_claim) != typed_projection(sidecar_claim)
 
 
 def _matches_lineage(row: object, attestation: Mapping[object, object]) -> bool:
@@ -120,7 +120,7 @@ def _matches_lineage(row: object, attestation: Mapping[object, object]) -> bool:
     )
 
 
-def _first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
+def first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
     if type(left) is not type(right):
         return {"location": path, "before": left, "after": right, "reason": "type_changed"}
     if isinstance(left, Mapping) and isinstance(right, Mapping):
@@ -144,7 +144,7 @@ def _mapping_difference(
             "reason": "mapping_keys_changed",
         }
     for key in sorted(left, key=str):
-        difference = _first_difference(left[key], right[key], f"{path}.{key}")
+        difference = first_difference(left[key], right[key], f"{path}.{key}")
         if difference is not None:
             return difference
     return None
@@ -158,7 +158,7 @@ def _sequence_difference(
     if len(left) != len(right):
         return {"location": path, "before": len(left), "after": len(right), "reason": "length_changed"}
     for index, (before, after) in enumerate(zip(left, right, strict=True)):
-        difference = _first_difference(before, after, f"{path}[{index}]")
+        difference = first_difference(before, after, f"{path}[{index}]")
         if difference is not None:
             return difference
     return None
@@ -169,8 +169,8 @@ def compare_modelos(before: ModeloDefinition, after: ModeloDefinition) -> Compar
     sidecar_gaps = (*_lineage_attestation_projection_gaps(before), *_lineage_attestation_projection_gaps(after))
     if sidecar_gaps:
         return ComparisonResult(CheckStatus.FAILED, len(before.revisions), sidecar_gaps)
-    left, right = _typed_projection(before), _typed_projection(after)
-    difference = _first_difference(left, right)
+    left, right = typed_projection(before), typed_projection(after)
+    difference = first_difference(left, right)
     return ComparisonResult(
         status=CheckStatus.PASSED if difference is None else CheckStatus.FAILED,
         checked=len(before.revisions),
@@ -215,7 +215,7 @@ def _lineage_attestation_projection_gaps(modelo: ModeloDefinition) -> tuple[Mapp
                 "origin": attestation.origin,
                 "evidence": attestation.evidence,
             }
-            if _typed_projection(projected) != _typed_projection(authored):
+            if typed_projection(projected) != typed_projection(authored):
                 gaps.append(
                     {
                         "location": f"$.revisions.{revision_id}.lineage_attestations.{attestation.continuidad_id}",

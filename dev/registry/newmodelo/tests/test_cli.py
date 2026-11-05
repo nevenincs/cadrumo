@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 from dev.paths import REPO_ROOT
 
 from ..checklist import CHECKLIST
-from ..cli import _default_manager, app
+from ..cli import app, default_manager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -22,7 +22,7 @@ _THROWAWAY_REVISION_ID = "2026-y-siguientes"
 
 def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
     """The no-override CLI path resolves the bundled Cadrumo registry."""
-    manager = _default_manager()
+    manager = default_manager()
 
     assert manager.registry_modelos_root.is_dir()
     assert manager.registry_modelos_root == (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos")

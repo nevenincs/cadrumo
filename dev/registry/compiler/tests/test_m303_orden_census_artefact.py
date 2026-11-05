@@ -195,7 +195,7 @@ def test_runtime_uses_the_shipped_census_without_parsing_and_reextracts_on_ident
     expected_extractions = [
         (
             ejercicio,
-            m303_orden_manifest._single_annual_orden_source_for_year(  # pyright: ignore[reportPrivateUsage]  # test observes the compiler's selected sources
+            m303_orden_manifest.single_annual_orden_source_for_year(  # pyright: ignore[reportPrivateUsage]  # test observes the compiler's selected sources
                 registry_sources,
                 ejercicio=ejercicio,
             ).id,

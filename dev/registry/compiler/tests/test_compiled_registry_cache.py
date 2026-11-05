@@ -21,13 +21,13 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
 
 from .. import loader as loader_module
-from .._compiled_cache import _COMPILED_CACHE_SCHEMA_VERSION, _FRAME_SEPARATOR, _payload_digest
 from ..compiled_cache import (
     CompiledRegistryPayload,
     compiled_cache_path,
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
+from ..compiled_cache_support import COMPILED_CACHE_SCHEMA_VERSION, FRAME_SEPARATOR, payload_digest
 from ..loader import clear_registry_tree_cache, load_registry_tree
 from ..loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 
@@ -106,8 +106,8 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path, bundled
         # payload object -- integrity passes, the structural type-check must not.
         foreign_bytes = pickle.dumps(("not", "a", "compiled", "registry"), protocol=pickle.HIGHEST_PROTOCOL)
         path.write_bytes(
-            _FRAME_SEPARATOR.join(
-                (_COMPILED_CACHE_SCHEMA_VERSION, _payload_digest(foreign_bytes), foreign_bytes),
+            FRAME_SEPARATOR.join(
+                (COMPILED_CACHE_SCHEMA_VERSION, payload_digest(foreign_bytes), foreign_bytes),
             ),
         )
 

@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler import source_evidence_fingerprint as _source_evidence_fingerprint
+from ..compiler import source_evidence_fingerprint
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,7 +39,7 @@ def test_a_specimen_evidence_root_is_never_served_from_the_window(tmp_path: Path
     well inside the window, so a served entry would return the pre-edit
     fingerprint.
     """
-    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
+    source_evidence_fingerprint.evidence_fingerprint_cache.clear()
     source_root = tmp_path / "specimen"
     _write_specimen_evidence(source_root, payload="before")
 
@@ -95,7 +95,7 @@ def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
     correctness half above would still pass with the window removed entirely,
     and the cost the window exists to remove would silently come back.
     """
-    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
+    source_evidence_fingerprint.evidence_fingerprint_cache.clear()
     source_root = bundled_path()
 
     first = collect_source_evidence_fingerprints(source_root)
@@ -107,9 +107,9 @@ def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
 
 def test_the_bundled_evidence_window_walks_once_before_serving_repeats(monkeypatch: pytest.MonkeyPatch) -> None:
     """The bounded path performs one filesystem walk, then reuses that result."""
-    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
+    source_evidence_fingerprint.evidence_fingerprint_cache.clear()
     source_root = bundled_path()
-    original_walk = _source_evidence_fingerprint._walk_source_evidence
+    original_walk = source_evidence_fingerprint.walk_source_evidence
     walks = 0
 
     def observed_walk(roots: tuple[Path, ...]) -> tuple[tuple[str, int, int], ...]:
@@ -117,7 +117,7 @@ def test_the_bundled_evidence_window_walks_once_before_serving_repeats(monkeypat
         walks += 1
         return original_walk(roots)
 
-    monkeypatch.setattr(_source_evidence_fingerprint, "_walk_source_evidence", observed_walk)
+    monkeypatch.setattr(source_evidence_fingerprint, "walk_source_evidence", observed_walk)
 
     first = collect_source_evidence_fingerprints(source_root)
     second = collect_source_evidence_fingerprints(source_root)
@@ -135,7 +135,7 @@ def test_clearing_the_window_forces_a_fresh_walk() -> None:
     source_root = bundled_path()
     first = collect_source_evidence_fingerprints(source_root)
 
-    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
+    source_evidence_fingerprint.evidence_fingerprint_cache.clear()
 
     second = collect_source_evidence_fingerprints(source_root)
     assert second is not first, "clearing the window must force a fresh walk"

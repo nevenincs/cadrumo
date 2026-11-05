@@ -21,14 +21,14 @@ from .. import authorities as authorities_module
 from ..authorities import RegistryClosureAuthorities, canonical_live_registry_closure_authorities
 from ..cli import app
 from ..closure import (
-    _TEMPORAL_WORK_ITEMS,
+    TEMPORAL_WORK_ITEMS,
     RegistryClosurePredicateRefusal,
     RegistryClosurePredicateRefusalReason,
     RegistryClosureReport,
-    _render_filing_channels,
     build_registry_closure_report,
     check_registry_closure_release,
     load_registry_closure_report,
+    render_filing_channels,
     render_registry_closure_report,
 )
 from ..closure_models import (
@@ -418,8 +418,8 @@ def test_every_locally_owned_reason_carries_a_work_item() -> None:
     application = set(typing.get_args(RegistryClosureRefusalReason.__value__))
     local = _predicate_reason_values() - application
 
-    assert local <= set(_TEMPORAL_WORK_ITEMS), (
-        f"local refusal reasons with no work item: {sorted(local - set(_TEMPORAL_WORK_ITEMS))}"
+    assert local <= set(TEMPORAL_WORK_ITEMS), (
+        f"local refusal reasons with no work item: {sorted(local - set(TEMPORAL_WORK_ITEMS))}"
     )
 
 
@@ -466,7 +466,7 @@ def test_a_populated_filing_channel_refusal_renders_both_channels_structurally()
         ),
     )
 
-    assert _render_filing_channels(refusal) == (
+    assert render_filing_channels(refusal) == (
         "conformance:proof_validation_failed,secure_replay:authority_unavailable"
     )
 
@@ -486,7 +486,7 @@ def test_a_refusal_without_channels_renders_not_measured_rather_than_a_value() -
         ),
     )
 
-    assert _render_filing_channels(refusal) == "n/a"
+    assert render_filing_channels(refusal) == "n/a"
 
 
 def test_only_a_filing_export_refusal_may_carry_per_channel_state() -> None:

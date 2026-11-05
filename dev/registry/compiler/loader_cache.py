@@ -19,7 +19,7 @@ See Also:
         Coverage for bundled-root versus mutable-authoring-tree separation.
     :func:`~domain.calculations.registry.tests.testloader_cache_isolation.test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl`
         Coverage for the longer bundled-root fingerprint TTL window.
-    :func:`~dev.registry.conftest._isolate_registry_caches`
+    :func:`~dev.registry.conftest.isolate_registry_caches`
         Session fixture that clears registry caches around pytest runs.
 """
 
@@ -51,8 +51,8 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from dev.cache_root import dev_cache_dir
 
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .export_fragment_grammar import is_generated_export_provenance
+from .toml_helpers import as_toml_table
 
 type TomlReader = Callable[..., dict[str, object]]
 """Parses one authored registry TOML file, refusing through ``error_factory``."""
@@ -155,7 +155,7 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[Path, ...]:
     return tuple(directories)
 
 
-def _read_modelo_id(path: Path, *, description: str, read: TomlReader | None = None) -> str:
+def read_modelo_id(path: Path, *, description: str, read: TomlReader | None = None) -> str:
     """Read ``[modelo].id`` from one authored manifest or revision TOML.
 
     Only a read/parse refusal from the TOML reader is relabelled with
@@ -173,7 +173,7 @@ def _read_modelo_id(path: Path, *, description: str, read: TomlReader | None = N
         raw_data = reader(path, error_factory=RegistryLoadError)
     except RegistryLoadError as exc:
         raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
-    modelo_table = _as_toml_table(raw_data.get("modelo"))
+    modelo_table = as_toml_table(raw_data.get("modelo"))
     if modelo_table is None or "id" not in modelo_table:
         raise RegistryLoadError(f"{path}: missing [modelo].id")
     return str(modelo_table["id"])
@@ -191,7 +191,7 @@ def _directory_modelo_source(entry: Path) -> ModeloSource:
     revision_sources = validate_modelo_directory_source(entry)
     manifest_path = entry / "manifest.toml"
     return ModeloSource(
-        modelo_id=_read_modelo_id(manifest_path, description="manifest"),
+        modelo_id=read_modelo_id(manifest_path, description="manifest"),
         path=entry.resolve(),
         manifest_path=manifest_path.resolve(),
         revision_sources=revision_sources,
@@ -414,7 +414,7 @@ def _validate_section_fragment_names(section_dir: Path) -> None:
 
 
 @lru_cache(maxsize=1)
-def _bundled_registry_root() -> Path:
+def bundled_registry_root() -> Path:
     """Return the resolved package-bundled registry root, computed once per process."""
     return bundled_path("registry", "aeat").resolve()
 
@@ -435,7 +435,7 @@ def is_bundled_registry_root(resolved: Path) -> bool:
     file content.
     """
     try:
-        return resolved == _bundled_registry_root()
+        return resolved == bundled_registry_root()
     except (ImportError, OSError, ValueError):
         # A resources boundary failure (e.g. no bundled data under an unusual
         # install) must never be mistaken for "this is the bundled tree";

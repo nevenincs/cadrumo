@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from dev.registry.edition_delta_assessment import MigrationAssessment
 
-from .registry_collapse_models import _EXPECTED_ASSESSMENT_FAMILIES, FindingTransition
+from .registry_collapse_models import EXPECTED_ASSESSMENT_FAMILIES, FindingTransition
 
 
 def finding_identities(assessment: MigrationAssessment) -> frozenset[str]:
@@ -31,8 +31,8 @@ def finding_transition(before: MigrationAssessment, after: MigrationAssessment) 
 def assessor_scope_gaps() -> tuple[Mapping[str, object], ...]:
     """Independently reconcile the assessor's family policy with the typed schema."""
     enrolled = {spec.section for spec in CANONICAL_FAMILY_SPECS}
-    missing = sorted(_EXPECTED_ASSESSMENT_FAMILIES - enrolled)
-    unknown = sorted(enrolled - _EXPECTED_ASSESSMENT_FAMILIES)
+    missing = sorted(EXPECTED_ASSESSMENT_FAMILIES - enrolled)
+    unknown = sorted(enrolled - EXPECTED_ASSESSMENT_FAMILIES)
     return tuple(
         {"revision": "*", "family": family, "reason": "assessor_family_not_enrolled"} for family in missing
     ) + tuple({"revision": "*", "family": family, "reason": "assessor_family_not_in_schema"} for family in unknown)
@@ -45,7 +45,7 @@ def assessment_coverage_gaps(
     stage: str,
 ) -> tuple[Mapping[str, object], ...]:
     """Prove every revision has one row for every family and its scalar bucket."""
-    expected_families = (*sorted(_EXPECTED_ASSESSMENT_FAMILIES), "$scalars")
+    expected_families = (*sorted(EXPECTED_ASSESSMENT_FAMILIES), "$scalars")
     expected = {(str(revision_id), family) for revision_id in modelo.revisions for family in expected_families}
     actual = {(str(row.get("revision")), str(row.get("family"))) for row in assessment.by_revision_family}
     return tuple(
@@ -67,7 +67,7 @@ def assessment_coverage_gaps(
     )
 
 
-def _assessment_accounting(results: Sequence[Mapping[str, object]], key: str) -> Mapping[str, int]:
+def assessment_accounting(results: Sequence[Mapping[str, object]], key: str) -> Mapping[str, int]:
     totals = _empty_accounting()
     for result in results:
         assessment = result.get(key)

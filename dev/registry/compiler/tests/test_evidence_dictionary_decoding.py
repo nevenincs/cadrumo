@@ -72,7 +72,7 @@ def test_dictionary_extraction_does_not_reuse_the_old_lossy_text_cache(
     monkeypatch.setattr(validate_evidence, "corpus_text_cache_dir", lambda: cache)
     source = _source(tmp_path, _QUOTE.encode("cp1252"))
     path = tmp_path / source.corpus_path
-    new_key = validate_evidence._source_text_cache_key(source, path, tmp_path, path.stat())
+    new_key = validate_evidence.source_text_cache_key(source, path, tmp_path, path.stat())
     legacy_key = (str(source.kind), *new_key[1:])
     legacy_cache = cache / f"corpus_text_{sha256_hex(json.dumps(legacy_key).encode())}.txt"
     cache.mkdir()

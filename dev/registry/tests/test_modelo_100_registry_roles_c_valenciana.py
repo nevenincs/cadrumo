@@ -7,10 +7,10 @@ from functools import lru_cache
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _C_VALENCIANA_DEDUCTION_SECTION,
-    _modelo_100_revision,
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    C_VALENCIANA_DEDUCTION_SECTION,
+    modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -354,7 +354,7 @@ _C_VALENCIANA_REVIEW_YEARS = tuple(sorted(_VA35_EXPECTED_ROWS))
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_revision(filing_year)
+    return modelo_100_revision(filing_year)
 
 
 def _assert_c_valenciana_rows(filing_year: int, expected_rows: _ExpectedRows) -> None:
@@ -371,9 +371,9 @@ def _assert_c_valenciana_rows(filing_year: int, expected_rows: _ExpectedRows) ->
     for casilla_id, (expected_label, expected_role) in expected_rows.items():
         casilla = casillas_by_id[casilla_id]
         assert casilla.label == expected_label, (filing_year, casilla_id)
-        assert tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION, (filing_year, casilla_id)
+        assert tuple(casilla.section) == C_VALENCIANA_DEDUCTION_SECTION, (filing_year, casilla_id)
         assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
-        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
+        assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
 
 
 def test_modelo_100_c_valenciana_va35_roles_follow_acciones_participaciones_family() -> None:
@@ -397,7 +397,7 @@ def test_modelo_100_c_valenciana_registry_does_not_use_legacy_generated_pending_
         legacy_rows = {
             casilla.id: casilla.semantic_role
             for casilla in revision.casillas
-            if tuple(casilla.section) == _C_VALENCIANA_DEDUCTION_SECTION
+            if tuple(casilla.section) == C_VALENCIANA_DEDUCTION_SECTION
             and casilla.semantic_role in _LEGACY_VALENCIANA_FAMILY_ROLES
         }
 

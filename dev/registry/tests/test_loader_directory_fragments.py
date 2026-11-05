@@ -17,31 +17,15 @@ from ..compiler.export_fragment_grammar import (
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS, revision_section_fragment_paths
 from ..conformance.loader_directory_mode_support import (
-    COMPLETENESS_CASILLA_0001 as _COMPLETENESS_CASILLA_0001,
-)
-from ..conformance.loader_directory_mode_support import (
-    COMPLETENESS_CASILLA_0002 as _COMPLETENESS_CASILLA_0002,
-)
-from ..conformance.loader_directory_mode_support import (
-    TOML_CASILLA_ID_KEY as _TOML_CASILLA_ID_KEY,
-)
-from ..conformance.loader_directory_mode_support import (
-    minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_manifest_text as _standard_manifest_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_fragmented_modelo_from_text as _write_fragmented_modelo_from_text,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_standard_manifest as _write_standard_manifest,
-)
-from ..conformance.loader_directory_mode_support import (
-    write_standard_revision_preamble as _write_standard_revision_preamble,
+    COMPLETENESS_CASILLA_0001,
+    COMPLETENESS_CASILLA_0002,
+    TOML_CASILLA_ID_KEY,
+    minimal_fragment_revision_layout,
+    standard_manifest_text,
+    standard_revision_preamble_text,
+    write_fragmented_modelo_from_text,
+    write_standard_manifest,
+    write_standard_revision_preamble,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,9 +34,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
 def test_registry_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
     baseline_text = (
-        _standard_manifest_text("Projection compiler proof")
+        standard_manifest_text("Projection compiler proof")
         + "\n"
-        + _standard_revision_preamble_text()
+        + standard_revision_preamble_text()
         + f"""
 
 [[revisions."2025".export_layouts]]
@@ -90,16 +74,16 @@ casilla_id = "500"
     )
 
     with pytest.raises(RegistryLoadError, match="exact integer"):
-        load_modelo_directory(_write_fragmented_modelo_from_text(tmp_path / "999", baseline_text))
+        load_modelo_directory(write_fragmented_modelo_from_text(tmp_path / "999", baseline_text))
 
 
 def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
     """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
 
     baseline_text = (
-        _standard_manifest_text("Fragment test")
+        standard_manifest_text("Fragment test")
         + "\n"
-        + _standard_revision_preamble_text()
+        + standard_revision_preamble_text()
         + """
 
 [[revisions."2025".casillas]]
@@ -142,15 +126,15 @@ required = true
 """.lstrip()
     )
     expected = load_modelo_directory(
-        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+        write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
     )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
     (target / "revisions" / "2025" / "casilla_continuidad_evolutions").mkdir()
     (target / "revisions" / "2025" / "export_layouts").mkdir()
-    _write_standard_manifest(target, "Fragment test")
-    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    write_standard_manifest(target, "Fragment test")
+    write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
     (target / "revisions" / "2025" / "casillas" / "liquidacion.toml").write_text(
         """
 [[revisions."2025".casillas]]
@@ -221,9 +205,9 @@ def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path:
     """Large calculation-completeness manifests can split their casilla list."""
 
     baseline_text = (
-        _standard_manifest_text("Fragment test")
+        standard_manifest_text("Fragment test")
         + "\n"
-        + _standard_revision_preamble_text()
+        + standard_revision_preamble_text()
         + """
 
 [revisions."2025".completeness_manifest]
@@ -233,25 +217,25 @@ source_refs = ["aeat-manual"]
 
 [[revisions."2025".completeness_manifest.casillas]]
 """
-        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+        + f'{TOML_CASILLA_ID_KEY} = "{COMPLETENESS_CASILLA_0001}"\n'
         + """
 number = "0001"
 
 [[revisions."2025".completeness_manifest.casillas]]
 """
-        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+        + f'{TOML_CASILLA_ID_KEY} = "{COMPLETENESS_CASILLA_0002}"\n'
         + """
 number = "0002"
 """
     ).lstrip()
     expected = load_modelo_directory(
-        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+        write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
     )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "completeness_manifest").mkdir(parents=True)
-    _write_standard_manifest(target, "Fragment test")
-    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    write_standard_manifest(target, "Fragment test")
+    write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
     (target / "revisions" / "2025" / "completeness_manifest" / "0001-manifest.toml").write_text(
         """
 [revisions."2025".completeness_manifest]
@@ -266,7 +250,7 @@ source_refs = ["aeat-manual"]
             """
 [[revisions."2025".completeness_manifest.casillas]]
 """
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+            + f'{TOML_CASILLA_ID_KEY} = "{COMPLETENESS_CASILLA_0001}"\n'
             + """
 number = "0001"
 """
@@ -278,7 +262,7 @@ number = "0001"
             """
 [[revisions."2025".completeness_manifest.casillas]]
 """
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+            + f'{TOML_CASILLA_ID_KEY} = "{COMPLETENESS_CASILLA_0002}"\n'
             + """
 number = "0002"
 """
@@ -294,9 +278,9 @@ def test_directory_mode_merges_export_record_field_fragments_by_record_id(tmp_pa
     """Large fixed-width records can be split across multiple field fragments."""
 
     baseline_text = (
-        _standard_manifest_text("Fragment test")
+        standard_manifest_text("Fragment test")
         + "\n"
-        + _standard_revision_preamble_text()
+        + standard_revision_preamble_text()
         + """
 
 [[revisions."2025".export_layouts]]
@@ -342,13 +326,13 @@ source_refs = ["aeat-manual"]
 """.lstrip()
     )
     expected = load_modelo_directory(
-        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+        write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
     )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "export_layouts").mkdir(parents=True)
-    _write_standard_manifest(target, "Fragment test")
-    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    write_standard_manifest(target, "Fragment test")
+    write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
     (target / "revisions" / "2025" / "export_layouts" / "0001-record-a.toml").write_text(
         """
 [[revisions."2025".export_layouts]]
@@ -413,9 +397,9 @@ def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_pa
     """Large construct membership lists can be split without redeclaring the construct."""
 
     baseline_text = (
-        _standard_manifest_text("Fragment test")
+        standard_manifest_text("Fragment test")
         + "\n"
-        + _standard_revision_preamble_text()
+        + standard_revision_preamble_text()
         + """
 
 [[revisions."2025".constructs]]
@@ -427,13 +411,13 @@ formulas = ["formula-1"]
 """.lstrip()
     )
     expected = load_modelo_directory(
-        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+        write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
     )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
-    _write_standard_manifest(target, "Fragment test")
-    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    write_standard_manifest(target, "Fragment test")
+    write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
     (target / "revisions" / "2025" / "constructs" / "0001-casillas.toml").write_text(
         """
 [[revisions."2025".constructs]]
@@ -529,7 +513,7 @@ def test_directory_mode_rejects_fragment_scalar_conflicts(
     """Same-id fragments must not silently override scalar metadata."""
 
     target = tmp_path / "999"
-    revision_dir = _minimal_fragment_revision_layout(target, fragment_dirs=(fragment_dir,))
+    revision_dir = minimal_fragment_revision_layout(target, fragment_dirs=(fragment_dir,))
     for filename, fragment_text in fragment_files:
         (revision_dir / fragment_dir / filename).write_text(fragment_text, encoding="utf-8")
 
@@ -541,7 +525,7 @@ def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tm
     """Same-id record fragments must not create ambiguous nested field ids."""
 
     target = tmp_path / "999"
-    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export_layouts",)) / "export_layouts"
+    export_dir = minimal_fragment_revision_layout(target, fragment_dirs=("export_layouts",)) / "export_layouts"
     duplicate_field_fragment = """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -611,7 +595,7 @@ def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) ->
     """Fragments under ``revisions/<id>/`` must declare the same revision id."""
 
     target = tmp_path / "999"
-    _minimal_fragment_revision_layout(
+    minimal_fragment_revision_layout(
         target,
         revision_text='[revisions."2024"]\nvalid_from = 2024-01-01\n',
     )
@@ -624,7 +608,7 @@ def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) ->
     """A fragmented revision has one owner for each scalar revision field."""
 
     target = tmp_path / "999"
-    revision_dir = _minimal_fragment_revision_layout(
+    revision_dir = minimal_fragment_revision_layout(
         target,
         revision_text='[revisions."2025"]\nvalid_from = 2025-01-01\n',
     )

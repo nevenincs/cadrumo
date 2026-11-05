@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.result_casillas import (
     result_disposition_casilla_ids,
 )
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,7 +32,7 @@ _ANY_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -> None:
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
 
     checked_revisions: list[str] = []
     offences: list[str] = []

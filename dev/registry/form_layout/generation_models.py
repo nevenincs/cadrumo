@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import FormDesignS
 
 
 @dataclass(slots=True)
-class _Position:
+class Position:
     """One official position in form order: a design row or dictionary line."""
 
     page_key: str
@@ -27,7 +27,7 @@ class _Position:
 
 
 @dataclass(frozen=True, slots=True)
-class _Item:
+class Item:
     """One thing a section shows: a casilla, a binding input, or a design constant."""
 
     position: int
@@ -38,12 +38,12 @@ class _Item:
 
 
 @dataclass(slots=True)
-class _Build:
+class Build:
     """Mutable state of one revision's generation."""
 
     modelo_id: str
     revision: ModeloRevision
-    positions: list[_Position] = field(default_factory=list)
+    positions: list[Position] = field(default_factory=list)
     anchors: dict[str, list[int]] = field(default_factory=lambda: defaultdict(list))
     ambiguous: set[str] = field(default_factory=set)
     binding_primary: dict[str, int] = field(default_factory=dict)
@@ -57,15 +57,15 @@ class _Build:
 
 
 @dataclass(slots=True)
-class _SectionDraft:
+class SectionDraft:
     key: tuple[str, ...]
     heading: str | None
     positions: list[int] = field(default_factory=list)
-    items: list[_Item] = field(default_factory=list)
+    items: list[Item] = field(default_factory=list)
 
 
 @dataclass(slots=True)
-class _RowDraft:
+class RowDraft:
     stem: str
     columns: list[str]
-    items: list[_Item]
+    items: list[Item]

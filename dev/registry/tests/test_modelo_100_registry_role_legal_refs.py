@@ -6,26 +6,26 @@ from functools import lru_cache
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _ANDALUCIA_EJERCICIO_FISICO_ROLE,
-    _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
-    _CANARIAS_DONACION_DESCENDIENTES_ROLE,
-    _CASILLA_0575,
-    _CASILLA_0580,
-    _CASILLA_0581,
-    _CASILLA_0921,
-    _CASILLA_1091,
-    _DA45_CLAUSULA_SUELO_REF,
-    _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE,
-    _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
-    _INCENTIVO_ART_33_REGULARIZATION_CASILLAS,
-    _LGT_INTEREST_ART_26_REF,
-    _LIRPF_CAPITAL_GAINS_ART_33_REF,
-    _REGULARIZACION_DEDUCTION_LOSS_CASILLAS,
-    _REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS,
-    _REGULARIZACION_PREVIOUS_INTEREST_CASILLAS,
-    _RIRPF_DEDUCTION_LOSS_ART_59_REF,
-    _modelo_100_revision,
+from .modelo_100_registry_support import (
+    ANDALUCIA_EJERCICIO_FISICO_ROLE,
+    C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
+    CANARIAS_DONACION_DESCENDIENTES_ROLE,
+    CASILLA_0575,
+    CASILLA_0580,
+    CASILLA_0581,
+    CASILLA_0921,
+    CASILLA_1091,
+    DA45_CLAUSULA_SUELO_REF,
+    DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE,
+    EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+    INCENTIVO_ART_33_REGULARIZATION_CASILLAS,
+    LGT_INTEREST_ART_26_REF,
+    LIRPF_CAPITAL_GAINS_ART_33_REF,
+    REGULARIZACION_DEDUCTION_LOSS_CASILLAS,
+    REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS,
+    REGULARIZACION_PREVIOUS_INTEREST_CASILLAS,
+    RIRPF_DEDUCTION_LOSS_ART_59_REF,
+    modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -37,94 +37,94 @@ _CASILLA_0921_ROLE_CASES = (
     (
         2020,
         "canarias_res",
-        _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+        CANARIAS_DONACION_DESCENDIENTES_ROLE,
         "donaciones en metálico a descendientes",
     ),
     (
         2021,
         "canarias_res",
-        _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+        CANARIAS_DONACION_DESCENDIENTES_ROLE,
         "donaciones en metálico a descendientes",
     ),
     (
         2022,
         "canarias_res",
-        _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+        CANARIAS_DONACION_DESCENDIENTES_ROLE,
         "donaciones en metálico a descendientes",
     ),
     (
         2023,
         "canarias_res",
-        _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+        CANARIAS_DONACION_DESCENDIENTES_ROLE,
         "donaciones en metálico a descendientes",
     ),
     (
         2024,
         "canarias_res",
-        _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+        CANARIAS_DONACION_DESCENDIENTES_ROLE,
         "donaciones en metálico a descendientes",
     ),
-    (2025, "andalucia_res", _ANDALUCIA_EJERCICIO_FISICO_ROLE, "ejercicio físico"),
+    (2025, "andalucia_res", ANDALUCIA_EJERCICIO_FISICO_ROLE, "ejercicio físico"),
 )
 _CASILLA_1091_ROLE_CASES = (
     (
         2020,
         "c_valenciana_res",
-        _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
+        C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
         "labores no remuneradas en el hogar",
     ),
     (
         2021,
         "c_valenciana_res",
-        _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
+        C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
         "labores no remuneradas en el hogar",
     ),
     (
         2022,
         "extremadura_res",
-        _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+        EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
         "vivienda habitual en zonas rurales",
     ),
     (
         2023,
         "extremadura_res",
-        _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+        EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
         "vivienda habitual en zonas rurales",
     ),
     (
         2024,
         "extremadura_res",
-        _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+        EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
         "vivienda habitual en zonas rurales",
     ),
     (
         2025,
         "extremadura_res",
-        _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+        EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
         "vivienda habitual en zonas rurales",
     ),
 )
 _CASILLA_0581_ROLE_CASES = (
     # BOE-A-2021-4238 p21 / BOE-A-2022-4296 p20 place 0581 in the
     # regional column; the old dictionary's state caption is erroneous.
-    (2020, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
-    (2021, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
-    (2022, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
-    (2023, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
-    (2024, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
-    (2025, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2020, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2021, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2022, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2023, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2024, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
+    (2025, DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE, "Parte autonómica"),
 )
 
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_revision(filing_year)
+    return modelo_100_revision(filing_year)
 
 
 def test_modelo_100_casilla_0921_role_tracks_year_specific_official_meaning() -> None:
     for filing_year, expected_section_tail, expected_role, expected_label_snippet in _CASILLA_0921_ROLE_CASES:
         revision = _revision_for(filing_year)
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_0921)
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == CASILLA_0921)
 
         assert casilla.number == "0921"
         assert casilla.section[-1] == expected_section_tail, filing_year
@@ -136,7 +136,7 @@ def test_modelo_100_casilla_0921_role_tracks_year_specific_official_meaning() ->
 def test_modelo_100_casilla_1091_role_tracks_year_specific_official_meaning() -> None:
     for filing_year, expected_section_tail, expected_role, expected_label_snippet in _CASILLA_1091_ROLE_CASES:
         revision = _revision_for(filing_year)
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_1091)
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == CASILLA_1091)
 
         assert casilla.number == "1091"
         assert casilla.section[-1] == expected_section_tail, filing_year
@@ -148,7 +148,7 @@ def test_modelo_100_casilla_1091_role_tracks_year_specific_official_meaning() ->
 def test_modelo_100_casilla_0581_role_tracks_year_specific_state_autonomic_column() -> None:
     for filing_year, expected_role, expected_label_snippet in _CASILLA_0581_ROLE_CASES:
         revision = _revision_for(filing_year)
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_0581)
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == CASILLA_0581)
 
         assert casilla.number == "0581"
         assert casilla.section[-1] == "gravamenes_res"
@@ -163,19 +163,19 @@ def test_modelo_100_da45_regularization_flags_cite_their_named_legal_basis() -> 
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         casillas_by_id = {
-            casilla.id: casilla for casilla in revision.casillas if casilla.id in {_CASILLA_0575, _CASILLA_0580}
+            casilla.id: casilla for casilla in revision.casillas if casilla.id in {CASILLA_0575, CASILLA_0580}
         }
 
-        assert set(casillas_by_id) == {_CASILLA_0575, _CASILLA_0580}
+        assert set(casillas_by_id) == {CASILLA_0575, CASILLA_0580}
         for casilla_id, expected_role in (
-            (_CASILLA_0575, "irpf_flag_regularizacion_da45_estatal"),
-            (_CASILLA_0580, "irpf_flag_regularizacion_da45"),
+            (CASILLA_0575, "irpf_flag_regularizacion_da45_estatal"),
+            (CASILLA_0580, "irpf_flag_regularizacion_da45"),
         ):
             casilla = casillas_by_id[casilla_id]
             assert casilla.section[-1] == "gravamenes_res"
             assert casilla.semantic_role == expected_role, filing_year
             assert "D.A. 45" in casilla.label
-            assert _DA45_CLAUSULA_SUELO_REF in casilla.legal_refs
+            assert DA45_CLAUSULA_SUELO_REF in casilla.legal_refs
 
 
 def test_modelo_100_art_33_incentive_loss_rows_cite_named_legal_basis() -> None:
@@ -184,16 +184,16 @@ def test_modelo_100_art_33_incentive_loss_rows_cite_named_legal_basis() -> None:
         casillas_by_id = {
             casilla.id: casilla
             for casilla in revision.casillas
-            if casilla.id in _INCENTIVO_ART_33_REGULARIZATION_CASILLAS
+            if casilla.id in INCENTIVO_ART_33_REGULARIZATION_CASILLAS
         }
 
-        assert set(casillas_by_id) == _INCENTIVO_ART_33_REGULARIZATION_CASILLAS
+        assert set(casillas_by_id) == INCENTIVO_ART_33_REGULARIZATION_CASILLAS
         for casilla in casillas_by_id.values():
             assert casilla.section[-1] == "gravamenes_res"
             assert "artículo 33.3" in casilla.label
-            assert _LIRPF_CAPITAL_GAINS_ART_33_REF in casilla.legal_refs
-            assert _RIRPF_DEDUCTION_LOSS_ART_59_REF not in casilla.legal_refs
-            assert _LGT_INTEREST_ART_26_REF not in casilla.legal_refs
+            assert LIRPF_CAPITAL_GAINS_ART_33_REF in casilla.legal_refs
+            assert RIRPF_DEDUCTION_LOSS_ART_59_REF not in casilla.legal_refs
+            assert LGT_INTEREST_ART_26_REF not in casilla.legal_refs
 
 
 def test_modelo_100_previous_regularization_interest_rows_cite_lgt_interest_basis() -> None:
@@ -202,36 +202,36 @@ def test_modelo_100_previous_regularization_interest_rows_cite_lgt_interest_basi
         casillas_by_id = {
             casilla.id: casilla
             for casilla in revision.casillas
-            if casilla.id in _REGULARIZACION_PREVIOUS_INTEREST_CASILLAS
+            if casilla.id in REGULARIZACION_PREVIOUS_INTEREST_CASILLAS
         }
 
-        assert set(casillas_by_id) == _REGULARIZACION_PREVIOUS_INTEREST_CASILLAS
+        assert set(casillas_by_id) == REGULARIZACION_PREVIOUS_INTEREST_CASILLAS
         for casilla in casillas_by_id.values():
             assert casilla.section[-1] == "gravamenes_res"
             assert "Intereses de demora" in casilla.label
             assert "regularización anterior" in casilla.label
-            assert _LGT_INTEREST_ART_26_REF in casilla.legal_refs
-            assert _RIRPF_DEDUCTION_LOSS_ART_59_REF not in casilla.legal_refs
+            assert LGT_INTEREST_ART_26_REF in casilla.legal_refs
+            assert RIRPF_DEDUCTION_LOSS_ART_59_REF not in casilla.legal_refs
 
 
 def test_modelo_100_deduction_loss_regularization_rows_cite_exact_procedure() -> None:
-    tracked_ids = _REGULARIZACION_DEDUCTION_LOSS_CASILLAS | _REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS
+    tracked_ids = REGULARIZACION_DEDUCTION_LOSS_CASILLAS | REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS
 
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in tracked_ids}
 
         assert set(casillas_by_id) == tracked_ids
-        for casilla_id in _REGULARIZACION_DEDUCTION_LOSS_CASILLAS:
+        for casilla_id in REGULARIZACION_DEDUCTION_LOSS_CASILLAS:
             casilla = casillas_by_id[casilla_id]
             assert casilla.section[-1] == "gravamenes_res"
             assert "deducciones" in casilla.label.lower()
-            assert _RIRPF_DEDUCTION_LOSS_ART_59_REF in casilla.legal_refs
-            assert _LGT_INTEREST_ART_26_REF not in casilla.legal_refs
+            assert RIRPF_DEDUCTION_LOSS_ART_59_REF in casilla.legal_refs
+            assert LGT_INTEREST_ART_26_REF not in casilla.legal_refs
 
-        for casilla_id in _REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS:
+        for casilla_id in REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS:
             casilla = casillas_by_id[casilla_id]
             assert casilla.section[-1] == "gravamenes_res"
             assert "Intereses de demora" in casilla.label
-            assert _RIRPF_DEDUCTION_LOSS_ART_59_REF in casilla.legal_refs
-            assert _LGT_INTEREST_ART_26_REF in casilla.legal_refs
+            assert RIRPF_DEDUCTION_LOSS_ART_59_REF in casilla.legal_refs
+            assert LGT_INTEREST_ART_26_REF in casilla.legal_refs

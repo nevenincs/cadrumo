@@ -46,7 +46,7 @@ def is_blank_row(values: tuple[object, ...]) -> bool:
     return all(value is None or str(value).strip() == "" for value in values)
 
 
-def _probe_header_row(
+def probe_header_row(
     values: tuple[object, ...],
     row_number: int,
     *,
@@ -101,9 +101,9 @@ def _probe_header_row(
             )
             return None
         length_index = length_correction.column_index
-    complementary_index = _optional_header_index(values, "com", "comp")
-    description_index = _optional_header_index(values, "descripcion")
-    validation_index = _optional_header_index(values, "validacion", "oblig.")
+    complementary_index = optional_header_index(values, "com", "comp")
+    description_index = optional_header_index(values, "descripcion")
+    validation_index = optional_header_index(values, "validacion", "oblig.")
     if description_index is None:
         if complementary_index is None:
             _log.debug(
@@ -133,8 +133,8 @@ def _probe_header_row(
         complementary_index=complementary_index,
         description_index=description_index,
         validation_index=validation_index,
-        content_index=_optional_header_index(values, "contenido"),
-        relative_offset_index=_optional_header_index(values, "pos. rel."),
+        content_index=optional_header_index(values, "contenido"),
+        relative_offset_index=optional_header_index(values, "pos. rel."),
     )
     return header, length_correction
 
@@ -151,7 +151,7 @@ def find_header(
     """
     sheet_name = worksheet.title.strip()
     for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
-        matched = _probe_header_row(
+        matched = probe_header_row(
             tuple(row),
             row_number,
             label=f"xlsx {worksheet.title}",
@@ -176,7 +176,7 @@ def find_xls_header(
     sheet_name = worksheet.name.strip()
     header_corrections = header_corrections or EMPTY_HEADER_CORRECTIONS
     for rowx in range(min(10, worksheet.nrows)):
-        matched = _probe_header_row(
+        matched = probe_header_row(
             tuple(worksheet.row_values(rowx)),
             rowx + 1,
             label="xls",
@@ -336,7 +336,7 @@ def _normalise_header_cell(value: object | None) -> str:
 
 
 def _required_header_index(values: tuple[object, ...], header_name: str) -> int:
-    index = _optional_header_index(values, header_name)
+    index = optional_header_index(values, header_name)
     if index is None:
         raise RegistryValidationError(f"missing workbook header {header_name!r}")
     return index
@@ -385,7 +385,7 @@ def _header_names_one_column(cell: str, expected: str) -> bool:
     return len(shorter) >= 3 and longer.startswith(shorter)
 
 
-def _optional_header_index(values: tuple[object, ...], *header_names: str) -> int | None:
+def optional_header_index(values: tuple[object, ...], *header_names: str) -> int | None:
     expected = [_header_token(name) for name in header_names]
     for index, value in enumerate(values):
         cell = _header_token(_normalise_header_cell(value))

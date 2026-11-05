@@ -23,10 +23,8 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_snapshot as _committed_snapshot,
+    committed_modelo,
+    committed_snapshot,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -151,7 +149,7 @@ _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 
 
 def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("390")
+    return committed_modelo("390")
 
 
 def _replace_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
@@ -215,13 +213,13 @@ def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
     into resolution.
     """
     for filing_year in (2022, 2023, 2024, 2025):
-        snapshot = _committed_snapshot("390", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = committed_snapshot("390", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.revision.id == str(filing_year)
 
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
     _, catalogues = _load_modelo_390()
-    snapshot = _committed_snapshot("390", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = committed_snapshot("390", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)

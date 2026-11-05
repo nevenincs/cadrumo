@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..indexed_authority_benchmark import _summary
+from ..indexed_authority_benchmark import summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,7 +73,7 @@ def test_summary_uses_backend_workload_medians_and_pairs_only_shared_semantics()
         },
     ]
 
-    assert _summary(samples) == {
+    assert summary(samples) == {
         "json": {
             "fresh_processes": 4,
             "workloads": {

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 
@@ -33,7 +33,7 @@ from ..filing_export_proof_authority import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PINNED = Path(__file__).resolve().parents[1] / "conformance_vectors" / "modelo_200_2025_y_siguientes.toml"
-_REGISTRY_ROOT = _bundled_path("registry", "aeat")
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_the_shipped_pin_materializes_against_the_current_generated_tree(
@@ -42,7 +42,7 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree(
     """The committed pin admits the tree as generated today."""
     vectors = canonical_filing_export_conformance_vectors(
         registry_root=_REGISTRY_ROOT,
-        source_root=_bundled_path(),
+        source_root=bundled_path(),
     )
     assert len(vectors) == 1
     coordinate = vectors[0].evidence.coordinate
@@ -109,7 +109,7 @@ def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(
     candidate_proof = CanonicalTwoChannelFilingExportProofAuthority(
         workspace_root=Path.cwd(),
         registry_root=candidate_root,
-        source_root=_bundled_path(),
+        source_root=bundled_path(),
         authority=authority,
         vectors=(vector,),
         conformance_enrollment=proof.conformance_enrollment,

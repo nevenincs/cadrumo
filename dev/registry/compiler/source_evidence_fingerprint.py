@@ -39,7 +39,7 @@ __all__ = (
     "is_source_evidence_path",
 )
 
-_evidence_fingerprint_cache: dict[tuple[Path, ...], tuple[float, SourceEvidenceFingerprint]] = {}
+evidence_fingerprint_cache: dict[tuple[Path, ...], tuple[float, SourceEvidenceFingerprint]] = {}
 
 
 def is_source_evidence_path(path: PurePath) -> bool:
@@ -77,23 +77,23 @@ def collect_source_evidence_fingerprints(
     if not roots:
         return ()
     if not use_cache or not all(_is_bundled_evidence_root(root) for root in roots):
-        return _walk_source_evidence(roots)
+        return walk_source_evidence(roots)
 
     started = time.time()
-    entry = _evidence_fingerprint_cache.get(roots)
+    entry = evidence_fingerprint_cache.get(roots)
     if entry is not None and started - entry[0] < BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS:
         return entry[1]
 
-    fingerprints = _walk_source_evidence(roots)
+    fingerprints = walk_source_evidence(roots)
     # Stamped at walk COMPLETION, so the walk's own multi-hundred-millisecond
     # cost is not charged against the window it opens; a start stamp on a loaded
     # host can consume the window outright and defeat the cache exactly when it
     # is worth most.
-    _evidence_fingerprint_cache[roots] = (time.time(), fingerprints)
+    evidence_fingerprint_cache[roots] = (time.time(), fingerprints)
     return fingerprints
 
 
-def _walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
+def walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
     fingerprints: list[tuple[str, int, int]] = []
     for root in roots:
         for path in scan_directory(

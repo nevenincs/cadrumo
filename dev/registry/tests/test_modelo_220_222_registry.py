@@ -29,7 +29,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import authored_revisions_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +82,7 @@ _CASES = (
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCase) -> None:
-    modelo, catalogues = _committed_modelo(case.modelo_id)
+    modelo, catalogues = committed_modelo(case.modelo_id)
     assert modelo.id == case.modelo_id
     assert modelo.revisions, f"{case.modelo_id} must declare at least one revision"
     RegistryValidator(
@@ -105,7 +105,7 @@ def test_modelo_220_222_approval_and_plazo_resolve_as_legal_authority(case: _Mod
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_deadline_provision_is_cited_by_every_window(case: _ModeloCase) -> None:
-    modelo, _catalogues = _committed_modelo(case.modelo_id)
+    modelo, _catalogues = committed_modelo(case.modelo_id)
     declared = [
         (revision_id, window)
         for revision_id, revision in modelo.revisions.items()
@@ -147,7 +147,7 @@ def test_modelo_220_evidenced_revisions_are_found() -> None:
 @pytest.mark.parametrize("exercise", _M220_EVIDENCED_EXERCISES)
 def test_modelo_220_evidenced_revision_sources_match_the_revision_window(exercise: int) -> None:
     """Each evidenced revision cites its own design and period-scoped approving order."""
-    modelo, catalogues = _committed_modelo("220")
+    modelo, catalogues = committed_modelo("220")
     revision = modelo.revisions[str(exercise)]
     design, order = f"aeat-dr-220-{exercise}", f"boe-modelo-220-{exercise}-form"
 

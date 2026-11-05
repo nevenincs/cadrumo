@@ -76,7 +76,7 @@ class ProseParserEnrolment:
     reason: str
 
 
-def _iter_scanned_modules() -> Iterator[Path]:
+def iter_scanned_modules() -> Iterator[Path]:
     for root in FIRST_PARTY_ROOTS:
         for path in sorted((REPO_ROOT / root).rglob("*.py")):
             if is_production_source(path, root=REPO_ROOT):
@@ -102,7 +102,7 @@ def derive_prose_parsers() -> tuple[ProseParserModule, ...]:
     """Derive every module that compiles a regulatory-prose pattern."""
     found: list[ProseParserModule] = []
     unread: list[str] = []
-    for path in _iter_scanned_modules():
+    for path in iter_scanned_modules():
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError) as error:

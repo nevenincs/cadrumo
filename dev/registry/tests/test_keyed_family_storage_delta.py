@@ -14,10 +14,10 @@ from ..compiler.keyed_family_storage_delta import patch_family_sequences
 from ..compiler.loader import load_modelo_directory
 from .synthetic_delta_edition_support import SUCCESSOR_EDITION
 from .test_restated_family_merge import (
-    _BASE_FORMULA,
-    _CUOTA_FORMULA,
-    _RECARGO_FORMULA,
-    _build_modelo,
+    BASE_FORMULA,
+    CUOTA_FORMULA,
+    RECARGO_FORMULA,
+    build_modelo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -31,7 +31,7 @@ _CLEARED_CONSTRUCTS = (
 
 
 def _successor(root: Path, declaration: str) -> ModeloRevision:
-    return load_modelo_directory(_build_modelo(root, successor_extra=declaration)).revisions[SUCCESSOR_EDITION]
+    return load_modelo_directory(build_modelo(root, successor_extra=declaration)).revisions[SUCCESSOR_EDITION]
 
 
 def test_changed_member_authors_only_its_changed_nested_field(tmp_path: Path) -> None:
@@ -43,7 +43,7 @@ def test_changed_member_authors_only_its_changed_nested_field(tmp_path: Path) ->
         'fields = { expression = { literal = "7" } }\n',
     )
 
-    formula = next(item for item in revision.formulas if item.id == _CUOTA_FORMULA)
+    formula = next(item for item in revision.formulas if item.id == CUOTA_FORMULA)
     assert formula.expression.literal == 7
     assert str(formula.target_casilla_id) == "0002"
 
@@ -60,12 +60,12 @@ def test_member_removal_addition_and_order_are_exact(tmp_path: Path) -> None:
         "position = 0\n",
     )
 
-    assert tuple(item.id for item in revision.formulas) == (_RECARGO_FORMULA, _BASE_FORMULA)
+    assert tuple(item.id for item in revision.formulas) == (RECARGO_FORMULA, BASE_FORMULA)
 
 
 def test_explicit_clear_differs_from_omitted_family(tmp_path: Path) -> None:
     inherited = _successor(tmp_path / "inherited", "")
-    modelo = _build_modelo(
+    modelo = build_modelo(
         tmp_path / "cleared",
         successor_extra=_CLEARED_CONSTRUCTS,
     )
@@ -84,7 +84,7 @@ def test_inherited_member_keeps_predecessor_source_default(tmp_path: Path) -> No
         'formula_source_refs = ["successor-source"]\n',
     )
 
-    inherited = next(item for item in revision.formulas if item.id == _CUOTA_FORMULA)
+    inherited = next(item for item in revision.formulas if item.id == CUOTA_FORMULA)
     assert tuple(str(item) for item in inherited.source_refs) == ("aeat-manual",)
 
 

@@ -9,10 +9,10 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from ...export_clearance import prepare_export_clearance_retirement
-from .._export_tree import render_complete_export_tree
 from ..candidate_source_chain import require_source_chain_unchanged, requires_source_chain, stage_source_chain
 from ..candidate_staging import stage_generated_export_candidate
-from ..render_check import GeneratedExportBootstrapTransport, _revision_render_inputs
+from ..export_tree import render_complete_export_tree
+from ..render_check import GeneratedExportBootstrapTransport, build_revision_render_inputs
 from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -94,7 +94,7 @@ def test_source_chain_refuses_removed_lineage_and_missing_siblings(pending_sourc
 
 def _render_2023(root: Path) -> None:
     mapping = load_semantic_map(Path("dev/registry/mappings/modelo_194/2023"))
-    inputs = _revision_render_inputs(
+    inputs = build_revision_render_inputs(
         load_modelo_directory(root),
         load_shared_catalogues(_SOURCE.parents[1]),
         modelo="194",

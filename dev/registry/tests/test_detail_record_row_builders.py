@@ -39,13 +39,13 @@ from cadrumo.domain.foreign_assets.register import (
 from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos():
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return modelos
 
 

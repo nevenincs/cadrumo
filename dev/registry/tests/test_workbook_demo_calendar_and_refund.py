@@ -23,7 +23,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..workbook_demo import build_demonstration_plan
 from ..workbook_demo_cases import DEMO_CASES
 from ..workbook_demo_inputs import demonstration_inputs
-from ._workbook_demo_oracle_support import expected_result, numeric_inputs
+from .workbook_demo_oracle_support import expected_result, numeric_inputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -21,8 +21,8 @@ from collections.abc import Mapping
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from ._validate_helpers import missing_refs
 from .validate_evidence import EvidenceValidator
+from .validate_helpers import missing_refs
 
 _GROUNDING_TIER = "official_source_guidance"
 

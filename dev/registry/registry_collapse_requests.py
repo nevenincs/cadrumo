@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.temporal import (
     select_revision,
 )
 
-from .registry_collapse_comparison import _first_difference, _typed_projection
+from .registry_collapse_comparison import first_difference, typed_projection
 from .registry_collapse_models import CheckStatus, ComparisonResult, RequestCoordinate
 
 
@@ -119,7 +119,7 @@ def _record_internal_gap_coordinates(
             coordinates[(year, period, None, None)] = RequestCoordinate(year, period, None, None, "internal_gap")
 
 
-def _selection_result(
+def selection_result(
     modelo: ModeloDefinition,
     coordinate: RequestCoordinate,
     support: SupportedFilingYearsCatalogue,
@@ -145,7 +145,7 @@ def _selection_result(
             "requested_filing_year": resolution.requested_filing_year,
             "authored_filing_year": resolution.authored_filing_year,
             "projection_direction": str(resolution.projection_direction),
-            "value": _typed_projection(selected),
+            "value": typed_projection(selected),
         }
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
@@ -163,9 +163,9 @@ def compare_temporal(
     differences: list[Mapping[str, object]] = []
     matrix = request_matrix(before, floor=floor, ceiling=ceiling)
     for coordinate in matrix:
-        left = _selection_result(before, coordinate, support)
-        right = _selection_result(after, coordinate, support)
-        difference = _first_difference(left, right)
+        left = selection_result(before, coordinate, support)
+        right = selection_result(after, coordinate, support)
+        difference = first_difference(left, right)
         if difference is not None:
             differences.append({"coordinate": asdict(coordinate), **difference})
     return ComparisonResult(

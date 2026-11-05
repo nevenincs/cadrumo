@@ -6,28 +6,28 @@ from functools import lru_cache
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
-    _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
-    _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-    _BASE_LIQUIDABLE_ART_50_REF,
-    _BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA,
-    _BROAD_DEDUCTION_ART_68_REF,
-    _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _GENERAL_BASE_CUOTA_CASILLAS,
-    _GENERAL_SCALE_ART_63_REF,
-    _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE,
-    _MODELO_100_2025_FORM_ORDER_REF,
-    _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
-    _SAVINGS_BASE_ART_49_REF,
-    _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025,
-    _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-    _STATE_DEDUCTION_ART_67_REF,
-    _STATE_INTEGRAL_QUOTA_ART_62_REF,
-    _governing_redaction,
-    _modelo_100_revision,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
+    AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+    AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
+    BASE_LIQUIDABLE_ART_50_REF,
+    BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA,
+    BROAD_DEDUCTION_ART_68_REF,
+    FRACTIONAL_PAYMENT_ARTICLE_REF,
+    GENERAL_BASE_CUOTA_CASILLAS,
+    GENERAL_SCALE_ART_63_REF,
+    M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE,
+    MODELO_100_2025_FORM_ORDER_REF,
+    PERSONAL_FAMILY_MINIMUM_ART_56_REF,
+    SAVINGS_BASE_ART_49_REF,
+    SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025,
+    STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+    STATE_DEDUCTION_ART_67_REF,
+    STATE_INTEGRAL_QUOTA_ART_62_REF,
+    governing_redaction,
+    modelo_100_revision,
+)
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -63,11 +63,11 @@ _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR = {
 #: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
 _GENERAL_SCALE_ART_63_REF_BY_YEAR = {
     2020: "ley-35-2006:art-63-2015",
-    2021: _GENERAL_SCALE_ART_63_REF,
-    2022: _GENERAL_SCALE_ART_63_REF,
-    2023: _GENERAL_SCALE_ART_63_REF,
-    2024: _GENERAL_SCALE_ART_63_REF,
-    2025: _GENERAL_SCALE_ART_63_REF,
+    2021: GENERAL_SCALE_ART_63_REF,
+    2022: GENERAL_SCALE_ART_63_REF,
+    2023: GENERAL_SCALE_ART_63_REF,
+    2024: GENERAL_SCALE_ART_63_REF,
+    2025: GENERAL_SCALE_ART_63_REF,
 }
 _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
     2020: "ley-35-2006:art-76-2015",
@@ -81,67 +81,67 @@ _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_revision(filing_year)
+    return modelo_100_revision(filing_year)
 
 
 def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         general_scale_art_63_ref = _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year]
-        checked_casilla_ids = {_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *_GENERAL_BASE_CUOTA_CASILLAS}
+        checked_casilla_ids = {BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *GENERAL_BASE_CUOTA_CASILLAS}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in checked_casilla_ids}
 
         assert set(casillas_by_id) == checked_casilla_ids
-        base_casilla = casillas_by_id[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]
-        assert _BASE_LIQUIDABLE_ART_50_REF in base_casilla.legal_refs
-        assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_casilla.legal_refs
-        assert _SAVINGS_BASE_ART_49_REF not in base_casilla.legal_refs
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_casilla.legal_refs
+        base_casilla = casillas_by_id[BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]
+        assert BASE_LIQUIDABLE_ART_50_REF in base_casilla.legal_refs
+        assert PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_casilla.legal_refs
+        assert SAVINGS_BASE_ART_49_REF not in base_casilla.legal_refs
+        assert FRACTIONAL_PAYMENT_ARTICLE_REF not in base_casilla.legal_refs
 
         formula_by_target = {
             formula.target_casilla_id: formula
             for formula in revision.formulas
             if formula.target_casilla_id in checked_casilla_ids
         }
-        base_formula = formula_by_target.get(_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
+        base_formula = formula_by_target.get(BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
         if base_formula is not None:
-            assert _BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
+            assert BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
             assert general_scale_art_63_ref in base_formula.legal_refs
-            assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_formula.legal_refs
-            assert _SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
-            assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
+            assert PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_formula.legal_refs
+            assert SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
+            assert FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
 
-        for casilla_id in _GENERAL_BASE_CUOTA_CASILLAS:
+        for casilla_id in GENERAL_BASE_CUOTA_CASILLAS:
             casilla = casillas_by_id[casilla_id]
             formula = formula_by_target[casilla_id]
             assert general_scale_art_63_ref in casilla.legal_refs, (filing_year, casilla.id)
-            assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
-            assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
-            assert _SAVINGS_BASE_ART_49_REF not in formula.legal_refs, (filing_year, formula.id)
-            assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, (filing_year, formula.id)
+            assert SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
+            assert FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+            assert SAVINGS_BASE_ART_49_REF not in formula.legal_refs, (filing_year, formula.id)
+            assert FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, (filing_year, formula.id)
 
 
 def test_modelo_100_scale_result_casillas_use_scale_articles_not_fractional_payment_article() -> None:
     revision = _revision_for(_REVIEWED_EDITION)
     casillas_by_id = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.id in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
     }
     formula_by_target = {
         formula.target_casilla_id: formula
         for formula in revision.formulas
-        if formula.target_casilla_id in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
+        if formula.target_casilla_id in SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
     }
 
-    assert set(casillas_by_id) == set(_SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
-    assert set(formula_by_target) == set(_SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
-    for casilla_id, expected_ref in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025.items():
+    assert set(casillas_by_id) == set(SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
+    assert set(formula_by_target) == set(SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
+    for casilla_id, expected_ref in SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025.items():
         casilla = casillas_by_id[casilla_id]
         formula = formula_by_target[casilla_id]
         assert expected_ref in casilla.legal_refs, casilla.id
         assert expected_ref in formula.legal_refs, formula.id
-        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, casilla.id
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, formula.id
+        assert SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, casilla.id
+        assert FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
+        assert FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, formula.id
 
 
 # Casilla 0527 (anualidades por alimentos) is a direct manual input in 2020 and
@@ -156,7 +156,7 @@ def test_modelo_100_scale_result_casillas_use_scale_articles_not_fractional_paym
 def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
     for filing_year in _ANUALIDADES_FORMULA_YEARS:
         expected_refs = {
-            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
             _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
         }
         revision = _revision_for(filing_year)
@@ -166,10 +166,10 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
 
         assert formula_id in formulas_by_id
         formula = formulas_by_id[formula_id]
-        assert formula.target_casilla_id == _ANUALIDADES_ALIMENTOS_TOTAL_CASILLA
+        assert formula.target_casilla_id == ANUALIDADES_ALIMENTOS_TOTAL_CASILLA
         assert set(formula.legal_refs) == expected_refs
-        assert _BASE_LIQUIDABLE_ART_50_REF not in formula.legal_refs
-        assert expected_refs <= set(casillas_by_id[_ANUALIDADES_ALIMENTOS_TOTAL_CASILLA].legal_refs)
+        assert BASE_LIQUIDABLE_ART_50_REF not in formula.legal_refs
+        assert expected_refs <= set(casillas_by_id[ANUALIDADES_ALIMENTOS_TOTAL_CASILLA].legal_refs)
         required_text = {text for citation in formula.source_citations for text in citation.required_text}
         assert "anualidades por alimentos a favor de los hijos" in required_text
         assert "resto de la base liquidable general" in required_text
@@ -179,7 +179,7 @@ def test_modelo_100_anualidades_casilla_is_manual_input_before_the_per_child_blo
     """The editions before the per-child block carry 0527 as a manual scalar input with no sum formula."""
     for filing_year in _ANUALIDADES_MANUAL_INPUT_YEARS:
         expected_refs = {
-            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
             _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
         }
         revision = _revision_for(filing_year)
@@ -191,7 +191,7 @@ def test_modelo_100_anualidades_casilla_is_manual_input_before_the_per_child_blo
             f"{filing_year}: casilla 0527 must not be computed from a per-child sum formula; "
             "the per-child anualidades block only exists in the AEAT form from 2022 onward."
         )
-        anualidades_casilla = casillas_by_id[_ANUALIDADES_ALIMENTOS_TOTAL_CASILLA]
+        anualidades_casilla = casillas_by_id[ANUALIDADES_ALIMENTOS_TOTAL_CASILLA]
         assert getattr(anualidades_casilla, "input_kind", None) != "computed", (
             f"{filing_year}: casilla 0527 must be a manual input, not computed."
         )
@@ -205,7 +205,7 @@ def test_modelo_100_cuota_chain_casillas_do_not_cite_fractional_payment_article(
 
     assert {casilla.id for casilla in checked} == {f"{number:04d}" for number in range(500, 547)}
     offenders = {
-        casilla.id: casilla.legal_refs for casilla in checked if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+        casilla.id: casilla.legal_refs for casilla in checked if FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
     }
     assert not offenders
 
@@ -231,7 +231,7 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
-        form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
+        form_order_refs = {MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
         separate_escala_ids = _autonomic_separate_escala_formula_ids(filing_year)
         regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
         art_75_ref = _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year]
@@ -239,37 +239,37 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
         regime_refs = {art_75_ref} if regime_modelled else set()
         expected_refs_by_formula = {
             "renta-tipo-medio-gravamen-autonomico-base-liquidable-general": {
-                _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+                AUTONOMIC_GENERAL_SCALE_ART_74_REF,
             },
             "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro": {
                 art_76_ref,
             },
             "renta-minimo-personal-base-liquidable-ahorro-autonomica": {
-                _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
+                PERSONAL_FAMILY_MINIMUM_ART_56_REF,
                 art_76_ref,
                 *form_order_refs,
             },
             "renta-cuota-escala-autonomica-sobre-base-liquidable-general": {
-                _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-                _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+                AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
+                AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
             "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar": {
-                _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-                _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+                AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
+                AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
             "renta-cuota-base-liquidable-general-autonomica": {
-                _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-                _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+                AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
+                AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
             "renta-cuota-integra-autonomica": {
-                _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-                _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+                AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
+                AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 art_76_ref,
                 *form_order_refs,
             },
@@ -281,8 +281,8 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
             legal_refs = tuple(formulas_by_id[formula_id].legal_refs)
             if set(legal_refs) != expected_refs:
                 offenders[formula_id] = legal_refs
-            assert _STATE_INTEGRAL_QUOTA_ART_62_REF not in legal_refs, formula_id
-            assert _STATE_DEDUCTION_ART_67_REF not in legal_refs, formula_id
+            assert STATE_INTEGRAL_QUOTA_ART_62_REF not in legal_refs, formula_id
+            assert STATE_DEDUCTION_ART_67_REF not in legal_refs, formula_id
             # art-75 is permitted only on the separate-escala formulas in modelled years.
             if not (regime_modelled and formula_id in separate_escala_ids):
                 assert art_75_ref not in legal_refs, formula_id
@@ -297,14 +297,14 @@ def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> Non
         profiles_by_surface = {
             profile.surface: profile
             for profile in revision.extraction_profiles
-            if profile.surface in _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE
+            if profile.surface in M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE
         }
 
-        assert set(profiles_by_surface) == set(_M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE)
+        assert set(profiles_by_surface) == set(M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE)
         for surface, profile in profiles_by_surface.items():
             expected_refs = frozenset(
-                _governing_redaction(reference_id, revision)
-                for reference_id in _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE[surface]
+                governing_redaction(reference_id, revision)
+                for reference_id in M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE[surface]
             )
             target_refs = frozenset(
                 legal_ref
@@ -314,4 +314,4 @@ def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> Non
 
             assert target_refs == expected_refs, (filing_year, surface)
             assert set(profile.legal_refs) == expected_refs, (filing_year, surface)
-            assert _BROAD_DEDUCTION_ART_68_REF not in profile.legal_refs
+            assert BROAD_DEDUCTION_ART_68_REF not in profile.legal_refs

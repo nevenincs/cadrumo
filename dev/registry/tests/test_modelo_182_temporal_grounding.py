@@ -13,8 +13,8 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 
 from ..compiler.authority import compiled_bundled_authority
-from ._gate_support import assert_deadline_window_for_filing_year, assert_edition_opens_at_filing_year
 from .authored_edition_support import source_first_exercise, source_with_sha256
+from .gate_support import assert_deadline_window_for_filing_year, assert_edition_opens_at_filing_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

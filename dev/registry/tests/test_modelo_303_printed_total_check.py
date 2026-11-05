@@ -49,8 +49,8 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 
 from ..compiler.loader import load_registry_tree
 from ..pipeline.export_tree_serialization import render_toml_bytes
-from ._gate_support import mutate_declaration, scratch_registry_tree
-from ._modelo_303_registry_support import load_modelo_303
+from .gate_support import mutate_declaration, scratch_registry_tree
+from .modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

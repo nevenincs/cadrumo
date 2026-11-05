@@ -204,7 +204,7 @@ def _require_current_baseline_render(
     baseline_layout: ExportLayoutDefinition,
     baseline_context: GeneratedExportInheritanceContext | None,
 ) -> None:
-    from ._export_tree import render_complete_export_tree
+    from .export_tree import render_complete_export_tree
     from .render_check import compare_export_tree_roots, revision_render_inputs
     from .source_defects import source_defects_for
 

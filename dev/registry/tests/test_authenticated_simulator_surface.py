@@ -15,8 +15,8 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
-from ..maintenance_support import _COMPATIBLE_SURFACE_PAIRS
-from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..maintenance_support import COMPATIBLE_SURFACE_PAIRS
+from .remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -141,7 +141,7 @@ def test_authenticated_simulator_inherits_canonical_aeat_write_forbidden_actions
 def test_authenticated_simulator_iva_id_check_pair_is_in_compatibility_table() -> None:
     """The new cross-reference category pairs with the iva_id_check oracle surface_kind."""
 
-    assert ("authenticated_simulator", "iva_id_check") in _COMPATIBLE_SURFACE_PAIRS
+    assert ("authenticated_simulator", "iva_id_check") in COMPATIBLE_SURFACE_PAIRS
 
 
 def test_existing_surface_categories_still_validate() -> None:

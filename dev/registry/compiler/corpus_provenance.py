@@ -67,15 +67,15 @@ def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> 
     path = resolve_normative_corpus_path(source_root, corpus_ref)
     if path is None:
         return NormativeCorpusProvenance.OUT_OF_SCOPE
-    provenance = _PROVENANCE_BY_CONTENT.get(corpus_content_digest(path))
+    provenance = PROVENANCE_BY_CONTENT.get(corpus_content_digest(path))
     if provenance is None:
         payload = path.read_bytes()
         provenance = classify_normative_corpus_bytes(payload)
-        _PROVENANCE_BY_CONTENT[blake2b_hex(payload)] = provenance
+        PROVENANCE_BY_CONTENT[blake2b_hex(payload)] = provenance
     return provenance
 
 
-_PROVENANCE_BY_CONTENT: dict[str, NormativeCorpusProvenance] = {}
+PROVENANCE_BY_CONTENT: dict[str, NormativeCorpusProvenance] = {}
 """Each classified corpus payload's provenance, keyed on the payload's content digest.
 
 Provenance is decided by the file's bytes but asked per legal REFERENCE, and

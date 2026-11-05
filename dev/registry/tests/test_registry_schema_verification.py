@@ -29,13 +29,9 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 )
 
 from ..conformance.registry_schema_support import (
-    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
-)
-from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    with_revision as _with_revision,
+    NUMERIC_CASILLA_01,
+    committed_modelo,
+    with_revision,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -46,7 +42,7 @@ def test_verification_expectation_rejects_negative_tolerance() -> None:
     with pytest.raises(ValidationError, match="tolerance"):
         VerificationExpectationDefinition(
             id="test.negative-tolerance",
-            computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+            computed_casilla_ids=(NUMERIC_CASILLA_01,),
             tolerance=Decimal("-0.01"),
             rounding="money-2",
             min_coverage=Decimal("1"),
@@ -59,7 +55,7 @@ def test_verification_expectation_rejects_negative_tolerance() -> None:
 def test_verification_expectation_accepts_zero_tolerance() -> None:
     expectation = VerificationExpectationDefinition(
         id="test.zero-tolerance",
-        computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+        computed_casilla_ids=(NUMERIC_CASILLA_01,),
         tolerance=Decimal("0"),
         rounding="money-2",
         min_coverage=Decimal("1"),
@@ -88,7 +84,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     Typos are caught before any calculation runs.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     typo_predicate = VerificationPredicateDefinition(
         id="cap-lt-when-positive:typo-predicate",
@@ -102,7 +98,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     )
 
     with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 @pytest.mark.parametrize(
@@ -115,7 +111,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
 )
 def test_validator_rejects_positive_application_stock_predicate_wrong_arity(expression: str) -> None:
     """The canonical registry gate rejects malformed exact-pair declarations."""
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="positive-application-le-present-stock:wrong-arity",
@@ -129,12 +125,12 @@ def test_validator_rejects_positive_application_stock_predicate_wrong_arity(expr
     )
 
     with pytest.raises(RegistryValidationError, match="must name exactly 2 casilla ids"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_positive_application_stock_predicate_unknown_casilla() -> None:
     """The generic CASILLA_LIST authoring route checks both pair references."""
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="positive-application-le-present-stock:unknown-casilla",
@@ -151,7 +147,7 @@ def test_validator_rejects_positive_application_stock_predicate_unknown_casilla(
         RegistryValidationError,
         match="positive_application_le_present_stock references unknown casilla 'missing-casilla'",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 @pytest.mark.parametrize(
@@ -173,7 +169,7 @@ def test_validator_rejects_text_operands_for_positive_application_stock_predicat
     role: str,
 ) -> None:
     """Both pair members must be Decimal casillas, not absent text projections."""
-    modelo, catalogues = _committed_modelo("210")
+    modelo, catalogues = committed_modelo("210")
     revision = modelo.revisions["2025"]
     predicate = VerificationPredicateDefinition(
         id=f"positive-application-le-present-stock:text-{role}",
@@ -190,12 +186,12 @@ def test_validator_rejects_text_operands_for_positive_application_stock_predicat
         RegistryValidationError,
         match=rf"{role} casilla 'tipo_renta' must be a Decimal numeric casilla",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_accepts_decimal_operands_for_positive_application_stock_predicate() -> None:
     """The proposed ordinary M200 amount pair passes the same authoring gate."""
-    modelo, catalogues = _committed_modelo("200")
+    modelo, catalogues = committed_modelo("200")
     revision = modelo.revisions["2024"]
     expression = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
     existing_index = next(
@@ -214,13 +210,13 @@ def test_validator_accepts_decimal_operands_for_positive_application_stock_predi
     predicates[existing_index] = predicate
     mutated = revision.model_copy(update={"verification_predicates": tuple(predicates)})
 
-    committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+    committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 @pytest.mark.parametrize("revision_id", ("2024", "2025-y-siguientes"))
 def test_committed_m200_materializes_stock_guard_and_preserves_statutory_cap(revision_id: str) -> None:
     """Both source revisions retain the stock guard and the statutory cap."""
-    modelo, _catalogues = _committed_modelo("200")
+    modelo, _catalogues = committed_modelo("200")
     revision = modelo.revisions[revision_id]
 
     stock_guard = next(
@@ -255,7 +251,7 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     arity, not an unknown-casilla reference.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     bad_arity = VerificationPredicateDefinition(
         id="roll-forward-balances:bad-roll-forward",
@@ -269,7 +265,7 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="must name exactly four casilla ids"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_equals_sum_with_a_single_addend() -> None:
@@ -280,7 +276,7 @@ def test_validator_rejects_equals_sum_with_a_single_addend() -> None:
     addend is the binary ``equals`` operator's job.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     single_addend = VerificationPredicateDefinition(
         id="equals-sum:single-addend",
@@ -294,13 +290,13 @@ def test_validator_rejects_equals_sum_with_a_single_addend() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="equals_sum expression must name at least 3 casilla ids"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None:
     """Every casilla-list predicate operator must resolve ids against the revision."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     cases = (
         ("all_nonzero", 'all_nonzero(["01", "missing-casilla"])'),
@@ -330,13 +326,13 @@ def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None
             RegistryValidationError,
             match=rf"{operator_name} references unknown casilla 'missing-casilla'",
         ):
-            validator.validate_modelo(_with_revision(modelo, mutated))
+            validator.validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_known_verification_predicate_with_malformed_casilla_list() -> None:
     """Known operators must use the parseable casilla-list form, not silent-pass syntax."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="any-nonzero:malformed-any-nonzero",
@@ -350,13 +346,13 @@ def test_validator_rejects_known_verification_predicate_with_malformed_casilla_l
     )
 
     with pytest.raises(RegistryValidationError, match=r"any_nonzero expression .* is malformed"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
     """Predicate whose expression is not a parseable DSL call fails."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     malformed_predicate = VerificationPredicateDefinition(
         id="malformed-expression:malformed-predicate",
@@ -370,7 +366,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     )
 
     with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_accepts_known_verification_predicate_operators() -> None:
@@ -383,7 +379,7 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
     from the known set would surface here, not at runtime.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     # No mutation — committed M130 carries the predicate.
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
@@ -392,7 +388,7 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
 def test_validator_rejects_casilla_equals_implies_numeric_malformed_m130_predicates(operator: str) -> None:
     """M130 categorical-conditional predicate authoring errors are rejected."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     validator = committed_registry_validator(catalogues)
     cases = (
@@ -437,7 +433,7 @@ def test_validator_rejects_casilla_equals_implies_numeric_malformed_m130_predica
 
         try:
             with pytest.raises(RegistryValidationError, match=match):
-                validator.validate_modelo(_with_revision(modelo, mutated))
+                validator.validate_modelo(with_revision(modelo, mutated))
         except AssertionError as exc:
             raise AssertionError(case_id) from exc
 
@@ -446,7 +442,7 @@ def test_validator_rejects_casilla_equals_implies_numeric_malformed_m130_predica
 def test_validator_rejects_casilla_equals_implies_numeric_text_consequent(operator: str) -> None:
     """The consequent must resolve through the Decimal casilla-values projection."""
 
-    modelo, catalogues = _committed_modelo("210")
+    modelo, catalogues = committed_modelo("210")
     revision = modelo.revisions["2025"]
     predicate = VerificationPredicateDefinition(
         id="casilla-equals-implies-nonzero:casilla-equals-implies-nonzero-text-consequent",
@@ -463,7 +459,7 @@ def test_validator_rejects_casilla_equals_implies_numeric_text_consequent(operat
         RegistryValidationError,
         match=r"consequent casilla 'tipo_renta' must be a numeric casilla, not a text-family one",
     ):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predicate() -> None:
@@ -478,7 +474,7 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
     casilla_equals_implies_nonzero from the known set would surface here.
     """
 
-    modelo, catalogues = _committed_modelo("210")
+    modelo, catalogues = committed_modelo("210")
     revision = modelo.revisions["2025"]
     predicate = next(
         p
@@ -495,7 +491,7 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
 def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_predicates() -> None:
     """M130 vivienda eligibility predicate authoring errors are rejected."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     validator = committed_registry_validator(catalogues)
     cases = (
@@ -534,7 +530,7 @@ def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_
 
         try:
             with pytest.raises(RegistryValidationError, match=match):
-                validator.validate_modelo(_with_revision(modelo, mutated))
+                validator.validate_modelo(with_revision(modelo, mutated))
         except AssertionError as exc:
             raise AssertionError(case_id) from exc
 
@@ -549,7 +545,7 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
     from the known set would surface here.
     """
 
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     predicate = next(
         p
         for p in modelo.revisions["2024"].verification_predicates
@@ -565,7 +561,7 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
 def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() -> None:
     """M130 single-casilla positive advisory authoring errors are rejected."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     validator = committed_registry_validator(catalogues)
     cases = (
@@ -590,7 +586,7 @@ def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() ->
 
         try:
             with pytest.raises(RegistryValidationError, match=match):
-                validator.validate_modelo(_with_revision(modelo, mutated))
+                validator.validate_modelo(with_revision(modelo, mutated))
         except AssertionError as exc:
             raise AssertionError(case_id) from exc
 
@@ -606,7 +602,7 @@ def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compu
     and that the registry still validates cleanly without it.
     """
 
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = committed_modelo("100")
     for year in ("2024", "2025"):
         predicate_ids = {p.predicate_id for p in modelo.revisions[year].verification_predicates}
         assert f"modelo-100-{year}-anualidades-alimentos-hijos-revisar-cuota-escala-separada" not in predicate_ids, (
@@ -639,7 +635,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unreadable_threshold(threshold
     reads as a checked box. Refusing at build means a registry cannot ship one.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="advisory-when-ratio-ge:ratio-bad-threshold",
@@ -653,7 +649,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unreadable_threshold(threshold
     )
 
     with pytest.raises(RegistryValidationError, match="is not a plain decimal number") as caught:
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
     assert threshold in str(caught.value), f"the refusal must echo the rejected threshold ({why})"
 
@@ -676,7 +672,7 @@ def test_validator_accepts_advisory_when_ratio_ge_plain_threshold(threshold: str
     unconstrained.
     """
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="advisory-when-ratio-ge:ratio-ok-threshold",
@@ -689,13 +685,13 @@ def test_validator_accepts_advisory_when_ratio_ge_plain_threshold(threshold: str
         update={"verification_predicates": (*revision.verification_predicates, predicate)},
     )
 
-    committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+    committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
     """Both ratio operands must resolve against the revision, like every other operator."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="advisory-when-ratio-ge:ratio-unknown-casilla",
@@ -709,13 +705,13 @@ def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="unknown denominator casilla 'missing-casilla'"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))
 
 
 def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
     """Three tokens exactly: numerator, denominator, threshold."""
 
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
         id="advisory-when-ratio-ge:ratio-bad-arity",
@@ -729,4 +725,4 @@ def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match=r"advisory_when_ratio_ge expression.*is malformed"):
-        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(with_revision(modelo, mutated))

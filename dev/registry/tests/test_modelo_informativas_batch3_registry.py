@@ -31,7 +31,7 @@ import pytest
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -56,7 +56,7 @@ def test_committed_definition_legal_authority_and_deadline_shape(
     mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
 ) -> None:
     """Each Batch-3 informativa validates and carries only grounded deadline windows."""
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     committed_registry_validator(catalogues).validate_modelo(modelo)

@@ -28,7 +28,7 @@ from ..compiler.loader import (
     load_catalogue_file,
     load_modelo_directory,
 )
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import authored_revisions, source_first_exercise, sources_where
 from .profile_schema_support import committed_registry_validator
 
@@ -58,7 +58,7 @@ _ANNUAL_PERIOD = "0A"
 
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("210")
+    return committed_modelo("210")
 
 
 @cache

@@ -18,7 +18,7 @@ from ..compiler import record_design_workbook as record_design_workbook_module
 from ..compiler.record_design import (
     extract_record_design,
 )
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,7 +50,7 @@ _M220_COMPOSITE_CLOSING_ROWS: tuple[_WorkbookRow, ...] = (
 
 def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelope() -> None:
     """The pinned binary, rather than terminal inference, owns totals and composition."""
-    _modelo, catalogues = _committed_registry_tree()
+    _modelo, catalogues = committed_registry_tree()
     source = catalogues.sources["aeat-dr-200-2025"]
     workbook_path = bundled_path() / source.corpus_path
 
@@ -101,7 +101,7 @@ def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
     expected_field_count: int,
 ) -> None:
     """Every pinned M303 binary owns the same explicit DP30300 composition."""
-    _modelo, catalogues = _committed_registry_tree()
+    _modelo, catalogues = committed_registry_tree()
     source = catalogues.sources[source_ref]
 
     parsed = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
@@ -143,7 +143,7 @@ def test_modelo_220_workbooks_preserve_the_exact_composite_relative_closing(
     design_epoch: str,
 ) -> None:
     """Each SHA-bound M220 design retains all six official closing rows."""
-    _modelo, catalogues = _committed_registry_tree()
+    _modelo, catalogues = committed_registry_tree()
     resolved = resolve_record_design_binary(
         bundled_path(),
         catalogues.sources,
@@ -184,7 +184,7 @@ def test_modelo_220_workbooks_preserve_the_exact_composite_relative_closing(
 
 def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
     """The parser recognises official composition markers, never a known tab name."""
-    source = inspect.getsource(record_design_workbook_module._extract_sheet_rows)
+    source = inspect.getsource(record_design_workbook_module.extract_sheet_rows)
 
     assert "DP200000" not in source
     assert "DP30300" not in source

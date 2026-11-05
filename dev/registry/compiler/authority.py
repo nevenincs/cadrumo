@@ -185,7 +185,7 @@ def compile_structural_authority(
     )
 
 
-def _compile_validated_authority_uncached(
+def compile_validated_authority_uncached(
     registry_root: Path,
     source_root: Path,
     *,
@@ -308,7 +308,7 @@ def compile_validated_authority(
     )
     pair = receipt.pair
     if complete_validation:
-        authority = _compile_validated_authority_uncached(
+        authority = compile_validated_authority_uncached(
             pair.registry_root,
             pair.source_root,
             identity=receipt.identity,
@@ -327,7 +327,7 @@ def compile_validated_authority(
             registry_identity_digest=receipt.identity.digest,
             source_receipt=receipt.source_receipt,
             compiler_source_tree_digest=receipt.compiler_source_tree_digest,
-            build=lambda: _compile_validated_authority_uncached(
+            build=lambda: compile_validated_authority_uncached(
                 pair.registry_root,
                 pair.source_root,
                 identity=receipt.identity,

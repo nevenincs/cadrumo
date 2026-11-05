@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
 
@@ -32,7 +32,7 @@ _M151_FORM_ORDER_REF = "orden-hap-2783-2015:art-1"
 
 
 def _load_modelo_151() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("151")
+    return committed_modelo("151")
 
 
 def test_modelo_151_validator_accepts_committed_definition() -> None:

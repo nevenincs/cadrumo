@@ -13,8 +13,8 @@ from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindow
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..compiler.validate_revision_rules import validate_deadline_window_uniqueness
-from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 from .profile_schema_support import committed_registry_validator
+from .referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

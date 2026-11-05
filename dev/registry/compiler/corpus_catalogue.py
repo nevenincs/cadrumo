@@ -74,7 +74,7 @@ def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
         raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
     if actual_sha256 != source.sha256:
         raise RegistryValidationError(f"source {source.id!r} sha256 mismatch")
-    _validate_source_corpus_tier_declaration(source, present_path)
+    validate_source_corpus_tier_declaration(source, present_path)
     return present_path
 
 
@@ -292,7 +292,7 @@ def _record_design_manifest_identities(bundle_root: Path, manifest_path: PurePos
         ) from error
 
 
-def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, path: Path) -> None:
+def validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, path: Path) -> None:
     if source.corpus_tier is None:
         return
     if not source.corpus_path.startswith(_NORMATIVES_TREE_PREFIX):

@@ -32,15 +32,15 @@ __all__ = [
     "ADVISORY_ONLY_OPERATORS",
     "BLOCKING_ONLY_OPERATORS",
     "CASILLA_LIST_OPERATORS",
-    "_advisory_when_ratio_ge_predicate_failures",
-    "_casilla_equals_implies_diverges_predicate_failures",
-    "_casilla_equals_implies_numeric_predicate_failures",
-    "_casilla_equals_implies_profile_flag_predicate_failures",
-    "_casilla_list_predicate_failures",
-    "_deduccion_requires_adquisicion_before_predicate_failures",
-    "_finding_kind_failures",
-    "_profile_field_required_predicate_failures",
-    "_profile_flag_enabled_predicate_failures",
+    "advisory_when_ratio_ge_predicate_failures",
+    "casilla_equals_implies_diverges_predicate_failures",
+    "casilla_equals_implies_numeric_predicate_failures",
+    "casilla_equals_implies_profile_flag_predicate_failures",
+    "casilla_list_predicate_failures",
+    "deduccion_requires_adquisicion_before_predicate_failures",
+    "finding_kind_failures",
+    "profile_field_required_predicate_failures",
+    "profile_flag_enabled_predicate_failures",
 ]
 
 
@@ -59,7 +59,7 @@ ADVISORY_ONLY_OPERATORS = ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPER
 BLOCKING_ONLY_OPERATORS = BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
 
 
-def _finding_kind_failures(
+def finding_kind_failures(
     prefix: str,
     owner: str,
     operator: VerificationPredicateOperator,
@@ -95,7 +95,7 @@ def _malformed_expression_failure(
     return f"{prefix}: {owner} {operator.value} expression {expression!r} is malformed"
 
 
-def _casilla_list_predicate_failures(
+def casilla_list_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -169,7 +169,7 @@ def _decimal_operand_failures(
     return failures
 
 
-def _casilla_equals_implies_numeric_predicate_failures(
+def casilla_equals_implies_numeric_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -200,7 +200,7 @@ def _casilla_equals_implies_numeric_predicate_failures(
     return failures
 
 
-def _casilla_equals_implies_profile_flag_predicate_failures(
+def casilla_equals_implies_profile_flag_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -231,7 +231,7 @@ def _casilla_equals_implies_profile_flag_predicate_failures(
     return failures
 
 
-def _casilla_equals_implies_diverges_predicate_failures(
+def casilla_equals_implies_diverges_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -264,7 +264,7 @@ def _casilla_equals_implies_diverges_predicate_failures(
     return failures
 
 
-def _deduccion_requires_adquisicion_before_predicate_failures(
+def deduccion_requires_adquisicion_before_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -306,7 +306,7 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
     return failures
 
 
-def _advisory_when_ratio_ge_predicate_failures(
+def advisory_when_ratio_ge_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
@@ -336,7 +336,7 @@ def _advisory_when_ratio_ge_predicate_failures(
     return failures
 
 
-def _profile_field_required_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+def profile_field_required_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
     operator = VerificationPredicateOperator.PROFILE_FIELD_REQUIRED
     if _parsed_expression(expression, operator) is not None:
         return []
@@ -346,7 +346,7 @@ def _profile_field_required_predicate_failures(prefix: str, owner: str, expressi
     ]
 
 
-def _profile_flag_enabled_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+def profile_flag_enabled_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
     operator = VerificationPredicateOperator.PROFILE_FLAG_ENABLED
     parsed = _parsed_expression(expression, operator)
     if parsed is None:

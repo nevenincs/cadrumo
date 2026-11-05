@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests import unrouted_renta_quantity_screen_scenarios as scenarios
 
-from ._ledger_income_chain_oracle_support import modelo_130_revision
+from .ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

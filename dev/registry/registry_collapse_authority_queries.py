@@ -26,25 +26,25 @@ from cadrumo.domain.calculations.registry.temporal import (
     revision_temporal_resolution,
 )
 
-from .registry_collapse_comparison import _typed_projection
-from .registry_collapse_models import _FACT_QUERY_TYPES, RequestCoordinate
+from .registry_collapse_comparison import typed_projection
+from .registry_collapse_models import FACT_QUERY_TYPES, RequestCoordinate
 
 
 def _fact_projection(value: object) -> object:
     """Compare fact meaning while checking each generation digest separately."""
-    projected = _typed_projection(value)
+    projected = typed_projection(value)
     if isinstance(projected, Mapping):
         return {key: child for key, child in projected.items() if key != "authority_digest"}
     return projected
 
 
-def _fact_queries(authority: ValidatedRegistryAuthority) -> tuple[GovernedFactQuery, ...]:
+def fact_queries(authority: ValidatedRegistryAuthority) -> tuple[GovernedFactQuery, ...]:
     catalogue = authority.catalogues.facts
     envelope = authority.catalogues.require_supported_filing_years().date_envelope()
     queries: dict[str, GovernedFactQuery] = {}
     for fact in catalogue.facts.values():
         windows = fact.materialized_windows(envelope)
-        query_type = _FACT_QUERY_TYPES[fact.family]
+        query_type = FACT_QUERY_TYPES[fact.family]
         for variant in fact.variants:
             query = _fact_query_for_variant(fact, variant, windows[variant.variant_id], envelope, query_type)
             if query is None:
@@ -83,7 +83,7 @@ def _fact_query_for_variant(
     )
 
 
-def _fact_result(resolve: Callable[[GovernedFactQuery], object], query: GovernedFactQuery) -> Mapping[str, object]:
+def fact_result(resolve: Callable[[GovernedFactQuery], object], query: GovernedFactQuery) -> Mapping[str, object]:
     try:
         value = resolve(query)
         digest = getattr(value, "authority_digest", None)
@@ -96,7 +96,7 @@ def _fact_result(resolve: Callable[[GovernedFactQuery], object], query: Governed
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
 
 
-def _snapshot_result(
+def snapshot_result(
     snapshot: Callable[..., object],
     modelo_id: str,
     coordinate: RequestCoordinate,
@@ -116,7 +116,7 @@ def _snapshot_result(
                 value,
                 indexed_form_layout(modelo_id, str(value.revision.id)),
             )
-        return {"outcome": "admitted", "value": _typed_projection(_scoped_to_selected_edition(value))}
+        return {"outcome": "admitted", "value": typed_projection(_scoped_to_selected_edition(value))}
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
 
@@ -160,7 +160,7 @@ def _snapshot_with_form_layout(
     )
 
 
-def _indexed_complete_revision(
+def indexed_complete_revision(
     operation: PinnedAuthorityOperation,
     modelo_id: str,
     revision_id: str,
@@ -171,7 +171,7 @@ def _indexed_complete_revision(
     return revision.model_copy(update={"form_layouts": () if form_layout is None else (form_layout,)})
 
 
-def _indexed_selection_result(
+def indexed_selection_result(
     operation: PinnedAuthorityOperation,
     modelo_id: str,
     coordinate: RequestCoordinate,
@@ -198,13 +198,13 @@ def _indexed_selection_result(
             "authored_filing_year": resolution.authored_filing_year,
             "projection_direction": str(resolution.projection_direction),
             # The runtime addresses export and form layouts separately from the base revision.
-            "value": _typed_projection(_indexed_complete_revision(operation, modelo_id, str(selected.id))),
+            "value": typed_projection(indexed_complete_revision(operation, modelo_id, str(selected.id))),
         }
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
 
 
-def _revision_inventory(modelo: ModeloDefinition) -> tuple[Mapping[str, object], ...]:
+def revision_inventory(modelo: ModeloDefinition) -> tuple[Mapping[str, object], ...]:
     return tuple(
         {
             "revision": str(revision.id),

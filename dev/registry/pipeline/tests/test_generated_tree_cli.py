@@ -22,10 +22,8 @@ from ...compiler.authority import compile_validated_authority, compiled_bundled_
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .. import cli as cli_module
-from .._export_tree import render_complete_export_tree
-from .._tree_validation import GeneratedExportTreeValidationContext
 from ..bootstrap_construct_retarget import retarget_bootstrap_construct_export_layout
-from ..bootstrap_targets import _bootstrap_target_from_row
+from ..bootstrap_targets import bootstrap_target_from_row
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
@@ -38,6 +36,7 @@ from ..cli import (
 )
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..export_tree import render_complete_export_tree
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from ..render_check import (
     GeneratedExportBootstrapTransport,
@@ -47,12 +46,13 @@ from ..render_check import (
 )
 from ..tree_publication_contracts import GeneratedExportTreePublicationContext, GeneratedExportTreeTargetStateReceipt
 from ..tree_publication_paths import require_expected_target_state
-from ._generated_tree_test_support import (
+from ..tree_validation import GeneratedExportTreeValidationContext
+from .generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_authorities,
     write_isolated_generated_authority_tree,
 )
-from ._unpublished_modelo_registry import (
+from .unpublished_modelo_registry import (
     DECLARED_RECORD_DESIGN_SOURCE,
     UNPUBLISHED_MODELO,
     UNPUBLISHED_REVISION,
@@ -84,7 +84,7 @@ def test_field_republication_routes_to_the_explicit_mode(monkeypatch: pytest.Mon
     def capture(invocation, **kwargs):
         calls.append((invocation, kwargs))
 
-    monkeypatch.setattr(cli_module, "_run", capture)
+    monkeypatch.setattr(cli_module, "run", capture)
     result = CliRunner().invoke(
         app,
         [
@@ -337,7 +337,7 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
 
 def test_bootstrap_supersession_accepts_an_explicit_zero_construct_reference_pin() -> None:
     """A reviewed manual layout may be replaced when no construct points to it."""
-    target = _bootstrap_target_from_row(
+    target = bootstrap_target_from_row(
         {
             "modelo": "360",
             "revision": "2023-y-siguientes",
@@ -668,7 +668,7 @@ def test_final_live_validator_compiles_the_live_root_without_restaging_the_targe
         ),
     )
 
-    cli_module._validate_final_live_target(prepared)
+    cli_module.validate_final_live_target(prepared)
 
     assert compiles == [(target_root, {"verify_evidence_bytes": True})]
 

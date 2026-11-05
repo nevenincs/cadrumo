@@ -9,28 +9,30 @@ from dataclasses import dataclass, field
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_planning_counts as _edition_delta_planning_counts
-from . import edition_delta_planning_predecessor as _edition_delta_planning_predecessor
-from . import edition_delta_planning_state as _edition_delta_planning_state
-from . import edition_delta_row_delta as _edition_delta_row_delta
-from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
-from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
-from . import edition_delta_source as _edition_delta_source
-from . import edition_delta_types as _edition_delta_types
+from . import (
+    edition_delta_errors,
+    edition_delta_planning_counts,
+    edition_delta_planning_predecessor,
+    edition_delta_planning_state,
+    edition_delta_row_delta,
+    edition_delta_row_delta_common,
+    edition_delta_row_delta_reconstruction,
+    edition_delta_source,
+    edition_delta_types,
+)
 
 
 @dataclass
 class _FullCopyResult:
     predecessor: str | None
-    basis: _edition_delta_types.PredecessorBasis
-    causes: list[_edition_delta_types.BlockedCause]
+    basis: edition_delta_types.PredecessorBasis
+    causes: list[edition_delta_types.BlockedCause]
     drops: set[str] = field(default_factory=set)
-    kept: Counter[_edition_delta_types.KeptReason] = field(default_factory=Counter)
+    kept: Counter[edition_delta_types.KeptReason] = field(default_factory=Counter)
     not_exact: list[str] = field(default_factory=list)
-    overrides: tuple[_edition_delta_source._Row, ...] = ()
-    removals: tuple[_edition_delta_source._Row, ...] = ()
-    positions: tuple[_edition_delta_source._Row, ...] = ()
+    overrides: tuple[edition_delta_source.Row, ...] = ()
+    removals: tuple[edition_delta_source.Row, ...] = ()
+    positions: tuple[edition_delta_source.Row, ...] = ()
     attestations: tuple[LineageAttestation, ...] = ()
     reconstructed_order: tuple[str, ...] = ()
     normalised: bool = False
@@ -38,21 +40,21 @@ class _FullCopyResult:
 
 
 def _select_full_copy_delta(
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     revision_id: str,
     predecessor: str | None,
-    basis: _edition_delta_types.PredecessorBasis,
-    causes: list[_edition_delta_types.BlockedCause],
-    full_rows: list[_edition_delta_source._Row],
-    lifts: Mapping[str, _edition_delta_source._Lift],
-    source: _edition_delta_source._EditionSource,
-    defaults: _edition_delta_source._Defaults,
+    basis: edition_delta_types.PredecessorBasis,
+    causes: list[edition_delta_types.BlockedCause],
+    full_rows: list[edition_delta_source.Row],
+    lifts: Mapping[str, edition_delta_source.Lift],
+    source: edition_delta_source.EditionSource,
+    defaults: edition_delta_source.Defaults,
 ) -> _FullCopyResult:
     result = _FullCopyResult(
         predecessor=predecessor,
         basis=basis,
         causes=causes,
-        reconstructed_order=tuple(_edition_delta_source._row_id(row) for row in full_rows),
+        reconstructed_order=tuple(edition_delta_source.row_id(row) for row in full_rows),
     )
     if predecessor is None or causes:
         return result
@@ -68,7 +70,7 @@ def _select_full_copy_delta(
             result.attestations,
             result.reconstructed_order,
             result.normalised,
-        ) = _edition_delta_row_delta._choose_drops(
+        ) = edition_delta_row_delta.choose_drops(
             definition=run.definition,
             revision_id=revision_id,
             predecessor=predecessor,
@@ -79,16 +81,16 @@ def _select_full_copy_delta(
             defaults=defaults,
             # Keep canonical baseline merge placement; preserve local order by positions.
             normalise_order=predecessor in run.order_normalised,
-            storage_only=basis is _edition_delta_types.PredecessorBasis.STORAGE,
+            storage_only=basis is edition_delta_types.PredecessorBasis.STORAGE,
         )
-    except _edition_delta_errors.MigrationRefusedError as exc:
-        result.causes = [_edition_delta_types.BlockedCause.TRANSFORMATION_FAILED]
+    except edition_delta_errors.MigrationRefusedError as exc:
+        result.causes = [edition_delta_types.BlockedCause.TRANSFORMATION_FAILED]
         result.failure_details = (f"requires readable authored source {predecessor!r}; transformation failed: {exc}",)
     return result
 
 
-def _block_copy(result: _FullCopyResult, full_rows: list[_edition_delta_source._Row]) -> None:
-    result.basis = _edition_delta_types.PredecessorBasis.BLOCKED
+def _block_copy(result: _FullCopyResult, full_rows: list[edition_delta_source.Row]) -> None:
+    result.basis = edition_delta_types.PredecessorBasis.BLOCKED
     result.drops = set()
     result.kept = Counter()
     result.not_exact = []
@@ -96,47 +98,47 @@ def _block_copy(result: _FullCopyResult, full_rows: list[_edition_delta_source._
     result.removals = ()
     result.positions = ()
     result.attestations = ()
-    result.reconstructed_order = tuple(_edition_delta_source._row_id(row) for row in full_rows)
+    result.reconstructed_order = tuple(edition_delta_source.row_id(row) for row in full_rows)
     result.normalised = False
 
 
 def _seed_materialised(
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     revision_id: str,
-    source: _edition_delta_source._EditionSource,
-    lift: _edition_delta_source._EditionLift,
+    source: edition_delta_source.EditionSource,
+    lift: edition_delta_source.EditionLift,
     result: _FullCopyResult,
 ) -> None:
     """Seed descendants from the storage rows this plan will actually write and merge."""
     plan = result
-    if plan.basis is _edition_delta_types.PredecessorBasis.BLOCKED:
+    if plan.basis is edition_delta_types.PredecessorBasis.BLOCKED:
         placed = [
-            _edition_delta_source._Placed(row, origin or revision_id)
+            edition_delta_source.Placed(row, origin or revision_id)
             for row, origin in zip(source.rows, source.origins, strict=True)
         ]
     elif plan.predecessor is None:
         placed = [
-            _edition_delta_source._Placed(lift.lifts[_edition_delta_source._row_id(row)].row, revision_id)
+            edition_delta_source.Placed(lift.lifts[edition_delta_source.row_id(row)].row, revision_id)
             for row in lift.rows
         ]
     else:
-        stated = frozenset(_edition_delta_source._row_id(row) for row in lift.rows) - plan.drops
-        layout = _edition_delta_source._stated_layout(source, stated)
+        stated = frozenset(edition_delta_source.row_id(row) for row in lift.rows) - plan.drops
+        layout = edition_delta_source.stated_layout(source, stated)
         stated_rows = _lifted_stated_rows(layout, lift)
         inherited = run.materialised[plan.predecessor]
         overrides = (
-            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides"),
+            *edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides"),
             *plan.overrides,
         )
         removals = (
-            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+            *edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
             *plan.removals,
         )
         positions = (
-            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+            *edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
             *plan.positions,
         )
-        placed = _edition_delta_row_delta_reconstruction._simulate_storage_output(
+        placed = edition_delta_row_delta_reconstruction.simulate_storage_output(
             revision_id=revision_id,
             predecessor=plan.predecessor,
             inherited=inherited,
@@ -146,18 +148,18 @@ def _seed_materialised(
             removals=removals,
             positions=positions,
         )
-        by_id = {_edition_delta_source._row_id(item.row): item for item in placed}
+        by_id = {edition_delta_source.row_id(item.row): item for item in placed}
         placed = [by_id[row_id] for row_id in plan.reconstructed_order]
     run.materialised[revision_id] = placed
 
 
 def _lifted_stated_rows(
-    layout: list[tuple[str, list[_edition_delta_source._Block]]], lift: _edition_delta_source._EditionLift
-) -> list[_edition_delta_source._Row]:
-    return [lift.lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks]
+    layout: list[tuple[str, list[edition_delta_source.Block]]], lift: edition_delta_source.EditionLift
+) -> list[edition_delta_source.Row]:
+    return [lift.lifts[edition_delta_source.row_id(block.row)].row for _, blocks in layout for block in blocks]
 
 
-def _overridden_ids(overrides: tuple[_edition_delta_source._Row, ...]) -> set[str]:
+def _overridden_ids(overrides: tuple[edition_delta_source.Row, ...]) -> set[str]:
     return {
         str(fields.get("id", selector.get("id")))
         for override in overrides
@@ -174,19 +176,19 @@ def _blocked_details(result: _FullCopyResult) -> tuple[str, ...]:
 
 def _build_full_copy_plan(
     revision_id: str,
-    source: _edition_delta_source._EditionSource,
-    lift: _edition_delta_source._EditionLift,
-    full_rows: list[_edition_delta_source._Row],
+    source: edition_delta_source.EditionSource,
+    lift: edition_delta_source.EditionLift,
+    full_rows: list[edition_delta_source.Row],
     result: _FullCopyResult,
-) -> _edition_delta_types.EditionPlan:
-    stated_ids = frozenset(_edition_delta_source._row_id(row) for row in full_rows) - result.drops
+) -> edition_delta_types.EditionPlan:
+    stated_ids = frozenset(edition_delta_source.row_id(row) for row in full_rows) - result.drops
     is_delta = result.basis in {
-        _edition_delta_types.PredecessorBasis.ADJACENT,
-        _edition_delta_types.PredecessorBasis.DECLARED,
-        _edition_delta_types.PredecessorBasis.STORAGE,
+        edition_delta_types.PredecessorBasis.ADJACENT,
+        edition_delta_types.PredecessorBasis.DECLARED,
+        edition_delta_types.PredecessorBasis.STORAGE,
     }
     overridden = _overridden_ids(result.overrides)
-    return _edition_delta_types.EditionPlan(
+    return edition_delta_types.EditionPlan(
         revision_id=revision_id,
         basis=result.basis,
         predecessor=result.predecessor if is_delta else None,
@@ -195,15 +197,14 @@ def _build_full_copy_plan(
         source_default_withheld=lift.withheld,
         rows_before=len(full_rows),
         stated_ids=tuple(
-            _edition_delta_source._row_id(row) for row in full_rows if _edition_delta_source._row_id(row) in stated_ids
+            edition_delta_source.row_id(row) for row in full_rows if edition_delta_source.row_id(row) in stated_ids
         ),
         inherited_ids=tuple(
-            _edition_delta_source._row_id(row)
+            edition_delta_source.row_id(row)
             for row in full_rows
-            if _edition_delta_source._row_id(row) not in stated_ids
-            and _edition_delta_source._row_id(row) not in overridden
+            if edition_delta_source.row_id(row) not in stated_ids and edition_delta_source.row_id(row) not in overridden
         ),
-        lifted=_edition_delta_planning_counts.lift_counts(source, lift.lifts, stated_ids),
+        lifted=edition_delta_planning_counts.lift_counts(source, lift.lifts, stated_ids),
         kept=dict(sorted(result.kept.items())),
         not_exact=tuple(result.not_exact),
         comments_dropped=_comments_dropped(source, stated_ids),
@@ -217,12 +218,12 @@ def _build_full_copy_plan(
     )
 
 
-def _comments_dropped(source: _edition_delta_source._EditionSource, stated_ids: frozenset[str]) -> int:
+def _comments_dropped(source: edition_delta_source.EditionSource, stated_ids: frozenset[str]) -> int:
     return sum(
         1
         for fragment in source.fragments
         for block in fragment.blocks
-        if _edition_delta_source._row_id(block.row) not in stated_ids and block.text.lstrip().startswith("#")
+        if edition_delta_source.row_id(block.row) not in stated_ids and block.text.lstrip().startswith("#")
     )
 
 
@@ -232,16 +233,16 @@ def _reviewed_against(manifest: Mapping[str, object]) -> str | None:
 
 
 def plan_full_copy_edition(
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     position: int,
     revision: ModeloRevision,
-) -> _edition_delta_source._EditionWork:
+) -> edition_delta_source.EditionWork:
     """Plan a full-copy edition: choose its predecessor and the row drops, overrides and positions that reproduce it."""
     revision_id = str(revision.id)
     source = run.sources[revision_id]
-    lift = _edition_delta_source._edition_lift(source)
+    lift = edition_delta_source.edition_lift(source)
     full_rows = list(lift.rows)
-    predecessor, basis, causes = _edition_delta_planning_predecessor.choose_predecessor(
+    predecessor, basis, causes = edition_delta_planning_predecessor.choose_predecessor(
         position, run.ordered, source, reconsider_technical_roots=True
     )
     result = _select_full_copy_delta(
@@ -253,4 +254,4 @@ def plan_full_copy_edition(
         run.order_normalised.add(revision_id)
     _seed_materialised(run, revision_id, source, lift, result)
     plan = _build_full_copy_plan(revision_id, source, lift, full_rows, result)
-    return _edition_delta_source._EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None)
+    return edition_delta_source.EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None)

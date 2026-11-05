@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_assessment import assess_migration_state
-from ..edition_delta_equivalence import _prove_chain
+from ..edition_delta_equivalence import prove_chain
 from ..edition_delta_override_pruning import prune_redundant_override_leaves
 from ..edition_family_delta_collapse import collapse_keyed_families
 from ..edition_round_trip import RoundTripReport
@@ -100,7 +100,7 @@ def _construct_findings(modelo_dir: Path) -> list[Mapping[str, object]]:
 
 
 def _prove(reference_dir: Path, staged_dir: Path) -> RoundTripReport:
-    return _prove_chain(
+    return prove_chain(
         reference_modelo_dir=reference_dir,
         staged_modelo_dir=staged_dir,
         revision_ids=(_BASELINE, _EDITION),

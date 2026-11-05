@@ -33,7 +33,7 @@ class NoteNegativeAmountDeclaration(BaseModel):
     sign_position: ExportSignPosition
 
 
-_NOTE_NEGATIVE_AMOUNTS: Final[dict[str, NoteNegativeAmountDeclaration]] = {
+NOTE_NEGATIVE_AMOUNTS: Final[dict[str, NoteNegativeAmountDeclaration]] = {
     "aeat-dr-369-2021": NoteNegativeAmountDeclaration(
         source_ref="aeat-dr-369-2021",
         source_sha256="b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
@@ -54,7 +54,7 @@ _NOTE_NEGATIVE_AMOUNTS: Final[dict[str, NoteNegativeAmountDeclaration]] = {
 
 def note_negative_amount_for(source: RecordDesignIntermediateSource) -> NoteNegativeAmountDeclaration | None:
     """Return the reading only when it matches the parser-read source identity."""
-    declaration = _NOTE_NEGATIVE_AMOUNTS.get(str(source.source_ref))
+    declaration = NOTE_NEGATIVE_AMOUNTS.get(str(source.source_ref))
     if declaration is not None and declaration.source_sha256 != source.source_sha256:
         raise RegistryValidationError("negative-amount note is not pinned to the parser-read source SHA-256")
     return declaration

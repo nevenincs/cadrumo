@@ -35,14 +35,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_chain_materialisation import chain_materialisation as _chain_materialisation
-from ..edition_delta_equivalence import _member_difference, _prove_chain
-from ..edition_delta_planning import _plan, plan_migration
-from ..edition_delta_source import _read_edition
+from ..edition_delta_chain_materialisation import chain_materialisation
+from ..edition_delta_equivalence import member_difference, prove_chain
+from ..edition_delta_planning import edition_delta_planning_plan, plan_migration
+from ..edition_delta_source import read_edition
 from ..edition_delta_types import PredecessorBasis
 from ..edition_delta_writer import (
-    _edition_changes,
-    _write_edition,
+    edition_changes,
+    write_edition,
 )
 from ..edition_round_trip import RoundTripReport
 from .synthetic_delta_edition_support import (
@@ -169,15 +169,15 @@ def _materialised_formula_ids(modelo_dir: Path, revision_id: str) -> tuple[str, 
 
 def _stage_lift(reference_dir: Path, staged_root: Path) -> Path:
     """Plan the delta-authored modelo and write the lift into a copy of its tree."""
-    _plan_result, works = _plan(reference_dir, _definition(reference_dir))
+    _plan_result, works = edition_delta_planning_plan(reference_dir, _definition(reference_dir))
     staged_dir = shutil.copytree(reference_dir, staged_root / MODELO_ID)
     for work in works:
-        _write_edition(staged_dir / "revisions" / work.plan.revision_id, work)
+        write_edition(staged_dir / "revisions" / work.plan.revision_id, work)
     return staged_dir
 
 
 def _prove(reference_dir: Path, staged_dir: Path) -> RoundTripReport:
-    return _prove_chain(
+    return prove_chain(
         reference_modelo_dir=reference_dir,
         staged_modelo_dir=staged_dir,
         revision_ids=(PREDECESSOR_EDITION, SUCCESSOR_EDITION),
@@ -194,7 +194,7 @@ def test_an_existing_delta_finishes_changed_members_as_storage_overrides(tmp_pat
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
     assert _materialised_ids(modelo_dir, SUCCESSOR_EDITION) == _MATERIALISED_ORDER
 
-    plan, works = _plan(modelo_dir, _definition(modelo_dir))
+    plan, works = edition_delta_planning_plan(modelo_dir, _definition(modelo_dir))
 
     assert plan.already_delta_authored
     assert [edition.basis for edition in plan.editions] == [PredecessorBasis.FIRST, PredecessorBasis.LIFT_ONLY]
@@ -252,12 +252,12 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     assert _prove(reference_dir, staged_dir) == _CLEAN_REPORT
     assert _materialised_ids(staged_dir, SUCCESSOR_EDITION) == _MATERIALISED_ORDER
 
-    plan, works = _plan(staged_dir, _definition(staged_dir))
+    plan, works = edition_delta_planning_plan(staged_dir, _definition(staged_dir))
 
     assert plan.already_delta_authored
     assert [edition.stated_ids for edition in plan.editions] == [("0001", "0002", "0003"), ("0005",)]
     assert [edition.lifted.total() for edition in plan.editions] == [0, 0]
-    assert [_edition_changes(work) for work in works] == [False, False]
+    assert [edition_changes(work) for work in works] == [False, False]
 
 
 def test_a_lift_that_dropped_a_casilla_member_is_refused(tmp_path: Path) -> None:
@@ -368,14 +368,14 @@ def test_a_value_the_chain_proof_cannot_render_is_refused_by_key_path_and_type(t
     compares, making the proof fail at random.
     """
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
-    source = _read_edition(modelo_dir, SUCCESSOR_EDITION)
+    source = read_edition(modelo_dir, SUCCESSOR_EDITION)
     # The unplanted edition renders, so the refusal below cannot pass vacuously.
-    assert _chain_materialisation(source)
+    assert chain_materialisation(source)
 
     planted = dataclasses.replace(source, table={**source.table, "audit_stamp": {"taken_at": datetime.time(9, 0)}})
 
     with pytest.raises(RegistryError) as refusal:
-        _chain_materialisation(planted)
+        chain_materialisation(planted)
 
     assert str(refusal.value) == (
         f"edition '{SUCCESSOR_EDITION}': the value at table.audit_stamp.taken_at is a time, "
@@ -387,17 +387,17 @@ def test_a_value_the_chain_proof_cannot_render_is_refused_by_key_path_and_type(t
 def test_a_date_and_the_text_that_reads_like_it_do_not_materialise_alike(tmp_path: Path) -> None:
     """Dates are what the corpus holds, so they render -- but never to the bare text a string would give."""
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
-    source = _read_edition(modelo_dir, SUCCESSOR_EDITION)
+    source = read_edition(modelo_dir, SUCCESSOR_EDITION)
 
     dated = dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)})
     as_text = dataclasses.replace(source, table={**source.table, "stamp": "2025-01-01"})
 
     # A date is permitted: the corpus declares `valid_from` and its kin as bare
     # TOML dates, so refusing them would refuse every edition.
-    assert _chain_materialisation(dated)
-    assert _chain_materialisation(dated) != _chain_materialisation(as_text)
+    assert chain_materialisation(dated)
+    assert chain_materialisation(dated) != chain_materialisation(as_text)
     # And two editions holding the same date still prove identical.
-    assert _chain_materialisation(dated) == _chain_materialisation(
+    assert chain_materialisation(dated) == chain_materialisation(
         dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)}),
     )
 
@@ -412,14 +412,14 @@ def test_a_family_only_the_staged_tree_holds_is_reported_as_a_member_change() ->
     """
     shared: dict[str, tuple[str, ...]] = {"casillas": ("0001|base",)}
 
-    assert _member_difference(shared, shared) is None
-    assert _member_difference(shared, {**shared, "bindings": ("modelo-999-2025-iva",)}) == (
+    assert member_difference(shared, shared) is None
+    assert member_difference(shared, {**shared, "bindings": ("modelo-999-2025-iva",)}) == (
         "lifting changed the bindings members, which a lift may never do: 0 before, 1 after, first difference at "
         "position 0: ['modelo-999-2025-iva'] on the staged side only"
     )
     # The reference-only direction, which the asymmetric read already caught,
     # keeps reporting on the side that still holds the member.
-    assert _member_difference({**shared, "bindings": ("modelo-999-2025-iva",)}, shared) == (
+    assert member_difference({**shared, "bindings": ("modelo-999-2025-iva",)}, shared) == (
         "lifting changed the bindings members, which a lift may never do: 1 before, 0 after, first difference at "
         "position 0: ['modelo-999-2025-iva'] on the reference side only"
     )
@@ -463,7 +463,7 @@ def test_forward_storage_dependencies_preserve_chronological_reports_and_existin
     definition = _definition(modelo_dir)
     before = _source_bytes(modelo_dir)
 
-    plan, works = _plan(modelo_dir, definition)
+    plan, works = edition_delta_planning_plan(modelo_dir, definition)
 
     assert [edition.revision_id for edition in plan.editions] == [PREDECESSOR_EDITION, "2025-early", SUCCESSOR_EDITION]
     assert [work.plan for work in works] == list(plan.editions)
@@ -486,7 +486,7 @@ def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(
     revision_ids = (PREDECESSOR_EDITION, "2025-early", SUCCESSOR_EDITION)
 
     assert (
-        _prove_chain(
+        prove_chain(
             reference_modelo_dir=reference_dir,
             staged_modelo_dir=staged_dir,
             revision_ids=revision_ids,
@@ -495,8 +495,8 @@ def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(
         == _CLEAN_REPORT
     )
     for revision_id in revision_ids:
-        assert _chain_materialisation(_read_edition(staged_dir, revision_id)) == _chain_materialisation(
-            _read_edition(reference_dir, revision_id)
+        assert chain_materialisation(read_edition(staged_dir, revision_id)) == chain_materialisation(
+            read_edition(reference_dir, revision_id)
         )
     assert _materialised_ids(staged_dir, "2025-early") == _MATERIALISED_ORDER
     assert _materialised_formula_ids(staged_dir, "2025-early") == _materialised_formula_ids(
@@ -504,10 +504,10 @@ def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(
     )
     before = _source_bytes(staged_dir)
 
-    plan, works = _plan(staged_dir, _definition(staged_dir))
+    plan, works = edition_delta_planning_plan(staged_dir, _definition(staged_dir))
 
     assert [edition.revision_id for edition in plan.editions] == list(revision_ids)
-    assert [_edition_changes(work) for work in works] == [False, False, False]
+    assert [edition_changes(work) for work in works] == [False, False, False]
     assert _source_bytes(staged_dir) == before
 
 
@@ -526,7 +526,7 @@ def test_a_missing_forward_storage_baseline_is_still_refused_without_writing(tmp
     before = _source_bytes(modelo_dir)
 
     with pytest.raises(RegistryError) as refusal:
-        _plan(modelo_dir, definition)
+        edition_delta_planning_plan(modelo_dir, definition)
 
     assert str(refusal.value).endswith("revision '2025-early' has invalid casilla storage baseline 'missing'")
     assert _source_bytes(modelo_dir) == before
@@ -543,7 +543,7 @@ def test_an_authored_predecessor_cycle_is_still_refused_before_planning(tmp_path
     before = _source_bytes(modelo_dir)
 
     with pytest.raises(RegistryError) as refusal:
-        _plan(modelo_dir, definition)
+        edition_delta_planning_plan(modelo_dir, definition)
 
     assert str(refusal.value).endswith(
         "modelo '999' predecessor declarations form a cycle '2024' -> '2025' -> '2024'; "
@@ -561,7 +561,7 @@ def test_a_cyclic_inferred_planning_baseline_is_refused_without_guessing(tmp_pat
     before = _source_bytes(modelo_dir)
 
     with pytest.raises(RegistryError) as refusal:
-        _plan(modelo_dir, definition)
+        edition_delta_planning_plan(modelo_dir, definition)
 
     assert str(refusal.value) == "cyclic edition planning dependency: '2025-early' -> '2025' -> '2025-early'"
     assert _source_bytes(modelo_dir) == before

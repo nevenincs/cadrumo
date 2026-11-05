@@ -27,7 +27,7 @@ import re
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
+from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +36,7 @@ _OFFSET_RANGE = re.compile(r"^\d+-\d+$")
 
 
 def _modelo_151():
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "151"), catalogues
 
 

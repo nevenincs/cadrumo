@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from ._modelo_100_registry_support import _loaded_registry, _source_root
+from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,7 +37,7 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
     field_id: str,
     expected_casilla_id: str,
 ) -> None:
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
     source = catalogues.sources[str(layout.dictionary_source_ref)]
 
@@ -45,7 +45,7 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
         layout,
         sources=catalogues.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
     )
     entry = next(item for item in entries if item.field_id == field_id)
@@ -58,14 +58,14 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
 @pytest.mark.parametrize("filing_year", (2024, 2025))
 def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_year: int) -> None:
     """Widening the grammar for annex boxes leaves the numeric rows spelled exactly as published."""
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
 
     entries = xml_dictionary_entries(
         layout,
         sources=catalogues.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
     )
     entry = next(item for item in entries if item.field_id == "TITA")
@@ -75,7 +75,7 @@ def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_y
 
 def test_m100_letter_casilla_grammar_is_declared_by_the_bound_source() -> None:
     """The earliest capable source's own temporal row begins the extension."""
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     sources = tuple(
         catalogues.sources[
             str(modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0].dictionary_source_ref)
@@ -93,10 +93,10 @@ def test_m100_letter_casilla_grammar_is_declared_by_the_bound_source() -> None:
 
 def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed() -> None:
     """The same published dictionary row becomes non-casilla without its capability."""
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     layout = modelos_by_id["100"].revisions["2024"].export_layouts[0]
     source = catalogues.sources[str(layout.dictionary_source_ref)]
-    dictionary_path = _source_root() / source.corpus_path
+    dictionary_path = source_root() / source.corpus_path
     removed_capability = SourceReference.model_validate(
         {**source.model_dump(), "dictionary_casilla_id_grammar": "numeric"},
     )
@@ -118,7 +118,7 @@ def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed()
 
 def test_extended_dictionary_grammar_refuses_a_non_dictionary_source() -> None:
     """Only a dictionary source may claim the annex grammar."""
-    _, catalogues = _loaded_registry()
+    _, catalogues = loaded_registry()
     source = catalogues.sources["aeat-dr-100-2024-dictionary"]
     malformed = source.model_dump()
     malformed["kind"] = "manual_pdf"

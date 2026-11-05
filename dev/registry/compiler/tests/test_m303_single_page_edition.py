@@ -8,7 +8,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.m303_orden_constants import M303_2022_ORDEN_SOURCE_REF
 
-from .._m303_orden_projection_compiler import require_single_page_edition
+from ..m303_orden_projection_compiler import require_single_page_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

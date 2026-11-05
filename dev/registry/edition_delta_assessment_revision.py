@@ -71,7 +71,7 @@ def _scalar_fields(
             continue
         if key in {"cleared_families", "family_overrides", "family_removals", "family_positions"}:
             continue
-        payload_count, overhead = payload._field_count({key: value}, structural=key in payload._STRUCTURAL_FIELDS)
+        payload_count, overhead = payload.field_count({key: value}, structural=key in payload.STRUCTURAL_FIELDS)
         scalar_row["authored_payload_fields"] += payload_count
         scalar_row["structural_overhead"] += overhead
     return scalar_row

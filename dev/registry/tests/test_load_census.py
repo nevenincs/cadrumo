@@ -412,13 +412,13 @@ def test_the_reference_map_is_built_once_per_set_of_roots(
     monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
     # The planted root is unique to this test, so counting misses against a
     # baseline proves the same thing without discarding the warm real-tree entry.
-    misses_before = load_census._reference_map_for.cache_info().misses
+    misses_before = load_census.reference_map_for.cache_info().misses
 
     first = load_census.build_reference_map()
     second = load_census.build_reference_map()
 
     assert first is second, "one set of roots must be scanned once"
-    assert load_census._reference_map_for.cache_info().misses - misses_before == 1
+    assert load_census.reference_map_for.cache_info().misses - misses_before == 1
 
 
 def test_redirected_roots_are_scanned_separately(
@@ -428,7 +428,7 @@ def test_redirected_roots_are_scanned_separately(
     """Two root sets cannot share one answer, however similar their trees."""
     from ..analysis import load_census
 
-    misses_before = load_census._reference_map_for.cache_info().misses
+    misses_before = load_census.reference_map_for.cache_info().misses
     maps = []
     for name, target in (("one", "module_a"), ("two", "module_b")):
         root = tmp_path / name / "cadrumo"
@@ -442,7 +442,7 @@ def test_redirected_roots_are_scanned_separately(
 
     assert "cadrumo.domain.calculations.registry.module_a" in maps[0].production
     assert "cadrumo.domain.calculations.registry.module_a" not in maps[1].production
-    assert load_census._reference_map_for.cache_info().misses - misses_before == 2
+    assert load_census.reference_map_for.cache_info().misses - misses_before == 2
 
 
 def test_the_reference_map_reads_the_registry_package_once_per_scan(
@@ -506,7 +506,7 @@ def test_a_shared_reference_map_follows_an_edit_to_a_scanned_file(
     consumer = root / "consumer.py"
     consumer.write_text("from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10), encoding="utf-8")
     monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
-    scan = load_census._reference_map_for.__wrapped__
+    scan = load_census.reference_map_for.__wrapped__
 
     before = scan((root,))
     consumer.write_text("from cadrumo.domain.calculations.registry.module_b import Thing" + chr(10), encoding="utf-8")
@@ -579,7 +579,7 @@ def test_the_snapshot_probe_takes_its_filing_year_from_the_support_envelope() ->
     """The generated probe names no filing-year literal; the registry's envelope supplies it."""
     from ..analysis import load_census
 
-    script = load_census._trace_script("inspection_snapshot")
+    script = load_census.trace_script("inspection_snapshot")
 
     assert "authority.supported_filing_years().horizon" in script
     assert not re.search(r"\b(?:19|20)\d{2}\b", script)

@@ -13,7 +13,7 @@ from .compiler.export_fragment_grammar import revision_section_for_directory
 from .edition_delta_assessment_state import FamilyRun
 
 
-def _family_bytes(family: FamilyRun) -> int:
+def family_bytes(family: FamilyRun) -> int:
     revision_dir = family.run.modelo_dir / "revisions" / family.revision_id
     return sum(
         path.stat().st_size
@@ -24,7 +24,7 @@ def _family_bytes(family: FamilyRun) -> int:
     )
 
 
-def _count_authored_payload(family: FamilyRun, authored: tuple[Mapping[str, object], ...]) -> None:
+def count_authored_payload(family: FamilyRun, authored: tuple[Mapping[str, object], ...]) -> None:
     for member in authored:
         _add_field_counts(family, member)
     _count_casilla_operations(family)
@@ -33,7 +33,7 @@ def _count_authored_payload(family: FamilyRun, authored: tuple[Mapping[str, obje
 
 
 def _add_field_counts(family: FamilyRun, value: object) -> None:
-    count, overhead = payload._field_count(value, structural=False)
+    count, overhead = payload.field_count(value, structural=False)
     family.row["authored_payload_fields"] += count
     family.row["structural_overhead"] += overhead
 
@@ -41,13 +41,13 @@ def _add_field_counts(family: FamilyRun, value: object) -> None:
 def _count_casilla_operations(family: FamilyRun) -> None:
     if family.spec.section != CASILLAS_FAMILY:
         return
-    overrides = source._members(family.raw, "casilla_overrides") or ()
+    overrides = source.members(family.raw, "casilla_overrides") or ()
     for override in overrides:
         fields_value = override.get("fields", {})
         _add_field_counts(family, fields_value)
         family.row["structural_overhead"] += 1
-    family.row["removals"] += len(source._members(family.raw, "casilla_removals") or ())
-    positions = source._members(family.raw, "casilla_positions") or ()
+    family.row["removals"] += len(source.members(family.raw, "casilla_removals") or ())
+    positions = source.members(family.raw, "casilla_positions") or ()
     family.row["structural_overhead"] += 2 * len(positions)
 
 
@@ -85,7 +85,7 @@ def _count_override_payload(family: FamilyRun, operation: Mapping[str, object]) 
 
 
 def _operation_overhead(operation: Mapping[str, object]) -> int:
-    return len(payload._leaf_values({key: value for key, value in operation.items() if key != "fields"}))
+    return len(payload.leaf_values({key: value for key, value in operation.items() if key != "fields"}))
 
 
 def _count_cleared_family(family: FamilyRun) -> None:

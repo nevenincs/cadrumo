@@ -141,7 +141,7 @@ def test_an_unreadable_module_is_announced_as_a_missing_prose_parser(
     from ..analysis import regulatory_prose_parser_channel as channel
 
     (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
-    monkeypatch.setattr(channel, "_iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
+    monkeypatch.setattr(channel, "iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
 
     channel.derive_prose_parsers()
 
@@ -159,7 +159,7 @@ def test_a_readable_tree_announces_nothing(
     from ..analysis import regulatory_prose_parser_channel as channel
 
     (tmp_path / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
-    monkeypatch.setattr(channel, "_iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
+    monkeypatch.setattr(channel, "iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
 
     channel.derive_prose_parsers()
 

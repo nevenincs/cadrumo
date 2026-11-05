@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from dev.registry.compiler.edition_materialisation import materialise_edition
 from dev.registry.compiler.loader import load_modelo_declarations, load_modelo_directory
 
-from .edition_family_delta import _digest, _effective
+from .edition_family_delta import digest, effective
 from .edition_family_delta_collapse_family import collapse_family
 from .edition_family_delta_collapse_revision import prepare_revision, write_revision
 from .edition_family_delta_collapse_state import CollapseInput
@@ -25,7 +25,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
         shutil.copytree(source, candidate)
     from dev.registry.edition_delta_assessment import assess_migration_state
 
-    source_digest = _digest(source)
+    source_digest = digest(source)
     if assess_migration_state(source).minimal:
         return _unchanged_result(source_digest, candidate)
     inputs = _load_collapse_inputs(source, candidate, source_digest)
@@ -41,7 +41,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
 
 
 def _unchanged_result(source_digest: str, candidate: Path) -> dict[str, object]:
-    return {"source_digest": source_digest, "candidate_digest": _digest(candidate), "by_revision_family": []}
+    return {"source_digest": source_digest, "candidate_digest": digest(candidate), "by_revision_family": []}
 
 
 def _load_collapse_inputs(source: Path, candidate: Path, source_digest: str) -> CollapseInput:
@@ -64,12 +64,12 @@ def _prove_collapse_result(
 ) -> dict[str, object]:
     after = load_modelo_directory(candidate)
     for revision_id in inputs.before.revisions:
-        left = _effective(inputs.before.revisions[revision_id].model_dump(mode="json"))
-        right = _effective(after.revisions[revision_id].model_dump(mode="json"))
+        left = effective(inputs.before.revisions[revision_id].model_dump(mode="json"))
+        right = effective(after.revisions[revision_id].model_dump(mode="json"))
         _assert_revision_unchanged(revision_id, left, right)
     return {
         "source_digest": inputs.source_digest,
-        "candidate_digest": _digest(candidate),
+        "candidate_digest": digest(candidate),
         "by_revision_family": counts,
     }
 

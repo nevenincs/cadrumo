@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .casilla_shard_toml_text import _KEY_LINE, _NL
+from .casilla_shard_toml_text import KEY_LINE, NL
 from .casilla_shard_types import GenerationRefusedError, GenerationReport
 
 
 def _source_lines(data: bytes) -> list[str]:
     """Decode a shard and split it, tolerating either line-ending style."""
-    return data.decode("utf-8").replace(chr(13) + _NL, _NL).split(_NL)
+    return data.decode("utf-8").replace(chr(13) + NL, NL).split(NL)
 
 
 def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str, list[str]]]:
@@ -52,7 +52,7 @@ def _harvest_shard(path: Path, marker: str, harvested: dict[str, tuple[str, list
         if line.startswith("id = "):
             casilla_id = line.split("=", 1)[1].strip().strip('"')
             continue
-        if _KEY_LINE.match(line):
+        if KEY_LINE.match(line):
             current.append(line)
     if casilla_id is not None and casilla_id:
         harvested[casilla_id] = (path.name, current)
@@ -69,7 +69,7 @@ def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]]
     block: list[str] = []
     casilla_id: str | None = None
     carried = 0
-    for line in body.split(_NL):
+    for line in body.split(NL):
         if line.strip() == marker:
             restored, count = _restore_attestation_block(block, casilla_id, harvested)
             out.extend(restored)
@@ -82,7 +82,7 @@ def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]]
                 casilla_id = line.split("=", 1)[1].strip().strip('"')
                 block.append(line)
                 continue
-            if _KEY_LINE.match(line):
+            if KEY_LINE.match(line):
                 block.append(line)
                 continue
             restored, count = _restore_attestation_block(block, casilla_id, harvested)
@@ -94,7 +94,7 @@ def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]]
     restored, count = _restore_attestation_block(block, casilla_id, harvested)
     out.extend(restored)
     carried += count
-    return _NL.join(out), carried
+    return NL.join(out), carried
 
 
 def _restore_attestation_block(
@@ -104,10 +104,10 @@ def _restore_attestation_block(
 ) -> tuple[list[str], int]:
     if casilla_id is None:
         return block, 0
-    emitted = {match.group(1) for line in block if (match := _KEY_LINE.match(line))}
+    emitted = {match.group(1) for line in block if (match := KEY_LINE.match(line))}
     carried = 0
     for line in harvested.get(casilla_id, ("", []))[1]:
-        key_match = _KEY_LINE.match(line)
+        key_match = KEY_LINE.match(line)
         if key_match is None:
             raise GenerationRefusedError(f"attestation line is not a key line: {line!r}")
         key = key_match.group(1)
@@ -160,7 +160,7 @@ def emitted_ids(report: GenerationReport) -> list[str]:
     ]
 
 
-def _refuse_duplicate_ids(report: GenerationReport) -> None:
+def refuse_duplicate_ids(report: GenerationReport) -> None:
     """Refuse before writing when two casillas would share an id."""
     seen: dict[str, int] = {}
     for casilla_id in emitted_ids(report):

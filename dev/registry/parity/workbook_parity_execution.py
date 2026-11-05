@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.external_constants import XLSX_EXTENSION
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
@@ -19,12 +19,12 @@ from .workbook_parity_models import (
     WorkbookCellRef,
     WorkbookRunnerAvailability,
 )
-from .workbook_parity_output_ids import _workbook_output_id_set
-from .workbook_parity_runner_resolution import _resolve_libreoffice_runner
+from .workbook_parity_output_ids import workbook_output_id_set
+from .workbook_parity_runner_resolution import resolve_libreoffice_runner
 from .workbook_parity_types import (
     WorkbookRunnerEngine,
 )
-from .workbook_parity_values import _coerce_excel_result, _excel_value
+from .workbook_parity_values import coerce_excel_result, excel_value
 
 if TYPE_CHECKING:
     # Annotation-only: ``from __future__ import annotations`` above makes every
@@ -142,10 +142,10 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     )
 
 
-def _execution_runner_availability(executable: str | None) -> WorkbookRunnerAvailability:
+def execution_runner_availability(executable: str | None) -> WorkbookRunnerAvailability:
     if executable is None:
         return detect_workbook_runner()
-    runner = _resolve_libreoffice_runner(executable)
+    runner = resolve_libreoffice_runner(executable)
     return WorkbookRunnerAvailability(
         status="available",
         engine=_ENGINE_LIBREOFFICE,
@@ -165,13 +165,13 @@ def run_workbook_with_excel_com(
     The workbook is opened read-only, link updates are disabled, alerts are
     disabled, and it is closed with ``SaveChanges=False``.
     """
-    _workbook_output_id_set("workbook output cells", outputs)
+    workbook_output_id_set("workbook output cells", outputs)
     if _detect_excel_com_clsid() is None:
         raise RegistryValidationError("Excel COM automation is not registered")
     resolved = workbook_path.resolve()
     if not resolved.is_file():
         raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
-    if resolved.suffix.lower() != _XLSX_EXTENSION:
+    if resolved.suffix.lower() != XLSX_EXTENSION:
         raise RegistryValidationError("Excel COM runner currently accepts only XLSX workbooks")
 
     import pythoncom
@@ -183,11 +183,11 @@ def run_workbook_with_excel_com(
         excel.configure_read_only()
         workbook = excel.open_read_only_workbook(resolved)
         for cell, value in inputs.items():
-            workbook.set_cell_value(cell, _excel_value(value))
+            workbook.set_cell_value(cell, excel_value(value))
         excel.calculate_full_rebuild()
         result: dict[WorkbookOutputId, Decimal | int | str | bool | None] = {}
         for output_id, cell in outputs.items():
-            result[output_id] = _coerce_excel_result(workbook.cell_value(cell))
+            result[output_id] = coerce_excel_result(workbook.cell_value(cell))
         return result
     finally:
         workbook.close_without_saving()

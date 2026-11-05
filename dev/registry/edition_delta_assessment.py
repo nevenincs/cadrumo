@@ -13,7 +13,7 @@ from typing import Final
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 
-from . import edition_delta_errors as _edition_delta_errors
+from . import edition_delta_errors
 from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_delta_assessment_revision import assess_revision
 from .edition_delta_assessment_shape import authored_shape_findings
@@ -108,7 +108,7 @@ class MigrationAssessment:
         return self.inputs_stable and not self.unresolved_duplication and not self.blocked_work
 
 
-def _file_fingerprints(modelo_dir: Path) -> tuple[Mapping[str, str], ...]:
+def file_fingerprints(modelo_dir: Path) -> tuple[Mapping[str, str], ...]:
     return tuple(
         {
             "path": path.relative_to(modelo_dir).as_posix(),
@@ -130,7 +130,7 @@ def _source_fingerprint(modelo_dir: Path) -> str:
 
 def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
     """Measure authored duplication independently of any converter deletion plan."""
-    initial_fingerprints = _file_fingerprints(modelo_dir)
+    initial_fingerprints = file_fingerprints(modelo_dir)
     initial_fingerprint = _source_fingerprint(modelo_dir)
     try:
         declarations = load_modelo_declarations(modelo_dir)
@@ -138,7 +138,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
         return _load_failure_assessment(modelo_dir, initial_fingerprints, initial_fingerprint, exc)
     raw_revisions = declarations.get("revisions", {})
     if not isinstance(raw_revisions, Mapping):
-        raise _edition_delta_errors.MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
+        raise edition_delta_errors.MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
     shape_findings = authored_shape_findings(raw_revisions)
     if shape_findings:
         return _shape_failure_assessment(modelo_dir, initial_fingerprints, initial_fingerprint, shape_findings)
@@ -162,7 +162,7 @@ def _load_failure_assessment(
 ) -> MigrationAssessment:
     field_match = re.search(r"fragment field '([^']+)'", str(error))
     revision_match = re.search(r"[\\/]revisions[\\/]([^\\/]+)[\\/]", str(error))
-    final_fingerprints = _file_fingerprints(modelo_dir)
+    final_fingerprints = file_fingerprints(modelo_dir)
     inputs_stable = initial_fingerprints == final_fingerprints
     blocked: list[Mapping[str, object]] = [
         {
@@ -198,7 +198,7 @@ def _shape_failure_assessment(
     initial_fingerprint: str,
     findings: list[Mapping[str, object]],
 ) -> MigrationAssessment:
-    final_fingerprints = _file_fingerprints(modelo_dir)
+    final_fingerprints = file_fingerprints(modelo_dir)
     inputs_stable = initial_fingerprints == final_fingerprints
     if not inputs_stable:
         findings.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
@@ -221,7 +221,7 @@ def _shape_failure_assessment(
 
 
 def _final_assessment(run: AssessmentRun) -> MigrationAssessment:
-    final_fingerprints = _file_fingerprints(run.modelo_dir)
+    final_fingerprints = file_fingerprints(run.modelo_dir)
     inputs_stable = run.input_fingerprints == final_fingerprints
     if not inputs_stable:
         run.blocked.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
@@ -264,5 +264,5 @@ def _finding_class(finding: RoundTripFinding) -> AcceptanceCheckClass:
     return AcceptanceCheckClass.SOURCE_RECONSTRUCTION
 
 
-def _is_source_finding(finding: RoundTripFinding) -> bool:
+def is_source_finding(finding: RoundTripFinding) -> bool:
     return _finding_class(finding) is AcceptanceCheckClass.SOURCE_RECONSTRUCTION

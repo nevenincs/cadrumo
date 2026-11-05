@@ -10,12 +10,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
 from dev.registry.compiler.keyed_family_inheritance import inherit_keyed_family
 
-from .edition_family_delta import _payload_field_count, _table, restates_stated_whole_sequence
+from .edition_family_delta import payload_field_count, restates_stated_whole_sequence, table
 from .edition_family_delta_collapse_state import FamilyCounts, FamilyState, RevisionState
-from .edition_family_delta_difference import _difference
+from .edition_family_delta_difference import difference
 
 
-def _append_common_overrides(revision: RevisionState, family: FamilyState, counts: FamilyCounts) -> None:
+def append_common_overrides(revision: RevisionState, family: FamilyState, counts: FamilyCounts) -> None:
     for identity, successor_identity in sorted(family.common.items()):
         _append_member_override(revision, family, counts, identity, successor_identity)
 
@@ -30,7 +30,7 @@ def _append_member_override(
     if identity in family.existing_override_ids:
         return
     spec = family.spec
-    fields, removed, sequence_additions, sequence_removals, sequence_order = _difference(
+    fields, removed, sequence_additions, sequence_removals, sequence_order = difference(
         family.old[identity], family.new[successor_identity], identity=family.identity
     )
     if restates_stated_whole_sequence(
@@ -132,7 +132,7 @@ def _override_entry(
 ) -> object:
     entry = tomlkit.table()
     entry["family"] = family.spec.section
-    entry["selector"] = _table({"revision": revision.predecessor_id, "id": identity})
+    entry["selector"] = table({"revision": revision.predecessor_id, "id": identity})
     if successor_identity != identity:
         entry["replacement_id"] = successor_identity
     _append_override_details(entry, fields, removed, additions, removals, order, reaffirm, counts)
@@ -150,23 +150,23 @@ def _append_override_details(
     counts: FamilyCounts,
 ) -> None:
     if fields:
-        entry["fields"] = _table(fields)
-        counts.payload += _payload_field_count(fields)
+        entry["fields"] = table(fields)
+        counts.payload += payload_field_count(fields)
     if removed:
         entry["removed_fields"] = list(removed)
     if additions:
-        entry["sequence_additions"] = _table(additions)
-        counts.payload += _payload_field_count(additions)
+        entry["sequence_additions"] = table(additions)
+        counts.payload += payload_field_count(additions)
         counts.sequence_additions += sum(len(items) for items in additions.values())
     if removals:
-        entry["sequence_removals"] = _table(removals)
+        entry["sequence_removals"] = table(removals)
         counts.sequence_removals += sum(len(items) for items in removals.values())
     if order:
-        entry["sequence_order"] = _table(order)
+        entry["sequence_order"] = table(order)
         counts.sequence_order += sum(len(items) for items in order.values())
     if reaffirm:
         entry["restate_identity"] = True
 
 
-def _skip_empty_scope(revision: RevisionState, spec: KeyedFamilySpec, family: FamilyState) -> bool:
+def skip_empty_scope(revision: RevisionState, spec: KeyedFamilySpec, family: FamilyState) -> bool:
     return spec.scoped and spec.section not in revision.scoped_families and family.keep >= set(family.new)

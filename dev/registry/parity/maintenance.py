@@ -24,7 +24,7 @@ from ..maintenance_support import (
 )
 from ..tests.aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
 from ..tests.groi_oracle import GroiOracle
-from ._parity_tapes import (
+from .parity_tapes import (
     ParityTape,
     ParityTapeReplayReport,
     generate_parity_tape_path,

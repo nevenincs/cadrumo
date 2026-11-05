@@ -14,33 +14,33 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
 )
 
-from .generation_constants import _GENERAL_SECTION
-from .generation_models import _Build
-from .heading_keys import _unique, form_heading_key
+from .generation_constants import GENERAL_SECTION
+from .generation_models import Build
+from .heading_keys import form_heading_key, unique
 from .official_text import node_slug
-from .position_anchoring import _casilla_box
+from .position_anchoring import casilla_box
 
 
-def _numbered_casillas(build: _Build, primary: Mapping[str, int]) -> list[str]:
+def numbered_casillas(build: Build, primary: Mapping[str, int]) -> list[str]:
     """Return casillas with a numeric box and no official position, in box order."""
     remaining = [
         casilla
         for casilla in build.revision.casillas
         if casilla.id not in primary
         and casilla.id not in build.ambiguous
-        and _casilla_box(casilla.number, casilla.form_number) is not None
+        and casilla_box(casilla.number, casilla.form_number) is not None
     ]
-    remaining.sort(key=lambda casilla: (int(str(_casilla_box(casilla.number, casilla.form_number))), casilla.id))
+    remaining.sort(key=lambda casilla: (int(str(casilla_box(casilla.number, casilla.form_number))), casilla.id))
     return [casilla.id for casilla in remaining]
 
 
-def _numbered_page(build: _Build, page_id: str, casilla_ids: Sequence[str]) -> FormPageDefinition:
+def numbered_page(build: Build, page_id: str, casilla_ids: Sequence[str]) -> FormPageDefinition:
     """Place casillas known only by their box number, grouped by their registry section's first token."""
     by_id = {casilla.id: casilla for casilla in build.revision.casillas}
     groups: dict[str, list[str]] = {}
     for casilla_id in casilla_ids:
         section = by_id[casilla_id].section
-        groups.setdefault(node_slug(section[0]) if section else _GENERAL_SECTION, []).append(casilla_id)
+        groups.setdefault(node_slug(section[0]) if section else GENERAL_SECTION, []).append(casilla_id)
     sections = tuple(
         FormSectionDefinition(
             id=section_id,
@@ -57,8 +57,8 @@ def _numbered_page(build: _Build, page_id: str, casilla_ids: Sequence[str]) -> F
     )
 
 
-def _inputs_page(
-    build: _Build,
+def inputs_page(
+    build: Build,
     page_id: str,
     manual_bindings: Mapping[str, bool],
     placed: set[str],
@@ -74,7 +74,7 @@ def _inputs_page(
         blocks.append(FormBindingInputsBlock(id="binding-inputs", binding_ids=scalar))
     blocks.extend(
         FormRepeatingGroupBlock(
-            id=_unique(node_slug(binding), used),
+            id=unique(node_slug(binding), used),
             row_source=FormRepeatingRowSource.ROW_SET_BINDING,
             binding_id=binding,
         )

@@ -38,10 +38,8 @@ from cadrumo.domain.calculations.registry.snapshot import validate_materialized_
 from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader_semantics import (
-    compile_export_semantic_field as _compile_export_semantic_field,
-)
-from ..compiler.loader_semantics import (
-    compile_projection_endpoint_declaration as _compile_projection_endpoint_declaration,
+    compile_export_semantic_field,
+    compile_projection_endpoint_declaration,
 )
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validate_exports import (
@@ -216,7 +214,7 @@ def test_projection_field_declares_only_the_typed_projection_payload() -> None:
 
 def test_registry_loader_hydrates_only_exact_projection_ref_toml() -> None:
     source_path = Path("projection.toml")
-    compiled = _compile_export_semantic_field(
+    compiled = compile_export_semantic_field(
         source_path,
         _raw_projection_field(
             reference={
@@ -231,14 +229,14 @@ def test_registry_loader_hydrates_only_exact_projection_ref_toml() -> None:
 
     assert field.projection_ref == _prorrata_ref()
     with pytest.raises(RegistryLoadError, match="does not match any of the expected tags"):
-        _compile_export_semantic_field(
+        compile_export_semantic_field(
             source_path,
             _raw_projection_field(reference={"projection_kind": "m303_unknown_projection"}),
         )
 
 
 def test_registry_loader_hydrates_required_flat_module_projection() -> None:
-    compiled = _compile_export_semantic_field(
+    compiled = compile_export_semantic_field(
         Path("projection.toml"),
         _raw_projection_field(
             reference={
@@ -456,7 +454,7 @@ def test_m390_undeclared_positive_references_cannot_enter_an_export(payload: dic
 
 def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -> None:
     source_path = Path("projection-endpoint.toml")
-    compiled = _compile_projection_endpoint_declaration(
+    compiled = compile_projection_endpoint_declaration(
         source_path,
         {
             "id": "m303-prorrata-activity:field-cnae.slot-1",

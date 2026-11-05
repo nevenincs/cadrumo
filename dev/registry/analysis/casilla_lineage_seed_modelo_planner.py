@@ -7,19 +7,17 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .casilla_lineage_seed_chain_state import _ChainState
+from .casilla_lineage_seed_chain_state import ChainState
 from .casilla_lineage_seed_design import DesignOracle
 from .casilla_lineage_seed_pair_walk import walk_pair
 from .casilla_lineage_seed_rules import (
-    _role_derived,
-    _slug,
     judged_pairs,
+    role_derived,
+    slug,
 )
 from .casilla_lineage_seed_stamp_settlement import (
-    partial_stamp_records as _partial_stamp_records,
-)
-from .casilla_lineage_seed_stamp_settlement import (
-    settle_partial_stamps as _settle_partial_stamps,
+    partial_stamp_records,
+    settle_partial_stamps,
 )
 from .casilla_lineage_seed_types import (
     LineagePlan,
@@ -28,7 +26,7 @@ from .casilla_lineage_seed_types import (
 )
 
 
-class _ModeloPlanner:
+class ModeloPlanner:
     def __init__(
         self,
         modelo_id: str,
@@ -43,7 +41,7 @@ class _ModeloPlanner:
         self.oracle = oracle
         self.rulings = {(ruling.predecessor, ruling.successor): ruling for ruling in rulings}
         self.plan = LineagePlan(modelo_id)
-        self.state = _ChainState.of(modelo)
+        self.state = ChainState.of(modelo)
 
     # -- chain writing
 
@@ -54,10 +52,10 @@ class _ModeloPlanner:
             and role == successor.semantic_role
             and all(self.state.role_counts[revision][role] == 1 for revision in pair)
         ):
-            return _role_derived(role)
-        if role is not None and not bool(self.state.members.get(_role_derived(role))):
-            return _role_derived(role)
-        return _slug(previous.id)
+            return role_derived(role)
+        if role is not None and not bool(self.state.members.get(role_derived(role))):
+            return role_derived(role)
+        return slug(previous.id)
 
     def _write_absence(
         self, revision: str, casilla: CasillaDefinition, origin: CasillaLineageOrigin, evidence: str
@@ -88,10 +86,10 @@ class _ModeloPlanner:
     # -- identifier-wide stamping
 
     def settle_partial_stamps(self) -> frozenset[str]:
-        return _settle_partial_stamps(self)
+        return settle_partial_stamps(self)
 
     def partial_stamp_records(self, unsettled: frozenset[str]) -> tuple[PartialStamping, ...]:
-        return _partial_stamp_records(self, unsettled)
+        return partial_stamp_records(self, unsettled)
 
     # -- pair walk
 

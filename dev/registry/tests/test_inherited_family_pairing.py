@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_inherited_family_pairing import inherited_family_pairing_failures
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -131,7 +131,7 @@ def _write_edition(
 def _modelo(tmp_path: Path, *, successor_extra: str) -> Path:
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     _write_edition(modelo_dir, "2024", year=2024, cross_references=(_CROSS_REFERENCE,))
     _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n' + successor_extra)
     return modelo_dir
@@ -234,7 +234,7 @@ def test_a_disposition_over_a_family_no_predecessor_declares_stands(tmp_path: Pa
     """
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     _write_edition(modelo_dir, "2024", year=2024)
     _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n\n' + _DISPOSITION)
 
@@ -256,7 +256,7 @@ def test_a_scoped_family_the_edition_states_itself_needs_no_assertion(tmp_path: 
     """
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     for revision_id, year in (("2024", 2024), ("2025", 2025)):
         _write_edition(
             modelo_dir,
@@ -304,7 +304,7 @@ def _owed_layout_modelo(tmp_path: Path, *, cause: str) -> Path:
     """
     modelo_dir = tmp_path / _MODELO_ID
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     clearance = (
         f'cleared_families = [{{ family = "export_layouts", cause = "{cause}", '
         'reason = "This edition generates its own layout from its record design." }]\n'

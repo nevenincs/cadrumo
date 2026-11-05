@@ -6,31 +6,28 @@ from collections.abc import Mapping, Sequence
 
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_lineage_attestation as _edition_delta_lineage_attestation
-from . import edition_delta_source as _edition_delta_source
+from . import edition_delta_errors, edition_delta_fields, edition_delta_lineage_attestation, edition_delta_source
 from .compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 
 
 def candidate_indexes(
-    inherited: Sequence[_edition_delta_source._Placed],
-) -> tuple[dict[str, list[_edition_delta_source._Placed]], dict[str, list[_edition_delta_source._Placed]]]:
+    inherited: Sequence[edition_delta_source.Placed],
+) -> tuple[dict[str, list[edition_delta_source.Placed]], dict[str, list[edition_delta_source.Placed]]]:
     """Index inherited predecessor rows by continuity lineage and by storage id."""
-    by_lineage: dict[str, list[_edition_delta_source._Placed]] = {}
-    by_storage_id: dict[str, list[_edition_delta_source._Placed]] = {}
+    by_lineage: dict[str, list[edition_delta_source.Placed]] = {}
+    by_storage_id: dict[str, list[edition_delta_source.Placed]] = {}
     for placed in inherited:
-        if (lineage := _edition_delta_source._lineage(placed.row)) is not None:
+        if (lineage := edition_delta_source.lineage(placed.row)) is not None:
             by_lineage.setdefault(lineage, []).append(placed)
-        by_storage_id.setdefault(_edition_delta_source._row_id(placed.row), []).append(placed)
+        by_storage_id.setdefault(edition_delta_source.row_id(placed.row), []).append(placed)
     return by_lineage, by_storage_id
 
 
 def pending_lineage_attestation(
     *,
-    row: _edition_delta_source._Row,
+    row: edition_delta_source.Row,
     lineage: str | None,
-    target: _edition_delta_source._Row,
+    target: edition_delta_source.Row,
     manifest: Mapping[str, object],
     predecessor: str,
     revision_id: str,
@@ -41,7 +38,7 @@ def pending_lineage_attestation(
         return None
     if not any(claim in target for claim in LINEAGE_CLAIM_FIELDS):
         return None
-    return _edition_delta_lineage_attestation._lineage_attestation(
+    return edition_delta_lineage_attestation.lineage_attestation(
         member=row,
         manifest=manifest,
         predecessor_revision_id=predecessor,
@@ -58,20 +55,20 @@ def unsupported_nested_removals(removed_fields: Sequence[str]) -> tuple[str, ...
     )
 
 
-def storage_rows(source: _edition_delta_source._EditionSource) -> Mapping[str, _edition_delta_source._Row]:
+def storage_rows(source: edition_delta_source.EditionSource) -> Mapping[str, edition_delta_source.Row]:
     """The edition's casilla rows as the loader stores them before lifting."""
-    raw = source.table.get(_edition_delta_fields._CASILLAS, ())
-    rows: dict[str, _edition_delta_source._Row] = {}
+    raw = source.table.get(edition_delta_fields.CASILLAS, ())
+    rows: dict[str, edition_delta_source.Row] = {}
     if not isinstance(raw, list | tuple):
         return rows
     for row in raw:
         if isinstance(row, Mapping):
-            stored = _edition_delta_source._as_row(row)
-            rows[_edition_delta_source._row_id(stored)] = stored
+            stored = edition_delta_source.as_row(row)
+            rows[edition_delta_source.row_id(stored)] = stored
     return rows
 
 
-def manifest_operations(manifest: Mapping[str, object], name: str) -> tuple[_edition_delta_source._Row, ...]:
+def manifest_operations(manifest: Mapping[str, object], name: str) -> tuple[edition_delta_source.Row, ...]:
     """Return one manifest operation array as ordinary row mappings."""
     raw = manifest.get(name, ())
     if not isinstance(raw, list | tuple):
@@ -82,8 +79,8 @@ def manifest_operations(manifest: Mapping[str, object], name: str) -> tuple[_edi
 def operations_with_replacements(
     manifest: Mapping[str, object],
     name: str,
-    replacements: Sequence[_edition_delta_source._Row],
-) -> tuple[_edition_delta_source._Row, ...]:
+    replacements: Sequence[edition_delta_source.Row],
+) -> tuple[edition_delta_source.Row, ...]:
     """Apply replacement operations by their exact predecessor selector."""
     operations = list(manifest_operations(manifest, name))
     for replacement in replacements:
@@ -92,7 +89,7 @@ def operations_with_replacements(
             continue
         matching = [index for index, operation in enumerate(operations) if operation.get("selector") == selector]
         if len(matching) != 1:
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"expected one {name} operation for selector {selector!r}, found {len(matching)}"
             )
         operations[matching[0]] = dict(replacement)
@@ -104,14 +101,14 @@ def reconcile_source_removals(
 ) -> tuple[str, ...]:
     """Keep patched source references valid for the storage form the loader applies."""
     reconciled: list[str] = list(removed_fields)
-    if _edition_delta_fields._ROW_SOURCE in fields:
-        reconciled = [field for field in reconciled if field != _edition_delta_fields._ROW_SOURCE_ADDITIONS]
+    if edition_delta_fields.ROW_SOURCE in fields:
+        reconciled = [field for field in reconciled if field != edition_delta_fields.ROW_SOURCE_ADDITIONS]
     elif (
-        _edition_delta_fields._ROW_SOURCE_ADDITIONS in fields
-        and _edition_delta_fields._ROW_SOURCE in raw_baseline
-        and _edition_delta_fields._ROW_SOURCE not in reconciled
+        edition_delta_fields.ROW_SOURCE_ADDITIONS in fields
+        and edition_delta_fields.ROW_SOURCE in raw_baseline
+        and edition_delta_fields.ROW_SOURCE not in reconciled
     ):
-        reconciled.append(_edition_delta_fields._ROW_SOURCE)
+        reconciled.append(edition_delta_fields.ROW_SOURCE)
     _reconcile_constraint_source_spellings(fields, raw_baseline, reconciled)
     return tuple(reconciled)
 
@@ -119,15 +116,15 @@ def reconcile_source_removals(
 def _reconcile_constraint_source_spellings(
     fields: Mapping[str, object], raw_baseline: Mapping[str, object], reconciled: list[str]
 ) -> None:
-    constraint_fields = fields.get(_edition_delta_fields._CONSTRAINTS)
-    stored_constraints = raw_baseline.get(_edition_delta_fields._CONSTRAINTS)
+    constraint_fields = fields.get(edition_delta_fields.CONSTRAINTS)
+    stored_constraints = raw_baseline.get(edition_delta_fields.CONSTRAINTS)
     if not isinstance(constraint_fields, Mapping) or not isinstance(stored_constraints, Mapping):
         return
     for stated, displaced in (
-        (_edition_delta_fields._ROW_SOURCE, _edition_delta_fields._ROW_SOURCE_ADDITIONS),
-        (_edition_delta_fields._ROW_SOURCE_ADDITIONS, _edition_delta_fields._ROW_SOURCE),
+        (edition_delta_fields.ROW_SOURCE, edition_delta_fields.ROW_SOURCE_ADDITIONS),
+        (edition_delta_fields.ROW_SOURCE_ADDITIONS, edition_delta_fields.ROW_SOURCE),
     ):
-        removal = f"{_edition_delta_fields._CONSTRAINTS}.{displaced}"
+        removal = f"{edition_delta_fields.CONSTRAINTS}.{displaced}"
         if stated in constraint_fields and displaced in stored_constraints and removal not in reconciled:
             reconciled.append(removal)
 
@@ -148,22 +145,22 @@ def authored_override_selectors(manifest: Mapping[str, object]) -> frozenset[str
 
 
 def candidate_for_authored(
-    authored: _edition_delta_source._Row,
-    by_lineage: Mapping[str, list[_edition_delta_source._Placed]],
-    by_storage_id: Mapping[str, list[_edition_delta_source._Placed]],
+    authored: edition_delta_source.Row,
+    by_lineage: Mapping[str, list[edition_delta_source.Placed]],
+    by_storage_id: Mapping[str, list[edition_delta_source.Placed]],
     claimed: frozenset[str],
-) -> _edition_delta_source._Placed | None:
+) -> edition_delta_source.Placed | None:
     """Select the unique unclaimed predecessor matching an authored row."""
-    row_id = _edition_delta_source._row_id(authored)
-    lineage = _edition_delta_source._lineage(authored)
+    row_id = edition_delta_source.row_id(authored)
+    lineage = edition_delta_source.lineage(authored)
     lineage_candidates = by_lineage.get(lineage, []) if lineage is not None else []
     storage_candidates = by_storage_id.get(row_id, []) if lineage is None else []
     candidates = lineage_candidates or storage_candidates
     if len(candidates) != 1:
         return None
     candidate = candidates[0]
-    if _edition_delta_source._row_id(candidate.row) in claimed:
+    if edition_delta_source.row_id(candidate.row) in claimed:
         return None
-    if not lineage_candidates and lineage is None and _edition_delta_source._lineage(candidate.row) is not None:
+    if not lineage_candidates and lineage is None and edition_delta_source.lineage(candidate.row) is not None:
         return None
     return candidate

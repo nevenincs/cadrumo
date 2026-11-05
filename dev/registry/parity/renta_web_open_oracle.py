@@ -326,7 +326,7 @@ class RentaWebOpenOracle:
             _compare_expected_field(casilla_id, expected_value, observed=observation.values.get(casilla_id))
             for casilla_id, expected_value in sorted(expected_values.items())
         )
-        verdict = _overall_verdict(fields)
+        verdict = overall_verdict(fields)
         return ParityResult(
             oracle_id=self.oracle_id,
             cross_reference_id=policy.id,
@@ -373,8 +373,8 @@ def equivalent_renta_web_open_value(expected: str, observed: str) -> bool:
         return False
     if observed == expected:
         return True
-    expected_decimal = _parse_decimal_text(expected)
-    observed_decimal = _parse_decimal_text(observed)
+    expected_decimal = parse_decimal_text(expected)
+    observed_decimal = parse_decimal_text(observed)
     return expected_decimal is not None and observed_decimal is not None and expected_decimal == observed_decimal
 
 
@@ -405,7 +405,7 @@ def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed
     return ParityFieldComparison(name=casilla_id, expected=expected_text, observed=observed, verdict=verdict)
 
 
-def _parse_decimal_text(value: str) -> Decimal | None:
+def parse_decimal_text(value: str) -> Decimal | None:
     """Parse a captured Renta WEB amount, refusing non-finite tokens.
 
     ``Decimal`` accepts ``"NaN"`` and ``"Infinity"``, so calling it directly let
@@ -422,7 +422,7 @@ def _parse_decimal_text(value: str) -> Decimal | None:
     return coerce_finite_european_decimal(text)
 
 
-def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
+def overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
     if any(field.verdict == ParityVerdictKind.MISMATCH for field in fields):
         return ParityVerdictKind.MISMATCH
     if any(field.verdict == ParityVerdictKind.UNVERIFIABLE for field in fields):

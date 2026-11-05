@@ -12,7 +12,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
 from ..edition_export_scenarios import edition_export_scenarios
-from ..edition_round_trip import SYNTHETIC_TAX_ID, _PayloadSink
+from ..edition_round_trip import SYNTHETIC_TAX_ID, PayloadSink
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -35,7 +35,7 @@ def test_populated_scenario_exports_both_parties_and_excludes_below_threshold(re
             schema_provider=provider,
         )
         assert draft.snapshot_ref.revision_id == revision_id
-        sink = _PayloadSink()
+        sink = PayloadSink()
         export_draft(
             draft.model_copy(update={"status": ModeloDraftStatus.APROBADO}),
             payload_consumer=sink,

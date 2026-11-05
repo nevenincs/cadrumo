@@ -10,10 +10,10 @@ from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.formula_runtime_support import (
-    committed_modelo_130_snapshot as _committed_modelo_130_snapshot,
+    committed_modelo_130_snapshot as formula_runtime_modelo_130_snapshot,
 )
 from cadrumo.domain.calculations.registry.tests.formula_runtime_support import (
-    committed_modelo_180_snapshot as _committed_modelo_180_snapshot,
+    committed_modelo_180_snapshot as formula_runtime_modelo_180_snapshot,
 )
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -87,14 +87,14 @@ def registry_snapshot(
 def committed_modelo_130_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return _committed_modelo_130_snapshot(registry_snapshot)
+    return formula_runtime_modelo_130_snapshot(registry_snapshot)
 
 
 @pytest.fixture
 def committed_modelo_180_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return _committed_modelo_180_snapshot(registry_snapshot)
+    return formula_runtime_modelo_180_snapshot(registry_snapshot)
 
 
 @pytest.fixture

@@ -19,34 +19,33 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
-from .. import _export_tree
-from .. import export_field_derivation as _field_patterns
+from .. import export_field_derivation, export_tree
 from .. import export_tree_serialization as serialization
-from .._export_tree import render_complete_export_tree
-from ..export_field_literal_derivation import _OFFICIAL_QUOTE_FOLD
-from ..export_field_numeric_derivation import _numeric_derivation
-from ..export_field_render_profile_derivation import _WIDTH_17_SIGNED_POLICY, _WIDTH_17_UNSIGNED_POLICY
+from ..export_field_literal_derivation import OFFICIAL_QUOTE_FOLD
+from ..export_field_numeric_derivation import numeric_derivation
+from ..export_field_render_profile_derivation import WIDTH_17_SIGNED_POLICY, WIDTH_17_UNSIGNED_POLICY
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
-    _write_canonical_manifest_atomically,
     emit_export_fragment_provenance_manifest,
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
+    write_canonical_manifest_atomically,
 )
+from ..export_tree import render_complete_export_tree
 from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..render_profile_rules import Width17MembershipRule
-from ._export_tree_support import (
-    _blank_integer_profile,
-    _intermediate,
-    _joined,
-    _m130_inspection,
-    _oversized_authorities,
-    _profile,
-    _semantic_map,
-    _synthetic_static_inspection,
-    _wire_evidence,
-    _wire_profile,
-    _write_modelo_shell,
+from .export_tree_support import (
+    blank_integer_profile,
+    export_tree_intermediate,
+    export_tree_joined,
+    export_tree_profile,
+    export_tree_semantic_map,
+    m130_inspection,
+    oversized_authorities,
+    synthetic_static_inspection,
+    wire_evidence,
+    wire_profile,
+    write_modelo_shell,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -54,17 +53,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_direct_manifest_emission_and_real_loader_verification(tmp_path) -> None:
     """The public provenance-manifest emitter and verifier operate on a real fresh tree only."""
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    semantic_map = _semantic_map()
-    joined = _joined(_m130_inspection())
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    semantic_map = export_tree_semantic_map()
+    joined = export_tree_joined(m130_inspection())
     rendered = render_complete_export_tree(
         revision_dir / "export",
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
     layout = load_modelo_directory(tmp_path / "modelos" / "130").revisions["2025"].export_layouts[0]
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -77,8 +76,8 @@ def test_direct_manifest_emission_and_real_loader_verification(tmp_path) -> None
         loaded_layout=layout,
         export_root=revision_dir / "export",
         field_derivations=rendered.field_derivations,
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     assert load_export_fragment_provenance_manifest(manifest_path.read_bytes()) == emitted
@@ -90,8 +89,8 @@ def test_direct_manifest_emission_and_real_loader_verification(tmp_path) -> None
             target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
         == emitted
     )
@@ -109,11 +108,11 @@ def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
     """
     target = tmp_path / EXPORT_FRAGMENT_PROVENANCE_FILENAME
 
-    _write_canonical_manifest_atomically(target, b'{"first": true}')
+    write_canonical_manifest_atomically(target, b'{"first": true}')
     assert target.read_bytes() == b'{"first": true}'
 
     with pytest.raises(RegistryValidationError, match="already exists"):
-        _write_canonical_manifest_atomically(target, b'{"second": true}')
+        write_canonical_manifest_atomically(target, b'{"second": true}')
 
     assert target.read_bytes() == b'{"first": true}', "the refused write must not have replaced the target"
     assert scan_directory(tmp_path) == (target,), "the refused write must not leave its staging tempfile behind"
@@ -121,8 +120,8 @@ def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
 
 def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(tmp_path) -> None:
     """Manifest emission never leaves a partial sibling attestation when map authority drifts."""
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    semantic_map = _semantic_map()
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    semantic_map = export_tree_semantic_map()
     mismatched_map = semantic_map.model_copy(
         update={
             "entries": (
@@ -136,22 +135,22 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(tmp_path) -
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
+            joined=export_tree_joined(m130_inspection()),
             semantic_map=mismatched_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="semantic-map SHA-256 does not match joined official source"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
+            joined=export_tree_joined(m130_inspection()),
             semantic_map=semantic_map.model_copy(update={"source_sha256": "b" * 64}),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
@@ -164,18 +163,18 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
     terms rather than inherit coverage from the coarse whole-map and SHA-256 siblings pinned
     above: a source-ref drift on the map argument, and an entries set that no longer bijects
     the compiled map once the joined design itself carries a duplicated field."""
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    semantic_map = _semantic_map()
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    semantic_map = export_tree_semantic_map()
 
     with pytest.raises(RegistryValidationError, match=r"semantic-map source .+ does not match joined source"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
+            joined=export_tree_joined(m130_inspection()),
             semantic_map=semantic_map.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     # The coarse whole-map equality check above intercepts every semantic_map
@@ -184,7 +183,7 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
     # argument identical to the join's own authored map and instead corrupting
     # the JOINED design: one already-joined field duplicated so its flattened
     # entry set no longer bijects the compiled map's entries.
-    joined = _joined(_m130_inspection())
+    joined = export_tree_joined(m130_inspection())
     joined_with_duplicated_field = joined.model_copy(update={"fields": (*joined.fields, joined.fields[0])})
 
     with pytest.raises(
@@ -196,9 +195,9 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
             revision_id="2025",
             joined=joined_with_duplicated_field,
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
@@ -212,7 +211,7 @@ def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries
     without dropping or duplicating any of them must still render cleanly. A gate that fired
     on any change to field order, rather than genuine incompleteness, would not have proven
     the completeness comparison the prior test exercises."""
-    joined = _joined(_m130_inspection())
+    joined = export_tree_joined(m130_inspection())
     reordered_fields = (joined.fields[1], joined.fields[0], *joined.fields[2:])
     reordered_joined = joined.model_copy(update={"fields": reordered_fields})
 
@@ -220,10 +219,10 @@ def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries
         tmp_path / "export",
         revision_id="2025",
         joined=reordered_joined,
-        semantic_map=_semantic_map(),
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     assert rendered.output_files
@@ -240,8 +239,8 @@ def test_renderer_refuses_incomplete_joined_records_without_emitting_a_manifest(
     export_record_id). Dropping a record from the joined design instead -- so the joined set
     is a proper subset of the compiled map's records, with no id collision -- reaches the
     comparison this raise site actually guards."""
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    joined = _joined(_m130_inspection())
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    joined = export_tree_joined(m130_inspection())
     joined_missing_a_record = joined.model_copy(update={"records": joined.records[:1]})
 
     with pytest.raises(
@@ -252,10 +251,10 @@ def test_renderer_refuses_incomplete_joined_records_without_emitting_a_manifest(
             revision_dir / "export",
             revision_id="2025",
             joined=joined_missing_a_record,
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
@@ -267,7 +266,7 @@ def test_renderer_tolerates_reordered_joined_records_without_tripping_the_record
     """Sibling-blindness for the records-completeness gate above: it compares joined records
     as a SET against the compiled map's records, so reordering them without dropping or
     duplicating any must still render cleanly."""
-    joined = _joined(_m130_inspection())
+    joined = export_tree_joined(m130_inspection())
     reordered_records = (joined.records[1], joined.records[0])
     reordered_joined = joined.model_copy(update={"records": reordered_records})
 
@@ -275,10 +274,10 @@ def test_renderer_tolerates_reordered_joined_records_without_tripping_the_record
         tmp_path / "export",
         revision_id="2025",
         joined=reordered_joined,
-        semantic_map=_semantic_map(),
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     assert rendered.output_files
@@ -292,51 +291,51 @@ def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_man
     pinned in ``test_renderer_refuses_mismatched_map_without_emitting_a_manifest`` proves only
     that one axis, and two differently-named parametrize labels that both mutate the SHA-256
     field would leave these other four axes silently undriven."""
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    profile = _profile()
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    profile = export_tree_profile()
 
     with pytest.raises(RegistryValidationError, match="export tree transport profile modelo"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
-            semantic_map=_semantic_map(),
+            joined=export_tree_joined(m130_inspection()),
+            semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"modelo": "184"}),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="export tree transport profile design epoch"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
-            semantic_map=_semantic_map(),
+            joined=export_tree_joined(m130_inspection()),
+            semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"design_epoch": "2020"}),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="export tree transport profile source "):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
-            semantic_map=_semantic_map(),
+            joined=export_tree_joined(m130_inspection()),
+            semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="export tree transport profile serializer"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection()),
-            semantic_map=_semantic_map(),
+            joined=export_tree_joined(m130_inspection()),
+            semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"serializer_convention": "unsupported-convention"}),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
@@ -350,11 +349,11 @@ def test_renderer_tolerates_transport_profile_line_ending_drift(tmp_path) -> Non
     rendered = render_complete_export_tree(
         tmp_path / "export",
         revision_id="2025",
-        joined=_joined(_m130_inspection()),
-        semantic_map=_semantic_map(),
-        transport_profile=_profile().model_copy(update={"line_ending": "lf"}),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        joined=export_tree_joined(m130_inspection()),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile().model_copy(update={"line_ending": "lf"}),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     assert rendered.output_files
@@ -370,11 +369,11 @@ def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_part
         render_complete_export_tree(
             target,
             revision_id="2025",
-            joined=_joined(_m130_inspection(), numeric_content=None),
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            joined=export_tree_joined(m130_inspection(), numeric_content=None),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
@@ -383,18 +382,18 @@ def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_part
 def test_renderer_resolves_one_blank_numeric_field_only_through_its_exact_profile_anchor(
     tmp_path,
 ) -> None:
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
-    joined = _joined(_m130_inspection(), numeric_content=None)
-    profile = _blank_integer_profile()
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    joined = export_tree_joined(m130_inspection(), numeric_content=None)
+    profile = blank_integer_profile()
 
     rendered = render_complete_export_tree(
         revision_dir / "export",
         revision_id="2025",
         joined=joined,
-        semantic_map=_semantic_map(),
-        transport_profile=_profile(),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
         render_profile=profile,
-        render_profile_source_evidence=_wire_evidence(),
+        render_profile_source_evidence=wire_evidence(),
     )
     loaded = load_modelo_directory(tmp_path / "modelos" / "130").revisions["2025"].export_layouts[0]
     derived = rendered.field_derivations[-1]
@@ -432,9 +431,9 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
     """No inferred total, first position, gap, overlap, or terminal extent may be emitted."""
     target = tmp_path / "export"
     joined = join_record_design_semantics(
-        _semantic_map(),
-        _intermediate(**intermediate_kwargs),
-        _m130_inspection(),
+        export_tree_semantic_map(),
+        export_tree_intermediate(**intermediate_kwargs),
+        m130_inspection(),
     )
 
     with pytest.raises(RegistryValidationError, match=error):
@@ -442,10 +441,10 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
             target,
             revision_id="2025",
             joined=joined,
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
@@ -454,8 +453,8 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
 def test_renderer_refuses_unstructured_quoted_numeric_prose(tmp_path) -> None:
     """Quoted digits form an enum only under the reviewed comma-delimited source grammar."""
     target = tmp_path / "export"
-    joined = _joined(
-        _m130_inspection(),
+    joined = export_tree_joined(
+        m130_inspection(),
         # Four digits each, matching the declared slot width, so the ambiguity
         # refusal is reached rather than the slot-width refusal.
         numeric_content='"0000" only if the taxpayer elects "0050"',
@@ -466,10 +465,10 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(tmp_path) -> None:
             target,
             revision_id="2025",
             joined=joined,
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
@@ -483,39 +482,39 @@ def test_note_governed_numeric_enumeration_retains_the_period_specific_closed_do
     period-reserved wire token in addition to the printed Yes/No values.
     """
     annotated = (
-        _joined(
-            _synthetic_static_inspection(),
+        export_tree_joined(
+            synthetic_static_inspection(),
             numeric_content='"0001" SI, "0002" NO. Nota 8. Nota 9',
         )
         .records[1]
         .fields[1]
     )
     unannotated = (
-        _joined(
-            _synthetic_static_inspection(),
+        export_tree_joined(
+            synthetic_static_inspection(),
             numeric_content='"0001" SI, "0002" NO',
         )
         .records[1]
         .fields[1]
     )
     incomplete_note_pair = (
-        _joined(
-            _synthetic_static_inspection(),
+        export_tree_joined(
+            synthetic_static_inspection(),
             numeric_content='"0001" SI, "0002" NO. Nota 8',
         )
         .records[1]
         .fields[1]
     )
 
-    annotated_derivation = _numeric_derivation(
+    annotated_derivation = numeric_derivation(
         annotated,
         export_record_id="generated-record-type-2",
     )
-    unannotated_derivation = _numeric_derivation(
+    unannotated_derivation = numeric_derivation(
         unannotated,
         export_record_id="generated-record-type-2",
     )
-    incomplete_note_pair_derivation = _numeric_derivation(
+    incomplete_note_pair_derivation = numeric_derivation(
         incomplete_note_pair,
         export_record_id="generated-record-type-2",
     )
@@ -530,27 +529,27 @@ def test_note_governed_numeric_enumeration_retains_the_period_specific_closed_do
 
 def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(tmp_path) -> None:
     """The renderer rejects unsafe authority mismatches and never overwrites a prior output."""
-    joined = _joined(_m130_inspection())
+    joined = export_tree_joined(m130_inspection())
     with pytest.raises(RegistryValidationError, match="SHA-256"):
         render_complete_export_tree(
             tmp_path / "export",
             revision_id="2025",
             joined=joined,
-            semantic_map=_semantic_map(),
-            transport_profile=_profile().model_copy(update={"source_sha256": "b" * 64}),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile().model_copy(update={"source_sha256": "b" * 64}),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
-    literal_map = _semantic_map().model_copy(
+    literal_map = export_tree_semantic_map().model_copy(
         update={
             "entries": (
-                _semantic_map().entries[0].model_copy(update={"literal": "TOO LONG"}),
-                *_semantic_map().entries[1:],
+                export_tree_semantic_map().entries[0].model_copy(update={"literal": "TOO LONG"}),
+                *export_tree_semantic_map().entries[1:],
             ),
         },
     )
-    intermediate = _intermediate()
+    intermediate = export_tree_intermediate()
     first_sheet = intermediate.sheets[0]
     oversized_literal = first_sheet.fields[0].model_copy(update={"content": 'Constante "TOO LONG"'})
     intermediate = intermediate.model_copy(
@@ -565,11 +564,11 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
         render_complete_export_tree(
             tmp_path / "second" / "export",
             revision_id="2025",
-            joined=join_record_design_semantics(literal_map, intermediate, _m130_inspection()),
+            joined=join_record_design_semantics(literal_map, intermediate, m130_inspection()),
             semantic_map=literal_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
     assert not (tmp_path / "second" / "export").exists()
 
@@ -581,10 +580,10 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             occupied,
             revision_id="2025",
             joined=joined,
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
 
@@ -604,7 +603,7 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
     official_content: str | None,
 ) -> None:
     """Literal meaning never substitutes for absent or ambiguous official constant bytes."""
-    intermediate = _intermediate()
+    intermediate = export_tree_intermediate()
     first_sheet = intermediate.sheets[0]
     first_field = first_sheet.fields[0].model_copy(update={"content": official_content})
     intermediate = intermediate.model_copy(
@@ -615,25 +614,25 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
             ),
         },
     )
-    semantic_map = _semantic_map()
+    semantic_map = export_tree_semantic_map()
     target = tmp_path / "export"
 
     with pytest.raises(RegistryValidationError, match="official constant"):
         render_complete_export_tree(
             target,
             revision_id="2025",
-            joined=join_record_design_semantics(semantic_map, intermediate, _m130_inspection()),
+            joined=join_record_design_semantics(semantic_map, intermediate, m130_inspection()),
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
 
 
 def _intermediate_with_first_content(content: str, *, in_contenido_column: bool):
-    intermediate = _intermediate()
+    intermediate = export_tree_intermediate()
     first_sheet = intermediate.sheets[0]
     first_field = first_sheet.fields[0].model_copy(
         update={"content": content, "content_in_contenido_column": in_contenido_column},
@@ -650,19 +649,19 @@ def _intermediate_with_first_content(content: str, *, in_contenido_column: bool)
 
 def test_bare_constant_is_the_literal_only_when_it_fills_the_printed_contenido_column(tmp_path) -> None:
     """A lone unlabelled token states the constant when the reader located it in the Contenido cell."""
-    semantic_map = _semantic_map()
+    semantic_map = export_tree_semantic_map()
     tree = render_complete_export_tree(
-        _write_modelo_shell(tmp_path / "modelos" / "130") / "export",
+        write_modelo_shell(tmp_path / "modelos" / "130") / "export",
         revision_id="2025",
         joined=join_record_design_semantics(
             semantic_map,
             _intermediate_with_first_content("<T", in_contenido_column=True),
-            _m130_inspection(),
+            m130_inspection(),
         ),
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     assert tree.field_derivations[0].derivation_code == "literal-exact-v1"
@@ -672,7 +671,7 @@ def test_bare_constant_is_the_literal_only_when_it_fills_the_printed_contenido_c
 def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, official_content: str) -> None:
     """The same token as text merely attributed to the field, or a multi-token cell, is no constant."""
     in_column = official_content != "<T"
-    semantic_map = _semantic_map()
+    semantic_map = export_tree_semantic_map()
     target = tmp_path / "export"
 
     with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
@@ -682,12 +681,12 @@ def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, o
             joined=join_record_design_semantics(
                 semantic_map,
                 _intermediate_with_first_content(official_content, in_contenido_column=in_column),
-                _m130_inspection(),
+                m130_inspection(),
             ),
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
@@ -695,14 +694,18 @@ def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, o
 
 def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alternative() -> None:
     """M184 2025 prints the constant before a merged explanatory sentence."""
-    labelled = _field_patterns._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
+    labelled = export_field_derivation.OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
         'Constante "E". rentas. Declaración anual.',
     )
 
     assert labelled is not None
     assert labelled.group("literal") == "E"
-    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
-    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
+    assert (
+        export_field_derivation.OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
+    )
+    assert (
+        export_field_derivation.OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
+    )
 
 
 def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_constant() -> None:
@@ -711,21 +714,21 @@ def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_cons
         "Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» "
         'Sólo para claves de percepción "1" ó "2" (posiciones 100-101 del tipo de registro 2).'
     )
-    folded = official_content.translate(_OFFICIAL_QUOTE_FOLD)
+    folded = official_content.translate(OFFICIAL_QUOTE_FOLD)
 
-    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
-    labelled = _field_patterns._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
+    assert export_field_derivation.OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
+    labelled = export_field_derivation.OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
     assert labelled is not None
     assert labelled.group("literal") == "F"
 
 
 def test_renderer_refuses_wrong_same_width_literal_without_output(tmp_path) -> None:
     """A reviewed literal with the right width still cannot override different official bytes."""
-    semantic_map = _semantic_map().model_copy(
+    semantic_map = export_tree_semantic_map().model_copy(
         update={
             "entries": (
-                _semantic_map().entries[0].model_copy(update={"literal": "ZZ"}),
-                *_semantic_map().entries[1:],
+                export_tree_semantic_map().entries[0].model_copy(update={"literal": "ZZ"}),
+                *export_tree_semantic_map().entries[1:],
             ),
         },
     )
@@ -735,11 +738,11 @@ def test_renderer_refuses_wrong_same_width_literal_without_output(tmp_path) -> N
         render_complete_export_tree(
             target,
             revision_id="2025",
-            joined=join_record_design_semantics(semantic_map, _intermediate(), _m130_inspection()),
+            joined=join_record_design_semantics(semantic_map, export_tree_intermediate(), m130_inspection()),
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
     assert not target.exists()
@@ -749,37 +752,37 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     tmp_path,
 ) -> None:
     """A real-shaped 245-field record stays reviewable and roundtrips exactly once in source order."""
-    semantic_map, joined = _oversized_authorities(_m130_inspection())
-    first_revision = _write_modelo_shell(tmp_path / "first" / "modelos" / "130")
-    second_revision = _write_modelo_shell(tmp_path / "second" / "modelos" / "130")
+    semantic_map, joined = oversized_authorities(m130_inspection())
+    first_revision = write_modelo_shell(tmp_path / "first" / "modelos" / "130")
+    second_revision = write_modelo_shell(tmp_path / "second" / "modelos" / "130")
     first = render_complete_export_tree(
         first_revision / "export",
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
     second = render_complete_export_tree(
         second_revision / "export",
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
-    compact_map, compact_joined = _oversized_authorities(_m130_inspection(), field_count=20)
-    compact_revision = _write_modelo_shell(tmp_path / "compact" / "modelos" / "130")
+    compact_map, compact_joined = oversized_authorities(m130_inspection(), field_count=20)
+    compact_revision = write_modelo_shell(tmp_path / "compact" / "modelos" / "130")
     compact = render_complete_export_tree(
         compact_revision / "export",
         revision_id="2025",
         joined=compact_joined,
         semantic_map=compact_map,
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     oversized_parts = tuple(
@@ -828,16 +831,16 @@ def test_renderer_refuses_a_fragment_prefix_that_overflows_its_padded_width() ->
     function is exercised directly. The last in-width prefix must still render, or
     the guard would be refusing legitimate output one short of the boundary.
     """
-    width = serialization._FRAGMENT_PREFIX_DIGITS
+    width = serialization.FRAGMENT_PREFIX_DIGITS
     last_in_width = 10**width - 1
 
     assert (
-        serialization._record_relative_path(last_in_width, "generated-record")
+        serialization.record_relative_path(last_in_width, "generated-record")
         == f"{last_in_width}-record-generated-record.toml"
     )
 
     with pytest.raises(RegistryValidationError, match="overflows"):
-        serialization._record_relative_path(last_in_width + 1, "generated-record")
+        serialization.record_relative_path(last_in_width + 1, "generated-record")
 
 
 def _code_only_source(module: ModuleType) -> str:
@@ -860,7 +863,7 @@ def _code_only_source(module: ModuleType) -> str:
 
 def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> None:
     """The renderer must fail closed instead of importing an older output as guidance."""
-    module = ast.parse(inspect.getsource(_export_tree))
+    module = ast.parse(inspect.getsource(export_tree))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     imported_modules = {
         node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None
@@ -874,7 +877,7 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     # scan read that explanation as the defect it warns against. Stripping prose
     # keeps the tokens meaningful -- an actual `shutil` import or `read_text`
     # call is still caught, because those survive tokenisation as code.
-    source = _code_only_source(_export_tree).casefold()
+    source = _code_only_source(export_tree).casefold()
 
     assert "resolve_export_layout" not in referenced_names
     assert "bundled_authority" not in referenced_names
@@ -915,7 +918,7 @@ def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
 ) -> None:
     """The dash-enumeration reader admits AEAT's label spellings, never a range."""
     values = tuple(
-        match.group("value") for match in _field_patterns._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
+        match.group("value") for match in export_field_derivation.DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
     )
 
     assert values == expected
@@ -929,7 +932,7 @@ def test_bare_record_tag_is_recognised_without_a_constante_label() -> None:
     pattern keys on the tag's SHAPE, so admitting them cannot turn an arbitrary
     unlabelled cell into a mandated literal.
     """
-    matcher = _field_patterns._OFFICIAL_BARE_RECORD_TAG_RE
+    matcher = export_field_derivation.OFFICIAL_BARE_RECORD_TAG_RE
 
     assert matcher.fullmatch("</T35301000>") is not None
     assert matcher.fullmatch("<T32201000>") is not None
@@ -950,7 +953,7 @@ def test_width_17_sign_policies_cover_every_declared_policy() -> None:
     false. Adding a policy must break here rather than in a filed amount.
     """
     declared = set(get_args(Width17MembershipRule.model_fields["sign_policy"].annotation))
-    handled = {_WIDTH_17_SIGNED_POLICY, _WIDTH_17_UNSIGNED_POLICY}
+    handled = {WIDTH_17_SIGNED_POLICY, WIDTH_17_UNSIGNED_POLICY}
     assert handled == declared, (
         f"width-17 sign policies handled by the derivation {sorted(handled)} do not match the "
         f"declared set {sorted(declared)}; an unhandled policy renders as unsigned decimal"
@@ -983,15 +986,15 @@ def test_every_spelling_of_a_text_naturaleza_reaches_its_own_derivation_code(
     the ALPHANUMERIC derivation, and nothing refuses, because the folded word is
     simply not the abbreviation.
     """
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
     rendered = render_complete_export_tree(
         revision_dir / "export",
         revision_id="2025",
-        joined=_joined(_m130_inspection(), second_field_aeat_type=aeat_type),
-        semantic_map=_semantic_map(),
-        transport_profile=_profile(),
-        render_profile=_wire_profile(),
-        render_profile_source_evidence=_wire_evidence(),
+        joined=export_tree_joined(m130_inspection(), second_field_aeat_type=aeat_type),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
     )
 
     codes = {str(derivation.field.id): derivation.derivation_code for derivation in rendered.field_derivations}
@@ -1010,34 +1013,34 @@ def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
     the two disagree, and the honest answer is a refusal naming the field, not a
     text derivation invented for it.
     """
-    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
 
     with pytest.raises(RegistryValidationError, match="blank-run naturaleza"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
-            joined=_joined(_m130_inspection(), second_field_aeat_type="Blancos"),
-            semantic_map=_semantic_map(),
-            transport_profile=_profile(),
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
+            joined=export_tree_joined(m130_inspection(), second_field_aeat_type="Blancos"),
+            semantic_map=export_tree_semantic_map(),
+            transport_profile=export_tree_profile(),
+            render_profile=wire_profile(),
+            render_profile_source_evidence=wire_evidence(),
         )
 
 
 def _joined_field_with_aeat_type(aeat_type: str) -> JoinedRecordDesignField:
     """Return a parser-owned field from the hermetic joined-design fixture."""
-    joined = _joined(_synthetic_static_inspection(), second_field_aeat_type=aeat_type)
+    joined = export_tree_joined(synthetic_static_inspection(), second_field_aeat_type=aeat_type)
     return next(field for field in joined.fields if field.parser_field.aeat_type == aeat_type)
 
 
 @pytest.mark.unit
 def test_an_unsigned_official_type_derives_an_unsigned_slot() -> None:
     """`Num` is numerico SIN signo, and it must still render without refusal."""
-    from ..export_field_numeric_derivation import _derive_sign_from_official_type
+    from ..export_field_numeric_derivation import derive_sign_from_official_type
 
     unsigned = _joined_field_with_aeat_type("Num")
 
-    assert _derive_sign_from_official_type(unsigned) is False
+    assert derive_sign_from_official_type(unsigned) is False
 
 
 @pytest.mark.unit
@@ -1050,11 +1053,11 @@ def test_a_signed_official_type_derives_a_signed_slot() -> None:
     reserves no byte -- the marker displaces the leading digit when the value is
     negative -- and the derivation reads that grounding rather than refusing.
     """
-    from ..export_field_numeric_derivation import _derive_sign_from_official_type
+    from ..export_field_numeric_derivation import derive_sign_from_official_type
 
     signed = _joined_field_with_aeat_type("N")
 
-    assert _derive_sign_from_official_type(signed) is True
+    assert derive_sign_from_official_type(signed) is True
 
 
 def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier() -> None:
@@ -1070,22 +1073,22 @@ def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier
     unconditional; it is read as a requirement for natural persons only. A
     wording nobody has adjudicated is neither, and stays unclaimed.
     """
-    from ..export_field_schema import _is_required, _qualified_requirement
+    from ..export_field_schema import is_required, qualified_requirement
 
-    assert _is_required(None) is False
-    assert _is_required("Obligatorio") is True
-    assert _is_required("OBLIGATORIO") is True
-    assert _is_required("  obligatorio  ") is True
-    assert _is_required("OBLIGATORIO.") is True
-    assert _is_required("Obligatorio PI") is True
+    assert is_required(None) is False
+    assert is_required("Obligatorio") is True
+    assert is_required("OBLIGATORIO") is True
+    assert is_required("  obligatorio  ") is True
+    assert is_required("OBLIGATORIO.") is True
+    assert is_required("Obligatorio PI") is True
 
     for qualified in ("OBLIGATORIO (persona fisica)", "Obligatorio si procede"):
-        assert _is_required(qualified) is False
+        assert is_required(qualified) is False
 
-    assert _qualified_requirement("OBLIGATORIO (persona fisica)") == "natural_person"
-    assert _qualified_requirement("Obligatorio (persona física).") == "natural_person"
-    assert _qualified_requirement("Obligatorio si procede") is None
-    assert _qualified_requirement("OBLIGATORIO") is None
+    assert qualified_requirement("OBLIGATORIO (persona fisica)") == "natural_person"
+    assert qualified_requirement("Obligatorio (persona física).") == "natural_person"
+    assert qualified_requirement("Obligatorio si procede") is None
+    assert qualified_requirement("OBLIGATORIO") is None
 
 
 def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_representation() -> None:
@@ -1097,11 +1100,11 @@ def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_repres
     indicator could not be rendered at all. A contenido that names no blank keeps
     the field required, and a cell that is not obligatorio stays unrequired.
     """
-    from ..export_field_schema import _is_required_admitting_blank_text
+    from ..export_field_schema import is_required_admitting_blank_text
 
-    assert _is_required_admitting_blank_text("obligatorio", 'blanco o "C" (compl.)') is False
-    assert _is_required_admitting_blank_text("Obligatorio", "C o blanco") is False
-    assert _is_required_admitting_blank_text("obligatorio", None) is True
-    assert _is_required_admitting_blank_text("obligatorio", '"C" (compl.)') is True
-    assert _is_required_admitting_blank_text("obligatorio", "Blanquear") is True
-    assert _is_required_admitting_blank_text(None, 'blanco o "C"') is False
+    assert is_required_admitting_blank_text("obligatorio", 'blanco o "C" (compl.)') is False
+    assert is_required_admitting_blank_text("Obligatorio", "C o blanco") is False
+    assert is_required_admitting_blank_text("obligatorio", None) is True
+    assert is_required_admitting_blank_text("obligatorio", '"C" (compl.)') is True
+    assert is_required_admitting_blank_text("obligatorio", "Blanquear") is True
+    assert is_required_admitting_blank_text(None, 'blanco o "C"') is False

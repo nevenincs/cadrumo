@@ -7,10 +7,8 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    with_revision as _with_revision,
+    committed_modelo,
+    with_revision,
 )
 from .profile_schema_support import committed_registry_validator
 
@@ -18,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def test_validator_rejects_filing_schedule_legal_ref_without_legal_authority() -> None:
-    modelo, catalogues = _committed_modelo("111")
+    modelo, catalogues = committed_modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = revision.filing_schedules[0]
     legal = dict(catalogues.legal)
@@ -34,7 +32,7 @@ def test_validator_rejects_filing_schedule_legal_ref_without_legal_authority() -
 
 
 def test_validator_rejects_filing_schedule_without_official_guidance_source() -> None:
-    modelo, catalogues = _committed_modelo("111")
+    modelo, catalogues = committed_modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = revision.filing_schedules[0]
     mutated_schedule = schedule.model_copy(update={"source_refs": ("aeat-dr-111-2019-v18",)})
@@ -47,12 +45,12 @@ def test_validator_rejects_filing_schedule_without_official_guidance_source() ->
         match=r"filing schedule modelo-111-trimestral requires official_source_guidance source evidence",
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )
 
 
 def test_validator_rejects_filing_schedule_condition_legal_ref_without_legal_authority() -> None:
-    modelo, catalogues = _committed_modelo("111")
+    modelo, catalogues = committed_modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = revision.filing_schedules[0]
     condition = schedule.profile_conditions[0]
@@ -72,7 +70,7 @@ def test_validator_rejects_filing_schedule_condition_legal_ref_without_legal_aut
 
 
 def test_validator_rejects_filing_schedule_condition_without_official_guidance_source() -> None:
-    modelo, catalogues = _committed_modelo("111")
+    modelo, catalogues = committed_modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = revision.filing_schedules[0]
     condition = schedule.profile_conditions[0]
@@ -92,5 +90,5 @@ def test_validator_rejects_filing_schedule_condition_without_official_guidance_s
         ),
     ):
         committed_registry_validator(catalogues).validate_modelo(
-            _with_revision(modelo, mutated_revision),
+            with_revision(modelo, mutated_revision),
         )

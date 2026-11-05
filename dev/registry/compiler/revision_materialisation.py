@@ -17,30 +17,26 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.keyed_families import (
-    KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS,
-)
-from cadrumo.domain.calculations.registry.keyed_families import (
-    KeyedFamilySpec as _KeyedFamily,
+    KEYED_FAMILY_SPECS,
+    KeyedFamilySpec,
 )
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
 from cadrumo.domain.calculations.registry.revision_contracts import validate_predecessor_forest
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from . import casilla_inheritance as _casilla_inheritance
-from . import family_disposition_inheritance as _disposition_inheritance
-from . import keyed_family_inheritance as _keyed_family_inheritance
-from .casilla_inheritance import _LabelOrigins
+from . import casilla_inheritance, family_disposition_inheritance, keyed_family_inheritance
+from .casilla_inheritance import LabelOrigins
 from .loader_fields import (
-    _CASILLA_STORAGE_BASELINE_FIELD,
-    _CLEARED_FAMILIES_FIELD,
-    _DISPOSITIONS_FIELD,
-    _FAMILY_STORAGE_BASELINE_FIELD,
-    _INHERITED_SECTION,
-    _NO_PREDECESSOR_TABLE_KEY,
-    _PREDECESSOR_FIELD,
+    CASILLA_STORAGE_BASELINE_FIELD,
+    CLEARED_FAMILIES_FIELD,
+    DISPOSITIONS_FIELD,
+    FAMILY_STORAGE_BASELINE_FIELD,
+    INHERITED_SECTION,
+    NO_PREDECESSOR_TABLE_KEY,
+    PREDECESSOR_FIELD,
 )
 
-_KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = _CANONICAL_KEYED_FAMILY_SPECS
+_KEYED_FAMILIES: Final[tuple[KeyedFamilySpec, ...]] = KEYED_FAMILY_SPECS
 
 _REVISION_ID_ADAPTER: Final = TypeAdapter(RevisionId)
 
@@ -54,7 +50,7 @@ class _RawPredecessorDeclarations:
     keyless: frozenset[str]
 
 
-def _raw_predecessor_declarations(raw_revisions: Mapping[str, object]) -> _RawPredecessorDeclarations | None:
+def raw_predecessor_declarations(raw_revisions: Mapping[str, object]) -> _RawPredecessorDeclarations | None:
     """Project every edition's authored ``predecessor`` onto the three declaration states.
 
     Returns ``None`` when any edition is not a table or spells its declaration
@@ -66,15 +62,15 @@ def _raw_predecessor_declarations(raw_revisions: Mapping[str, object]) -> _RawPr
     declared_roots: set[str] = set()
     keyless: set[str] = set()
     for revision_id, raw_revision in raw_revisions.items():
-        table = _as_toml_table(raw_revision)
+        table = as_toml_table(raw_revision)
         if table is None:
             return None
-        declaration = table.get(_PREDECESSOR_FIELD)
+        declaration = table.get(PREDECESSOR_FIELD)
         if declaration is None:
             keyless.add(revision_id)
         elif isinstance(declaration, str) and _is_revision_id(declaration):
             named[revision_id] = declaration
-        elif isinstance(declaration, Mapping) and set(declaration) == {_NO_PREDECESSOR_TABLE_KEY}:
+        elif isinstance(declaration, Mapping) and set(declaration) == {NO_PREDECESSOR_TABLE_KEY}:
             declared_roots.add(revision_id)
         else:
             return None
@@ -103,8 +99,8 @@ class _MaterialisedRevisions:
     """
 
     revisions: Mapping[str, object]
-    label_origins: Mapping[str, _LabelOrigins]
-    text_origins: Mapping[str, _LabelOrigins] = dataclass_field(default_factory=dict)
+    label_origins: Mapping[str, LabelOrigins]
+    text_origins: Mapping[str, LabelOrigins] = dataclass_field(default_factory=dict)
     """Per inheriting edition, the edition whose catalogue holds each row's text.
 
     It differs from ``label_origins`` only for a row a storage patch restates
@@ -119,11 +115,11 @@ class _MaterialisedRevision:
     """One edition resolved against its chain; ``label_origins`` is ``None`` when it inherits nothing."""
 
     table: Mapping[str, object]
-    label_origins: _LabelOrigins | None
-    text_origins: _LabelOrigins | None = None
+    label_origins: LabelOrigins | None
+    text_origins: LabelOrigins | None = None
 
 
-def _materialise_revisions(
+def materialise_revisions(
     source_path: Path,
     modelo_id: str,
     raw_revisions: Mapping[str, object],
@@ -188,11 +184,11 @@ def _materialise_revisions(
     enrolment; the raw rows carry no marker, so a materialised table written
     back as a full copy states nothing the loader would refuse.
     """
-    _disposition_inheritance.refuse_authored_disposition_markers(source_path, raw_revisions)
-    declarations = _raw_predecessor_declarations(raw_revisions)
+    family_disposition_inheritance.refuse_authored_disposition_markers(source_path, raw_revisions)
+    declarations = raw_predecessor_declarations(raw_revisions)
     storage_named, family_storage_named = _storage_baselines(source_path, raw_revisions)
     if not _requires_materialisation(declarations, storage_named, family_storage_named):
-        _disposition_inheritance.refuse_removals_without_predecessor(source_path, raw_revisions)
+        family_disposition_inheritance.refuse_removals_without_predecessor(source_path, raw_revisions)
         return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
     _validate_predecessor_declarations(source_path, modelo_id, declarations)
     semantic_named = {} if declarations is None else declarations.named
@@ -210,15 +206,15 @@ def _storage_baselines(source_path: Path, raw_revisions: Mapping[str, object]) -
     storage_named: dict[str, str] = {}
     family_storage_named: dict[str, str] = {}
     for revision_id, raw_revision in raw_revisions.items():
-        table = _as_toml_table(raw_revision)
-        baseline = None if table is None else table.get(_CASILLA_STORAGE_BASELINE_FIELD)
+        table = as_toml_table(raw_revision)
+        baseline = None if table is None else table.get(CASILLA_STORAGE_BASELINE_FIELD)
         if isinstance(baseline, str):
             if baseline == revision_id or baseline not in raw_revisions:
                 raise RegistryLoadError(
                     f"{source_path}: revision {revision_id!r} has invalid casilla storage baseline {baseline!r}"
                 )
             storage_named[revision_id] = baseline
-        family_baseline = None if table is None else table.get(_FAMILY_STORAGE_BASELINE_FIELD)
+        family_baseline = None if table is None else table.get(FAMILY_STORAGE_BASELINE_FIELD)
         if isinstance(family_baseline, str):
             if family_baseline == revision_id or family_baseline not in raw_revisions:
                 raise RegistryLoadError(
@@ -264,8 +260,8 @@ def _materialise_revision_set(
 ) -> _MaterialisedRevisions:
     resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
-    label_origins: dict[str, _LabelOrigins] = {}
-    text_origins: dict[str, _LabelOrigins] = {}
+    label_origins: dict[str, LabelOrigins] = {}
+    text_origins: dict[str, LabelOrigins] = {}
     revision_ids = dict.fromkeys((*semantic_named, *storage_named, *family_storage_named))
     for revision_id in revision_ids:
         revision = _materialise_revision(
@@ -286,8 +282,8 @@ def _materialise_revision_set(
 def _record_origins(
     revision_id: str,
     revision: _MaterialisedRevision,
-    label_origins: dict[str, _LabelOrigins],
-    text_origins: dict[str, _LabelOrigins],
+    label_origins: dict[str, LabelOrigins],
+    text_origins: dict[str, LabelOrigins],
 ) -> None:
     if revision.label_origins is not None:
         label_origins[revision_id] = revision.label_origins
@@ -314,7 +310,7 @@ def _materialise_revision(
     casilla_baseline_id = predecessor_id or storage_named.get(revision_id)
     family_baseline_id = predecessor_id or family_storage_named.get(revision_id)
     if casilla_baseline_id is None and family_baseline_id is None:
-        _disposition_inheritance.inherit_family_dispositions(
+        family_disposition_inheritance.inherit_family_dispositions(
             f"{source_path}: revision {revision_id!r}",
             modelo_id=modelo_id,
             baseline_id=None,
@@ -336,8 +332,8 @@ def _materialise_revision(
             table,
             resolved,
         )
-        merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
-        restated = _keyed_family_inheritance._restated_families(table)
+        merged: dict[str, object] = {**table, INHERITED_SECTION: rows}
+        restated = keyed_family_inheritance.restated_families(table)
         if family_baseline_id is not None:
             _inherit_revision_families(
                 source_path,
@@ -377,7 +373,7 @@ def _revision_table(
     revision_id: str,
     raw_revisions: Mapping[str, object],
 ) -> Mapping[str, object]:
-    table = _as_toml_table(raw_revisions[revision_id])
+    table = as_toml_table(raw_revisions[revision_id])
     if table is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
     return table
@@ -395,18 +391,18 @@ def _materialise_revision_casillas(
     baseline_id: str | None,
     table: Mapping[str, object],
     resolved: dict[str, _MaterialisedRevision],
-) -> tuple[tuple[object, ...], _LabelOrigins | None, _LabelOrigins | None]:
+) -> tuple[tuple[object, ...], LabelOrigins | None, LabelOrigins | None]:
     if baseline_id is None:
-        return _raw_casilla_rows(source_path, revision_id, table), None, None
+        return raw_casilla_rows(source_path, revision_id, table), None, None
     predecessor = _materialise_revision(
         source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
     )
     relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
-    rows, label_origins, text_origins = _casilla_inheritance.inherit_casillas(
+    rows, label_origins, text_origins = casilla_inheritance.inherit_casillas(
         f"{source_path}: revision {revision_id!r} {relation} {baseline_id!r}",
         revision_id=revision_id,
         predecessor_id=baseline_id,
-        inherited=_raw_casilla_rows(source_path, baseline_id, predecessor.table),
+        inherited=raw_casilla_rows(source_path, baseline_id, predecessor.table),
         inherited_label_origins=predecessor.label_origins,
         inherited_text_origins=predecessor.text_origins,
         successor=table,
@@ -433,7 +429,7 @@ def _inherit_revision_families(
         source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
     )
     asserted = as_toml_array(successor.get("scoped_families", ())) or ()
-    declined = cleared_family_names(successor.get(_CLEARED_FAMILIES_FIELD, ()))
+    declined = cleared_family_names(successor.get(CLEARED_FAMILIES_FIELD, ()))
     for family in _KEYED_FAMILIES:
         if family.section in restated:
             continue
@@ -473,7 +469,7 @@ def _inherit_revision_dispositions(
             source_path, modelo_id, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
         ).table
     )
-    effective = _disposition_inheritance.inherit_family_dispositions(
+    effective = family_disposition_inheritance.inherit_family_dispositions(
         f"{source_path}: revision {revision_id!r} inheriting from {baseline_id!r}",
         modelo_id=modelo_id,
         baseline_id=baseline_id,
@@ -481,14 +477,14 @@ def _inherit_revision_dispositions(
         successor=successor,
     )
     if effective:
-        merged[_DISPOSITIONS_FIELD] = effective
+        merged[DISPOSITIONS_FIELD] = effective
 
 
 def _materialise_one_family(
     source_path: Path,
     revision_id: str,
     baseline_id: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     predecessor: Mapping[str, object],
     rows: tuple[object, ...],
     successor: Mapping[str, object],
@@ -496,24 +492,24 @@ def _materialise_one_family(
     declined: frozenset[str],
 ) -> object | None:
     context = f"{source_path}: revision {revision_id!r} inheriting from {baseline_id!r}"
-    inherited = _keyed_family_inheritance._raw_keyed_members(source_path, baseline_id, predecessor, family)
+    inherited = keyed_family_inheritance.raw_keyed_members(source_path, baseline_id, predecessor, family)
     if family.scoped and family.section not in asserted:
-        _keyed_family_inheritance._refuse_undecided_scoped_family(
+        keyed_family_inheritance.refuse_undecided_scoped_family(
             context,
             family=family,
             inherited=inherited,
-            stated=_keyed_family_inheritance._raw_keyed_members(source_path, revision_id, successor, family),
+            stated=keyed_family_inheritance.raw_keyed_members(source_path, revision_id, successor, family),
             declined=declined,
         )
         return None
-    family_members = _keyed_family_inheritance.inherit_keyed_family(
+    family_members = keyed_family_inheritance.inherit_keyed_family(
         context,
         revision_id=revision_id,
         predecessor_id=baseline_id,
         predecessor=predecessor,
         family=family,
         inherited=inherited,
-        inherited_casillas=_raw_casilla_rows(source_path, baseline_id, predecessor),
+        inherited_casillas=raw_casilla_rows(source_path, baseline_id, predecessor),
         successor_casillas=rows,
         successor=successor,
     )
@@ -522,8 +518,8 @@ def _materialise_one_family(
     return family_members
 
 
-def _raw_casilla_rows(source_path: Path, revision_id: str, table: Mapping[str, object]) -> tuple[object, ...]:
-    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+def raw_casilla_rows(source_path: Path, revision_id: str, table: Mapping[str, object]) -> tuple[object, ...]:
+    rows = as_toml_array(table.get(INHERITED_SECTION, ()))
     if rows is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} casillas must be an array")
     return rows

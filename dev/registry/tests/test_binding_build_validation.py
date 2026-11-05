@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -64,7 +64,7 @@ _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load the committed Modelo 130 modelo plus catalogues for the build path."""
-    return _committed_modelo("130")
+    return committed_modelo("130")
 
 
 def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) -> ModeloDefinition:

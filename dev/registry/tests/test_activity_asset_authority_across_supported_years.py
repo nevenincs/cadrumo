@@ -44,9 +44,18 @@ from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, Pla
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
-from ._activity_asset_schedule_support import _asset, _election, _linear
+from .activity_asset_schedule_support import (
+    activity_asset_schedule_asset,
+    activity_asset_schedule_election,
+    activity_asset_schedule_linear,
+)
 from .authored_edition_support import reachable_grade_snapshot
-from .test_activity_asset_schedule_authority_methods import _renewable, _renewable_evidence, _vehicle, _workforce
+from .test_activity_asset_schedule_authority_methods import (
+    activity_asset_schedule_authority_methods_vehicle,
+    renewable,
+    renewable_evidence,
+    workforce,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,7 +130,7 @@ def _charge(
 
 
 def _kept_workforce(year: int) -> tuple[PlantillaMediaYear, ...]:
-    return _workforce(
+    return workforce(
         (year - 1, "10.00", PlantillaMediaState.OBSERVED),
         (year, "10.00", PlantillaMediaState.OBSERVED),
         (year + 1, "10.00", PlantillaMediaState.COMMITTED),
@@ -137,7 +146,9 @@ def test_every_authored_supported_year_prints_the_machinery_row() -> None:
 @pytest.mark.parametrize("year", _supported_years())
 def test_a_full_year_of_linear_machinery_charges_the_table_maximum(year: int) -> None:
     basis = Decimal("10000")
-    asset = _asset(_linear("maquinaria"), basis=str(basis), in_service=date(year, 1, 1))
+    asset = activity_asset_schedule_asset(
+        activity_asset_schedule_linear("maquinaria"), basis=str(basis), in_service=date(year, 1, 1)
+    )
 
     assert _charge(asset, year).amount == basis * _MACHINERY_RATE
 
@@ -145,8 +156,8 @@ def test_a_full_year_of_linear_machinery_charges_the_table_maximum(year: int) ->
 @pytest.mark.parametrize("year", _supported_years())
 def test_renewable_free_depreciation_is_admitted_exactly_where_the_manual_or_the_lis_grants_it(year: int) -> None:
     admitted = year in manual_editions_printing("renta", _RENEWABLE_HEADING) or _lis_admits_renewables(year)
-    evidence = _renewable_evidence(made_available=date(year, 1, 10))
-    panels = _asset(_renewable(evidence), basis="40000", in_service=date(year, 2, 1))
+    evidence = renewable_evidence(made_available=date(year, 1, 10))
+    panels = activity_asset_schedule_asset(renewable(evidence), basis="40000", in_service=date(year, 2, 1))
 
     if admitted:
         assert _charge(panels, year, free_amount="40000", workforce=_kept_workforce(year)).amount == Decimal("40000.00")
@@ -191,8 +202,8 @@ def _expect_electric_mobility_outcome(
 
 
 def _charger(year: int, kind: AssetKind = AssetKind.MATERIAL) -> ActivityAssetRevision:
-    return _asset(
-        _election(
+    return activity_asset_schedule_asset(
+        activity_asset_schedule_election(
             AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE,
             authority_class_key="instalacion-resto",
             charging_infrastructure=ChargingInfrastructureEvidence(
@@ -217,11 +228,13 @@ def test_charging_point_free_depreciation_is_admitted_where_the_manual_or_the_li
 
 @pytest.mark.parametrize("year", _supported_years())
 def test_electric_vehicle_free_depreciation_is_admitted_where_the_manual_or_the_lis_grants_it(year: int) -> None:
-    vehicle = _asset(
-        _election(AmortizationMethod.ELECTRIC_VEHICLE_FREE, authority_class_key="transporte-externo"),
+    vehicle = activity_asset_schedule_asset(
+        activity_asset_schedule_election(
+            AmortizationMethod.ELECTRIC_VEHICLE_FREE, authority_class_key="transporte-externo"
+        ),
         basis="30000",
         in_service=date(year, 3, 1),
-        vehicle=_vehicle(propulsion=ElectricPropulsion.BEV),
+        vehicle=activity_asset_schedule_authority_methods_vehicle(propulsion=ElectricPropulsion.BEV),
     )
 
     _expect_electric_mobility_outcome(
@@ -239,7 +252,9 @@ def test_the_accelerated_da18_regime_is_printed_by_some_supported_manual() -> No
 @pytest.mark.parametrize("year", _accelerated_only_years())
 def test_elections_outside_the_da18_regime_keep_the_generic_refusal(year: int) -> None:
     """Only a material DA 18 election falls under the accelerated regime; nothing else changes token."""
-    material_goodwill = _asset(_election(AmortizationMethod.GOODWILL), basis="1000", in_service=date(year, 3, 1))
+    material_goodwill = activity_asset_schedule_asset(
+        activity_asset_schedule_election(AmortizationMethod.GOODWILL), basis="1000", in_service=date(year, 3, 1)
+    )
     intangible_charger = _charger(year, AssetKind.INTANGIBLE)
 
     for asset, method, kind in (
@@ -263,7 +278,9 @@ def test_an_edition_that_begins_after_the_tax_year_is_refused() -> None:
     later = max(_supported_years(), key=lambda year: _edition(year).valid_from)
     edition = _edition(later)
     earlier_year = edition.valid_from.year - 1
-    asset = _asset(_linear("maquinaria"), basis="10000", in_service=date(earlier_year, 1, 1))
+    asset = activity_asset_schedule_asset(
+        activity_asset_schedule_linear("maquinaria"), basis="10000", in_service=date(earlier_year, 1, 1)
+    )
 
     with pytest.raises(ActividadAssetUnsupportedError) as refused:
         resolve_activity_asset_schedule_authority(

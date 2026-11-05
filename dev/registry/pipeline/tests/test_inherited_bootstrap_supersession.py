@@ -13,8 +13,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError, Regis
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
 from .. import cli as tree_cli
-from .._tree_publication import publish_validated_generated_export_tree
-from .._tree_validation import GeneratedExportTreeValidationContext
 from ..bootstrap_supersession import (
     bootstrap_layout_supersession_fingerprint,
     bootstrap_manual_source_revision_root,
@@ -31,12 +29,14 @@ from ..cli import (
 from ..export_fragment_provenance import ExportFragmentTarget
 from ..export_tree_models import RenderedExportTree
 from ..export_tree_serialization import render_toml_bytes
+from ..tree_publication import publish_validated_generated_export_tree
 from ..tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
 )
-from ..tree_publication_supersession import _install_generated_form_companion, _retarget_reviewed_constructs
+from ..tree_publication_supersession import install_generated_form_companion, retarget_reviewed_constructs
+from ..tree_validation import GeneratedExportTreeValidationContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -135,7 +135,7 @@ def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_pa
         target_export_root=staged_revision_root / "export",
     )
 
-    _install_generated_form_companion(
+    install_generated_form_companion(
         context=context,
         staged_revision_root=staged_revision_root,
         source_modelo_root=source_modelo_root,
@@ -328,7 +328,7 @@ def test_inherited_construct_cannot_change_layout_id_without_a_local_keyed_delta
         source_state_sha256=before,
     )
     with pytest.raises(RegistryValidationError, match="inherited construct without a keyed local delta"):
-        _retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=reviewed)
+        retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=reviewed)
     assert bootstrap_layout_supersession_fingerprint(staged_revision) == before
 
     stable = GeneratedExportSupersession(
@@ -337,7 +337,7 @@ def test_inherited_construct_cannot_change_layout_id_without_a_local_keyed_delta
         expected_construct_references=1,
         source_state_sha256=before,
     )
-    _retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=stable)
+    retarget_reviewed_constructs(staged_revision, revision_id="2026-3t-4t", supersession=stable)
     assert bootstrap_layout_supersession_fingerprint(staged_revision) == before
 
 

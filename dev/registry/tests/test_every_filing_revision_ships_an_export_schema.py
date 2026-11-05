@@ -32,7 +32,7 @@ import pytest
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ _FILING_GRADE = "filing"
 
 def _filing_revisions():
     """``(modelo id, revision id, revision)`` for every revision claiming filing authority."""
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     rows = [
         (modelo.id, revision_id, revision)
         for modelo in sorted(modelos, key=lambda candidate: candidate.id)
@@ -58,7 +58,7 @@ def test_the_population_splits_by_grade_so_this_module_is_not_measuring_everythi
     whole-tree assertion, and the applicability revisions that legitimately ship no
     filing schema would start failing it. If none were, it would assert nothing at all.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     grades = {
         str(getattr(revision, "authority_grade", "") or "").lower()
         for modelo in modelos

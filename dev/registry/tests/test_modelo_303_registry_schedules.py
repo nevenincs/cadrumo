@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests import modelo_303_registry_schedules_scenarios as scenarios
 
-from ._modelo_303_registry_support import load_modelo_303
+from .modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

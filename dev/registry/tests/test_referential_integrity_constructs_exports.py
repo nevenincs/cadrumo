@@ -29,7 +29,8 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
 )
 
 from ..compiler.validator import RegistryValidator
-from ._referential_integrity_support import (
+from .profile_schema_support import load_user_profile_schema
+from .referential_integrity_support import (
     NUMERIC_CASILLA_01,
     PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
@@ -46,7 +47,6 @@ from ._referential_integrity_support import (
     modelo_validation_failures,
     snapshot_for_revision,
 )
-from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [
     pytest.mark.unit,

@@ -25,7 +25,7 @@ import pytest
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_fragment_repairs import join_wrapped_row_descriptions
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,7 +70,7 @@ def test_a_bare_row_with_nothing_usable_after_it_is_left_alone() -> None:
 )
 def test_the_bundled_modelo_202_designs_carry_no_position_holes(prefix: str) -> None:
     """The real corpus case: each of these reported a dropped byte at 80 or 81."""
-    matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
+    matches = [path for path in bundled_designs() if path.name.startswith(prefix)]
     assert matches, f"the bundled design {prefix!r} is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

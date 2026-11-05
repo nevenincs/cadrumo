@@ -12,11 +12,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from .. import maintenance_support as _maintenance_support
-from ..compiler import corpus_catalogue as _corpus_catalogue
+from .. import maintenance_support
+from ..compiler import corpus_catalogue
 from ..maintenance_support import resolve_record_design_binary
 from .authored_edition_support import source_first_exercise, source_with_sha256
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import catalogue_verification_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +42,7 @@ def test_resolves_each_explicit_hash_pinned_modelo_303_design_epoch(
     filing_year: int,
     design_epoch: str,
 ) -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
 
     resolved = resolve_record_design_binary(
         bundled_path(),
@@ -64,7 +64,7 @@ def test_resolves_each_explicit_hash_pinned_modelo_390_design_epoch(
     design_epoch: str,
 ) -> None:
     """Each M390 binary selects only through its own epoch-bearing source entry."""
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
 
     resolved = resolve_record_design_binary(
         bundled_path(),
@@ -83,7 +83,7 @@ def test_rejects_modelo_390_cross_epoch_selection_before_reading_the_binary() ->
     with pytest.raises(RegistryValidationError, match="declares design epoch '2025', not requested '2024'"):
         resolve_record_design_binary(
             bundled_path(),
-            _catalogues().sources,
+            catalogue_verification_catalogues().sources,
             source_ref="aeat-dr-390-2025",
             filing_year=2025,
             design_epoch="2024",
@@ -91,7 +91,7 @@ def test_rejects_modelo_390_cross_epoch_selection_before_reading_the_binary() ->
 
 
 def test_rejects_modelo_390_hash_drift() -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-390-2025"]
     drifting_source = SourceReference.model_validate({**source.model_dump(mode="python"), "sha256": "0" * 64})
 
@@ -108,7 +108,7 @@ def test_rejects_modelo_390_hash_drift() -> None:
 def _m303_split_design_sources() -> tuple[tuple[int, str, str, str, str], ...]:
     """Derive each complete early/late pair from the record-design catalogue."""
     epochs_by_year: dict[int, dict[str, list[SourceReference]]] = {}
-    for source in _catalogues().sources.values():
+    for source in catalogue_verification_catalogues().sources.values():
         if not str(source.id).startswith("aeat-dr-303-") or source.record_design_epoch is None:
             continue
         year_text, separator, suffix = source.record_design_epoch.partition("-")
@@ -152,7 +152,7 @@ def test_verifies_both_explicit_modelo_303_split_design_epochs_without_date_only
     late_source_ref: str,
     late_epoch: str,
 ) -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
 
     early = resolve_record_design_binary(
         bundled_path(),
@@ -177,7 +177,7 @@ def test_rejects_modelo_303_epoch_mismatch_before_reading_the_binary() -> None:
     with pytest.raises(RegistryValidationError, match="declares design epoch '2024-late', not requested '2024-early'"):
         resolve_record_design_binary(
             bundled_path(),
-            _catalogues().sources,
+            catalogue_verification_catalogues().sources,
             source_ref="aeat-dr-303-2024-late",
             filing_year=2024,
             design_epoch="2024-early",
@@ -185,7 +185,7 @@ def test_rejects_modelo_303_epoch_mismatch_before_reading_the_binary() -> None:
 
 
 def test_rejects_modelo_303_hash_drift() -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-303-2025"]
     drifting_source = SourceReference.model_validate({**source.model_dump(mode="python"), "sha256": "0" * 64})
 
@@ -200,7 +200,7 @@ def test_rejects_modelo_303_hash_drift() -> None:
 
 
 def test_rejects_modelo_303_source_without_an_explicit_epoch() -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-303-2025"]
     epochless_source = SourceReference.model_validate({**source.model_dump(mode="python"), "record_design_epoch": None})
 
@@ -215,7 +215,7 @@ def test_rejects_modelo_303_source_without_an_explicit_epoch() -> None:
 
 
 def test_rejects_a_modelo_303_filename_instead_of_an_explicit_source_reference() -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-303-2025"]
 
     with pytest.raises(RegistryValidationError, match="is not declared in the source catalogue"):
@@ -229,7 +229,7 @@ def test_rejects_a_modelo_303_filename_instead_of_an_explicit_source_reference()
 
 
 def _catalogue_top_level_imports() -> tuple[set[tuple[int, str | None, str]], set[str]]:
-    catalogue_tree = ast.parse(inspect.getsource(_corpus_catalogue))
+    catalogue_tree = ast.parse(inspect.getsource(corpus_catalogue))
     top_level_imported_symbols = {
         (node.level, node.module, alias.name)
         for node in catalogue_tree.body
@@ -243,7 +243,7 @@ def _catalogue_top_level_imports() -> tuple[set[tuple[int, str | None, str]], se
 
 
 def _resolver_imports_and_reached_names() -> tuple[set[tuple[int, str | None, str]], set[str], set[str], set[str]]:
-    resolver_tree = ast.parse(inspect.getsource(_maintenance_support.resolve_record_design_binary))
+    resolver_tree = ast.parse(inspect.getsource(maintenance_support.resolve_record_design_binary))
     resolver = resolver_tree.body[0]
     assert isinstance(resolver, ast.FunctionDef)
     resolver_imports = {
@@ -332,7 +332,7 @@ _M200_PINNED_DESIGN_EXERCISE = source_first_exercise(
 
 def test_resolves_the_hash_pinned_modelo_200_binary() -> None:
     year = _M200_PINNED_DESIGN_EXERCISE
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
 
     resolved = resolve_record_design_binary(
         bundled_path(),
@@ -351,7 +351,7 @@ def test_rejects_an_exact_design_that_does_not_apply_to_the_filing_year() -> Non
     with pytest.raises(RegistryValidationError, match="does not apply to filing year 2025"):
         resolve_record_design_binary(
             bundled_path(),
-            _catalogues().sources,
+            catalogue_verification_catalogues().sources,
             source_ref="aeat-dr-200-2024",
             filing_year=2025,
             design_epoch="2024",
@@ -359,7 +359,7 @@ def test_rejects_an_exact_design_that_does_not_apply_to_the_filing_year() -> Non
 
 
 def test_rejects_a_hash_drifting_selected_binary() -> None:
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-200-2025"]
     drifting_source = SourceReference.model_validate(
         {**source.model_dump(mode="python"), "sha256": "0" * 64},
@@ -384,7 +384,7 @@ def test_rejects_a_selection_without_a_catalogue_epoch() -> None:
     given epoch ``2013``: the call still raised, so the test still passed, but on
     an epoch MISMATCH — a different branch from the one it exists to cover.
     """
-    sources = _catalogues().sources
+    sources = catalogue_verification_catalogues().sources
     source = sources["aeat-dr-200-2025"]
     epochless = SourceReference.model_validate(
         {**source.model_dump(mode="python"), "record_design_epoch": None},
@@ -404,7 +404,7 @@ def test_rejects_a_blank_requested_design_epoch() -> None:
     with pytest.raises(RegistryValidationError, match="requires a non-blank design epoch"):
         resolve_record_design_binary(
             bundled_path(),
-            _catalogues().sources,
+            catalogue_verification_catalogues().sources,
             source_ref="aeat-dr-200-2025",
             filing_year=2025,
             design_epoch="   ",

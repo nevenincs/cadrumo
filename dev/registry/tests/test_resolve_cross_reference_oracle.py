@@ -18,11 +18,11 @@ from cadrumo.domain.calculations.registry.schema_live_verification import (
     ProfilePredicateDefinition,
 )
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment, collect_orphan_oracle_ids
-from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .groi_oracle import GROI_ORACLE_ID, GroiOracle
+from .remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -94,7 +94,7 @@ def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> N
     binds both NIF-IVA (Modelo 349 IXVI) and GROI (Modelo 349 GROI), so
     a catalogue containing both produces no orphans."""
 
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     catalogue = LiveParityCatalogue()
     catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
     catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)

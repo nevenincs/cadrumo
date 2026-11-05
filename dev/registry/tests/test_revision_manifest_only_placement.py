@@ -37,11 +37,11 @@ from cadrumo.domain.calculations.registry.schema_base import (
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.loader_directory_mode_support import load_revision as _shared_load_revision
 from ..conformance.loader_directory_mode_support import (
-    standard_revision_preamble_text as _standard_revision_preamble_text,
+    load_revision,
+    standard_revision_preamble_text,
+    write_modelo,
 )
-from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -118,7 +118,7 @@ def _revision_manifest_text(*, declare_legal_refs: bool = True, extra: str = "")
     its legal grounding is exactly the shape a fragment could have supplied it
     for, unchallenged.
     """
-    return _standard_revision_preamble_text(declare_legal_refs=declare_legal_refs) + extra
+    return standard_revision_preamble_text(declare_legal_refs=declare_legal_refs) + extra
 
 
 def _write_modelo(
@@ -127,7 +127,7 @@ def _write_modelo(
     manifest_text: str | None = None,
     fragment_extra: str = "",
 ) -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -137,7 +137,7 @@ def _write_modelo(
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _fragment_declaring(field_name: str, literal: str) -> str:

@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 from .profile_schema_support import committed_registry_validator
 
@@ -114,7 +114,7 @@ def _assert_official_design_endpoints(source_ref: str, filing_year: int, design_
 
 def _assert_registry_endpoints(revision_id: str, source_ref: str, filing_year: int, period: str) -> None:
     """Pin the registry's own endpoint declarations for one revision."""
-    modelo, registry_catalogues = _committed_modelo("303")
+    modelo, registry_catalogues = committed_modelo("303")
     snapshot = build_snapshot(
         modelo,
         registry_catalogues,
@@ -171,7 +171,7 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
 
 
 def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers() -> None:
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for _revision_id, _source_ref, filing_year, _design_epoch, period in _DESIGNS:

@@ -45,8 +45,8 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import mutate_declaration, scratch_registry_tree
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .gate_support import mutate_declaration, scratch_registry_tree
+from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -139,7 +139,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-        deduction_provenance=_deduction_provenance(
+        deduction_provenance=ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-21",
         ),
@@ -154,7 +154,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
         base_amount=Decimal("500.00"),
         iva_amount=Decimal("105.00"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-        deduction_provenance=_deduction_provenance(
+        deduction_provenance=ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("domestic_current"),
             source_locator="invoice:domestic-isp",
         ),
@@ -188,7 +188,7 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-        deduction_provenance=_deduction_provenance(
+        deduction_provenance=ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-zero",
         ),
@@ -225,7 +225,7 @@ def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_pa
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
-        deduction_provenance=_deduction_provenance(
+        deduction_provenance=ledger_iva_aggregation_deduction_provenance(
             IvaDeductionFactKind.from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-zero-mutant",
         ),

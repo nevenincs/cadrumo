@@ -41,7 +41,7 @@ from dev.temporary_output import prepare_temp_root
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
-from ._export_tree import render_complete_export_tree
+from .export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
 from .generated_export_inheritance import select_generated_export_inheritance
@@ -78,7 +78,7 @@ __all__ = [
 #: declaration - one filename, three spellings across this repository, of
 #: which this was the one nobody would have found when it changed.
 _PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
-_AUTHORED_ROOT = Path(__file__).resolve().parent.parent
+AUTHORED_ROOT = Path(__file__).resolve().parent.parent
 
 
 class RecordDesignFrameUnavailableError(ValueError):
@@ -251,7 +251,7 @@ def _record_design_refs(
     )
 
 
-def _select_record_design_source(
+def select_record_design_source(
     selected: ModeloRevision,
     sources: Mapping[SourceRefId, SourceReference],
     *,
@@ -404,7 +404,7 @@ def select_revision_record_design_source(
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
-    return _select_record_design_source(
+    return select_record_design_source(
         definition.revisions[revision],
         authority.catalogues.sources,
         modelo=modelo,
@@ -415,7 +415,7 @@ def select_revision_record_design_source(
     )
 
 
-def _render_transport(
+def render_transport(
     selected: ModeloRevision,
     sources: Mapping[SourceRefId, SourceReference],
     *,
@@ -534,7 +534,7 @@ def revision_render_inputs(
             absent. Each is reported by name rather than substituted, because a
             silent fallback would derive the wrong thing and look like success.
     """
-    return _revision_render_inputs(
+    return build_revision_render_inputs(
         authority.modelo(modelo),
         authority.catalogues,
         modelo=modelo,
@@ -547,7 +547,7 @@ def revision_render_inputs(
     )
 
 
-def _revision_render_inputs(
+def build_revision_render_inputs(
     definition: ModeloDefinition,
     catalogues: RegistryCatalogues,
     *,
@@ -570,7 +570,7 @@ def _revision_render_inputs(
         effective_year, effective_period = _declared_render_frame(
             selected, catalogues, modelo=modelo, revision=revision, source_ref=source_ref
         )
-    selected_source_ref, epoch = _select_record_design_source(
+    selected_source_ref, epoch = select_record_design_source(
         selected,
         sources,
         modelo=modelo,
@@ -579,7 +579,7 @@ def _revision_render_inputs(
         filing_year=effective_year,
         period=effective_period,
     )
-    layout_id, line_ending = _render_transport(
+    layout_id, line_ending = render_transport(
         selected,
         sources,
         modelo=modelo,
@@ -588,8 +588,8 @@ def _revision_render_inputs(
         bootstrap_transport=bootstrap_transport,
     )
 
-    semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
-    profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
+    semantic_root = AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
+    profile_root = AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
     for root in (semantic_root, profile_root):
         if not root.is_dir():
             raise ValueError(f"{modelo}/{revision} has no authored inputs at {root}")
@@ -668,7 +668,7 @@ def _declared_render_frame(
     refusals: list[str] = []
     for year, declared_period in coordinates:
         try:
-            _select_record_design_source(
+            select_record_design_source(
                 selected,
                 catalogues.sources,
                 modelo=modelo,

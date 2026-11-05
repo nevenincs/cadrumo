@@ -12,7 +12,7 @@ from .temporal_enrollment_models import (
     RegistryRevisionSubject,
     TemporalEnrollmentExclusionPin,
 )
-from .temporal_enrollment_source import _subject_is_declared
+from .temporal_enrollment_source import subject_is_declared
 
 __all__ = ["ENROLLMENT_EXCLUSION_PINS"]
 
@@ -21,7 +21,7 @@ __all__ = ["ENROLLMENT_EXCLUSION_PINS"]
 ENROLLMENT_EXCLUSION_PINS: Final[tuple[TemporalEnrollmentExclusionPin, ...]] = ()
 
 
-def _declaration_finding(
+def declaration_finding(
     declaration: LiteralEnrollmentDeclaration,
     *,
     expected: frozenset[RegistryRevisionSubject] | None,
@@ -62,7 +62,7 @@ def _declared_subject_drift(
 ) -> tuple[set[RegistryRevisionSubject], tuple[RegistryRevisionSubject, ...], tuple[RegistryRevisionSubject, ...]]:
     declared = set(declaration.subjects)
     duplicates = tuple(sorted(subject for subject in declared if declaration.subjects.count(subject) > 1))
-    absent = tuple(sorted(subject for subject in declared if not _subject_is_declared(subject, authority=authority)))
+    absent = tuple(sorted(subject for subject in declared if not subject_is_declared(subject, authority=authority)))
     return declared, duplicates, absent
 
 

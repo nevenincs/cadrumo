@@ -18,22 +18,17 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from ...form_layout.serialization import FORM_LAYOUT_FRAGMENT
-from .._form_layout_companion import prepare_generated_form_layout_companion
-from .._tree_publication import publish_validated_generated_export_tree
-from .._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    validate_generated_export_tree,
-)
 from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
 from ..export_tree_models import RenderedExportTree
+from ..form_layout_companion import prepare_generated_form_layout_companion
 from ..joined_record_design import JoinedRecordDesign
 from ..render_check import RevisionRenderInputs
 from ..semantic_map import SemanticMap
+from ..tree_publication import publish_validated_generated_export_tree
 from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
 from ..tree_publication_contracts import (
     GeneratedExportPublicationJournal,
@@ -50,7 +45,12 @@ from ..tree_publication_journal import (
 )
 from ..tree_publication_recovery import recover_interrupted_publication
 from ..tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
-from ._generated_tree_test_support import (
+from ..tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    validate_generated_export_tree,
+)
+from .generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_render_profile,
     write_isolated_generated_authority_tree,
@@ -599,7 +599,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
     )
     target_revision_root = context.target_export_root.parent
     paths = GeneratedExportTransactionPaths.for_context(context)
-    original_cleanup = publication_module._delete_opaque_transaction_tree_allow_partial
+    original_cleanup = publication_module.delete_opaque_transaction_tree_allow_partial
     interrupted_backups: list[Path] = []
 
     def remove_one_member_then_fail(
@@ -618,7 +618,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
 
     monkeypatch.setattr(
         publication_module,
-        "_delete_opaque_transaction_tree_allow_partial",
+        "delete_opaque_transaction_tree_allow_partial",
         remove_one_member_then_fail,
     )
     with pytest.raises(RegistryValidationError, match="injected committed cleanup failure"):
@@ -631,7 +631,7 @@ def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_par
     committed_revision = _tree_bytes(target_revision_root)
     assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
 
-    monkeypatch.setattr(publication_module, "_delete_opaque_transaction_tree_allow_partial", original_cleanup)
+    monkeypatch.setattr(publication_module, "delete_opaque_transaction_tree_allow_partial", original_cleanup)
     assert recover_interrupted_supersession_bundle(
         target_root=context.target_root,
         modelo=ISOLATED_TREE.modelo,

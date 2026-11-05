@@ -14,8 +14,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .casilla_lineage_seed_paths import _DATA_ROOT, _UTF_8
-from .casilla_lineage_seed_types import _EVIDENCE_ADVISORY
+from .casilla_lineage_seed_paths import DATA_ROOT, UTF_8
+from .casilla_lineage_seed_types import EVIDENCE_ADVISORY
 
 _PLAIN_INTEGER = re.compile(r"^\d+$")
 
@@ -23,7 +23,7 @@ _NON_NUMERIC_BOX = r"\d{1,5}bis|\d{1,5}\.[a-z]|[A-Z]\d{1,2}[A-Z]?"
 
 _PRINTED_BOX = re.compile(rf"^(?:{_NON_NUMERIC_BOX})$")
 
-_DESIGN_BOX = re.compile(rf"\[\s*({_NON_NUMERIC_BOX}|\d{{1,5}})\s*\]")
+DESIGN_BOX = re.compile(rf"\[\s*({_NON_NUMERIC_BOX}|\d{{1,5}})\s*\]")
 
 _ALPHANUMERIC = re.compile(r"\w")
 
@@ -160,7 +160,7 @@ def parse_design_inventory(text: str, *, relative_path: str, sha256: str) -> Des
             continue
         cells = line.split("|")
         for cell in cells:
-            box = _defined_box(cell)
+            box = defined_box(cell)
             if box is not None:
                 lines[box].append(number)
                 text_by_line[number] = line
@@ -204,7 +204,7 @@ def _box_order(box: int | str) -> tuple[int, int, str]:
     return (0, box, "") if isinstance(box, int) else (1, 0, box)
 
 
-def _defined_box(cell: str) -> int | str | None:
+def defined_box(cell: str) -> int | str | None:
     """The box one design cell prints, or ``None`` when the cell prints none.
 
     Three shapes are told apart: a campo ending with its own box (``... ([16] x
@@ -212,7 +212,7 @@ def _defined_box(cell: str) -> int | str | None:
     + [05]``); and a note enumerating boxes outside any parenthesis (``las
     casillas [20], [21] y [22]``). Only the first defines a box.
     """
-    matches = list(_DESIGN_BOX.finditer(cell))
+    matches = list(DESIGN_BOX.finditer(cell))
     if not matches or _ALPHANUMERIC.search(cell[matches[-1].end() :]):
         return None
     depths = _parenthesis_depths(cell, matches)
@@ -306,7 +306,7 @@ class DesignOracle:
 
     @staticmethod
     def _load(corpus_path: str, sha256: str) -> DesignInventory | str:
-        original = _DATA_ROOT / corpus_path
+        original = DATA_ROOT / corpus_path
         extract = original.with_name(original.name + ".extracted.md")
         if not original.is_file() or not extract.is_file():
             return f"design {corpus_path} has no bundled extract"
@@ -314,7 +314,7 @@ class DesignOracle:
         if digest != sha256:
             return f"design {corpus_path} does not match its pinned sha256"
         return parse_design_inventory(
-            extract.read_text(encoding=_UTF_8),
+            extract.read_text(encoding=UTF_8),
             relative_path=str(Path(corpus_path).with_name(extract.name).as_posix()),
             sha256=sha256,
         )
@@ -356,10 +356,10 @@ def _with_rationale(locus: str, rationale: str) -> str:
     pushing routine evidence past the advisory length.
     """
     combined = f"{locus}. {rationale}"
-    return combined if len(" ".join(combined.split())) <= _EVIDENCE_ADVISORY else f"{locus}."
+    return combined if len(" ".join(combined.split())) <= EVIDENCE_ADVISORY else f"{locus}."
 
 
-def _cite(design: DesignInventory | None, line: int | None) -> str:
+def cite(design: DesignInventory | None, line: int | None) -> str:
     if design is None:
         return "the record design"
     where = design.relative_path if line is None else f"{design.relative_path}:{line}"
@@ -378,13 +378,13 @@ def _row_locus(casilla: CasillaDefinition, design: DesignInventory | str) -> str
         line = found[0]
         span = design.component_span(box)
         over = "" if span is None else f" over {len(found)} printed components @{span.offset}+{span.length}"
-        return f"{_cite(design, line)} box [{box}]{over} ({design.snippet(line)})"
+        return f"{cite(design, line)} box [{box}]{over} ({design.snippet(line)})"
     if (casilla.segmento is not None and casilla.segmento) and _BYTE_POSITIONS.match(casilla.number.strip()):
-        return f"{_cite(design, None)} record {casilla.segmento} campo at byte position {casilla.number.strip()}"
+        return f"{cite(design, None)} record {casilla.segmento} campo at byte position {casilla.number.strip()}"
     return None
 
 
-def _grounded_evidence(
+def grounded_evidence(
     previous: CasillaDefinition,
     successor: CasillaDefinition,
     prev_design: DesignInventory | str,
@@ -397,7 +397,7 @@ def _grounded_evidence(
     return _with_rationale(f"{before} continues as {after}", rationale)
 
 
-def _ruled_new_evidence(
+def ruled_new_evidence(
     casilla: CasillaDefinition,
     prev_design: DesignInventory | str,
     succ_design: DesignInventory | str,
@@ -411,17 +411,17 @@ def _ruled_new_evidence(
     localised = None if box is None else prev_design.defining_lines(box)
     if localised is not None:
         line = localised[0]
-        before = f"{_cite(prev_design, line)} prints [{box}] as another concept ({prev_design.snippet(line)})"
+        before = f"{cite(prev_design, line)} prints [{box}] as another concept ({prev_design.snippet(line)})"
     elif earlier:
-        before = f"{_cite(prev_design, None)} prints [{box}] only as other concepts, at lines {list(earlier[:4])}"
+        before = f"{cite(prev_design, None)} prints [{box}] only as other concepts, at lines {list(earlier[:4])}"
     elif box is not None:
-        before = f"{_cite(prev_design, None)} prints no box [{box}]"
+        before = f"{cite(prev_design, None)} prints no box [{box}]"
     else:
-        before = f"no counterpart in {_cite(prev_design, None)}"
+        before = f"no counterpart in {cite(prev_design, None)}"
     return _with_rationale(f"{locus}; {before}", rationale)
 
 
-def _design_trust(
+def design_trust(
     previous: ModeloRevision,
     successor: ModeloRevision,
     prev_design: DesignInventory | str,

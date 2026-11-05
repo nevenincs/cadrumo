@@ -9,14 +9,14 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from .temporal_enrollment_models import (
-    _MODELO_ID_ADAPTER,
-    _REVISION_ID_ADAPTER,
+    MODELO_ID_ADAPTER,
+    REVISION_ID_ADAPTER,
     LiteralEnrollmentDeclaration,
     RegistryRevisionSubject,
 )
 
 
-def _literal_enrollment_declarations(
+def literal_enrollment_declarations(
     source: str, *, path: str, authority: ValidatedRegistryAuthority
 ) -> tuple[LiteralEnrollmentDeclaration, ...]:
     """Return the module-level collections that enumerate registry revisions.
@@ -35,12 +35,12 @@ def _literal_enrollment_declarations(
             continue
         symbol, value = assignment
         subjects = tuple(subject for row in _literal_rows(value) if (subject := _row_subject(row)) is not None)
-        if subjects and any(_subject_is_declared(subject, authority=authority) for subject in subjects):
+        if subjects and any(subject_is_declared(subject, authority=authority) for subject in subjects):
             declarations.append(LiteralEnrollmentDeclaration(path, symbol, subjects))
     return tuple(declarations)
 
 
-def _subject_is_declared(subject: RegistryRevisionSubject, *, authority: ValidatedRegistryAuthority) -> bool:
+def subject_is_declared(subject: RegistryRevisionSubject, *, authority: ValidatedRegistryAuthority) -> bool:
     """Whether the compiled registry declares this exact revision identity.
 
     Declared, not law-selectable: the corpus ships revisions below the supported
@@ -86,8 +86,8 @@ def _row_subject(row: ast.expr) -> RegistryRevisionSubject | None:
         return None
     try:
         return RegistryRevisionSubject(
-            _MODELO_ID_ADAPTER.validate_python(modelo),
-            _REVISION_ID_ADAPTER.validate_python(revision),
+            MODELO_ID_ADAPTER.validate_python(modelo),
+            REVISION_ID_ADAPTER.validate_python(revision),
         )
     except ValidationError:
         return None

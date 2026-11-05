@@ -13,10 +13,10 @@ from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.loader_cache import ModeloSource, discover_modelo_sources
 
-from .registry_collapse_assessment import _assessment_accounting
-from .registry_collapse_authority_checks import _authority_checks
-from .registry_collapse_cache import _cache_invalidation_probe
-from .registry_collapse_candidate import _replace_candidate_modelo, _verify_one
+from .registry_collapse_assessment import assessment_accounting
+from .registry_collapse_authority_checks import authority_checks
+from .registry_collapse_cache import cache_invalidation_probe
+from .registry_collapse_candidate import replace_candidate_modelo, verify_one
 from .registry_collapse_converter import canonical_converter
 from .registry_collapse_fingerprints import (
     fingerprint_digest,
@@ -25,12 +25,12 @@ from .registry_collapse_fingerprints import (
     fingerprint_tree,
     published_authority_root,
 )
-from .registry_collapse_inputs import _copy_source_dependencies, _source_dependency_paths, _tool_input_paths
-from .registry_collapse_models import _MODELOS, CheckStatus, FingerprintEntry, ModeloOutcome
+from .registry_collapse_inputs import copy_source_dependencies, source_dependency_paths, tool_input_paths
+from .registry_collapse_models import MODELOS, CheckStatus, FingerprintEntry, ModeloOutcome
 
 
 @dataclass(frozen=True, slots=True)
-class _RunContext:
+class RunContext:
     registry_root: Path
     source_root: Path
     work_dir: Path
@@ -68,15 +68,17 @@ def run_registry_verification(
     host can verify one modelo per process against the same registry-wide
     authority checks.
     """
-    context = _prepare_run_context(registry_root, source_root, work_dir, authority_root, modelos)
+    context = prepare_run_context(registry_root, source_root, work_dir, authority_root, modelos)
     results = _verify_modelos(context, converter)
     authority = _run_authority_checks(context)
     _apply_authority_results(results, authority, context.details_dir)
-    live_registry_after, tools_after, source_dependencies_after, published_after = _fingerprint_run_inputs(context)
-    inputs_stable = _inputs_stable(context, live_registry_after, tools_after, source_dependencies_after)
-    no_live_mutation = _no_live_mutation(context, live_registry_after, published_after)
+    live_registry_after, tools_after, source_dependencies_after, published_after = fingerprint_run_inputs(context)
+    inputs_stable = registry_collapse_run_inputs_stable(
+        context, live_registry_after, tools_after, source_dependencies_after
+    )
+    no_live_mutation = registry_collapse_run_no_live_mutation(context, live_registry_after, published_after)
     _record_input_instability(results, context.details_dir, inputs_stable)
-    summary = _run_summary(context, results, authority, inputs_stable, no_live_mutation)
+    summary = run_summary(context, results, authority, inputs_stable, no_live_mutation)
     _write_run_artifacts(context, summary)
     return summary
 
@@ -105,7 +107,7 @@ def _snapshot_paths(work_dir: Path) -> tuple[Path, Path, Path]:
     return snapshot_registry, snapshot_source_root, registry_candidate
 
 
-def _copy_registry_snapshots(
+def copy_registry_snapshots(
     registry_root: Path,
     snapshot_registry: Path,
     registry_candidate: Path,
@@ -114,11 +116,11 @@ def _copy_registry_snapshots(
     shutil.copytree(snapshot_registry, registry_candidate)
 
 
-def _selected_sources(
+def selected_sources(
     snapshot_registry: Path,
     modelos: Sequence[str],
 ) -> tuple[tuple[ModeloSource, ...], int]:
-    sources = discover_modelo_sources(snapshot_registry / _MODELOS)
+    sources = discover_modelo_sources(snapshot_registry / MODELOS)
     if len({source.modelo_id for source in sources}) != len(sources):
         raise RuntimeError("modelo discovery returned duplicate identities")
     discovered = len(sources)
@@ -130,23 +132,23 @@ def _selected_sources(
     return sources, discovered
 
 
-def _prepare_run_context(
+def prepare_run_context(
     registry_root: Path,
     source_root: Path,
     work_dir: Path,
     authority_root: Path | None,
     modelos: Sequence[str],
-) -> _RunContext:
+) -> RunContext:
     registry_root, source_root, work_dir = _validated_run_paths(registry_root, source_root, work_dir)
     snapshot_registry, snapshot_source_root, registry_candidate = _snapshot_paths(work_dir)
     live_registry_before = fingerprint_tree(registry_root)
-    tools_before = _tool_fingerprints(REPO_ROOT)
-    source_dependencies = _source_dependency_paths(source_root)
+    tools_before = tool_fingerprints(REPO_ROOT)
+    source_dependencies = source_dependency_paths(source_root)
     source_dependencies_before = fingerprint_paths(source_dependencies, relative_to=source_root)
     published_root = published_authority_root(authority_root)
     published_before = fingerprint_optional_tree(published_root)
-    _copy_registry_snapshots(registry_root, snapshot_registry, registry_candidate)
-    _copy_source_dependencies(source_dependencies, source_root=source_root, destination=snapshot_source_root)
+    copy_registry_snapshots(registry_root, snapshot_registry, registry_candidate)
+    copy_source_dependencies(source_dependencies, source_root=source_root, destination=snapshot_source_root)
     _require_snapshots_match_inputs(
         snapshot_registry,
         registry_candidate,
@@ -154,11 +156,11 @@ def _prepare_run_context(
         live_registry_before,
         source_dependencies_before,
     )
-    sources, discovered = _selected_sources(snapshot_registry, modelos)
-    support, ceiling = _run_support(snapshot_registry)
+    sources, discovered = selected_sources(snapshot_registry, modelos)
+    support, ceiling = run_support(snapshot_registry)
     details_dir = work_dir / "modelos"
     details_dir.mkdir()
-    return _RunContext(
+    return RunContext(
         registry_root=registry_root,
         source_root=source_root,
         work_dir=work_dir,
@@ -196,7 +198,7 @@ def _require_snapshots_match_inputs(
         raise RuntimeError("source dependency snapshot differs from the captured live input")
 
 
-def _run_support(snapshot_registry: Path) -> tuple[SupportedFilingYearsCatalogue, int]:
+def run_support(snapshot_registry: Path) -> tuple[SupportedFilingYearsCatalogue, int]:
     support = load_shared_catalogues(snapshot_registry).supported_filing_years
     if support is None:
         raise RuntimeError("registry has no global supported filing range")
@@ -205,7 +207,7 @@ def _run_support(snapshot_registry: Path) -> tuple[SupportedFilingYearsCatalogue
 
 
 def _verify_modelos(
-    context: _RunContext,
+    context: RunContext,
     converter: Callable[[Path, Path], Mapping[str, object]],
 ) -> list[dict[str, object]]:
     results = []
@@ -214,12 +216,12 @@ def _verify_modelos(
         result = _verify_one_safely(source, candidate, context.support, context.ceiling, converter)
         results.append(result)
         _write_modelo_result(context.details_dir, source.modelo_id, result)
-        _replace_candidate_modelo(context.registry_candidate, result)
+        replace_candidate_modelo(context.registry_candidate, result)
     return results
 
 
 def _candidate_path(work_dir: Path, modelo_id: str) -> Path:
-    return work_dir / "candidates" / modelo_id / "registry" / "aeat" / _MODELOS / modelo_id
+    return work_dir / "candidates" / modelo_id / "registry" / "aeat" / MODELOS / modelo_id
 
 
 def _verify_one_safely(
@@ -230,7 +232,7 @@ def _verify_one_safely(
     converter: Callable[[Path, Path], Mapping[str, object]],
 ) -> dict[str, object]:
     try:
-        return _verify_one(
+        return verify_one(
             source.modelo_id,
             source.path,
             candidate,
@@ -259,14 +261,14 @@ def _write_modelo_result(details_dir: Path, modelo_id: str, result: Mapping[str,
     )
 
 
-def _run_authority_checks(context: _RunContext) -> dict[str, object]:
-    authority = _authority_checks(
+def _run_authority_checks(context: RunContext) -> dict[str, object]:
+    authority = authority_checks(
         context.snapshot_registry,
         context.registry_candidate,
         source_root=context.snapshot_source_root,
         indexed_dir=context.work_dir / "indexed-authority",
     )
-    cache_invalidation = _cache_invalidation_probe(
+    cache_invalidation = cache_invalidation_probe(
         context.registry_candidate,
         context.work_dir / "cache-invalidation-probe",
     )
@@ -294,8 +296,8 @@ def _apply_authority_results(
         _write_modelo_result(details_dir, str(result["modelo"]), result)
 
 
-def _fingerprint_run_inputs(
-    context: _RunContext,
+def fingerprint_run_inputs(
+    context: RunContext,
 ) -> tuple[
     tuple[FingerprintEntry, ...],
     tuple[FingerprintEntry, ...],
@@ -304,19 +306,19 @@ def _fingerprint_run_inputs(
 ]:
     return (
         fingerprint_tree(context.registry_root),
-        _tool_fingerprints(REPO_ROOT),
-        fingerprint_paths(_source_dependency_paths(context.source_root), relative_to=context.source_root),
+        tool_fingerprints(REPO_ROOT),
+        fingerprint_paths(source_dependency_paths(context.source_root), relative_to=context.source_root),
         fingerprint_optional_tree(context.published_root),
     )
 
 
-def _tool_fingerprints(repo_root: Path) -> tuple[FingerprintEntry, ...]:
+def tool_fingerprints(repo_root: Path) -> tuple[FingerprintEntry, ...]:
     """Re-discover tool paths for each boundary before hashing their bytes."""
-    return fingerprint_paths(_tool_input_paths(repo_root), relative_to=repo_root)
+    return fingerprint_paths(tool_input_paths(repo_root), relative_to=repo_root)
 
 
-def _inputs_stable(
-    context: _RunContext,
+def registry_collapse_run_inputs_stable(
+    context: RunContext,
     registry_after: tuple[FingerprintEntry, ...],
     tools_after: tuple[FingerprintEntry, ...],
     dependencies_after: tuple[FingerprintEntry, ...],
@@ -328,8 +330,8 @@ def _inputs_stable(
     )
 
 
-def _no_live_mutation(
-    context: _RunContext,
+def registry_collapse_run_no_live_mutation(
+    context: RunContext,
     registry_after: tuple[FingerprintEntry, ...],
     published_after: tuple[FingerprintEntry, ...],
 ) -> bool:
@@ -353,8 +355,8 @@ def _record_input_instability(
         _write_modelo_result(details_dir, str(result["modelo"]), result)
 
 
-def _run_summary(
-    context: _RunContext,
+def run_summary(
+    context: RunContext,
     results: Sequence[Mapping[str, object]],
     authority: Mapping[str, object],
     inputs_stable: bool,
@@ -388,8 +390,8 @@ def _run_summary(
         },
         "outcomes": outcome_counts,
         "accounting": {
-            "before": _assessment_accounting(results, "before"),
-            "after": _assessment_accounting(results, "after"),
+            "before": assessment_accounting(results, "before"),
+            "after": assessment_accounting(results, "after"),
         },
         "source_apply_ready": sum(item.get("source_apply_readiness") == CheckStatus.PASSED for item in results),
         "authority_publication_ready": sum(
@@ -416,7 +418,7 @@ def _run_is_complete(
     )
 
 
-def _write_run_artifacts(context: _RunContext, summary: Mapping[str, object]) -> None:
+def _write_run_artifacts(context: RunContext, summary: Mapping[str, object]) -> None:
     (context.work_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n",
         encoding="utf-8",

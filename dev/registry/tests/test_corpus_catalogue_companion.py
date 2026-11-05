@@ -33,7 +33,7 @@ from ..compiler.corpus_catalogue import (
     verify_source_file,
 )
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
-from ._registry_schema_support import _committed_registry_tree
+from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +46,7 @@ def test_registry_cited_record_design_boundary_is_exhaustively_catalogued() -> N
     supplies its cited sources; the independently acquired manifests supply
     their payload identities.
     """
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
 
     compiled = compile_record_design_manifest_catalogue(bundled_path(), catalogues.sources)
 
@@ -70,7 +70,7 @@ def test_registry_cited_record_design_boundary_is_exhaustively_catalogued() -> N
 
 def _committed_present_companion_binary() -> SourceReference:
     """Return a committed source whose corpus binary is present in the bundled tree."""
-    _modelos, catalogues = _committed_registry_tree()
+    _modelos, catalogues = committed_registry_tree()
     for source in catalogues.sources.values():
         if not source.corpus_path.lower().endswith((".pdf", ".xls", ".xlsx")):
             continue
@@ -82,7 +82,7 @@ def _committed_present_companion_binary() -> SourceReference:
 
 def _absent_source(*, corpus_path: str, kind: str) -> SourceReference:
     """Build a source reference pointing at an absent corpus path with a plausible hash."""
-    template = next(iter(_committed_registry_tree()[1].sources.values()))
+    template = next(iter(committed_registry_tree()[1].sources.values()))
     return template.model_copy(
         update={
             "id": "aeat-companion-probe",

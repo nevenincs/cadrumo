@@ -29,7 +29,7 @@ def chain_id_is_wellformed(candidate: str) -> bool:
     return True
 
 
-def _normalise(text: str) -> str:
+def normalise(text: str) -> str:
     folded = unicodedata.normalize("NFKC", text).casefold()
     return _WHITESPACE.sub(" ", folded).strip().rstrip(".,;:")
 

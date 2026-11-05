@@ -20,9 +20,9 @@ from ..export_fragment_provenance import load_export_fragment_provenance_manifes
 from ..render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
-    _render_transport,
-    _select_record_design_source,
     compare_revision_against_committed,
+    render_transport,
+    select_record_design_source,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -54,7 +54,7 @@ def test_historical_design_source_selection_requires_the_actual_year(modelo: str
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo))
     selected = definition.revisions["2019-y-siguientes"]
-    old, _epoch = _select_record_design_source(
+    old, _epoch = select_record_design_source(
         selected,
         catalogues.sources,
         modelo=modelo,
@@ -63,7 +63,7 @@ def test_historical_design_source_selection_requires_the_actual_year(modelo: str
         filing_year=2019,
         period="0A",
     )
-    new, _epoch = _select_record_design_source(
+    new, _epoch = select_record_design_source(
         selected,
         catalogues.sources,
         modelo=modelo,
@@ -74,7 +74,7 @@ def test_historical_design_source_selection_requires_the_actual_year(modelo: str
     )
     assert old != new
     with pytest.raises(ValueError, match="exactly one record-design source"):
-        _select_record_design_source(
+        select_record_design_source(
             selected,
             catalogues.sources,
             modelo=modelo,
@@ -89,7 +89,7 @@ def test_late_m131_source_is_only_eligible_for_its_quarters() -> None:
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
     selected = definition.revisions["2026-3t-4t"]
-    source, epoch = _select_record_design_source(
+    source, epoch = select_record_design_source(
         selected,
         catalogues.sources,
         modelo="131",
@@ -101,7 +101,7 @@ def test_late_m131_source_is_only_eligible_for_its_quarters() -> None:
     assert (source, epoch) == ("aeat-dr-131-2026-late", "2026-late")
     for period in (None, "1T"):
         with pytest.raises(ValueError, match="exactly one record-design source"):
-            _select_record_design_source(
+            select_record_design_source(
                 selected,
                 catalogues.sources,
                 modelo="131",
@@ -128,7 +128,7 @@ def test_m210_event_selector_and_concrete_event_select_the_same_design(
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "210"))
     selected = definition.revisions[revision]
     for period in ("EVENT-N", "EVENT-1"):
-        assert _select_record_design_source(
+        assert select_record_design_source(
             selected,
             catalogues.sources,
             modelo="210",
@@ -143,7 +143,7 @@ def test_an_event_selector_does_not_widen_an_administrative_revision() -> None:
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "145"))
     with pytest.raises(ValueError, match=r"event selector.*not declared"):
-        _select_record_design_source(
+        select_record_design_source(
             definition.revisions["2012-01-31-y-siguientes"],
             catalogues.sources,
             modelo="145",
@@ -162,7 +162,7 @@ def test_m145_administrative_frame_selects_its_exact_source(filing_year: int, pe
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "145"))
     revision = "2012-01-31-y-siguientes"
     selected = definition.revisions[revision]
-    source, epoch = _select_record_design_source(
+    source, epoch = select_record_design_source(
         selected,
         catalogues.sources,
         modelo="145",
@@ -186,7 +186,7 @@ def test_m145_administrative_source_refuses_wrong_period_year_and_pin() -> None:
         (2011, "comunicacion", "administrative period"),
     ):
         with pytest.raises(ValueError, match=expected):
-            _select_record_design_source(
+            select_record_design_source(
                 selected,
                 catalogues.sources,
                 modelo="145",
@@ -196,7 +196,7 @@ def test_m145_administrative_source_refuses_wrong_period_year_and_pin() -> None:
                 period=period,
             )
     with pytest.raises(ValueError, match="does not declare record-design source"):
-        _select_record_design_source(
+        select_record_design_source(
             selected,
             catalogues.sources,
             modelo="145",
@@ -214,7 +214,7 @@ def test_m145_administrative_source_refuses_wrong_period_year_and_pin() -> None:
         supersedes_layout_id="modelo-145-dr-v20-fixed-width",
     )
     assert (
-        _render_transport(
+        render_transport(
             selected,
             catalogues.sources,
             modelo="145",
@@ -225,7 +225,7 @@ def test_m145_administrative_source_refuses_wrong_period_year_and_pin() -> None:
         == bootstrap.layout_id
     )
     with pytest.raises(ValueError, match="bootstrap source digest"):
-        _render_transport(
+        render_transport(
             selected,
             catalogues.sources,
             modelo="145",
@@ -240,7 +240,7 @@ def test_stable_layout_bootstrap_requires_exact_declared_supersession_and_source
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "123"))
     revision = "2024-y-siguientes"
     selected = definition.revisions[revision]
-    source, _epoch = _select_record_design_source(
+    source, _epoch = select_record_design_source(
         selected,
         catalogues.sources,
         modelo="123",
@@ -258,7 +258,7 @@ def test_stable_layout_bootstrap_requires_exact_declared_supersession_and_source
         supersedes_layout_id=stable,
     )
     assert (
-        _render_transport(
+        render_transport(
             selected,
             catalogues.sources,
             modelo="123",
@@ -275,7 +275,7 @@ def test_stable_layout_bootstrap_requires_exact_declared_supersession_and_source
         replace(bootstrap, source_sha256="0" * 64),
     ):
         with pytest.raises(ValueError, match="bootstrap"):
-            _render_transport(
+            render_transport(
                 selected,
                 catalogues.sources,
                 modelo="123",
@@ -315,7 +315,7 @@ def test_a_revision_spanning_the_floor_renders_the_design_its_supported_years_fi
     committed = load_export_fragment_provenance_manifest(
         (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).read_bytes()
     )
-    supported, _epoch = _select_record_design_source(
+    supported, _epoch = select_record_design_source(
         selected,
         authority.catalogues.sources,
         modelo=modelo,

@@ -28,7 +28,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 from .authored_edition_support import authored_revisions, revision_covering, source_reference
-from .ledger_iva_aggregation_support import _calculate_303_from_observations, _observation
+from .ledger_iva_aggregation_support import calculate_303_from_observations, ledger_iva_aggregation_observation
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -227,7 +227,7 @@ def test_design_scoped_boxes_are_declared_exactly_where_their_design_prints_them
 
 def _domestic_sales(exercise: int) -> tuple[IvaLedgerObservation, ...]:
     def sale(ledger_id: str, category: str, rate_kind: str, rate: str, base: str, iva: str) -> IvaLedgerObservation:
-        return _observation(
+        return ledger_iva_aggregation_observation(
             ledger_id=ledger_id,
             txn_date=date(exercise, 5, 15),
             category=IvaCategory(category),
@@ -255,7 +255,7 @@ def test_floor_exercise_carries_its_sales_to_the_printed_result() -> None:
     the rate rows' Tipo % free, so the rows themselves stay operator input there.
     """
     exercise = committed_supported_filing_years().floor
-    result = _calculate_303_from_observations(filing_year=exercise, period="2T", observations=_domestic_sales(exercise))
+    result = calculate_303_from_observations(filing_year=exercise, period="2T", observations=_domestic_sales(exercise))
     values = result.values
 
     def box(casilla_id: str) -> Decimal:

@@ -7,22 +7,22 @@ import dataclasses
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 from .casilla_shard_attestations import (
-    _refuse_duplicate_ids,
     emitted_ids,
     harvest_attestations,
     reattach_attestations,
     refuse_dropped_attestations,
+    refuse_duplicate_ids,
 )
-from .casilla_shard_toml_text import _KEY_LINE
+from .casilla_shard_toml_text import KEY_LINE
 from .casilla_shard_types import GenerationRefusedError, GenerationReport, WaveSpec
 
 
-def _finalize_emission(spec: WaveSpec, report: GenerationReport, *, write: bool) -> None:
+def finalize_emission(spec: WaveSpec, report: GenerationReport, *, write: bool) -> None:
     if report.refusals:
         raise GenerationRefusedError(
             f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5])
         )
-    _refuse_duplicate_ids(report)
+    refuse_duplicate_ids(report)
     _preserve_attestations(spec, report)
     if write:
         _write_outcomes(spec, report)
@@ -77,5 +77,5 @@ def _validate_writeback(
 
 def _validate_toml_lines(segmento: str, text: str) -> None:
     for number, line in enumerate(text.splitlines(), start=1):
-        if line and not (line.startswith(("#", "[")) or _KEY_LINE.match(line)):
+        if line and not (line.startswith(("#", "[")) or KEY_LINE.match(line)):
             raise GenerationRefusedError(f"{segmento}: line {number} is neither comment nor key: {line[:60]!r}")

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 
-def _difference(
+def difference(
     left: Mapping[str, object], right: Mapping[str, object], *, identity: str
 ) -> tuple[dict[str, object], list[str], dict[str, list[object]], dict[str, list[int]], dict[str, list[int]]]:
     fields: dict[str, object] = {}

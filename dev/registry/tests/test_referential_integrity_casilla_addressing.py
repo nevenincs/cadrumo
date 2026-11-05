@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessCasilla
 
 from ..compiler.validator import RegistryValidator
-from ._referential_integrity_support import (
+from .profile_schema_support import load_user_profile_schema
+from .referential_integrity_support import (
     NUMERIC_CASILLA_01,
     NUMERIC_CASILLA_02,
     REFERENCE_LEGAL_ID,
@@ -29,7 +30,6 @@ from ._referential_integrity_support import (
     minimal_revision,
     segmented_casilla,
 )
-from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [
     pytest.mark.unit,

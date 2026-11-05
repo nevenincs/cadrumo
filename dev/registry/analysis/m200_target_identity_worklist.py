@@ -276,10 +276,10 @@ def _target_identity_entry_findings(
         return None, None, None
     if entry.casilla_id is None:
         raise ValueError(f"casilla map entry {entry.export_field_id!r} omits its owner")
-    printed = _printed_target_number(field)
+    printed = printed_target_number(field)
     resolved = _resolve_owner(entry, target_map, known_ids)
     if resolved is not None:
-        printed_state = _printed_identity_state(printed, resolved, proposal=None)
+        printed_state = printed_identity_state(printed, resolved, proposal=None)
         diagnostic = None
         if printed_state is not M200PrintedIdentityState.MATCHES_MAP_OWNER:
             diagnostic = M200PrintedIdentityDiagnostic(
@@ -294,8 +294,8 @@ def _target_identity_entry_findings(
         return None, diagnostic, resolved
 
     owner = str(entry.casilla_id)
-    disposition, proposed = _classify_noncanonical_map_owner(entry, target_map, field=field, known_ids=known_ids)
-    printed_state = _printed_identity_state(printed, owner, proposal=proposed)
+    disposition, proposed = classify_noncanonical_map_owner(entry, target_map, field=field, known_ids=known_ids)
+    printed_state = printed_identity_state(printed, owner, proposal=proposed)
     if printed is None or printed_state is not M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL:
         raise ValueError(f"target anchor {entry.export_field_id!r} does not prove its proposed map-owner identity")
     mismatch = M200MapOwnerIdentity(
@@ -458,7 +458,7 @@ def _semantic_kind(entry: SemanticMapEntry) -> str:
     return str(kind)
 
 
-def _classify_noncanonical_map_owner(
+def classify_noncanonical_map_owner(
     entry: SemanticMapEntry,
     target_map: SemanticMap,
     *,
@@ -479,7 +479,7 @@ def _same_box_number(left: str, right: str) -> bool:
     return left.isdecimal() and right.isdecimal() and left.lstrip("0") == right.lstrip("0")
 
 
-def _printed_identity_state(
+def printed_identity_state(
     printed: str | None,
     owner: str,
     *,
@@ -494,7 +494,7 @@ def _printed_identity_state(
     return M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
 
 
-def _printed_target_number(field: RecordDesignIntermediateField) -> str | None:
+def printed_target_number(field: RecordDesignIntermediateField) -> str | None:
     """Return the single bracketed printed box number, whatever its digit count."""
     matches = _PRINTED_NUMBER.findall(field.normalized_description)
     return str(matches[0]) if len(matches) == 1 else None

@@ -17,8 +17,8 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
 
-from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 from .cross_revision_divergence import covered_fields
+from .validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 
 
 def strict_continuity_evolution_failures(modelo: ModeloDefinition) -> tuple[str, ...]:

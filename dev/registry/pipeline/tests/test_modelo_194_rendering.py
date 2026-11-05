@@ -11,10 +11,10 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from .._export_tree import render_complete_export_tree
-from ..export_field_literal_derivation import _literal_derivation
-from ..render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, _revision_render_inputs
-from ..render_profile import _validate_telematic_transport_condition
+from ..export_field_literal_derivation import literal_derivation
+from ..export_tree import render_complete_export_tree
+from ..render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, build_revision_render_inputs
+from ..render_profile import validate_telematic_transport_condition
 from ..semantic_map import load_semantic_map
 from ..source_stated_composites import source_stated_composite_integer_digits_for
 
@@ -26,7 +26,7 @@ def inputs(request: pytest.FixtureRequest) -> RevisionRenderInputs:
     epoch = str(request.param)
     root = Path("src/cadrumo/_data")
     mapping = load_semantic_map(Path(f"dev/registry/mappings/modelo_194/{epoch}"))
-    return _revision_render_inputs(
+    return build_revision_render_inputs(
         load_modelo_directory(root / "registry/aeat/modelos/194"),
         load_shared_catalogues(root / "registry/aeat"),
         modelo="194",
@@ -133,7 +133,7 @@ def test_reserved_zero_run_refuses_nonzero_or_space_payload(inputs: RevisionRend
             update={"semantic_entry": field.semantic_entry.model_copy(update={"literal": literal})}
         )
         with pytest.raises(RegistryValidationError):
-            _literal_derivation(
+            literal_derivation(
                 altered,
                 encoding=inputs.transport_profile.encoding,
                 render_profile=inputs.render_profile,
@@ -146,4 +146,4 @@ def test_reserved_zero_run_refuses_nonzero_or_space_payload(inputs: RevisionRend
 )
 def test_transport_choice_refuses_other_conditions(condition: str) -> None:
     with pytest.raises(RegistryValidationError, match="lacks the official telematic condition"):
-        _validate_telematic_transport_condition(f"'T': {condition}.")
+        validate_telematic_transport_condition(f"'T': {condition}.")

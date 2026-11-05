@@ -8,16 +8,16 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..compiler.producer_inventory import producer_inventory
-from ._modelo_100_registry_support import _loaded_registry, _registry_validator
+from .modelo_100_registry_support import loaded_registry, registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_every_formula_target_is_declared_as_the_matching_computed_casilla() -> None:
     """Formula evaluation and casilla input classification share one contract."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
 
-    _registry_validator().validate_registry(modelos_by_id.values())
+    registry_validator().validate_registry(modelos_by_id.values())
 
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
@@ -107,7 +107,7 @@ def _assert_casilla_producer_traces(inventory, casilla) -> None:
 
 def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible() -> None:
     """The real registry inventory preserves deterministic and intentional producers."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     observed_kinds: set[str] = set()
 
     for modelo in modelos_by_id.values():
@@ -123,7 +123,7 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
 
 def test_revision_producer_inventory_keeps_relation_prefill_binding_provenance() -> None:
     """A relation-prefill trace retains the binding's own grounding."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
 
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
@@ -150,7 +150,7 @@ def test_revision_producer_inventory_keeps_relation_prefill_binding_provenance()
 
 def test_registry_validator_rejects_a_manual_formula_target() -> None:
     """The load-boundary validator prevents the old M100 drift from returning."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     target = next(formula.target_casilla_id for formula in revision.formulas)
@@ -162,12 +162,12 @@ def test_registry_validator_rejects_a_manual_formula_target() -> None:
     broken_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: broken_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"formula .*targets casilla"):
-        _registry_validator().validate_modelo(broken_modelo)
+        registry_validator().validate_modelo(broken_modelo)
 
 
 def test_registry_validator_rejects_a_formula_target_without_back_reference() -> None:
     """The formula target must also name the same formula in its casilla row."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     target = next(formula.target_casilla_id for formula in revision.formulas)
@@ -179,12 +179,12 @@ def test_registry_validator_rejects_a_formula_target_without_back_reference() ->
     broken_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: broken_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"whose declared formula is None"):
-        _registry_validator().validate_modelo(broken_modelo)
+        registry_validator().validate_modelo(broken_modelo)
 
 
 def test_registry_validator_rejects_a_computed_casilla_without_a_formula_producer() -> None:
     """A computed row cannot silently fall back to an input path."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     manual_casilla = next(casilla for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
@@ -198,12 +198,12 @@ def test_registry_validator_rejects_a_computed_casilla_without_a_formula_produce
     broken_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: broken_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"computed casilla .*no formula producer declaration"):
-        _registry_validator().validate_modelo(broken_modelo)
+        registry_validator().validate_modelo(broken_modelo)
 
 
 def test_registry_validator_rejects_a_noncomputed_casilla_formula_declaration() -> None:
     """Manual rows may remain manual, but cannot carry a deterministic formula declaration."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     manual_casilla = next(casilla for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
@@ -216,12 +216,12 @@ def test_registry_validator_rejects_a_noncomputed_casilla_formula_declaration() 
     broken_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: broken_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"formula declarations must be computed"):
-        _registry_validator().validate_modelo(broken_modelo)
+        registry_validator().validate_modelo(broken_modelo)
 
 
 def test_registry_validator_rejects_duplicate_formula_targets() -> None:
     """Two deterministic producers cannot claim the same casilla target."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     first_formula, second_formula = revision.formulas[:2]
@@ -235,4 +235,4 @@ def test_registry_validator_rejects_duplicate_formula_targets() -> None:
     broken_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: broken_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"duplicate formula target"):
-        _registry_validator().validate_modelo(broken_modelo)
+        registry_validator().validate_modelo(broken_modelo)

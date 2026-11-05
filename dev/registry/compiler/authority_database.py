@@ -75,9 +75,9 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
             connection.execute("PRAGMA foreign_keys = ON")
             connection.execute("PRAGMA journal_mode = DELETE")
             connection.execute("PRAGMA synchronous = FULL")
-            _create_schema(connection)
+            create_schema(connection)
             _insert_components(connection, components)
-            _insert_dependencies(connection, components)
+            insert_dependencies(connection, components)
             connection.execute(
                 "INSERT INTO authority_manifest(singleton, format, logical_generation, component_count) "
                 "VALUES (1, ?, ?, ?)",
@@ -278,7 +278,7 @@ def _profile_snapshot_components(
             snapshot_globals_query,
             snapshot_globals,
             payload=snapshot_globals_payload,
-            dependencies=_decoded_fact_dependencies(
+            dependencies=decoded_fact_dependencies(
                 snapshot_globals_query,
                 snapshot_globals_payload,
                 fact_queries,
@@ -368,7 +368,7 @@ def _base_revision_component(
         ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
         for reference_id in sorted(source_ids)
     )
-    revision_fact_queries = _decoded_fact_dependencies(
+    revision_fact_queries = decoded_fact_dependencies(
         query,
         payload,
         fact_queries,
@@ -429,7 +429,7 @@ def _evidence_components(artifact: AuthorityArtifact) -> list[_CompiledComponent
     return components
 
 
-def _decoded_fact_dependencies(
+def decoded_fact_dependencies(
     query: AuthorityComponentQuery,
     payload: bytes,
     fact_queries: tuple[GovernedFactComponentQuery, ...],
@@ -457,7 +457,7 @@ def _decoded_fact_dependencies(
     return tuple(fact_query for fact_query in fact_queries if fact_query.fact_id in observed)
 
 
-def _create_schema(connection: sqlite3.Connection) -> None:
+def create_schema(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
         CREATE TABLE authority_manifest (
@@ -510,7 +510,7 @@ def _insert_components(connection: sqlite3.Connection, components: tuple[_Compil
         )
 
 
-def _insert_dependencies(connection: sqlite3.Connection, components: tuple[_CompiledComponent, ...]) -> None:
+def insert_dependencies(connection: sqlite3.Connection, components: tuple[_CompiledComponent, ...]) -> None:
     for component in components:
         kind, key = authority_component_identity(component.query)
         for ordinal, dependency in enumerate(component.dependencies):

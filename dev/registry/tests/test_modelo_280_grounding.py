@@ -11,13 +11,13 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ._gate_support import (
+from .authored_edition_support import newest_authored_edition
+from .gate_support import (
     assert_deadline_window_for_filing_year,
     assert_edition_opens_at_filing_year,
     assert_sole_current_edition,
     assert_source_refs_not_stale,
 )
-from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

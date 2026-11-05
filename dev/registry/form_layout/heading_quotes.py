@@ -17,13 +17,13 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from .column_vocabulary import shared_column_key
-from .generation_models import _Build
+from .generation_models import Build
 from .heading_keys import column_form_heading_key, form_heading_key
 from .official_headings import OfficialHeadingRefusedError, QuotedHeading, verify_quote
 from .official_text import node_slug
 
 
-def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, column: C, quote: QuotedHeading) -> C:
+def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: Build, column: C, quote: QuotedHeading) -> C:
     if column.official_heading is not None:
         raise OfficialHeadingRefusedError(f"{quote.describe()}: the design already names this column")
     key = shared_column_key(quote.text) or column.key
@@ -32,7 +32,7 @@ def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, colu
     )
 
 
-def _quoted_block(build: _Build, block: FormBlockDefinition, quotes: dict[str, QuotedHeading]) -> FormBlockDefinition:
+def _quoted_block(build: Build, block: FormBlockDefinition, quotes: dict[str, QuotedHeading]) -> FormBlockDefinition:
     if isinstance(block, FormGridBlock):
         grid = tuple(
             _quoted_column(build, column, quotes.pop(column.key)) if column.key in quotes else column
@@ -49,7 +49,7 @@ def _quoted_block(build: _Build, block: FormBlockDefinition, quotes: dict[str, Q
 
 
 def _quoted_section(
-    build: _Build, section: FormSectionDefinition, quote: QuotedHeading | None, columns: dict[str, QuotedHeading]
+    build: Build, section: FormSectionDefinition, quote: QuotedHeading | None, columns: dict[str, QuotedHeading]
 ) -> FormSectionDefinition:
     update: dict[str, object] = {"blocks": tuple(_quoted_block(build, block, columns) for block in section.blocks)}
     if quote is not None:
@@ -61,7 +61,7 @@ def _quoted_section(
 
 
 def _pin_quote_sources(
-    build: _Build,
+    build: Build,
     quotes: Sequence[QuotedHeading],
     *,
     sources: Mapping[str, SourceReference],
@@ -91,7 +91,7 @@ def _section_quote_parts(
 
 
 def _quoted_page_sections(
-    build: _Build,
+    build: Build,
     page: FormPageDefinition,
     pending: dict[tuple[str, str | None, str | None], QuotedHeading],
 ) -> tuple[FormSectionDefinition, ...]:
@@ -106,7 +106,7 @@ def _quoted_page_sections(
 
 
 def _quoted_page(
-    build: _Build,
+    build: Build,
     page: FormPageDefinition,
     pending: dict[tuple[str, str | None, str | None], QuotedHeading],
 ) -> FormPageDefinition:
@@ -119,8 +119,8 @@ def _quoted_page(
     return page.model_copy(update=update)
 
 
-def _quoted_pages(
-    build: _Build,
+def quoted_pages(
+    build: Build,
     pages: Sequence[FormPageDefinition],
     quotes: Sequence[QuotedHeading],
     *,

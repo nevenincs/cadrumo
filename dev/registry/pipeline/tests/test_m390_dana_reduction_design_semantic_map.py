@@ -10,7 +10,7 @@ import pytest
 from ...compiler.authority import compiled_bundled_authority
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from ..semantic_map import SemanticMapEntry
-from ._m390_semantic_map_support import (
+from .m390_semantic_map_support import (
     assert_anchors_biject_to_layout,
     assert_page_07_close,
     load_edition_pair,

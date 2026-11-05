@@ -20,7 +20,7 @@ app = typer.Typer(
 )
 
 
-def _default_manager() -> NewModeloScaffoldManager:
+def default_manager() -> NewModeloScaffoldManager:
     # cli.py lives at dev/registry/newmodelo/cli.py; parents[3] is the repo root.
     repo_root = REPO_ROOT
     modelos_root = repo_root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
@@ -89,7 +89,7 @@ def scaffold(
     manager = (
         NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)
         if registry_modelos_root is not None
-        else _default_manager()
+        else default_manager()
     )
     try:
         result = manager.scaffold(
@@ -129,7 +129,7 @@ def new_edition(
     manager = (
         NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)
         if registry_modelos_root is not None
-        else _default_manager()
+        else default_manager()
     )
     try:
         result = manager.scaffold(

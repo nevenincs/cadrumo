@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .modelo_registry_surface_support import (
     FORBIDDEN_REMOTE_ACTIONS,
     assert_authenticated_read_surface_is_read_only,
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def _load_modelo_720() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("720")
+    return committed_modelo("720")
 
 
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(

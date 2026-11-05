@@ -45,7 +45,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -91,7 +91,7 @@ def _observation(
         recargo_amount=Decimal("0"),
         deduction_fact_kind=deduction_fact_kind,
         deduction_provenance=(
-            _deduction_provenance(
+            ledger_iva_aggregation_deduction_provenance(
                 deduction_fact_kind,
                 source_locator="invoice:ledger-m390-base",
             )

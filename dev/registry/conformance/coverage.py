@@ -537,7 +537,7 @@ def _model_law_coverage_for_coordinate(
             f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
             f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
         )
-    proof = _snapshot_filing_review_proof(
+    proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
@@ -677,7 +677,7 @@ def _construct_evidence_ledger_for_revision(
         coordinates=coordinates,
     )
     inspection = inspections[0]
-    proof = _snapshot_filing_review_proof(
+    proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
@@ -1189,7 +1189,7 @@ def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
 
 
-def _snapshot_filing_review_proof(
+def snapshot_filing_review_proof(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     authority: ValidatedRegistryAuthority,

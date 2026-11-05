@@ -15,7 +15,7 @@ authorities, fails here. This is the adapter-owned complement to the
 ports-inversion boundary.
 
 See Also:
-    ``dev.registry.compiler._validate_extraction_profiles.validate_dotted_callable``
+    ``dev.registry.compiler.validate_extraction_profiles.validate_dotted_callable``
         Domain-side structural validator that deliberately avoids importing
         adapter parser modules.
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`

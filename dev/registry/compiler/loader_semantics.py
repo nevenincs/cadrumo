@@ -13,7 +13,7 @@ from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 
-from ._toml_helpers import as_toml_table
+from .toml_helpers import as_toml_table
 
 
 def passthrough_toml_row(raw: object) -> dict[str, object]:

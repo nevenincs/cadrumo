@@ -23,7 +23,7 @@ from .filing_export_proof_contracts import (
     FilingExportConformanceVectorEvidence,
     FilingExportProofCoordinate,
 )
-from .filing_export_writer import _export
+from .filing_export_writer import export
 
 
 class FilingExportConformanceRequest(BaseModel):
@@ -73,7 +73,7 @@ class FilingExportConformanceAuthority(Protocol):
         ...
 
 
-_CONFORMANCE_AUTHORITY_ID = "dev.registry.filing-export-conformance"
+CONFORMANCE_AUTHORITY_ID = "dev.registry.filing-export-conformance"
 
 
 def prove_export_conformance(
@@ -97,7 +97,7 @@ def prove_export_conformance(
         raise ValueError("conformance vector builder returned inputs for another coordinate")
     with TemporaryDirectory(prefix="cadrumo-export-conformance-", dir=prepare_temp_root()) as temporary:
         output_path = Path(temporary) / "proof-output"
-        result = _export(render_inputs, output_path=output_path, schema_provider=schema_provider)
+        result = export(render_inputs, output_path=output_path, schema_provider=schema_provider)
         payload = output_path.read_bytes()
         receipt = authority.verify_conformance(
             request=request,

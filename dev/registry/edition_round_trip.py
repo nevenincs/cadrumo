@@ -782,7 +782,7 @@ def _export_findings(
 
 
 @dataclass(slots=True)
-class _PayloadSink:
+class PayloadSink:
     """Keeps the validated in-memory payload so no plaintext export touches disk."""
 
     payload: bytes = b""
@@ -864,7 +864,7 @@ def _export_bytes_finding(
                         )
                 if producer_snapshot is None:
                     producer_snapshot = scenario.producer_snapshot()
-                sink = _PayloadSink()
+                sink = PayloadSink()
                 export_draft(
                     draft,
                     payload_consumer=sink,

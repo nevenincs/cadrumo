@@ -13,9 +13,9 @@ from .casilla_shard_design import (
     read_design,
     verify_design_hash,
 )
-from .casilla_shard_emission import _emit_record
+from .casilla_shard_emission import emit_record
 from .casilla_shard_types import GenerationReport, WaveSpec
-from .casilla_shard_writer import _finalize_emission
+from .casilla_shard_writer import finalize_emission
 
 
 def generate(spec: WaveSpec, *, write: bool = False) -> GenerationReport:
@@ -35,6 +35,6 @@ def emit_records(
     """Emit already-read sheets through the real refusal and preservation path."""
     report = GenerationReport()
     for segmento in spec.records:
-        _emit_record(spec, sheets, segmento, report)
-    _finalize_emission(spec, report, write=write)
+        emit_record(spec, sheets, segmento, report)
+    finalize_emission(spec, report, write=write)
     return report

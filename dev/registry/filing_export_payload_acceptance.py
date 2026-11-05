@@ -116,7 +116,7 @@ def _verify_live_export_probe(
     checked_positions: set[int],
 ) -> None:
     field, offset, length, literal = _live_export_probe_field(probe, first_record)
-    expected = _literal_bytes(field, literal=literal, encoding=first_record.encoding)
+    expected = literal_bytes(field, literal=literal, encoding=first_record.encoding)
     start = prefix_extent + offset - 1
     field_positions = set(range(start, start + length))
     if checked_positions.intersection(field_positions):
@@ -142,6 +142,6 @@ def _live_export_probe_field(
     return field, field.offset, field.length, field.literal
 
 
-def _literal_bytes(field: ExportFieldDefinition, *, literal: str, encoding: str) -> bytes:
+def literal_bytes(field: ExportFieldDefinition, *, literal: str, encoding: str) -> bytes:
     rendered = render_fixed_width_export_field(field, literal)
     return rendered.encode(encoding)

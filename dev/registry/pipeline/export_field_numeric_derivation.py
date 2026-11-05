@@ -11,26 +11,26 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding
 
 from .export_field_derivation import (
-    _BARE_NUMERIC_ENUMERATION_FINAL_OR_RE,
-    _BARE_NUMERIC_ENUMERATION_RE,
-    _DASH_NUMERIC_ENUMERATION_TOKEN_RE,
-    _DECIMAL_CONTENT_RE,
-    _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE,
-    _INTEGER_CONTENT_RE,
-    _LABELLED_ENUMERATION_VALUE_DELIMITER_RE,
-    _OFFICIAL_LITERAL_RE,
-    _OFFICIAL_UNQUOTED_LITERAL_RE,
-    _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE,
-    _POSITIONED_INTEGER_CONTENT_RE,
-    _QUOTED_DATE_PATTERN_RE,
-    _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
-    _QUOTED_NUMERIC_ENUMERATION_RE,
-    _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE,
-    _QUOTED_NUMERIC_TOKEN_RE,
-    _QUOTED_NUMERIC_VALUE_RE,
+    BARE_NUMERIC_ENUMERATION_FINAL_OR_RE,
+    BARE_NUMERIC_ENUMERATION_RE,
+    DASH_NUMERIC_ENUMERATION_TOKEN_RE,
+    DECIMAL_CONTENT_RE,
+    EQUALS_NUMERIC_ENUMERATION_TOKEN_RE,
+    INTEGER_CONTENT_RE,
+    LABELLED_ENUMERATION_VALUE_DELIMITER_RE,
+    OFFICIAL_LITERAL_RE,
+    OFFICIAL_UNQUOTED_LITERAL_RE,
+    PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE,
+    POSITIONED_INTEGER_CONTENT_RE,
+    QUOTED_DATE_PATTERN_RE,
+    QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
+    QUOTED_NUMERIC_ENUMERATION_RE,
+    QUOTED_NUMERIC_LABELLED_ENUMERATION_RE,
+    QUOTED_NUMERIC_TOKEN_RE,
+    QUOTED_NUMERIC_VALUE_RE,
 )
-from .export_field_note_references import _split_official_note_references
-from .export_field_schema import _is_required, _require_numeric_extent, _schema_field
+from .export_field_note_references import split_official_note_references
+from .export_field_schema import is_required, require_numeric_extent, schema_field
 from .export_fragment_provenance import ExportFieldDerivation, ExportFieldDerivationCode
 from .joined_record_design import JoinedRecordDesignField
 from .source_defects import NoteGovernedAmountDeclaration, note_governed_amount_for
@@ -80,7 +80,7 @@ _SPANISH_CARDINALS: Final[dict[str, int]] = {
 }
 
 
-_DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
+DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
 }
@@ -122,7 +122,7 @@ def _fold_quoted_date_pattern(content: str) -> str | None:
     Returns ``None`` for anything that is not one, so an unrecognised content
     form still reaches the ambiguity refusal rather than being read as a date.
     """
-    match = _QUOTED_DATE_PATTERN_RE.match(content)
+    match = QUOTED_DATE_PATTERN_RE.match(content)
     if match is None:
         return None
     folded = "".join(
@@ -150,7 +150,7 @@ def _note_governed_period_zero_boolean(raw_values: tuple[str, ...], note_referen
     )
 
 
-def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
+def derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
     """Return whether the official type column declares this amount signed.
 
     This derivation used to write ``False`` for every amount without reading the
@@ -173,11 +173,11 @@ def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bo
 
 def _labelled_enumeration_values_are_delimited(content: str) -> bool:
     """Report whether every gap between quoted values carries a real delimiter."""
-    gaps = _QUOTED_NUMERIC_VALUE_RE.split(content)[1:-1]
-    return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
+    gaps = QUOTED_NUMERIC_VALUE_RE.split(content)[1:-1]
+    return all(LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
 
 
-def _numeric_derivation(
+def numeric_derivation(
     joined_field: JoinedRecordDesignField,
     *,
     export_record_id: str,
@@ -191,7 +191,7 @@ def _numeric_derivation(
         )
     normalised_content = _normalise_numeric_content(content)
     pointer_content = normalised_content
-    normalised_content, note_references = _split_official_note_references(normalised_content)
+    normalised_content, note_references = split_official_note_references(normalised_content)
     if not normalised_content and note_references:
         return _pointer_numeric_derivation(
             joined_field,
@@ -260,10 +260,10 @@ def _pointer_numeric_derivation(
     if adjudicated is None:
         # No reviewed note reading means the historical unscaled shape cannot
         # be silently changed by a rule nobody has adjudicated for this design.
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="integer",
-            required=_is_required(parser_field.validation),
+            required=is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
             signed=False,
@@ -274,11 +274,11 @@ def _pointer_numeric_derivation(
     # `decimals` together. The width check includes the sign position, so an
     # adjudication that does not fill the slot is refused like an unsigned one.
     signed = adjudicated.signed
-    _require_numeric_extent(joined_field, expected_length=adjudicated.wire_length)
-    return _schema_field(
+    require_numeric_extent(joined_field, expected_length=adjudicated.wire_length)
+    return schema_field(
         joined_field,
         data_type="money" if signed else "decimal",
-        required=_is_required(parser_field.validation),
+        required=is_required(parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=signed,
@@ -297,7 +297,7 @@ def _date_numeric_derivation(
     """Derive either official date order when its content and width agree."""
     parser_field = joined_field.parser_field
     date_token = _fold_quoted_date_pattern(content) or content.casefold()
-    for policy, date_format in _DATE_FORMAT_BY_POLICY.items():
+    for policy, date_format in DATE_FORMAT_BY_POLICY.items():
         if date_token != date_format:
             continue
         expected_length = export_value_policy_wire_length(policy)
@@ -306,10 +306,10 @@ def _date_numeric_derivation(
                 f"official date field {joined_field.semantic_entry.export_field_id!r} has "
                 f"{parser_field.length} bytes, expected {expected_length}",
             )
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="date",
-            required=_is_required(parser_field.validation),
+            required=is_required(parser_field.validation),
             padding=ExportPadding.NONE,
             justification=ExportJustification.NONE,
             signed=False,
@@ -335,10 +335,10 @@ def _exercise_numeric_derivation(
             f"official ejercicio field {joined_field.semantic_entry.export_field_id!r} has "
             f"{parser_field.length} bytes, expected {expected_length}",
         )
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(parser_field.validation),
+        required=is_required(parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -354,27 +354,27 @@ def _decimal_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation | None:
     """Derive a stated whole-plus-decimals shape and its official sign."""
-    match = _DECIMAL_CONTENT_RE.fullmatch(content)
+    match = DECIMAL_CONTENT_RE.fullmatch(content)
     if match is None:
         return None
     whole = _numeric_word_or_digits(match.group("whole"))
     decimals = _numeric_word_or_digits(match.group("decimals"))
     if whole is None or decimals is None:
         return None
-    _require_numeric_extent(joined_field, expected_length=whole + decimals)
-    signed = _derive_sign_from_official_type(joined_field)
+    require_numeric_extent(joined_field, expected_length=whole + decimals)
+    signed = derive_sign_from_official_type(joined_field)
     if signed and decimals != _MONEY_SCALE:
         raise RegistryValidationError(
             f"export field {joined_field.semantic_entry.export_field_id!r} is typed "
             f"'{_SIGNED_AEAT_TYPE}' (numerico con signo) at {decimals} decimals, and a signed "
             f"amount is representable only at the {_MONEY_SCALE}-decimal money scale",
         )
-    return _schema_field(
+    return schema_field(
         joined_field,
         # Signed `money` carries its scale in the type; only unsigned `decimal`
         # declares the scale as a separate count.
         data_type="money" if signed else "decimal",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=signed,
@@ -390,14 +390,14 @@ def _integer_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation | None:
     """Derive the official integer-width wording when its extent matches."""
-    match = _INTEGER_CONTENT_RE.fullmatch(content) or _POSITIONED_INTEGER_CONTENT_RE.fullmatch(content)
+    match = INTEGER_CONTENT_RE.fullmatch(content) or POSITIONED_INTEGER_CONTENT_RE.fullmatch(content)
     if match is None:
         return None
-    _require_numeric_extent(joined_field, expected_length=int(match.group("whole")))
-    return _schema_field(
+    require_numeric_extent(joined_field, expected_length=int(match.group("whole")))
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -412,11 +412,11 @@ def _numeric_enumeration_values(content: str) -> tuple[str, ...] | None:
     if labelled_values is not None:
         return labelled_values
     if _is_quoted_numeric_enumeration(content):
-        return tuple(str(match.group("value")) for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(content))
+        return tuple(str(match.group("value")) for match in QUOTED_NUMERIC_TOKEN_RE.finditer(content))
     return None
 
 
-def _numbered_line_enumeration_values(content: str | None) -> tuple[str, ...] | None:
+def numbered_line_enumeration_values(content: str | None) -> tuple[str, ...] | None:
     """Read a complete cell listing one numeric code and label on each line.
 
     M309's situation and taxable-event cells use ``1. Label`` rather than
@@ -454,10 +454,10 @@ def _m369_closed_period_range(
     if expected is None or content != expected:
         return None
     upper = 4 if expected == "1 a 4" else 12
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(field.validation),
+        required=is_required(field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -470,8 +470,8 @@ def _m369_closed_period_range(
 
 def _labelled_numeric_values(content: str) -> tuple[str, ...] | None:
     """Read dash, equals, or bare comma-separated numeric labels."""
-    dash_values = tuple(str(match.group("value")) for match in _DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
-    equals_values = tuple(str(match.group("value")) for match in _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
+    dash_values = tuple(str(match.group("value")) for match in DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
+    equals_values = tuple(str(match.group("value")) for match in EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
     labelled_values = dash_values if len(dash_values) > 1 else equals_values
     if len(labelled_values) > 1:
         return labelled_values
@@ -479,10 +479,10 @@ def _labelled_numeric_values(content: str) -> tuple[str, ...] | None:
 
 
 def _bare_labelled_numeric_values(content: str) -> tuple[str, ...] | None:
-    if _BARE_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None:
+    if BARE_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None:
         values = tuple(value.strip() for value in content.rstrip(".").split(","))
         return values if len(values) > 1 else None
-    if _BARE_NUMERIC_ENUMERATION_FINAL_OR_RE.fullmatch(content) is not None:
+    if BARE_NUMERIC_ENUMERATION_FINAL_OR_RE.fullmatch(content) is not None:
         values = tuple(str(value) for value in re.findall(r"\d+", content))
         return values if len(values) > 1 else None
     return None
@@ -491,13 +491,13 @@ def _bare_labelled_numeric_values(content: str) -> tuple[str, ...] | None:
 def _is_quoted_numeric_enumeration(content: str) -> bool:
     """Report whether an official quoted spelling names a closed value set."""
     return (
-        _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None
-        or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(content) is not None
+        QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None
+        or QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(content) is not None
         or (
-            _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(content) is not None
+            QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(content) is not None
             and _labelled_enumeration_values_are_delimited(content)
         )
-        or _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None
+        or PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(content) is not None
     )
 
 
@@ -508,7 +508,7 @@ def _enumeration_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation | None:
     """Validate and derive a closed set of numeric wire values."""
-    raw_values = _numbered_line_enumeration_values(joined_field.parser_field.content)
+    raw_values = numbered_line_enumeration_values(joined_field.parser_field.content)
     if raw_values is None:
         raw_values = _numeric_enumeration_values(content)
     if raw_values is None:
@@ -528,10 +528,10 @@ def _enumeration_numeric_derivation(
         # Adjacent Nota 8/9 add period-reserved zero to the printed 1/2 pair;
         # retain a closed codec domain while the typed producer chooses the value.
         allowed_values = ("0", *allowed_values)
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(parser_field.validation),
+        required=is_required(parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -549,9 +549,9 @@ def _constant_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation | None:
     """Derive a constant as a shape or as its exact closed value domain."""
-    match = _OFFICIAL_LITERAL_RE.fullmatch(content)
+    match = OFFICIAL_LITERAL_RE.fullmatch(content)
     if match is None:
-        match = _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(content)
+        match = OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(content)
     if match is None:
         return None
     parser_field = joined_field.parser_field
@@ -566,10 +566,10 @@ def _constant_numeric_derivation(
     if note_references:
         # A note-bearing constant is not a closed wire fact; a typed owner may
         # vary its value while the source still fixes the integer wire shape.
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="integer",
-            required=_is_required(parser_field.validation),
+            required=is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
             signed=False,
@@ -579,10 +579,10 @@ def _constant_numeric_derivation(
     # An unannotated constant is a one-member enumeration. Carrying that value
     # lets the field follow its canonical producer while refusing disagreement
     # with the design's mandated bytes.
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(parser_field.validation),
+        required=is_required(parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,

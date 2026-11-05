@@ -44,8 +44,7 @@ from dev.registry.compiler.schema_family_coverage import (
 
 from ...compiler.loader import load_modelo_directory
 from ..coverage import REQUIRED_COVERAGE_TIERS
-from ..loader_directory_mode_support import load_revision as _shared_load_revision
-from ..loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..loader_directory_mode_support import load_revision, write_modelo
 from ..schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -72,7 +71,7 @@ source_refs = ["aeat-manual"]
 
 
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
-    return _shared_write_modelo(
+    return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
@@ -82,7 +81,7 @@ def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str =
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
+    return load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _revision(**overrides: object) -> ModeloRevision:

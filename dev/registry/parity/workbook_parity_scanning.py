@@ -13,9 +13,8 @@ from zipfile import BadZipFile
 
 from cadrumo.core.decimal.coercion import coerce_decimal
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from cadrumo.core.hashing import hash_file as _hash_file
+from cadrumo.core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
+from cadrumo.core.hashing import hash_file
 from cadrumo.core.logging import get_logger
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
@@ -46,7 +45,7 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 
-_WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
+_WORKBOOK_SUFFIXES = {XLSX_EXTENSION, XLS_EXTENSION}
 
 
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
@@ -55,7 +54,7 @@ _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 
 
-_CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
+CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 
 
 @dataclass(frozen=True)
@@ -107,11 +106,11 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         raise RegistryValidationError(f"workbook path escapes scan root: {path}")
 
     relative = resolved_path.relative_to(resolved_root).as_posix()
-    digest, byte_count = _hash_file(resolved_path)
+    digest, byte_count = hash_file(resolved_path)
     suffix = resolved_path.suffix.lower()
-    modelo = _infer_modelo(relative)
+    modelo = infer_modelo(relative)
 
-    if suffix == _XLS_EXTENSION:
+    if suffix == XLS_EXTENSION:
         return _unsupported_binary_xls_report(
             relative=relative,
             modelo=modelo,
@@ -126,7 +125,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=_XLSX_EXTENSION,
+            suffix=XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
             status=WorkbookScanStatus.TIMEOUT,
@@ -143,7 +142,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=_XLSX_EXTENSION,
+            suffix=XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
             status=WorkbookScanStatus.FAILED,
@@ -172,23 +171,23 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         raise RegistryValidationError(
             f"Unexpected error scanning workbook {relative}: {type(exc).__name__}",
         ) from exc
-    kind = _classify_xlsx(relative, formulas)
-    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
+    kind = classify_xlsx(relative, formulas)
+    evidence_tier, not_evidence_for = evidence_for_workbook_kind(kind)
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=_XLSX_EXTENSION,
+        extension=XLSX_EXTENSION,
         bytes=byte_count,
         sha256=digest,
         sheets=tuple(sheets),
         formula_cells=len(formulas),
-        input_candidates=tuple(_dedupe_cells(references)),
+        input_candidates=tuple(dedupe_cells(references)),
         output_candidates=tuple(formulas),
         workbook_kind=kind,
         evidence_tier=evidence_tier,
         not_evidence_for=not_evidence_for,
         scan_status=WorkbookScanStatus.SCANNED,
-        elapsed_seconds=_elapsed_decimal(started),
+        elapsed_seconds=elapsed_decimal(started),
     )
 
 
@@ -201,11 +200,11 @@ def _unsupported_binary_xls_report(
     started: float,
 ) -> WorkbookArtefactReport:
     """Stable .xls short-circuit report — binary XLS requires conversion before scanning."""
-    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(WorkbookKind.UNSUPPORTED_BINARY_XLS)
+    evidence_tier, not_evidence_for = evidence_for_workbook_kind(WorkbookKind.UNSUPPORTED_BINARY_XLS)
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=_XLS_EXTENSION,
+        extension=XLS_EXTENSION,
         bytes=byte_count,
         sha256=digest,
         workbook_kind=WorkbookKind.UNSUPPORTED_BINARY_XLS,
@@ -214,7 +213,7 @@ def _unsupported_binary_xls_report(
         scan_status=WorkbookScanStatus.UNSUPPORTED,
         formula_cells=0,
         error="binary XLS requires isolated conversion before workbook formula inspection",
-        elapsed_seconds=_elapsed_decimal(started),
+        elapsed_seconds=elapsed_decimal(started),
     )
 
 
@@ -233,7 +232,7 @@ def _scan_xlsx_contents(
     references: list[WorkbookCellRef] = []
     try:
         for worksheet in workbook.worksheets:
-            _raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
+            raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
             sheets.append(worksheet.title)
             _scan_worksheet_cells(
                 worksheet,
@@ -259,7 +258,7 @@ def _scan_worksheet_cells(
 ) -> None:
     """Walk one worksheet's cells, appending formulas and bounded references in place."""
     for row in worksheet.iter_rows(values_only=False):
-        _raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
+        raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
         for cell in row:
             value = cell.value
             if not (isinstance(value, str) and value.startswith("=")):
@@ -267,7 +266,7 @@ def _scan_worksheet_cells(
             ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
             formulas.append(ref)
             if len(references) < opts.max_formula_refs:
-                references.extend(_formula_references(worksheet.title, value, opts.max_formula_refs - len(references)))
+                references.extend(formula_references(worksheet.title, value, opts.max_formula_refs - len(references)))
 
 
 def inventory_workbook_coverage(
@@ -287,7 +286,7 @@ def inventory_workbook_coverage(
     for path in paths:
         relative = path.resolve().relative_to(resolved_root).as_posix()
         previous = previous_by_path.get(relative)
-        if previous is not None and previous.sha256 == _hash_file(path)[0]:
+        if previous is not None and previous.sha256 == hash_file(path)[0]:
             reports.append(previous)
             continue
         reports.append(scan_workbook(path, root=root, options=options))
@@ -303,7 +302,7 @@ def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> Non
         raise RegistryValidationError(f"workbook verification failed to scan {len(failed)} artefact(s):\n{details}")
 
 
-def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:
+def build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:
     buckets: dict[str, list[WorkbookArtefactReport]] = {}
     for report in reports:
         modelo = report.modelo or "unknown"
@@ -328,7 +327,7 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
     )
 
 
-def _infer_modelo(relative_path: str) -> str | None:
+def infer_modelo(relative_path: str) -> str | None:
     match = _MODELO_PATTERN.search(relative_path)
     if match is None:
         return None
@@ -338,17 +337,17 @@ def _infer_modelo(relative_path: str) -> str | None:
     return modelo
 
 
-def _raise_if_timed_out(cpu_started: float, timeout_seconds: float, relative: str) -> None:
+def raise_if_timed_out(cpu_started: float, timeout_seconds: float, relative: str) -> None:
     """Raise once the scanning thread has spent more than ``timeout_seconds`` of CPU time."""
     if time.thread_time() - cpu_started > timeout_seconds:
         raise TimeoutError(f"workbook scan of {relative!r} exceeded its {timeout_seconds:.1f}s CPU budget")
 
 
-def _elapsed_decimal(started: float) -> Decimal:
+def elapsed_decimal(started: float) -> Decimal:
     return coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
 
 
-def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
+def classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
     formula_count = sum(1 for _ in formulas)
     lowered = relative.lower()
     if "valid" in lowered or "valida" in lowered:
@@ -364,7 +363,7 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
     return any(marker in lowered_relative_path for marker in ("disenos_registro", "diseños_registro", "registro"))
 
 
-def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
+def evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
     legal, guidance = EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE
     parity, layout = EvidenceTier.EXECUTABLE_PARITY_EVIDENCE, EvidenceTier.LAYOUT_AUTHORITY
     if kind == WorkbookKind.FORMULA_FORM:
@@ -376,7 +375,7 @@ def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None
     return None, (legal, guidance, parity, layout)
 
 
-def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:
+def formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:
     if remaining <= 0:
         return ()
     # Both imported before the ``try``: ``TokenizerError`` is named in the
@@ -409,7 +408,7 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
     return tuple(refs)
 
 
-def _dedupe_cells(cells: Iterable[WorkbookCellRef]) -> tuple[WorkbookCellRef, ...]:
+def dedupe_cells(cells: Iterable[WorkbookCellRef]) -> tuple[WorkbookCellRef, ...]:
     seen: set[tuple[str, str]] = set()
     deduped: list[WorkbookCellRef] = []
     for cell in cells:
@@ -449,5 +448,5 @@ def _failed_report(
         ),
         scan_status=status,
         error=error,
-        elapsed_seconds=_elapsed_decimal(started),
+        elapsed_seconds=elapsed_decimal(started),
     )

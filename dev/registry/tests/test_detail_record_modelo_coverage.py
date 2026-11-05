@@ -18,7 +18,7 @@ import pytest
 from cadrumo.application.storage.calc_sheets.row_sets import collect_row_sets
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -38,7 +38,7 @@ _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
 
 @pytest.fixture(scope="module")
 def _modelos_by_id() -> Mapping[str, ModeloDefinition]:
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}
 
 

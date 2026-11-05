@@ -16,15 +16,15 @@ from ..compiler.validate_label_artifacts import (
     collect_label_artifact_findings,
     validate_no_label_artifacts,
 )
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
-from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
+from ..conformance.registry_schema_support import committed_registry_tree
+from .synthetic_locale_fixtures import synthetic_locale_scope, write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
 
-__all__ = ["_synthetic_locale_scope"]
+__all__ = ["synthetic_locale_scope"]
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:
@@ -32,7 +32,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
         {
             "id": _TEST_CASILLA_ID,
             "number": "0001",
-            "localization_keys": (_write_test_label(label),),
+            "localization_keys": (write_test_label(label),),
             "section": ("test",),
             "data_type": "money",
             "legal_refs": ("ley-58-2003:art-29",),
@@ -96,7 +96,7 @@ def test_label_artifact_inventory_ignores_normal_casilla_brackets() -> None:
 
 
 def test_committed_corpus_has_no_unresolved_label_placeholders() -> None:
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
 
     findings = collect_label_artifact_findings(modelos)
 

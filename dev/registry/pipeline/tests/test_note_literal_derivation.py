@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from .._export_tree import render_complete_export_tree
-from ..export_field_literal_derivation import _literal_derivation
+from ..export_field_literal_derivation import literal_derivation
+from ..export_tree import render_complete_export_tree
 from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import join_record_design_semantics
 from ..note_literals import NoteLiteralDeclaration, note_literal_for, note_literals_for
@@ -243,7 +243,7 @@ def test_note_reading_cannot_override_literal_geometry_or_another_pointer(
         }
     )
     with pytest.raises(RegistryValidationError, match=error):
-        _literal_derivation(
+        literal_derivation(
             field,
             encoding=inputs.transport_profile.encoding,
             render_profile=inputs.render_profile,

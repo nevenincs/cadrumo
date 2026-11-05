@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefi
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .modelo_registry_surface_support import (
     FORBIDDEN_REMOTE_ACTIONS,
     assert_authenticated_read_surface_is_read_only,
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 def _load_modelo_232():
-    return _committed_modelo("232")
+    return committed_modelo("232")
 
 
 def test_committed_modelo_232_validates_against_catalogues() -> None:

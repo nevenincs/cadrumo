@@ -11,15 +11,15 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from .casilla_lineage_seed_rules import (
-    _role_derived,
     judged_pairs,
+    role_derived,
 )
 
 type _Row = tuple[str, str]
 
 
 @dataclass(slots=True)
-class _ChainState:
+class ChainState:
     """Continuity ids and lineage links as they will stand once the plan is written.
 
     A link is the step from a row to the one predecessor-edition row carrying
@@ -38,7 +38,7 @@ class _ChainState:
     grounded_link: dict[_Row, bool]
 
     @classmethod
-    def of(cls, modelo: ModeloDefinition) -> _ChainState:
+    def of(cls, modelo: ModeloDefinition) -> ChainState:
         revisions = ordered_revisions(modelo)
         state = cls(
             ids={},
@@ -86,7 +86,7 @@ class _ChainState:
         role = _single_declared_role(self, occurrences)
         if role is None or not _requires_role_derived_chain(self, chain, role, occurrences):
             return None
-        return f"chain {chain!r} has role {role!r} unique in every revision and must be {_role_derived(role)!r}"
+        return f"chain {chain!r} has role {role!r} unique in every revision and must be {role_derived(role)!r}"
 
     def link(self, chain: str, rows: Iterable[_Row]) -> None:
         for row in rows:
@@ -99,7 +99,7 @@ class _ChainState:
         self.grounded_link[successor] = grounded
 
 
-def _index_declared_chains(state: _ChainState, revisions: tuple[ModeloRevision, ...]) -> None:
+def _index_declared_chains(state: ChainState, revisions: tuple[ModeloRevision, ...]) -> None:
     for revision in revisions:
         state.role_counts[revision.id] = collections.Counter(casilla.semantic_role for casilla in revision.casillas)
         for casilla in revision.casillas:
@@ -109,7 +109,7 @@ def _index_declared_chains(state: _ChainState, revisions: tuple[ModeloRevision, 
                 state.members[casilla.continuidad_id].append((revision.id, casilla.id))
 
 
-def _index_existing_links(state: _ChainState, modelo: ModeloDefinition, revisions: tuple[ModeloRevision, ...]) -> None:
+def _index_existing_links(state: ChainState, modelo: ModeloDefinition, revisions: tuple[ModeloRevision, ...]) -> None:
     for previous, successor in judged_pairs(modelo, revisions):
         for casilla in successor.casillas:
             if casilla.continuidad_id is None:
@@ -128,7 +128,7 @@ def _index_existing_links(state: _ChainState, modelo: ModeloDefinition, revision
 
 
 def _links_for_occurrences(
-    state: _ChainState,
+    state: ChainState,
     occurrences: set[_Row],
 ) -> dict[_Row, tuple[_Row, bool]]:
     return {
@@ -137,7 +137,7 @@ def _links_for_occurrences(
 
 
 def _missing_semantic_roles(
-    state: _ChainState,
+    state: ChainState,
     occurrences: set[_Row],
     links: Mapping[_Row, tuple[_Row, bool]],
 ) -> list[_Row]:
@@ -146,11 +146,11 @@ def _missing_semantic_roles(
     )
 
 
-def _single_declared_role(state: _ChainState, occurrences: set[_Row]) -> str | None:
+def _single_declared_role(state: ChainState, occurrences: set[_Row]) -> str | None:
     roles = {state.roles[row] for row in occurrences} - {None}
     return next(iter(roles)) if len(roles) == 1 else None
 
 
-def _requires_role_derived_chain(state: _ChainState, chain: str, role: str, occurrences: set[_Row]) -> bool:
+def _requires_role_derived_chain(state: ChainState, chain: str, role: str, occurrences: set[_Row]) -> bool:
     revisions = {revision for revision, _ in occurrences}
-    return all(state.role_counts[revision][role] == 1 for revision in revisions) and chain != _role_derived(role)
+    return all(state.role_counts[revision][role] == 1 for revision in revisions) and chain != role_derived(role)

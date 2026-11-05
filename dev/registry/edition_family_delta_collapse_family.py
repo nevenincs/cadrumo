@@ -14,18 +14,18 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from dev.registry.compiler.keyed_family_period_scope import selector_covers
 
 from .edition_family_delta import (
-    _authored_member_order,
-    _drop_restatement,
-    _family_members,
-    _payload_field_count,
-    _remove_members,
-    _replace_operations,
-    _selector_id,
-    _state_members,
-    _table,
+    authored_member_order,
+    drop_restatement,
+    family_members,
+    payload_field_count,
+    remove_members,
+    replace_operations,
     restates_stated_whole_sequence,
+    selector_id,
+    state_members,
+    table,
 )
-from .edition_family_delta_collapse_overrides import _append_common_overrides, _skip_empty_scope
+from .edition_family_delta_collapse_overrides import append_common_overrides, skip_empty_scope
 from .edition_family_delta_collapse_state import FamilyChange, FamilyCounts, FamilyState, RevisionState
 from .edition_family_delta_difference import minimal_positions
 
@@ -44,12 +44,12 @@ def collapse_family(state: RevisionState, spec: KeyedFamilySpec) -> bool:
     if not section_dir.is_dir():
         return False
     if spec.section in state.restated_sections:
-        _drop_restatement(state.revision, spec.section)
+        drop_restatement(state.revision, spec.section)
         state.revision_changed = True
     family = _family_state(state, spec, identity, new_members)
     counts = FamilyCounts()
-    _append_common_overrides(state, family, counts)
-    if _skip_empty_scope(state, spec, family):
+    append_common_overrides(state, family, counts)
+    if skip_empty_scope(state, spec, family):
         return False
     removed_identities = _append_removals(state, family)
     moves, positions_changed = _restore_family_order(state, family)
@@ -92,7 +92,7 @@ def _restore_sequence_restatements(
     _state_restatements(state, spec, identity, new_members, restating)
     restating_ids = {id(operation) for operation in restating}
     retained = [operation for operation in state.overrides if id(operation) not in restating_ids]
-    _replace_operations(state.overrides, retained)
+    replace_operations(state.overrides, retained)
     state.revision_changed = True
 
 
@@ -104,8 +104,8 @@ def _state_restatements(
     restating: Sequence[Mapping[str, object]],
 ) -> None:
     by_identity = {str(member[identity]): member for member in new_members}
-    members = [by_identity[str(operation.get("replacement_id") or _selector_id(operation))] for operation in restating]
-    _state_members(state.revision_dir, state.revision_id, spec.section, members)
+    members = [by_identity[str(operation.get("replacement_id") or selector_id(operation))] for operation in restating]
+    state_members(state.revision_dir, state.revision_id, spec.section, members)
 
 
 def _family_state(
@@ -114,14 +114,14 @@ def _family_state(
     identity: str,
     source_members: tuple[Mapping[str, object], ...],
 ) -> FamilyState:
-    old_members = _family_members(revision.predecessor, spec)
+    old_members = family_members(revision.predecessor, spec)
     new_members, typed_order = _typed_members(revision.typed_revision, spec, identity, source_members)
     if set(typed_order) == {str(item[identity]) for item in new_members}:
         by_identity = {str(item[identity]): item for item in new_members}
         new_members = tuple(by_identity[member_id] for member_id in typed_order)
     old = _inlined_members(old_members, revision.predecessor, spec, identity)
     new = _inlined_members(new_members, revision.current, spec, identity)
-    authored_order = _authored_member_order(revision.revision_dir, revision.revision_id, spec.section, identity)
+    authored_order = authored_member_order(revision.revision_dir, revision.revision_id, spec.section, identity)
     authored_ids = set(authored_order)
     replacements = _declared_replacements(revision, spec, old, new)
     additions = set(new) - set(old) - set(replacements.values())
@@ -184,7 +184,7 @@ def _declared_replacements(
         if not isinstance(operation, Mapping) or operation.get("family") != spec.section:
             continue
         replacement_id = operation.get("replacement_id")
-        member_id = _selector_id(operation)
+        member_id = selector_id(operation)
         if replacement_id is not None and member_id is not None:
             replacements[member_id] = str(replacement_id)
     return replacements
@@ -212,7 +212,7 @@ def _append_removals(revision: RevisionState, family: FamilyState) -> set[str]:
             continue
         entry = tomlkit.table()
         entry["family"] = spec.section
-        entry["selector"] = _table({"revision": revision.predecessor_id, "id": identity})
+        entry["selector"] = table({"revision": revision.predecessor_id, "id": identity})
         revision.removals.append(entry)
     return removed
 
@@ -263,7 +263,7 @@ def _write_positions(revision: RevisionState, section: str, moves: Sequence[tupl
         for operation in revision.positions
         if not (isinstance(operation, Mapping) and operation.get("family") == section)
     ]
-    _replace_operations(revision.positions, retained)
+    replace_operations(revision.positions, retained)
     for identity, position in moves:
         entry = tomlkit.table()
         entry["family"] = section
@@ -275,7 +275,7 @@ def _write_positions(revision: RevisionState, section: str, moves: Sequence[tupl
 def _remove_redundant_authored(revision: RevisionState, family: FamilyState) -> set[str]:
     removed = family.authored_ids - family.keep
     if removed:
-        _remove_members(
+        remove_members(
             revision.revision_dir,
             revision.revision_id,
             family.spec.section,
@@ -341,7 +341,7 @@ def _family_change(
 def _payload_before(family: FamilyState) -> int:
     identity = family.identity
     return sum(
-        _payload_field_count({key: value for key, value in member.items() if key != identity})
+        payload_field_count({key: value for key, value in member.items() if key != identity})
         for member in family.new.values()
     )
 
@@ -349,7 +349,7 @@ def _payload_before(family: FamilyState) -> int:
 def _payload_after(family: FamilyState, counts: FamilyCounts) -> int:
     identity = family.identity
     retained = sum(
-        _payload_field_count({key: value for key, value in family.new[item].items() if key != identity})
+        payload_field_count({key: value for key, value in family.new[item].items() if key != identity})
         for item in family.keep
     )
     return retained + counts.payload

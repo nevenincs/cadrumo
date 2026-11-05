@@ -22,14 +22,14 @@ if TYPE_CHECKING:
     pass
 
 
-def _missing_or_empty_output_refs(
+def missing_or_empty_output_refs(
     expected_ids: frozenset[WorkbookOutputId],
     refs: Mapping[WorkbookOutputId, tuple[str, ...]],
 ) -> tuple[WorkbookOutputId, ...]:
     return tuple(sorted(output_id for output_id in expected_ids if not bool(refs.get(output_id))))
 
 
-def _workbook_output_id_set(
+def workbook_output_id_set(
     surface: str,
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
@@ -39,19 +39,19 @@ def _workbook_output_id_set(
     return frozenset(values)
 
 
-def _require_matching_output_ids(
+def require_matching_output_ids(
     left_name: str,
     left: Mapping[WorkbookOutputId, object],
     right_name: str,
     right: Mapping[WorkbookOutputId, object],
 ) -> None:
-    left_ids = _workbook_output_id_set(left_name, left)
-    right_ids = _workbook_output_id_set(right_name, right)
+    left_ids = workbook_output_id_set(left_name, left)
+    right_ids = workbook_output_id_set(right_name, right)
     if left_ids != right_ids:
-        _raise_output_id_mismatch(left_name, left_ids, right_name, right_ids)
+        raise_output_id_mismatch(left_name, left_ids, right_name, right_ids)
 
 
-def _raise_output_id_mismatch(
+def raise_output_id_mismatch(
     left_name: str,
     left_ids: frozenset[WorkbookOutputId],
     right_name: str,

@@ -10,25 +10,23 @@ from typing import Final
 from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
-    KeyedFamilySpec as _KeyedFamily,
-)
-from cadrumo.domain.calculations.registry.keyed_families import (
+    KeyedFamilySpec,
     inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from .casilla_identity import _casillas_by_id
-from .keyed_family_identity import _member_identity, _refuse_undeclared_repurpose
+from .casilla_identity import casillas_by_id
+from .keyed_family_identity import member_identity, refuse_undeclared_repurpose
 from .keyed_family_period_scope import selector_covers
-from .keyed_family_storage_delta import _apply_family_storage_delta
+from .keyed_family_storage_delta import apply_family_storage_delta
 
 _CLEARED_FAMILIES_FIELD: Final = "cleared_families"
 _RESTATED_FAMILIES_FIELD: Final = "restated_families"
 _IDENTIFIER_EVOLUTIONS_SECTION: Final = "identifier_evolutions"
 
 
-def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
+def restated_families(successor: Mapping[str, object]) -> frozenset[str]:
     """Return the families ``successor`` declares it states in full on this edge.
 
     A declared family is not merged at all: the edition's stated array survives
@@ -46,7 +44,7 @@ def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
     entries = as_toml_array(successor.get(_RESTATED_FAMILIES_FIELD, ())) or ()
     declared: set[str] = set()
     for raw_entry in entries:
-        entry = _as_toml_table(raw_entry)
+        entry = as_toml_table(raw_entry)
         if entry is None:
             continue
         family = entry.get("family")
@@ -55,7 +53,7 @@ def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
     return frozenset(declared)
 
 
-def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family: _KeyedFamily) -> frozenset[str]:
+def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family: KeyedFamilySpec) -> frozenset[str]:
     """Return the identifiers ``family`` withdraws from ``revision_id``.
 
     Both evolution kinds withdraw the identifier they name: ``retired`` ends it,
@@ -66,7 +64,7 @@ def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family
     evolutions = as_toml_array(successor.get(_IDENTIFIER_EVOLUTIONS_SECTION, ())) or ()
     retired: set[str] = set()
     for raw_evolution in evolutions:
-        evolution = _as_toml_table(raw_evolution)
+        evolution = as_toml_table(raw_evolution)
         if evolution is None or evolution.get("to_revision") != revision_id:
             continue
         if evolution.get("family") != family.section:
@@ -83,7 +81,7 @@ def inherit_keyed_family(
     revision_id: str,
     predecessor_id: str,
     predecessor: Mapping[str, object],
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     inherited: tuple[object, ...],
     inherited_casillas: tuple[object, ...],
     successor_casillas: tuple[object, ...],
@@ -117,12 +115,12 @@ def inherit_keyed_family(
     if stated is None:
         return ()
     inherited = tuple(_pin_family_source_default(member, predecessor, family) for member in inherited)
-    inherited, removed, positions, patched = _apply_family_storage_delta(
+    inherited, removed, positions, patched = apply_family_storage_delta(
         context, predecessor_id=predecessor_id, family=family, inherited=inherited, successor=successor
     )
     retired = _keyed_retirements(successor, revision_id, family) | removed
-    inherited_casillas_by_id = _casillas_by_id(inherited_casillas)
-    successor_casillas_by_id = _casillas_by_id(successor_casillas)
+    inherited_casillas_by_id = casillas_by_id(inherited_casillas)
+    successor_casillas_by_id = casillas_by_id(successor_casillas)
     superseders = _validated_superseders(context, family, stated, retired)
     _refuse_ambiguous_superseders(context, family, inherited, superseders)
     members, superseded = _inherit_members(
@@ -136,11 +134,13 @@ def inherit_keyed_family(
         inherited_casillas_by_id,
         successor_casillas_by_id,
     )
-    members.extend(member for member in stated if _member_identity(member, family) not in superseded)
+    members.extend(member for member in stated if member_identity(member, family) not in superseded)
     return _apply_family_positions(context, family, members, positions)
 
 
-def _stated_members(context: str, family: _KeyedFamily, successor: Mapping[str, object]) -> tuple[object, ...] | None:
+def _stated_members(
+    context: str, family: KeyedFamilySpec, successor: Mapping[str, object]
+) -> tuple[object, ...] | None:
     if family.section in cleared_family_names(successor.get(_CLEARED_FAMILIES_FIELD, ())):
         if successor.get(family.section):
             raise RegistryLoadError(f"{context}: cleared family {family.section!r} also states members")
@@ -153,22 +153,22 @@ def _stated_members(context: str, family: _KeyedFamily, successor: Mapping[str, 
     return stated
 
 
-def _parse_stated_members(raw: object, family: _KeyedFamily) -> tuple[object, ...] | None:
+def _parse_stated_members(raw: object, family: KeyedFamilySpec) -> tuple[object, ...] | None:
     if family.singleton:
-        table = _as_toml_table(raw)
+        table = as_toml_table(raw)
         return () if raw is None else (table,) if table is not None else None
     return as_toml_array(raw if raw is not None else ())
 
 
 def _validated_superseders(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     stated: tuple[object, ...],
     retired: frozenset[str],
 ) -> dict[str, object]:
     superseders: dict[str, object] = {}
     for member in stated:
-        identity = _member_identity(member, family)
+        identity = member_identity(member, family)
         if identity is None:
             raise RegistryLoadError(
                 f"{context}: states a {family.section} member carrying no {family.identity!r}, so it can neither "
@@ -189,11 +189,11 @@ def _validated_superseders(
 
 def _refuse_ambiguous_superseders(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     inherited: tuple[object, ...],
     superseders: Mapping[str, object],
 ) -> None:
-    counts = Counter(identity for member in inherited if (identity := _member_identity(member, family)) is not None)
+    counts = Counter(identity for member in inherited if (identity := member_identity(member, family)) is not None)
     ambiguous = sorted(identity for identity in superseders if counts[identity] > 1)
     if ambiguous:
         raise RegistryLoadError(
@@ -204,7 +204,7 @@ def _refuse_ambiguous_superseders(
 
 def _inherit_members(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     inherited: tuple[object, ...],
     successor: Mapping[str, object],
     retired: frozenset[str],
@@ -236,7 +236,7 @@ def _inherit_members(
 
 def _inherited_member(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     member: object,
     successor: Mapping[str, object],
     retired: frozenset[str],
@@ -245,7 +245,7 @@ def _inherited_member(
     inherited_casillas_by_id: Mapping[str, tuple[object, ...]],
     successor_casillas_by_id: Mapping[str, tuple[object, ...]],
 ) -> tuple[bool, object, str | None]:
-    identity = _member_identity(member, family)
+    identity = member_identity(member, family)
     if identity is None:
         raise RegistryLoadError(
             f"{context}: the predecessor carries a {family.section} member with no {family.identity!r}, so it "
@@ -258,7 +258,7 @@ def _inherited_member(
     stated = superseders.get(identity)
     if stated is not None:
         if identity not in patched:
-            _refuse_undeclared_repurpose(
+            refuse_undeclared_repurpose(
                 context,
                 family,
                 identity,
@@ -270,7 +270,7 @@ def _inherited_member(
         return True, stated, identity
     if identity not in patched:
         # Even an omitted declaration is interpreted against successor casillas.
-        _refuse_undeclared_repurpose(
+        refuse_undeclared_repurpose(
             context,
             family,
             identity,
@@ -284,13 +284,13 @@ def _inherited_member(
 
 def _apply_family_positions(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     members: list[object],
     positions: tuple[tuple[str, int], ...],
 ) -> tuple[object, ...]:
     if not positions:
         return tuple(members)
-    by_identity = {_member_identity(member, family): member for member in members}
+    by_identity = {member_identity(member, family): member for member in members}
     for identity, position in positions:
         member = by_identity.get(identity)
         if member is None:
@@ -300,19 +300,19 @@ def _apply_family_positions(
     return tuple(members)
 
 
-def _pin_family_source_default(member: object, predecessor: Mapping[str, object], family: _KeyedFamily) -> object:
+def _pin_family_source_default(member: object, predecessor: Mapping[str, object], family: KeyedFamilySpec) -> object:
     """Keep an inherited member bound to the source default effective at its origin."""
-    table = _as_toml_table(member)
+    table = as_toml_table(member)
     if table is None:
         return member
     pinned = inline_family_source_default(table, predecessor, family.source_default_key)
     return member if pinned is table else pinned
 
 
-def _refuse_undecided_scoped_family(
+def refuse_undecided_scoped_family(
     context: str,
     *,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     inherited: tuple[object, ...],
     stated: tuple[object, ...],
     declined: frozenset[str],
@@ -343,17 +343,17 @@ def _refuse_undecided_scoped_family(
     )
 
 
-def _raw_keyed_members(
+def raw_keyed_members(
     source_path: Path,
     revision_id: str,
     table: Mapping[str, object],
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
 ) -> tuple[object, ...]:
     raw = table.get(family.section)
     if family.singleton:
         if raw is None:
             return ()
-        member = _as_toml_table(raw)
+        member = as_toml_table(raw)
         if member is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} {family.section} must be a table")
         return (member,)

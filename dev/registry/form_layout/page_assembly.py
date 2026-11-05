@@ -15,26 +15,26 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
 )
 
-from .generation_constants import _INPUTS_PAGE, _NUMBERED_PAGE
-from .generation_models import _Build, _RowDraft, _SectionDraft
-from .heading_keys import _unique, form_heading_key
+from .generation_constants import INPUTS_PAGE, NUMBERED_PAGE
+from .generation_models import Build, RowDraft, SectionDraft
+from .heading_keys import form_heading_key, unique
 from .official_text import node_slug
-from .page_fallbacks import _inputs_page, _numbered_casillas, _numbered_page
-from .page_placement import _block_bindings, _block_casillas
+from .page_fallbacks import inputs_page, numbered_casillas, numbered_page
+from .page_placement import block_bindings, block_casillas
 from .page_sections import (
-    _page_sections,
-    _row_drafts,
-    _section_blocks,
-    _section_slug,
-    _signature,
+    page_sections,
+    page_sections_signature,
+    row_drafts,
+    section_blocks,
+    section_slug,
 )
 from .predecessor_layout import ContinuedLayout
-from .repeating_blocks import _with_row_column_groups
+from .repeating_blocks import with_row_column_groups
 
 
 @dataclass(slots=True)
 class _PageBuildState:
-    build: _Build
+    build: Build
     manual_bindings: Mapping[str, bool]
     repeating: Mapping[str, ExportRecordDefinition]
     pages: list[FormPageDefinition]
@@ -70,10 +70,10 @@ def _continued_pages(continued: ContinuedLayout | None) -> list[FormPageDefiniti
 def _continued_casillas(continued: ContinuedLayout | None) -> set[str]:
     if continued is None:
         return set()
-    return _block_casillas(block for page in continued.pages for section in page.sections for block in section.blocks)
+    return block_casillas(block for page in continued.pages for section in page.sections for block in section.blocks)
 
 
-def _position_indexes(build: _Build) -> tuple[dict[str, list[int]], dict[str, str | None]]:
+def _position_indexes(build: Build) -> tuple[dict[str, list[int]], dict[str, str | None]]:
     pages: dict[str, list[int]] = {}
     refs: dict[str, str | None] = {}
     for index, position in enumerate(build.positions):
@@ -82,24 +82,24 @@ def _position_indexes(build: _Build) -> tuple[dict[str, list[int]], dict[str, st
     return pages, refs
 
 
-def _page_signatures(build: _Build, drafts: Sequence[_SectionDraft]) -> Counter[tuple[str, ...]]:
-    entries = (entry for draft in drafts for entry in _row_drafts(build, draft.items))
-    return Counter(_signature(entry.columns) for entry in entries if isinstance(entry, _RowDraft))
+def _page_signatures(build: Build, drafts: Sequence[SectionDraft]) -> Counter[tuple[str, ...]]:
+    entries = (entry for draft in drafts for entry in row_drafts(build, draft.items))
+    return Counter(page_sections_signature(entry.columns) for entry in entries if isinstance(entry, RowDraft))
 
 
 def _section_for_page(
     state: _PageBuildState,
-    draft: _SectionDraft,
+    draft: SectionDraft,
     *,
     page_id: str,
     signatures: Counter[tuple[str, ...]],
     used_sections: set[str],
 ) -> FormSectionDefinition | None:
-    section_id = _unique(
-        node_slug(draft.heading) if (draft.heading is not None and draft.heading) else _section_slug(draft.key),
+    section_id = unique(
+        node_slug(draft.heading) if (draft.heading is not None and draft.heading) else section_slug(draft.key),
         used_sections,
     )
-    blocks = _section_blocks(
+    blocks = section_blocks(
         state.build,
         draft,
         page_signatures=signatures,
@@ -111,8 +111,8 @@ def _section_for_page(
         return None
     for index in draft.positions:
         state.section_of[index] = (page_id, section_id)
-    state.shown.update(_block_casillas(blocks))
-    state.placed_bindings.update(_block_bindings(blocks))
+    state.shown.update(block_casillas(blocks))
+    state.placed_bindings.update(block_bindings(blocks))
     heading = node_slug(draft.heading) if (draft.heading is not None and draft.heading) else section_id
     return FormSectionDefinition(
         id=section_id,
@@ -124,7 +124,7 @@ def _section_for_page(
 
 def _sections_for_page(
     state: _PageBuildState,
-    drafts: Sequence[_SectionDraft],
+    drafts: Sequence[SectionDraft],
     *,
     page_id: str,
     signatures: Counter[tuple[str, ...]],
@@ -144,7 +144,7 @@ def _sections_for_page(
     return sections
 
 
-def _records_on_page(build: _Build, indexes: Sequence[int]) -> dict[str, ExportRecordDefinition]:
+def _records_on_page(build: Build, indexes: Sequence[int]) -> dict[str, ExportRecordDefinition]:
     return {record_id: record for index in indexes for record_id, record in build.positions[index].records.items()}
 
 
@@ -154,9 +154,9 @@ def _append_source_page(
     indexes: Sequence[int],
     official_ref: str | None,
 ) -> None:
-    drafts = _page_sections(state.build, indexes, state.primary)
+    drafts = page_sections(state.build, indexes, state.primary)
     signatures = _page_signatures(state.build, drafts)
-    page_id = _unique(page_key, state.used_pages)
+    page_id = unique(page_key, state.used_pages)
     sections = _sections_for_page(
         state,
         drafts,
@@ -200,24 +200,24 @@ def _mark_repeating_bindings(state: _PageBuildState) -> None:
 
 def _append_numbered_page(state: _PageBuildState) -> None:
     numbered = [
-        casilla_id for casilla_id in _numbered_casillas(state.build, state.primary) if casilla_id not in state.shown
+        casilla_id for casilla_id in numbered_casillas(state.build, state.primary) if casilla_id not in state.shown
     ]
     if not numbered:
         return
-    page_id = _unique(_NUMBERED_PAGE, state.used_pages)
-    state.pages.append(_numbered_page(state.build, page_id, numbered))
+    page_id = unique(NUMBERED_PAGE, state.used_pages)
+    state.pages.append(numbered_page(state.build, page_id, numbered))
     state.shown.update(numbered)
 
 
 def _append_inputs_page(state: _PageBuildState) -> None:
-    page_id = _unique(_INPUTS_PAGE, state.used_pages)
-    page = _inputs_page(state.build, page_id, state.manual_bindings, state.placed_bindings)
+    page_id = unique(INPUTS_PAGE, state.used_pages)
+    page = inputs_page(state.build, page_id, state.manual_bindings, state.placed_bindings)
     if page is not None:
         state.pages.append(page)
 
 
-def _build_pages(
-    build: _Build,
+def build_pages(
+    build: Build,
     manual_bindings: Mapping[str, bool],
     repeating: Mapping[str, ExportRecordDefinition],
     continued: ContinuedLayout | None,
@@ -237,7 +237,7 @@ def _build_pages(
         primary={casilla_id: anchors[0] for casilla_id, anchors in build.anchors.items()},
     )
     _append_source_pages(state, pages, refs)
-    state.pages[:] = _with_row_column_groups(build, state.pages)
+    state.pages[:] = with_row_column_groups(build, state.pages)
     _mark_repeating_bindings(state)
     _append_numbered_page(state)
     _append_inputs_page(state)

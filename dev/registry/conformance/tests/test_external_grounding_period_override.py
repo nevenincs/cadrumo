@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..external_grounding import _select_revision_for_filing_year
+from ..external_grounding import select_revision_for_filing_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -44,13 +44,13 @@ def _overridden_revision() -> ModeloRevision:
 def test_a_period_the_override_year_drops_is_not_attributed() -> None:
     revisions = (_overridden_revision(),)
 
-    assert _select_revision_for_filing_year(revisions, filing_year=_YEAR, period=_DROPPED) is None
+    assert select_revision_for_filing_year(revisions, filing_year=_YEAR, period=_DROPPED) is None
 
 
 def test_a_period_the_override_year_serves_is_attributed() -> None:
     revisions = (_overridden_revision(),)
 
-    selected = _select_revision_for_filing_year(revisions, filing_year=_YEAR, period=_SERVED[0])
+    selected = select_revision_for_filing_year(revisions, filing_year=_YEAR, period=_SERVED[0])
 
     assert selected is not None
     assert selected.id == _REVISION
@@ -59,7 +59,7 @@ def test_a_period_the_override_year_serves_is_attributed() -> None:
 def test_a_year_outside_the_override_keeps_the_flat_surface() -> None:
     revisions = (_overridden_revision(),)
 
-    selected = _select_revision_for_filing_year(revisions, filing_year=_YEAR + 1, period=_DROPPED)
+    selected = select_revision_for_filing_year(revisions, filing_year=_YEAR + 1, period=_DROPPED)
 
     assert selected is not None
     assert selected.id == _REVISION

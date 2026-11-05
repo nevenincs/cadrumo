@@ -8,28 +8,30 @@ from collections.abc import Mapping
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_planning_counts as _edition_delta_planning_counts
-from . import edition_delta_planning_mode as _edition_delta_planning_mode
-from . import edition_delta_planning_state as _edition_delta_planning_state
-from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
-from . import edition_delta_row_delta_existing as _edition_delta_row_delta_existing
-from . import edition_delta_row_delta_preserving as _edition_delta_row_delta_preserving
-from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
-from . import edition_delta_source as _edition_delta_source
-from . import edition_delta_types as _edition_delta_types
+from . import (
+    edition_delta_errors,
+    edition_delta_planning_counts,
+    edition_delta_planning_mode,
+    edition_delta_planning_state,
+    edition_delta_row_delta_common,
+    edition_delta_row_delta_existing,
+    edition_delta_row_delta_preserving,
+    edition_delta_row_delta_reconstruction,
+    edition_delta_source,
+    edition_delta_types,
+)
 from .compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 
 
 def _validate_authored_rows(
     revision_id: str,
-    source: _edition_delta_source._EditionSource,
-    lift: _edition_delta_source._EditionLift,
+    source: edition_delta_source.EditionSource,
+    lift: edition_delta_source.EditionLift,
 ) -> tuple[tuple[str, ...], str, bool]:
-    authored_ids = tuple(_edition_delta_source._row_id(row) for row in source.stated_rows())
+    authored_ids = tuple(edition_delta_source.row_id(row) for row in source.stated_rows())
     unheld = sorted(row_id for row_id in authored_ids if row_id not in lift.lifts)
     if unheld:
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold"
         )
     semantic_predecessor = source.manifest.get("predecessor")
@@ -39,30 +41,30 @@ def _validate_authored_rows(
 
 
 def _authored_operation_scope(
-    run: _edition_delta_planning_state.PlanningRun,
-    source: _edition_delta_source._EditionSource,
-    lift: _edition_delta_source._EditionLift,
+    run: edition_delta_planning_state.PlanningRun,
+    source: edition_delta_source.EditionSource,
+    lift: edition_delta_source.EditionLift,
     revision_id: str,
     predecessor: str,
     authored_ids: tuple[str, ...],
     storage_only: bool,
 ) -> tuple[
     set[str],
-    Counter[_edition_delta_types.KeptReason],
+    Counter[edition_delta_types.KeptReason],
     list[str],
-    tuple[_edition_delta_source._Row, ...],
+    tuple[edition_delta_source.Row, ...],
     tuple[LineageAttestation, ...],
 ]:
     if predecessor not in run.materialised:
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"edition {revision_id!r} declares unavailable storage baseline {predecessor!r}"
         )
-    return _edition_delta_row_delta_existing.choose_existing_drops(
+    return edition_delta_row_delta_existing.choose_existing_drops(
         revision_id=revision_id,
         predecessor=predecessor,
         storage_rows=(
-            _edition_delta_row_delta_common.storage_rows(run.sources[predecessor])
-            if _edition_delta_planning_mode.storage_authored(run.sources[predecessor].manifest)
+            edition_delta_row_delta_common.storage_rows(run.sources[predecessor])
+            if edition_delta_planning_mode.storage_authored(run.sources[predecessor].manifest)
             else {}
         ),
         inherited=run.materialised[predecessor],
@@ -75,22 +77,22 @@ def _authored_operation_scope(
 
 
 def _authored_selector_ids(
-    inherited: list[_edition_delta_source._Placed],
+    inherited: list[edition_delta_source.Placed],
     dropped_authored: frozenset[str],
     dropped_lineages: set[str],
 ) -> set[str]:
     return {
-        _edition_delta_source._row_id(placed.row)
+        edition_delta_source.row_id(placed.row)
         for placed in inherited
-        if _edition_delta_source._row_id(placed.row) in dropped_authored
-        or _edition_delta_source._lineage(placed.row) in dropped_lineages
+        if edition_delta_source.row_id(placed.row) in dropped_authored
+        or edition_delta_source.lineage(placed.row) in dropped_lineages
     }
 
 
 def _matching_authored_overrides(
-    overrides: tuple[_edition_delta_source._Row, ...],
+    overrides: tuple[edition_delta_source.Row, ...],
     selector_ids: set[str],
-) -> tuple[_edition_delta_source._Row, ...]:
+) -> tuple[edition_delta_source.Row, ...]:
     return tuple(
         override
         for override in overrides
@@ -99,54 +101,54 @@ def _matching_authored_overrides(
 
 
 def _planned_stored_rows(
-    source: _edition_delta_source._EditionSource,
-    lifts: Mapping[str, _edition_delta_source._Lift],
+    source: edition_delta_source.EditionSource,
+    lifts: Mapping[str, edition_delta_source.Lift],
     stated_ids: tuple[str, ...],
-) -> list[_edition_delta_source._Row]:
+) -> list[edition_delta_source.Row]:
     stated = frozenset(stated_ids)
-    layout = _edition_delta_source._stated_layout(source, stated)
-    return [lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks]
+    layout = edition_delta_source.stated_layout(source, stated)
+    return [lifts[edition_delta_source.row_id(block.row)].row for _, blocks in layout for block in blocks]
 
 
 def _replay_authored_output(
     *,
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     revision_id: str,
     predecessor: str,
-    source: _edition_delta_source._EditionSource,
-    lift: _edition_delta_source._EditionLift,
+    source: edition_delta_source.EditionSource,
+    lift: edition_delta_source.EditionLift,
     stated_ids: tuple[str, ...],
-    generated_overrides: tuple[_edition_delta_source._Row, ...],
-    override_replacements: tuple[_edition_delta_source._Row, ...],
+    generated_overrides: tuple[edition_delta_source.Row, ...],
+    override_replacements: tuple[edition_delta_source.Row, ...],
     attestations: tuple[LineageAttestation, ...],
-) -> list[_edition_delta_source._Placed]:
+) -> list[edition_delta_source.Placed]:
     inherited = run.materialised[predecessor]
-    replayed = _edition_delta_row_delta_reconstruction._simulate_storage_output(
+    replayed = edition_delta_row_delta_reconstruction.simulate_storage_output(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=inherited,
         source=source,
         stated_rows=_planned_stored_rows(source, lift.lifts, stated_ids),
         overrides=(
-            *_edition_delta_row_delta_common.operations_with_replacements(
+            *edition_delta_row_delta_common.operations_with_replacements(
                 source.manifest, "casilla_overrides", override_replacements
             ),
             *generated_overrides,
         ),
-        removals=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
-        positions=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+        removals=edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+        positions=edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
     )
-    targets = {_edition_delta_source._row_id(row): row for row in lift.rows}
+    targets = {edition_delta_source.row_id(row): row for row in lift.rows}
     attested_lineages = _attested_lineages(source, attestations)
-    actual: dict[str, _edition_delta_source._Row] = {}
+    actual: dict[str, edition_delta_source.Row] = {}
     for placed in replayed:
-        row_id = _edition_delta_source._row_id(placed.row)
+        row_id = edition_delta_source.row_id(placed.row)
         target = targets.get(row_id)
         if target is None:
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"edition {revision_id!r}: planned storage retained unexpected casilla {row_id!r}"
             )
-        effective = _edition_delta_row_delta_reconstruction._effective_simulated_row(
+        effective = edition_delta_row_delta_reconstruction.effective_simulated_row(
             placed,
             target,
             attested_lineages,
@@ -156,31 +158,29 @@ def _replay_authored_output(
         )
         if effective is None or effective != target:
             differing = _replay_differing_fields(target, effective)
-            raise _edition_delta_errors.MigrationRefusedError(
+            raise edition_delta_errors.MigrationRefusedError(
                 f"edition {revision_id!r}: planned raw storage for casilla {row_id!r} does not preserve its "
                 f"effective target; differing fields: {differing!r}; sidecar projection for lineage "
-                f"{_edition_delta_source._lineage(target)!r} is "
-                f"{'present' if _edition_delta_source._lineage(target) in attested_lineages else 'absent'}"
+                f"{edition_delta_source.lineage(target)!r} is "
+                f"{'present' if edition_delta_source.lineage(target) in attested_lineages else 'absent'}"
             )
         actual[row_id] = effective
     missing = sorted(set(targets) - set(actual))
     if missing:
-        raise _edition_delta_errors.MigrationRefusedError(
+        raise edition_delta_errors.MigrationRefusedError(
             f"edition {revision_id!r}: planned storage omitted effective casillas {missing!r}"
         )
     return replayed
 
 
-def _replay_differing_fields(
-    target: _edition_delta_source._Row, effective: _edition_delta_source._Row | None
-) -> list[str]:
+def _replay_differing_fields(target: edition_delta_source.Row, effective: edition_delta_source.Row | None) -> list[str]:
     return sorted(
         key for key in set(target) | set(effective or {}) if effective is None or target.get(key) != effective.get(key)
     )
 
 
 def _attested_lineages(
-    source: _edition_delta_source._EditionSource,
+    source: edition_delta_source.EditionSource,
     generated: tuple[LineageAttestation, ...],
 ) -> set[str]:
     raw = source.manifest.get("lineage_attestations", ())
@@ -197,54 +197,54 @@ def _attested_lineages(
 
 
 def _replay_authored_source(
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     revision_id: str,
     predecessor: str,
-    source: _edition_delta_source._EditionSource,
-    override_replacements: tuple[_edition_delta_source._Row, ...],
-) -> list[_edition_delta_source._Placed]:
+    source: edition_delta_source.EditionSource,
+    override_replacements: tuple[edition_delta_source.Row, ...],
+) -> list[edition_delta_source.Placed]:
     """Read the current authored operations as the raw storage baseline."""
     stated = source.stated_rows()
-    stated_ids = frozenset(_edition_delta_source._row_id(row) for row in stated)
-    layout = _edition_delta_source._stated_layout(source, stated_ids)
+    stated_ids = frozenset(edition_delta_source.row_id(row) for row in stated)
+    layout = edition_delta_source.stated_layout(source, stated_ids)
     stored_rows = [block.row for _, blocks in layout for block in blocks]
-    return _edition_delta_row_delta_reconstruction._simulate_storage_output(
+    return edition_delta_row_delta_reconstruction.simulate_storage_output(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=run.materialised[predecessor],
         source=source,
         stated_rows=stored_rows,
-        overrides=_edition_delta_row_delta_common.operations_with_replacements(
+        overrides=edition_delta_row_delta_common.operations_with_replacements(
             source.manifest, "casilla_overrides", override_replacements
         ),
-        removals=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
-        positions=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+        removals=edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+        positions=edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
     )
 
 
 def _build_authored_plan(
-    source: _edition_delta_source._EditionSource,
+    source: edition_delta_source.EditionSource,
     revision_id: str,
-    lift: _edition_delta_source._EditionLift,
+    lift: edition_delta_source.EditionLift,
     authored_ids: tuple[str, ...],
     predecessor: str,
     drops: set[str],
-    kept: Mapping[_edition_delta_types.KeptReason, int],
+    kept: Mapping[edition_delta_types.KeptReason, int],
     not_exact: list[str],
-    overrides: tuple[_edition_delta_source._Row, ...],
+    overrides: tuple[edition_delta_source.Row, ...],
     attestations: tuple[LineageAttestation, ...],
-) -> _edition_delta_types.EditionPlan:
+) -> edition_delta_types.EditionPlan:
     dropped_authored = frozenset(authored_ids) & drops
     stated_ids = tuple(row_id for row_id in authored_ids if row_id not in dropped_authored)
     stated = frozenset(stated_ids)
     stated_lineages = {
-        _edition_delta_source._lineage(lift.lifts[row_id].row)
+        edition_delta_source.lineage(lift.lifts[row_id].row)
         for row_id in dropped_authored
         if any(claim in lift.lifts[row_id].row for claim in LINEAGE_CLAIM_FIELDS)
     }
-    return _edition_delta_types.EditionPlan(
+    return edition_delta_types.EditionPlan(
         revision_id=revision_id,
-        basis=_edition_delta_types.PredecessorBasis.LIFT_ONLY,
+        basis=edition_delta_types.PredecessorBasis.LIFT_ONLY,
         predecessor=predecessor,
         blocked=(),
         source_default=lift.source_default,
@@ -252,9 +252,9 @@ def _build_authored_plan(
         rows_before=len(lift.rows),
         stated_ids=stated_ids,
         inherited_ids=tuple(
-            _edition_delta_source._row_id(row) for row in lift.rows if _edition_delta_source._row_id(row) not in stated
+            edition_delta_source.row_id(row) for row in lift.rows if edition_delta_source.row_id(row) not in stated
         ),
-        lifted=_edition_delta_planning_counts.lift_counts(source, lift.lifts, stated),
+        lifted=edition_delta_planning_counts.lift_counts(source, lift.lifts, stated),
         kept=dict(sorted(kept.items())),
         not_exact=tuple(not_exact),
         comments_dropped=0,
@@ -266,13 +266,13 @@ def _build_authored_plan(
 
 
 def plan_authored_edition(
-    run: _edition_delta_planning_state.PlanningRun,
+    run: edition_delta_planning_state.PlanningRun,
     revision: ModeloRevision,
-) -> _edition_delta_source._EditionWork:
+) -> edition_delta_source.EditionWork:
     """Plan an edition already in delta storage: finish its stated rows without replaying existing operations."""
     revision_id = str(revision.id)
     source = run.sources[revision_id]
-    lift = _edition_delta_source._edition_lift(source)
+    lift = edition_delta_source.edition_lift(source)
     authored_ids, predecessor, storage_only = _validate_authored_rows(revision_id, source, lift)
     drops, kept, not_exact, generated_overrides, attestations = _authored_operation_scope(
         run, source, lift, revision_id, predecessor, authored_ids, storage_only
@@ -281,11 +281,11 @@ def plan_authored_edition(
     dropped_lineages = {
         lineage
         for row_id in dropped_authored
-        if (lineage := _edition_delta_source._lineage(lift.lifts[row_id].row)) is not None
+        if (lineage := edition_delta_source.lineage(lift.lifts[row_id].row)) is not None
     }
     selector_ids = _authored_selector_ids(run.materialised[predecessor], dropped_authored, dropped_lineages)
     authored_overrides = _matching_authored_overrides(generated_overrides, selector_ids)
-    normalized_replacements = _edition_delta_row_delta_preserving.normalize_authored_override_removals(
+    normalized_replacements = edition_delta_row_delta_preserving.normalize_authored_override_removals(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=run.materialised[predecessor],
@@ -294,7 +294,7 @@ def plan_authored_edition(
         defaults=lift.defaults,
     )
     current_output = _replay_authored_source(run, revision_id, predecessor, source, normalized_replacements)
-    preserving_overrides, preserving_replacements = _edition_delta_row_delta_preserving.preserve_inherited_rows(
+    preserving_overrides, preserving_replacements = edition_delta_row_delta_preserving.preserve_inherited_rows(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=run.materialised[predecessor],
@@ -303,7 +303,7 @@ def plan_authored_edition(
         defaults=lift.defaults,
         current_output=current_output,
     )
-    replacement_by_selector: dict[tuple[str, str], _edition_delta_source._Row] = {}
+    replacement_by_selector: dict[tuple[str, str], edition_delta_source.Row] = {}
     for replacement in (*normalized_replacements, *preserving_replacements):
         selector = replacement.get("selector")
         if isinstance(selector, Mapping):
@@ -334,7 +334,7 @@ def plan_authored_edition(
         override_replacements=override_replacements,
         attestations=plan.lineage_attestations,
     )
-    return _edition_delta_source._EditionWork(
+    return edition_delta_source.EditionWork(
         plan=plan,
         source=source,
         lifts=lift.lifts,

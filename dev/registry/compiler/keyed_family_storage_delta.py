@@ -8,28 +8,28 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec as _KeyedFamily
+from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
 from cadrumo.domain.calculations.registry.schema_overrides import (
     FamilyFieldOverride,
     FamilyMemberPosition,
     FamilyMemberRemoval,
 )
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
-from .keyed_family_identity import _member_identity
+from .keyed_family_identity import member_identity
 
 _CLEARED_FAMILIES_FIELD = "cleared_families"
 
 
-def _patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
-    table = _as_toml_table(value)
+def patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
+    table = as_toml_table(value)
     if table is None:
         raise RegistryLoadError(f"{context}: selected family member is not a table")
     result: dict[str, object] = dict(table)
     for key, replacement in fields.items():
         if isinstance(replacement, Mapping) and isinstance(result.get(key), Mapping):
-            result[key] = _patch_family_table(context, result[key], replacement, ())
+            result[key] = patch_family_table(context, result[key], replacement, ())
         else:
             result[key] = replacement
     for path in removed:
@@ -55,7 +55,7 @@ def patch_family_sequences(
     orders: Mapping[str, tuple[int, ...]],
 ) -> object:
     """Apply a sequence delta and optional order to one nested member table."""
-    table = _as_toml_table(value)
+    table = as_toml_table(value)
     if table is None:
         raise RegistryLoadError(f"{context}: selected family member is not a table")
     result: dict[str, object] = dict(table)
@@ -101,11 +101,11 @@ def _patched_sequence(
     return tuple(patched)
 
 
-def _apply_family_storage_delta(
+def apply_family_storage_delta(
     context: str,
     *,
     predecessor_id: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     inherited: tuple[object, ...],
     successor: Mapping[str, object],
 ) -> tuple[tuple[object, ...], frozenset[str], tuple[tuple[str, int], ...], frozenset[str]]:
@@ -114,7 +114,7 @@ def _apply_family_storage_delta(
         return tuple(), frozenset[str](), tuple(), frozenset[str]()
     overrides, removals, positions = _validated_family_delta(context, family, successor)
     result = list(inherited)
-    by_identity = {_member_identity(member, family): index for index, member in enumerate(result)}
+    by_identity = {member_identity(member, family): index for index, member in enumerate(result)}
     seen, removed = _validated_family_removals(context, predecessor_id, by_identity, removals)
     patched = _apply_family_overrides(context, predecessor_id, family, result, by_identity, seen, overrides)
     return (
@@ -127,7 +127,7 @@ def _apply_family_storage_delta(
 
 def _validated_family_delta(
     context: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     successor: Mapping[str, object],
 ) -> tuple[tuple[FamilyFieldOverride, ...], tuple[FamilyMemberRemoval, ...], tuple[FamilyMemberPosition, ...]]:
     try:
@@ -185,7 +185,7 @@ def _validated_family_removals(
 def _apply_family_overrides(
     context: str,
     predecessor_id: str,
-    family: _KeyedFamily,
+    family: KeyedFamilySpec,
     result: list[object],
     by_identity: Mapping[str | None, int],
     seen: set[str],
@@ -195,7 +195,7 @@ def _apply_family_overrides(
     for declaration in overrides:
         identity = _validate_override_selector(context, predecessor_id, by_identity, seen, declaration)
         index = by_identity[identity]
-        result[index] = _patch_family_table(context, result[index], declaration.fields, declaration.removed_fields)
+        result[index] = patch_family_table(context, result[index], declaration.fields, declaration.removed_fields)
         result[index] = patch_family_sequences(
             context,
             result[index],
@@ -204,7 +204,7 @@ def _apply_family_overrides(
             declaration.sequence_order,
         )
         if declaration.replacement_id is not None:
-            table = _as_toml_table(result[index])
+            table = as_toml_table(result[index])
             if table is None or family.identity is None:
                 raise RegistryLoadError(f"{context}: family identity replacement selected a non-table member")
             result[index] = {**table, family.identity: declaration.replacement_id}

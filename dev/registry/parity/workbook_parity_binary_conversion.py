@@ -10,26 +10,25 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from cadrumo.core.hashing import hash_file as _hash_file
+from cadrumo.core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
+from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 
-from .workbook_parity_libreoffice import _convert_with_libreoffice, _libreoffice_workspace, _LibreOfficeConversionError
+from .workbook_parity_libreoffice import LibreOfficeConversionError, convert_with_libreoffice, libreoffice_workspace
 from .workbook_parity_models import (
     WorkbookCellRef,
     WorkbookConversionReport,
 )
-from .workbook_parity_runner_resolution import _resolve_libreoffice_runner
+from .workbook_parity_runner_resolution import resolve_libreoffice_runner
 from .workbook_parity_scanning import (
-    _classify_xlsx,
-    _dedupe_cells,
-    _elapsed_decimal,
-    _evidence_for_workbook_kind,
-    _formula_references,
-    _infer_modelo,
-    _raise_if_timed_out,
+    classify_xlsx,
+    dedupe_cells,
+    elapsed_decimal,
+    evidence_for_workbook_kind,
+    formula_references,
+    infer_modelo,
+    raise_if_timed_out,
 )
 from .workbook_parity_types import (
     WorkbookKind,
@@ -61,7 +60,7 @@ def _collect_sheet_formulas(
 ) -> None:
     """Walk every row in ``worksheet`` and append formula refs + a bounded set of references."""
     for row in worksheet.iter_rows(values_only=False):
-        _raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
+        raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
         for cell in row:
             _record_cell_if_formula(
                 cell,
@@ -85,7 +84,7 @@ def _record_cell_if_formula(
     formulas.append(WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value))
     remaining = _REFERENCE_HARVEST_LIMIT - len(references)
     if remaining > 0:
-        references.extend(_formula_references(sheet_title, value, remaining))
+        references.extend(formula_references(sheet_title, value, remaining))
 
 
 @dataclass(frozen=True)
@@ -107,14 +106,14 @@ def convert_binary_xls_with_libreoffice(
     """Convert one official binary XLS in isolated storage and return a :class:`WorkbookConversionReport`."""
     started = time.monotonic()
     context = _binary_xls_conversion_context(workbook_path, root=root)
-    runner = _resolve_libreoffice_runner(executable)
+    runner = resolve_libreoffice_runner(executable)
     try:
         with _converted_binary_xls_path(context, runner=runner) as converted_path:
             sheets, formulas, references = _inspect_converted_xlsx(
                 converted_path,
                 original_relative=context.relative,
             )
-    except _LibreOfficeConversionError as exc:
+    except LibreOfficeConversionError as exc:
         # A timeout and any other conversion failure both resolve to the same
         # "failed" WorkbookConversionReport: WorkbookConversionStatus carries no
         # distinct timed-out member, so there is nothing for a timeout branch to
@@ -127,23 +126,23 @@ def convert_binary_xls_with_libreoffice(
             error=str(exc),
             started=started,
         )
-    kind = _classify_xlsx(context.relative, formulas)
-    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
+    kind = classify_xlsx(context.relative, formulas)
+    evidence_tier, not_evidence_for = evidence_for_workbook_kind(kind)
     return WorkbookConversionReport(
         path=context.relative,
         modelo=context.modelo,
         bytes=context.byte_count,
         sha256=context.digest,
-        converted_extension=_XLSX_EXTENSION,
+        converted_extension=XLSX_EXTENSION,
         sheets=sheets,
         formula_cells=len(formulas),
-        input_candidates=tuple(_dedupe_cells(references)),
+        input_candidates=tuple(dedupe_cells(references)),
         output_candidates=formulas,
         workbook_kind=kind,
         evidence_tier=evidence_tier,
         not_evidence_for=not_evidence_for,
         conversion_status="converted",
-        elapsed_seconds=_elapsed_decimal(started),
+        elapsed_seconds=elapsed_decimal(started),
     )
 
 
@@ -156,11 +155,11 @@ def converted_binary_xls_with_libreoffice(
 ) -> Generator[Path]:
     """Yield a temporary XLSX converted from official binary XLS input."""
     context = _binary_xls_conversion_context(workbook_path, root=root)
-    runner = _resolve_libreoffice_runner(executable)
+    runner = resolve_libreoffice_runner(executable)
     try:
         with _converted_binary_xls_path(context, runner=runner) as converted_path:
             yield converted_path
-    except _LibreOfficeConversionError as exc:
+    except LibreOfficeConversionError as exc:
         raise exc.as_registry_error() from exc
 
 
@@ -169,17 +168,17 @@ def _binary_xls_conversion_context(workbook_path: Path, *, root: Path) -> _Binar
     resolved_path = workbook_path.resolve()
     if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
         raise RegistryValidationError(f"workbook path escapes conversion root: {workbook_path}")
-    if resolved_path.suffix.lower() != _XLS_EXTENSION:
+    if resolved_path.suffix.lower() != XLS_EXTENSION:
         raise RegistryValidationError("binary workbook conversion accepts only XLS artefacts")
     relative = resolved_path.relative_to(resolved_root).as_posix()
-    digest, byte_count = _hash_file(resolved_path)
+    digest, byte_count = hash_file(resolved_path)
     return _BinaryXlsConversionContext(
         resolved_root=resolved_root,
         resolved_path=resolved_path,
         relative=relative,
         digest=digest,
         byte_count=byte_count,
-        modelo=_infer_modelo(relative),
+        modelo=infer_modelo(relative),
     )
 
 
@@ -189,17 +188,17 @@ def _converted_binary_xls_path(
     *,
     runner: Path,
 ) -> Generator[Path]:
-    with _libreoffice_workspace() as workspace:
-        converted_path = workspace.output / f"{context.resolved_path.stem}{_XLSX_EXTENSION}"
+    with libreoffice_workspace() as workspace:
+        converted_path = workspace.output / f"{context.resolved_path.stem}{XLSX_EXTENSION}"
         cache_key = (context.digest, context.byte_count, str(runner))
         cached_bytes = _BINARY_XLS_CONVERSION_BYTES_CACHE.get(cache_key)
         if cached_bytes is None:
             # LibreOffice names its output after its input, so converting a
             # short-named copy keeps every path it writes bounded by the
             # workspace rather than by the official artefact's file name.
-            source_copy = workspace.root / f"in{_XLS_EXTENSION}"
+            source_copy = workspace.root / f"in{XLS_EXTENSION}"
             shutil.copyfile(context.resolved_path, source_copy)
-            produced = _convert_with_libreoffice(
+            produced = convert_with_libreoffice(
                 runner,
                 source_copy,
                 workspace=workspace,
@@ -237,7 +236,7 @@ def _failed_conversion_report(
         ),
         conversion_status="failed",
         error=error,
-        elapsed_seconds=_elapsed_decimal(started),
+        elapsed_seconds=elapsed_decimal(started),
     )
 
 
@@ -260,7 +259,7 @@ def _inspect_converted_xlsx(
         formulas: list[WorkbookCellRef] = []
         references: list[WorkbookCellRef] = []
         for worksheet in workbook.worksheets:
-            _raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
+            raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
             sheets.append(worksheet.title)
             _collect_sheet_formulas(
                 worksheet,

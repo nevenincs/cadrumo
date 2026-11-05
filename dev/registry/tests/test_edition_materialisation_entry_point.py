@@ -15,9 +15,9 @@ from ..compiler.edition_materialisation import materialise_edition, resolve_edit
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.edition import ReviewCoverage, read_registry_edition
-from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_chain_materialisation import chain_materialisation
-from ..edition_delta_source import _read_edition
+from ..edition_delta_source import read_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -55,7 +55,7 @@ def _write_edition(
 def _modelo(tmp_path: Path, *, successor_extra: str) -> Path:
     modelo_dir = tmp_path / "999"
     modelo_dir.mkdir()
-    _write_standard_manifest(modelo_dir, "Test")
+    write_standard_manifest(modelo_dir, "Test")
     _write_edition(modelo_dir, "2024", year=2024, rows=(("1", "base"), ("2", "cuota")), extra="")
     _write_edition(modelo_dir, "2025", year=2025, rows=(("3", "recargo"),), extra=successor_extra)
     return modelo_dir
@@ -201,7 +201,7 @@ def test_materialised_sidecar_is_an_exact_inline_claim_on_a_standalone_edition(t
     assert "lineage_attestations" not in edition.table
     standalone = tmp_path / "standalone"
     standalone.mkdir()
-    _write_standard_manifest(standalone, "Detached attestation")
+    write_standard_manifest(standalone, "Detached attestation")
     revision_dir = standalone / "revisions" / "2025"
     (revision_dir / "casillas").mkdir(parents=True)
     (revision_dir / "revision.toml").write_text(
@@ -240,7 +240,7 @@ def test_materialisation_does_not_discard_distinct_sidecar_references(tmp_path: 
     resolved = resolve_edition(modelo, "2025")
     assert resolved.table["predecessor"] == "2024"
     before = load_modelo_directory(modelo).revisions["2025"]
-    source = _read_edition(modelo, "2025")
+    source = read_edition(modelo, "2025")
     assert source.table["lineage_attestations"] == resolved.table["lineage_attestations"]
     row = next(row for row in source.rows if row["continuidad_id"] == "base")
     assert row[field] == list(getattr(before.casillas[0], field))
@@ -250,7 +250,7 @@ def test_materialisation_does_not_discard_distinct_sidecar_references(tmp_path: 
     proof = chain_materialisation(source)
     assert (b"other-source" if field == "source_refs" else b"ley-58-2003:art-30") in proof
     manifest.write_text(head + separator + tail, encoding="utf-8")
-    assert chain_materialisation(_read_edition(modelo, "2025")) != proof
+    assert chain_materialisation(read_edition(modelo, "2025")) != proof
 
 
 def test_materialisation_validates_sidecar_edge_before_projecting_its_claim(tmp_path: Path) -> None:

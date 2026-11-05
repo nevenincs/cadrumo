@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,7 +75,7 @@ def _modelo_registry_test_ids() -> set[str]:
 
 
 def test_formula_bearing_modelos_have_constructs_and_model_specific_tests() -> None:
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     covered_ids = _modelo_registry_test_ids()
 
     violations: list[str] = []

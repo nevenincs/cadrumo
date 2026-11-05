@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPos
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ...form_layout.reconciliation import admit_note_signed_amount
-from ..note_negative_amount import _NOTE_NEGATIVE_AMOUNTS, note_negative_amount_for
+from ..note_negative_amount import NOTE_NEGATIVE_AMOUNTS, note_negative_amount_for
 from ..record_design_intermediate import RecordDesignIntermediateSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -26,7 +26,7 @@ _DESIGN = (
     "files",
     "01-369-regimenes-especiales-aplicables-a-los-ser.xlsx",
 )
-_DECLARATION = _NOTE_NEGATIVE_AMOUNTS["aeat-dr-369-2021"]
+_DECLARATION = NOTE_NEGATIVE_AMOUNTS["aeat-dr-369-2021"]
 
 
 def test_the_declared_notes_are_printed_in_the_official_design_cells() -> None:

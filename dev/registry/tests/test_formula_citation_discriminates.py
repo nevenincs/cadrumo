@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
+from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -63,7 +63,7 @@ _NO_GUIDANCE_TIER_SOURCE_DESCRIBES_THE_BOXES: dict[tuple[str, str, str], str] = 
 
 def _bare_modelo_number_citations() -> dict[tuple[str, str, str], tuple[str, ...]]:
     """Return every formula citation whose required phrase is just the modelo id."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     found: dict[tuple[str, str, str], tuple[str, ...]] = {}
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():

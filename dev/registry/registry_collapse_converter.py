@@ -11,7 +11,7 @@ from uuid import uuid4
 from dev.registry.edition_delta_migration import MigrationOutcome, migrate_modelo
 from dev.registry.edition_round_trip import copy_registry_tree
 
-from .registry_collapse_models import _MODELOS
+from .registry_collapse_models import MODELOS
 
 
 def canonical_converter(source: Path, candidate: Path) -> Mapping[str, object]:
@@ -21,7 +21,7 @@ def canonical_converter(source: Path, candidate: Path) -> Mapping[str, object]:
     candidate_registry = candidate.parent.parent.resolve(strict=True)
     _copy_registry_dependencies(registry_root, candidate_registry)
     runs_root = _converter_runs_root(candidate)
-    candidate_modelos = candidate_registry / _MODELOS
+    candidate_modelos = candidate_registry / MODELOS
     _copy_candidate_dependency_closure(registry_root, candidate_modelos, runs_root, modelo_id)
     work_dir = runs_root / f"{modelo_id}-{uuid4().hex}"
     outcome = migrate_modelo(
@@ -37,7 +37,7 @@ def canonical_converter(source: Path, candidate: Path) -> Mapping[str, object]:
 
 def _copy_registry_dependencies(registry_root: Path, candidate_registry: Path) -> None:
     for dependency in registry_root.iterdir():
-        if dependency.name == _MODELOS:
+        if dependency.name == MODELOS:
             continue
         target = candidate_registry / dependency.name
         if target.exists():
@@ -68,7 +68,7 @@ def _copy_candidate_dependency_closure(
         runs_root / f"{modelo_id}-{uuid4().hex}-dependencies" / "registry" / "aeat",
         modelo_id=modelo_id,
     )
-    for dependency in (closure_root / _MODELOS).iterdir():
+    for dependency in (closure_root / MODELOS).iterdir():
         target = candidate_modelos / dependency.name
         if dependency.name != modelo_id and not target.exists():
             shutil.copytree(dependency, target)
@@ -80,7 +80,7 @@ def _install_staged_candidate(
     modelo_id: str,
 ) -> None:
     if outcome.staged_registry is not None:
-        staged = outcome.staged_registry / _MODELOS / modelo_id
+        staged = outcome.staged_registry / MODELOS / modelo_id
         resolved_candidate = candidate.resolve(strict=True)
         resolved_parent = candidate.parent.resolve(strict=True)
         if resolved_candidate.parent != resolved_parent:

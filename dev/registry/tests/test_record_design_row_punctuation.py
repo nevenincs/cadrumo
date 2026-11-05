@@ -29,7 +29,7 @@ import pytest
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_coordinate_repairs import collapse_stuttered_row_prefix
 from ..compiler.record_design_pdf_rows import parse_pdf_row
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,7 +65,7 @@ def test_genuine_leading_text_is_never_stripped() -> None:
 
 @pytest.mark.parametrize("prefix", ["02-131-ejercicio-2008-primer", "03-131-ejercicio-2008-trimestre"])
 def test_the_bundled_modelo_131_editions_now_read_whole(prefix: str) -> None:
-    matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
+    matches = [path for path in bundled_designs() if path.name.startswith(prefix)]
     assert matches, f"the bundled design {prefix!r} is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

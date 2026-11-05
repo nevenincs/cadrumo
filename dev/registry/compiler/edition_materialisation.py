@@ -16,11 +16,11 @@ from typing import cast
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ._toml_helpers import as_toml_table
 from .loader_cache import validate_modelo_directory_source
-from .loader_fields import _PREDECESSOR_FIELD
-from .loader_materialisation import _load_modelo_manifest, _load_modelo_revisions
-from .revision_materialisation import _materialise_revisions
+from .loader_fields import PREDECESSOR_FIELD
+from .loader_materialisation import load_modelo_manifest, load_modelo_revisions
+from .revision_materialisation import materialise_revisions
+from .toml_helpers import as_toml_table
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,7 +89,7 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
     edition = resolve_edition(modelo_directory, revision_id)
     table = dict(edition.table)
     if edition.inherits_from is not None:
-        table.pop(_PREDECESSOR_FIELD, None)
+        table.pop(PREDECESSOR_FIELD, None)
         if table.get("lineage_attestations"):
             table = _inline_lineage_claims(modelo_directory.resolve(), revision_id, table)
     return MaterialisedEdition(
@@ -105,12 +105,12 @@ def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition
     """Resolve within the intact chain, preserving distinct attestation references."""
     resolved = modelo_directory.resolve()
     validate_modelo_directory_source(resolved)
-    manifest = _load_modelo_manifest(resolved)
+    manifest = load_modelo_manifest(resolved)
     modelo_table = as_toml_table(manifest.get("modelo"))
     modelo_id = None if modelo_table is None else modelo_table.get("id")
     if not isinstance(modelo_id, str):
         raise RegistryLoadError(f"{resolved}: manifest.toml must declare a string [modelo].id")
-    raw_revisions = _load_modelo_revisions(resolved)
+    raw_revisions = load_modelo_revisions(resolved)
     if revision_id not in raw_revisions:
         raise RegistryLoadError(
             f"{resolved}: modelo {modelo_id!r} has no edition {revision_id!r}; editions are {sorted(raw_revisions)!r}",
@@ -118,11 +118,11 @@ def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition
     declared = as_toml_table(raw_revisions[revision_id])
     if declared is None:
         raise RegistryLoadError(f"{resolved}: revision {revision_id!r} must be a table")
-    resolution = _materialise_revisions(resolved, modelo_id, raw_revisions)
+    resolution = materialise_revisions(resolved, modelo_id, raw_revisions)
     materialised = as_toml_table(resolution.revisions[revision_id])
     if materialised is None:
         raise RegistryLoadError(f"{resolved}: revision {revision_id!r} must be a table")
-    predecessor = declared.get(_PREDECESSOR_FIELD)
+    predecessor = declared.get(PREDECESSOR_FIELD)
     table = dict(materialised)
     table = _preserve_lineage_projection(resolved, revision_id, table)
     return ResolvedEdition(

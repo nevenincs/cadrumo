@@ -14,7 +14,7 @@ from .edition_delta_assessment_state import FamilyRun
 from .edition_family_delta import STATED_WHOLE_SEQUENCES, restates_stated_whole_sequence
 
 
-def _compare_family_override_operations(
+def compare_family_override_operations(
     family: FamilyRun,
     inherited_by_id: Mapping[object, object],
     current_by_id: Mapping[object, object],
@@ -44,8 +44,8 @@ def _compare_family_override(
     current_id = operation.get("replacement_id", member_id)
     inherited = inherited_by_id.get(member_id)
     current = current_by_id.get(current_id)
-    inherited_dump = payload._model_value(inherited)
-    current_dump = payload._model_value(current)
+    inherited_dump = payload.model_value(inherited)
+    current_dump = payload.model_value(current)
     if not isinstance(inherited_dump, Mapping) or not isinstance(current_dump, Mapping):
         family.blocked.append(
             {
@@ -57,8 +57,8 @@ def _compare_family_override(
         )
         return
     _record_whole_sequence_override(family, operation, member_id)
-    inherited_leaves = payload._stated_leaves(inherited)
-    current_leaves = payload._leaf_values(current_dump)
+    inherited_leaves = payload.stated_leaves(inherited)
+    current_leaves = payload.leaf_values(current_dump)
     _count_override_leaves(family, member_id, override_fields, inherited_leaves, current_leaves)
 
 
@@ -83,8 +83,8 @@ def _count_override_leaves(
     inherited: Mapping[tuple[str, ...], object],
     current: Mapping[tuple[str, ...], object],
 ) -> None:
-    for path in payload._leaf_values(override_fields):
-        if path in inherited and path in current and payload._typed_equal(current[path], inherited[path]):
+    for path in payload.leaf_values(override_fields):
+        if path in inherited and path in current and payload.typed_equal(current[path], inherited[path]):
             family.row["redundant_overrides"] += 1
             family.unresolved.append(
                 {
@@ -99,12 +99,12 @@ def _count_override_leaves(
             family.row["genuine_overrides"] += 1
 
 
-def _compare_casilla_overrides(
+def compare_casilla_overrides(
     family: FamilyRun,
     predecessor: ModeloRevision,
 ) -> None:
     baseline_rows = {str(item.id): item for item in predecessor.casillas}
-    overrides = source._members(family.raw, "casilla_overrides") or ()
+    overrides = source.members(family.raw, "casilla_overrides") or ()
     for override in overrides:
         _compare_casilla_override(family, baseline_rows, override)
 
@@ -133,7 +133,7 @@ def _compare_casilla_override(
             }
         )
         return
-    _count_casilla_override_fields(family, member_id, override_fields, payload._stated_leaves(inherited))
+    _count_casilla_override_fields(family, member_id, override_fields, payload.stated_leaves(inherited))
 
 
 def _count_casilla_override_fields(
@@ -142,10 +142,10 @@ def _count_casilla_override_fields(
     override_fields: Mapping[str, object],
     baseline_leaves: Mapping[tuple[str, ...], object],
 ) -> None:
-    for path, value in payload._leaf_values(override_fields).items():
+    for path, value in payload.leaf_values(override_fields).items():
         if _casilla_override_is_forced(family, path):
             family.row["genuine_overrides"] += 1
-        elif path in baseline_leaves and payload._typed_equal(value, baseline_leaves[path]):
+        elif path in baseline_leaves and payload.typed_equal(value, baseline_leaves[path]):
             family.row["redundant_overrides"] += 1
             family.unresolved.append(
                 {
@@ -161,4 +161,4 @@ def _count_casilla_override_fields(
 
 
 def _casilla_override_is_forced(family: FamilyRun, path: tuple[str, ...]) -> bool:
-    return bool(path and (path[0] in LINEAGE_CLAIM_FIELDS or path[-1] in fields._EDITION_DEFAULTED_FIELDS))
+    return bool(path and (path[0] in LINEAGE_CLAIM_FIELDS or path[-1] in fields.EDITION_DEFAULTED_FIELDS))

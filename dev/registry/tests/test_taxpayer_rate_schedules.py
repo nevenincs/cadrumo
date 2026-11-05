@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.ids import ParameterId
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -24,7 +24,7 @@ def _modelo_revision(
     *,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ):
-    modelo, catalogues = _committed_modelo(modelo_id)
+    modelo, catalogues = committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
         catalogues,

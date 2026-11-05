@@ -20,12 +20,12 @@ from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from ...compiler.loader import load_catalogue_file
-from ..export_tree_field_derivation import _normalise_cell
+from ..export_tree_field_derivation import normalise_cell
 from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField
 from ..record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
 from ..render_profile import render_profile_digest
-from ..render_profile_authority import _validate_signed_composite_source_agreement, validate_render_profile_authority
+from ..render_profile_authority import validate_render_profile_authority, validate_signed_composite_source_agreement
 from ..render_profile_eligibility import RenderProfileEligibility, project_render_profile_eligibility
 from ..render_profile_evidence import RenderProfileSourceEvidence, ReviewedPolicyDecision, SourceStatedCompositeEvidence
 from ..render_profile_loading import load_render_profile
@@ -61,7 +61,7 @@ def _m190_total_source(epoch: str) -> tuple[SignedMonetaryCompositeRule, RecordD
 @pytest.mark.parametrize("epoch", ("2020", "2023", "2024", "2025"))
 def test_m190_total_is_a_source_stated_signed_amount(epoch: str) -> None:
     rule, field, profile = _m190_total_source(epoch)
-    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    validate_signed_composite_source_agreement(rule, field, profile.design_identity)
     assert (field.offset, field.length, rule.integer_digits, rule.decimal_digits) == (145, 16, 13, 2)
 
 
@@ -81,7 +81,7 @@ def test_m190_total_refuses_changed_sign_magnitude_and_partition_clauses(origina
     assert original in (field.content or "")
     changed = field.model_copy(update={"content": (field.content or "").replace(original, altered, 1)})
     with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-        _validate_signed_composite_source_agreement(rule, changed, profile.design_identity)
+        validate_signed_composite_source_agreement(rule, changed, profile.design_identity)
 
 
 _SOURCE_CONTENT = (
@@ -213,7 +213,7 @@ def test_reviewed_composite_projects_through_existing_money_codec_and_distinct_p
     profile = _profile()
     _validate(field, profile)
 
-    derived = _normalise_cell(
+    derived = normalise_cell(
         _joined_field(field),
         ExportTreeTransportProfile(
             modelo="296",
@@ -407,7 +407,7 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
         eligibility,
         RenderProfileSourceEvidence(design_identity=_identity(), entries=()),
     )
-    rendered = _normalise_cell(
+    rendered = normalise_cell(
         _joined_field(field),
         ExportTreeTransportProfile(
             modelo="296",
@@ -454,7 +454,7 @@ def _m180_composite(
 @pytest.mark.parametrize("epoch, row", (("2014", 116), ("2014", 302), ("2023", 109), ("2023", 292)))
 def test_m180_composites_validate_through_the_one_composite_grammar(epoch: str, row: int) -> None:
     rule, field, identity = _m180_composite(epoch, row)
-    _validate_signed_composite_source_agreement(rule, field, identity)
+    validate_signed_composite_source_agreement(rule, field, identity)
 
     for changed_field in (
         field.model_copy(update={"length": 17}),
@@ -462,7 +462,7 @@ def test_m180_composites_validate_through_the_one_composite_grammar(epoch: str, 
         field.model_copy(update={"content": (field.content or "").replace("SIGNO:", "SIGNO: Numérico.", 1)}),
     ):
         with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-            _validate_signed_composite_source_agreement(rule, changed_field, identity)
+            validate_signed_composite_source_agreement(rule, changed_field, identity)
 
 
 @pytest.mark.parametrize("epoch, row", (("2014", 116), ("2023", 109)))
@@ -477,7 +477,7 @@ def test_m180_printed_partition_overlap_resolves_only_through_its_pinned_declara
         (identity, field.model_copy(update={"content": (field.content or "").replace("146-159", "146-157", 1)})),
     ):
         with pytest.raises(RegistryValidationError, match="do not exactly partition"):
-            _validate_signed_composite_source_agreement(rule, changed_field, changed_identity)
+            validate_signed_composite_source_agreement(rule, changed_field, changed_identity)
 
 
 def test_m180_printed_overlap_renders_signed_limits_losslessly() -> None:
@@ -494,7 +494,7 @@ def test_m180_printed_overlap_renders_signed_limits_losslessly() -> None:
     semantic = load_semantic_map(Path(__file__).parents[2] / "mappings/modelo_180/2023")
     field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == 109)
     entry = next(entry for entry in semantic.entries if entry.anchor.source_row == 109)
-    derived = _normalise_cell(
+    derived = normalise_cell(
         JoinedRecordDesignField(parser_field=field, semantic_entry=entry),
         ExportTreeTransportProfile(
             modelo="180",
@@ -556,9 +556,9 @@ def _m347_composite_fields(epoch: str, source_ref: str, filing_year: int) -> tup
     derived = []
     for rule in profile.signed_composite_rules:
         field = by_row[rule.anchor.source_row]
-        _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+        validate_signed_composite_source_agreement(rule, field, profile.design_identity)
         joined = JoinedRecordDesignField(parser_field=field, semantic_entry=entries[rule.anchor.source_row])
-        derived.append(_normalise_cell(joined, transport, profile, export_record_id="m347-record").field)
+        derived.append(normalise_cell(joined, transport, profile, export_record_id="m347-record").field)
     return tuple(derived)
 
 
@@ -609,11 +609,11 @@ def test_a_m347_amount_with_one_clause_altered_is_refused(mutation: tuple[str, s
     profile, fields, _semantic = _m347_design("2025", "aeat-dr-347-2025", 2025)
     rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == 349)
     field = next(field for field in fields if field.source_row == 349)
-    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    validate_signed_composite_source_agreement(rule, field, profile.design_identity)
     original, altered = mutation
     assert original in (field.content or "")
     with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-        _validate_signed_composite_source_agreement(
+        validate_signed_composite_source_agreement(
             rule,
             field.model_copy(update={"content": (field.content or "").replace(original, altered, 1)}),
             profile.design_identity,
@@ -626,10 +626,10 @@ def test_only_exact_boe_page_furniture_is_removed_before_the_grammar_reads_a_cel
     rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == 637)
     field = next(field for field in fields if field.source_row == 637)
     assert "cve: BOE-A-2011-19397" in (field.content or "")
-    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    validate_signed_composite_source_agreement(rule, field, profile.design_identity)
     lookalike = (field.content or "").replace("Pág. 132703", "Pág. 132703 con signo")
     with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-        _validate_signed_composite_source_agreement(
+        validate_signed_composite_source_agreement(
             rule, field.model_copy(update={"content": lookalike}), profile.design_identity
         )
 

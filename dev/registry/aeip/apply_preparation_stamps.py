@@ -9,13 +9,13 @@ from typing import Any
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import MissingTranslationError
 
-from . import constants as _constants
+from . import constants
 from .apply_support import (
-    _add_refusal,
-    _grounded_row_evidence,
-    _locate_casilla_file,
-    _origin_value,
-    _source_refs_are_grounded,
+    add_refusal,
+    grounded_row_evidence,
+    locate_casilla_file,
+    origin_value,
+    source_refs_are_grounded,
 )
 from .types import AeipOccurrence, AeipStampWrite, ChainPlanEntry, EvolutionPair
 
@@ -40,7 +40,7 @@ def prepare_stamp_writes(
     for key, (chain_id, is_successor, occurrence) in sorted(planned_rows.items()):
         current = current_rows.get(key)
         if current is None:
-            _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is absent from canonical Modelo 100 load")
+            add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is absent from canonical Modelo 100 load")
             continue
         current_id, current_origin, current_evidence = _validate_live_row(
             key, chain_id, occurrence, current, refusals, seen_refusals
@@ -93,19 +93,19 @@ def _validate_row_surface(
     seen_refusals: set[str],
 ) -> None:
     if (
-        _constants.ANEXO_A_SECTION_LEAF not in tuple(current.section or ())
-        or str(current.semantic_role or "") != _constants.EVENT_SEMANTIC_ROLE
+        constants.ANEXO_A_SECTION_LEAF not in tuple(current.section or ())
+        or str(current.semantic_role or "") != constants.EVENT_SEMANTIC_ROLE
     ):
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is no longer an AEIP event row")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} is no longer an AEIP event row")
     try:
-        current_label = current.get_label(_constants.SOURCE_LOCALE)
+        current_label = current.get_label(constants.SOURCE_LOCALE)
     except MissingTranslationError:
         current_label = ""
     if (
         current_label != occurrence.label
         or tuple(str(item) for item in current.localization_keys) != occurrence.localization_keys
     ):
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} label/localization changed since adjudication")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} label/localization changed since adjudication")
 
 
 def _validate_row_refs(
@@ -116,12 +116,12 @@ def _validate_row_refs(
     seen_refusals: set[str],
 ) -> None:
     if tuple(str(item) for item in current.legal_refs) != occurrence.legal_refs:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} legal refs changed since adjudication")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} legal refs changed since adjudication")
     current_sources = tuple(str(item) for item in current.source_refs)
-    if not _source_refs_are_grounded(current_sources):
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} has no authoritative source refs")
+    if not source_refs_are_grounded(current_sources):
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} has no authoritative source refs")
     elif current_sources != occurrence.source_refs:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} source refs changed since adjudication")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} source refs changed since adjudication")
 
 
 def _current_lineage_values(
@@ -132,10 +132,10 @@ def _current_lineage_values(
     seen_refusals: set[str],
 ) -> tuple[str | None, str | None, object]:
     current_id = None if current.continuidad_id is None else str(current.continuidad_id)
-    current_origin = _origin_value(current.continuidad_origin)
+    current_origin = origin_value(current.continuidad_origin)
     current_evidence = current.continuidad_evidence
     if current_id is not None and current_id != chain_id:
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{key[0]}/{key[1]} already carries conflicting continuidad_id {current_id!r}",
@@ -158,12 +158,12 @@ def _expected_lineage(
     if is_successor:
         endpoint = _predecessor_endpoint(chain_id, occurrence, pair_endpoints)
         if endpoint is None:
-            _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} has no grounded predecessor pair")
+            add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} has no grounded predecessor pair")
         else:
-            expected.update(continuidad_origin="grounded", continuidad_evidence=_grounded_row_evidence(*endpoint))
+            expected.update(continuidad_origin="grounded", continuidad_evidence=grounded_row_evidence(*endpoint))
         _check_successor_origin(key, current_origin, current_evidence, refusals, seen_refusals)
     elif current_origin is not None or current_evidence is not None:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} chain root already carries origin/evidence")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} chain root already carries origin/evidence")
     return expected
 
 
@@ -187,15 +187,15 @@ def _check_successor_origin(
 ) -> None:
     if current_origin == "grounded":
         if not isinstance(current_evidence, str) or not current_evidence.strip():
-            _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} grounded origin has empty evidence")
+            add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} grounded origin has empty evidence")
     elif current_origin is not None:
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{key[0]}/{key[1]} carries conflicting continuity origin {current_origin!r}",
         )
     elif current_evidence is not None:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} carries evidence without grounded origin")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} carries evidence without grounded origin")
 
 
 def _missing_lineage(
@@ -223,16 +223,16 @@ def _append_stamp(
     refusals: list[str],
     seen_refusals: set[str],
 ) -> None:
-    path = _locate_casilla_file(modelo_root, key[0], key[1], refusals, seen_refusals)
+    path = locate_casilla_file(modelo_root, key[0], key[1], refusals, seen_refusals)
     if path is None:
         return
     try:
         raw_text = path.read_text(encoding=UTF_8_ENCODING)
         _, done = insert_lineage_keys(raw_text, key[0], {key[1]: missing})
     except (OSError, UnicodeError, ValueError) as error:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} lineage insertion refused: {error}")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} lineage insertion refused: {error}")
         return
     if done != {key[1]}:
-        _add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} was not uniquely located by insertion helper")
+        add_refusal(refusals, seen_refusals, f"{key[0]}/{key[1]} was not uniquely located by insertion helper")
         return
     stamp_writes.append(AeipStampWrite(path=path, revision_id=key[0], casilla_id=key[1], keys=tuple(missing.items())))

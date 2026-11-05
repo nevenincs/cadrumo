@@ -21,8 +21,8 @@ from cadrumo.domain.calculations.registry.temporal import (
 from dev.registry.compiler.loader import load_modelo_declarations
 from dev.registry.edition_delta_assessment_lineage import technical_root
 
-from .registry_collapse_models import _REPRESENTATION_ONLY, RootEligibility
-from .registry_collapse_values import _same_typed_value
+from .registry_collapse_models import REPRESENTATION_ONLY, RootEligibility
+from .registry_collapse_values import same_typed_value
 
 
 def _with_family_source_default(raw_revision: Mapping[str, object], section: str) -> object:
@@ -297,11 +297,11 @@ def _equal_raw_overlap_fields(
         ".".join(path)
         for path, value in left.items()
         if path
-        and path[0] not in _REPRESENTATION_ONLY | {storage_identity}
+        and path[0] not in REPRESENTATION_ONLY | {storage_identity}
         and path in right
-        and _same_typed_value(value, right[path])
+        and same_typed_value(value, right[path])
     )
 
 
-def _root_gaps(rows: Sequence[Mapping[str, object]]) -> tuple[Mapping[str, object], ...]:
+def root_gaps(rows: Sequence[Mapping[str, object]]) -> tuple[Mapping[str, object], ...]:
     return tuple(row for row in rows if row.get("status") in {RootEligibility.CANDIDATE, RootEligibility.UNRESOLVED})

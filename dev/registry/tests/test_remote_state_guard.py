@@ -35,7 +35,7 @@ from cadrumo.tests.aeat_literal_fixtures import (
     configured_path,
 )
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
 from ..parity.renta_web_open_oracle import RentaWebOpenOracle
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
@@ -783,7 +783,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
 
 
 def test_committed_static_cross_references_reject_remote_state_operations() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
 
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
@@ -815,7 +815,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
 
 
 def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     oracle_catalogue = _production_oracle_catalogue()
     covered_oracle_ids: set[str] = set()
 

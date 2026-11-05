@@ -28,13 +28,13 @@ from ..form_layout.row_binding_reconciliation import reconcile_export_row_bindin
 from ..form_layout.scalar_source_reconciliation import reconcile_scalar_export_sources
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ..registry_collapse_fingerprints import fingerprint_tree
-from ._form_layout_companion import _editable_form_layout_fragment
+from .form_layout_companion import editable_form_layout_fragment
 from .generated_form_bridge import (
-    _active_verified_backup,
-    _other_files,
-    _sha,
+    active_verified_backup,
     generated_form_interpreting_input_digest,
+    other_files,
     registry_evidence_content_digest,
+    sha,
 )
 from .tree_paths import require_existing_non_link
 from .tree_publication_artifacts import verify_generated_export_package
@@ -72,7 +72,7 @@ class AuthoredFormBridge:
             changed.append("official evidence bytes")
         if fingerprint_tree(self.source_root / "registry" / "cadrumo") != self.profile_fingerprint:
             changed.append("profile registry")
-        actual = _other_files(
+        actual = other_files(
             self.registry_root, self.modelo, str(self.before.id), transaction_backup=transaction_backup
         )
         expected = self.expected_other_files(finalized=finalized)
@@ -96,7 +96,7 @@ class AuthoredFormBridge:
     def require_export_cutover(self, _registry_root: Path | None = None) -> None:
         """Validate exactly the prevalidated export plus still-unchanged old form."""
         backup = (
-            _active_verified_backup(
+            active_verified_backup(
                 self.registry_root,
                 self.modelo,
                 str(self.before.id),
@@ -109,9 +109,9 @@ class AuthoredFormBridge:
         )
         self.require_dependencies(transaction_backup=backup)
         revision_root = self.registry_root / "modelos" / self.modelo / "revisions" / str(self.before.id)
-        if _sha(form_layout_fragment_path(revision_root)) != self.old_form_sha256:
+        if sha(form_layout_fragment_path(revision_root)) != self.old_form_sha256:
             raise RegistryValidationError("authored first-export form changed before reconciliation")
-        if _sha(revision_root / "export" / "_generation.provenance.json") != self.manifest_sha256:
+        if sha(revision_root / "export" / "_generation.provenance.json") != self.manifest_sha256:
             raise RegistryValidationError("authored first-export package differs from its validated candidate")
         verify_generated_export_package(revision_root / "export")
 
@@ -153,7 +153,7 @@ def prepare_authored_form_bridge(
     _require_isolated_candidate(candidate_root, registry_root, temporary_root)
     live_revision = registry_root / "modelos" / modelo / "revisions" / revision
     candidate_revision = candidate_root / "modelos" / modelo / "revisions" / revision
-    old_manifest = _sha(live_revision / "export" / "_generation.provenance.json") if replacing else None
+    old_manifest = sha(live_revision / "export" / "_generation.provenance.json") if replacing else None
     old_package = verify_generated_export_package(live_revision / "export") if replacing else None
     if not replacing and (live_revision / "export").exists():
         raise RegistryValidationError("authored first-export bridge refuses an existing target")
@@ -169,15 +169,15 @@ def prepare_authored_form_bridge(
     reconciled = _reconciled_form(before, after, replacements, row_bindings, casilla_splits, unreferenced_producers)
     new_bytes = render_form_layout_toml(revision, reconciled).encode("utf-8")
     live_form = form_layout_fragment_path(live_revision)
-    old_sha = _sha(live_form)
-    other = _other_files(registry_root, modelo, revision)
+    old_sha = sha(live_form)
+    other = other_files(registry_root, modelo, revision)
     interpreting = generated_form_interpreting_input_digest(modelo)
     evidence = registry_evidence_content_digest(source_root)
     profile = fingerprint_tree(source_root / "registry" / "cadrumo")
-    _editable_form_layout_fragment(candidate_revision).write_bytes(new_bytes)
+    editable_form_layout_fragment(candidate_revision).write_bytes(new_bytes)
     verify_generated_export_package(candidate_revision / "export")
     form_layout_fragment_path(overlay_revision).write_bytes(new_bytes)
-    if _other_files(overlay, modelo, revision) != other:
+    if other_files(overlay, modelo, revision) != other:
         raise RegistryValidationError("authored first-export overlay changed unrelated source")
     clearance = _prepare_overlay_clearance(registry_root, candidate_root, overlay, modelo, revision)
     compile_validated_authority(overlay, source_root, complete_validation=True, verify_evidence_bytes=True)
@@ -188,7 +188,7 @@ def prepare_authored_form_bridge(
         before,
         old_sha,
         sha256(new_bytes).hexdigest(),
-        _sha(candidate_revision / "export" / "_generation.provenance.json"),
+        sha(candidate_revision / "export" / "_generation.provenance.json"),
         other,
         interpreting,
         evidence,
@@ -203,14 +203,14 @@ def prepare_authored_form_bridge(
     )
     bridge.require_dependencies()
     target_changed = _target_changed(live_revision, replacing, old_manifest)
-    if target_changed or _sha(live_form) != old_sha:
+    if target_changed or sha(live_form) != old_sha:
         raise RegistryValidationError("authored first-export target changed during prevalidation")
     return bridge
 
 
 def _target_changed(live_revision: Path, replacing: bool, old_manifest: str | None) -> bool:
     target_changed = (
-        _sha(live_revision / "export" / "_generation.provenance.json") != old_manifest
+        sha(live_revision / "export" / "_generation.provenance.json") != old_manifest
         if replacing
         else (live_revision / "export").exists()
     )

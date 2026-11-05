@@ -47,9 +47,9 @@ _REASON: Final = "the 2025 diseno de registros lays the formula set out end to e
 _RESTATED_FORMULAS: Final = (
     f'restated_families = [{{ family = "formulas", cause = "official_structure_differs", reason = "{_REASON}" }}]\n'
 )
-_BASE_FORMULA: Final = "modelo-999-base"
-_CUOTA_FORMULA: Final = "modelo-999-cuota"
-_RECARGO_FORMULA: Final = "modelo-999-recargo"
+BASE_FORMULA: Final = "modelo-999-base"
+CUOTA_FORMULA: Final = "modelo-999-cuota"
+RECARGO_FORMULA: Final = "modelo-999-recargo"
 
 
 def _construct(revision_id: str, construct_id: str, *, casilla_id: str) -> str:
@@ -62,7 +62,7 @@ def _construct(revision_id: str, construct_id: str, *, casilla_id: str) -> str:
     )
 
 
-def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
+def build_modelo(root: Path, *, successor_extra: str = "") -> Path:
     """A 2024 root and a 2025 delta whose stated formulas are fewer and reordered.
 
     The predecessor states three formulas in target order; the successor
@@ -83,9 +83,9 @@ def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
             + delta_casilla(PREDECESSOR_EDITION, "0003", number="3", lineage="recargo")
         ),
         formulas=(
-            delta_formula(PREDECESSOR_EDITION, _BASE_FORMULA, target="0001")
-            + delta_formula(PREDECESSOR_EDITION, _CUOTA_FORMULA, target="0002")
-            + delta_formula(PREDECESSOR_EDITION, _RECARGO_FORMULA, target="0003")
+            delta_formula(PREDECESSOR_EDITION, BASE_FORMULA, target="0001")
+            + delta_formula(PREDECESSOR_EDITION, CUOTA_FORMULA, target="0002")
+            + delta_formula(PREDECESSOR_EDITION, RECARGO_FORMULA, target="0003")
         ),
         constructs=_construct(PREDECESSOR_EDITION, "modelo-999-liquidacion", casilla_id="0001"),
     )
@@ -96,8 +96,8 @@ def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
         predecessor=PREDECESSOR_EDITION,
         casillas=delta_casilla(SUCCESSOR_EDITION, "0002", number="22", lineage="cuota"),
         formulas=(
-            delta_formula(SUCCESSOR_EDITION, _RECARGO_FORMULA, target="0003")
-            + delta_formula(SUCCESSOR_EDITION, _BASE_FORMULA, target="0001")
+            delta_formula(SUCCESSOR_EDITION, RECARGO_FORMULA, target="0003")
+            + delta_formula(SUCCESSOR_EDITION, BASE_FORMULA, target="0001")
         ),
         constructs=_construct(SUCCESSOR_EDITION, "modelo-999-recargo-equivalencia", casilla_id="0002"),
         extra_manifest=successor_extra,
@@ -116,9 +116,9 @@ def test_a_restated_family_materialises_to_the_edition_s_stated_array(tmp_path: 
     -- and nothing is reordered, so the array reads as the official structure
     laid it out.
     """
-    revision = _successor(_build_modelo(tmp_path, successor_extra=_RESTATED_FORMULAS))
+    revision = _successor(build_modelo(tmp_path, successor_extra=_RESTATED_FORMULAS))
 
-    assert tuple(formula.id for formula in revision.formulas) == (_RECARGO_FORMULA, _BASE_FORMULA)
+    assert tuple(formula.id for formula in revision.formulas) == (RECARGO_FORMULA, BASE_FORMULA)
     assert tuple(formula.target_casilla_id for formula in revision.formulas) == ("0003", "0001")
 
 
@@ -130,18 +130,18 @@ def test_without_the_declaration_the_same_fixture_inherits_and_reorders(tmp_path
     replaced by the predecessor's, which is precisely what the declaration
     withdraws.
     """
-    revision = _successor(_build_modelo(tmp_path))
+    revision = _successor(build_modelo(tmp_path))
 
     assert tuple(formula.id for formula in revision.formulas) == (
-        _BASE_FORMULA,
-        _CUOTA_FORMULA,
-        _RECARGO_FORMULA,
+        BASE_FORMULA,
+        CUOTA_FORMULA,
+        RECARGO_FORMULA,
     )
 
 
 def test_a_sibling_family_of_the_declaring_edition_still_inherits(tmp_path: Path) -> None:
     """The claim is per family: constructs are undeclared, so they merge as before."""
-    revision = _successor(_build_modelo(tmp_path, successor_extra=_RESTATED_FORMULAS))
+    revision = _successor(build_modelo(tmp_path, successor_extra=_RESTATED_FORMULAS))
 
     assert tuple(construct.id for construct in revision.constructs) == (
         "modelo-999-liquidacion",
@@ -164,7 +164,7 @@ def test_restating_a_family_the_edition_states_empty_is_refused_before_the_merge
     )
 
     with pytest.raises(RegistryLoadError, match="restated in full but declares no 'parameters'"):
-        load_modelo_directory(_build_modelo(tmp_path, successor_extra=empty_family))
+        load_modelo_directory(build_modelo(tmp_path, successor_extra=empty_family))
 
 
 @pytest.mark.parametrize(
@@ -197,7 +197,7 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
             delta_casilla(PREDECESSOR_EDITION, "0001", number="1", lineage="base")
             + delta_casilla(PREDECESSOR_EDITION, "0002", number="2", lineage="cuota")
         ),
-        formulas=delta_formula(PREDECESSOR_EDITION, _BASE_FORMULA, target="0001"),
+        formulas=delta_formula(PREDECESSOR_EDITION, BASE_FORMULA, target="0001"),
         constructs="",
     )
     write_revision(
@@ -209,7 +209,7 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
             delta_casilla(SUCCESSOR_EDITION, base_id, number=base_id, lineage="base")
             + delta_casilla(SUCCESSOR_EDITION, cuota_id, number=cuota_id, lineage="cuota")
         ),
-        formulas=delta_formula(SUCCESSOR_EDITION, _BASE_FORMULA, target=target),
+        formulas=delta_formula(SUCCESSOR_EDITION, BASE_FORMULA, target=target),
         constructs="",
     )
     if accepted:
@@ -222,7 +222,7 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
 
 
 def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) -> None:
-    from .test_casilla_structural_succession import _relation
+    from .test_casilla_structural_succession import casilla_structural_succession_relation
 
     modelo_dir = tmp_path / MODELO_ID
     modelo_dir.mkdir()
@@ -232,7 +232,7 @@ def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) 
         "2024",
         year=2024,
         casillas=delta_casilla("2024", "0001", number="1", lineage="combined"),
-        formulas=delta_formula("2024", _BASE_FORMULA, target="0001"),
+        formulas=delta_formula("2024", BASE_FORMULA, target="0001"),
         constructs="",
     )
     write_revision(
@@ -247,7 +247,7 @@ def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) 
     )
     directory = modelo_dir / "revisions" / "2025" / "casilla_structural_successions"
     directory.mkdir()
-    (directory / "0001-declarations.toml").write_text(_relation(), encoding="utf-8")
+    (directory / "0001-declarations.toml").write_text(casilla_structural_succession_relation(), encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="a change to a field carrying the member's identity"):
         load_modelo_directory(modelo_dir)
 
@@ -269,7 +269,7 @@ def test_omitted_formula_keeps_unchanged_target_with_or_without_lineage(tmp_path
             year=year,
             predecessor="2024" if year == 2025 else None,
             casillas=row,
-            formulas=delta_formula("2024", _BASE_FORMULA, target="0001")
+            formulas=delta_formula("2024", BASE_FORMULA, target="0001")
             if year == 2024
             else '[revisions."2025"]\nformulas = []\n',
             constructs="",
@@ -290,7 +290,7 @@ def test_omitted_formula_keeps_unchanged_target_with_or_without_lineage(tmp_path
 def test_unchanged_formula_operand_cannot_follow_reused_split_child(
     tmp_path: Path, *, stated: str, expression: str
 ) -> None:
-    from .test_casilla_structural_succession import _relation
+    from .test_casilla_structural_succession import casilla_structural_succession_relation
 
     modelo_dir = tmp_path / MODELO_ID
     modelo_dir.mkdir()
@@ -304,7 +304,7 @@ def test_unchanged_formula_operand_cannot_follow_reused_split_child(
             else delta_casilla(revision, "0001", number="1", lineage="surname")
             + delta_casilla(revision, "0002", number="2", lineage="given")
         )
-        formulas = delta_formula(revision, _BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
+        formulas = delta_formula(revision, BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
         if year == 2025 and stated == "explicit-default":
             formulas = formulas.replace('casilla_id = "0001"', 'casilla_id = "0001", args = []')
         write_revision(
@@ -318,7 +318,7 @@ def test_unchanged_formula_operand_cannot_follow_reused_split_child(
         )
     directory = modelo_dir / "revisions" / "2025" / "casilla_structural_successions"
     directory.mkdir()
-    (directory / "0001-declarations.toml").write_text(_relation(), encoding="utf-8")
+    (directory / "0001-declarations.toml").write_text(casilla_structural_succession_relation(), encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="unchanged expression whose casilla operand"):
         load_modelo_directory(modelo_dir)
 
@@ -340,7 +340,7 @@ def test_formula_operand_identity_preserves_valid_declarations(tmp_path: Path, *
                 delta_casilla(revision, number, number=number, lineage=lineage)
                 for number, lineage in (("0001", "base"), ("0002", "cuota"), ("0003", "total"))
             ),
-            formulas=delta_formula(revision, _BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
+            formulas=delta_formula(revision, BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
             if year == 2024 or (changed and year == 2025)
             else f'[revisions."{revision}"]\nformulas = []\n',
             constructs="",
@@ -356,7 +356,7 @@ def test_collapsing_a_restated_family_lifts_the_restatement_without_losing_membe
     declaration in place would delete them; the collapse must lift the
     declaration and state the predecessor-only member as an explicit removal.
     """
-    source = _build_modelo(tmp_path / "source", successor_extra=_RESTATED_FORMULAS)
+    source = build_modelo(tmp_path / "source", successor_extra=_RESTATED_FORMULAS)
     candidate = tmp_path / "candidate" / MODELO_ID
 
     collapse_keyed_families(source, candidate)

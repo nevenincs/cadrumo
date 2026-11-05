@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from dev.registry.conformance.iva_regulation_catalogue import (
     bundled_iva_catalogue,
@@ -24,7 +24,7 @@ def test_the_grounded_years_are_derived_from_the_citation_windows() -> None:
     that the set is non-empty, so adding a year's citations widens it without
     editing this test.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = iva_catalogue_years(operation=_authority_operation_for_test)
 
         assert grounded, "the catalogue grounds no year at all; every assertion below would be vacuous"
@@ -41,7 +41,7 @@ def test_the_grounded_years_are_derived_from_the_citation_windows() -> None:
 
 def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -> None:
     """Projection is the point: a year gets the evidence that speaks to it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         year = min(iva_catalogue_years(operation=_authority_operation_for_test))
 
         catalogue = resolve_catalogue(
@@ -56,7 +56,7 @@ def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -
 
 
 def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_cache() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         first = resolve_catalogue(
             on=date(2025, 6, 15),
             operation=_authority_operation_for_test,
@@ -74,7 +74,7 @@ def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_c
 
 def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
     """The loaded corpus is the whole record; only resolution narrows it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         whole = sum(
             len(regulation.citations) for regulation in bundled_iva_catalogue(operation=_authority_operation_for_test)
         )
@@ -96,7 +96,7 @@ def test_resolve_catalogue_requires_a_grounded_year() -> None:
     # claims to file is permanently ungrounded, pinning today's coverage gap as
     # the contract and reddening the moment that year is correctly added.
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(IvaCatalogueError, match="year=1990"),
     ):
         resolve_catalogue(

@@ -32,11 +32,11 @@ def test_bundled_authoring_toml_fingerprint_tracks_same_stat_replacement(
     try:
         with monkeypatch.context() as patch:
             patch.setattr(loader_cache, "bundled_path", redirected_bundled_path)
-            loader_cache._bundled_registry_root.cache_clear()
-            assert loader_cache._bundled_registry_root() == registry_root.resolve()
+            loader_cache.bundled_registry_root.cache_clear()
+            assert loader_cache.bundled_registry_root() == registry_root.resolve()
 
             before = loader_cache.toml_file_fingerprint(manifest)
-            assert loader_cache._read_modelo_id(manifest, description="test manifest") == "111"
+            assert loader_cache.read_modelo_id(manifest, description="test manifest") == "111"
 
             original_stat = manifest.stat()
             manifest.write_text(replacement, encoding="utf-8", newline="\n")
@@ -47,6 +47,6 @@ def test_bundled_authoring_toml_fingerprint_tracks_same_stat_replacement(
             assert manifest.stat().st_mtime_ns == original_stat.st_mtime_ns
             assert before[:3] == after[:3]
             assert before[3] != after[3]
-            assert loader_cache._read_modelo_id(manifest, description="test manifest") == "222"
+            assert loader_cache.read_modelo_id(manifest, description="test manifest") == "222"
     finally:
-        loader_cache._bundled_registry_root.cache_clear()
+        loader_cache.bundled_registry_root.cache_clear()

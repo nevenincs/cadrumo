@@ -32,7 +32,7 @@ def _modelos_root() -> Path:
     return _repo_root() / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
 
-def _load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan, AdjudicationSet]:
+def load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan, AdjudicationSet]:
     path = adjudications_path or Path(__file__).resolve().parent / DEFAULT_ADJUDICATIONS_FILENAME
     adjudications = load_adjudications(path)
     occurrences, category_counts = extract_occurrences(_modelos_root(), modelo_id=modelo_id)
@@ -110,7 +110,7 @@ def inventory_command(
     adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
 ) -> None:
     """Report the event matrix: programmes, spans, and id-reuse collisions."""
-    inventory, _, _ = _load(modelo, adjudications)
+    inventory, _, _ = load(modelo, adjudications)
     multi = [event for event in inventory.events if event.spans_multiple_revisions]
     _report_inventory_header(modelo, inventory, len(multi))
     _report_revision_counts(inventory)
@@ -156,7 +156,7 @@ def check_command(
     adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
 ) -> None:
     """Report every unadjudicated ambiguity and every stale adjudication; exit non-zero while any remain."""
-    inventory, plan, adjudications_set = _load(modelo, adjudications)
+    inventory, plan, adjudications_set = load(modelo, adjudications)
     stale = detect_stale_adjudications(inventory, adjudications_set)
     if plan.complete and not stale:
         typer.echo(f"AEIP family fully adjudicated: {len(plan.entries)} chains planned.")
@@ -183,7 +183,7 @@ def plan_command(
     ] = False,
 ) -> None:
     """Plan the chain stamps and evolution records. Writes nothing."""
-    _, plan, _ = _load(modelo, adjudications)
+    _, plan, _ = load(modelo, adjudications)
     typer.echo(f"planned chains        : {len(plan.entries)}")
     typer.echo(f"occurrences to stamp  : {plan.stamp_count}")
     typer.echo(f"evolution records     : {plan.record_count}")
@@ -234,7 +234,7 @@ def apply_command(
     ] = False,
 ) -> None:
     """Preflight the adjudicated AEIP plan; write only with explicit ``--write``."""
-    inventory, planned, adjudications_set = _load(modelo, adjudications)
+    inventory, planned, adjudications_set = load(modelo, adjudications)
     prepared = prepare_apply(
         _modelos_root(),
         inventory,

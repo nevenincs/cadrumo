@@ -8,49 +8,49 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 
-from ._modelo_100_registry_support import (
-    _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
-    _ANEXO_C_ENERGY_EXCESS_ROLES,
-    _ANEXO_C_ENERGY_EXCESS_SECTION,
-    _ATTRIBUTION_DETAIL_ART_86_CASILLAS,
-    _ATTRIBUTION_DETAIL_SECTIONS,
-    _ATTRIBUTION_REGIME_ART_86_REF,
-    _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA,
-    _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE,
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF,
-    _EV_CHARGING_POINT_DEDUCTION_DA_58_REF,
-    _EV_CHARGING_POINT_DEDUCTION_ROLE,
-    _EV_CHARGING_POINT_RESULTS_SECTION,
-    _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _GENERAL_BASE_ART_48_ONLY_CASILLAS,
-    _GENERAL_BASE_ART_48_REF,
-    _GENERAL_BASE_GYP_LIMIT_CASILLA,
-    _GENERAL_BASE_IMPONIBLE_CASILLA,
-    _GENERAL_BASE_IMPONIBLE_ROLE,
-    _HOUSING_ENERGY_DEDUCTION_RESULT_ROLE,
-    _HOUSING_ENERGY_RESULTS_SECTION,
-    _LEGACY_RIB_SPLIT_ROLES,
-    _RIB_BALEARES_DA70_REF,
-    _RIB_DOTACION_ANIO_ROLE,
-    _RIB_DOTACION_IMPORTE_ROLE,
-    _RIB_INVERSION_TIPO_AB_ROLE,
-    _RIB_INVERSION_TIPO_C_ROLE,
-    _RIB_RESERVA_SECTION,
-    _RIC_DOTACION_ANIO_ROLE,
-    _RIC_DOTACION_IMPORTE_ROLE,
-    _RIC_INVERSION_TIPO_ABD_ROLE,
-    _RIC_INVERSION_TIPO_CD_ROLE,
-    _RIC_RESERVA_SECTION,
-    _SAVINGS_BASE_ART_49_ONLY_CASILLAS,
-    _SAVINGS_BASE_ART_49_ONLY_ROLES,
-    _SAVINGS_BASE_ART_49_REF,
-    _SAVINGS_BASE_GYP_LIMIT_CASILLA,
-    _loaded_registry,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition, oldest_authored_edition
+from .modelo_100_registry_support import (
+    ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
+    ANEXO_C_ENERGY_EXCESS_ROLES,
+    ANEXO_C_ENERGY_EXCESS_SECTION,
+    ATTRIBUTION_DETAIL_ART_86_CASILLAS,
+    ATTRIBUTION_DETAIL_SECTIONS,
+    ATTRIBUTION_REGIME_ART_86_REF,
+    ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA,
+    ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE,
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF,
+    EV_CHARGING_POINT_DEDUCTION_DA_58_REF,
+    EV_CHARGING_POINT_DEDUCTION_ROLE,
+    EV_CHARGING_POINT_RESULTS_SECTION,
+    FRACTIONAL_PAYMENT_ARTICLE_REF,
+    GENERAL_BASE_ART_48_ONLY_CASILLAS,
+    GENERAL_BASE_ART_48_REF,
+    GENERAL_BASE_GYP_LIMIT_CASILLA,
+    GENERAL_BASE_IMPONIBLE_CASILLA,
+    GENERAL_BASE_IMPONIBLE_ROLE,
+    HOUSING_ENERGY_DEDUCTION_RESULT_ROLE,
+    HOUSING_ENERGY_RESULTS_SECTION,
+    LEGACY_RIB_SPLIT_ROLES,
+    RIB_BALEARES_DA70_REF,
+    RIB_DOTACION_ANIO_ROLE,
+    RIB_DOTACION_IMPORTE_ROLE,
+    RIB_INVERSION_TIPO_AB_ROLE,
+    RIB_INVERSION_TIPO_C_ROLE,
+    RIB_RESERVA_SECTION,
+    RIC_DOTACION_ANIO_ROLE,
+    RIC_DOTACION_IMPORTE_ROLE,
+    RIC_INVERSION_TIPO_ABD_ROLE,
+    RIC_INVERSION_TIPO_CD_ROLE,
+    RIC_RESERVA_SECTION,
+    SAVINGS_BASE_ART_49_ONLY_CASILLAS,
+    SAVINGS_BASE_ART_49_ONLY_ROLES,
+    SAVINGS_BASE_ART_49_REF,
+    SAVINGS_BASE_GYP_LIMIT_CASILLA,
+    loaded_registry,
+    modelo_100_revision,
+    modelo_100_snapshot,
+)
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -67,7 +67,7 @@ _ORDINAL_SLOT_ROOT_EDITION = oldest_authored_edition("100")
 
 def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> None:
     """Art. 19 work-income amount fields use M100 decimal precision consistently."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     role = "irpf_rendimiento_trabajo_gasto_otros"
     expected_years = {str(year) for year in range(2020, 2026)}
@@ -98,74 +98,74 @@ def _assert_base_roles_are_grounded_in_their_own_articles(revision, filing_year:
     savings_formula_id = "renta-saldo-gp-base-ahorro-cap-25"
     general_formula = next(formula for formula in revision.formulas if formula.id == general_formula_id)
     savings_formula = next(formula for formula in revision.formulas if formula.id == savings_formula_id)
-    general_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == _GENERAL_BASE_GYP_LIMIT_CASILLA)
-    savings_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == _SAVINGS_BASE_GYP_LIMIT_CASILLA)
+    general_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == GENERAL_BASE_GYP_LIMIT_CASILLA)
+    savings_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == SAVINGS_BASE_GYP_LIMIT_CASILLA)
 
     for refs in (general_formula.legal_refs, general_gyp_limit.legal_refs):
-        assert _GENERAL_BASE_ART_48_REF in refs, filing_year
-        assert _SAVINGS_BASE_ART_49_REF not in refs, filing_year
+        assert GENERAL_BASE_ART_48_REF in refs, filing_year
+        assert SAVINGS_BASE_ART_49_REF not in refs, filing_year
     for refs in (savings_formula.legal_refs, savings_gyp_limit.legal_refs):
-        assert _SAVINGS_BASE_ART_49_REF in refs, filing_year
-        assert _GENERAL_BASE_ART_48_REF not in refs, filing_year
+        assert SAVINGS_BASE_ART_49_REF in refs, filing_year
+        assert GENERAL_BASE_ART_48_REF not in refs, filing_year
 
     general_casillas = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.id in _GENERAL_BASE_ART_48_ONLY_CASILLAS
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in GENERAL_BASE_ART_48_ONLY_CASILLAS
     }
-    assert set(general_casillas) == _GENERAL_BASE_ART_48_ONLY_CASILLAS, filing_year
+    assert set(general_casillas) == GENERAL_BASE_ART_48_ONLY_CASILLAS, filing_year
     for casilla in general_casillas.values():
-        assert _GENERAL_BASE_ART_48_REF in casilla.legal_refs, (filing_year, casilla.id)
-        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
-        assert _ATTRIBUTION_REGIME_ART_86_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert GENERAL_BASE_ART_48_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert ATTRIBUTION_REGIME_ART_86_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
-    base_general = general_casillas[_GENERAL_BASE_IMPONIBLE_CASILLA]
-    assert base_general.semantic_role == _GENERAL_BASE_IMPONIBLE_ROLE, filing_year
+    base_general = general_casillas[GENERAL_BASE_IMPONIBLE_CASILLA]
+    assert base_general.semantic_role == GENERAL_BASE_IMPONIBLE_ROLE, filing_year
     assert base_general.label == "Base imponible general", filing_year
 
     savings_casillas = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role in _SAVINGS_BASE_ART_49_ONLY_ROLES
+        casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role in SAVINGS_BASE_ART_49_ONLY_ROLES
     }
-    assert set(savings_casillas) == _SAVINGS_BASE_ART_49_ONLY_CASILLAS, filing_year
+    assert set(savings_casillas) == SAVINGS_BASE_ART_49_ONLY_CASILLAS, filing_year
     for casilla in savings_casillas.values():
-        assert _SAVINGS_BASE_ART_49_REF in casilla.legal_refs, (filing_year, casilla.id)
-        assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert SAVINGS_BASE_ART_49_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert GENERAL_BASE_ART_48_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
 
 def _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year: int) -> None:
     attribution_base = next(
-        casilla for casilla in revision.casillas if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
+        casilla for casilla in revision.casillas if casilla.id == ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
     )
-    assert _ATTRIBUTION_REGIME_ART_86_REF in attribution_base.legal_refs, filing_year
-    assert attribution_base.semantic_role == _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE, filing_year
+    assert ATTRIBUTION_REGIME_ART_86_REF in attribution_base.legal_refs, filing_year
+    assert attribution_base.semantic_role == ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE, filing_year
     assert attribution_base.label == "Base imponible imputada", filing_year
-    assert _GENERAL_BASE_ART_48_REF not in attribution_base.legal_refs, filing_year
-    assert _SAVINGS_BASE_ART_49_REF not in attribution_base.legal_refs, filing_year
-    assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in attribution_base.legal_refs, filing_year
+    assert GENERAL_BASE_ART_48_REF not in attribution_base.legal_refs, filing_year
+    assert SAVINGS_BASE_ART_49_REF not in attribution_base.legal_refs, filing_year
+    assert FRACTIONAL_PAYMENT_ARTICLE_REF not in attribution_base.legal_refs, filing_year
 
     attribution_detail_casillas = {
-        casilla.id: casilla for casilla in revision.casillas if casilla.id in _ATTRIBUTION_DETAIL_ART_86_CASILLAS
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in ATTRIBUTION_DETAIL_ART_86_CASILLAS
     }
-    assert set(attribution_detail_casillas) == _ATTRIBUTION_DETAIL_ART_86_CASILLAS, filing_year
+    assert set(attribution_detail_casillas) == ATTRIBUTION_DETAIL_ART_86_CASILLAS, filing_year
     for casilla in attribution_detail_casillas.values():
-        assert _ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs, (filing_year, casilla.id)
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
     checked_sections = [
-        casilla for casilla in revision.casillas if _ATTRIBUTION_DETAIL_SECTIONS & frozenset(casilla.section)
+        casilla for casilla in revision.casillas if ATTRIBUTION_DETAIL_SECTIONS & frozenset(casilla.section)
     ]
     assert checked_sections, filing_year
     for casilla in checked_sections:
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
 
 
 def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revisions() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         _assert_base_roles_are_grounded_in_their_own_articles(revision, filing_year)
         _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year)
 
 
 def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     detail_roles = {"irpf_re_tfi_entidad_denominacion", "irpf_re_tfi_imputacion_importe"}
     expected_refs = {
@@ -202,7 +202,7 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
 
 @pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))
 def test_modelo_100_zec_reduced_rate_parameter_cites_special_rate_article(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = modelo_100_snapshot(filing_year).revision
     parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}
     parameter = parameters_by_id["renta-zec-tipo-gravamen-reducido"]
 
@@ -216,244 +216,244 @@ def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
         (
             2022,
             "1692",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_ABD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_ABD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2022,
             "1696",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_CD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_CD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2023,
             "1681",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_DOTACION_IMPORTE_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_DOTACION_IMPORTE_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2023,
             "1682",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_DOTACION_ANIO_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_DOTACION_ANIO_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2023,
             "1684",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_ABD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_ABD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2023,
             "1685",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_CD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_CD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2024,
             "1681",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_DOTACION_IMPORTE_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_DOTACION_IMPORTE_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2024,
             "1682",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_DOTACION_ANIO_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_DOTACION_ANIO_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2024,
             "1684",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_ABD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_ABD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2024,
             "1685",
-            _RIC_RESERVA_SECTION,
+            RIC_RESERVA_SECTION,
             "Canarias",
-            _RIC_INVERSION_TIPO_CD_ROLE,
-            _AUTONOMIC_DEDUCTION_ART_77_REF,
-            _RIB_BALEARES_DA70_REF,
+            RIC_INVERSION_TIPO_CD_ROLE,
+            AUTONOMIC_DEDUCTION_ART_77_REF,
+            RIB_BALEARES_DA70_REF,
         ),
         (
             2023,
             "1938",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2023,
             "1940",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2023,
             "1943",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2024,
             "1781",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2024,
             "1783",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2024,
             "1938",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2024,
             "1940",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2024,
             "1943",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1681",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_IMPORTE_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_IMPORTE_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1682",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1684",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_AB_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_AB_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1685",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1781",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1783",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1938",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_DOTACION_ANIO_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_DOTACION_ANIO_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1940",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
         (
             2025,
             "1943",
-            _RIB_RESERVA_SECTION,
+            RIB_RESERVA_SECTION,
             "Illes Balears",
-            _RIB_INVERSION_TIPO_C_ROLE,
-            _RIB_BALEARES_DA70_REF,
+            RIB_INVERSION_TIPO_C_ROLE,
+            RIB_BALEARES_DA70_REF,
             None,
         ),
     )
@@ -467,7 +467,7 @@ def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
         required_ref,
         forbidden_ref,
     ) in expected_cases:
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         casilla = next(
             casilla
             for casilla in revision.casillas
@@ -483,16 +483,16 @@ def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
 
 
 def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
-    reserva_sections = {_RIC_RESERVA_SECTION[-1], _RIB_RESERVA_SECTION[-1]}
+    reserva_sections = {RIC_RESERVA_SECTION[-1], RIB_RESERVA_SECTION[-1]}
     offences: list[str] = []
 
     for revision_id, revision in modelo.revisions.items():
         for casilla in revision.casillas:
             if not reserva_sections.intersection(casilla.section):
                 continue
-            if casilla.semantic_role in _LEGACY_RIB_SPLIT_ROLES:
+            if casilla.semantic_role in LEGACY_RIB_SPLIT_ROLES:
                 offences.append(f"{revision_id}/{casilla.id}: {casilla.semantic_role}")
 
     assert not offences, "legacy RIB split semantic roles remain:\n  " + "\n  ".join(offences)
@@ -500,41 +500,41 @@ def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -
 
 def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding() -> None:
     for filing_year in range(2023, 2026):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         casilla = next(
             casilla
             for casilla in revision.casillas
             if casilla.id == validated_casilla_id("1935", surface="test_modelo_100_registry.casilla")
         )
 
-        assert tuple(casilla.section) == _EV_CHARGING_POINT_RESULTS_SECTION, filing_year
-        assert casilla.semantic_role == _EV_CHARGING_POINT_DEDUCTION_ROLE, filing_year
-        assert _EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs, filing_year
-        assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs, filing_year
+        assert tuple(casilla.section) == EV_CHARGING_POINT_RESULTS_SECTION, filing_year
+        assert casilla.semantic_role == EV_CHARGING_POINT_DEDUCTION_ROLE, filing_year
+        assert EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs, filing_year
+        assert ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs, filing_year
 
 
 def test_modelo_100_housing_energy_result_role_stays_in_housing_energy_section() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     offences: list[str] = []
 
     for revision_id, revision in modelo.revisions.items():
         for casilla in revision.casillas:
-            if casilla.semantic_role != _HOUSING_ENERGY_DEDUCTION_RESULT_ROLE:
+            if casilla.semantic_role != HOUSING_ENERGY_DEDUCTION_RESULT_ROLE:
                 continue
-            if tuple(casilla.section) != _HOUSING_ENERGY_RESULTS_SECTION:
+            if tuple(casilla.section) != HOUSING_ENERGY_RESULTS_SECTION:
                 offences.append(f"{revision_id}/{casilla.id}: section={tuple(casilla.section)}")
-            if _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs:
-                offences.append(f"{revision_id}/{casilla.id}: missing {_ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF}")
-            if _EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs:
-                offences.append(f"{revision_id}/{casilla.id}: carries {_EV_CHARGING_POINT_DEDUCTION_DA_58_REF}")
+            if ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs:
+                offences.append(f"{revision_id}/{casilla.id}: missing {ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF}")
+            if EV_CHARGING_POINT_DEDUCTION_DA_58_REF in casilla.legal_refs:
+                offences.append(f"{revision_id}/{casilla.id}: carries {EV_CHARGING_POINT_DEDUCTION_DA_58_REF}")
 
     assert not offences, "housing energy result role escaped its legal section:\n  " + "\n  ".join(offences)
 
 
 def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded() -> None:
     for filing_year in range(2022, 2026):
-        revision = _modelo_100_revision(filing_year)
+        revision = modelo_100_revision(filing_year)
         offences: list[str] = []
         roles_by_casilla: dict[CasillaId, str] = {}
         for casilla in revision.casillas:
@@ -543,23 +543,23 @@ def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded() -> No
                 continue
             if "eeficiencia" in semantic_role:
                 offences.append(f"{filing_year}/{casilla.id}: {semantic_role}")
-            if tuple(casilla.section) == _ANEXO_C_ENERGY_EXCESS_SECTION and semantic_role.startswith(
-                _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
+            if tuple(casilla.section) == ANEXO_C_ENERGY_EXCESS_SECTION and semantic_role.startswith(
+                ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
             ):
                 roles_by_casilla[casilla.id] = semantic_role
         missing_da50 = {
             casilla.id: casilla.legal_refs
             for casilla in revision.casillas
-            if casilla.id in roles_by_casilla and _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs
+            if casilla.id in roles_by_casilla and ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF not in casilla.legal_refs
         }
 
         assert not offences, "misspelled Anexo C energy-efficiency roles remain:\n  " + "\n  ".join(offences)
-        assert _ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values())), filing_year
+        assert ANEXO_C_ENERGY_EXCESS_ROLES.issubset(set(roles_by_casilla.values())), filing_year
         assert not missing_da50, filing_year
 
 
 def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grounded() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     current_year_role = "irpf_anexo_c_exceso_patrim_protegido_ejercicio_actual"
     old_role = "irpf_anexo_c_exceso_patrim_protegido_generado"
@@ -593,7 +593,7 @@ def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grou
 
 
 def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_by_year = {
         2023: (
@@ -640,7 +640,7 @@ def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> 
 
 
 def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_ganancia_derechos_valor_transmision_global"
 
@@ -668,7 +668,7 @@ def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
 
 
 def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_rental_aid() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_by_year = {
         2020: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
@@ -703,7 +703,7 @@ def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_renta
 
 
 def test_modelo_100_root_revision_0356_is_gp_otros_ordinal_element_number() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     root_revision = modelo.revisions[str(_ORDINAL_SLOT_ROOT_EDITION)]
     casilla = next(
@@ -737,7 +737,7 @@ def test_modelo_100_root_revision_0356_is_gp_otros_ordinal_element_number() -> N
 
 
 def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_roles = {
         validated_casilla_id(
@@ -777,7 +777,7 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
 
 
 def test_modelo_100_coti_fund_loss_role_matches_loss_label() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions[str(_REVIEWED_EDITION)]
     coti_loss = next(
@@ -813,7 +813,7 @@ def test_modelo_100_coti_fund_loss_role_matches_loss_label() -> None:
 
 
 def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_afecto_actividades_economicas"
 
@@ -840,7 +840,7 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
 
 
 def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_rows = {
         validated_casilla_id("0246", surface="test_modelo_100_registry.casilla"): (
@@ -900,7 +900,7 @@ def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> No
 
 
 def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_rows = {
         validated_casilla_id("0618", surface="test_modelo_100_registry.casilla"): (
@@ -955,7 +955,7 @@ def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
 
 
 def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
     for filing_year in range(2020, 2026):
@@ -987,7 +987,7 @@ def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
 
 
 def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_vivienda_habitual"
 
@@ -1010,7 +1010,7 @@ def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
 
 
 def test_modelo_100_inmueble_0079_use_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_uso"
 
@@ -1033,7 +1033,7 @@ def test_modelo_100_inmueble_0079_use_days_are_integer() -> None:
 
 
 def test_modelo_100_inmueble_0085_disposal_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_a_disposicion"
 
@@ -1056,7 +1056,7 @@ def test_modelo_100_inmueble_0085_disposal_days_are_integer() -> None:
 
 
 def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_otros_usos"
 
@@ -1079,7 +1079,7 @@ def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
 
 
 def test_modelo_100_inmueble_rented_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_labels = {
         "0101": "Número de días en que el inmueble ha estado arrendado",
@@ -1113,7 +1113,7 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
 
 
 def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
     for filing_year in range(2020, 2026):
@@ -1135,7 +1135,7 @@ def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
 
 
 def test_modelo_100_maternity_extension_child_counts_are_integer() -> None:
-    revision = _modelo_100_snapshot(_MATERNITY_EXTENSION_EDITION).revision
+    revision = modelo_100_snapshot(_MATERNITY_EXTENSION_EDITION).revision
     expected_roles = {
         validated_casilla_id("1911", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2020",
         validated_casilla_id("1914", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2021",
@@ -1160,7 +1160,7 @@ def test_modelo_100_maternity_extension_child_counts_are_integer() -> None:
 
 
 def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     common_expected_roles = {
         "1064": "irpf_deduccion_la_rioja_vivienda_codigo_municipio",
@@ -1198,14 +1198,14 @@ def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
             assert tuple(casilla.section) == ("resultados", "deduccion_autonomica_res", "la_rioja_res")
             assert casilla.data_type == "integer"
             assert casilla.semantic_role == expected_role
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+            assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )
 
 
 def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> None:
-    modelos_by_id, _ = _loaded_registry()
+    modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
     expected_role = "irpf_retrib_especie_no_exenta_importe_integro_pendiente_imputacion"
     expected_legal_refs = {

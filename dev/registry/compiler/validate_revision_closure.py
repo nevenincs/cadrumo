@@ -32,11 +32,11 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import revision_endpoint_source_ids
 
-from ._validate_application_links import validate_application_link_closure
-from ._validate_helpers import missing_refs as _missing_refs
+from .validate_application_links import validate_application_link_closure
 from .validate_constructs import validate_construct_closure
 from .validate_evidence import EvidenceValidator
 from .validate_formulas import validate_formula_dag
+from .validate_helpers import missing_refs
 from .validate_parameter_temporal import validate_bracket_table_temporal_coverage
 from .validate_revision_rules import validate_reconciliation_total_closure
 
@@ -103,10 +103,10 @@ def validate_revision_reference_surfaces(
     manifest = revision.completeness_manifest
     if manifest is not None:
         failures.extend(
-            _missing_refs(prefix, "calculation-completeness manifest", manifest.legal_refs, legal_refs, "legal"),
+            missing_refs(prefix, "calculation-completeness manifest", manifest.legal_refs, legal_refs, "legal"),
         )
         failures.extend(
-            _missing_refs(prefix, "calculation-completeness manifest", manifest.source_refs, source_refs, "source"),
+            missing_refs(prefix, "calculation-completeness manifest", manifest.source_refs, source_refs, "source"),
         )
         failures.extend(
             evidence.require_any_source_tier(
@@ -118,12 +118,12 @@ def validate_revision_reference_surfaces(
         )
     for relation in revision.casilla_structural_successions:
         owner = f"casilla structural succession {relation.id!r}"
-        failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
         for endpoint_id, endpoint_refs in (
             (relation.from_revision, relation.from_source_refs),
             (relation.to_revision, relation.to_source_refs),
         ):
-            failures.extend(_missing_refs(prefix, owner, endpoint_refs, source_refs, "source"))
+            failures.extend(missing_refs(prefix, owner, endpoint_refs, source_refs, "source"))
             failures.extend(
                 evidence.require_any_source_tier(prefix, owner, endpoint_refs, _REVISION_REFERENCE_SOURCE_TIERS),
             )
@@ -141,8 +141,8 @@ def validate_revision_reference_surfaces(
             )
     for evolution in revision.casilla_continuidad_evolutions:
         owner = f"casilla continuidad evolution {evolution.id!r}"
-        failures.extend(_missing_refs(prefix, owner, evolution.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, evolution.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, evolution.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, evolution.source_refs, source_refs, "source"))
         failures.extend(
             evidence.require_any_source_tier(prefix, owner, evolution.source_refs, _REVISION_REFERENCE_SOURCE_TIERS),
         )

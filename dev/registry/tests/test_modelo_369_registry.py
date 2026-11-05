@@ -20,7 +20,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._registry_schema_support import _committed_modelo
+from .registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,7 +57,7 @@ def test_the_scheme_total_sums_every_destination_line_the_scheme_declares(
     short operand list, so the defect that matters -- a destination line the
     total forgets -- shows up here and nowhere in the value.
     """
-    revision = _committed_modelo(_MODELO).revisions[revision_id]
+    revision = committed_modelo(_MODELO).revisions[revision_id]
     formula = next(item for item in revision.formulas if str(item.target_casilla_id) == total_casilla_id)
 
     operands = tuple(sorted(str(arg.casilla_id) for arg in formula.expression.args))

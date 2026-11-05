@@ -37,22 +37,22 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import declared_cross_revision_continuity_semantic_linkage_failures
-from ._referential_integrity_support import (
+from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     minimal_application_link,
     minimal_casilla,
     minimal_workbook_ref,
 )
-from ._synthetic_locale_fixtures import (
-    _synthetic_locale_scope,
-    _write_test_label,
+from .synthetic_locale_fixtures import (
+    synthetic_locale_scope,
     synthetic_locale_state,
+    write_test_label,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-__all__ = ["_synthetic_locale_scope"]
+__all__ = ["synthetic_locale_scope"]
 
 CENSUS_PERIODS = ("alta", "modificacion", "baja")
 EARLIER_REVISION = "2023-hasta-2025-02-02"
@@ -380,7 +380,7 @@ source_refs = ["aeat-manual"]
         window="valid_from = 2025-02-03",
         selector='{ year_from = 2025, periods = ["alta", "modificacion", "baja"] }',
     )
-    _write_test_label("Census casilla")
+    write_test_label("Census casilla")
     for revision_id in (EARLIER_REVISION, LATER_REVISION):
         key = casilla_occurrence_locale_key("998", revision_id, "0700", ModeloLocalizationFieldKind.LABEL)
         if synthetic_locale_state.root is not None:

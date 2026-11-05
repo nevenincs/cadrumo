@@ -54,9 +54,9 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_assessment import assess_migration_state
 from ..edition_delta_migration import MigrationOutcome, main, migrate_modelo, persist_migration_report
 from ..edition_delta_planning import plan_migration
-from ..edition_delta_row_delta import _choose_drops
-from ..edition_delta_source import _Defaults, _EditionSource, _Placed, _read_edition
-from ..edition_delta_source_publication import _validate_staged_modelo
+from ..edition_delta_row_delta import choose_drops
+from ..edition_delta_source import Defaults, EditionSource, Placed, read_edition
+from ..edition_delta_source_publication import validate_staged_modelo
 from ..edition_delta_types import BlockedCause, EditionPlan, MigrationPlan, PredecessorBasis
 from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
@@ -766,7 +766,7 @@ def _semantic_withdrawal_fixture(root: Path) -> Path:
 def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path: Path) -> None:
     registry = _semantic_withdrawal_fixture(tmp_path / "registry")
     definition = _load(registry, "999")
-    source = _read_edition(registry / "modelos" / "999", "2024")
+    source = read_edition(registry / "modelos" / "999", "2024")
     predecessor: dict[str, object] = {
         "id": "0002",
         "number": "2",
@@ -775,15 +775,15 @@ def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path:
         "source_refs": ["aeat-manual"],
     }
 
-    causes, *_ = _choose_drops(
+    causes, *_ = choose_drops(
         definition=definition,
         revision_id="2024",
         predecessor="2023",
-        inherited=[_Placed(predecessor, "2023")],
+        inherited=[Placed(predecessor, "2023")],
         full_rows=[],
         lifts={},
         source=source,
-        defaults=_Defaults(source_refs=None, orden=()),
+        defaults=Defaults(source_refs=None, orden=()),
         storage_only=False,
     )
 
@@ -803,7 +803,7 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
     def semantic_middle(
         position: int,
         revisions: Sequence[ModeloRevision],
-        source: _EditionSource,
+        source: EditionSource,
         *,
         reconsider_technical_roots: bool = False,
     ) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
@@ -941,7 +941,7 @@ def test_invalid_staged_candidate_leaves_the_live_modelo_byte_identical(
         newline="\n",
     )
     with pytest.raises(RegistryError, match="missing-revision"):
-        _validate_staged_modelo(staged_root=staged, modelo_id=_PILOT)
+        validate_staged_modelo(staged_root=staged, modelo_id=_PILOT)
 
     assert before == {
         path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()

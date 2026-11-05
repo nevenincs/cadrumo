@@ -8,13 +8,13 @@ from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _load_modelos() -> tuple[ModeloDefinition, ...]:
-    modelos, _ = _committed_registry_tree()
+    modelos, _ = committed_registry_tree()
     return modelos
 
 

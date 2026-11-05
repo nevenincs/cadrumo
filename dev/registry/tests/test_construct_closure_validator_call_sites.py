@@ -24,7 +24,8 @@ from cadrumo.domain.calculations.registry.schema_revision_members import Constru
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES, validate_construct_closure
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validator import RegistryValidator
-from ._referential_integrity_support import (
+from .profile_schema_support import load_user_profile_schema
+from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     minimal_casilla,
@@ -32,7 +33,6 @@ from ._referential_integrity_support import (
     minimal_modelo,
     minimal_revision,
 )
-from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

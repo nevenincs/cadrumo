@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from .edition_delta_source import _members
+from .edition_delta_source import members
 
 _OPERATION_SECTIONS = {
     "casilla_overrides",
@@ -43,7 +43,7 @@ def _family_shape_findings(revision_id: str, raw_revision: Mapping[str, object])
     return [
         {"revision": revision_id, "family": spec.section, "reason": "authored_shape_unsupported"}
         for spec in CANONICAL_FAMILY_SPECS
-        if _members(raw_revision, spec.section, singleton=spec.singleton) is None
+        if members(raw_revision, spec.section, singleton=spec.singleton) is None
     ]
 
 

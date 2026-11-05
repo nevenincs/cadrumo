@@ -45,15 +45,15 @@ def _authority() -> ValidatedRegistryAuthority:
 @pytest.fixture(autouse=True)
 def isolated_memo() -> Generator[None]:
     """Restore whatever the process already held, so these cases own the memo."""
-    with authority_state._state_lock:
-        preserved = dict(authority_state._authority_sources)
-        authority_state._authority_sources.clear()
+    with authority_state.state_lock:
+        preserved = dict(authority_state.authority_sources)
+        authority_state.authority_sources.clear()
     try:
         yield
     finally:
-        with authority_state._state_lock:
-            authority_state._authority_sources.clear()
-            authority_state._authority_sources.update(preserved)
+        with authority_state.state_lock:
+            authority_state.authority_sources.clear()
+            authority_state.authority_sources.update(preserved)
 
 
 def test_a_registered_authority_resolves_to_the_root_it_was_compiled_from() -> None:
@@ -79,8 +79,8 @@ def test_a_dead_authoritys_entry_is_not_served_to_whatever_reuses_its_address() 
     live = _authority()
     collected = _authority()
     register_authoring_authority(collected, source_root=_SCRATCH_ROOT)
-    with authority_state._state_lock:
-        authority_state._authority_sources[id(live)] = authority_state._authority_sources.pop(id(collected))
+    with authority_state.state_lock:
+        authority_state.authority_sources[id(live)] = authority_state.authority_sources.pop(id(collected))
     del collected
     gc.collect()
 
@@ -108,6 +108,6 @@ def test_registering_drops_entries_whose_authority_is_gone() -> None:
     survivor = _authority()
     register_authoring_authority(survivor, source_root=_BUNDLED_ROOT)
 
-    with authority_state._state_lock:
-        remaining = dict(authority_state._authority_sources)
+    with authority_state.state_lock:
+        remaining = dict(authority_state.authority_sources)
     assert [root for _reference, root in remaining.values()] == [_BUNDLED_ROOT]

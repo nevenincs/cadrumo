@@ -41,14 +41,14 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..registry_classification_coherence import (
-    _MAX_DETAIL_LENGTH,
+    MAX_DETAIL_LENGTH,
     ClassificationCoherenceFinding,
     DeclaredAxis,
     RegistryClassificationAudit,
-    _bounded_detail,
-    _field_max_length,
     audit_bundled_classification_coherence,
+    bounded_detail,
     build_classification_coherence_audit,
+    field_max_length,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -454,8 +454,8 @@ def test_a_modelo_with_many_blockers_is_reported_rather_than_refused() -> None:
         ),
     )
     finding = audit.findings_of_kind("informative_axis_divergence")[0]
-    assert _MAX_DETAIL_LENGTH is not None
-    assert len(finding.detail) <= _MAX_DETAIL_LENGTH
+    assert MAX_DETAIL_LENGTH is not None
+    assert len(finding.detail) <= MAX_DETAIL_LENGTH
     assert "further blocker" in finding.detail, "the unrendered blockers must still be counted"
     assert len(audit.rows[0].informative_class_blockers) == len(casillas), (
         "the row keeps every blocker even though the sentence samples them"
@@ -469,10 +469,10 @@ def test_the_detail_bound_is_read_from_the_field_it_must_satisfy() -> None:
     someone edits one of the two. Reading the constraint makes the pair
     inseparable: lowering the field bound lowers the clamp in the same edit.
     """
-    assert _field_max_length(ClassificationCoherenceFinding, "detail") == _MAX_DETAIL_LENGTH
-    assert _MAX_DETAIL_LENGTH is not None, "the finding's detail must stay bounded, or the clamp means nothing"
+    assert field_max_length(ClassificationCoherenceFinding, "detail") == MAX_DETAIL_LENGTH
+    assert MAX_DETAIL_LENGTH is not None, "the finding's detail must stay bounded, or the clamp means nothing"
 
-    over_bound = "x" * (_MAX_DETAIL_LENGTH + 1)
+    over_bound = "x" * (MAX_DETAIL_LENGTH + 1)
     with pytest.raises(ValidationError):
         ClassificationCoherenceFinding(
             kind="informative_axis_divergence",
@@ -496,8 +496,8 @@ def test_the_bound_reader_reads_the_declared_constraint() -> None:
     class _Unbounded(BaseModel):
         text: str
 
-    assert _field_max_length(_NarrowlyBounded, "text") == 40
-    assert _field_max_length(_Unbounded, "text") is None
+    assert field_max_length(_NarrowlyBounded, "text") == 40
+    assert field_max_length(_Unbounded, "text") is None
 
 
 def test_a_detail_over_the_bound_is_truncated_to_exactly_the_bound() -> None:
@@ -507,16 +507,16 @@ def test_a_detail_over_the_bound_is_truncated_to_exactly_the_bound() -> None:
     below), so nothing else in this module reaches this branch. Driving it
     directly is what turns the clamp from assumed-correct into proven-correct.
     """
-    assert _MAX_DETAIL_LENGTH is not None
+    assert MAX_DETAIL_LENGTH is not None
 
-    at_bound = "y" * _MAX_DETAIL_LENGTH
-    assert _bounded_detail(at_bound) == at_bound, "a detail exactly at the bound must pass through untouched"
+    at_bound = "y" * MAX_DETAIL_LENGTH
+    assert bounded_detail(at_bound) == at_bound, "a detail exactly at the bound must pass through untouched"
 
-    over_bound = "y" * (_MAX_DETAIL_LENGTH + 50)
-    clamped = _bounded_detail(over_bound)
-    assert len(clamped) == _MAX_DETAIL_LENGTH
+    over_bound = "y" * (MAX_DETAIL_LENGTH + 50)
+    clamped = bounded_detail(over_bound)
+    assert len(clamped) == MAX_DETAIL_LENGTH
     assert clamped.endswith(PROSE_ELISION_MARKER)
-    assert clamped.startswith(over_bound[: _MAX_DETAIL_LENGTH - len(PROSE_ELISION_MARKER)])
+    assert clamped.startswith(over_bound[: MAX_DETAIL_LENGTH - len(PROSE_ELISION_MARKER)])
 
 
 def test_lowering_the_bound_moves_the_clamp() -> None:
@@ -528,10 +528,10 @@ def test_lowering_the_bound_moves_the_clamp() -> None:
     """
     detail = "z" * 200
 
-    assert _bounded_detail(detail, max_length=100) != _bounded_detail(detail, max_length=150)
-    assert len(_bounded_detail(detail, max_length=100)) == 100
-    assert len(_bounded_detail(detail, max_length=150)) == 150
-    assert _bounded_detail(detail, max_length=None) == detail, "an unbounded field needs no clamp"
+    assert bounded_detail(detail, max_length=100) != bounded_detail(detail, max_length=150)
+    assert len(bounded_detail(detail, max_length=100)) == 100
+    assert len(bounded_detail(detail, max_length=150)) == 150
+    assert bounded_detail(detail, max_length=None) == detail, "an unbounded field needs no clamp"
 
 
 def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
@@ -541,8 +541,8 @@ def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
     own, so a finding that raises while being CONSTRUCTED aborts the whole read
     on exactly the disagreement it exists to surface.
     """
-    assert _MAX_DETAIL_LENGTH is not None
-    oversized = "modelo 100 declares " + "w" * _MAX_DETAIL_LENGTH
+    assert MAX_DETAIL_LENGTH is not None
+    oversized = "modelo 100 declares " + "w" * MAX_DETAIL_LENGTH
 
     with pytest.raises(ValidationError):
         ClassificationCoherenceFinding(
@@ -557,10 +557,10 @@ def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
         kind="informative_axis_divergence",
         modelo="100",
         subject="100",
-        detail=_bounded_detail(oversized),
+        detail=bounded_detail(oversized),
         registry_validated=False,
     )
-    assert len(survived.detail) == _MAX_DETAIL_LENGTH
+    assert len(survived.detail) == MAX_DETAIL_LENGTH
     assert survived.detail.endswith(PROSE_ELISION_MARKER)
 
 
@@ -600,12 +600,12 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
     )
 
     detail = audit.findings_of_kind("informative_axis_divergence")[0].detail
-    assert _MAX_DETAIL_LENGTH is not None
+    assert MAX_DETAIL_LENGTH is not None
     assert not detail.endswith(PROSE_ELISION_MARKER), (
         f"the widest legal divergence sentence is being truncated at {len(detail)} characters; "
         "the sampler no longer keeps real findings inside the field bound"
     )
-    assert len(detail) < _MAX_DETAIL_LENGTH
+    assert len(detail) < MAX_DETAIL_LENGTH
 
 
 def test_degraded_read_stamps_every_row_and_finding_unvalidated() -> None:

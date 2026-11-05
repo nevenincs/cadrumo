@@ -18,24 +18,24 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    ValidatedHistoricalStaticGeneratedExportTree,
-)
 from .export_fragment_provenance import (
     SHA256_PATTERN,
     ExportFragmentOutputDigest,
     collect_export_fragment_output_digests,
 )
+from .tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
+)
 
-_JOURNAL_SCHEMA_VERSION: Final[Literal[2]] = 2
+JOURNAL_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
-_MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
+MODELO_ID_ADAPTER: Final[TypeAdapter[ModeloId]] = TypeAdapter(ModeloId)
 
 
-_REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
+REVISION_ID_ADAPTER: Final[TypeAdapter[RevisionId]] = TypeAdapter(RevisionId)
 
 
 class _StrictModel(BaseModel):
@@ -63,7 +63,7 @@ class GeneratedExportPublicationJournal(_StrictModel):
     @field_validator("modelo", "revision_id")
     @classmethod
     def _identities_are_single_path_components(cls, value: str) -> str:
-        _require_single_path_component(value, subject="generated publication journal identity")
+        require_single_path_component(value, subject="generated publication journal identity")
         return value
 
     @field_validator("candidate_export", "backup_export")
@@ -71,7 +71,7 @@ class GeneratedExportPublicationJournal(_StrictModel):
     def _entries_are_root_relative_names(cls, value: str) -> str:
         # Recovery resolves each entry against its own transaction root, so a
         # moved checkout still recovers and no machine path is ever persisted.
-        _require_single_path_component(value, subject="generated publication journal entry")
+        require_single_path_component(value, subject="generated publication journal entry")
         return value
 
     @property
@@ -263,7 +263,7 @@ class GeneratedExportTransactionPaths:
         return staging
 
 
-def _require_single_path_component(value: str, *, subject: str) -> None:
+def require_single_path_component(value: str, *, subject: str) -> None:
     """Reject drive-relative or multi-component identifiers before path use."""
     posix_component = PurePosixPath(value)
     windows_component = PureWindowsPath(value)

@@ -18,7 +18,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -29,7 +29,7 @@ _M131_RESULTADO_ANTERIORES = "14"
 
 
 def _editions() -> tuple[ModeloRevision, ...]:
-    return tuple(_loaded_registry()[0]["100"].revisions.values())
+    return tuple(loaded_registry()[0]["100"].revisions.values())
 
 
 def _modelo_131_sources(revision: ModeloRevision) -> set[str]:

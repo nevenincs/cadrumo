@@ -122,7 +122,7 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
         tmp_path / "corrupt-pin-candidate",
         authority=source_authority(),
     )
-    cli._render_candidate(prepared_old)
+    cli.render_candidate(prepared_old)
     old_form.write_bytes(old_form_bytes + b"\n# intervening edit\n")
     try:
         with pytest.raises(RegistryValidationError, match="old manifest or form differs from reviewed bytes"):

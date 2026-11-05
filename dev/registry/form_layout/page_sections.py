@@ -19,42 +19,42 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 )
 
 from .column_vocabulary import SHARED_COLUMN_KEYS, shared_column_key
-from .generation_constants import _GENERAL_SECTION
-from .generation_models import _Build, _Item, _Position, _RowDraft, _SectionDraft
-from .heading_keys import _unique, column_form_heading_key, form_heading_key
+from .generation_constants import GENERAL_SECTION
+from .generation_models import Build, Item, Position, RowDraft, SectionDraft
+from .heading_keys import column_form_heading_key, form_heading_key, unique
 from .official_text import clean_official_text, description_path, node_slug
-from .repeating_blocks import _official_repeat_items, _repeating_section_items
+from .repeating_blocks import official_repeat_items, repeating_section_items
 
 
-def _section_key(position: _Position) -> tuple[str, ...]:
+def _section_key(position: Position) -> tuple[str, ...]:
     if position.xml_container is not None:
         return position.xml_container[2:3]
     return description_path(position.description).section
 
 
-def _items_for(build: _Build, index: int, primary: Mapping[str, int]) -> list[_Item]:
+def _items_for(build: Build, index: int, primary: Mapping[str, int]) -> list[Item]:
     position = build.positions[index]
     items = [
-        _Item(
+        Item(
             position=index, casilla_id=casilla_id, literal=position.literal, literal_decimals=position.literal_decimals
         )
         for casilla_id in position.casilla_ids
         if primary.get(casilla_id) == index
     ]
     items.extend(
-        _Item(position=index, binding_id=binding_id)
+        Item(position=index, binding_id=binding_id)
         for binding_id in position.binding_ids
         if build.binding_primary.get(binding_id) == index
     )
     if not items and position.literal is not None and position.box is not None:
-        items.append(_Item(position=index, literal=position.literal, literal_decimals=position.literal_decimals))
+        items.append(Item(position=index, literal=position.literal, literal_decimals=position.literal_decimals))
     return items
 
 
-def _page_sections(build: _Build, indexes: Sequence[int], primary: Mapping[str, int]) -> list[_SectionDraft]:
+def page_sections(build: Build, indexes: Sequence[int], primary: Mapping[str, int]) -> list[SectionDraft]:
     """Group a page's positions into contiguous runs sharing a heading path."""
     aliased = {index for anchors in build.anchors.values() for index in anchors[1:]}
-    drafts: list[_SectionDraft] = []
+    drafts: list[SectionDraft] = []
     for index in indexes:
         items = _items_for(build, index, primary)
         if not items and index not in aliased:
@@ -62,16 +62,16 @@ def _page_sections(build: _Build, indexes: Sequence[int], primary: Mapping[str, 
         key = _section_key(build.positions[index])
         if not drafts or drafts[-1].key != key:
             heading = " - ".join(key) if key and build.positions[index].xml_container is None else None
-            drafts.append(_SectionDraft(key=key, heading=heading))
+            drafts.append(SectionDraft(key=key, heading=heading))
         drafts[-1].positions.append(index)
         drafts[-1].items.extend(items)
     return drafts
 
 
-def _row_drafts(build: _Build, items: Sequence[_Item]) -> list[_RowDraft | _Item]:
+def row_drafts(build: Build, items: Sequence[Item]) -> list[RowDraft | Item]:
     """Split a section's items into row candidates and lone items."""
-    out: list[_RowDraft | _Item] = []
-    current: _RowDraft | None = None
+    out: list[RowDraft | Item] = []
+    current: RowDraft | None = None
     for item in items:
         position = build.positions[item.position]
         path = description_path(position.description) if position.xml_container is None else description_path(None)
@@ -80,14 +80,14 @@ def _row_drafts(build: _Build, items: Sequence[_Item]) -> list[_RowDraft | _Item
             out.append(item)
             continue
         if current is None or current.stem != path.stem or path.column in current.columns:
-            current = _RowDraft(stem=path.stem, columns=[], items=[])
+            current = RowDraft(stem=path.stem, columns=[], items=[])
             out.append(current)
         current.columns.append(path.column)
         current.items.append(item)
     return out
 
 
-def _signature(columns: Sequence[str]) -> tuple[str, ...]:
+def page_sections_signature(columns: Sequence[str]) -> tuple[str, ...]:
     return tuple(shared_column_key(column) or node_slug(column) for column in columns)
 
 
@@ -96,11 +96,11 @@ def _is_subsequence(candidate: Sequence[str], whole: Sequence[str]) -> bool:
     return all(any(token == value for value in iterator) for token in candidate)
 
 
-def _section_slug(key: Sequence[str]) -> str:
-    return node_slug("-".join(key)) if key else _GENERAL_SECTION
+def section_slug(key: Sequence[str]) -> str:
+    return node_slug("-".join(key)) if key else GENERAL_SECTION
 
 
-def _cell(item: _Item) -> FormCell:
+def _cell(item: Item) -> FormCell:
     if item.casilla_id is not None and item.literal is not None:
         return FormCell(
             kind=FormCellKind.DESIGN_CONSTANT,
@@ -117,7 +117,7 @@ def _cell(item: _Item) -> FormCell:
     )
 
 
-def _field_block(block_id: str, item: _Item) -> FormFieldBlock | None:
+def _field_block(block_id: str, item: Item) -> FormFieldBlock | None:
     if item.casilla_id is not None:
         return FormFieldBlock(
             id=block_id,
@@ -130,11 +130,11 @@ def _field_block(block_id: str, item: _Item) -> FormFieldBlock | None:
     return None
 
 
-_GridDraft = tuple[list[str], list[tuple[_RowDraft, tuple[str, ...]]]]
+_GridDraft = tuple[list[str], list[tuple[RowDraft, tuple[str, ...]]]]
 
 
 def _flush_grid(
-    build: _Build,
+    build: Build,
     grid: _GridDraft | None,
     blocks: list[FormBlockDefinition],
     block_ids: set[str],
@@ -142,7 +142,7 @@ def _flush_grid(
     if grid is None:
         return
     column_keys, rows = grid
-    blocks.append(_grid_block(build, column_keys, rows, _unique("grid", block_ids)))
+    blocks.append(_grid_block(build, column_keys, rows, unique("grid", block_ids)))
 
 
 def _grid_is_warranted(signature: tuple[str, ...], page_signatures: Counter[tuple[str, ...]]) -> bool:
@@ -150,27 +150,27 @@ def _grid_is_warranted(signature: tuple[str, ...], page_signatures: Counter[tupl
     return len(signature) >= 2 and (shared or page_signatures[signature] >= 2)
 
 
-def _append_field_items(items: Sequence[_Item], blocks: list[FormBlockDefinition], block_ids: set[str]) -> None:
+def _append_field_items(items: Sequence[Item], blocks: list[FormBlockDefinition], block_ids: set[str]) -> None:
     for item in items:
-        block = _field_block(_unique("field", block_ids), item)
+        block = _field_block(unique("field", block_ids), item)
         if block is not None:
             blocks.append(block)
 
 
 def _append_section_entry(
-    build: _Build,
-    entry: _RowDraft | _Item,
+    build: Build,
+    entry: RowDraft | Item,
     *,
     page_signatures: Counter[tuple[str, ...]],
     grid: _GridDraft | None,
     blocks: list[FormBlockDefinition],
     block_ids: set[str],
 ) -> _GridDraft | None:
-    if not isinstance(entry, _RowDraft):
+    if not isinstance(entry, RowDraft):
         _flush_grid(build, grid, blocks, block_ids)
         _append_field_items((entry,), blocks, block_ids)
         return None
-    signature = _signature(entry.columns)
+    signature = page_sections_signature(entry.columns)
     if not _grid_is_warranted(signature, page_signatures):
         _flush_grid(build, grid, blocks, block_ids)
         _append_field_items(entry.items, blocks, block_ids)
@@ -182,9 +182,9 @@ def _append_section_entry(
     return (list(signature), [(entry, signature)])
 
 
-def _section_blocks(
-    build: _Build,
-    draft: _SectionDraft,
+def section_blocks(
+    build: Build,
+    draft: SectionDraft,
     *,
     page_signatures: Counter[tuple[str, ...]],
     repeating: Mapping[str, ExportRecordDefinition],
@@ -192,10 +192,10 @@ def _section_blocks(
 ) -> list[FormBlockDefinition]:
     blocks: list[FormBlockDefinition] = []
     block_ids: set[str] = set()
-    plain = _repeating_section_items(build, draft, repeating, emitted_repeating, blocks, block_ids)
-    plain = _official_repeat_items(build, plain, emitted_repeating, blocks, block_ids)
+    plain = repeating_section_items(build, draft, repeating, emitted_repeating, blocks, block_ids)
+    plain = official_repeat_items(build, plain, emitted_repeating, blocks, block_ids)
     grid: _GridDraft | None = None
-    for entry in _row_drafts(build, plain):
+    for entry in row_drafts(build, plain):
         grid = _append_section_entry(
             build,
             entry,
@@ -209,9 +209,9 @@ def _section_blocks(
 
 
 def _grid_block(
-    build: _Build,
+    build: Build,
     column_keys: Sequence[str],
-    rows: Sequence[tuple[_RowDraft, tuple[str, ...]]],
+    rows: Sequence[tuple[RowDraft, tuple[str, ...]]],
     block_id: str,
 ) -> FormGridBlock:
     first_row = rows[0][0]
@@ -227,7 +227,7 @@ def _grid_block(
     grid_rows: list[FormGridRow] = []
     for row, signature in rows:
         by_key = dict(zip(signature, row.items, strict=True))
-        row_key = _unique(node_slug(row.stem), used_rows)
+        row_key = unique(node_slug(row.stem), used_rows)
         grid_rows.append(
             FormGridRow(
                 key=row_key,

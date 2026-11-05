@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 
 from .semantic_map import SemanticMap
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
+LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
 """Shape of the projection ``normalised_loader_semantics`` attests.
 
 Every committed manifest's ``loader_semantic_sha256`` is a digest of this
@@ -202,7 +202,7 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
     normalised_entries = [_normalise_semantic_map_entry(entry) for entry in entries]
     normalised_entries.sort(key=_semantic_entry_sort_key)
     records = _as_object_list(payload["records"], subject="semantic-map records")
-    normalised_records = [_normalise_semantic_map_record(record) for record in records]
+    normalised_records = [normalise_semantic_map_record(record) for record in records]
     normalised_records.sort(key=_semantic_record_sort_key)
     variable_envelopes = _as_object_list(payload["variable_envelopes"], subject="semantic-map variable envelopes")
     normalised_variable_envelopes = [_normalise_variable_envelope_contract(envelope) for envelope in variable_envelopes]
@@ -240,7 +240,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     ]
     overrides.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary override field_id"))
     projected: dict[str, object] = {
-        "loader_semantic_schema_version": _LOADER_SEMANTIC_SCHEMA_VERSION,
+        "loader_semantic_schema_version": LOADER_SEMANTIC_SCHEMA_VERSION,
         "id": payload["id"],
         "format": payload["format"],
         "dictionary_source_ref": payload["dictionary_source_ref"],
@@ -277,7 +277,7 @@ def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, 
     return tuple(sorted(drift))
 
 
-def _omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+def omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
         if field[key] is None:
             del field[key]
@@ -398,7 +398,7 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
     )
 
 
-def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+def normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
     discriminator = payload["discriminator"]
     normalised_discriminator: dict[str, object] | None = None
@@ -517,7 +517,7 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
     }
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
         normalised[key] = payload[key]
-    return _omit_undeclared_field_keys(normalised)
+    return omit_undeclared_field_keys(normalised)
 
 
 #: Projected arrays whose members carry a stable identity, keyed by the member

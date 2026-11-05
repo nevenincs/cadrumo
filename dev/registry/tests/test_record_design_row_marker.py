@@ -22,7 +22,7 @@ import pytest
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_rows import parse_pdf_row
-from .test_every_bundled_design_is_read_or_reported import _bundled_designs
+from .test_every_bundled_design_is_read_or_reported import bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,7 +52,7 @@ def test_an_unlettered_prose_line_is_still_refused() -> None:
 
 def test_the_bundled_modelo_604_design_reads_both_records_whole() -> None:
     """The real corpus case: before this, its transactions record held a hole at 325."""
-    matches = [path for path in _bundled_designs() if path.name.startswith("02-604-diseno-de-registro-atf")]
+    matches = [path for path in bundled_designs() if path.name.startswith("02-604-diseno-de-registro-atf")]
     assert matches, "the bundled modelo 604 ATF design is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])

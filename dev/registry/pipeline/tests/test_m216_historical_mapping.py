@@ -17,8 +17,8 @@ from ...compiler.form_layout_integrity import form_layout_failures, form_layout_
 from ...compiler.loader import load_modelo_directory
 from ...form_layout.reconciliation import install_authored_export_reconciliation, reconcile_authored_export_addition
 from ...form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
-from .._export_tree import render_complete_export_tree
 from ..authored_form_bridge import prepare_authored_form_bridge
+from ..export_tree import render_complete_export_tree
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -17,19 +17,19 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ...pipeline.record_design_intermediate import RecordDesignIntermediateField
-from .._dp30302_field_matrix import (
+from ..dp30302_field_matrix import (
     DP30302_EPOCH_COORDINATES,
     DP30302_EPOCHS,
     DP30302EpochFieldMatrix,
     DP30302FieldPartition,
     DP30302RepeatingModuleFamily,
     DP30302RepeatingModuleFamilyEpoch,
-    _measure_dp30302_epoch,
     classify_dp30302_field_description,
     dp30302_activity_slot,
     generalize_dp30302_field_description,
     load_dp30302_epoch_intermediates,
     load_dp30302_field_matrix,
+    measure_dp30302_epoch,
     measure_dp30302_field_matrix,
     resolve_dp30302_module_sub_indices,
 )
@@ -316,7 +316,7 @@ def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> No
             ),
         },
     )
-    reclassified_epoch, _, _ = _measure_dp30302_epoch(
+    reclassified_epoch, _, _ = measure_dp30302_epoch(
         repartitioned_intermediate,
         epoch="2023",
     )

@@ -32,7 +32,7 @@ import pytest
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -66,7 +66,7 @@ _MODELOS = [
 def test_validator_accepts_committed_definition(
     mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
 ) -> None:
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     assert modelo.tax_domain == "iva"
@@ -77,7 +77,7 @@ def test_validator_accepts_committed_definition(
 def test_approval_and_plazo_resolve_as_legal_authority(
     mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
 ) -> None:
-    _, catalogues = _committed_modelo(mid)
+    _, catalogues = committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"

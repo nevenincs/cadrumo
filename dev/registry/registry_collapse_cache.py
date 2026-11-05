@@ -12,11 +12,11 @@ from tomlkit.items import Table
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.compiler.loader_cache import discover_modelo_sources
 
-from .registry_collapse_comparison import _typed_projection
-from .registry_collapse_models import _MODELOS, CheckStatus
+from .registry_collapse_comparison import typed_projection
+from .registry_collapse_models import MODELOS, CheckStatus
 
 
-def _cache_invalidation_probe(registry_root: Path, probe_root: Path) -> Mapping[str, object]:
+def cache_invalidation_probe(registry_root: Path, probe_root: Path) -> Mapping[str, object]:
     """Exercise warm reuse and source/support invalidation on isolated copies."""
     try:
         cold_warm_same_object, source_invalidated = _source_cache_invalidation(registry_root, probe_root)
@@ -34,7 +34,7 @@ def _cache_invalidation_probe(registry_root: Path, probe_root: Path) -> Mapping[
 
 
 def _source_cache_invalidation(registry_root: Path, probe_root: Path) -> tuple[bool, bool]:
-    source = discover_modelo_sources(registry_root / _MODELOS)[0].path
+    source = discover_modelo_sources(registry_root / MODELOS)[0].path
     modelo_probe = probe_root / "modelo"
     shutil.copytree(source, modelo_probe)
     cold = load_modelo_directory(modelo_probe)
@@ -43,9 +43,7 @@ def _source_cache_invalidation(registry_root: Path, probe_root: Path) -> tuple[b
     manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8", newline="\n")
     changed = load_modelo_directory(modelo_probe)
     cold_warm_same_object = cold is warm
-    invalidated = (
-        cold_warm_same_object and changed is not warm and _typed_projection(changed) == _typed_projection(warm)
-    )
+    invalidated = cold_warm_same_object and changed is not warm and typed_projection(changed) == typed_projection(warm)
     return cold_warm_same_object, invalidated
 
 
@@ -61,7 +59,7 @@ def _support_cache_invalidation(registry_root: Path, probe_root: Path) -> tuple[
     support_file.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
     try:
         support_after = load_shared_catalogues(legal_probe.parent).supported_filing_years
-        return _typed_projection(support_before) != _typed_projection(support_after), None
+        return typed_projection(support_before) != typed_projection(support_after), None
     except Exception as exc:
         return True, f"changed support metadata refused: {type(exc).__name__}: {exc}"
 

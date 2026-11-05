@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
+from dev.registry.compiler.toml_helpers import as_toml_table
 
 
 def _period_token(value: object) -> str | None:
@@ -20,7 +20,7 @@ def _period_token(value: object) -> str | None:
     return value.split()[-1].upper()
 
 
-def _selector_periods_for_year(table: Mapping[str, object], year: object) -> object:
+def selector_periods_for_year(table: Mapping[str, object], year: object) -> object:
     """The periods a selector serves in one filing year, honouring a ``period_overrides`` entry.
 
     A transition year files a narrower surface than the years around it: an
@@ -38,7 +38,7 @@ def _selector_periods_for_year(table: Mapping[str, object], year: object) -> obj
         overrides = table.get("period_overrides")
         if isinstance(overrides, list | tuple):
             for override in overrides:
-                override_table = _as_toml_table(override)
+                override_table = as_toml_table(override)
                 if override_table is not None and override_table.get("year") == year:
                     return override_table.get("periods")
     return table.get("periods")
@@ -57,8 +57,8 @@ def selector_covers(selector: object, member: object) -> bool:
     ``period``, never by its identifier: the identifier is a name, and for this
     family the year inside it is data that a rename can destroy.
     """
-    table = _as_toml_table(selector)
-    member_table = _as_toml_table(member)
+    table = as_toml_table(selector)
+    member_table = as_toml_table(member)
     if table is None or member_table is None:
         return True
     year = member_table.get("filing_year")
@@ -80,7 +80,7 @@ def _selector_covers_year(selector: Mapping[str, object], year: int) -> bool:
 
 def _selector_covers_period(selector: Mapping[str, object], member: Mapping[str, object], year: object) -> bool:
     period = _period_token(member.get("period"))
-    periods = _selector_periods_for_year(selector, year)
+    periods = selector_periods_for_year(selector, year)
     if period is None or not isinstance(periods, list | tuple):
         return True
     covered = {token for value in periods if (token := _period_token(value)) is not None}

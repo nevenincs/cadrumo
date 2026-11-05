@@ -36,7 +36,7 @@ def _formula(revision_id: str, formula_id: str, target: str) -> str:
     )
 
 
-def _casillas(revision_id: str) -> str:
+def casillas(revision_id: str) -> str:
     return "".join(
         f'[[revisions."{revision_id}".casillas]]\nid = "000{index}"\nnumber = "{index}"\n'
         f'section = ["liquidacion"]\ncontinuidad_id = "linaje-{index}"\n'
@@ -53,7 +53,7 @@ def _window(revision_id: str, year: int) -> str:
     )
 
 
-def _layout(revision_id: str, *records: str) -> str:
+def edition_family_delta_layout(revision_id: str, *records: str) -> str:
     text = (
         f'[[revisions."{revision_id}".export_layouts]]\nid = "fichero-boe"\n'
         f'legal_refs = ["{_REF}"]\nsource_refs = ["{_SOURCE}"]\n\n'
@@ -66,7 +66,7 @@ def _layout(revision_id: str, *records: str) -> str:
     return text
 
 
-def _modelo(root: Path) -> Path:
+def edition_family_delta_modelo(root: Path) -> Path:
     modelo_dir = root / "999"
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Collapse fixture")
@@ -93,12 +93,12 @@ def test_a_declared_position_is_kept_and_no_greedy_position_is_appended(tmp_path
     ``d`` into place and appended those three moves after the one already
     declared, so the family carried four positions for one move.
     """
-    source = _modelo(tmp_path / "source")
+    source = edition_family_delta_modelo(tmp_path / "source")
     write_sectioned_edition(
         source,
         "2024",
         sections={
-            "casillas": _casillas("2024"),
+            "casillas": casillas("2024"),
             "formulas": "".join(
                 _formula("2024", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
             ),
@@ -126,12 +126,12 @@ def test_a_declared_position_is_kept_and_no_greedy_position_is_appended(tmp_path
 
 def test_the_order_is_restored_with_one_move_per_member_out_of_place(tmp_path: Path) -> None:
     """With no position declared the collapse emits the minimal set: one move, not three."""
-    source = _modelo(tmp_path / "source")
+    source = edition_family_delta_modelo(tmp_path / "source")
     write_sectioned_edition(
         source,
         "2024",
         sections={
-            "casillas": _casillas("2024"),
+            "casillas": casillas("2024"),
             "formulas": "".join(
                 _formula("2024", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
             ),
@@ -174,12 +174,12 @@ def test_the_order_is_restored_with_one_move_per_member_out_of_place(tmp_path: P
 
 def test_a_casilla_storage_baseline_declared_alone_leaves_the_families_as_authored(tmp_path: Path) -> None:
     """Reusing casilla storage is a decision about casillas; the families are not given a baseline for it."""
-    source = _modelo(tmp_path / "source")
+    source = edition_family_delta_modelo(tmp_path / "source")
     formulas = "".join(
         _formula("{rev}", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
     )
     write_sectioned_edition(
-        source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
+        source, "2024", sections={"casillas": casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
     )
     write_sectioned_edition(
         source,
@@ -202,12 +202,12 @@ def test_a_casilla_storage_baseline_declared_alone_leaves_the_families_as_author
 
 def test_a_family_baseline_the_author_declared_is_still_used(tmp_path: Path) -> None:
     """Detector teeth: the same restatement under a declared family baseline is collapsed."""
-    source = _modelo(tmp_path / "source")
+    source = edition_family_delta_modelo(tmp_path / "source")
     formulas = "".join(
         _formula("{rev}", formula_id, f"000{index}") for index, formula_id in enumerate(_FORMULAS, start=1)
     )
     write_sectioned_edition(
-        source, "2024", sections={"casillas": _casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
+        source, "2024", sections={"casillas": casillas("2024"), "formulas": formulas.replace("{rev}", "2024")}
     )
     write_sectioned_edition(
         source,
@@ -237,25 +237,30 @@ def _layout_modelo(root: Path, *, successor_layout: str, successor_extra: str = 
     The 2025 edition restates its casillas in full, which is what sends the
     collapse over it; the layout is the family under test.
     """
-    source = _modelo(root)
+    source = edition_family_delta_modelo(root)
     write_sectioned_edition(
         source,
         "2024",
-        sections={"casillas": _casillas("2024"), "export_layouts": _layout("2024", "cabecera", "detalle")},
+        sections={
+            "casillas": casillas("2024"),
+            "export_layouts": edition_family_delta_layout("2024", "cabecera", "detalle"),
+        },
     )
     sections = {"export_layouts": successor_layout} if successor_layout else {}
     write_sectioned_edition(
         source,
         "2025",
         manifest_extra='family_storage_baseline = "2024"\nscoped_families = ["export_layouts"]\n' + successor_extra,
-        sections={"casillas": _casillas("2025"), **sections},
+        sections={"casillas": casillas("2025"), **sections},
     )
     return source
 
 
 def test_a_layout_whose_records_differ_stays_stated_whole(tmp_path: Path) -> None:
     """An export layout is a per-edition statement: it is never folded into a record-replacing override."""
-    source = _layout_modelo(tmp_path / "source", successor_layout=_layout("2025", "cabecera-2025", "detalle-2025"))
+    source = _layout_modelo(
+        tmp_path / "source", successor_layout=edition_family_delta_layout("2025", "cabecera-2025", "detalle-2025")
+    )
     candidate = tmp_path / "candidate" / "999"
 
     collapse_keyed_families(source, candidate)
@@ -271,7 +276,9 @@ def test_a_layout_whose_records_differ_stays_stated_whole(tmp_path: Path) -> Non
 
 def test_an_identical_layout_is_still_inherited(tmp_path: Path) -> None:
     """The normal path: a layout the edition restates unchanged is dropped and inherited through its scope."""
-    source = _layout_modelo(tmp_path / "source", successor_layout=_layout("2025", "cabecera", "detalle"))
+    source = _layout_modelo(
+        tmp_path / "source", successor_layout=edition_family_delta_layout("2025", "cabecera", "detalle")
+    )
     candidate = tmp_path / "candidate" / "999"
 
     collapse_keyed_families(source, candidate)
@@ -306,15 +313,15 @@ def test_a_record_folding_override_is_reported_and_stated_again(tmp_path: Path) 
 
 
 def _window_modelo(root: Path, *, successor_extra: str) -> Path:
-    source = _modelo(root)
+    source = edition_family_delta_modelo(root)
     write_sectioned_edition(
-        source, "2024", sections={"casillas": _casillas("2024"), "deadline_windows": _window("2024", 2024)}
+        source, "2024", sections={"casillas": casillas("2024"), "deadline_windows": _window("2024", 2024)}
     )
     write_sectioned_edition(
         source,
         "2025",
         manifest_extra='family_storage_baseline = "2024"\n' + successor_extra,
-        sections={"casillas": _casillas("2025"), "deadline_windows": _window("2025", 2025)},
+        sections={"casillas": casillas("2025"), "deadline_windows": _window("2025", 2025)},
     )
     return source
 

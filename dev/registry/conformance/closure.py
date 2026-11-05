@@ -72,7 +72,7 @@ type RegistryClosurePredicateRefusalReason = (
     ]
 )
 
-_TEMPORAL_WORK_ITEMS: Final[dict[str, str]] = {
+TEMPORAL_WORK_ITEMS: Final[dict[str, str]] = {
     "law_selection_refused": "registry-temporal-coverage:law-selection",
     "selected_revision_mismatch": "registry-temporal-coverage:law-selection",
     "undeclared_authority_grade": "registry-temporal-coverage:authority-grade",
@@ -437,7 +437,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
             owner=refusal.disposition.owner,
             work_item=refusal.disposition.work_item,
             reconsideration_condition=refusal.disposition.reconsideration_condition,
-            filing_channels=_render_filing_channels(refusal),
+            filing_channels=render_filing_channels(refusal),
             detail=refusal.detail,
         )
         for row in report.rows
@@ -465,7 +465,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
     return "\n".join(lines)
 
 
-def _render_filing_channels(refusal: RegistryClosurePredicateRefusal) -> str:
+def render_filing_channels(refusal: RegistryClosurePredicateRefusal) -> str:
     """Render one refusal's per-channel filing states as a stable token list.
 
     The two filing channels fail for materially different reasons: public
@@ -489,7 +489,7 @@ def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClos
     failure_detail = coverage.failure_detail
     if failure_code is None or failure_detail is None:
         raise ValueError("a temporal coverage refusal must carry both its failure code and its detail")
-    work_item = _TEMPORAL_WORK_ITEMS[failure_code]
+    work_item = TEMPORAL_WORK_ITEMS[failure_code]
     return RegistryClosurePredicateRefusal(
         limb="temporal_coverage",
         reason=failure_code,

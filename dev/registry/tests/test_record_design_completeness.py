@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _modelo_200_record_design_corpus_path() -> Path:
     """Return the corpus path of the Modelo 200 record-design Diseño."""
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
     source_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
@@ -66,7 +66,7 @@ def _record_design_corpus_paths(modelo_id: str) -> tuple[Path, ...]:
     would silently stop covering anything the moment that lands, and would still
     pass, which is the failure this helper exists to avoid.
     """
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == modelo_id)
     paths: list[Path] = []
     for revision in modelo.revisions.values():

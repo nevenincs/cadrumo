@@ -29,12 +29,12 @@ from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
-from ._export_tree import render_complete_export_tree
+from .export_tree import render_complete_export_tree
 from .export_tree_models import RenderedExportTree
 from .generated_form_bridge import generated_form_interpreting_input_digest, registry_evidence_content_digest
 from .render_check import (
     RevisionRenderInputs,
-    _revision_render_inputs,
+    build_revision_render_inputs,
     compare_export_tree_roots,
     revision_render_inputs,
 )
@@ -57,7 +57,7 @@ class _RepairTarget:
     exact_findings: frozenset[str] | None = None
 
 
-_REVIEWED_TARGETS = {
+REVIEWED_TARGETS = {
     (_MODELO, _REVISION, _SOURCE_REF, 2016, "0A", _OLD_MANIFEST_SHA256): _RepairTarget(
         _SOURCE_SHA256, "generated-modelo-232-2016-2017-fichero", 140
     ),
@@ -133,7 +133,7 @@ _REVIEWED_TARGETS = {
 }
 
 
-def _validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -> None:
+def validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -> None:
     exact = target.exact_findings
     if len(findings) != target.finding_count or (
         frozenset(findings) != exact
@@ -177,9 +177,9 @@ def validated_historical_repair_source(
         collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
     )
     original = inspect_authoring_candidate(registry_root, source_root, identity=initial_identity)
-    _validate_repair_findings(target, original.findings)
+    validate_repair_findings(target, original.findings)
     definition = _reviewed_repair_definition(original, source_ref, target, modelo)
-    preliminary = _revision_render_inputs(
+    preliminary = build_revision_render_inputs(
         definition,
         original.components.catalogues,
         modelo=modelo,
@@ -282,7 +282,7 @@ def _reviewed_repair_target(
 ) -> tuple[_RepairTarget, str]:
     if expected_manifest_sha256 is None:
         raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
-    target = _REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
+    target = REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
     if target is None:
         raise RegistryValidationError(
             "historical repair requires an exact reviewed M232/2016 or M720/2024 target and manifest"

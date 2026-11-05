@@ -9,19 +9,17 @@ from typing import Literal
 
 from pydantic import Field, NonNegativeInt
 
-from cadrumo.core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
+from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError as _RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import (
-    derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
+    derive_export_layouts_from_bindings,
 )
-from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries as _xml_dictionary_entries
-from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
-from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition as _ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference as _SourceReference
+from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from .coverage import CoverageAuthorityScope
 from .model import ConformanceModel
@@ -86,10 +84,10 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
     mapping contract.
     """
 
-    modelo: _ModeloId
+    modelo: ModeloId
     filing_year: FilingYear
     period: str
-    law_selected_revision: _RevisionId
+    law_selected_revision: RevisionId
     identity_measurement: _MeasurementStatus
     printed_form_membership: _MeasurementStatus
     xsd_only_attributes: _MeasurementStatus
@@ -126,17 +124,17 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
 class _AnnualPopulationContext:
     """Selected revision facts shared by filing and inspection comparisons."""
 
-    revision: _ModeloRevision
-    layouts: tuple[_ExportLayoutDefinition, ...]
-    modelo: _ModeloId
+    revision: ModeloRevision
+    layouts: tuple[ExportLayoutDefinition, ...]
+    modelo: ModeloId
     filing_year: int
     period: str
-    sources: Mapping[str, _SourceReference]
+    sources: Mapping[str, SourceReference]
     authority_scope: CoverageAuthorityScope
 
 
 def compare_annual_casilla_population(
-    snapshot: _RegistrySnapshot,
+    snapshot: RegistrySnapshot,
     *,
     source_root: Path | None = None,
 ) -> AnnualCasillaPopulationComparison:
@@ -181,11 +179,11 @@ def compare_annual_casilla_population(
 
 def compare_annual_casilla_population_for_revision(
     *,
-    modelo: _ModeloId,
-    revision: _ModeloRevision,
+    modelo: ModeloId,
+    revision: ModeloRevision,
     filing_year: int,
     period: str,
-    sources: Mapping[str, _SourceReference],
+    sources: Mapping[str, SourceReference],
     source_root: Path | None = None,
 ) -> AnnualCasillaPopulationComparison:
     """Compare an explicitly-supplied revision read to its XML dictionaries.
@@ -199,7 +197,7 @@ def compare_annual_casilla_population_for_revision(
     return _compare_annual_population(
         _AnnualPopulationContext(
             revision=revision,
-            layouts=_derive_export_layouts_from_bindings(revision),
+            layouts=derive_export_layouts_from_bindings(revision),
             modelo=modelo,
             filing_year=filing_year,
             period=period,
@@ -253,13 +251,13 @@ def _compare_annual_population(
 
 
 def _compare_dictionary_layout(
-    layout: _ExportLayoutDefinition,
+    layout: ExportLayoutDefinition,
     *,
     registry_ids: frozenset[str],
     registry_internal_only_count: int,
     printed_form_status: _MeasurementStatus,
     xsd_status: _MeasurementStatus,
-    sources: Mapping[str, _SourceReference],
+    sources: Mapping[str, SourceReference],
     source_root: Path | None,
 ) -> DictionaryLayoutCasillaComparison:
     """Measure one layout, keeping unsupported and unavailable sources visible."""
@@ -277,7 +275,7 @@ def _compare_dictionary_layout(
     def measured(**fields: object) -> DictionaryLayoutCasillaComparison:
         return DictionaryLayoutCasillaComparison.model_validate({**base, **fields})
 
-    if layout.format is not _ExportLayoutFormat.XML_DICTIONARY:
+    if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
         return measured(
             identity_measurement="unsupported",
             diagnostic="dictionary comparator supports only xml_dictionary layouts",
@@ -288,7 +286,7 @@ def _compare_dictionary_layout(
             diagnostic="xml_dictionary layout has no dictionary source reference",
         )
     try:
-        entries = _xml_dictionary_entries(
+        entries = xml_dictionary_entries(
             layout,
             sources=sources,
             source_payloads=(
@@ -297,7 +295,7 @@ def _compare_dictionary_layout(
                 else {str(source.id): (source_root / source.corpus_path).read_bytes() for source in sources.values()}
             ),
         )
-    except (_RegistryValidationError, OSError) as exc:
+    except (RegistryValidationError, OSError) as exc:
         return measured(
             identity_measurement="unmeasured",
             parser_exposed_attributes=_XML_DICTIONARY_PARSER_ATTRIBUTES,
@@ -319,7 +317,7 @@ def _compare_dictionary_layout(
 
 def _source_refs_of_kind(
     source_refs: Sequence[str],
-    sources: Mapping[str, _SourceReference],
+    sources: Mapping[str, SourceReference],
     kind: str,
 ) -> tuple[str, ...]:
     """Return resolved source ids of one declared kind in declaration order."""

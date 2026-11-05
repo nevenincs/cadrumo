@@ -8,7 +8,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .casilla_lineage_seed_design import DesignInventory, _cite, printed_box
+from .casilla_lineage_seed_design import DesignInventory, cite, printed_box
 from .casilla_lineage_seed_types import LineagePlan, LineageRefusalCategory
 
 
@@ -96,7 +96,7 @@ def _classify_printed_box(
         successor.id,
         casilla,
         CasillaLineageOrigin.NEW_ON_FORM,
-        f"{_cite(successor_design, successor_line)} prints box [{box}]; {_cite(previous_design, None)} prints no box "
+        f"{cite(successor_design, successor_line)} prints box [{box}]; {cite(previous_design, None)} prints no box "
         f"[{box}] and retires none",
     )
 
@@ -117,7 +117,7 @@ def _classify_predecessor_printing(
         successor.id,
         casilla,
         CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT,
-        f"{_cite(previous_design, previous_line)} prints box [{box}] ({previous_design.snippet(previous_line)}); "
+        f"{cite(previous_design, previous_line)} prints box [{box}] ({previous_design.snippet(previous_line)}); "
         f"edition {previous.id} declares no row for it",
     )
 

@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ _MARITIME_PATH_BINDING = "renta-maritime-path-rebeca"
 
 
 def _editions() -> tuple[ModeloRevision, ...]:
-    return tuple(_loaded_registry()[0]["100"].revisions.values())
+    return tuple(loaded_registry()[0]["100"].revisions.values())
 
 
 def _casilla(revision: ModeloRevision, casilla_id: str) -> CasillaDefinition:

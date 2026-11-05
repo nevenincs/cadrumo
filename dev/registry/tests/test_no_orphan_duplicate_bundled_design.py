@@ -36,7 +36,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,7 +50,7 @@ def _design_root() -> Path:
 
 
 def _claimed_paths() -> set[str]:
-    _, catalogues = _committed_registry_tree()
+    _, catalogues = committed_registry_tree()
     return {Path(str(s.corpus_path)).as_posix() for s in catalogues.sources.values()}
 
 

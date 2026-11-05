@@ -39,7 +39,7 @@ from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupport
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -100,7 +100,7 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     doubled window, which a total cannot distinguish from a legitimately added
     year, and it stays true as eras are split or extended.
     """
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain == domain
     committed_registry_validator(catalogues).validate_modelo(modelo)
@@ -174,7 +174,7 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
     closes_on: date,
 ) -> None:
     """The law selects each design era with its deadline, inside the support envelope or not."""
-    modelo, catalogues = _committed_modelo("763")
+    modelo, catalogues = committed_modelo("763")
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
     revision = select_revision(modelo, filing_year=filing_year, period=period)
@@ -204,7 +204,7 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
 
 def test_modelo_763_projects_the_current_design_through_every_supported_year() -> None:
     """Every year the support envelope admits resolves to the open-ended design era."""
-    modelo, catalogues = _committed_modelo("763")
+    modelo, catalogues = committed_modelo("763")
     open_revisions = [revision for revision in modelo.revisions.values() if revision.valid_to is None]
     assert len(open_revisions) == 1
     (current,) = open_revisions
@@ -228,7 +228,7 @@ def test_modelo_763_projects_the_current_design_through_every_supported_year() -
 @pytest.mark.parametrize("filing_year,period", [(2011, "4T"), (2012, "1T")])
 def test_modelo_763_refuses_the_unevidenced_opening_coordinates(filing_year: int, period: str) -> None:
     """The tax had no filing window before its second 2012 quarter; no cadence inference fills one."""
-    modelo, _catalogues = _committed_modelo("763")
+    modelo, _catalogues = committed_modelo("763")
 
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=filing_year, period=period)

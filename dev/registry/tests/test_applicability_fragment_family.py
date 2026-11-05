@@ -27,7 +27,7 @@ from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCate
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_applicability_section import validate_applicability_section
 from ..conformance.schema_family_support import schema_family_enrollment_failures
-from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
+from .referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

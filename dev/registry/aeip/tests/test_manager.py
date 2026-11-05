@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
-from dev.paths import REPO_ROOT as _REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..adjudications import (
     AdjudicationSet,
@@ -58,7 +58,7 @@ _CHAIN_ID_ADAPTER = TypeAdapter(ContinuidadId)
 _LANDED_CHAIN_ID = "irpf-aeip-centenario-del-hockey-1923-2023-aplicado"
 
 
-_MODELOS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+_MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 _SHIPPED_ADJUDICATIONS = Path(__file__).resolve().parents[1] / "adjudications.toml"
 
 

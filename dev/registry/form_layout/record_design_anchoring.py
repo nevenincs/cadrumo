@@ -21,13 +21,13 @@ from ..record_design_labels import (
     read_record_design,
     record_design_sidecars,
 )
-from .generation_constants import _RECORD_MATCH_FLOOR
-from .generation_models import _Build, _Position
+from .generation_constants import RECORD_MATCH_FLOOR
+from .generation_models import Build, Position
 from .official_text import description_box, node_slug
 
 
 def _attach_export_field(
-    position: _Position,
+    position: Position,
     record: ExportRecordDefinition,
     export_field: ExportFieldDefinition,
     manual_bindings: Mapping[str, bool],
@@ -69,12 +69,12 @@ def _best_design_record(
     for design_record, rows in design.items():
         hits = sum(1 for offset, length in coordinates if offset in rows and rows[offset].length in (length, None))
         ratio = hits / len(coordinates)
-        if ratio >= _RECORD_MATCH_FLOOR and (best is None or ratio > best[0]):
+        if ratio >= RECORD_MATCH_FLOOR and (best is None or ratio > best[0]):
             best = (ratio, design_record)
     return None if best is None else best[1]
 
 
-def _design_rows(build: _Build, sources: Mapping[str, SourceReference]) -> dict[str, dict[int, RecordDesignRow]]:
+def _design_rows(build: Build, sources: Mapping[str, SourceReference]) -> dict[str, dict[int, RecordDesignRow]]:
     try:
         sidecars = record_design_sidecars(build.revision.source_refs, sources)
     except RecordDesignUnavailableError as error:
@@ -118,7 +118,7 @@ def _field_positions_by_design(
 
 
 def _append_design_positions(
-    build: _Build,
+    build: Build,
     design: Mapping[str, Mapping[int, RecordDesignRow]],
     fields_at: Mapping[tuple[str, int], Sequence[tuple[ExportRecordDefinition, ExportFieldDefinition]]],
     manual_bindings: Mapping[str, bool],
@@ -127,7 +127,7 @@ def _append_design_positions(
         page_key = node_slug(design_record)
         for offset, row in rows.items():
             label = row.label or None
-            position = _Position(
+            position = Position(
                 page_key=page_key,
                 page_ref=design_record,
                 description=label,
@@ -139,19 +139,19 @@ def _append_design_positions(
 
 
 def _append_unmatched_positions(
-    build: _Build,
+    build: Build,
     unmatched: Sequence[tuple[ExportRecordDefinition, ExportFieldDefinition]],
     manual_bindings: Mapping[str, bool],
 ) -> None:
     for record, export_field in unmatched:
-        position = _Position(page_key=node_slug(record.id), page_ref=record.id, description=None, box=None)
+        position = Position(page_key=node_slug(record.id), page_ref=record.id, description=None, box=None)
         _attach_export_field(position, record, export_field, manual_bindings)
         if position.casilla_ids or position.binding_ids:
             build.positions.append(position)
 
 
-def _record_design_positions(
-    build: _Build,
+def record_design_positions(
+    build: Build,
     sources: Mapping[str, SourceReference],
     records: Sequence[ExportRecordDefinition],
     manual_bindings: Mapping[str, bool],

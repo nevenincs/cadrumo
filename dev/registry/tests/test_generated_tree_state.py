@@ -17,7 +17,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..analysis import generated_tree_state as _generated_tree_state_module
+from ..analysis import generated_tree_state
 from ..analysis.generated_tree_state import STATES, classify_comparison, generated_state_inventory, tree_states
 from ..compiler.authority import compiled_bundled_authority
 
@@ -105,7 +105,7 @@ def test_a_comparison_failure_is_excluded_not_reported_reproducible(
     def _broken_compare(authority: object, *, modelo: str, revision: str, **_roots: object) -> object:
         raise ValueError(f"synthetic comparison failure for {modelo}/{revision}")
 
-    monkeypatch.setattr(_generated_tree_state_module, "compare_revision_against_committed", _broken_compare)
+    monkeypatch.setattr(generated_tree_state, "compare_revision_against_committed", _broken_compare)
 
     states = tree_states(authority, (modelo_id,))
 

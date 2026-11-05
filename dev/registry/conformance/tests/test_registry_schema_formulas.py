@@ -28,19 +28,17 @@ from ..loader_directory_mode_support import (
     write_fragmented_modelo_from_text,
 )
 from ..registry_schema_support import (
-    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
+    NUMERIC_CASILLA_01,
+    committed_registry,
 )
 from ..registry_schema_support import (
-    committed_registry as _committed_registry,
+    revision as committed_revision,
 )
-from ..registry_schema_support import (
-    revision as _revision,
-)
-from ._registry_schema_support import (
-    _committed_modelo_text,
-    _load_modelo_text,
-    _validate_revision,
-    _with_binding,
+from .registry_schema_support import (
+    committed_modelo_text,
+    load_modelo_text,
+    validate_revision,
+    with_binding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -189,8 +187,8 @@ def test_committed_registry_contains_no_zero_casilla_revisions(
 
 
 def test_revision_without_casillas_is_registry_validation_failure() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     empty_revision = revision.model_copy(
         update={
             "casillas": (),
@@ -207,11 +205,11 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         RegistryValidationError,
         match="revision must declare at least one casilla",
     ):
-        _validate_revision(modelo, catalogues, empty_revision)
+        validate_revision(modelo, catalogues, empty_revision)
 
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
-    modelo, catalogues = _committed_registry()
+    modelo, catalogues = committed_registry()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
     layout_only_snapshot = snapshot.model_copy(
         update={
@@ -241,7 +239,7 @@ def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() ->
 
 
 def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> None:
-    modelo, catalogues = _committed_registry()
+    modelo, catalogues = committed_registry()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
     source_id, source = next(iter(snapshot.sources.items()))
     workbook_id, workbook = next(iter(snapshot.workbook_parity_refs.items()))
@@ -275,10 +273,10 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
 
 
 def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
-    text = _committed_modelo_text() + '\n[source."local"]\nkind = "record_design"\n'
+    text = committed_modelo_text() + '\n[source."local"]\nkind = "record_design"\n'
 
     with pytest.raises(RegistryLoadError, match="must not define local legal/source"):
-        _load_modelo_text(tmp_path, text)
+        load_modelo_text(tmp_path, text)
 
 
 def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None:
@@ -294,7 +292,7 @@ def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None
     assert replacements == 1, "minimal typed fixture must contain its modelo-level legal evidence"
 
     with pytest.raises(RegistryLoadError, match="too_short"):
-        _load_modelo_text(tmp_path, mutated)
+        load_modelo_text(tmp_path, mutated)
 
 
 def test_modelo_file_rejects_casilla_binding_id_collision(tmp_path: Path) -> None:
@@ -334,25 +332,25 @@ source_refs = ["aeat-manual"]
 
 def test_validation_requires_source_integrity(tmp_path: Path) -> None:
     """Validation against a source root lacking the cited corpus refuses by name."""
-    modelo, catalogues = _committed_registry()
+    modelo, catalogues = committed_registry()
 
     with pytest.raises(RegistryValidationError, match=r"missing (extracted )?corpus"):
         RegistryValidator(catalogues, source_root=tmp_path).validate_modelo(modelo)
 
 
 def test_validator_rejects_duplicate_formula_targets() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     duplicate = revision.formulas[0].model_copy(update={"id": f"{revision.formulas[0].id}-duplicate"})
     mutated = revision.model_copy(update={"formulas": (*revision.formulas, duplicate)})
 
     with pytest.raises(RegistryValidationError, match="duplicate formula target"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_id_matching_casilla_id() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     formula = revision.formulas[0]
     renamed_formula = formula.model_copy(update={"id": formula.target_casilla_id})
     casillas = tuple(
@@ -365,12 +363,12 @@ def test_validator_rejects_formula_id_matching_casilla_id() -> None:
     mutated = revision.model_copy(update={"casillas": casillas, "formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match=f"duplicate registry id '{formula.target_casilla_id}'"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_reports_casilla_binding_id_collision_owners() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     collision_id = revision.casillas[0].id
     collision_binding = revision.bindings[0].model_copy(update={"id": collision_id})
     mutated = revision.model_copy(update={"bindings": (*revision.bindings, collision_binding)})
@@ -379,18 +377,18 @@ def test_validator_reports_casilla_binding_id_collision_owners() -> None:
         RegistryValidationError,
         match=rf"duplicate registry id '{re.escape(collision_id)}' shared by casilla, binding",
     ):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_target_mismatch() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     formula = revision.formulas[0]
-    mismatched_formula = formula.model_copy(update={"target_casilla_id": _NUMERIC_CASILLA_01})
+    mismatched_formula = formula.model_copy(update={"target_casilla_id": NUMERIC_CASILLA_01})
     mutated = revision.model_copy(update={"formulas": (mismatched_formula, *revision.formulas[1:])})
 
-    with pytest.raises(RegistryValidationError, match=f"targeting '{_NUMERIC_CASILLA_01}'"):
-        _validate_revision(modelo, catalogues, mutated)
+    with pytest.raises(RegistryValidationError, match=f"targeting '{NUMERIC_CASILLA_01}'"):
+        validate_revision(modelo, catalogues, mutated)
 
 
 @pytest.mark.parametrize("authority_grade", [RegistryAuthorityGrade.FILING, RegistryAuthorityGrade.APPLICABILITY])
@@ -398,29 +396,29 @@ def test_validator_requires_workbook_parity_for_filing_or_declared_layout(
     authority_grade: RegistryAuthorityGrade,
 ) -> None:
     """A parity anchor follows a filing claim or layout, never a bare schedule claim."""
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo).model_copy(
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo).model_copy(
         update={"authority_grade": authority_grade, "workbook_parity_refs": ()},
     )
 
     with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
-        _validate_revision(modelo, catalogues, revision)
+        validate_revision(modelo, catalogues, revision)
 
 
 def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> None:
-    text = _committed_modelo_text().replace(
+    text = committed_modelo_text().replace(
         'formula_coverage = "record_design_layout"',
         'formula_coverage = "formula_form"',
         1,
     )
 
     with pytest.raises(RegistryLoadError, match="formula coverage requires a runner"):
-        _load_modelo_text(tmp_path, text)
+        load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_formula_workbook_without_executable_parity_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     workbook = revision.workbook_parity_refs[0].model_copy(
         update={
             "formula_coverage": "formula_form",
@@ -431,12 +429,12 @@ def test_validator_rejects_formula_workbook_without_executable_parity_source() -
     mutated = revision.model_copy(update={"workbook_parity_refs": (workbook,)})
 
     with pytest.raises(RegistryValidationError, match="requires executable parity evidence source"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_layout_workbook_without_layout_authority_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     workbook = revision.workbook_parity_refs[0]
     source = catalogues.sources[workbook.workbook_source]
     mutated_catalogues = catalogues.model_copy(
@@ -449,12 +447,12 @@ def test_validator_rejects_layout_workbook_without_layout_authority_source() -> 
     )
 
     with pytest.raises(RegistryValidationError, match="requires layout_authority source evidence"):
-        _validate_revision(modelo, mutated_catalogues, revision)
+        validate_revision(modelo, mutated_catalogues, revision)
 
 
 def test_validator_rejects_formula_without_official_source_guidance() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     formulas = tuple(
         formula.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
         if formula.id == "modelo-130-pago-fraccionado-directa"
@@ -464,12 +462,12 @@ def test_validator_rejects_formula_without_official_source_guidance() -> None:
     mutated = revision.model_copy(update={"formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_citation_missing_from_official_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     formula = next(item for item in revision.formulas if item.id == "modelo-130-pago-fraccionado-directa")
     bad_citations = tuple(
         citation.model_copy(update={"required_text": ("official source does not contain this calculation anchor",)})
@@ -482,18 +480,18 @@ def test_validator_rejects_formula_citation_missing_from_official_source() -> No
     mutated = revision.model_copy(update={"formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_binding_citation_missing_from_official_source() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = committed_registry()
+    revision = committed_revision(modelo)
     binding = revision.bindings[0]
     bad_citations = tuple(
         citation.model_copy(update={"required_text": ("official source does not contain this binding anchor",)})
         for citation in binding.source_citations
     )
-    mutated = _with_binding(revision, binding.model_copy(update={"source_citations": bad_citations}))
+    mutated = with_binding(revision, binding.model_copy(update={"source_citations": bad_citations}))
 
     with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
-        _validate_revision(modelo, catalogues, mutated)
+        validate_revision(modelo, catalogues, mutated)

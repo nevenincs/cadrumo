@@ -91,7 +91,7 @@ class _WorkbookFieldRow:
 def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
     """Extract a record-design sheet from an openpyxl ``.xlsx`` worksheet."""
     header, header_correction = find_header(worksheet, corrections.header_corrections)
-    return _extract_sheet_rows(
+    return extract_sheet_rows(
         worksheet.title,
         header,
         enumerate(
@@ -106,7 +106,7 @@ def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_COR
 def extract_xls_sheet(worksheet: XlrdSheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
     """Extract a record-design sheet from a legacy xlrd ``.xls`` worksheet."""
     header, header_correction = find_xls_header(worksheet, corrections.header_corrections)
-    return _extract_sheet_rows(
+    return extract_sheet_rows(
         worksheet.name,
         header,
         ((rowx + 1, tuple(worksheet.row_values(rowx))) for rowx in range(header.row_number, worksheet.nrows)),
@@ -115,7 +115,7 @@ def extract_xls_sheet(worksheet: XlrdSheet, corrections: CorrectionIndex = EMPTY
     )
 
 
-def _extract_sheet_rows(
+def extract_sheet_rows(
     sheet_name: str,
     header: WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],

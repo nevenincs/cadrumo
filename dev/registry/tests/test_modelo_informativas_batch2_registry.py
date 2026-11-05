@@ -32,7 +32,7 @@ import pytest
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -79,7 +79,7 @@ _MODELOS = [
 def test_committed_definition_legal_refs_and_deadlines_are_grounded(
     mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
 ) -> None:
-    modelo, catalogues = _committed_modelo(mid)
+    modelo, catalogues = committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     committed_registry_validator(catalogues).validate_modelo(modelo)

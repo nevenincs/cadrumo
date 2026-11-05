@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -83,7 +83,7 @@ _AGES = (40, 64, 65, 74, 75, 90)
 
 
 def _revisions() -> dict[int, ModeloRevision]:
-    return {int(revision_id): revision for revision_id, revision in _loaded_registry()[0]["100"].revisions.items()}
+    return {int(revision_id): revision for revision_id, revision in loaded_registry()[0]["100"].revisions.items()}
 
 
 def _computed_years() -> tuple[int, ...]:

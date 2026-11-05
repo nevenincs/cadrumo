@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema_extraction import (
 )
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -29,7 +29,7 @@ _M202_PARSER = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 
 def _committed_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
     """Load the live Modelo 202 registry entry and its shared catalogues."""
-    return _committed_modelo("202")
+    return committed_modelo("202")
 
 
 def _provisional_m202_profile(modelo: ModeloDefinition) -> ExtractionProfileDefinition:

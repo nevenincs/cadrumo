@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 
 from ...compiler.authority import compiled_bundled_authority
-from .._export_tree import render_complete_export_tree
+from ..export_tree import render_complete_export_tree
 from ..render_check import RevisionRenderInputs, revision_render_inputs
 from ..render_profile import validate_render_profile
 from ..render_profile_rules import SingletonNumericRule

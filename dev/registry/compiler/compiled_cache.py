@@ -8,15 +8,15 @@ from pathlib import Path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
-from ._compiled_cache import (
-    _LOGGER,
-    _decode_and_validate,
-    _delete_cache_file,
-    _encode_frame,
-    _evict_stale_registry_pickles,
-    _loader_code_fingerprint,
-    _read_cache_bytes,
-    _registry_disk_cache_key,
+from .compiled_cache_support import (
+    LOGGER,
+    compiled_cache_loader_code_fingerprint,
+    decode_and_validate,
+    delete_cache_file,
+    encode_frame,
+    evict_stale_registry_pickles,
+    read_cache_bytes,
+    registry_disk_cache_key,
 )
 from .loader_cache import registry_disk_cache_dir
 
@@ -27,12 +27,12 @@ type FingerprintTuples = tuple[tuple[str, int, int, str], ...]
 @cache
 def loader_code_fingerprint() -> str:
     """Return the loader-source fingerprint, computed once on first use."""
-    return _loader_code_fingerprint()
+    return compiled_cache_loader_code_fingerprint()
 
 
 def compiled_cache_path(root: Path, fingerprints: FingerprintTuples) -> Path:
     """Return the compiled-cache file for ``root`` at the current fingerprint key."""
-    key_hash = _registry_disk_cache_key(str(root), fingerprints)
+    key_hash = registry_disk_cache_key(str(root), fingerprints)
     return registry_disk_cache_dir() / f"cadrumo_registry_{key_hash}.pkl"
 
 
@@ -41,12 +41,12 @@ def load_compiled_registry_cache(root: Path, fingerprints: FingerprintTuples) ->
     path = compiled_cache_path(root, fingerprints)
     if not path.is_file():
         return None
-    raw = _read_cache_bytes(path)
+    raw = read_cache_bytes(path)
     if raw is None:
         return None
-    payload = _decode_and_validate(raw)
+    payload = decode_and_validate(raw)
     if payload is None:
-        _delete_cache_file(path)
+        delete_cache_file(path)
         return None
     return payload
 
@@ -58,14 +58,14 @@ def store_compiled_registry_cache(
 ) -> None:
     """Persist a compiled payload at the current tree and loader-code key."""
     path = compiled_cache_path(root, fingerprints)
-    frame = _encode_frame(payload)
+    frame = encode_frame(payload)
     try:
         from cadrumo.core.atomic_write import atomic_write_best_effort_bytes
 
         atomic_write_best_effort_bytes(path, frame)
-        _evict_stale_registry_pickles(path.parent, logger=_LOGGER)
+        evict_stale_registry_pickles(path.parent, logger=LOGGER)
     except Exception:
-        _LOGGER.debug("Could not write compiled registry cache at %s", path, exc_info=True)
+        LOGGER.debug("Could not write compiled registry cache at %s", path, exc_info=True)
 
 
 __all__ = [

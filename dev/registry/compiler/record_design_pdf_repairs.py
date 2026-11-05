@@ -117,7 +117,7 @@ REVERSED_ROW_TAIL_RE = re.compile(
     r"^\s*(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<description>\S.*)$",
     re.IGNORECASE,
 )
-_REVERSED_ROW_HEAD_RE = re.compile(
+REVERSED_ROW_HEAD_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*(?P<tail>\[[^\]]*\]\s*)?$",
 )
 
@@ -125,12 +125,12 @@ _REVERSED_ROW_HEAD_RE = re.compile(
 #: A head half carrying description text after its position: ``79 1236 (2 a 6)
 #: [021]``. Admitted only under the continuity constraint below, never on the
 #: pattern alone -- prose beginning with two numbers is common.
-_REVERSED_ROW_HEAD_WITH_TAIL_RE = re.compile(
+REVERSED_ROW_HEAD_WITH_TAIL_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<trailing>\S.*)$",
 )
 
 
-def _continues(previous: PdfRow | None, ordinal: str, offset: int) -> bool:
+def continues(previous: PdfRow | None, ordinal: str, offset: int) -> bool:
     """Whether this ordinal and position resume exactly where ``previous`` ended.
 
     The same over-determination the glued-ordinal split relies on: the ordinal
@@ -226,7 +226,7 @@ def _rejoin_forward_column_pair(
     claimed: frozenset[tuple[str, int]],
 ) -> str | None:
     """Join a coordinate head followed by a length/naturaleza tail."""
-    head = _REVERSED_ROW_HEAD_RE.match(line)
+    head = REVERSED_ROW_HEAD_RE.match(line)
     tail = REVERSED_ROW_TAIL_RE.match(following)
     if head is None or tail is None or not _unparsed_pair(line, following, row_number):
         return None
@@ -251,14 +251,14 @@ def _rejoin_bled_column_pair(
 ) -> str | None:
     """Join a length/naturaleza tail with a continuity-checked bled head."""
     tail = REVERSED_ROW_TAIL_RE.match(line)
-    head = _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
-    if tail is None or head is None or _REVERSED_ROW_HEAD_RE.match(following) is not None:
+    head = REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
+    if tail is None or head is None or REVERSED_ROW_HEAD_RE.match(following) is not None:
         return None
     if not _unparsed_pair(line, following, row_number):
         return None
     ordinal = head.group("ordinal")
     offset = int(head.group("offset"))
-    if not _continues(previous, ordinal, offset) or (ordinal, offset) in claimed:
+    if not continues(previous, ordinal, offset) or (ordinal, offset) in claimed:
         return None
     return (
         f"{ordinal} {offset} {tail.group('length')} {tail.group('type')} "
@@ -274,7 +274,7 @@ def _rejoin_tail_column_pair(
 ) -> str | None:
     """Join a length/naturaleza tail followed by a bare coordinate head."""
     tail = REVERSED_ROW_TAIL_RE.match(line)
-    head = _REVERSED_ROW_HEAD_RE.match(following)
+    head = REVERSED_ROW_HEAD_RE.match(following)
     if tail is None or head is None or not _unparsed_pair(line, following, row_number):
         return None
     identity = (head.group("ordinal"), int(head.group("offset")))
@@ -362,7 +362,7 @@ def rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 #: row: ``99 1592 99 1592 17 Num ...``. The repeat is the evidence -- the line
 #: states the same two numbers twice, so dropping the first pair asserts nothing
 #: the row does not already say about itself.
-_STUTTERED_PDF_ROW_RE = re.compile(
+STUTTERED_PDF_ROW_RE = re.compile(
     r"^(?P<indent>\s*)(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P=ordinal)\s+(?P=offset)\s+(?P<rest>\d.*)$",
 )
 
@@ -371,22 +371,22 @@ _STUTTERED_PDF_ROW_RE = re.compile(
 #: own: ``54 827 Ajustes por valoracion [380]``. The line is not itself a row --
 #: it carries no length and no naturaleza -- so it can only be read together
 #: with the half that does.
-_COORDINATE_STUTTER_RE = re.compile(
+COORDINATE_STUTTER_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<rest>\S.*)$",
 )
 
 #: The other half: length, naturaleza and description with no coordinates at
 #: all, which is what a row whose coordinate column was lost leaves behind.
-_ORPHAN_MEASURE_RE = re.compile(
+ORPHAN_MEASURE_RE = re.compile(
     r"^\s*(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\.?\s+(?P<description>\S.*)$",
     re.IGNORECASE,
 )
 
 #: A casilla reference anywhere in a line.
-_ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
+ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
 
 
-def _previous_parsed_row(parsed: Sequence[PdfRow | None], before: int) -> PdfRow | None:
+def previous_parsed_row(parsed: Sequence[PdfRow | None], before: int) -> PdfRow | None:
     """Find the nearest parsed row before a source-line index."""
     return next((row for row in reversed(parsed[:before]) if row is not None), None)
 
@@ -397,21 +397,21 @@ def _previous_parsed_row(parsed: Sequence[PdfRow | None], before: int) -> PdfRow
 #: end, so the line must be EXACTLY ordinal, position and length and nothing
 #: else -- a looser pattern that tolerated a trailing fragment was measured
 #: claiming forty lines on one design where two were real.
-_BARE_COORDINATE_TRIPLE_RE = re.compile(
+BARE_COORDINATE_TRIPLE_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*$",
 )
 
 #: How far past the naturaleza half the anchoring successor row may sit. The
 #: wrapped Contenido cell runs to three lines in the measured corpus.
-_BARE_COORDINATE_LOOKAHEAD = 6
+BARE_COORDINATE_LOOKAHEAD = 6
 
 #: How far ABOVE a bare triple its naturaleza half may sit. Wider than the
 #: lookahead because a page break drops several lines of running furniture --
 #: the modelo name, the version and the two-line subtitle -- between them.
-_BARE_COORDINATE_LOOKBEHIND = 12
+BARE_COORDINATE_LOOKBEHIND = 12
 
 #: The half that follows it: naturaleza then description, no numbers of its own.
-_NATURALEZA_HEAD_RE = re.compile(
+NATURALEZA_HEAD_RE = re.compile(
     r"^\s*(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\D\S*.*)$",
 )
 
@@ -421,7 +421,7 @@ _NATURALEZA_HEAD_RE = re.compile(
 #: ``2 3 3 Num C Modelo.``. Distinct from :data:`_FUSED_ROW_RE`, which covers a
 #: position glued to its NATURALEZA (``59 1A Num``); here the two numbers ran
 #: together and nothing is glued to a letter.
-_FUSED_ORDINAL_POSITION_RE = re.compile(
+FUSED_ORDINAL_POSITION_RE = re.compile(
     r"^\s*(?P<fused>\d+)\s+(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\S.*)$",
 )
 
@@ -430,7 +430,7 @@ _FUSED_ORDINAL_POSITION_RE = re.compile(
 #: ``170 1697 9 AnC ...`` for AEAT's ``170 1697 9 An C ...``. The sibling
 #: :data:`_DOUBLED_COORDINATE_ROW_RE` covers the same gluing when the
 #: coordinates are ALSO doubled; this covers it on its own.
-_GLUED_NATURALEZA_ROW_RE = re.compile(
+GLUED_NATURALEZA_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
     r"(?P<naturaleza>An|Num|N|A)(?P<marker>[A-Z])\s+(?P<rest>\S.*)$",
 )
@@ -440,7 +440,7 @@ _GLUED_NATURALEZA_ROW_RE = re.compile(
 #: the row itself was printed with a truncated position: ``18 215`` under
 #: ``18 21 17 N ...``. Anchored end to end -- two integers and nothing else --
 #: because a looser pattern would claim any line opening with two numbers.
-_STRANDED_COORDINATE_PAIR_RE = re.compile(
+STRANDED_COORDINATE_PAIR_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*$",
 )
 
@@ -449,7 +449,7 @@ _STRANDED_COORDINATE_PAIR_RE = re.compile(
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
 #: protegida ..." underneath.
-_BARE_COMPACT_PDF_ROW_RE = re.compile(
+BARE_COMPACT_PDF_ROW_RE = re.compile(
     r"^\s*\d+\s+\d+\s+\d+\s+(?:An|Num|N|A)\s*$",
     re.IGNORECASE,
 )
@@ -457,23 +457,23 @@ _BARE_COMPACT_PDF_ROW_RE = re.compile(
 
 #: A casilla reference AEAT emitted on a line of its own, orphaned from the
 #: description it terminates.
-_STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
+STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
 
 #: A bracketed casilla reference already closing a line.
-_TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
+TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
 
 
 #: A row whose ORDINAL and OFFSET arrived fused into one token and whose LENGTH
 #: and NATURALEZA arrived fused into another: ``59 1A Indicador ...`` for what
 #: AEAT prints as ``5 9 1 A Indicador ...``.
-_FUSED_ROW_RE = re.compile(r"^\s*(\d+)\s+(\d+)([A-Za-z][A-Za-z.]*)\s+(\S.*)$")
+FUSED_ROW_RE = re.compile(r"^\s*(\d+)\s+(\d+)([A-Za-z][A-Za-z.]*)\s+(\S.*)$")
 
 
 #: A row whose OFFSET and LENGTH were emitted twice and whose naturaleza was
 #: glued to the description's opening column marker:
 #: ``137 1777 15 1777 15 AnC B Participaciones ...`` for AEAT's
 #: ``137 1777 15 An C B Participaciones ...``.
-_DOUBLED_COORDINATE_ROW_RE = re.compile(
+DOUBLED_COORDINATE_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
     r"(?P=offset)\s+(?P=length)\s+(?P<naturaleza>An|Num|Tit|N|A)(?P<rest>\S.*)$",
 )

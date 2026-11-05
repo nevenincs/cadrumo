@@ -23,7 +23,7 @@ from ..coverage import (
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
-from ..registry_schema_support import committed_modelo as _committed_modelo
+from ..registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -216,7 +216,7 @@ def test_complete_construct_evidence_requires_the_authority_check_marker() -> No
 
 def test_public_construct_ledger_keeps_reference_presence_unvalidated() -> None:
     """The public snapshot projection cannot manufacture validated authority."""
-    modelo, catalogues = _committed_modelo("130")
+    modelo, catalogues = committed_modelo("130")
     snapshot = build_snapshot(
         modelo,
         catalogues,

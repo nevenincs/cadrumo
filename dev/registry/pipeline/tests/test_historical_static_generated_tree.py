@@ -14,9 +14,9 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 
 from ...compiler.authority import compiled_bundled_authority
-from .._tree_validation import ValidatedHistoricalStaticGeneratedExportTree, validate_generated_export_tree
-from ..cli import GeneratedTreeInvocation, _render_candidate, prepare_generated_tree_invocation
-from ..render_check import _select_record_design_source
+from ..cli import GeneratedTreeInvocation, prepare_generated_tree_invocation, render_candidate
+from ..render_check import select_record_design_source
+from ..tree_validation import ValidatedHistoricalStaticGeneratedExportTree, validate_generated_export_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -28,7 +28,7 @@ def test_m232_historical_tree_has_static_inspection_and_no_filing_snapshot(tmp_p
         tmp_path,
         authority=authority,
     )
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
 
     def validate(context):
         return validate_generated_export_tree(
@@ -69,7 +69,7 @@ def test_historical_source_selection_refuses_two_applicable_official_designs() -
     )
     changed_revision = revision.model_copy(update={"source_refs": (*revision.source_refs, late_ref)})
     with pytest.raises(ValueError, match="exactly one record-design source"):
-        _select_record_design_source(
+        select_record_design_source(
             changed_revision,
             sources,
             modelo="232",

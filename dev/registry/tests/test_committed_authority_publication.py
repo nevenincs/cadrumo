@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import AuthoritySourceSet
 from ..pipeline.authority_publication import authority_source_identity, install_validated_authority_database
-from ._authority_generation_support import synthetic_authority_artifact
+from .authority_generation_support import synthetic_authority_artifact
 from .committed_authority_publication import AuthorityPublisher, published_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

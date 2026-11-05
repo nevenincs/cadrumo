@@ -9,13 +9,13 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import catalogue_verification_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
 
     assert {
         "ley-35-2006:art-27",
@@ -32,7 +32,7 @@ def _assert_lirpf_reference_links_to_full_boe_corpus(
     effective_from: date,
     required_text: tuple[str, ...],
 ):
-    catalogues = _catalogues()
+    catalogues = catalogue_verification_catalogues()
     reference = catalogues.legal[ref_id]
     article = ref_id.rsplit("-", 1)[-1]
 

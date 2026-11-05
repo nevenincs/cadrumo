@@ -9,18 +9,18 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from .planning import _merge_source_refs
+from .planning import merge_source_refs
 from .types import AeipOccurrence, ChainPlanEntry, EvolutionPair
 
 
-def _add_refusal(refusals: list[str], seen: set[str], detail: str) -> None:
+def add_refusal(refusals: list[str], seen: set[str], detail: str) -> None:
     """Append one stable refusal without flooding a report with duplicates."""
     if detail not in seen:
         seen.add(detail)
         refusals.append(detail)
 
 
-def _safe_resolve(path: Path, root: Path) -> Path | None:
+def safe_resolve(path: Path, root: Path) -> Path | None:
     """Resolve a path and return it only when it stays below ``root``."""
     try:
         resolved = path.resolve(strict=False)
@@ -55,7 +55,7 @@ def _raw_casilla_tables(document: object, revision_id: str) -> tuple[dict[str, o
     return tuple(tables)
 
 
-def _locate_casilla_file(
+def locate_casilla_file(
     modelo_root: Path,
     revision_id: str,
     casilla_id: str,
@@ -85,7 +85,7 @@ def _locate_casilla_file(
     )
     if len(matches) != 1:
         detail = "no source-native casilla fragment found" if not matches else f"{len(matches)} fragments found"
-        _add_refusal(refusals, seen_refusals, f"{revision_id}/{casilla_id}: {detail}")
+        add_refusal(refusals, seen_refusals, f"{revision_id}/{casilla_id}: {detail}")
         return None
     return matches[0]
 
@@ -99,15 +99,15 @@ def _revision_source_root(
 ) -> Path | None:
     revision_candidate = modelo_root / "revisions" / revision_id
     if revision_candidate.is_symlink():
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{revision_id}/{casilla_id}: revision path is a symlink",
         )
         return None
-    revision_root = _safe_resolve(revision_candidate, modelo_root)
+    revision_root = safe_resolve(revision_candidate, modelo_root)
     if revision_root is None:
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{revision_id}/{casilla_id}: revision path escapes the Modelo 100 registry root",
@@ -124,7 +124,7 @@ def _casilla_source_candidates(
     seen_refusals: set[str],
 ) -> list[Path] | None:
     if casillas_root.is_symlink() or not casillas_root.is_dir():
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{revision_id}/{casilla_id}: casillas source directory is missing or unsafe",
@@ -134,7 +134,7 @@ def _casilla_source_candidates(
     try:
         return sorted(casillas_root.iterdir(), key=lambda path: path.name)
     except OSError as error:
-        _add_refusal(
+        add_refusal(
             refusals,
             seen_refusals,
             f"{revision_id}/{casilla_id}: cannot enumerate casillas source directory: {error}",
@@ -154,8 +154,8 @@ def _matching_casilla_paths(
     for path in candidates:
         if path.suffix.lower() != ".toml":
             continue
-        if path.is_symlink() or _safe_resolve(path, modelo_root) is None:
-            _add_refusal(
+        if path.is_symlink() or safe_resolve(path, modelo_root) is None:
+            add_refusal(
                 refusals,
                 seen_refusals,
                 f"{revision_id}/{casilla_id}: unsafe casilla fragment path {path}",
@@ -164,7 +164,7 @@ def _matching_casilla_paths(
         try:
             document = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, UnicodeError, TomlDecodeError) as error:
-            _add_refusal(
+            add_refusal(
                 refusals,
                 seen_refusals,
                 f"{revision_id}/{casilla_id}: cannot parse casilla fragment {path}: {error}",
@@ -176,7 +176,7 @@ def _matching_casilla_paths(
     return matches
 
 
-def _origin_value(value: object) -> str | None:
+def origin_value(value: object) -> str | None:
     """Read an enum or raw lineage origin as its canonical token."""
     if value is None:
         return None
@@ -184,15 +184,15 @@ def _origin_value(value: object) -> str | None:
     return str(token)
 
 
-def _source_refs_are_grounded(refs: tuple[str, ...]) -> bool:
+def source_refs_are_grounded(refs: tuple[str, ...]) -> bool:
     """Require a non-empty list of non-blank source catalogue ids."""
     return bool(refs) and all(isinstance(ref, str) and bool(ref.strip()) for ref in refs)
 
 
-def _grounded_row_evidence(pair: EvolutionPair, earlier: AeipOccurrence, later: AeipOccurrence) -> str:
+def grounded_row_evidence(pair: EvolutionPair, earlier: AeipOccurrence, later: AeipOccurrence) -> str:
     """Render deterministic, source-backed evidence for a grounded successor row."""
-    refs = _merge_source_refs(earlier, later)
-    if not _source_refs_are_grounded(refs):
+    refs = merge_source_refs(earlier, later)
+    if not source_refs_are_grounded(refs):
         raise RegistryLoadError(
             f"{pair.chain_id} {pair.from_revision}->{pair.to_revision}: missing authoritative source refs",
         )
@@ -209,7 +209,7 @@ def _grounded_row_evidence(pair: EvolutionPair, earlier: AeipOccurrence, later: 
     return evidence
 
 
-def _pair_endpoints(entry: ChainPlanEntry, pair: EvolutionPair) -> tuple[AeipOccurrence, AeipOccurrence | None] | None:
+def pair_endpoints(entry: ChainPlanEntry, pair: EvolutionPair) -> tuple[AeipOccurrence, AeipOccurrence | None] | None:
     """Return the source and target occurrences represented by an evolution pair."""
     earlier = [occurrence for occurrence in entry.occurrences if occurrence.revision_id == pair.from_revision]
     if len(earlier) != 1:
@@ -222,7 +222,7 @@ def _pair_endpoints(entry: ChainPlanEntry, pair: EvolutionPair) -> tuple[AeipOcc
     return earlier[0], later[0]
 
 
-def _evolution_core(record: object) -> tuple[str, str, str, str] | None:
+def evolution_core(record: object) -> tuple[str, str, str, str] | None:
     """Get the identity-bearing fields from a loaded evolution record."""
     values: list[str] = []
     for field_name in ("continuidad_id", "from_revision", "to_revision", "evolution_kind"):
@@ -235,12 +235,12 @@ def _evolution_core(record: object) -> tuple[str, str, str, str] | None:
     return values[0], values[1], values[2], values[3]
 
 
-def _expected_evolution_id(modelo_id: str, casilla_id: str, pair: EvolutionPair) -> str:
+def expected_evolution_id(modelo_id: str, casilla_id: str, pair: EvolutionPair) -> str:
     """Use the loader's source-native record identity convention."""
     return f"m{modelo_id}-{casilla_id}-{pair.from_revision}-{pair.to_revision}-{pair.evolution_kind}"
 
 
-def _safe_evolution_filename(casilla_id: str, pair: EvolutionPair) -> str | None:
+def safe_evolution_filename(casilla_id: str, pair: EvolutionPair) -> str | None:
     """Return a source-native filename only for safe single-component fields."""
     tokens = (casilla_id, pair.from_revision, pair.to_revision, pair.evolution_kind)
     if any(re.fullmatch(r"[A-Za-z0-9_-]+", token) is None for token in tokens):

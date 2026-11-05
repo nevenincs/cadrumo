@@ -6,11 +6,11 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, _StrictModel
-from .render_profile_validation import _duplicates
+from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, StrictModel
+from .render_profile_validation import render_profile_validation_duplicates
 
 
-class OfficialSourceEvidence(_StrictModel):
+class OfficialSourceEvidence(StrictModel):
     """A profile conclusion grounded in text read from an exact official cell."""
 
     authority_kind: Literal["official_source"]
@@ -26,7 +26,7 @@ class OfficialSourceEvidence(_StrictModel):
         return self
 
 
-class ReviewedPolicyDecision(_StrictModel):
+class ReviewedPolicyDecision(StrictModel):
     """A reviewed policy decision that makes no claim about official source text."""
 
     authority_kind: Literal["reviewed_policy"]
@@ -55,7 +55,7 @@ ReviewedEvidence = Annotated[
 ]
 
 
-class SourceStatedCompositeEvidence(_StrictModel):
+class SourceStatedCompositeEvidence(StrictModel):
     """A reviewed composite whose complete wire grammar is stated at one PDF anchor."""
 
     authority_kind: Literal["official_parser_anchor"]
@@ -70,7 +70,7 @@ class SourceStatedCompositeEvidence(_StrictModel):
         return self
 
 
-class RenderProfileSourceEvidenceEntry(_StrictModel):
+class RenderProfileSourceEvidenceEntry(StrictModel):
     """Actual normalized text read from one exact cell in the verified source."""
 
     sheet: str = Field(min_length=1)
@@ -84,7 +84,7 @@ class RenderProfileSourceEvidenceEntry(_StrictModel):
         return self
 
 
-class RenderProfileSourceEvidence(_StrictModel):
+class RenderProfileSourceEvidence(StrictModel):
     """Independent exact-cell evidence extracted from one verified official design."""
 
     design_identity: RenderProfileDesignIdentity
@@ -93,7 +93,7 @@ class RenderProfileSourceEvidence(_StrictModel):
     @model_validator(mode="after")
     def _require_unique_locators(self) -> RenderProfileSourceEvidence:
         locators = tuple((entry.sheet, entry.cell) for entry in self.entries)
-        duplicates = _duplicates(locators)
+        duplicates = render_profile_validation_duplicates(locators)
         if duplicates:
             raise ValueError(f"source evidence contains duplicate exact locators: {duplicates!r}")
         return self

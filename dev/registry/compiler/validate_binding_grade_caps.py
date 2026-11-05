@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
-from ._validate_helpers import missing_refs
+from .validate_helpers import missing_refs
 
 _GRADES_A_CAP_CANNOT_NARROW: frozenset[RegistryAuthorityGrade] = frozenset(
     {RegistryAuthorityGrade.APPLICABILITY, RegistryAuthorityGrade.CALCULATION}

@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..compiler.producer_inventory import producer_inventory
-from ._modelo_100_registry_support import _loaded_registry
 from .authored_edition_support import newest_authored_editions
+from .modelo_100_registry_support import loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ def test_m100_deferred_focus_rows_do_not_inherit_prior_revision_producers(
     prior_producer_kind: str,
 ) -> None:
     """A prior-year formula or relation is not evidence for the deferred row."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     prior_revision = modelo.revisions[_PRIOR_EDITION]
     current_revision = modelo.revisions[_DEFERRED_EDITION]
@@ -64,7 +64,7 @@ def test_m100_deferred_focus_rows_do_not_inherit_prior_revision_producers(
 
 def test_m100_deferred_0613_has_no_guarderia_profile_producer() -> None:
     """The prior edition's guarderia profile inputs are not silently treated as deferred-edition facts."""
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     prior_revision = modelo.revisions[_PRIOR_EDITION]
     current_revision = modelo.revisions[_DEFERRED_EDITION]

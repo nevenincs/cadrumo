@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry.irnr_ledger_bindings import (
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,7 +53,7 @@ class _IrnrIncomeObservation:
 
 
 def _modelo_210_snapshot():
-    modelo, catalogues = _committed_modelo("210")
+    modelo, catalogues = committed_modelo("210")
     return build_snapshot(
         modelo,
         catalogues,

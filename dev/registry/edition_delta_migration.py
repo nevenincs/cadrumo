@@ -162,21 +162,23 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 
-from . import edition_delta_assessment as _edition_delta_assessment
-from . import edition_delta_drop as _edition_delta_drop
-from . import edition_delta_drop_reporting as _edition_delta_drop_reporting
-from . import edition_delta_drop_types as _edition_delta_drop_types
-from . import edition_delta_equivalence as _edition_delta_equivalence
-from . import edition_delta_errors as _edition_delta_errors
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_order_restoration as _edition_delta_order_restoration
-from . import edition_delta_override_pruning as _edition_delta_override_pruning
-from . import edition_delta_planning as _edition_delta_planning
-from . import edition_delta_source as _edition_delta_source
-from . import edition_delta_source_publication as _edition_delta_source_publication
-from . import edition_delta_types as _edition_delta_types
-from . import edition_delta_workdir as _edition_delta_workdir
-from . import edition_delta_writer as _edition_delta_writer
+from . import (
+    edition_delta_assessment,
+    edition_delta_drop,
+    edition_delta_drop_reporting,
+    edition_delta_drop_types,
+    edition_delta_equivalence,
+    edition_delta_errors,
+    edition_delta_fields,
+    edition_delta_order_restoration,
+    edition_delta_override_pruning,
+    edition_delta_planning,
+    edition_delta_source,
+    edition_delta_source_publication,
+    edition_delta_types,
+    edition_delta_workdir,
+    edition_delta_writer,
+)
 from .casilla_order_review import render_report as render_casilla_order_review
 from .casilla_order_review import review_casilla_order
 from .edition_export_scenarios import edition_export_scenarios
@@ -202,15 +204,15 @@ __all__ = [
 class MigrationOutcome:
     """The plan, the gate's verdict on the staged tree, and whether the modelo was published."""
 
-    plan: _edition_delta_types.MigrationPlan
+    plan: edition_delta_types.MigrationPlan
     staged_registry: Path | None
     report: RoundTripReport | None
     applied: bool
     changed: bool
-    before_assessment: _edition_delta_assessment.MigrationAssessment | None = None
-    after_assessment: _edition_delta_assessment.MigrationAssessment | None = None
+    before_assessment: edition_delta_assessment.MigrationAssessment | None = None
+    after_assessment: edition_delta_assessment.MigrationAssessment | None = None
     #: Positions written so complete statements keep the order they state.
-    order_restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...] = ()
+    order_restorations: tuple[edition_delta_order_restoration.OrderRestoration, ...] = ()
     #: Every ``(revision, family)`` whose member order those positions change.
     reordered_families: tuple[tuple[str, str], ...] = ()
 
@@ -219,9 +221,7 @@ class MigrationOutcome:
         """Findings that disprove reconstruction or effective-data identity."""
         if self.report is None:
             return ()
-        return tuple(
-            finding for finding in self.report.findings if _edition_delta_assessment._is_source_finding(finding)
-        )
+        return tuple(finding for finding in self.report.findings if edition_delta_assessment.is_source_finding(finding))
 
     @property
     def publication_readiness_findings(self) -> tuple[RoundTripFinding, ...]:
@@ -229,35 +229,35 @@ class MigrationOutcome:
         if self.report is None:
             return ()
         return tuple(
-            finding for finding in self.report.findings if not _edition_delta_assessment._is_source_finding(finding)
+            finding for finding in self.report.findings if not edition_delta_assessment.is_source_finding(finding)
         )
 
     @property
-    def source_status(self) -> _edition_delta_assessment.SourceMigrationStatus:
+    def source_status(self) -> edition_delta_assessment.SourceMigrationStatus:
         """Return the source replacement acceptance state."""
         if self.source_findings:
-            return _edition_delta_assessment.SourceMigrationStatus.REFUSED
+            return edition_delta_assessment.SourceMigrationStatus.REFUSED
         if self.blocked:
-            return _edition_delta_assessment.SourceMigrationStatus.PARTIAL
+            return edition_delta_assessment.SourceMigrationStatus.PARTIAL
         return (
-            _edition_delta_assessment.SourceMigrationStatus.APPLIED
+            edition_delta_assessment.SourceMigrationStatus.APPLIED
             if self.applied
-            else _edition_delta_assessment.SourceMigrationStatus.ACCEPTED
+            else edition_delta_assessment.SourceMigrationStatus.ACCEPTED
         )
 
     @property
-    def publication_readiness_status(self) -> _edition_delta_assessment.PublicationReadinessStatus:
+    def publication_readiness_status(self) -> edition_delta_assessment.PublicationReadinessStatus:
         """Return the separately observed authority-readiness state."""
         return (
-            _edition_delta_assessment.PublicationReadinessStatus.FAILED
+            edition_delta_assessment.PublicationReadinessStatus.FAILED
             if self.publication_readiness_findings
-            else _edition_delta_assessment.PublicationReadinessStatus.NOT_CHECKED
+            else edition_delta_assessment.PublicationReadinessStatus.NOT_CHECKED
         )
 
     @property
-    def publication_execution_status(self) -> _edition_delta_assessment.PublicationExecutionStatus:
+    def publication_execution_status(self) -> edition_delta_assessment.PublicationExecutionStatus:
         """Confirm that source migration did not execute publication."""
-        return _edition_delta_assessment.PublicationExecutionStatus.NOT_PERFORMED
+        return edition_delta_assessment.PublicationExecutionStatus.NOT_PERFORMED
 
     @property
     def completed(self) -> tuple[str, ...]:
@@ -275,71 +275,71 @@ class MigrationOutcome:
         return {
             edition.revision_id: edition.blocked_detail
             for edition in self.plan.editions
-            if edition.basis is _edition_delta_types.PredecessorBasis.BLOCKED
+            if edition.basis is edition_delta_types.PredecessorBasis.BLOCKED
         }
 
     @property
     def complete(self) -> bool:
         """Whether reconstruction, scope coverage, and minimality all pass."""
         return (
-            self.equivalence_status is _edition_delta_assessment.MigrationStatus.PASSED
-            and self.minimality_status is _edition_delta_assessment.MigrationStatus.PASSED
+            self.equivalence_status is edition_delta_assessment.MigrationStatus.PASSED
+            and self.minimality_status is edition_delta_assessment.MigrationStatus.PASSED
         )
 
     @property
-    def equivalence_status(self) -> _edition_delta_assessment.MigrationStatus:
+    def equivalence_status(self) -> edition_delta_assessment.MigrationStatus:
         """Return the candidate hydration-equivalence verdict."""
         return (
-            _edition_delta_assessment.MigrationStatus.FAILED
+            edition_delta_assessment.MigrationStatus.FAILED
             if self.source_findings
-            else _edition_delta_assessment.MigrationStatus.PASSED
+            else edition_delta_assessment.MigrationStatus.PASSED
         )
 
     @property
-    def compaction_status(self) -> _edition_delta_assessment.MigrationStatus:
+    def compaction_status(self) -> edition_delta_assessment.MigrationStatus:
         """Return whether physical or semantic authored storage decreased."""
         if self.before_assessment is None or self.after_assessment is None:
-            return _edition_delta_assessment.MigrationStatus.INCOMPLETE
+            return edition_delta_assessment.MigrationStatus.INCOMPLETE
         improved = (
             self.after_assessment.physical_bytes < self.before_assessment.physical_bytes
             or self.after_assessment.authored_payload_fields < self.before_assessment.authored_payload_fields
         )
         return (
-            _edition_delta_assessment.MigrationStatus.COMPLETE
+            edition_delta_assessment.MigrationStatus.COMPLETE
             if improved
-            else _edition_delta_assessment.MigrationStatus.INCOMPLETE
+            else edition_delta_assessment.MigrationStatus.INCOMPLETE
         )
 
     @property
-    def minimality_status(self) -> _edition_delta_assessment.MigrationStatus:
+    def minimality_status(self) -> edition_delta_assessment.MigrationStatus:
         """Return the independent redundant-payload and coverage verdict."""
         if self.after_assessment is None:
             return (
-                _edition_delta_assessment.MigrationStatus.FAILED
+                edition_delta_assessment.MigrationStatus.FAILED
                 if self.blocked
-                else _edition_delta_assessment.MigrationStatus.INCOMPLETE
+                else edition_delta_assessment.MigrationStatus.INCOMPLETE
             )
         if not self.changed and self.after_assessment.minimal:
-            return _edition_delta_assessment.MigrationStatus.PASSED
+            return edition_delta_assessment.MigrationStatus.PASSED
         return (
-            _edition_delta_assessment.MigrationStatus.PASSED
+            edition_delta_assessment.MigrationStatus.PASSED
             if self.after_assessment.minimal and not self.blocked
-            else _edition_delta_assessment.MigrationStatus.FAILED
+            else edition_delta_assessment.MigrationStatus.FAILED
         )
 
     @property
-    def application_status(self) -> _edition_delta_assessment.MigrationStatus:
+    def application_status(self) -> edition_delta_assessment.MigrationStatus:
         """Return whether the verified candidate is live, staged, or absent."""
         if self.applied:
             return (
-                _edition_delta_assessment.MigrationStatus.APPLIED
-                if self.minimality_status is _edition_delta_assessment.MigrationStatus.PASSED
-                else _edition_delta_assessment.MigrationStatus.PARTIALLY_APPLIED
+                edition_delta_assessment.MigrationStatus.APPLIED
+                if self.minimality_status is edition_delta_assessment.MigrationStatus.PASSED
+                else edition_delta_assessment.MigrationStatus.PARTIALLY_APPLIED
             )
         return (
-            _edition_delta_assessment.MigrationStatus.STAGED
+            edition_delta_assessment.MigrationStatus.STAGED
             if self.staged_registry is not None
-            else _edition_delta_assessment.MigrationStatus.NOT_APPLIED
+            else edition_delta_assessment.MigrationStatus.NOT_APPLIED
         )
 
 
@@ -417,10 +417,10 @@ class _MigrationPreparation:
     modelo_id: str
     modelo_dir: Path
     definition: ModeloDefinition
-    before: _edition_delta_assessment.MigrationAssessment
-    restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...]
-    plan: _edition_delta_types.MigrationPlan
-    works: tuple[_edition_delta_source._EditionWork, ...]
+    before: edition_delta_assessment.MigrationAssessment
+    restorations: tuple[edition_delta_order_restoration.OrderRestoration, ...]
+    plan: edition_delta_types.MigrationPlan
+    works: tuple[edition_delta_source.EditionWork, ...]
     family_changes: bool
 
 
@@ -430,19 +430,19 @@ class _StagedMigration:
     declared: Path
     reordered: tuple[tuple[str, str], ...]
     staged: Path
-    plan: _edition_delta_types.MigrationPlan
+    plan: edition_delta_types.MigrationPlan
     report: RoundTripReport
 
 
 def _prepare_migration(registry_root: Path, modelo_id: str, work_dir: Path) -> _MigrationPreparation:
-    registry_root, work_dir = _edition_delta_workdir._resolve_work_directory(registry_root, work_dir)
-    modelo_dir = registry_root / _edition_delta_fields._MODELOS / modelo_id
-    if not modelo_dir.is_dir() or not _edition_delta_workdir._inside(modelo_dir, registry_root):
-        raise _edition_delta_errors.MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
-    definition = _edition_delta_workdir._load(registry_root, modelo_id)
-    before = _edition_delta_assessment.assess_migration_state(modelo_dir)
-    restorations = _edition_delta_order_restoration.declared_order_restorations(modelo_dir)
-    plan, works = _edition_delta_planning._plan(modelo_dir, definition)
+    registry_root, work_dir = edition_delta_workdir.resolve_work_directory(registry_root, work_dir)
+    modelo_dir = registry_root / edition_delta_fields.MODELOS / modelo_id
+    if not modelo_dir.is_dir() or not edition_delta_workdir.inside(modelo_dir, registry_root):
+        raise edition_delta_errors.MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
+    definition = edition_delta_workdir.load(registry_root, modelo_id)
+    before = edition_delta_assessment.assess_migration_state(modelo_dir)
+    restorations = edition_delta_order_restoration.declared_order_restorations(modelo_dir)
+    plan, works = edition_delta_planning.edition_delta_planning_plan(modelo_dir, definition)
     family_changes = any(finding.get("family") != CASILLAS_FAMILY for finding in before.unresolved_duplication)
     return _MigrationPreparation(
         registry_root, work_dir, modelo_id, modelo_dir, definition, before, restorations, plan, works, family_changes
@@ -458,14 +458,14 @@ def _needs_staging(preparation: _MigrationPreparation) -> bool:
 def _write_migration_works(
     preparation: _MigrationPreparation,
     staged: Path,
-    plan: _edition_delta_types.MigrationPlan,
-    works: Sequence[_edition_delta_source._EditionWork],
+    plan: edition_delta_types.MigrationPlan,
+    works: Sequence[edition_delta_source.EditionWork],
 ) -> None:
     casilla_changes = _casilla_changes(plan, preparation.before)
     for work in works:
-        if casilla_changes and _edition_delta_writer._edition_changes(work):
-            _edition_delta_writer._write_edition(
-                staged / _edition_delta_fields._MODELOS / preparation.modelo_id / "revisions" / work.plan.revision_id,
+        if casilla_changes and edition_delta_writer.edition_changes(work):
+            edition_delta_writer.write_edition(
+                staged / edition_delta_fields.MODELOS / preparation.modelo_id / "revisions" / work.plan.revision_id,
                 work,
             )
 
@@ -476,10 +476,10 @@ def _stage_migration(
 ) -> _StagedMigration:
     reference = copy_registry_tree(
         preparation.registry_root,
-        _edition_delta_workdir._scratch_path(preparation.work_dir, "reference", "registry", "aeat"),
+        edition_delta_workdir.scratch_path(preparation.work_dir, "reference", "registry", "aeat"),
         modelo_id=preparation.modelo_id,
     )
-    declared, reordered = _edition_delta_order_restoration._stage_declared_order(
+    declared, reordered = edition_delta_order_restoration.stage_declared_order(
         registry_root=preparation.registry_root,
         modelo_id=preparation.modelo_id,
         work_dir=preparation.work_dir,
@@ -488,19 +488,19 @@ def _stage_migration(
     )
     plan, works = preparation.plan, preparation.works
     if preparation.restorations:
-        declared_modelo = declared / _edition_delta_fields._MODELOS / preparation.modelo_id
-        plan, works = _edition_delta_planning._plan(
-            declared_modelo, _edition_delta_workdir._load(declared, preparation.modelo_id)
+        declared_modelo = declared / edition_delta_fields.MODELOS / preparation.modelo_id
+        plan, works = edition_delta_planning.edition_delta_planning_plan(
+            declared_modelo, edition_delta_workdir.load(declared, preparation.modelo_id)
         )
     staged = copy_registry_tree(
         declared,
-        _edition_delta_workdir._scratch_path(preparation.work_dir, "migrated", "registry", "aeat"),
+        edition_delta_workdir.scratch_path(preparation.work_dir, "migrated", "registry", "aeat"),
         modelo_id=preparation.modelo_id,
     )
     _write_migration_works(preparation, staged, plan, works)
-    staged_modelo = staged / _edition_delta_fields._MODELOS / preparation.modelo_id
-    collapse_keyed_families(declared / _edition_delta_fields._MODELOS / preparation.modelo_id, staged_modelo)
-    _edition_delta_override_pruning.prune_redundant_override_leaves(staged_modelo)
+    staged_modelo = staged / edition_delta_fields.MODELOS / preparation.modelo_id
+    collapse_keyed_families(declared / edition_delta_fields.MODELOS / preparation.modelo_id, staged_modelo)
+    edition_delta_override_pruning.prune_redundant_override_leaves(staged_modelo)
     report = edition_round_trip_report(
         live_registry_root=staged,
         reference_registry_root=declared,
@@ -508,8 +508,8 @@ def _stage_migration(
         export_scenarios=export_scenarios or {},
     )
     if plan.already_delta_authored:
-        report = _edition_delta_equivalence._prove_chain(
-            reference_modelo_dir=declared / _edition_delta_fields._MODELOS / preparation.modelo_id,
+        report = edition_delta_equivalence.prove_chain(
+            reference_modelo_dir=declared / edition_delta_fields.MODELOS / preparation.modelo_id,
             staged_modelo_dir=staged_modelo,
             revision_ids=tuple(edition.revision_id for edition in plan.editions),
             report=report,
@@ -518,18 +518,16 @@ def _stage_migration(
 
 
 def _publish_clean_migration(preparation: _MigrationPreparation, staged: _StagedMigration, apply: bool) -> bool:
-    has_source_findings = any(
-        _edition_delta_assessment._is_source_finding(finding) for finding in staged.report.findings
-    )
+    has_source_findings = any(edition_delta_assessment.is_source_finding(finding) for finding in staged.report.findings)
     if not apply or has_source_findings:
         return False
-    _edition_delta_source_publication._assert_proof_inputs_unchanged(
+    edition_delta_source_publication.assert_proof_inputs_unchanged(
         live_root=preparation.registry_root, captured_root=staged.reference, modelo_id=preparation.modelo_id
     )
-    _edition_delta_source_publication._apply_proven_modelo(
+    edition_delta_source_publication.apply_proven_modelo(
         target=preparation.modelo_dir.resolve(),
-        staged=staged.staged / _edition_delta_fields._MODELOS / preparation.modelo_id,
-        original=staged.reference / _edition_delta_fields._MODELOS / preparation.modelo_id,
+        staged=staged.staged / edition_delta_fields.MODELOS / preparation.modelo_id,
+        original=staged.reference / edition_delta_fields.MODELOS / preparation.modelo_id,
     )
     return True
 
@@ -577,9 +575,9 @@ def migrate_modelo(
         return _unchanged_migration(preparation)
     staged = _stage_migration(preparation, export_scenarios)
     applied = _publish_clean_migration(preparation, staged, apply)
-    assessed_dir = preparation.modelo_dir if applied else staged.staged / _edition_delta_fields._MODELOS / modelo_id
+    assessed_dir = preparation.modelo_dir if applied else staged.staged / edition_delta_fields.MODELOS / modelo_id
     changed = (
-        preparation.before.fingerprint != _edition_delta_assessment.assess_migration_state(assessed_dir).fingerprint
+        preparation.before.fingerprint != edition_delta_assessment.assess_migration_state(assessed_dir).fingerprint
     )
     return MigrationOutcome(
         plan=staged.plan,
@@ -588,14 +586,14 @@ def migrate_modelo(
         applied=applied,
         changed=changed,
         before_assessment=preparation.before,
-        after_assessment=_edition_delta_assessment.assess_migration_state(assessed_dir),
+        after_assessment=edition_delta_assessment.assess_migration_state(assessed_dir),
         order_restorations=preparation.restorations,
         reordered_families=staged.reordered,
     )
 
 
 def _casilla_changes(
-    plan: _edition_delta_types.MigrationPlan, assessment: _edition_delta_assessment.MigrationAssessment
+    plan: edition_delta_types.MigrationPlan, assessment: edition_delta_assessment.MigrationAssessment
 ) -> bool:
     """Whether the casilla pass has anything to write: a lift, or restated casilla payload."""
     return any(edition.lifted.total() for edition in plan.editions) or any(
@@ -607,8 +605,8 @@ def _casilla_changes(
 
 
 def _measurement_line(
-    before: _edition_delta_assessment.MigrationAssessment,
-    after: _edition_delta_assessment.MigrationAssessment,
+    before: edition_delta_assessment.MigrationAssessment,
+    after: edition_delta_assessment.MigrationAssessment,
 ) -> str:
     return (
         f"measurement before_fingerprint={before.fingerprint} after_fingerprint={after.fingerprint} "
@@ -682,7 +680,7 @@ def render_outcome(outcome: MigrationOutcome) -> str:
         lines.append(_measurement_line(outcome.before_assessment, outcome.after_assessment))
     lines.extend(_edition_lines(outcome))
     lines.extend(
-        _edition_delta_order_restoration._order_lines(
+        edition_delta_order_restoration.order_lines(
             outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families
         )
     )
@@ -697,18 +695,18 @@ def render_outcome(outcome: MigrationOutcome) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _render(outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome) -> str:
+def _render(outcome: MigrationOutcome | edition_delta_drop_types.DropOutcome) -> str:
     """Render whichever outcome the invoked operation produced."""
     return (
-        _edition_delta_drop_reporting.render_drop_outcome(outcome)
-        if isinstance(outcome, _edition_delta_drop_types.DropOutcome)
+        edition_delta_drop_reporting.render_drop_outcome(outcome)
+        if isinstance(outcome, edition_delta_drop_types.DropOutcome)
         else render_outcome(outcome)
     )
 
 
 def persist_migration_report(
     repository: Path,
-    outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome,
+    outcome: MigrationOutcome | edition_delta_drop_types.DropOutcome,
     command: Sequence[str],
 ) -> Path:
     """Persist one rendered migration outcome under the canonical audit log hierarchy.
@@ -721,7 +719,7 @@ def persist_migration_report(
     derived from the caller's scratch directory.
     """
     run_dir = allocate_run_directory(
-        repository.resolve(), family=_edition_delta_fields._REPORT_FAMILY, label=_edition_delta_fields._REPORT_LABEL
+        repository.resolve(), family=edition_delta_fields.REPORT_FAMILY, label=edition_delta_fields.REPORT_LABEL
     )
     run_dir.mkdir(parents=True, exist_ok=False)
     rendered = _render(outcome)
@@ -824,7 +822,7 @@ def _review_accepted_source(arguments: argparse.Namespace) -> bool:
     try:
         order_review = review_casilla_order(
             arguments.accepted_modelo_dir,
-            arguments.registry_root / _edition_delta_fields._MODELOS / arguments.modelo,
+            arguments.registry_root / edition_delta_fields.MODELOS / arguments.modelo,
             renames=_rename_pairs(arguments.rename_casilla),
         )
     except (RegistryError, ValueError) as exc:
@@ -837,10 +835,10 @@ def _review_accepted_source(arguments: argparse.Namespace) -> bool:
     return False
 
 
-def _execute_cli_operation(arguments: argparse.Namespace) -> MigrationOutcome | _edition_delta_drop_types.DropOutcome:
+def _execute_cli_operation(arguments: argparse.Namespace) -> MigrationOutcome | edition_delta_drop_types.DropOutcome:
     export_scenarios = edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root)
     if arguments.drop_restatement:
-        return _edition_delta_drop.drop_restatement(
+        return edition_delta_drop.drop_restatement(
             registry_root=arguments.registry_root,
             modelo_id=arguments.modelo,
             work_dir=arguments.work_dir,
@@ -857,7 +855,7 @@ def _execute_cli_operation(arguments: argparse.Namespace) -> MigrationOutcome | 
     )
 
 
-def _cli_exit_code(outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome) -> int:
+def _cli_exit_code(outcome: MigrationOutcome | edition_delta_drop_types.DropOutcome) -> int:
     if outcome.source_findings:
         return 1
     return int(isinstance(outcome, MigrationOutcome) and not outcome.complete)
@@ -872,7 +870,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     try:
         outcome = _execute_cli_operation(arguments)
-    except _edition_delta_errors.MigrationRefusedError as exc:
+    except edition_delta_errors.MigrationRefusedError as exc:
         sys.stderr.write(f"refused: {exc}\n")
         return 1
     command = tuple(sys.argv) if argv is None else (sys.argv[0], *argv)

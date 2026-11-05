@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _modelo_100_revision,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    modelo_100_revision,
+    modelo_100_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -85,7 +85,7 @@ _EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS = {
 
 
 def test_modelo_100_cantabria_desplazamiento_nuevos_residentes_roles_follow_cant20_family() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0773", "0776", "1715"}}
     legacy_roles = [
         casilla.semantic_role
@@ -100,23 +100,23 @@ def test_modelo_100_cantabria_desplazamiento_nuevos_residentes_roles_follow_cant
     assert parent.label == "Para compensar los gastos de desplazamiento y permanencia de nuevos residentes en Cantabria"
     assert tuple(parent.section) == _CANTABRIA_DEDUCTION_SECTION
     assert parent.semantic_role == _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["0776"]
     assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _CANTABRIA_DEDUCTION_SECTION
     assert generated.semantic_role == _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["1715"]
     assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert pending.semantic_role == _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
 def test_modelo_100_cantabria_nuevos_contribuyentes_extranjero_roles_follow_cant23_family() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1708", "1714", "1717"}}
     legacy_roles = [
         casilla.semantic_role
@@ -133,19 +133,19 @@ def test_modelo_100_cantabria_nuevos_contribuyentes_extranjero_roles_follow_cant
     )
     assert tuple(parent.section) == _CANTABRIA_DEDUCTION_SECTION
     assert parent.semantic_role == _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["1714"]
     assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _CANTABRIA_DEDUCTION_SECTION
     assert generated.semantic_role == _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["1717"]
     assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert pending.semantic_role == _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
 # The editions whose official labels are recorded above, keyed by the exercise each
@@ -154,7 +154,7 @@ def test_modelo_100_cantabria_nuevos_contribuyentes_extranjero_roles_follow_cant
 def test_modelo_100_cantabria_historical_obras_mejora_slots_keep_cant3aa_shape(
     filing_year: int,
 ) -> None:
-    revision = _modelo_100_revision(filing_year)
+    revision = modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0948", "0950", "0956"}}
 
     assert set(casillas_by_id) == {"0948", "0950", "0956"}
@@ -163,31 +163,31 @@ def test_modelo_100_cantabria_historical_obras_mejora_slots_keep_cant3aa_shape(
     assert previous_pending.label == _EXPECTED_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS[filing_year]
     assert tuple(previous_pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert previous_pending.semantic_role == _CANTABRIA_OBRAS_MEJORA_PENDIENTE_EJERCICIOS_ANTERIORES_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in previous_pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in previous_pending.legal_refs
 
     amount = casillas_by_id["0950"]
     assert amount.label == "Importe de la deducción"
     assert tuple(amount.section) == _CANTABRIA_DEDUCTION_SECTION
     assert amount.semantic_role == _CANTABRIA_OBRAS_MEJORA_IMPORTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in amount.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in amount.legal_refs
 
     current_pending = casillas_by_id["0956"]
     assert current_pending.label == f"Por obras de mejora generada en {filing_year} a deducir en los 2 años siguientes"
     assert tuple(current_pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert current_pending.semantic_role == _CANTABRIA_OBRAS_MEJORA_GENERADO_EJERCICIO_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
 
 
 def _assert_cantabria_deduction_casilla(casilla, *, label: str, role: str) -> None:
     assert casilla.label == label
     assert tuple(casilla.section) == _CANTABRIA_DEDUCTION_SECTION
     assert casilla.semantic_role == role
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
 
 
 @pytest.mark.parametrize("filing_year", sorted(_EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS))
 def test_modelo_100_cantabria_current_obras_mejora_roles_follow_cant3_family(filing_year: int) -> None:
-    revision = _modelo_100_revision(filing_year)
+    revision = modelo_100_revision(filing_year)
     casillas_by_id = {
         casilla.id: casilla
         for casilla in revision.casillas

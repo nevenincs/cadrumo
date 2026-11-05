@@ -132,7 +132,7 @@ class RegistryExternalGroundingAudit(ExternalGroundingModel):
         return checked / reconciled
 
 
-def _select_revision_for_filing_year(
+def select_revision_for_filing_year(
     revisions: Sequence[ModeloRevision],
     filing_year: int,
     *,
@@ -305,7 +305,7 @@ def build_external_grounding_audit(
         for candidate_modelo, filing_year, period in attributed_coordinates:
             if candidate_modelo != modelo.id:
                 continue
-            owner = _select_revision_for_filing_year(revisions, filing_year, period=period)
+            owner = select_revision_for_filing_year(revisions, filing_year, period=period)
             if owner is not None:
                 resolved_years.setdefault(owner.id, []).append((filing_year, period))
         for revision in revisions:

@@ -25,27 +25,25 @@ from ...edition_delta_assessment import assess_migration_state
 from ...edition_delta_chain_materialisation import chain_materialisation, member_identities
 from ...edition_delta_migration import migrate_modelo
 from ...edition_delta_proof_source import read_staged_edition
-from .. import _tree_publication as tree_publication
 from .. import cli as pipeline_cli
-from .._export_tree import render_complete_export_tree
-from .._tree_publication import publish_validated_generated_export_tree
-from .._tree_validation import _require_isolated_target_context, validate_generated_export_tree
+from .. import tree_publication as tree_publication
 from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from ..candidate_source_chain import require_source_chain_unchanged
 from ..candidate_staging import stage_attested_inherited_modelo
 from ..cli import (
     GeneratedTreeInvocation,
-    _render_candidate,
-    _require_storage_equivalent_republication,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
     publish_prepared_invocation,
+    render_candidate,
+    require_storage_equivalent_republication,
 )
 from ..export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
 )
+from ..export_tree import render_complete_export_tree
 from ..export_tree_serialization import render_toml_bytes
 from ..generated_export_inheritance import (
     generated_export_source_chain_fingerprint,
@@ -55,6 +53,7 @@ from ..generated_export_inheritance import (
 )
 from ..render_check import compare_export_tree_roots, compare_revision_against_committed, revision_render_inputs
 from ..source_defects import source_defects_for
+from ..tree_publication import publish_validated_generated_export_tree
 from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
 from ..tree_publication_contracts import (
     GeneratedExportPublicationJournal,
@@ -66,6 +65,7 @@ from ..tree_publication_contracts import (
     export_provenance_file_sha256,
 )
 from ..tree_publication_journal import write_generated_export_publication_journal
+from ..tree_validation import require_isolated_target_context, validate_generated_export_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -218,7 +218,7 @@ def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> 
     prepared, authority = _prepared(tmp_path, revision="2024")
     assert prepared.inheritance is not None
     assert prepared.inheritance.pinned_ancestors[0][0] == "2023"
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     validated = validate_generated_export_tree(
         context=prepared.validation,
         joined=prepared.inputs.joined,
@@ -244,7 +244,7 @@ def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> 
         rendered_root=prepared.candidate_root / "modelos/189/revisions/2024/export",
     )
     assert comparison.disposition_class == "record_drift"
-    _require_storage_equivalent_republication(bound, rendered, state, comparison)
+    require_storage_equivalent_republication(bound, rendered, state, comparison)
 
 
 def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) -> None:
@@ -320,7 +320,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         staged = read_staged_edition(staged_root, revision, side="staged")
         assert member_identities(staged) == member_identities(original)
         assert chain_materialisation(staged) == chain_materialisation(original)
-    _require_isolated_target_context(
+    require_isolated_target_context(
         candidate_root,
         modelo_id="189",
         revision_id="2025",
@@ -346,7 +346,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
         )
     (staged_root / "revisions/unrelated").mkdir()
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
-        _require_isolated_target_context(
+        require_isolated_target_context(
             candidate_root,
             modelo_id="189",
             revision_id="2025",
@@ -355,7 +355,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
     (staged_root / "revisions/unrelated").rmdir()
     (staged_root / "revisions/2023").rename(tmp_path / "removed-2023")
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
-        _require_isolated_target_context(
+        require_isolated_target_context(
             candidate_root,
             modelo_id="189",
             revision_id="2025",
@@ -375,7 +375,7 @@ def test_recursive_child_chain_requires_every_pinned_ancestor(tmp_path: Path) ->
 
 def test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact(tmp_path: Path) -> None:
     prepared, authority = _prepared(tmp_path)
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     assert rendered.output_files == ("0000-export-layout.toml",)
     assert rendered.provenance_manifest.generated_export_inheritance == prepared.inheritance.attestation
     assert "export_layouts = []" in (
@@ -563,7 +563,7 @@ def test_changed_source_pins_baseline_or_layout_refuse_compaction(tmp_path: Path
 
 def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) -> None:
     prepared, _ = _prepared(tmp_path, revision="2024")
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     (prepared.candidate_root / "modelos/189/revisions/unrelated").mkdir()
     with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
         validate_generated_export_tree(
@@ -597,7 +597,7 @@ def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) 
         rendered_root=prepared.candidate_root / "modelos/189/revisions/2025/export",
     )
     with pytest.raises(ValueError, match="does not reproduce the current full source render"):
-        _require_storage_equivalent_republication(bound, rendered, state, comparison)
+        require_storage_equivalent_republication(bound, rendered, state, comparison)
 
 
 def _m303_source_copy(root: Path, *, complete_registry: bool = False) -> Path:
@@ -696,7 +696,7 @@ def test_real_early_m303_compact_publication_retains_the_complete_legal_chain(
     try:
         manifest.write_bytes(before + b"\n# unrelated post-cutover source mutation\n")
         with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
-            pipeline_cli._validate_final_live_target(prepared)
+            pipeline_cli.validate_final_live_target(prepared)
     finally:
         manifest.write_bytes(before)
 

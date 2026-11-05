@@ -9,11 +9,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.loader import load_modelo_directory
-from . import constants as _constants
+from . import constants
 from .adjudications import AdjudicationSet
 from .apply_preparation_evolutions import desired_evolutions, existing_evolutions, prepare_evolution_writes
 from .apply_preparation_stamps import prepare_stamp_writes
-from .apply_support import _add_refusal, _safe_resolve
+from .apply_support import add_refusal, safe_resolve
 from .stale_adjudications import detect_stale_adjudications
 from .types import (
     AeipApplyPlan,
@@ -45,7 +45,7 @@ def prepare_apply(
     refusals: list[str] = []
     seen_refusals: set[str] = set()
     if modelo_id != "100":
-        _add_refusal(refusals, seen_refusals, f"AEIP apply is restricted to Modelo 100, not {modelo_id!r}")
+        add_refusal(refusals, seen_refusals, f"AEIP apply is restricted to Modelo 100, not {modelo_id!r}")
     base_root, modelo_root = _resolve_registry_root(modelos_root, modelo_id, refusals, seen_refusals)
     if base_root is None or modelo_root is None:
         return _empty_plan(refusals)
@@ -84,11 +84,11 @@ def _resolve_registry_root(
     try:
         base_root = modelos_root.resolve()
     except OSError as error:
-        _add_refusal(refusals, seen_refusals, f"cannot resolve modelos root: {error}")
+        add_refusal(refusals, seen_refusals, f"cannot resolve modelos root: {error}")
         return None, None
-    modelo_root = _safe_resolve(base_root / modelo_id, base_root)
+    modelo_root = safe_resolve(base_root / modelo_id, base_root)
     if modelo_root is None or not modelo_root.is_dir():
-        _add_refusal(refusals, seen_refusals, f"Modelo {modelo_id} registry path is missing or unsafe")
+        add_refusal(refusals, seen_refusals, f"Modelo {modelo_id} registry path is missing or unsafe")
         return None, None
     return base_root, modelo_root
 
@@ -101,9 +101,9 @@ def _record_unresolved_judgments(
     seen_refusals: set[str],
 ) -> None:
     for ambiguity in plan.ambiguities:
-        _add_refusal(refusals, seen_refusals, f"ambiguity [{ambiguity.kind}] {ambiguity.detail}")
+        add_refusal(refusals, seen_refusals, f"ambiguity [{ambiguity.kind}] {ambiguity.detail}")
     for stale in detect_stale_adjudications(inventory, adjudications):
-        _add_refusal(refusals, seen_refusals, f"stale adjudication [{stale.kind}] {stale.detail}")
+        add_refusal(refusals, seen_refusals, f"stale adjudication [{stale.kind}] {stale.detail}")
 
 
 def _load_canonical_modelo(
@@ -115,7 +115,7 @@ def _load_canonical_modelo(
     try:
         return load_modelo_directory(modelo_root)
     except RegistryLoadError as error:
-        _add_refusal(refusals, seen_refusals, f"Modelo {modelo_id} canonical load failed: {error}")
+        add_refusal(refusals, seen_refusals, f"Modelo {modelo_id} canonical load failed: {error}")
         return None
 
 
@@ -129,7 +129,7 @@ def _index_current_rows(
         for casilla in revision.casillas:
             key = (str(revision.id), str(casilla.id))
             if key in current_rows:
-                _add_refusal(refusals, seen_refusals, f"duplicate loaded casilla {key[0]}/{key[1]}")
+                add_refusal(refusals, seen_refusals, f"duplicate loaded casilla {key[0]}/{key[1]}")
             current_rows[key] = casilla
     return current_rows
 
@@ -154,11 +154,11 @@ def _index_chain_occurrences(
     seen_refusals: set[str],
 ) -> None:
     if entry.chain_id in {existing[0] for existing in planned_rows.values()}:
-        _add_refusal(refusals, seen_refusals, f"duplicate planned AEIP chain id {entry.chain_id!r}")
+        add_refusal(refusals, seen_refusals, f"duplicate planned AEIP chain id {entry.chain_id!r}")
     for index, occurrence in enumerate(entry.occurrences):
         key = (str(occurrence.revision_id), str(occurrence.casilla_id))
         if key in planned_rows:
-            _add_refusal(refusals, seen_refusals, f"duplicate planned AEIP occurrence {key[0]}/{key[1]}")
+            add_refusal(refusals, seen_refusals, f"duplicate planned AEIP occurrence {key[0]}/{key[1]}")
         planned_rows[key] = (entry.chain_id, index > 0, occurrence)
 
 
@@ -168,12 +168,12 @@ def _index_chain_pairs(
     seen_refusals: set[str],
 ) -> list[_PairEndpoint]:
     found: list[_PairEndpoint] = []
-    from .apply_support import _pair_endpoints
+    from .apply_support import pair_endpoints
 
     for pair in entry.pairs:
-        endpoints = _pair_endpoints(entry, pair)
+        endpoints = pair_endpoints(entry, pair)
         if endpoints is None:
-            _add_refusal(
+            add_refusal(
                 refusals,
                 seen_refusals,
                 f"{entry.chain_id} {pair.from_revision}->{pair.to_revision}: cannot localize pair endpoints",
@@ -195,7 +195,7 @@ def _refuse_unplanned_lineage(
         key = (str(occurrence.revision_id), str(occurrence.casilla_id))
         current = current_rows.get(key)
         if key not in planned_keys and current is not None and current.continuidad_id is not None:
-            _add_refusal(
+            add_refusal(
                 refusals,
                 seen_refusals,
                 f"{key[0]}/{key[1]} carries AEIP continuidad_id outside the adjudicated plan",
@@ -210,10 +210,10 @@ def _refuse_unplanned_category_lineage(
     seen_refusals: set[str],
 ) -> None:
     for key, current in current_rows.items():
-        if key in planned_keys or _constants.ANEXO_A_SECTION_LEAF not in tuple(current.section or ()):
+        if key in planned_keys or constants.ANEXO_A_SECTION_LEAF not in tuple(current.section or ()):
             continue
         if _is_unplanned_category(current):
-            _add_refusal(
+            add_refusal(
                 refusals,
                 seen_refusals,
                 f"{key[0]}/{key[1]} category row carries an AEIP continuidad_id outside the plan",
@@ -223,9 +223,9 @@ def _refuse_unplanned_category_lineage(
 def _is_unplanned_category(current: CasillaDefinition) -> bool:
     category_chain = None if current.continuidad_id is None else str(current.continuidad_id)
     return bool(
-        str(current.semantic_role or "") == _constants.CATEGORY_SEMANTIC_ROLE
+        str(current.semantic_role or "") == constants.CATEGORY_SEMANTIC_ROLE
         and (category_chain is not None and category_chain)
-        and category_chain.startswith(_constants.CHAIN_PREFIX)
+        and category_chain.startswith(constants.CHAIN_PREFIX)
     )
 
 
@@ -237,7 +237,7 @@ def _refuse_duplicate_targets(
 ) -> None:
     paths = [write.path for write in stamp_writes] + [write.path for write in evolution_writes]
     if len(paths) != len(set(paths)):
-        _add_refusal(refusals, seen_refusals, "apply plan contains duplicate target paths")
+        add_refusal(refusals, seen_refusals, "apply plan contains duplicate target paths")
 
 
 def _empty_plan(refusals: list[str]) -> AeipApplyPlan:

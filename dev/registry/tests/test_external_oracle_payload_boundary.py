@@ -26,13 +26,13 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..maintenance_support import (
-    _ORACLE_CORPUS_DIRECTORIES,
-    _ORACLE_PAYLOAD_MODELS,
+    ORACLE_CORPUS_DIRECTORIES,
+    ORACLE_PAYLOAD_MODELS,
     ExternalOracleEvidence,
     UnattributedOraclePayload,
-    _attribution_from_payload_name,
-    _parse_oracle_payload,
-    _read_oracle_payload,
+    attribution_from_payload_name,
+    parse_oracle_payload,
+    read_oracle_payload,
 )
 from ..parity.external_grounding import ManualWorkedExamplePayload, RentaWebOpenReplayPayload
 from ..parity.external_oracle_corpus import ExternalOracleCorpus
@@ -46,7 +46,7 @@ _YEAR_LESS_NAME = "modelo-303-prorrata-definitiva.json"
 
 def _bundled_payloads(corpus: ExternalOracleCorpus) -> tuple[Path, ...]:
     """Return every bundled payload of ``corpus``, read the way the fold reads them."""
-    return scan_directory(_ORACLE_CORPUS_DIRECTORIES[corpus](), pattern="modelo-*.json")
+    return scan_directory(ORACLE_CORPUS_DIRECTORIES[corpus](), pattern="modelo-*.json")
 
 
 def _stage(
@@ -64,7 +64,7 @@ def _stage(
     ``name`` overrides the filename when the case under test is about the name
     itself.
     """
-    directory = tmp_path / _ORACLE_CORPUS_DIRECTORIES[corpus]().name
+    directory = tmp_path / ORACLE_CORPUS_DIRECTORIES[corpus]().name
     directory.mkdir(parents=True, exist_ok=True)
     staged = directory / (source.name if name is None else name)
     staged.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
@@ -78,13 +78,13 @@ def test_every_bundled_payload_satisfies_its_corpus_strict_model() -> None:
     payloads would make the refusal tests pass for the wrong reason.
     """
     parsed_by_corpus = {
-        corpus: [_parse_oracle_payload(corpus, path) for path in _bundled_payloads(corpus)]
-        for corpus in _ORACLE_CORPUS_DIRECTORIES
+        corpus: [parse_oracle_payload(corpus, path) for path in _bundled_payloads(corpus)]
+        for corpus in ORACLE_CORPUS_DIRECTORIES
     }
 
     for corpus, parsed in parsed_by_corpus.items():
         assert parsed, f"no bundled payloads were discovered for the {corpus.value} corpus"
-        assert all(isinstance(item, _ORACLE_PAYLOAD_MODELS[corpus]) for item in parsed)
+        assert all(isinstance(item, ORACLE_PAYLOAD_MODELS[corpus]) for item in parsed)
         assert all(item.expected_by_casilla_id for item in parsed), (
             f"a {corpus.value} payload carries no expected_by_casilla_id figures at all"
         )
@@ -98,7 +98,7 @@ def test_the_manual_corpus_declares_the_token_the_cross_check_verifies() -> None
     it hydrates to the member of the directory holding it.
     """
     manual = [
-        _parse_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path)
+        parse_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path)
         for path in _bundled_payloads(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE)
     ]
 
@@ -114,7 +114,7 @@ def test_the_replay_corpus_declares_no_token_and_is_modelled_as_such() -> None:
     that would answer the cross-check on the payload's behalf.
     """
     replays = [
-        _parse_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, path)
+        parse_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, path)
         for path in _bundled_payloads(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY)
     ]
 
@@ -134,7 +134,7 @@ def test_a_declared_corpus_contradicting_its_directory_is_refused(tmp_path: Path
     original = json.loads(source.read_text(encoding="utf-8"))
 
     control = _stage(tmp_path / "control", ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, source, original)
-    loaded = _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, control)
+    loaded = read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, control)
     assert isinstance(loaded, ExternalOracleEvidence)
     assert loaded.corpus is ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE
 
@@ -145,7 +145,7 @@ def test_a_declared_corpus_contradicting_its_directory_is_refused(tmp_path: Path
         {**original, "source_kind": ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY.value},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
 
     message = str(caught.value)
     assert ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY.value in message
@@ -164,7 +164,7 @@ def test_a_replay_declaring_the_manual_corpus_is_refused(tmp_path: Path) -> None
     original = json.loads(source.read_text(encoding="utf-8"))
 
     control = _stage(tmp_path / "control", ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, source, original)
-    assert _parse_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, control).source_kind is None
+    assert parse_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, control).source_kind is None
 
     contradicting = _stage(
         tmp_path / "mutated",
@@ -173,7 +173,7 @@ def test_a_replay_declaring_the_manual_corpus_is_refused(tmp_path: Path) -> None
         {**original, "source_kind": ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE.value},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, contradicting)
+        read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, contradicting)
 
     assert ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE.value in str(caught.value)
     assert contradicting.parent.name in str(caught.value)
@@ -191,7 +191,7 @@ def test_an_unrecognised_source_kind_token_is_refused_with_the_accepted_set(tmp_
         {**original, "source_kind": "hand_computed_by_the_author"},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     message = str(caught.value)
     assert "hand_computed_by_the_author" in message
@@ -216,7 +216,7 @@ def test_a_manual_payload_omitting_its_source_kind_is_refused(tmp_path: Path) ->
         {key: value for key, value in original.items() if key != "source_kind"},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     assert "source_kind" in str(caught.value)
 
@@ -237,7 +237,7 @@ def test_an_undeclared_payload_key_is_refused(tmp_path: Path) -> None:
         {**original, "expected_by_casila_id": {"0226": "58100.00"}},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     assert "expected_by_casila_id" in str(caught.value)
 
@@ -259,7 +259,7 @@ def test_a_non_canonical_casilla_key_is_refused(tmp_path: Path) -> None:
         {**original, "expected_by_casilla_id": {"Rendimiento neto reducido": "58100.00"}},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     assert "expected_by_casilla_id" in str(caught.value)
 
@@ -286,9 +286,9 @@ def test_a_year_less_name_does_not_demote_a_payload_that_declares_its_own_axes(t
     # Pins the premise: the case is only about the declared axes if the name
     # genuinely carries none, so a name that quietly parsed would make the
     # assertion below pass for the wrong reason.
-    assert _attribution_from_payload_name(staged) == (None, None)
+    assert attribution_from_payload_name(staged) == (None, None)
 
-    loaded = _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+    loaded = read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     assert isinstance(loaded, ExternalOracleEvidence)
     assert loaded.modelo == original["modelo"]
@@ -308,7 +308,7 @@ def test_a_payload_declaring_nothing_under_a_year_less_name_is_still_a_recorded_
     original = json.loads(source.read_text(encoding="utf-8"))
 
     control = _stage(tmp_path / "control", ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, source, original)
-    assert isinstance(_read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, control), ExternalOracleEvidence)
+    assert isinstance(read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, control), ExternalOracleEvidence)
 
     staged = _stage(
         tmp_path / "renamed",
@@ -317,7 +317,7 @@ def test_a_payload_declaring_nothing_under_a_year_less_name_is_still_a_recorded_
         original,
         name=_YEAR_LESS_NAME,
     )
-    loaded = _read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, staged)
+    loaded = read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, staged)
 
     assert isinstance(loaded, UnattributedOraclePayload)
     assert loaded.gap == "payload_name_lacks_modelo_and_filing_year"
@@ -338,7 +338,7 @@ def test_a_declared_filing_year_contradicting_the_name_is_refused(tmp_path: Path
 
     control = _stage(tmp_path / "control", ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, source, original)
     assert isinstance(
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, control),
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, control),
         ExternalOracleEvidence,
     )
 
@@ -349,7 +349,7 @@ def test_a_declared_filing_year_contradicting_the_name_is_refused(tmp_path: Path
         {**original, "filing_year": declared_year - 1},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
 
     message = str(caught.value)
     assert str(declared_year - 1) in message
@@ -370,7 +370,7 @@ def test_a_declared_modelo_contradicting_the_name_is_refused(tmp_path: Path) -> 
         {**original, "modelo": other_modelo},
     )
     with pytest.raises(RegistryValidationError) as caught:
-        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
+        read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
 
     message = str(caught.value)
     assert other_modelo in message
@@ -389,19 +389,19 @@ def test_both_readings_agree_across_the_whole_shipped_manual_corpus() -> None:
     assert payloads, "no manual worked-example payloads were discovered"
 
     for path in payloads:
-        parsed = _parse_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path)
-        name_modelo, name_year = _attribution_from_payload_name(path)
+        parsed = parse_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path)
+        name_modelo, name_year = attribution_from_payload_name(path)
         assert (parsed.modelo, parsed.filing_year) == (name_modelo, name_year), (
             f"{path.name}: declared attribution disagrees with the payload name"
         )
         assert isinstance(
-            _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path),
+            read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path),
             ExternalOracleEvidence,
         )
 
 
 def test_the_payload_models_cover_every_corpus_directory() -> None:
     """Every corpus the fold walks has a strict model, so none is read untyped."""
-    assert set(_ORACLE_PAYLOAD_MODELS) == set(_ORACLE_CORPUS_DIRECTORIES) == set(ExternalOracleCorpus)
-    assert _ORACLE_PAYLOAD_MODELS[ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE] is ManualWorkedExamplePayload
-    assert _ORACLE_PAYLOAD_MODELS[ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY] is RentaWebOpenReplayPayload
+    assert set(ORACLE_PAYLOAD_MODELS) == set(ORACLE_CORPUS_DIRECTORIES) == set(ExternalOracleCorpus)
+    assert ORACLE_PAYLOAD_MODELS[ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE] is ManualWorkedExamplePayload
+    assert ORACLE_PAYLOAD_MODELS[ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY] is RentaWebOpenReplayPayload

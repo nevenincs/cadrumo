@@ -38,10 +38,10 @@ from cadrumo.domain.filing.schema import ModeloDraft
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.validate_export_field_placement import binding_export_spans, validate_export_record_field_placement
-from .._export_tree import render_complete_export_tree
+from ..export_tree import render_complete_export_tree
 from ..render_check import RevisionRenderInputs, revision_render_inputs
 from ..render_profile import validate_render_profile
-from ..render_profile_authority import _validate_signed_composite_source_agreement
+from ..render_profile_authority import validate_signed_composite_source_agreement
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -220,7 +220,7 @@ def test_signed_amount_requires_complete_exact_source_prose_and_geometry(
     rule = next(rule for rule in inputs.render_profile.signed_composite_rules if rule.anchor.source_row == row)
     field = next(field.parser_field for field in inputs.joined.fields if field.parser_field.source_row == row)
     identity = inputs.render_profile.design_identity
-    _validate_signed_composite_source_agreement(rule, field, identity)
+    validate_signed_composite_source_agreement(rule, field, identity)
     assert "será un espacio" in (field.content or "")
     assert "sin coma decimal" in (field.content or "")
     for update in (
@@ -233,13 +233,11 @@ def test_signed_amount_requires_complete_exact_source_prose_and_geometry(
         {"record_identity": "other record"},
     ):
         with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-            _validate_signed_composite_source_agreement(rule, field.model_copy(update=update), identity)
+            validate_signed_composite_source_agreement(rule, field.model_copy(update=update), identity)
     with pytest.raises(RegistryValidationError, match="unreviewed or stale"):
-        _validate_signed_composite_source_agreement(
-            rule, field, identity.model_copy(update={"source_sha256": "0" * 64})
-        )
+        validate_signed_composite_source_agreement(rule, field, identity.model_copy(update={"source_sha256": "0" * 64}))
     with pytest.raises(RegistryValidationError, match="signed monetary composite"):
-        _validate_signed_composite_source_agreement(
+        validate_signed_composite_source_agreement(
             rule.model_copy(update={"integer_digits": rule.integer_digits - 1}), field, identity
         )
 

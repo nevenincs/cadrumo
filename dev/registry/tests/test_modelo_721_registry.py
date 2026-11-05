@@ -17,7 +17,7 @@ from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -29,7 +29,7 @@ _M721_BOE_ERAS = (
 
 
 def _modelo_721() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("721")
+    return committed_modelo("721")
 
 
 def _revision_721(year: int) -> tuple[ModeloDefinition, ModeloRevision, RegistryCatalogues]:

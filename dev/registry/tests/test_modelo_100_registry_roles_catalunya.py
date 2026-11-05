@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import (
-    _AUTONOMIC_DEDUCTION_ART_77_REF,
-    _modelo_100_snapshot,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    AUTONOMIC_DEDUCTION_ART_77_REF,
+    modelo_100_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -29,7 +29,7 @@ _LEGACY_CATALUNYA_COOPERATIVAS_CHILD_ROLES = frozenset(
 
 
 def test_modelo_100_catalunya_cooperativas_agrarias_roles_are_family_specific() -> None:
-    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
+    revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"2003", "2004", "2005"}}
     legacy_roles = [
         casilla.semantic_role
@@ -44,16 +44,16 @@ def test_modelo_100_catalunya_cooperativas_agrarias_roles_are_family_specific() 
     assert parent.label.startswith("Por inversión en sociedades cooperativas agrarias y de vivienda")
     assert tuple(parent.section) == _CATALUNYA_DEDUCTION_SECTION
     assert parent.semantic_role == _CATALUNYA_COOPERATIVAS_AGRARIAS_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["2004"]
     assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _CATALUNYA_DEDUCTION_SECTION
     assert generated.semantic_role == _CATALUNYA_COOPERATIVAS_AGRARIAS_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["2005"]
     assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(pending.section) == _CATALUNYA_DEDUCTION_SECTION
     assert pending.semantic_role == _CATALUNYA_COOPERATIVAS_AGRARIAS_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
+    assert AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs

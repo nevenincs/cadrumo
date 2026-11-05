@@ -28,8 +28,8 @@ from ...tests.edition_staging_tree_support import (
     staged_modelo,
     write_edition,
 )
-from .._tree_validation import _load_continuity_metadata_modelo
 from ..edition_candidate_staging import stage_continuity_metadata
+from ..tree_validation import load_continuity_metadata_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -81,7 +81,7 @@ def test_an_inheriting_predecessor_stages_as_the_complete_edition_it_stands_for(
 
     assert metadata_root is not None
     assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == ["2023", "2024"]
-    witness = _load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2025")
+    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2025")
     staged = witness.revisions["2024"]
     assert staged.predecessor is None
     assert _rows(staged) == [
@@ -101,7 +101,7 @@ def test_successors_inheriting_through_the_excluded_target_still_stage_complete(
     metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2023")
 
     assert metadata_root is not None
-    witness = _load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2023")
+    witness = load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2023")
     assert tuple(witness.revisions) == ("2024", "2025")
     assert _rows(witness.revisions["2025"]) == [
         ("0001", "1", "base-imponible"),
@@ -140,7 +140,7 @@ def test_the_declared_predecessor_chain_is_followed_not_the_evolution_chain(tmp_
 
     assert target_2025 is not None
     assert target_2023 is not None
-    witness = _load_continuity_metadata_modelo(target_2023, modelo_id="999", revision_id="2023")
+    witness = load_continuity_metadata_modelo(target_2023, modelo_id="999", revision_id="2023")
     assert _rows(witness.revisions["2025"]) == [
         ("0001", "1", "base-imponible"),
         ("0002", "22", "cuota-integra"),

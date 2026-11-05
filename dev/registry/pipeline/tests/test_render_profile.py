@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import (
     validate_export_wire_value,
 )
 
-from .. import export_field_render_profile_derivation as _field_derivation
+from .. import export_field_render_profile_derivation
 from ..joined_record_design import (
     JoinedRecordDesign,
     JoinedRecordDesignField,
@@ -46,7 +46,7 @@ from ..semantic_map import SemanticMap
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _anchor(row: int) -> RenderProfileAnchor:
+def render_profile_anchor(row: int) -> RenderProfileAnchor:
     return RenderProfileAnchor(
         sheet="DP200001",
         source_row=row,
@@ -56,7 +56,7 @@ def _anchor(row: int) -> RenderProfileAnchor:
     )
 
 
-def _design_identity(*, sha256: str = "a" * 64) -> RenderProfileDesignIdentity:
+def design_identity(*, sha256: str = "a" * 64) -> RenderProfileDesignIdentity:
     return RenderProfileDesignIdentity(
         modelo="200",
         design_epoch="2025",
@@ -167,7 +167,7 @@ def _joined(intermediate: RecordDesignIntermediate | None = None) -> JoinedRecor
     )
 
 
-def _width_rule(aeat_type: str, anchor: RenderProfileAnchor) -> Width17MembershipRule:
+def width_rule(aeat_type: str, anchor: RenderProfileAnchor) -> Width17MembershipRule:
     payload = {
         "rule_kind": "width_17_membership",
         "aeat_type": aeat_type,
@@ -186,7 +186,7 @@ def _width_rule(aeat_type: str, anchor: RenderProfileAnchor) -> Width17Membershi
     return Width17MembershipRule.model_validate(payload)
 
 
-def _singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
+def singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
     return SingletonNumericRule(
         rule_kind="singleton_numeric",
         anchor=anchor,
@@ -207,22 +207,22 @@ def _singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
     )
 
 
-def _profile() -> RenderProfile:
+def render_profile() -> RenderProfile:
     return RenderProfile(
         schema_version=1,
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         fragment_ids=("width-17", "smaller-fields"),
         width_17_rules=(
-            _width_rule("Num", _anchor(10)),
-            _width_rule("N", _anchor(11)),
+            width_rule("Num", render_profile_anchor(10)),
+            width_rule("N", render_profile_anchor(11)),
         ),
-        singleton_rules=(_singleton(_anchor(12)),),
+        singleton_rules=(singleton(render_profile_anchor(12)),),
     )
 
 
 def _source_evidence() -> RenderProfileSourceEvidence:
     return RenderProfileSourceEvidence(
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         entries=(
             RenderProfileSourceEvidenceEntry(
                 sheet="DP200001",
@@ -257,7 +257,7 @@ def _fragment_toml(fragment: RenderProfileFragment) -> str:
 
 def test_complete_profile_covers_only_blank_fixed_numeric_fields_and_preserves_num_n_policy() -> None:
     """The production validator accepts exact membership, not a type/width default."""
-    profile = _profile()
+    profile = render_profile()
     validate_render_profile(profile, _joined(), _source_evidence())
 
     assert profile.width_17_rules[0].sign_policy == "unsigned"
@@ -268,7 +268,7 @@ def test_complete_profile_covers_only_blank_fixed_numeric_fields_and_preserves_n
 
 
 def test_singleton_rules_consume_the_public_closed_value_policy_axis() -> None:
-    profile = _profile()
+    profile = render_profile()
 
     assert all(isinstance(rule.value_policy, ExportValuePolicy) for rule in profile.singleton_rules)
     source = Path("dev/registry/pipeline/render_profile.py").read_text(encoding="utf-8")
@@ -277,7 +277,7 @@ def test_singleton_rules_consume_the_public_closed_value_policy_axis() -> None:
 
 
 def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> None:
-    profile = _profile()
+    profile = render_profile()
     source_evidence = _source_evidence()
     reordered = profile.model_copy(
         update={
@@ -331,9 +331,9 @@ def test_fragment_toml_refuses_a_missing_required_value_policy(tmp_path: Path) -
     fragment = RenderProfileFragment(
         schema_version=1,
         fragment_id="missing-policy",
-        design_identity=_design_identity(),
+        design_identity=design_identity(),
         width_17_rules=(),
-        singleton_rules=(_singleton(_anchor(12)),),
+        singleton_rules=(singleton(render_profile_anchor(12)),),
     )
     source = _fragment_toml(fragment)
     assert 'value_policy = "digit-string"\n' in source
@@ -392,24 +392,26 @@ def test_empty_rules_fragment_refusal_never_carries_a_sibling_fields_value(tmp_p
     ("profile", "joined", "error"),
     (
         (
-            _profile().model_copy(update={"design_identity": _design_identity(sha256="b" * 64)}),
+            render_profile().model_copy(update={"design_identity": design_identity(sha256="b" * 64)}),
             _joined(),
             "identity",
         ),
         (
-            _profile().model_copy(update={"singleton_rules": ()}),
+            render_profile().model_copy(update={"singleton_rules": ()}),
             _joined(),
             "cover exactly",
         ),
         (
-            _profile().model_copy(
-                update={"singleton_rules": (_singleton(_anchor(12)), _singleton(_anchor(12)))},
+            render_profile().model_copy(
+                update={
+                    "singleton_rules": (singleton(render_profile_anchor(12)), singleton(render_profile_anchor(12)))
+                },
             ),
             _joined(),
             "duplicate or overlapping",
         ),
-        (_profile(), _joined(_intermediate(smaller_content="2 enteros")), "cover exactly"),
-        (_profile(), _joined().model_copy(update={"modelo": "303"}), "identity"),
+        (render_profile(), _joined(_intermediate(smaller_content="2 enteros")), "cover exactly"),
+        (render_profile(), _joined().model_copy(update={"modelo": "303"}), "identity"),
     ),
 )
 def test_profile_refuses_identity_missing_overlap_present_content_and_modelo_drift(
@@ -436,7 +438,7 @@ def test_profile_refuses_nonexistent_or_mismatched_source_evidence(
     error: str,
 ) -> None:
     """A profile-authored claim must resolve exactly against separate verified source evidence."""
-    profile = _profile()
+    profile = render_profile()
     width_rule = profile.width_17_rules[0]
     contradicted_rule = width_rule.model_copy(
         update={
@@ -460,10 +462,10 @@ def test_profile_refuses_nonexistent_or_mismatched_source_evidence(
 def test_profile_refuses_source_evidence_sha_drift() -> None:
     """Exact cell text from a different source digest is inapplicable authority."""
     drifted = _source_evidence().model_copy(
-        update={"design_identity": _design_identity(sha256="b" * 64)},
+        update={"design_identity": design_identity(sha256="b" * 64)},
     )
     with pytest.raises(RegistryValidationError, match=r"source evidence.*identity"):
-        validate_render_profile(_profile(), _joined(), drifted)
+        validate_render_profile(render_profile(), _joined(), drifted)
 
 
 def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() -> None:
@@ -477,27 +479,27 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     ``source_row`` case below pins -- omit the exception and the principle it
     guards disappears with it.
     """
-    anchor_payload = _anchor(12).model_dump(mode="python")
+    anchor_payload = render_profile_anchor(12).model_dump(mode="python")
     del anchor_payload["source_cell"]
     omitted_cell = RenderProfileAnchor.model_validate(anchor_payload)
     assert omitted_cell.source_cell is None
 
-    anchor_payload = _anchor(12).model_dump(mode="python")
+    anchor_payload = render_profile_anchor(12).model_dump(mode="python")
     del anchor_payload["source_row"]
     with pytest.raises(ValidationError, match="source_row"):
         RenderProfileAnchor.model_validate(anchor_payload)
 
-    anchor_payload = _anchor(12).model_dump(mode="python")
+    anchor_payload = render_profile_anchor(12).model_dump(mode="python")
     del anchor_payload["ordinal"]
     with pytest.raises(ValidationError, match="ordinal"):
         RenderProfileAnchor.model_validate(anchor_payload)
 
-    singleton_payload = _singleton(_anchor(12)).model_dump(mode="python")
+    singleton_payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     del singleton_payload["semantic_kind"]
     with pytest.raises(ValidationError, match="semantic_kind"):
         SingletonNumericRule.model_validate(singleton_payload)
 
-    singleton_payload = _singleton(_anchor(12)).model_dump(mode="python")
+    singleton_payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     del singleton_payload["value_policy"]
     with pytest.raises(ValidationError, match="value_policy"):
         SingletonNumericRule.model_validate(singleton_payload)
@@ -506,21 +508,21 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     with pytest.raises(ValidationError, match="value_policy"):
         SingletonNumericRule.model_validate(singleton_payload)
 
-    selector_payload = _singleton(_anchor(12)).model_dump(mode="python") | {"selector": "Num:2"}
+    selector_payload = singleton(render_profile_anchor(12)).model_dump(mode="python") | {"selector": "Num:2"}
     with pytest.raises(ValidationError, match="selector"):
         SingletonNumericRule.model_validate(selector_payload)
 
-    signed_payload = _width_rule("N", _anchor(11)).model_dump(mode="python")
+    signed_payload = width_rule("N", render_profile_anchor(11)).model_dump(mode="python")
     signed_payload["sign_policy"] = "unsigned"
     with pytest.raises(ValidationError, match="sign policy"):
         Width17MembershipRule.model_validate(signed_payload)
 
-    unsigned_payload = _width_rule("Num", _anchor(10)).model_dump(mode="python")
+    unsigned_payload = width_rule("Num", render_profile_anchor(10)).model_dump(mode="python")
     unsigned_payload["integer_digits"] = 14
     with pytest.raises(ValidationError, match="sign policy"):
         Width17MembershipRule.model_validate(unsigned_payload)
 
-    policy_payload = _singleton(_anchor(12)).model_dump(mode="python")
+    policy_payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     policy_payload["semantic_kind"] = "checkbox"
     policy_payload["value_policy"] = "selected-1-unselected-0"
     policy_payload["integer_digits"] = 1
@@ -528,14 +530,14 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     policy_payload["evidence"] = {
         "authority_kind": "reviewed_policy",
         "decision_id": "m200-2025-dp200001-r0012",
-        "governed_anchor": _anchor(13),
+        "governed_anchor": render_profile_anchor(13),
         "decision_statement": "Encode selected as 1 and absent or unselected as 0.",
         "justification": "Reviewed exact-anchor decision, not official-source text.",
     }
     with pytest.raises(ValidationError, match="exact governed anchor"):
         SingletonNumericRule.model_validate(policy_payload)
 
-    policy_payload["evidence"]["governed_anchor"] = _anchor(12)
+    policy_payload["evidence"]["governed_anchor"] = render_profile_anchor(12)
     policy_payload["value_policy"] = "enumerated-digits"
     with pytest.raises(ValidationError, match="selected-1-unselected-0"):
         SingletonNumericRule.model_validate(policy_payload)
@@ -559,21 +561,21 @@ def test_width_17_membership_accepts_a_reviewed_policy_over_its_anchor_enumerati
     be labelled as quoted official text, asserting an authority the quoted
     statement does not carry.
     """
-    payload = _width_rule("Num", _anchor(10)).model_dump(mode="python")
+    payload = width_rule("Num", render_profile_anchor(10)).model_dump(mode="python")
     payload["evidence"] = _membership_policy_evidence()
     rule = Width17MembershipRule.model_validate(payload)
     evidence = rule.evidence
     assert isinstance(evidence, ReviewedPolicyDecision)
     assert evidence.governed_anchor is None
-    assert rule.anchors == (_anchor(10),)
+    assert rule.anchors == (render_profile_anchor(10),)
 
 
 def test_width_17_membership_policy_refuses_a_named_governed_anchor() -> None:
     """A membership decision governs the rule's enumeration, never one anchor."""
-    payload = _width_rule("N", _anchor(11)).model_dump(mode="python")
+    payload = width_rule("N", render_profile_anchor(11)).model_dump(mode="python")
     payload["evidence"] = _membership_policy_evidence() | {
         "decision_id": "m200-2025-width17-n-amount-representation",
-        "governed_anchor": _anchor(11),
+        "governed_anchor": render_profile_anchor(11),
     }
     with pytest.raises(ValidationError, match="anchor enumeration"):
         Width17MembershipRule.model_validate(payload)
@@ -581,7 +583,7 @@ def test_width_17_membership_policy_refuses_a_named_governed_anchor() -> None:
 
 def test_singleton_policy_refuses_an_omitted_governed_anchor() -> None:
     """A singleton decision must still name the exact anchor it governs."""
-    payload = _singleton(_anchor(12)).model_dump(mode="python")
+    payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     payload["evidence"] = _membership_policy_evidence() | {
         "decision_id": "m200-2025-dp200001-r0012",
     }
@@ -614,7 +616,7 @@ def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
     error: str,
 ) -> None:
     """An authored kind never supplies an internally contradictory wire shape."""
-    payload = _singleton(_anchor(12)).model_dump(mode="python")
+    payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     payload.update(
         semantic_kind=semantic_kind,
         value_policy=value_policy,
@@ -627,7 +629,7 @@ def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
 
 
 def test_enumeration_domain_uses_semantic_integers_not_padded_wire_spellings() -> None:
-    payload = _singleton(_anchor(12)).model_dump(mode="python")
+    payload = singleton(render_profile_anchor(12)).model_dump(mode="python")
     payload.update(
         semantic_kind="enumeration",
         value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
@@ -701,7 +703,7 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
         ),
     )
     rule = SingletonNumericRule.model_validate(
-        _singleton(_anchor(12)).model_dump(mode="python")
+        singleton(render_profile_anchor(12)).model_dump(mode="python")
         | {
             "semantic_kind": semantic_kind,
             "value_policy": policy,
@@ -711,7 +713,7 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
         },
     )
 
-    derivation = _field_derivation._profile_singleton_derivation(
+    derivation = export_field_render_profile_derivation.profile_singleton_derivation(
         joined,
         rule,
         export_record_id="reviewed-record",
@@ -726,8 +728,10 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
     # Sign bytes are source-printed semantic parts, governed by the signed
     # component route rather than a numeric singleton profile rule.
     signed_part_only = {ExportValuePolicy.SIGNED_COMPONENT_SIGN, ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN}
-    assert not set(_field_derivation._SINGLETON_POLICY_SHAPES) & signed_part_only
-    assert set(_field_derivation._SINGLETON_POLICY_SHAPES) | signed_part_only == set(ExportValuePolicy)
+    assert not set(export_field_render_profile_derivation.SINGLETON_POLICY_SHAPES) & signed_part_only
+    assert set(export_field_render_profile_derivation.SINGLETON_POLICY_SHAPES) | signed_part_only == set(
+        ExportValuePolicy
+    )
 
 
 def test_source_part_sign_policies_project_and_refuse_their_distinct_wire_domains() -> None:
@@ -750,7 +754,7 @@ def test_source_part_sign_policies_project_and_refuse_their_distinct_wire_domain
 
 def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drift(tmp_path: Path) -> None:
     """Fragmentation changes review size only; compilation order and identity stay deterministic."""
-    profile = _profile()
+    profile = render_profile()
     unsigned = RenderProfileFragment(
         schema_version=1,
         fragment_id="width-17-num",
@@ -779,7 +783,7 @@ def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drif
     compiled = load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
     assert compiled.fragment_ids == ("width-17-num", "width-17-n", "smaller-field")
 
-    drifted = smaller.model_copy(update={"design_identity": _design_identity(sha256="b" * 64)})
+    drifted = smaller.model_copy(update={"design_identity": design_identity(sha256="b" * 64)})
     (tmp_path / "0300-smaller.toml").write_text(_fragment_toml(drifted), encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="inapplicable design identities"):
         load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
@@ -787,7 +791,7 @@ def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drif
 
 def test_profile_loader_refuses_legacy_or_non_profile_siblings(tmp_path: Path) -> None:
     """A profile directory is an exhaustive authority set, never a tolerant legacy container."""
-    profile = _profile()
+    profile = render_profile()
     fragment = RenderProfileFragment(
         schema_version=1,
         fragment_id="width-17-num",
@@ -804,7 +808,7 @@ def test_profile_loader_refuses_legacy_or_non_profile_siblings(tmp_path: Path) -
 
 def test_profile_loader_refuses_conflicting_width17_authority(tmp_path: Path) -> None:
     """Splitting one numeric type cannot smuggle in a contradictory reviewed convention."""
-    profile = _profile()
+    profile = render_profile()
     first = RenderProfileFragment(
         schema_version=1,
         fragment_id="width-17-num-a",
@@ -844,7 +848,7 @@ def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() ->
         ordinal="99",
         record_identity="DP200001",
     )
-    unknown_rule = _singleton(unknown).model_copy(
+    unknown_rule = singleton(unknown).model_copy(
         update={
             "evidence": OfficialSourceEvidence(
                 authority_kind="official_source",
@@ -855,7 +859,7 @@ def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() ->
             ),
         },
     )
-    profile = _profile().model_copy(update={"singleton_rules": (unknown_rule,)})
+    profile = render_profile().model_copy(update={"singleton_rules": (unknown_rule,)})
 
     with pytest.raises(RegistryValidationError, match="unknown="):
         validate_render_profile(profile, _joined(), _source_evidence())

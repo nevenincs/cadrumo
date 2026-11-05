@@ -22,7 +22,7 @@ from ..edition_minimality_lanes import (
     delta_minimality_reasons,
     edition_assessment_reasons,
 )
-from ..registry_status import RegistryStatus, _payload
+from ..registry_status import RegistryStatus, registry_status_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -100,7 +100,7 @@ def _restating_131(tmp_path: Path) -> ModeloDefinition:
 
 def test_the_shipped_source_holds_both_standing_gates() -> None:
     assert edition_assessment_reasons(bundled_registry_root()) == ()
-    payload = _payload(_status(), blocking=True)
+    payload = registry_status_payload(_status(), blocking=True)
     assert _lanes(payload)["delta_minimality"] == "passed"
     assert _lanes(payload)["edition_delta_assessment"] == "passed"
 
@@ -111,7 +111,7 @@ def test_a_restated_inherited_row_fails_the_delta_minimality_lane(tmp_path: Path
     assert len(reasons) == 1
     assert _DELTA_MODELO in reasons[0]
 
-    payload = _payload(_status(minimality=reasons), blocking=True)
+    payload = registry_status_payload(_status(minimality=reasons), blocking=True)
     assert _lanes(payload)["delta_minimality"] == "failed"
     assert payload["failed_lanes"] == ["delta_minimality"]
     assert payload["result"] == "failed"
@@ -134,7 +134,7 @@ def test_a_redundant_override_leaf_fails_the_assessment_lane_and_removing_it_cle
     assert len(reasons) == 1
     assert f"modelo {_ASSESSED_MODELO}" in reasons[0]
 
-    payload = _payload(_status(assessment=reasons), blocking=True)
+    payload = registry_status_payload(_status(assessment=reasons), blocking=True)
     assert _lanes(payload)["edition_delta_assessment"] == "failed"
     assert payload["failed_lanes"] == ["edition_delta_assessment"]
 

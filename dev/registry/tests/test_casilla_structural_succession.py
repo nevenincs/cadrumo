@@ -24,12 +24,12 @@ from ..compiler.validate_cross_revision_evolution import strict_continuity_evolu
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validate_revision_closure import validate_revision_reference_surfaces
 from ..compiler.validate_semantic_roles import semantic_role_consistency_failures
-from .test_revision_edition_materialisation import _casilla, _modelo_root, _retirement, _write_edition
+from .test_revision_edition_materialisation import casilla, modelo_root, retirement, write_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _relation(
+def casilla_structural_succession_relation(
     *, kind: str = "split", sources: tuple[str, ...] = ("combined",), targets: tuple[str, ...] = ("surname", "given")
 ) -> str:
     def quoted(values: tuple[str, ...]) -> str:
@@ -47,26 +47,26 @@ def _relation(
     )
 
 
-def _tree(tmp_path: Path, *, delta: bool = True, merge: bool = False, relation: str | None = None) -> Path:
-    root = _modelo_root(tmp_path)
+def tree(tmp_path: Path, *, delta: bool = True, merge: bool = False, relation: str | None = None) -> Path:
+    root = modelo_root(tmp_path)
     sources = ("surname", "given") if merge else ("combined",)
     targets = ("combined",) if merge else ("surname", "given")
-    _write_edition(
+    write_edition(
         root,
         "2024",
         year=2024,
         casillas="".join(
-            _casilla("2024", f"old-{index}", number=str(index), lineage=lineage)
+            casilla("2024", f"old-{index}", number=str(index), lineage=lineage)
             for index, lineage in enumerate(sources, 1)
         ),
         manifest_extra='continuidad_validation = "strict"\n',
     )
-    _write_edition(
+    write_edition(
         root,
         "2025",
         year=2025,
         casillas="".join(
-            _casilla("2025", f"new-{index}", number=str(index), lineage=lineage)
+            casilla("2025", f"new-{index}", number=str(index), lineage=lineage)
             for index, lineage in enumerate(targets, 1)
         ),
         manifest_extra='predecessor = "2024"\n' if delta else "",
@@ -76,7 +76,9 @@ def _tree(tmp_path: Path, *, delta: bool = True, merge: bool = False, relation: 
     (directory / "0001-declarations.toml").write_text(
         relation
         if relation is not None
-        else _relation(kind="merge" if merge else "split", sources=sources, targets=targets),
+        else casilla_structural_succession_relation(
+            kind="merge" if merge else "split", sources=sources, targets=targets
+        ),
         encoding="utf-8",
     )
     return root
@@ -87,7 +89,7 @@ def _tree(tmp_path: Path, *, delta: bool = True, merge: bool = False, relation: 
 def test_structural_boundary_serializes_and_resolves_without_identity_inheritance(
     tmp_path: Path, merge: bool, delta: bool
 ) -> None:
-    root = _tree(tmp_path, merge=merge, delta=delta)
+    root = tree(tmp_path, merge=merge, delta=delta)
     modelo = load_modelo_directory(root)
     successor = modelo.revisions["2025"]
     assert len(successor.casillas) == (1 if merge else 2)
@@ -118,23 +120,27 @@ def test_structural_boundary_serializes_and_resolves_without_identity_inheritanc
     ],
 )
 def test_invalid_boundary_or_endpoint_refuses(tmp_path: Path, replacement: tuple[str, str]) -> None:
-    root = _tree(tmp_path, relation=_relation().replace(*replacement))
+    root = tree(tmp_path, relation=casilla_structural_succession_relation().replace(*replacement))
     with pytest.raises((RegistryError, ValueError)):
         load_modelo_directory(root)
 
 
 def test_overlapping_ownership_refuses(tmp_path: Path) -> None:
-    root = _tree(tmp_path, relation=_relation() + _relation().replace('id = "name-structure"', 'id = "duplicate"'))
+    root = tree(
+        tmp_path,
+        relation=casilla_structural_succession_relation()
+        + casilla_structural_succession_relation().replace('id = "name-structure"', 'id = "duplicate"'),
+    )
     with pytest.raises(RegistryError, match="overlapping"):
         load_modelo_directory(root)
 
 
 def test_retirement_cannot_duplicate_structural_withdrawal(tmp_path: Path) -> None:
-    root = _tree(tmp_path)
+    root = tree(tmp_path)
     directory = root / "revisions" / "2025" / "casilla_continuidad_evolutions"
     directory.mkdir()
     (directory / "0001-declarations.toml").write_text(
-        _retirement("2025", lineage="combined", from_revision="2024"), encoding="utf-8"
+        retirement("2025", lineage="combined", from_revision="2024"), encoding="utf-8"
     )
     with pytest.raises(RegistryError, match="conflicting single-chain"):
         load_modelo_directory(root)
@@ -142,7 +148,7 @@ def test_retirement_cannot_duplicate_structural_withdrawal(tmp_path: Path) -> No
 
 @pytest.mark.parametrize("origin", ["grounded", "seeded", "new_on_form", "predecessor_edition_silent"])
 def test_structural_target_cannot_claim_continuation_or_novelty(tmp_path: Path, origin: str) -> None:
-    root = _tree(tmp_path)
+    root = tree(tmp_path)
     fragment = root / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
     fragment.write_text(
         fragment.read_text(encoding="utf-8").replace(
@@ -156,8 +162,8 @@ def test_structural_target_cannot_claim_continuation_or_novelty(tmp_path: Path, 
 
 
 def test_relationship_never_inherits_into_grandchild(tmp_path: Path) -> None:
-    root = _tree(tmp_path)
-    _write_edition(root, "2026", year=2026, casillas="", manifest_extra='predecessor = "2025"\n')
+    root = tree(tmp_path)
+    write_edition(root, "2026", year=2026, casillas="", manifest_extra='predecessor = "2025"\n')
     modelo = load_modelo_directory(root)
     assert modelo.revisions["2026"].casilla_structural_successions == ()
     assert len(modelo.revisions["2026"].casillas) == 2
@@ -185,7 +191,7 @@ def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
 
 
 def test_source_cannot_reappear_and_target_cannot_preexist(tmp_path: Path) -> None:
-    root = _tree(tmp_path)
+    root = tree(tmp_path)
     modelo = load_modelo_directory(root)
     old, new = modelo.revisions["2024"], modelo.revisions["2025"]
     continued = new.model_copy(update={"casillas": (*new.casillas, old.casillas[0])})
@@ -198,10 +204,10 @@ def test_source_cannot_reappear_and_target_cannot_preexist(tmp_path: Path) -> No
 
 
 def test_relationship_does_not_select_a_predecessor(tmp_path: Path) -> None:
-    root = _tree(tmp_path, delta=False)
+    root = tree(tmp_path, delta=False)
     modelo = load_modelo_directory(root)
     assert modelo.revisions["2025"].predecessor is None
-    _write_edition(root, "2023", year=2023, casillas="")
+    write_edition(root, "2023", year=2023, casillas="")
     manifest = root / "revisions" / "2025" / "revision.toml"
     manifest.write_text(manifest.read_text(encoding="utf-8") + 'predecessor = "2023"\n', encoding="utf-8")
     with pytest.raises(RegistryError):

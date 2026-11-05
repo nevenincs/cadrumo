@@ -15,15 +15,15 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportPadding,
 )
 
-from .export_field_literal_derivation import _literal_derivation
-from .export_field_numeric_derivation import _numeric_derivation
+from .export_field_literal_derivation import literal_derivation
+from .export_field_numeric_derivation import numeric_derivation
 from .export_field_numeric_source_pins import m714_checkbox_for, m714_numeric_values_for
 from .export_field_render_profile_derivation import (
-    _profile_signed_composite_derivation,
-    _render_profile_anchor,
-    _render_profile_numeric_derivation,
+    profile_signed_composite_derivation,
+    render_profile_anchor,
+    render_profile_numeric_derivation,
 )
-from .export_field_schema import _is_required, _is_required_admitting_blank_text, _presence_marker, _schema_field
+from .export_field_schema import is_required, is_required_admitting_blank_text, presence_marker, schema_field
 from .export_fragment_provenance import (
     ExportFieldDerivation,
     ExportFieldDerivationCode,
@@ -33,12 +33,12 @@ from .export_tree_serialization import require_safe_identifier
 from .joined_record_design import JoinedRecordDesignField, design_view
 from .note_literals import NoteLiteralDeclaration
 from .render_profile_eligibility import (
-    _has_absent_naturaleza,
-    _is_numeric_aeat_type,
-    _states_no_wire_fact,
+    has_absent_naturaleza,
+    is_numeric_aeat_type,
     source_contact_name_field,
     source_iban_country_text_field,
     source_m270_birth_place_text_field,
+    states_no_wire_fact,
 )
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileDesignIdentity
@@ -76,7 +76,7 @@ _ALPHANUMERIC_TYPES: Final[frozenset[str]] = frozenset({"an", "alfanumerico", "a
 _BLANK_RUN_TYPES: Final[frozenset[str]] = frozenset({"blancos"})
 
 
-def _normalise_field(
+def normalise_field(
     joined_field: JoinedRecordDesignField,
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
@@ -96,7 +96,7 @@ def _normalise_field(
     """
     part = joined_field.semantic_entry.part
     if part is None:
-        return _normalise_cell(
+        return normalise_cell(
             joined_field,
             transport_profile,
             render_profile,
@@ -107,7 +107,7 @@ def _normalise_field(
             applicability_notes=applicability_notes,
         )
     view = joined_field.model_copy(update={"parser_field": design_view(joined_field)})
-    derived = _normalise_cell(
+    derived = normalise_cell(
         view,
         transport_profile,
         render_profile,
@@ -130,7 +130,7 @@ def _normalise_field(
     )
 
 
-def _normalise_cell(
+def normalise_cell(
     joined_field: JoinedRecordDesignField,
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
@@ -204,10 +204,10 @@ def _signed_component_derivation(
     if component_policy is None:
         return None
     is_sign = component_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="text" if is_sign else "money",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.NONE if is_sign else ExportPadding.LEFT_ZERO,
         justification=ExportJustification.NONE if is_sign else ExportJustification.RIGHT,
         signed=False,
@@ -236,10 +236,10 @@ def _signed_triple_derivation(
         ExportValuePolicy.SIGNED_COMPONENT_SIGN,
         ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
     }
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="text" if sign_part else "integer",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.NONE if sign_part else ExportPadding.LEFT_ZERO,
         justification=ExportJustification.NONE if sign_part else ExportJustification.RIGHT,
         signed=False,
@@ -264,10 +264,10 @@ def _text_date_component_derivation(
     )
     if date_policy is None:
         return None
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(joined_field.parser_field.validation),
+        required=is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -303,13 +303,13 @@ def _source_bounded_year_derivation(
         and semantic_entry.draft_attribute == "filing_year"
     ):
         raise RegistryValidationError("source-bounded year requires a four-position Num draft filing_year field")
-    year_rule = render_profile.singleton_rule_by_anchor.get(_render_profile_anchor(joined_field))
+    year_rule = render_profile.singleton_rule_by_anchor.get(render_profile_anchor(joined_field))
     if year_rule is None or year_rule.value_policy is not ExportValuePolicy.FOUR_DIGIT_YEAR:
         raise RegistryValidationError("source-bounded year requires an exact reviewed four-digit-year rule")
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(parser_field.validation),
+        required=is_required(parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -345,10 +345,10 @@ def _source_stated_year_constant_derivation(
         and entry.draft_attribute == "filing_year"
     ):
         raise RegistryValidationError("source-stated year constant requires its exact four-digit filing_year slot")
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="integer",
-        required=_is_required(field.validation),
+        required=is_required(field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
         signed=False,
@@ -371,7 +371,7 @@ def _derive_declared_field(
 ) -> ExportFieldDerivation:
     semantic_entry = joined_field.semantic_entry
     if semantic_entry.kind is CasillaFieldKind.LITERAL:
-        return _literal_derivation(
+        return literal_derivation(
             joined_field,
             encoding=transport_profile.encoding,
             render_profile=render_profile,
@@ -380,7 +380,7 @@ def _derive_declared_field(
             literal_notes=literal_notes,
         )
     if semantic_entry.kind is CasillaFieldKind.FILLER:
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="text",
             required=False,
@@ -427,7 +427,7 @@ def _derive_by_aeat_type(
             type_code,
             export_record_id=export_record_id,
         )
-    if _is_numeric_aeat_type(parser_field.aeat_type):
+    if is_numeric_aeat_type(parser_field.aeat_type):
         return _numeric_field_derivation(
             joined_field,
             render_profile,
@@ -435,7 +435,7 @@ def _derive_by_aeat_type(
             note_governed_amounts=note_governed_amounts,
             applicability_notes=applicability_notes,
         )
-    if _has_absent_naturaleza(parser_field):
+    if has_absent_naturaleza(parser_field):
         return _derive_absent_naturaleza(
             joined_field,
             semantic_entry,
@@ -476,7 +476,7 @@ def _derive_absent_naturaleza(
         return contact_name
     # The official design printed no naturaleza, so there is nothing to
     # derive a representation from; the reviewed profile governs this field.
-    return _render_profile_numeric_derivation(
+    return render_profile_numeric_derivation(
         joined_field,
         render_profile,
         export_record_id=export_record_id,
@@ -560,11 +560,11 @@ def _text_field_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation:
     composite = next(
-        (rule for rule in render_profile.signed_composite_rules if rule.anchor == _render_profile_anchor(joined_field)),
+        (rule for rule in render_profile.signed_composite_rules if rule.anchor == render_profile_anchor(joined_field)),
         None,
     )
     if composite is not None:
-        return _profile_signed_composite_derivation(
+        return profile_signed_composite_derivation(
             joined_field,
             composite,
             export_record_id=export_record_id,
@@ -572,12 +572,12 @@ def _text_field_derivation(
     derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code in _ALPHABETIC_TYPES else "text-an-v1"
     parser_field = joined_field.parser_field
     required = (
-        _is_required_admitting_blank_text(parser_field.validation, parser_field.content)
+        is_required_admitting_blank_text(parser_field.validation, parser_field.content)
         if joined_field.semantic_entry.kind in {CasillaFieldKind.CASILLA, CasillaFieldKind.COMPUTED}
-        and _presence_marker(joined_field) is None
-        else _is_required(parser_field.validation)
+        and presence_marker(joined_field) is None
+        else is_required(parser_field.validation)
     )
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="text",
         required=required,
@@ -600,17 +600,17 @@ def _numeric_field_derivation(
     parser_field = joined_field.parser_field
     # Use the profile's same applicability-aware predicate as its eligibility
     # check, so the renderer and profile agree about cells that state no wire fact.
-    if _states_no_wire_fact(parser_field, applicability_notes=applicability_notes):
-        return _render_profile_numeric_derivation(
+    if states_no_wire_fact(parser_field, applicability_notes=applicability_notes):
+        return render_profile_numeric_derivation(
             joined_field,
             render_profile,
             export_record_id=export_record_id,
         )
     if m714_checkbox_for(joined_field, render_profile.design_identity):
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="integer",
-            required=_is_required(parser_field.validation),
+            required=is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
             signed=False,
@@ -620,10 +620,10 @@ def _numeric_field_derivation(
         )
     pinned_values = m714_numeric_values_for(joined_field, render_profile.design_identity)
     if pinned_values is not None:
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="integer",
-            required=_is_required(parser_field.validation),
+            required=is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
             signed=False,
@@ -632,7 +632,7 @@ def _numeric_field_derivation(
             allowed_values=pinned_values or None,
             derivation_code="numeric-enumeration-v1" if pinned_values else "numeric-integer-v1",
         )
-    return _numeric_derivation(
+    return numeric_derivation(
         joined_field,
         export_record_id=export_record_id,
         note_governed_amounts=note_governed_amounts,

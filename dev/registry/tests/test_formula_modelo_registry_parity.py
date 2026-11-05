@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     validator = committed_registry_validator(catalogues)
     required_surfaces = {"calculation", "review", "approval", "reconciliation", "workflow"}
 

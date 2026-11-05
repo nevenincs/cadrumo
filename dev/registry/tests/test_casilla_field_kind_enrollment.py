@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +31,7 @@ _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
     """Every committed export field reaches consumers as a CasillaFieldKind."""
 
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
 
     checked = 0
     offenders: list[str] = []

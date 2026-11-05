@@ -12,10 +12,8 @@ from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatal
 from cadrumo.domain.calculations.registry.tests.legal_text import spanish_date
 
 from ..conformance.registry_schema_support import (
-    committed_modelo as _committed_modelo,
-)
-from ..conformance.registry_schema_support import (
-    committed_snapshot as _committed_snapshot,
+    committed_modelo,
+    committed_snapshot,
 )
 from .authored_edition_support import legal_text_match
 from .profile_schema_support import committed_registry_validator
@@ -34,7 +32,7 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 
 
 def _load_modelo_036() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("036")
+    return committed_modelo("036")
 
 
 def test_modelo_036_validator_accepts_committed_definition() -> None:
@@ -88,7 +86,7 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
         # censal alta/modificacion/baja is filed on AEAT's sede -- this
         # application produces no fichero for it, so a filing-grade snapshot
         # asks for capability the modelo neither has nor claims.
-        snapshot = _committed_snapshot(
+        snapshot = committed_snapshot(
             "036",
             2025,
             period,
@@ -99,7 +97,7 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
 
 
 def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
-    snapshot = _committed_snapshot(
+    snapshot = committed_snapshot(
         "036",
         2025,
         "alta",

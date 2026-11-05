@@ -28,7 +28,7 @@ from ..eager_authority_baseline import (
     read_eager_authority_baseline,
     write_eager_authority_baseline,
 )
-from ._authority_generation_support import publishable_artifact
+from .authority_generation_support import publishable_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

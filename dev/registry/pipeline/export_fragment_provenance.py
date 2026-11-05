@@ -26,14 +26,10 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .export_fragment_provenance_projection import (
-    _LOADER_SEMANTIC_SCHEMA_VERSION,
-    _omit_undeclared_field_keys,
-)
-from .export_fragment_provenance_projection import (
-    loader_semantic_digest as _loader_semantic_digest,
-)
-from .export_fragment_provenance_projection import (
-    semantic_map_digest as _semantic_map_digest,
+    LOADER_SEMANTIC_SCHEMA_VERSION,
+    loader_semantic_digest,
+    omit_undeclared_field_keys,
+    semantic_map_digest,
 )
 from .generated_export_inheritance_model import GeneratedExportInheritance
 from .joined_record_design import JoinedRecordDesign
@@ -496,13 +492,13 @@ def build_export_fragment_provenance_manifest(
         source_sha256=joined.source.source_sha256,
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
-        semantic_map_sha256=_semantic_map_digest(semantic_map),
+        semantic_map_sha256=semantic_map_digest(semantic_map),
         render_profile_schema_version=RENDER_PROFILE_SCHEMA_VERSION,
         render_profile_sha256=render_profile_digest(render_profile, render_profile_source_evidence),
         modelo=target.modelo,
         revision_id=target.revision_id,
         design_epoch=target.design_epoch,
-        loader_semantic_sha256=_loader_semantic_digest(loaded_layout),
+        loader_semantic_sha256=loader_semantic_digest(loaded_layout),
         output_files=collect_export_fragment_output_digests(export_root),
         field_derivations=tuple(
             sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
@@ -550,7 +546,7 @@ def emit_export_fragment_provenance_manifest(
         raise RegistryValidationError(f"export provenance refuses linked manifest target: {manifest_path}")
     if manifest_path.exists():
         raise RegistryValidationError(f"export provenance manifest already exists: {manifest_path}")
-    _write_canonical_manifest_atomically(manifest_path, export_fragment_provenance_manifest_json_bytes(manifest))
+    write_canonical_manifest_atomically(manifest_path, export_fragment_provenance_manifest_json_bytes(manifest))
     return manifest
 
 
@@ -589,7 +585,7 @@ def verify_export_fragment_provenance_manifest(
     actual_outputs = collect_export_fragment_output_digests(export_root)
     if manifest.output_files != actual_outputs:
         raise RegistryValidationError("export provenance output-file digests do not match generated tree")
-    actual_loader_digest = _loader_semantic_digest(loaded_layout)
+    actual_loader_digest = loader_semantic_digest(loaded_layout)
     if manifest.loader_semantic_sha256 != actual_loader_digest:
         # The output files were proven equal to their attested digests just
         # above, so the tree's bytes did not move: what moved is the projection
@@ -598,7 +594,7 @@ def verify_export_fragment_provenance_manifest(
         raise RegistryValidationError(
             "export provenance loader-semantic digest does not match generated tree: "
             f"the manifest attests {manifest.loader_semantic_sha256}, the current projection "
-            f"(loader semantic schema {_LOADER_SEMANTIC_SCHEMA_VERSION}) gives {actual_loader_digest}; "
+            f"(loader semantic schema {LOADER_SEMANTIC_SCHEMA_VERSION}) gives {actual_loader_digest}; "
             "every output file matches its attested digest, so the loader projection or the loader's "
             "hydration of this unchanged tree moved after the manifest was written",
         )
@@ -617,7 +613,7 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
     if payload["generated_export_inheritance"] is None:
         del payload["generated_export_inheritance"]
     for derivation in payload["field_derivations"]:
-        _omit_undeclared_field_keys(derivation["field"])
+        omit_undeclared_field_keys(derivation["field"])
         if derivation["semantic_entry"]["part"] is None:
             del derivation["semantic_entry"]["part"]
         if derivation["semantic_entry"]["required_with"] is None:
@@ -833,7 +829,7 @@ def _require_manifest_matches_current_authorities(
         "source_sha256": joined.source.source_sha256,
         "parser_schema_version": RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         "generator_schema_version": EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
-        "semantic_map_sha256": _semantic_map_digest(semantic_map),
+        "semantic_map_sha256": semantic_map_digest(semantic_map),
         "render_profile_schema_version": RENDER_PROFILE_SCHEMA_VERSION,
         "render_profile_sha256": render_profile_digest(render_profile, render_profile_source_evidence),
         "modelo": target.modelo,
@@ -910,7 +906,7 @@ def _require_derivation_fields_match_layout(
             )
 
 
-def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
+def write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
     """Publish the sibling evidence write-once, refusing a pre-existing target.
 
     Uses the development-owned publish-once primitive above.

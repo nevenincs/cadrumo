@@ -33,21 +33,21 @@ from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
 from ..compiler.validator import RegistryValidator
-from ._modelo_100_registry_support import (
-    _DECLARATIONS_LISTING_URL,
-    _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
-    _PERSONAL_FAMILY_BINDINGS,
-    _PERSONAL_FAMILY_CASILLAS,
-    _SOURCE_FOUNDATION_APPLICATION_LINKS,
-    _assert_registry_validation_error,
-    _binding_map_by_casilla,
-    _loaded_registry,
-    _modelo_100_revision_2025,
-    _modelo_100_snapshot,
-    _modelo_100_with_revision,
-    _source_root,
-)
 from .authored_edition_support import newest_authored_edition
+from .modelo_100_registry_support import (
+    DECLARATIONS_LISTING_URL,
+    MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
+    PERSONAL_FAMILY_BINDINGS,
+    PERSONAL_FAMILY_CASILLAS,
+    SOURCE_FOUNDATION_APPLICATION_LINKS,
+    assert_registry_validation_error,
+    binding_map_by_casilla,
+    loaded_registry,
+    modelo_100_revision_2025,
+    modelo_100_snapshot,
+    modelo_100_with_revision,
+    source_root,
+)
 from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -82,7 +82,7 @@ def _revalidate_snapshot_with_map(
 
 def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySnapshot, Mapping[str, object]]:
     if field_name == "filing_schedules":
-        modelos_by_id, catalogues = _loaded_registry()
+        modelos_by_id, catalogues = loaded_registry()
         # Modelo 036 is borrowed only because it populates `filing_schedules`;
         # the subject here is identifier-map key/payload drift on the snapshot
         # model. Built at the rung 036 actually declares -- its censal alta is
@@ -95,7 +95,7 @@ def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySn
         snapshot = build_snapshot(
             modelo_036,
             catalogues,
-            source_root=_source_root(),
+            source_root=source_root(),
             filing_year=newest_start.year,
             period="alta",
             on=newest_start,
@@ -103,7 +103,7 @@ def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySn
         )
         return snapshot, snapshot.filing_schedules
 
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     values = cast(Mapping[str, object], getattr(snapshot, field_name))
     assert values, f"real Modelo 100 snapshot must populate {field_name}"
     return snapshot, values
@@ -133,7 +133,7 @@ def _members_of_kind(construct: object, kind: str) -> tuple[str, ...]:
 
 
 def test_real_registry_snapshots_accept_identifier_keyed_maps() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     rebuilt = RegistrySnapshot.model_validate(
         {name: getattr(snapshot, name) for name in type(snapshot).model_fields},
     )
@@ -159,26 +159,26 @@ def test_registry_snapshot_rejects_identifier_map_key_payload_drift(field_name: 
 
 
 def test_modelo_100_source_foundation_matches_revision_refs_and_links() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     source_foundation = snapshot.constructs["renta-source-foundation"]
 
     assert set(snapshot.revision.legal_refs).issubset(source_foundation.legal_refs)
     assert set(snapshot.revision.source_refs).issubset(source_foundation.source_refs)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
-    assert set(source_foundation.application_links) == _SOURCE_FOUNDATION_APPLICATION_LINKS
+    assert set(source_foundation.application_links) == SOURCE_FOUNDATION_APPLICATION_LINKS
 
 
 def test_modelo_100_personal_family_construct_members_match_expected_sets() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     personal_family = snapshot.constructs["renta-personal-family"]
 
-    assert set(personal_family.bindings) == _PERSONAL_FAMILY_BINDINGS
-    assert set(personal_family.casilla_ids) == _PERSONAL_FAMILY_CASILLAS
+    assert set(personal_family.bindings) == PERSONAL_FAMILY_BINDINGS
+    assert set(personal_family.casilla_ids) == PERSONAL_FAMILY_CASILLAS
 
 
 def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     # The dependent-modelos construct covers every current observation-backed slot:
     # the direct same-modelo previous_filing carries (BIN N-1) and every registered
@@ -192,7 +192,7 @@ def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> N
 
 
 def test_modelo_100_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
-    snapshot = _modelo_100_snapshot(_REVIEWED_EDITION)
+    snapshot = modelo_100_snapshot(_REVIEWED_EDITION)
     revision = snapshot.revision
     resolved_constructs = {construct.id: construct for construct in revision.constructs}
     member_indexes = {
@@ -203,7 +203,7 @@ def test_modelo_100_member_grounded_constructs_do_not_declare_extra_legal_refs()
     }
     offenders: dict[str, list[str]] = {}
 
-    for construct_id in _MEMBER_GROUNDED_2025_CONSTRUCT_IDS:
+    for construct_id in MEMBER_GROUNDED_2025_CONSTRUCT_IDS:
         construct = resolved_constructs[construct_id]
         member_refs: set[str] = set()
         for kind, member_id in _construct_members(construct):
@@ -223,7 +223,7 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
     Modelo 184 belongs to economic-activities attribution semantics, and
     prior-year Modelo 100 base-liquidation carry-forward belongs to Anexo C.
     """
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     payments_retentions = snapshot.constructs["renta-payments-retentions"]
     payment_source_modelos = {
         classification.source_modelo
@@ -252,20 +252,20 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
 
 
 def test_modelo_100_economic_activities_construct_pins_estimacion_directa_binding() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     economic_activities = snapshot.constructs["renta-economic-activities"]
     assert "renta-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
     assert {"1479", "1553", "1577"}.issubset(economic_activities.casilla_ids)
 
 
 def test_modelo_100_observation_parsing_construct_lists_filed_declarations_read() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     observation_parsing = snapshot.constructs["renta-observation-parsing"]
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
 
 
 def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classification() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
     assert (
@@ -274,7 +274,7 @@ def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classif
     )
 
 
-_CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
+_CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = binding_map_by_casilla(
     ("DPNIF_D", "renta-profile-tax-id"),
     ("DP_APENOM_D", "renta-profile-display-name"),
     ("ZCCAD", "renta-profile-tax-residence-ccaa"),
@@ -344,7 +344,7 @@ _SPOUSE_REQUIRED_BINDINGS: tuple[str, ...] = (
 
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     with bundled_indexed_authority().operation() as operation:
         profile_keys = {entry.key for entry in catalogue_profile_keys(operation=operation)}
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
@@ -444,7 +444,7 @@ def _assert_family_row_selectors(
 
 
 def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     links_by_surface = {link.surface: link for link in snapshot.revision.application_links}
 
     assert {
@@ -475,7 +475,7 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
 
 
 def test_modelo_100_constructs_declare_their_revision_members() -> None:
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     constructs = {construct.id: construct for construct in revision.constructs}
     dependencies = constructs["renta-dependent-modelos"]
@@ -496,7 +496,7 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
     classify one as a relation source. Work income and movable capital take
     their credit from perceptor-side evidence instead, which is not a relation.
     """
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     constructs = {construct.id: construct for construct in revision.constructs}
@@ -528,7 +528,7 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
 
 
 def test_modelo_100_dependency_classifications_cover_registered_relation_sources() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     bindings_by_source: dict[str, set[str]] = {}
     # Both relation prefill and a prior year's filing make another filing a source.
     for binding in snapshot.revision.bindings:
@@ -551,9 +551,9 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
 
 
 def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_only() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     source = catalogues.sources["aeat-modelo-100-procedure"]
-    source_text = (_source_root() / source.corpus_path).read_text(encoding="utf-8")
+    source_text = (source_root() / source.corpus_path).read_text(encoding="utf-8")
 
     assert "Consulta de declaraciones presentadas" in source_text
     assert "Datos fiscales" in source_text
@@ -567,7 +567,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
     filing_years = [year for year in support.years if year in authored_years]
     assert filing_years
     for year in filing_years:
-        snapshot = _modelo_100_snapshot(year)
+        snapshot = modelo_100_snapshot(year)
         cross_reference = snapshot.live_cross_references["modelo-100-filed-declarations-read"]
         policy = remote_state_policy_from_cross_reference(cross_reference)
 
@@ -589,7 +589,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
             RemoteOperation(
                 kind="http",
                 method="GET",
-                url=AnyUrl(_DECLARATIONS_LISTING_URL),
+                url=AnyUrl(DECLARATIONS_LISTING_URL),
             ),
         )
         with pytest.raises(RegistryValidationError, match="remote write method"):
@@ -598,13 +598,13 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
                 RemoteOperation(
                     kind="http",
                     method="POST",
-                    url=AnyUrl(_DECLARATIONS_LISTING_URL),
+                    url=AnyUrl(DECLARATIONS_LISTING_URL),
                 ),
             )
 
 
 def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     expected_by_id = {
         "modelo-100-renta-web-open": {
             "authenticated-renta-web",
@@ -646,7 +646,7 @@ def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> 
 
 
 def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None:
-    snapshot = _modelo_100_snapshot(2023)
+    snapshot = modelo_100_snapshot(2023)
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>
@@ -694,7 +694,7 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
         payload,
         sources=snapshot.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
     )
 
@@ -709,7 +709,7 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
 
 
 def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_export_layout() -> None:
-    snapshot = _modelo_100_snapshot()
+    snapshot = modelo_100_snapshot()
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>
@@ -742,7 +742,7 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         payload,
         sources=snapshot.sources,
         source_payloads={
-            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+            str(source.id): (source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
     )
 
@@ -754,8 +754,8 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
 
 
 def test_validator_rejects_construct_sources_without_official_guidance() -> None:
-    modelo, revision = _modelo_100_revision_2025()
-    _modelos_by_id, catalogues = _loaded_registry()
+    modelo, revision = modelo_100_revision_2025()
+    _modelos_by_id, catalogues = loaded_registry()
     construct = next(item for item in revision.constructs if item.source_refs)
     sources = dict(catalogues.sources)
     for source_ref in construct.source_refs:
@@ -768,14 +768,14 @@ def test_validator_rejects_construct_sources_without_official_guidance() -> None
     ):
         RegistryValidator(
             mutated_catalogues,
-            source_root=_source_root(),
+            source_root=source_root(),
             user_profile_schema=load_user_profile_schema(),
         ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
-    modelo, revision = _modelo_100_revision_2025()
-    _modelos_by_id, catalogues = _loaded_registry()
+    modelo, revision = modelo_100_revision_2025()
+    _modelos_by_id, catalogues = loaded_registry()
     construct = next(item for item in revision.constructs if item.legal_refs)
     legal = dict(catalogues.legal)
     legal_ref = construct.legal_refs[0]
@@ -788,13 +788,13 @@ def test_validator_rejects_construct_legal_refs_without_legal_authority() -> Non
     ):
         RegistryValidator(
             mutated_catalogues,
-            source_root=_source_root(),
+            source_root=source_root(),
             user_profile_schema=load_user_profile_schema(),
         ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
     mutated_construct = construct.model_copy(update={"bindings": (*construct.bindings, "missing-binding")})
     mutated_revision = revision.model_copy(
@@ -802,13 +802,13 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="references unknown binding")
+    assert_registry_validation_error(mutated_modelo, match="references unknown binding")
 
 
 def test_validator_rejects_construct_dependency_classification_outside_revision() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
     mutated_construct = construct.model_copy(
         update={"dependency_classifications": (*construct.dependency_classifications, "missing-dependency")},
@@ -818,24 +818,24 @@ def test_validator_rejects_construct_dependency_classification_outside_revision(
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="references unknown dependency classification")
+    assert_registry_validation_error(mutated_modelo, match="references unknown dependency classification")
 
 
 def test_validator_rejects_dependency_classification_source_drift() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     classification = revision.dependency_classifications[0].model_copy(update={"source_modelo": "115"})
     mutated_revision = revision.model_copy(
         update={"dependency_classifications": (classification, *revision.dependency_classifications[1:])},
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="does not match .*binding")
+    assert_registry_validation_error(mutated_modelo, match="does not match .*binding")
 
 
 def test_validator_rejects_unclassified_relation_source() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -843,16 +843,16 @@ def test_validator_rejects_unclassified_relation_source() -> None:
             ),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(
+    assert_registry_validation_error(
         mutated_modelo,
         match="binding source modelo '130' has no dependency classification",
     )
 
 
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     # A foreign binding in place of the modelo 130 one leaves the 130 relation uncovered.
     mutated_classification = classification.model_copy(
@@ -866,13 +866,13 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
             ),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="does not cover binding refs")
+    assert_registry_validation_error(mutated_modelo, match="does not cover binding refs")
 
 
 def test_schema_accepts_direct_previous_filing_classification_without_binding_refs() -> None:
-    modelos_by_id, _catalogues = _loaded_registry()
+    modelos_by_id, _catalogues = loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
@@ -882,7 +882,7 @@ def test_schema_accepts_direct_previous_filing_classification_without_binding_re
 
 
 def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     mutated_classification = classification.model_copy(update={"binding_refs": ()})
     mutated_revision = revision.model_copy(
@@ -893,31 +893,31 @@ def test_validator_rejects_direct_dependency_classification_without_relation_or_
             ),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(
+    assert_registry_validation_error(
         mutated_modelo,
         match="does not cover binding refs",
     )
 
 
 def test_validator_rejects_duplicate_dependency_classification_source() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     duplicate = classification.model_copy(update={"id": "renta-2025-dep-130-duplicate"})
     mutated_revision = revision.model_copy(
         update={"dependency_classifications": (*revision.dependency_classifications, duplicate)},
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(
+    assert_registry_validation_error(
         mutated_modelo,
         match="duplicate dependency classification source modelo '130'",
     )
 
 
 def test_validator_rejects_dependency_classification_target_construct_drift() -> None:
-    modelo, revision = _modelo_100_revision_2025()
+    modelo, revision = modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     construct = next(item for item in revision.constructs if item.id == "renta-payments-retentions")
     mutated_construct = construct.model_copy(
@@ -932,17 +932,17 @@ def test_validator_rejects_dependency_classification_target_construct_drift() ->
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
         },
     )
-    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+    mutated_modelo = modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="but the construct does not list it")
+    assert_registry_validation_error(mutated_modelo, match="but the construct does not list it")
 
 
 def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_evidence() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
+    modelos_by_id, catalogues = loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     cross_reference = next(item for item in revision.live_cross_references if item.id == "modelo-100-renta-web-open")
     source = catalogues.sources[cross_reference.source_refs[0]]
-    source_text = (_source_root() / source.corpus_path).read_text(encoding="utf-8")
+    source_text = (source_root() / source.corpus_path).read_text(encoding="utf-8")
 
     assert cross_reference.surface == "open_simulator"
     assert cross_reference.synthetic_data_allowed is False

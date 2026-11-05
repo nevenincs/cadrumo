@@ -10,8 +10,8 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from .._export_tree import render_complete_export_tree
-from ..render_check import _revision_render_inputs
+from ..export_tree import render_complete_export_tree
+from ..render_check import build_revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def rendered(tmp_path_factory: pytest.TempPathFactory) -> ExportLayoutDefinition:
     root = Path("src/cadrumo/_data")
-    inputs = _revision_render_inputs(
+    inputs = build_revision_render_inputs(
         load_modelo_directory(root / "registry/aeat/modelos/156"),
         load_shared_catalogues(root / "registry/aeat"),
         modelo="156",

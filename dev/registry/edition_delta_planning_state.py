@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
-from . import edition_delta_source as _edition_delta_source
+from . import edition_delta_source
 
 
 @dataclass
@@ -17,8 +17,8 @@ class PlanningRun:
     modelo_dir: Path
     definition: ModeloDefinition
     ordered: tuple[ModeloRevision, ...]
-    sources: dict[str, _edition_delta_source._EditionSource]
+    sources: dict[str, edition_delta_source.EditionSource]
     already_delta_authored: bool
-    materialised: dict[str, list[_edition_delta_source._Placed]] = field(default_factory=dict)
+    materialised: dict[str, list[edition_delta_source.Placed]] = field(default_factory=dict)
     order_normalised: set[str] = field(default_factory=set)
-    work: list[_edition_delta_source._EditionWork] = field(default_factory=list)
+    work: list[edition_delta_source.EditionWork] = field(default_factory=list)
