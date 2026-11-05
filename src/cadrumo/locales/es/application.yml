@@ -2115,9 +2115,6 @@ application:
         Cambia el dato del perfil del que procede y vuelve a calcular.
       calculate_binding_unknown: '--binding %{key} no coincide con ningún id de origen
         de valor de esta versión del modelo. Ids aceptados: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'El valor de %{key} es un indicador
-        sí o no codificado como decimal y debe ser uno de: %{accepted}. Se recibió
-        %{value}. Codificación aceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
         canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
         el casilla.id canónico exacto'

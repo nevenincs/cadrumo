@@ -31,23 +31,6 @@ from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
-class BindingEncodedOptionPayload(OutputSchema):
-    """One accepted decimal encoding of a boolean-typed decimal-channel binding.
-
-    Projection of
-    :class:`~domain.calculations.registry.binding_selector_utils.BooleanBindingEncodedValue`.
-    ``encoded_value`` is the decimal the operator types on ``--binding``,
-    ``boolean_meaning`` is the affirmative/negative sense it carries, and
-    ``registry_value`` is the underlying casilla token the boolean maps to. The
-    mapping is derived from the binding's boolean selector, so the listing surface
-    can teach the decimal-to-meaning encoding before a calculation is attempted.
-    """
-
-    encoded_value: str
-    boolean_meaning: bool
-    registry_value: str
-
-
 class BindingGroundingPayload(OutputSchema):
     """Identity and regulatory grounding shared by every binding row payload.
 
@@ -80,15 +63,6 @@ class BindingGroundingPayload(OutputSchema):
     fold slots (:class:`~domain.calculations.registry.relation_prefill_bindings.RelationPrefillProvider`
     ``target_binding``), so a relation-fed binding's source is discoverable
     before a calculation is attempted, for any modelo.
-    """
-    encoded_options: tuple[BindingEncodedOptionPayload, ...] = ()
-    """Accepted decimal encodings for a boolean-typed ``input_channel=decimal`` binding.
-
-    Non-empty only for a boolean-flag binding the registry consumes as a numeric
-    ``1`` / ``0`` operand (the Modelo 100 estimación-directa modality flag). Each
-    entry pairs the decimal the operator must type on ``--binding`` with its
-    boolean meaning and the underlying casilla token, so the mapping is visible
-    before a calculation is attempted.
     """
 
 

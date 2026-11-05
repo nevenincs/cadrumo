@@ -33,7 +33,6 @@ _SHARED_GROUNDING_FIELDS = (
     "legal_refs",
     "source_refs",
     "relation_inputs",
-    "encoded_options",
 )
 
 _VALID_LEGAL_REF = "ley-35-2006:art-27"

@@ -11,7 +11,6 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -175,52 +174,16 @@ def decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
     return parsed
 
 
-def decimal_binding_value(
-    raw_value: str,
-    binding: BindingDefinition,
-    *,
-    work_unit: WorkUnit | None = None,
-) -> Decimal:
-    """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
-
-    For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
-    modality flag), a non-numeric value such as ``false`` otherwise produces the
-    opaque "is not a decimal" error. This raises an instructive refusal that names
-    the accepted ``0`` / ``1`` encoding and what each value means, derived from the
-    binding's boolean selector rather than a per-form hardcoded table.
+def decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decimal:
+    """Parse a ``--binding`` decimal value.
 
     Conformance is judged by the same canonical grammar :func:`decimal` applies,
     so a value whose numeric meaning is not what it appears (scientific
-    notation, a leading ``+``, a comma decimal) refuses here too instead of
-    being silently coerced.
+    notation, a leading ``+``, a comma decimal) refuses here instead of being
+    silently coerced.
     """
-    encoded_options = boolean_binding_encoded_values(binding)
     parsed = try_parse_canonical_decimal(raw_value)
     if parsed is None:
-        if encoded_options:
-            mapping = ", ".join(
-                f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
-                f"registry value {option.registry_value!r})"
-                for option in encoded_options
-            )
-            accepted = ", ".join(option.encoded_value for option in encoded_options)
-            raise ModeloCalculateDecimalInputError(
-                context={
-                    "flag": "--binding",
-                    "key": binding.id,
-                    "value": raw_value,
-                    "accepted": accepted,
-                    "mapping": mapping,
-                },
-                translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
-                precondition_failure=caller_override_failure(
-                    work_unit,
-                    scenario_id="modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
-                    evidence_id=_BINDING_OVERRIDE_EVIDENCE_ID,
-                    facts={"binding_id": binding.id, "accepted_encoded_values": accepted},
-                    with_registry_listing=True,
-                ),
-            )
         raise ModeloCalculateDecimalInputError(
             context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",

@@ -85,8 +85,6 @@ def test_a_casilla_shape_manual_input_binding_is_not_applicable() -> None:
                 "kind": "manual_input",
                 "casilla_id": "0168",
                 "data_type": "boolean",
-                "true_value": "N",
-                "false_value": "S",
             },
             "value": {
                 "data_type": "boolean",

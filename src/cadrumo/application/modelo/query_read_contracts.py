@@ -149,15 +149,6 @@ class ModeloReadinessOperationRequest(CredentialFreeOperationRequest):
         return self
 
 
-class ModeloBindingEncodedOptionV1(BaseModel):
-    """One complete registry boolean encoding."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    encoded_value: str
-    boolean_meaning: bool
-    registry_value: str
-
-
 class ModeloBindingRowV1(BaseModel):
     """Grounded binding row shared by list and preview."""
 
@@ -175,7 +166,6 @@ class ModeloBindingRowV1(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     relation_inputs: tuple[str, ...]
-    encoded_options: tuple[ModeloBindingEncodedOptionV1, ...]
     override: str | None = None
 
     @classmethod
@@ -197,14 +187,6 @@ class ModeloBindingRowV1(BaseModel):
             legal_refs=row.legal_refs,
             source_refs=row.source_refs,
             relation_inputs=row.relation_inputs,
-            encoded_options=tuple(
-                ModeloBindingEncodedOptionV1(
-                    encoded_value=item.encoded_value,
-                    boolean_meaning=item.boolean_meaning,
-                    registry_value=item.registry_value,
-                )
-                for item in row.encoded_options
-            ),
             override=override,
         )
 

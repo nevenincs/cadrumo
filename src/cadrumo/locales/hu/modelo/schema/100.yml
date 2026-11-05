@@ -18206,8 +18206,6 @@ modelo:
                 heading: Gyermekek és más leszármazottak
               declaracion:
                 heading: Bevallás
-              other-inputs:
-                heading: A számításhoz szükséges egyéb adatok
             section:
               anexoa:
                 heading: Lakások energetikai korszerűsítése, elektromos járművek és
@@ -18343,8 +18341,6 @@ modelo:
                 heading: Befizetendő vagy visszajáró összeg
               inmueblesres:
                 heading: Ingatlanból származó és betudott ingatlanjövedelem összesítése
-              inputs:
-                heading: Az űrlapon mezővel nem rendelkező adatok
               integracionres:
                 heading: Vagyoni nyereségek és veszteségek összevonása és beszámítása
               integracionres-2:

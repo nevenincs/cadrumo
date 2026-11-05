@@ -241,12 +241,6 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.calculate",
-        "modelo.work.calculate.caller_overrides.binding_encoding_valid",
-        "modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
-        action_id="operator.modelo.bindings.list",
-    ),
-    _profile(
-        "modelo.work.calculate",
         "modelo.work.calculate.caller_overrides.casilla_declared",
         "modelo.work.calculate.caller_overrides.casilla_unknown",
         action_id="operator.modelo.casillas",

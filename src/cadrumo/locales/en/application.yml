@@ -2013,9 +2013,6 @@ application:
         Change the profile fact it comes from and recalculate.
       calculate_binding_unknown: '--binding %{key} does not match any value source
         id in this version of the modelo. Accepted ids: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'The value for %{key} is a decimal-encoded
-        yes or no flag and must be one of: %{accepted}. Received %{value}. Accepted
-        encoding: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
         casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
         the exact canonical casilla.id'

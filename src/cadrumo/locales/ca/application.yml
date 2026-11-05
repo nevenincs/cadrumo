@@ -2119,9 +2119,6 @@ application:
         Canvia la dada del perfil de la qual procedeix i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap id d''origen
         de valor d''aquesta versió del model. Ids acceptats: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'El valor de %{key} és un indicador
-        sí o no codificat com a decimal i ha de ser un de: %{accepted}. S''ha rebut
-        %{value}. Codificació acceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'

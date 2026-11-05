@@ -109,7 +109,6 @@ def _assert_override_preview(
             "legal_refs",
             "source_refs",
             "relation_inputs",
-            "encoded_options",
         ):
             assert target[key] == source[key]
         assert target["override"] == ("0.75" if target["binding_id"] == binding_id else None)

@@ -2072,9 +2072,6 @@ application:
         a profil azon adatát, amelyből származik, és számolj újra.
       calculate_binding_unknown: 'A --binding %{key} egyik értékforrás-azonosítónak
         sem felel meg a nyomtatvány ezen változatában. Elfogadott azonosítók: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'A(z) %{key} értéke decimálisként
-        kódolt igen/nem jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
-        %{value}. Elfogadott kódolás: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
         casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Add
         meg a pontos kanonikus casilla.id-t'
