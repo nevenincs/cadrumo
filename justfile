@@ -55,8 +55,7 @@ default:
 [doc('Start the desktop development display on its fixed ports from the configured host build, generating inputs without compiling the desktop.')]
 [group('dev')]
 dev: (_native-selection "Debug")
-    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
-    just fixtures-seed
+    just _fixture-projections
     cmake --build --preset {{native_build_preset_prefix}}debug --target desktop-frontend-dev
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
@@ -65,27 +64,43 @@ dev: (_native-selection "Debug")
 # sync and default Vaultspec enrollment. Browser provisioning reuses installed
 # channels or installs missing resources. RAG then provisions its managed models,
 # Qdrant binary, and MCP integration. Authority publication runs so the
-# installed application consumes a generation compiled from the final tree. The
-# generated fixture projections follow it: they are produced through that
-# authority and need the frontend packages one of their producers runs from.
+# installed application consumes a generation compiled from the final tree, and
+# the fixture projections are seeded through it.
 [doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, runtime authority, frontend packages and fixture projections.')]
 [group('setup')]
 init:
-    just setup
+    just setup-checkout
     just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
-    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
-    just setup-desktop-frontend
-    just fixtures-seed
+    just _fixture-projections
 
-# Minimal checkout setup, shared by init and CI. It creates
-# the pinned Python environment, installs repository tooling, and materializes
-# local environment configuration. Workstation tools and browser binaries are
-# optional to the minimal setup; full init provisions browsers as well.
-[doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
+# Checkout setup for a developer: the minimal checkout setup, then the
+# published authority, the frontend packages and the fixture projections, so
+# `just fixtures-status` reports fresh afterwards.
+[doc('Converge a checkout with Python, tooling, environment configuration, runtime authority, frontend packages and fixture projections.')]
 [group('setup')]
 setup:
     uv run --isolated --no-project --python 3.13 -- python -m dev.init all
+    just _fixture-projections
+
+# Minimal checkout setup, shared by setup, init and CI. It creates the pinned
+# Python environment, installs repository tooling, and materializes local
+# environment configuration. A CI job that needs the authority, the frontend or
+# the projections provisions them in steps of its own, so a lint job never pays
+# for a fixture build.
+[doc('Converge a checkout with Python, repository tooling, and local environment configuration only.')]
+[group('setup')]
+setup-checkout:
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
+
+# The projections are produced through the published authority, and one
+# producer runs from the frontend packages, so both come first. Every step
+# leaves a current tree unchanged.
+[private]
+_fixture-projections:
+    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
+    just setup-desktop-frontend
+    just fixtures-seed
 
 [doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
 [group('setup')]
@@ -103,6 +118,13 @@ setup-locale-spelling:
 [group('setup')]
 setup-desktop-frontend:
     node native/desktop/scripts/frontend-install.mjs setup
+
+# The window's specs run under the frontend's own locked @playwright/test, whose
+# browser build differs from the one the Python Playwright installs.
+[doc('Install the Chromium build that the desktop frontend locked Playwright test runner launches.')]
+[group('setup')]
+setup-desktop-browser: setup-desktop-frontend
+    npm --prefix native/desktop/frontend exec --no -- playwright install chromium
 
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
@@ -378,7 +400,7 @@ check-operation-contract-manifest:
 # stamp records the content each family's outputs were produced from, so
 # freshness never reads a modification time. Test processes never seed.
 
-[doc('Produce the fixture projections whose inputs changed or whose outputs are missing; FAMILY narrows to one.')]
+[doc('Produce the fixture projections that are not fresh, adopting unstamped outputs their check proves; FAMILY narrows to one.')]
 [group('generate')]
 fixtures-seed FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections seed {{FAMILY}}
@@ -388,7 +410,7 @@ fixtures-seed FAMILY="":
 fixtures-seed-force FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections seed --force {{FAMILY}}
 
-[doc('Report each fixture projection as fresh, stale with the changed inputs, or missing; read-only.')]
+[doc('Report each fixture projection as fresh, stale with the changed inputs, unstamped or missing; read-only.')]
 [group('check')]
 fixtures-status FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections status {{FAMILY}}
@@ -400,7 +422,7 @@ fixtures-check FAMILY="":
 
 # A full Modelo envelope build takes many minutes, so the two-build proof runs
 # on a schedule or by hand rather than in every fixtures-check.
-[doc('Run fixtures-check and also build each family that takes an output directory twice in .tmp/, comparing the bytes.')]
+[doc('Run fixtures-check and also build each producer family twice in .tmp/, comparing the bytes; a family with no such build fails as determinism undeclared.')]
 [group('check')]
 fixtures-check-determinism FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections check --determinism {{FAMILY}}
@@ -737,6 +759,15 @@ test-native-ci AGENT_SOURCE_DIR CONFIGURATION="Release": (_native-selection CONF
     cmake --preset {{native_preset}} -D{{ if os() == "windows" { "'CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + replace(AGENT_SOURCE_DIR, "'", "''") + "'" } else { quote("CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + AGENT_SOURCE_DIR) } }}
     just test-native-bundle {{CONFIGURATION}}
 
+# The merge gate's frontend and Rust job configures the host preset once with
+# the runner's agent checkout; the later configures of test-frontend and
+# test-native keep that cache value.
+[doc('Configure the host preset with the cadrumo-agent project directory as its CMake cache value.')]
+[group('setup')]
+configure-native-agent AGENT_SOURCE_DIR: (_native-selection "Debug")
+    @{{ if trim(AGENT_SOURCE_DIR) == "" { error("AGENT_SOURCE_DIR must name the cadrumo-agent project directory") } else { "" } }}
+    cmake --preset {{native_preset}} -D{{ if os() == "windows" { "'CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + replace(AGENT_SOURCE_DIR, "'", "''") + "'" } else { quote("CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + AGENT_SOURCE_DIR) } }}
+
 [doc('Build the native bundle and package it as the distributable ZIP.')]
 [group('build')]
 build-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
@@ -764,22 +795,26 @@ check-rust CONFIGURATION="Debug": (_native-configure CONFIGURATION)
 
 [doc('Run the desktop frontend type, lint, design-system and formatting checks through CMake.')]
 [group('check')]
-check-frontend CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
+check-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
 
 # The window's specs and type checks read the generated fixture projections, so
-# seeding comes first; it does nothing when every stamp is fresh.
-[doc('Seed the fixture projections, then run the desktop frontend checks and Playwright specs through CMake.')]
+# seeding comes first, after the frontend packages one producer runs from; both
+# do nothing on a current tree.
+[doc('Install the frontend packages, seed the fixture projections, then run the desktop frontend checks and Playwright specs through CMake.')]
 [group('test')]
-test-frontend CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
+test-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-test
 
 # The host's Rust unit tests are the CTest cases named `*.rust`; the bundle,
-# staged-package and external-tool cases stay with test-native-bundle.
-[doc('Seed the fixture projections, then run the native Rust unit tests (CTest cases ending in .rust) without building the bundle.')]
+# staged-package and external-tool cases stay with test-native-bundle. Of the
+# projections they read only the Modelo envelopes, so only that family is
+# seeded. Its producer formats the wire types it also writes with the
+# frontend's formatter, so the frontend packages come first.
+[doc('Seed the Modelo envelopes, then run the native Rust unit tests (CTest cases ending in .rust) without building the bundle.')]
 [group('test')]
-test-native CONFIGURATION="Debug": fixtures-seed (_native-configure CONFIGURATION)
+test-native CONFIGURATION="Debug": setup-desktop-frontend (fixtures-seed "modelo-envelopes") (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target native_contract native_metadata rust_application
     ctest --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} -R '[.]rust$' --no-tests=error
 

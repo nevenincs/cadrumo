@@ -151,10 +151,17 @@ jobs:
 
       # One fixture producer runs from the frontend's installed packages, so
       # they come before the check; the check reads the sources and writes no
-      # fixture.
+      # fixture. Node is provisioned here rather than taken from the runner.
+      - name: Set up Node
+        id: node
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
       - name: Frontend packages
         id: frontend-packages
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
         shell: bash
         run: just setup-desktop-frontend
 
@@ -199,6 +206,11 @@ jobs:
     if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && needs.lint.result == 'success' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
+    # The host preset configures the desktop targets only with the payload,
+    # and the payload needs the runner's cadrumo-agent checkout, exactly as the
+    # release's native verification does.
+    env:
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -206,34 +218,79 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Require the repository agent-source variable
+        shell: bash
+        run: |
+          if [ -z "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR// /}" ]; then
+            echo "Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory." >&2
+            exit 1
+          fi
+
       # The recipes below seed the fixture projections themselves, and the
-      # producers read the registry authority, so this job restores it.
+      # producers read the registry authority, so this job restores it. The
+      # window's specs launch the frontend's own Playwright browser, provisioned
+      # below, not the Python Playwright's.
       - name: Set up toolchain
         id: setup
         uses: ./.github/actions/setup
         with:
           authority-artifact: ${{ inputs.authority-artifact }}
-          browser: "true"
 
-      - name: Frontend packages
-        id: frontend-packages
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+      # Every native tool is provisioned here rather than taken from whatever
+      # the runner holds; Rust and CMake follow native/toolchain.json.
+      - name: Read the native toolchain pins
+        id: pins
         shell: bash
-        run: just setup-desktop-frontend
+        run: |
+          set -euo pipefail
+          echo "rust=$(jq -er .rust native/toolchain.json)" >> "$GITHUB_OUTPUT"
+          echo "cmake=$(jq -er .cmake native/toolchain.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Set up CMake and Ninja
+        uses: lukka/get-cmake@f86dd60acae0d132056913e248bdabf0e0580b7a # v4.4.5
+        with:
+          cmakeVersion: ${{ steps.pins.outputs.cmake }}
+
+      - name: Set up Rust
+        shell: bash
+        env:
+          RUST_PIN: ${{ steps.pins.outputs.rust }}
+        run: |
+          set -euo pipefail
+          rustup toolchain install "$RUST_PIN" --profile minimal --component rustfmt,clippy
+          echo "RUSTUP_TOOLCHAIN=$RUST_PIN" >> "$GITHUB_ENV"
+
+      - name: Configure the native build with the agent checkout
+        id: configure
+        shell: bash
+        run: just configure-native-agent "$CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
+
+      - name: Frontend packages and browser
+        id: frontend-browser
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
+        shell: bash
+        run: just setup-desktop-browser
 
       - name: Frontend checks and specs
-        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
         shell: bash
         run: just test-frontend
 
       - name: Native Rust tests
-        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
         shell: bash
         run: just test-native
 
   verdict:
     name: "${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && 'Check: Merge gate (Linux)' || 'Check: Merge gate withheld (Linux)' }}"
-    needs: [lint, gate, desktop]
+    # `desktop` stays out until one real runner run of it is green: its
+    # configure, toolchain and browser provisioning are unproven on the runner.
+    needs: [lint, gate]
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 66

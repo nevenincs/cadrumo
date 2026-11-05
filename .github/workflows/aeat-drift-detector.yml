@@ -71,7 +71,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just setup
+        run: just setup-checkout
 
       - name: Provision Playwright Chromium
         run: just setup-browser
