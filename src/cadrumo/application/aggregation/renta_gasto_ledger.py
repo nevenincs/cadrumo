@@ -100,6 +100,7 @@ from ._renta_business_eligibility import (
 from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
+    effective_eur_recargo_amount,
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
@@ -787,6 +788,7 @@ def _category_rule_deductible_amount(
         )
     category, profile = resolved
     scaling = row_scaling_proportion(transaction, proportion, profile.proportionality)
+    eur_recargo = effective_eur_recargo_amount(transaction) if refund is None else None
     try:
         fact = RentaDeductibleExpenseFact(
             transaction_id=transaction_id,
@@ -798,6 +800,7 @@ def _category_rule_deductible_amount(
             gross_amount=effective_eur_amount(transaction) * scaling,
             taxable_base=eur_base * scaling,
             iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
+            recargo_amount=(None if eur_recargo is None else eur_recargo * scaling),
             direction=RentaExpenseDirection.OUTGOING_EXPENSE if refund is None else RentaExpenseDirection.REFUND,
             category=category,
             exclusive_business_use=exclusive_business_use(transaction),

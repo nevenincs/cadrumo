@@ -97,6 +97,7 @@ def ledger_expense_transaction(
     iva_rate: Decimal | None = None,
     iva_amount: Decimal | None = None,
     irpf_category: str | None = None,
+    recargo_amount: Decimal | None = None,
     usage_ratio_id: str | None = None,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
@@ -121,6 +122,7 @@ def ledger_expense_transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
+            "recargo_amount": recargo_amount,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
