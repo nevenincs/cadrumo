@@ -1,4 +1,4 @@
-"""Private row materialisation for invoice-shaped registry bindings."""
+"""Row materialisation for invoice-shaped registry bindings."""
 
 from __future__ import annotations
 
@@ -38,6 +38,14 @@ _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
 def normalise_m349_nif_export_rows(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Return Modelo 349 export rows with each NIF reduced to the number its country slot expects.
+
+    Only the operator and rectification NIF bindings that have a paired country
+    binding in the same row are rewritten; every other cell is copied unchanged.
+
+    Raises:
+        RegistryValidationError: When a NIF cannot be expressed for its country.
+    """
     normalised = dict(rows)
     for (binding_id, row_index), value in rows.items():
         country_binding = _M349_EXPORT_NIF_COUNTRY_BINDINGS.get(binding_id)
@@ -56,6 +64,14 @@ def build_invoice_rows(
     *,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group invoice observations into ordered export rows for one declared grouping.
+
+    ``m347_threshold_filter`` is applied only by the ``contraparte_clave``
+    grouping, which declares Modelo 347 third-party totals.
+
+    Raises:
+        RegistryValidationError: When ``grouping`` is not a supported grouping.
+    """
     if grouping == "operator_clave":
         return _build_operator_clave_rows(observations)
     if grouping == "operator_clave_period":
@@ -182,6 +198,7 @@ _ACCUMULATOR_CONFIG: ConfigDict = ConfigDict(
     extra="forbid",
     validate_default=True,
     validate_assignment=True,
+    defer_build=True,
 )
 
 
@@ -288,7 +305,7 @@ def _build_contraparte_clave_rows(
         values=lambda bucket: {
             "importe_total": bucket.importe_total,
             **_m347_quarter_amounts(bucket),
-            **_m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
+            **m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
             "cash_accounting_mark": _M347_ROW_MARK if bucket.cash_accounting_operation else "",
             "reverse_charge_mark": _M347_ROW_MARK if bucket.reverse_charge_recipient else "",
             "business_premises_lease_mark": _M347_ROW_MARK if bucket.arrendamiento_local_negocio else "",
@@ -355,7 +372,7 @@ def _m347_quarter_amounts(bucket: _ContraparteClaveAccumulator) -> dict[str, Dec
     }
 
 
-def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[str, str]:
+def m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[str, str]:
     """Project one counterparty onto the 347 declarado identification slots.
 
     Both 347 record designs fill the NIF DEL DECLARADO slot "solo ... con los NIF
@@ -453,7 +470,7 @@ def _build_arrendamiento_inmueble_rows(
     for key in sorted(grouped):
         bucket = grouped[key]
         row: dict[str, Decimal | str] = {
-            "declarado_tax_id": _m347_declarado_identification(bucket.party_tax_id, bucket.country_code)[
+            "declarado_tax_id": m347_declarado_identification(bucket.party_tax_id, bucket.country_code)[
                 "declarado_tax_id"
             ],
             "importe_total": bucket.importe_total,
