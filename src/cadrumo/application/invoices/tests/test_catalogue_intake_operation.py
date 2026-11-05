@@ -393,7 +393,7 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
-    source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nB00000034,Supplier,BOOK-1,2026-05-01,100.00,21,x\nB00000034,Supplier,BOOK-2,invalid,100.00,21,y\n"
+    source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nB00000281,Supplier,BOOK-1,2026-05-01,100.00,21,x\nB00000034,Supplier,BOOK-2,invalid,100.00,21,y\n"
     path.write_bytes(source)
     request = _wire(
         intake_contracts.InvoiceImportRequest(

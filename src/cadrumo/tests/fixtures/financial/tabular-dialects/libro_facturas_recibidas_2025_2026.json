@@ -1,6 +1,6 @@
 {
-  "output_sha256": "ace72401c07e6e27221450661a04becf1dce4b61b4c6f4108bbb3fb4d7c227b9",
-  "output_size_bytes": 1326,
+  "output_sha256": "168c5e48ba9f5d72d487d6f677ae0f990445430b7525c0e467ac83f155d38eb9",
+  "output_size_bytes": 1315,
   "provenance": "synthetic_generated",
   "role": "dialect_normalization_anchor",
   "licence": "CC0-1.0",
