@@ -38,6 +38,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -87,27 +88,19 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=create_context,
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Oracle Test Operator"),
-            UserProfileFact(path="identity.surnames", value="Calculation"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            # Spanish enum value: autónomo en estimación directa.
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories",
-                value="actividad_economica",
-            ),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Oracle Test Operator"),
+                UserProfileFact(path="identity.surnames", value="Calculation"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                # Spanish enum value: autónomo en estimación directa.
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            )
         ),
     )
     seed_test_profile_record(
@@ -128,36 +121,29 @@ def _seed_legal_entity_profile(
     Written directly to bypass ``config profile create``.
     """
 
-    facts: list[UserProfileFact] = [
-        UserProfileFact(path="identity.name", value="Oracle IS Operator"),
-        UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(
-            path="taxpayer_type.incn_prior_12_months",
-            value=incn_prior_12_months,
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.name", value="Oracle IS Operator"),
+            UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(
+                path="taxpayer_type.incn_prior_12_months",
+                value=incn_prior_12_months,
+            ),
+            UserProfileFact(
+                path="taxpayer_type.new_entity_first_two_profit_periods",
+                value=new_entity,
+            ),
+            UserProfileFact(path="activities.description", value="economic activity"),
         ),
-        UserProfileFact(
-            path="taxpayer_type.new_entity_first_two_profit_periods",
-            value=new_entity,
-        ),
-        UserProfileFact(path="activities.description", value="economic activity"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    ]
+        persona_id="sociedad-limitada",
+    )
     create_context, _ = profile_authority_contexts()
     record = create_user_profile_record(
         context=create_context,
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=tuple(facts),
+        facts=facts,
     )
     seed_test_profile_record(
         record,

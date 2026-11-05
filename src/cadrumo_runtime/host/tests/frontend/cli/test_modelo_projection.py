@@ -61,6 +61,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
@@ -264,35 +265,28 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=profile_authority_contexts()[0],
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
-            UserProfileFact(path="identity.surnames", value="Regression Harness"),
-            UserProfileFact(path="identity.tax_id", value="87654321X"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="activities.description", value="consultoria fiscal"),
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories",
-                value="actividad_economica",
-            ),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value=_CCAA),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            # Declaration type (person vs entity) — required by binding validation
-            # in modelo-100 formulas.
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            # Birth date drives the M100 ``age_at_year_end`` operator used by
-            # the mínimo del contribuyente formula and any age-sensitive tramo.
-            # Use a deterministic 1980 value so the taxpayer is under the over-65 threshold in the filing year
-            # (below the over-65 supplement threshold) — keeps the
-            # M130→M100 oracle stable across runs.
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
+                UserProfileFact(path="identity.surnames", value="Regression Harness"),
+                UserProfileFact(path="identity.tax_id", value="87654321X"),
+                UserProfileFact(path="activities.description", value="consultoria fiscal"),
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="tax_residence.ccaa", value=_CCAA),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                # Declaration type (person vs entity) — required by binding validation
+                # in modelo-100 formulas.
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                # Birth date drives the M100 ``age_at_year_end`` operator used by
+                # the mínimo del contribuyente formula and any age-sensitive tramo.
+                # Use a deterministic 1980 value so the taxpayer is under the over-65 threshold in the filing year
+                # (below the over-65 supplement threshold) — keeps the
+                # M130→M100 oracle stable across runs.
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+            )
         ),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Modelo projection test profile")

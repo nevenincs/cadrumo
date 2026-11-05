@@ -28,6 +28,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -270,27 +271,19 @@ def _set_export_profile_name() -> None:
 
 def _set_emilio_legal_entity_export_profile() -> None:
     set_active_test_profile_facts(
-        (
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.name", value="Emilio"),
-            UserProfileFact(path="identity.surnames", value="Corporate Persona"),
-            UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="Consulting"),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="withholding.has_employees", value=True),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
+        persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.name", value="Emilio"),
+                UserProfileFact(path="identity.surnames", value="Corporate Persona"),
+                UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
+                UserProfileFact(path="activities.description", value="Consulting"),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                UserProfileFact(path="withholding.has_employees", value=True),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
+            ),
+            persona_id="sociedad-limitada",
         ),
     )
 
