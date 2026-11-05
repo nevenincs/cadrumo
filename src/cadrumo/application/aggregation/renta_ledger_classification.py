@@ -42,7 +42,6 @@ from ._renta_business_eligibility import (
 )
 from .currency_predicates import (
     effective_eur_amount,
-    effective_eur_recargo_amount,
     is_non_eur_without_conversion,
 )
 
@@ -52,6 +51,7 @@ from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_l
 from .renta_ledger_evidence import (
     iva_amount_for,
     purchase_invoice_evidence_payload,
+    recargo_amount_for,
     taxable_base_for,
 )
 from .renta_ledger_models import (
@@ -292,7 +292,7 @@ def _renta_expense_fact_or_issue(
             gross_amount=business_fact_amount(eur_amount, proportion),
             taxable_base=business_fact_amount(taxable_base_for(transaction, evidence_payload), proportion),
             iva_amount=business_fact_amount(iva_amount_for(transaction, evidence_payload), proportion),
-            recargo_amount=business_fact_amount(effective_eur_recargo_amount(transaction), proportion),
+            recargo_amount=business_fact_amount(recargo_amount_for(transaction, evidence_payload), proportion),
             direction=direction,
             category=category,
             activity_key=activity_key,

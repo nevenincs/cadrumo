@@ -16,11 +16,23 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import Transaction
 from ....domain.user_profile.values import UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory
-from .ledger_source_mesh_support import _m130_binding_id, _revision, cash_criterion_profile, resolve_m130
+from .ledger_source_mesh_support import (
+    BUCKET_ID,
+    _InMemoryInvoiceCatalogueRepository,
+    _m130_binding_id,
+    _revision,
+    cash_criterion_profile,
+    resolve_m130,
+)
 from .renta_ledger_support import ledger_expense_transaction
 from .test_renta_gasto_linked_invoice import _YEAR
 
@@ -61,3 +73,58 @@ def test_the_retailer_bears_the_iva_of_an_ordinary_purchase_as_cost() -> None:
 
 def test_a_general_regime_taxpayer_keeps_only_the_base() -> None:
     assert _expense_box("GENERAL", _purchase(base="1000.00", iva="210.00")) == Decimal("1000.00")
+
+
+def _recargo_invoice(row: Transaction) -> Invoice:
+    line = InvoiceLine(
+        description="Mercancia",
+        quantity=Decimal("1"),
+        unit_price=Decimal("6800.00"),
+        subtotal=Decimal("6800.00"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
+        iva_amount=Decimal("1428.00"),
+    )
+    return Invoice.model_validate(
+        {
+            "bucket_id": BUCKET_ID,
+            "kind": InvoiceKind.RECEIVED,
+            "invoice_number": "MAY-1",
+            "issued_at": date(_YEAR, 2, 5),
+            "counterparty_name": "Mayorista SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("6800.00"),
+            "iva_total": Decimal("1428.00"),
+            "recargo_amount": Decimal("353.60"),
+            "grand_total": Decimal("8581.60"),
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "linked_transaction_ids": (row.transaction_id,),
+        }
+    )
+
+
+def test_the_linked_invoice_states_the_iva_and_recargo_the_row_does_not_carry() -> None:
+    bare = ledger_expense_transaction(
+        "compra-sin-cuotas",
+        amount=Decimal("8581.60"),
+        category=_CATEGORY,
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
+        taxable_base=Decimal("6800.00"),
+    )
+    invoice = _recargo_invoice(bare)
+    linked = bare.model_copy(update={"invoice_id": invoice.invoice_id})
+    repository = _InMemoryInvoiceCatalogueRepository()
+    repository.save(build_invoice_catalogue((invoice,)))
+    profile = cash_criterion_profile(
+        _YEAR, extra_facts=(UserProfileFact(path="iva.regime", value="RECARGO_EQUIVALENCIA"),)
+    )
+
+    quarterly = resolve_m130(ActivityAssetHistory(), "1T", rows=(linked,), profile=profile, invoices=repository)
+    unlinked = resolve_m130(ActivityAssetHistory(), "1T", rows=(bare,), profile=profile)
+    box = _m130_binding_id(_revision("130", "2019-y-siguientes"))
+
+    assert quarterly.binding_values[box] == Decimal("8581.60")
+    assert unlinked.binding_values[box] == Decimal("6800.00")

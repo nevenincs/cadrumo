@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import NamedTuple
 
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ from ..invoices.source_observations import is_rectificativa
 from ._renta_business_eligibility import is_supplier_refund
 from .currency_predicates import (
     effective_eur_iva_amount,
+    effective_eur_recargo_amount,
     effective_eur_taxable_base,
 )
 from .renta_imputation import received_invoice_reference
@@ -31,6 +33,35 @@ class _PurchaseInvoiceEvidencePayload(BaseModel):
     invoice_issue_date: date | None = None
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
+
+
+class LinkedInvoiceCuotas(NamedTuple):
+    """The IVA and recargo cuotas a received invoice states, in EUR."""
+
+    iva_amount: Decimal
+    recargo_amount: Decimal | None
+
+
+def linked_invoice_cuotas(transaction: Transaction, invoices: InvoiceCatalogue | None) -> LinkedInvoiceCuotas | None:
+    """Return the cuotas of the one received invoice the row links to, or ``None`` when the row's own stand.
+
+    The supplier states the IVA and the recargo de equivalencia on its invoice (RD 1619/2012 art. 6),
+    so the linked invoice is authoritative for the cuotas the buyer bears. An invoice that settles
+    through several rows cannot say which share is this row's, so the row's own amounts stand then.
+
+    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    """
+    invoice_id = received_invoice_reference(transaction)
+    invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
+    if (
+        invoice is None
+        or invoice.kind is not InvoiceKind.RECEIVED
+        or tuple(invoice.linked_transaction_ids) != (transaction.transaction_id,)
+        or invoice.iva_total_eur is None
+    ):
+        return None
+    return LinkedInvoiceCuotas(invoice.iva_total_eur, invoice.recargo_amount_eur)
 
 
 def refund_left_to_correction_netting(transaction: Transaction, invoices: InvoiceCatalogue) -> bool:
@@ -191,6 +222,7 @@ def _purchase_invoice_payload_for_totals(
         invoice_issue_date=invoice.issued_at,
         taxable_base=base_total_eur,
         iva_amount=iva_total_eur,
+        recargo_amount=invoice.recargo_amount_eur,
     )
 
 
@@ -204,6 +236,13 @@ def taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoic
     if evidence_payload.taxable_base is not None:
         return evidence_payload.taxable_base
     return effective_eur_taxable_base(transaction)
+
+
+def recargo_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
+    """Return the EUR recargo: the linked invoice's when one is linked, else the transaction's own."""
+    if evidence_payload.invoice_issue_date is not None:
+        return evidence_payload.recargo_amount
+    return effective_eur_recargo_amount(transaction)
 
 
 def iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
