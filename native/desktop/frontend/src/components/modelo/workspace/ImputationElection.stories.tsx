@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import fixtures from "@fixtures/desktop-imputation-election/imputationElection.json";
+import fixtures from "@fixtures/desktop-imputation-election/imputationElection.json" with { type: "json" };
 import { modeloFixture } from "@/dev/modeloFixture";
 import {
   imputationElectionFixture,

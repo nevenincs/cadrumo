@@ -1,6 +1,6 @@
 import type { CensoPort, CensoSnapshot } from "../shell/profileCenso";
 import type { ProfileFixture } from "./userProfileFixture";
-import profileFixtures from "@fixtures/desktop-profile/userProfile.json";
+import profileFixtures from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 
 /** What the generated profile states at `path`: the review's current side is
  * the profile the scenario host serves, never a value of its own. */

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import served from "@fixtures/desktop-withholding-refusal-words/ledgerWithholdingRefusalWords.json";
+import served from "@fixtures/desktop-withholding-refusal-words/ledgerWithholdingRefusalWords.json" with { type: "json" };
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import {
   STORY_PERIOD,

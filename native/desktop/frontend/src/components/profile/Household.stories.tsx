@@ -7,7 +7,7 @@ import {
   type HouseholdRefusal,
   type HouseholdScenario,
 } from "@/dev/householdFixture";
-import fixtures from "@fixtures/desktop-household/household.json";
+import fixtures from "@fixtures/desktop-household/household.json" with { type: "json" };
 import { translator } from "../../shell/strings";
 import { Household } from "./Household";
 
