@@ -33,7 +33,6 @@ its keyed ``payer_ref``, never by the payer's tax identifier.
 
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 from collections.abc import Sequence
 from decimal import Decimal
@@ -145,34 +144,30 @@ def _declared_categories(context: CalculationSourceContext) -> frozenset[str] | 
     return frozenset(token.strip() for token in raw.split(",") if token.strip()) or None
 
 
-_ACTIVITY_EPIGRAPH_PATH: Final[re.Pattern[str]] = re.compile(
-    r"activities(?:\.(?P<row>[1-9][0-9]*))?\.(?P<field>[a-z0-9_]+)"
-)
-"""A field of one declared censal activity: the first row has no index, later rows count from 1."""
+_ACTIVITY_SECTION: Final[str] = "activities"
 _IAE_EPIGRAPH_FIELD: Final[str] = "iae_epigraph"
 
 
 def declared_activity_epigraphs(context: CalculationSourceContext) -> tuple[str | None, ...] | None:
     """Return each declared activity's IAE epigraph in force at the period's end, ``None`` for one without.
 
-    ``None`` overall when the profile cannot be read; an empty tuple when it
-    declares no activity.
+    Rows are the profile's own activity rows, read by the shared section-row
+    grouping: the setup wizard's unindexed row and every indexed row, the first
+    of which the row mutation stores at index 0. ``None`` overall when the
+    profile cannot be read; an empty tuple when it declares no activity.
     """
     if context.profile is None:
         return None
+    from ..user_profile.completeness import profile_section_rows
     from ..user_profile.projections import record_to_path_values
 
-    rows: dict[str, str | None] = {}
-    for path, value in record_to_path_values(context.profile.record, as_of=context.period.end_date).items():
-        match = _ACTIVITY_EPIGRAPH_PATH.fullmatch(path)
-        if match is None:
-            continue
-        row = match.group("row") or "0"
-        if match.group("field") == _IAE_EPIGRAPH_FIELD and value.strip():
-            rows[row] = value
-        else:
-            rows.setdefault(row, None)
-    return tuple(rows.values())
+    values = record_to_path_values(context.profile.record, as_of=context.period.end_date)
+    epigraphs: list[str | None] = []
+    for row in profile_section_rows(_ACTIVITY_SECTION, values):
+        path = ".".join(part for part in (_ACTIVITY_SECTION, row, _IAE_EPIGRAPH_FIELD) if part)
+        epigraph = (values.get(path) or "").strip()
+        epigraphs.append(epigraph or None)
+    return tuple(epigraphs)
 
 
 def _class_state(

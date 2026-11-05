@@ -22,9 +22,14 @@ from .....application.aggregation.retencion_soportada_repository import (
     record_retencion_soportada,
     retencion_soportada_record_key,
 )
-from .....application.aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
+from .....application.aggregation.retencion_soportada_source import (
+    IRPF_INCOME_CATEGORIES_PROFILE_PATH,
+    RetencionSoportadaSourceResolver,
+)
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.source_resolution_operations import merge_source_resolutions
+from .....application.modelo.work_profile import ModeloWorkProfile
+from .....application.user_profile.section_rows import next_section_row_index, section_row_facts
 from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
@@ -34,7 +39,9 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
+from .....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...storage.secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE
@@ -50,10 +57,12 @@ _PAYER_B = "B00000002"
 _PAYER_C = "B00000003"
 _EJERCICIO = 2025
 _SECOND_PROFILE = "22222222-2222-4222-8222-222222222222"
+_ACTIVITY_PROFILE = "33333333-3333-4333-8333-333333333333"
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
 _SOURCE_REFS = ("aeat-modelo-100-instructions-2025",)
 _TRABAJO_BINDING = "renta-retencion-soportada-trabajo"
 _CAPITAL_BINDING = "renta-retencion-soportada-capital-mobiliario"
+_RENTAL_ACTIVITY_BINDING = "renta-retencion-soportada-arrendamiento-actividad"
 
 
 class _UndeclaredFamilyAuthority:
@@ -153,19 +162,47 @@ def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     )
 
 
-def _context(revision: ModeloRevision) -> CalculationSourceContext:
+def _context(revision: ModeloRevision, profile: ModeloWorkProfile | None = None) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="100",
         filing_year=_EJERCICIO,
         period=Period.from_year_and_code(_EJERCICIO, "0A"),
         revision=revision,
+        profile=profile,
     )
 
 
-def _resolve(repository: RetencionSoportadaRecordRepositoryAdapter, revision: ModeloRevision):
+def _resolve(
+    repository: RetencionSoportadaRecordRepositoryAdapter,
+    revision: ModeloRevision,
+    profile: ModeloWorkProfile | None = None,
+):
     resolver = RetencionSoportadaSourceResolver(ports=RetencionSoportadaPorts(repository=repository))
-    return merge_source_resolutions((resolver.resolve(_context(revision)),))
+    return merge_source_resolutions((resolver.resolve(_context(revision, profile)),))
+
+
+def _activity_profile(operation: PinnedAuthorityOperation, iae_epigraph: str) -> ModeloWorkProfile:
+    """An activity-income profile whose one activity row is allocated and filled as the row mutation does."""
+    section = operation.profile_schema().section("activities")
+    row = section_row_facts(
+        section,
+        row_index=next_section_row_index(section.key, ()),
+        values={"description": "Actividad sintetica", "iae_epigraph": iae_epigraph},
+    )
+    return ModeloWorkProfile(
+        record=create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_ACTIVITY_PROFILE,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER),
+                UserProfileFact(path=IRPF_INCOME_CATEGORIES_PROFILE_PATH, value="actividad_economica"),
+                *row,
+            ),
+            context=leased_profile_create_context(),
+        ),
+        profile_decode_context=operation.profile_decode_context(),
+    )
 
 
 def test_a_record_survives_the_encrypted_store_and_its_payer_is_never_plaintext(
@@ -406,6 +443,29 @@ def test_two_payers_of_one_class_sum_and_each_other_class_stays_distinct(
         assert node.fingerprint == certificate
         assert node.source_ref is not None
         assert _PAYER_A not in node.source_ref and _PAYER_B not in node.source_ref
+
+
+def test_the_first_activity_rows_epigraph_decides_the_rental_activity_class(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The row mutation stores a profile's first activity at index 0; its epigraph is read, not skipped.
+
+    A plumbing activity (IAE 504.2) is no urban rental, so with no record the
+    rental-activity credit is a proven zero resting on the profile; a group 861
+    activity declares the rental, so the same empty store leaves it unresolved.
+    """
+    revision = _revision(_binding(_RENTAL_ACTIVITY_BINDING, "arrendamiento_inmueble_urbano_actividad"))
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        plumbing = _resolve(_repository(), revision, _activity_profile(operation, "504.2"))
+        rental = _resolve(_repository(), revision, _activity_profile(operation, "861.1"))
+
+    assert next_section_row_index("activities", ()) == 0
+    assert plumbing.binding_values == {_RENTAL_ACTIVITY_BINDING: Decimal("0")}
+    assert plumbing.diagnostics == ()
+    assert rental.binding_values == {}
+    assert [(item.reason, item.binding_id) for item in rental.diagnostics] == [
+        ("unresolved_binding", _RENTAL_ACTIVITY_BINDING),
+    ]
 
 
 def test_a_zero_record_is_a_proven_zero(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
