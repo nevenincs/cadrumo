@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from textual.widgets import Button, Input, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
@@ -22,6 +22,7 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus

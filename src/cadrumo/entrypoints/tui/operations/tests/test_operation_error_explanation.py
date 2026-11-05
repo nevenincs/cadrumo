@@ -32,14 +32,15 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from .....application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import RecordedRegisteredError
-from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from ..controller_port import OperationErrorDetailPort
 from ..refusal_explanation import operation_error_explanation
 

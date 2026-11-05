@@ -16,8 +16,8 @@ import time
 from typing import TYPE_CHECKING
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.profile_access import AccessRefusal

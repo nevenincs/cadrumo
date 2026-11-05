@@ -7,9 +7,9 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult
 from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_selection import require_runtime_login_target

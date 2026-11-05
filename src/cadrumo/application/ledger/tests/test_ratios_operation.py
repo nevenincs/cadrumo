@@ -11,13 +11,14 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from .. import ratios_contracts as contracts
 from .. import ratios_operation as ratios

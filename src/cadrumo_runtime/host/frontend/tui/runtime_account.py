@@ -6,12 +6,11 @@ import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.credentials import assess_profile_password
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,

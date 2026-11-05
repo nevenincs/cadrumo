@@ -21,7 +21,8 @@ from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateRequest,
 )
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.operation_modelo_calculation import run_modelo_work_calculation
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

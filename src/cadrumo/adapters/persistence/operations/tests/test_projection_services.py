@@ -41,13 +41,10 @@ from cadrumo.application.operations.projection_services import (
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
 )
 

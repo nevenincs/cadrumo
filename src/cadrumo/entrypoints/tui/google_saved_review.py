@@ -36,7 +36,6 @@ from ...application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
 )
 from ...application.operations.interactions import OperationResponseIntentValue
-from ...application.operations.registry import OperationFrontendProjection
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
@@ -46,6 +45,7 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.operations import (
     EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

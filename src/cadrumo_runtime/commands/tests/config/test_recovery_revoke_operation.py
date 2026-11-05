@@ -21,7 +21,7 @@ from cadrumo.application.operations.access_resolution import (
     resolve_operation_access,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.recovery_custody import (
@@ -37,7 +37,12 @@ from cadrumo.application.user_profile.recovery_revoke_operation import (
 )
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.tests.command_line_rendering import Printed, assert_prints, command_result, json_document
 from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

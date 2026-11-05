@@ -33,7 +33,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.interactions import OperationResponseIntent
 from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.google_configuration_operation import (
     build_google_configuration_definitions,
     build_google_configuration_registration,
@@ -52,6 +52,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

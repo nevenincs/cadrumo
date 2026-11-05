@@ -19,13 +19,13 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceProjectionV1,
 )
 from cadrumo.application.modelo.workbench_read import ModeloWorkbenchFormReadV1
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.values import ProfileSetupState

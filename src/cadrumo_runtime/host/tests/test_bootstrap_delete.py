@@ -23,7 +23,6 @@ from cadrumo.adapters.persistence.storage.profile_persistence_composition import
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
 from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand
 from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import login_session
 from cadrumo.application.user_profile.access_contracts import OsLoginContext
 from cadrumo.application.user_profile.custody_repository import ProfileCustodyTransactionRepository
@@ -33,6 +32,7 @@ from cadrumo.application.user_profile.custody_transactions import (
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.bootstrap_delete import (
     ProfileDelete,

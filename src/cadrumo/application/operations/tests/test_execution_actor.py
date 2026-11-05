@@ -11,6 +11,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationFrontendProjection
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ....domain.buckets.event_repository import build_bucket_event
 from ...user_profile.access_contracts import SessionKind
@@ -23,7 +24,6 @@ from ..execution_actor import (
 from ..interactions import OperationActorReference
 from ..models import OperationIdentity
 from ..owner import OperationExecutorContext
-from ..registry import OperationFrontendProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

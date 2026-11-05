@@ -9,8 +9,8 @@ from uuid import UUID, uuid4
 import pytest
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import optional_profile_connection as optional
 from cadrumo_client.commands.profile_binding import bound_profile_client

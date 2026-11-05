@@ -21,7 +21,7 @@ import pytest
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -40,7 +40,7 @@ from ...operations.access_resolution import (
     resolve_operation_access,
 )
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ..own_account_operation import (
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,

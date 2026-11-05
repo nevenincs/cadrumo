@@ -22,9 +22,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 
 if TYPE_CHECKING:
     from cadrumo.application.operations.composition import OperationSubmission
-    from cadrumo.application.operations.registry import (
-        OperationFrontendProjection,
-    )
+    from cadrumo.core.operations import OperationFrontendProjection
 
     from .operation_host import ProfileWorkerOperationHost
 

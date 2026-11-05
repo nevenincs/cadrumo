@@ -16,6 +16,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -24,7 +25,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.interactions import OperationApplyResponse
 from ...operations.models import OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import profile_operation_request
 from ...tests.review_operation_fakes import review_execution_context
 from .. import google_configuration_operation as worker

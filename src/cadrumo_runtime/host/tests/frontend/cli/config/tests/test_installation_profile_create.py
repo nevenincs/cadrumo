@@ -15,7 +15,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
@@ -24,6 +23,7 @@ from cadrumo.application.user_profile.registration import ProfileRegistrationErr
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,

@@ -49,14 +49,13 @@ from ....application.operations.execution_actor import (
 from ....application.operations.models import OperationIdentity, OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.refusal_evidence import OperationRefusalEvidence
-from ....application.operations.registry import OperationFrontendProjection
 from ....application.tests.operation_host_fakes import RecordingEvents
 from ....application.user_profile.access_contracts import SessionKind
 from ....core.casilla_id import CasillaId
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ....core.operations import OperationEffect
+from ....core.operations import OperationEffect, OperationFrontendProjection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.credit_resolution import CreditResolutionState

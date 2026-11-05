@@ -15,8 +15,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.bucket_pointer import pointer_path, read_pointer_selection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
 from cadrumo_client.contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest

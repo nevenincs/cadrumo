@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ....core.external_constants import OutputLanguage
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -27,7 +28,7 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ...bucket_event_projection import BucketEventProjection
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history import WorkUnitHistory
 from ..history_operation import (

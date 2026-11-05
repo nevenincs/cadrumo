@@ -24,7 +24,12 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
@@ -53,7 +58,7 @@ from ..operations import profile_guard
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import OperationFrontendProjection, OperationRegistry
+from ..operations.registry import OperationRegistry
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .access_authority_support import scoped_policy_decision
 

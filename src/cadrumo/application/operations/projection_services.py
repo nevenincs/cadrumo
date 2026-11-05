@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
+from ...core.operations import OperationFrontendProjection
 from ._projection_authority import (
     OperationResponseAuthorityBrokerMixin,
     response_authority_binding_matches,
@@ -149,10 +150,7 @@ from .persistence.journal import (
     OperationPersistedSnapshot,
     OperationSecureReferenceStore,
 )
-from .registry import (
-    OperationFrontendProjection,
-    OperationRegistry,
-)
+from .registry import OperationRegistry
 from .secret_submission import zeroize_secret_buffer
 
 _READ_LIMIT = 1

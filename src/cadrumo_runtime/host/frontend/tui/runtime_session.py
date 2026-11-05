@@ -22,11 +22,12 @@ from textual.dom import DOMNode
 from textual.timer import Timer
 from textual.widgets import Button, Footer, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.account import (
     AccountRecomposeReasonV1,

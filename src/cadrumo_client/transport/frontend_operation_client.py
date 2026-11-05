@@ -12,12 +12,12 @@ from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionDescriptionV1,
 )
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError

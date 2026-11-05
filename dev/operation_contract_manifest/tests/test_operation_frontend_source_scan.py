@@ -20,7 +20,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from dev.operation_contract_manifest.tests.test_operation_catalogue import (
     production_operation_source_tree,
     production_operation_sources,

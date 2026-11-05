@@ -20,7 +20,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ....domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
@@ -50,7 +50,7 @@ from ....domain.usage_ratios.model import UsageRatioProfile, eligible_usage_rati
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..entry_options_operation import (
     LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID,

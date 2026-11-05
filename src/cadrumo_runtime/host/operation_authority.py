@@ -23,11 +23,7 @@ from cadrumo.application.operations.execution_actor import OperationExecutionCal
 from cadrumo.application.operations.models import OperationId, OperationIdentity, OperationRequest
 from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
@@ -44,6 +40,7 @@ from cadrumo.core.diagnostic_log import diagnostic_scope, diagnostic_timing_even
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.request_faults import registered_error_fault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts

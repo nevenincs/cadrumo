@@ -24,11 +24,7 @@ from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEF
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import new_operation_id
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -38,6 +34,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_PATCH_OPERATION_DEFINITION_ID,
 )
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.request_faults import RequestFault
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.operation_access import (

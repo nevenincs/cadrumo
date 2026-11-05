@@ -21,7 +21,7 @@ from contextlib import ExitStack, contextmanager
 from typing import Protocol
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.model_runs import (

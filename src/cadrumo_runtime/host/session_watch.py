@@ -27,7 +27,7 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus

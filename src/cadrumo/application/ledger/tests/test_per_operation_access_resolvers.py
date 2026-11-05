@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ...export.calculation_review_xlsx_operation import (
     CalculationReviewXlsxRequest,
     build_calculation_review_xlsx_definition,
@@ -74,7 +74,7 @@ from ...modelo.reconciliation_pull_operation import (
 from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...operations.models import OperationRequest
 from ...operations.operation_definition import OperationDefinition
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ...operations.registry import OperationPublicDefinitionRegistrationV1
 from ...overview.pipeline_operation import (
     OverviewPipelineRequest,
     resolve_overview_pipeline_access,

@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_admission as admission
 from cadrumo_client.commands import profile_selection
