@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:51002543612a6fc9ec9ea351920417709826f079c47b380e8d6447fab626ae3d'
+body_hash: 'sha256:ac639a4f78ad5a8c243c4377ab31f93dc2d65812024f5bee67a296800ddd60ff'
 ---
 
 # `fixture-canonicalization` plan
@@ -83,6 +83,7 @@ Assert hand-grounded expected obligations per persona and period through the rea
 
 - [ ] `P06.S18` - Add the persona by year by period obligation suite asserting expected obligations through the real overview, calendar and calculation; `src/cadrumo/application/overview/tests and dev/fixtures/personas`.
 - [ ] `P06.S19` - Run the full gates once and close the plan; `justfile`.
+- [ ] `P06.S29` - Fix the product defects the persona obligation suite found: three-state payer facts for 111, 115 and 349; Modelo 347 excluding issued invoices with retención; the RIRPF art. 109.1 exception in the 130 applicability rule; a pure recargo retailer's deadline profile; Modelo 130 expenses resolved through the linked invoice; reverse-charge deduction evidence from the supplier's invoice; casilla 0168 derived from the estimation regime; and the casilla 1384 observation reaching 1380; `src/cadrumo/application, src/cadrumo/domain and src/cadrumo/_data/registry`.
 
 ## Parallelization
 
