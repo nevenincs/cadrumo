@@ -11,6 +11,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
@@ -290,17 +291,14 @@ def _regime_profile_facts(
     iva_regime: str,
     extra: tuple[UserProfileFact, ...] = (),
 ) -> tuple[UserProfileFact, ...]:
-    return (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="irpf.estimation_regime", value=estimation),
-        UserProfileFact(path="iva.regime", value=iva_regime),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        *extra,
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="irpf.estimation_regime", value=estimation),
+            UserProfileFact(path="iva.regime", value=iva_regime),
+            *extra,
+        ),
+        persona_id="sociedad-limitada",
     )
 
 
