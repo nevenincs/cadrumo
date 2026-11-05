@@ -171,7 +171,13 @@ _EXPECTED_M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
-_EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+# Hand-derived annual rendimiento neto for the cobros y pagos persona in estimacion directa simplificada.
+# Casilla 0180 (ingresos) 12000.00 less the casilla 0220 expenses 2400.00 leaves a rendimiento previo of
+# 9600.00. RIRPF art. 30.2.4.a adds the provision for gastos de dificil justificacion, 5 per cent of that
+# previo (7 per cent applies to 2023 only, Ley 35/2006 DA 56), capped at 2.000,00: 480.00. Casilla 0223 is
+# therefore 2400.00 + 480.00 = 2880.00 and casilla 0224 is 12000.00 - 2880.00 = 9120.00.
+# oracle: AEAT-RENTA-MANUAL, estimacion directa simplificada; RIRPF art. 30.2.4.a.
+_EXPECTED_M100_ACTIVITY_NET = Decimal("9120.00")
 _AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("300.00"),
     "2T": Decimal("360.00"),
@@ -437,7 +443,8 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    # 12000.00 - (2400.00 + 5 per cent of the 9600.00 previo = 480.00) = 9120.00, as derived at the constant.
+    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
         _AUTONOMA_M130_C19_BY_PERIOD.values(),
@@ -489,7 +496,8 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    # 12000.00 - (2400.00 + 5 per cent of the 9600.00 previo = 480.00) = 9120.00, as derived at the constant.
+    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
     assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _AUTONOMA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
