@@ -110,14 +110,18 @@ complement = "Nave 3"
 # His own copy of the prior year's Renta: rendimiento neto of his activity in
 # estimación directa (casilla 0224) of 12846.30, a better year than the fiscal
 # year's 9349.90. Modelo 130 casilla 13 reads it (RIRPF art. 110.3.c): above
-# 12000.00, so no minoración applies. The product keeps a figure the taxpayer
-# types from his copy at calculation grade.
+# 12000.00, so no minoración applies. His results have always been positive, so
+# that return carried no negative general base pending for later years: the
+# Anexo C remainders (casillas 1384, 1387, 1390 and 1391) are zero, and this
+# year's opening rows (casillas 1380 to 1388) read them (Ley 35/2006 art. 50.3).
+# The product keeps a figure the taxpayer types from his copy at calculation
+# grade.
 [[local_observations]]
 modelo = "100"
 year = "horizon-2"
 period = "0A"
-casillas = { "0224" = "12846.30" }
-reason = "Rendimiento neto de la actividad en la declaración de la renta del ejercicio anterior"
+casillas = { "0224" = "12846.30", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
 
 # At the clock every quarterly return of the fiscal year is past its window,
 # so he has filed each one. His quarterly IVA results were all to pay, so no
