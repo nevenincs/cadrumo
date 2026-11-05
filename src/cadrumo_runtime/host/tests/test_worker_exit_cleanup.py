@@ -467,8 +467,8 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
         failed=failed,
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -480,7 +480,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
     clock = iter((10.0, 10.75, 11.0))
     monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: next(clock)))
     caplog.set_level(logging.DEBUG, logger=worker_service.log.name)
@@ -544,8 +544,8 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
         failed=asyncio.Event(),
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -557,7 +557,7 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
 
     with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
         asyncio.run(worker_service.serve_control_requests(context, input_executor))
@@ -593,8 +593,8 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
         operations=cast(ProfileWorkerOperationHost, Operations()),
         uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
         failed=asyncio.Event(),
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     receive_calls = 0
@@ -606,7 +606,7 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
             return request
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
 
     with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
         asyncio.run(worker_service.serve_control_requests(context, input_executor))
@@ -702,8 +702,8 @@ def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
             operations=cast(ProfileWorkerOperationHost, _Operations(0)),
             uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
             failed=asyncio.Event(),
-            operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-            upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+            operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
             changed=asyncio.Event(),
         )
         request = ProfileWorkerRetireRequest(request_id=uuid4(), session_id=uuid4())
@@ -743,8 +743,8 @@ def test_blocking_control_keeps_loop_responsive_and_owns_cancelled_work(action: 
             operations=cast(ProfileWorkerOperationHost, Operations()),
             uploads=worker_service.WorkerSubmissionStaging(),
             failed=asyncio.Event(),
-            operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-            upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+            operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
             changed=asyncio.Event(),
         )
         request = ProfileWorkerControlRequest.model_validate({"request_id": uuid4(), "action": action})

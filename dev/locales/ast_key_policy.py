@@ -128,11 +128,11 @@ TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
 #: The name alone is not the signal; the name plus the shape of what it wraps is.
 #:
 #: The CLI command specs never pass a bare string: every help key is
-#: written ``help_key=TranslationKey("cli...")`` or ``help_key=_key("cli...")``, so
+#: written ``help_key=TranslationKey("cli...")`` or ``help_key=translation_key("cli...")``, so
 #: reading only ``ast.Constant`` values made 690 live keys invisible to this scanner
 #: and reported them as catalogue-only extras — one strip away from deleting the
 #: entire ledger and live CLI help surface.
-KEY_WRAPPER_CALLS: frozenset[str] = frozenset({"TranslationKey", "_key"})
+KEY_WRAPPER_CALLS: frozenset[str] = frozenset({"TranslationKey", "translation_key", "_key"})
 
 
 #: CLI command-spec factories that take their translation key as a POSITIONAL
@@ -159,9 +159,9 @@ COMMAND_SPEC_KEY_FACTORIES: frozenset[str] = frozenset(
         # rather than guessed, and both are named here rather than reached by
         # widening the rule to any positional dotted literal - which the note
         # above rejects, because a module path would then become a phantom key.
-        "_boolean_flag_option",
-        "_repeatable_text_option",
-        "_optional_text_option",
+        "boolean_flag_option",
+        "repeatable_text_option",
+        "optional_text_option",
         "state_free_group_spec",
     },
 )

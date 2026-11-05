@@ -969,7 +969,7 @@ if _classified != set(IvaLedgerAggregationIssueReason):
     _stale = ", ".join(sorted(str(r) for r in _classified - set(IvaLedgerAggregationIssueReason)))
     raise InternalInvariantError(
         "every IvaLedgerAggregationIssueReason must be classified for the ledger preflight: map it in "
-        "_PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
+        "PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
         f"_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT; unclassified: {_unclassified or 'none'}; "
         f"stale: {_stale or 'none'}",
     )

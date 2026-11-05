@@ -29,7 +29,7 @@ _FINDING = WritePathFinding(
 
 
 def _run(result: WritePathResult, monkeypatch: pytest.MonkeyPatch, *argv: str) -> int:
-    monkeypatch.setattr(report._analysis, "run_write_path_scan", lambda: result)
+    monkeypatch.setattr(report.write_path_coverage, "run_write_path_scan", lambda: result)
     return report.main(list(argv))
 
 

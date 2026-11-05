@@ -102,7 +102,7 @@ async def _serve_control(
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return request
 
-    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    monkeypatch.setattr(worker_service.worker_operation_requests, "receive", receive)
     context = worker_service.WorkerControl(
         channel=cast(WorkerChannel, parent),
         custody=custody,
@@ -110,8 +110,8 @@ async def _serve_control(
         operations=host,
         uploads=cast(worker_service.WorkerSubmissionStaging, object()),
         failed=asyncio.Event(),
-        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
-        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        operation_release=cast(worker_service.worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service.worker_cleanup.WorkerRelease[None], object()),
         changed=asyncio.Event(),
     )
     with ThreadPoolExecutor(max_workers=1) as input_executor, pytest.raises(RefusalError):

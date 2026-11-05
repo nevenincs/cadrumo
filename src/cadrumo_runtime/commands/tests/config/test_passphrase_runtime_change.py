@@ -100,7 +100,7 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
     )
     monkeypatch.setattr(passphrase, "open_cli_profile_client", open_client)
     monkeypatch.setattr(passphrase, "run_profile_password_rotation", run_rotation)
-    monkeypatch.setattr(passphrase, "_activate_subcommand_output_language", lambda *_args: None)
+    monkeypatch.setattr(passphrase, "activate_subcommand_output_language", lambda *_args: None)
     monkeypatch.setattr(passphrase, "emit_envelope", lambda *_args, **kwargs: captured.update(kwargs))
 
     if close_fails:
@@ -124,7 +124,7 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
 
 def test_missing_active_profile_refuses_before_collecting_a_secret(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: None)
-    monkeypatch.setattr(passphrase, "_activate_subcommand_output_language", lambda *_args: None)
+    monkeypatch.setattr(passphrase, "activate_subcommand_output_language", lambda *_args: None)
 
     def forbidden(**_kwargs: object) -> None:
         raise AssertionError("missing target consumed a secret")
@@ -150,7 +150,7 @@ def test_post_submit_uncertainty_keeps_operation_identity_and_wipes_proofs(monke
         raise ProfileMutationRunError(operation_id=operation_id, code="unavailable")
 
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: str(profile_id))
-    monkeypatch.setattr(passphrase, "_activate_subcommand_output_language", lambda *_args: None)
+    monkeypatch.setattr(passphrase, "activate_subcommand_output_language", lambda *_args: None)
     monkeypatch.setattr(passphrase, "open_cli_profile_client", lambda _profile_id, _ctx: client)
     monkeypatch.setattr(
         passphrase,

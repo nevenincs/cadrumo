@@ -163,7 +163,7 @@ def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal
 
 MODELO_130_COMPUTED_CASILLAS = frozenset(
     {
-        validated_casilla_id("02", surface="_MODELO_130_COMPUTED_CASILLAS"),
+        validated_casilla_id("02", surface="MODELO_130_COMPUTED_CASILLAS"),
         _M130_RENDIMIENTO_NETO_CASILLA,
         _M130_PAGO_FRACCIONADO_CASILLA,
         _M130_DIFERENCIA_ACTIVIDADES_CASILLA,

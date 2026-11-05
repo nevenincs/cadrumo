@@ -16,10 +16,10 @@ from ..temporal import select_revision
 from .registry_tree import bundled_registry_tree
 from .snapshot_support import build_snapshot
 
-M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")
+M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="M202_CUOTA_BASE_CASILLA")
 M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00611",
-    surface="_M200_CUOTA_DIFERENCIAL_CASILLA",
+    surface="M200_CUOTA_DIFERENCIAL_CASILLA",
 )
 
 

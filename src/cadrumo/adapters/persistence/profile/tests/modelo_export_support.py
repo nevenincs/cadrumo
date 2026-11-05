@@ -52,14 +52,14 @@ from .published_authority_support import published_authority_operation
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
-M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INPUT_CASILLA")
-M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULT_CASILLA")
-M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
+M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="M130_INPUT_CASILLA")
+M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="M130_RENDIMIENTO_NETO_CASILLA")
+M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="M130_RESULT_CASILLA")
+M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="M303_RESULT_CASILLA")
 _SPANISH_IBAN = "ES9121000418450200051332"
 M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
-    surface="_M200_REFUND_RESULT_CASILLA",
+    surface="M200_REFUND_RESULT_CASILLA",
 )
 _SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 

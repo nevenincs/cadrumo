@@ -158,9 +158,9 @@ def is_transcribed_value(value: ast.expr) -> bool:
     if not isinstance(value, ast.Call):
         return False
     name = _call_name(value)
-    if name in {"_first_text", "findtext", "get"}:
+    if name in {"first_text", "findtext", "get"}:
         return True
-    if name in {"_decimal", "coerce_decimal", "Decimal"}:
+    if name in {"_decimal", "decimal", "coerce_decimal", "Decimal"}:
         return any(is_transcribed_value(argument) for argument in value.args)
     return False
 

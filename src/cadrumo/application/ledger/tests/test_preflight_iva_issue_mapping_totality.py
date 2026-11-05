@@ -166,7 +166,7 @@ def _observed_missing_fact_reasons() -> frozenset[IvaLedgerAggregationIssueReaso
 
 def test_the_shipped_module_imports_with_every_member_classified() -> None:
     """The real imported module classifies every native issue exactly once."""
-    assert set(preflight_module._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(
+    assert set(preflight_module.PREFLIGHT_REASON_BY_IVA_ISSUE) | set(
         preflight_module._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT
     ) == set(
         IvaLedgerAggregationIssueReason,
