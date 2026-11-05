@@ -63,6 +63,7 @@ _YEAR = 2025
 _REASON = "withholding_detail_absent"
 _ATTESTED = "application.modelo.findings.withholding_detail_absent_attested"
 _UNPROVEN = "application.modelo.findings.withholding_detail_absent_unproven"
+_PAYS_WITHHELD_INCOME = UserProfileFact(path="withholding.has_employees", value=True)
 _EVERY_QUARTER = UserProfileFact(
     path=M111_NO_RETENCIONES_PROFILE_PATH, value=",".join(f"{_YEAR}:{quarter}" for quarter in ("1T", "2T", "3T", "4T"))
 )
@@ -71,7 +72,11 @@ _EVERY_QUARTER = UserProfileFact(
 @contextmanager
 def _declaration(tmp_path: Path, *, attested: bool) -> Generator[tuple[SeededOperatorWork, InstalledModeloWorkbench]]:
     with seeded_operator_work(
-        tmp_path, modelo="190", filing_year=_YEAR, period_code="0A", extra_facts=(_EVERY_QUARTER,) if attested else ()
+        tmp_path,
+        modelo="190",
+        filing_year=_YEAR,
+        period_code="0A",
+        extra_facts=(_PAYS_WITHHELD_INCOME, _EVERY_QUARTER) if attested else (_PAYS_WITHHELD_INCOME,),
     ) as work:
         installed = application_workbench(work.work_unit, operation=work.operation)
         work.recalculate()

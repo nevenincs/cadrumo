@@ -347,8 +347,12 @@ def real_workbench(
     modelo: str = "130",
     filing_year: int = 2026,
     period_code: str = "1T",
+    extra_facts: tuple[UserProfileFact, ...] = (),
 ) -> Generator[InstalledModeloWorkbench]:
     """Yield the production reader and actions of one seeded declaration.
+
+    ``extra_facts`` are profile facts the declaration's applicability needs beyond the
+    ready baseline, such as a payer fact the filer states.
 
     Held open as a context manager because the profile runtime must stay live
     while a mounted workbench reads through it. The address picks the SHAPE of
@@ -363,7 +367,7 @@ def real_workbench(
             create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=_READY_PROFILE_FACTS,
+                facts=persona_facts_beneath((*_READY_PROFILE_FACTS, *extra_facts)),
                 created_at=_T0,
                 updated_at=_T0,
                 context=operation.profile_create_context(),

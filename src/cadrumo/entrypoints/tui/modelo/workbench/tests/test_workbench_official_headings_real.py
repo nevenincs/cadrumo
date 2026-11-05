@@ -23,6 +23,7 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......domain.user_profile.values import UserProfileFact
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ....tests.settling import settle_until
@@ -36,7 +37,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ADDRESSES = [
     pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="renta"),
-    pytest.param({"modelo": "349", "filing_year": 2026, "period_code": "1T"}, id="intra-community"),
+    pytest.param(
+        {
+            "modelo": "349",
+            "filing_year": 2026,
+            "period_code": "1T",
+            "extra_facts": (UserProfileFact(path="iva.does_intracomunitario", value=True),),
+        },
+        id="intra-community",
+    ),
 ]
 _NAVIGATOR_WIDTH = 400
 

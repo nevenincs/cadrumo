@@ -77,7 +77,7 @@ class _Bench:
 @contextmanager
 def _bench(tmp_path: Path, *, modelo: str) -> Generator[_Bench]:
     submissions = RecordedSubmissions()
-    with seeded_operator_work(tmp_path, modelo=modelo) as work:
+    with seeded_operator_work(tmp_path, modelo=modelo, estimation_regime="objetiva") as work:
         installed = application_workbench(work.work_unit, operation=work.operation, submissions=submissions)
         yield _Bench(work=work, installed=installed, submissions=submissions)
 
