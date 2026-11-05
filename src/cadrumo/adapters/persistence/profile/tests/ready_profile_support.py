@@ -1,22 +1,28 @@
-"""A complete natural-person profile seeded for work-unit suites, stated by the autonomo-fontanero persona.
+"""Seed a canonical persona's profile for suites below the entrypoints, and the shared ready profile.
 
-The identity, activity and tax-axis facts are the persona's own answers, read
-through the core persona reader and stored under the profile paths the production setup flow assigns.
+A persona's answers are read through the core persona reader. The production
+setup flow assigns each answer its profile path, the profile patch judge
+refuses what the patch operation would refuse, and the facts are stored
+through the capsule writer the profile tests share. The entrypoints parity
+suite holds the result equal to what replaying the persona's profile through
+the production operations records.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.user_profile.section_rows import next_section_row_index, section_row_facts
+from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
 from cadrumo.application.wizard.catalogue import build_setup_flow
+from cadrumo.application.wizard.imputation_election import YEAR_QUESTION_ID
+from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.personas import IdentityRef, Persona, YearEnvelope, read_persona
+from cadrumo.tests.personas import IdentityRef, Persona, ProfileValue, YearEnvelope, read_persona
 
 _PERSONA_ID = "autonomo-fontanero"
 
@@ -53,7 +59,7 @@ def _persona_and_paths() -> tuple[Persona, dict[str, str]]:
     return persona, paths
 
 
-def _stated(persona: Persona, answer_id: str) -> UserProfileFactValue:
+def _stated(persona: Persona, answer_id: str) -> str | bool:
     value = next(answer.value for answer in persona.profile if answer.question_id == answer_id)
     if isinstance(value, bool | str):
         return value
@@ -77,27 +83,104 @@ def ready_profile_fact_values() -> dict[str, str | bool]:
     }
 
 
-def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
-    persona, paths = _persona_and_paths()
-    return (
-        *(UserProfileFact(path=paths[answer_id], value=_stated(persona, answer_id)) for answer_id in _ANSWER_IDS),
-        UserProfileFact(path="activities.description", value=dict(persona.activities[0].values)["description"]),
-        UserProfileFact(path="provenance.source", value="manual_cli"),
-        # Modelo 111 refuses a defaulted colegio-concertado declaration; the persona
-        # leaves this header attestation outside its answers, and a natural-person
-        # filer truthfully states False.
-        UserProfileFact(path="withholding.colegio_concertado", value=False),
-    )
+def _submitted(persona: Persona, value: ProfileValue, envelope: YearEnvelope) -> str:
+    """Render one ``[profile]`` value as the profile patch takes it."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, str):
+        return value
+    if isinstance(value, tuple):
+        return ",".join(value)
+    if isinstance(value, IdentityRef):
+        return persona.identity(value)
+    return value.resolve(envelope).isoformat()
+
+
+def _patch_answers(persona: Persona, envelope: YearEnvelope) -> dict[str, str]:
+    """Every wizard answer the persona's patch submits: its answers, then its elections and their year."""
+    answers = {answer.question_id: _submitted(persona, answer.value, envelope) for answer in persona.profile}
+    years = {str(election.year.resolve(envelope)) for election in persona.elections}
+    if len(years) > 1:
+        raise ValueError(f"{persona.id}: one patch states one election year, found {sorted(years)}")
+    answers.update((election.question, election.value) for election in persona.elections)
+    answers.update((YEAR_QUESTION_ID, year) for year in years)
+    return answers
+
+
+def persona_profile_facts(persona_id: str) -> tuple[UserProfileFact, ...]:
+    """The facts a persona's profile holds: its answers through the patch judge, its fields and its activity rows."""
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        envelope = YearEnvelope(floor=support.floor, horizon=support.horizon)
+        persona = read_persona(persona_id, envelope=envelope)
+        flow = build_setup_flow(operation)
+        changes = validate_profile_patch(
+            flow=flow,
+            current_values={},
+            setup_state=ProfileSetupState.INCOMPLETE,
+            supplied=_patch_answers(persona, envelope),
+            colegio_concertado=None,
+            operation=operation,
+        )
+        facts = [fact for fact in changes if fact.value is not None]
+        facts.extend(UserProfileFact(path=field.path, value=field.value) for field in persona.fields)
+        sections = {section.key: section for section in operation.profile_schema().sections}
+        for activity in persona.activities:
+            section = sections["activities"]
+            index = next_section_row_index(section.key, (fact.path for fact in facts))
+            facts.extend(section_row_facts(section, row_index=index, values=dict(activity.values)))
+        return tuple(facts)
+
+
+def seed_persona_profile(
+    persona_id: str,
+    *,
+    bucket_id: str,
+    at: datetime,
+    facts: tuple[UserProfileFact, ...] = (),
+    complete: bool = True,
+    root: Path | None = None,
+    label: str = "Test profile",
+) -> None:
+    """Store ``persona_id``'s profile in ``bucket_id``, with the extra ``facts`` a suite states beside it.
+
+    The profile is complete when ``complete`` is true, and then it must pass the
+    same complete-profile judgement the setup-completion operation applies, or
+    the seed refuses. ``root`` and ``label`` name the storage root and the capsule label of a suite
+    that keeps its profile outside the default root.
+    """
+    persona_facts = persona_profile_facts(persona_id)
+    stated = {fact.path for fact in facts}
+    merged = (*(fact for fact in persona_facts if fact.path not in stated), *facts)
+    with bundled_indexed_authority().operation() as operation:
+        if complete:
+            reject_invalid_profile_facts(
+                bucket_id,
+                merged,
+                require_complete=True,
+                schema=operation.profile_decode_context().schema,
+            )
+        record = _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE if complete else ProfileSetupState.INCOMPLETE,
+            profile_id=bucket_id,
+            facts=merged,
+            created_at=at,
+            updated_at=at,
+            context=operation.profile_create_context(),
+        )
+    seed_test_profile_record(record, root=root, label=label)
 
 
 def seed_ready_profile(*, bucket_id: str, at: datetime) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_ready_profile_facts(),
-            created_at=at,
-            updated_at=at,
-            context=_profile_creation_context_for_test(),
-        ),
+    """Seed the shared ready profile: the autonomo-fontanero persona, with the colegio-concertado attestation.
+
+    Modelo 111 refuses a defaulted colegio-concertado declaration; the persona
+    leaves this header attestation outside its answers, and a natural-person
+    filer truthfully states False.
+    """
+    seed_persona_profile(
+        _PERSONA_ID,
+        bucket_id=bucket_id,
+        at=at,
+        facts=(UserProfileFact(path="withholding.colegio_concertado", value=False),),
     )

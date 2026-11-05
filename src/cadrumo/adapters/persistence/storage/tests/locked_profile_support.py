@@ -16,13 +16,13 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import persona_profile_facts
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     identity_seeded_custody_envelope,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
@@ -37,12 +37,12 @@ PROFILE_LABEL = "Operator"
 DEK = bytes(range(32))
 RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
 
-READY_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-)
+_READY_PERSONA_ID = "autonomo-fontanero"
+
+
+def ready_facts() -> tuple[UserProfileFact, ...]:
+    """The facts of a complete profile: the autonomo-fontanero persona's."""
+    return persona_profile_facts(_READY_PERSONA_ID)
 
 
 def build_envelope() -> ProfileCustodyEnvelope:
@@ -70,7 +70,7 @@ def publish_capsule_and_pointer(root: Path) -> None:
             initial_record=_create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=PROFILE_ID,
-                facts=READY_FACTS,
+                facts=ready_facts(),
                 context=_profile_create_context_for_test,
             ),
             record_session=session,
@@ -84,8 +84,8 @@ __all__ = [
     "DEK",
     "PROFILE_ID",
     "PROFILE_LABEL",
-    "READY_FACTS",
     "RECORD_NAMESPACE",
     "build_envelope",
     "publish_capsule_and_pointer",
+    "ready_facts",
 ]

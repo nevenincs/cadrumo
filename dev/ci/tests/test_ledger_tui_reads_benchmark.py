@@ -48,6 +48,7 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import persona_profile_facts
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
@@ -148,7 +149,6 @@ from cadrumo.domain.transactions.enums import (
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import (
     build_bienes_inversion_repository,
@@ -202,12 +202,8 @@ _MEASURED_PERIOD: Final = Period.from_year_and_code(_LAST_YEAR, "3T")
 _ACTOR: Final = "ledger-tui-reads-benchmark"
 _ACTOR_REF: Final = "benchmark:ledger-tui-reads"
 
-_PROFILE_FACTS: Final = (
-    UserProfileFact(path="identity.name", value="Escala"),
-    UserProfileFact(path="identity.surnames", value="Lectura Prueba"),
-    UserProfileFact(path="activities.description", value="design services"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="censo.activity_start_date", value=date(2016, 1, 1)),
+_PROFILE_PERSONA_ID: Final = "autonomo-fontanero"
+_HOME_OFFICE_FACTS: Final = (
     UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
     UserProfileFact(path="vivienda_office.office_m2", value=Decimal("20")),
 )
@@ -843,7 +839,7 @@ def ledger_tui_world(tmp_path: Path) -> Generator[LedgerTuiWorld]:
         ),
     ):
         bucket_id = str(profile_id)
-        upsert_test_profile_facts(profile_id, _PROFILE_FACTS)
+        upsert_test_profile_facts(profile_id, (*persona_profile_facts(_PROFILE_PERSONA_ID), *_HOME_OFFICE_FACTS))
         _seed_transactions(bucket_id)
         selected = _seed_selected_entry(bucket_id, operation)
         invoice_id = _seed_invoices(bucket_id)
