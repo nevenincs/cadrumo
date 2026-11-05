@@ -44,7 +44,15 @@ const listed = (shape = "") =>
   ) as ModeloDeclarationsListProjectionV1;
 
 /** The year of the declarations the scenario holds: its first row's. */
-const YEAR = listed().rows[0]!.filing_year;
+const YEAR = ((): number => {
+  const year = listed().rows[0]!.filing_year;
+  if (year === null) {
+    throw new Error(
+      "the scenario's first declaration row carries no filing year",
+    );
+  }
+  return year;
+})();
 /** The radio naming a quarter of that year, by its ordinal words. */
 const quarter = (ordinal: string) => new RegExp(`${ordinal} quarter ${YEAR}`);
 
