@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#fixture-canonicalization'
 date: '2026-11-04'
-modified: '2026-11-04'
+modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:181004dd496ddad9240697593ea2c981e4a33cce5f5537bf10655064581d5ef2'
+body_hash: 'sha256:83c7658feca8a834fa741ea8d40e9ecc204946abf6f8ff9b4d3303beec38c73b'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -799,6 +799,23 @@ related:
 - `S26` `verify:` `check-registry-gate` -> `pass`
 - `S26` `verify:` `lint-imports` -> `pass`
 - `S26` `by:` `vaultspec-high-executor`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/profile_registration.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/ready_profile_support.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_work_unit_discard_refusal.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/workspace_support.py`
+- `S15` `M` `src/cadrumo/domain/user_profile/tests/schema_value_support.py`
+- `S15` `M` `src/cadrumo/domain/user_profile/tests/test_schema_valid_placeholder.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/import_flow_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_capture_external_baseline.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow_mutation_guards.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_observation_layers_and_overrides.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_selectors.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_addressing.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_filing_chain_reconciliation.py`
+- `S15` `verify:` `ready-profile callers (114)` -> `pass`
+- `S15` `verify:` `lint-imports` -> `pass`
+- `S15` `verify:` `dev.quality.types on touched files` -> `pass`
+- `S15` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -817,3 +834,4 @@ related:
 - `S25` Not-applicable zeros are labelled `SheetRelationProvenance.OPERATOR_MANUAL` because no system-derived kind exists; pre-existing, raise at phase review
 - `S09` TS specs and prettier not run, `node_modules` absent. Envelopes replay personas at ReplayScope.PROFILE and seed activity income synthetically; carried to S27
 - `S26` Proven at horizon-1 only; per-year registry population runs at S19. Received `domestic_exempt` rows still raise the `unrouted_declarable_quantity` advisory
+- `S15` `register_minimal_profile` and `register_cli_profile` (125 consumers) and about 15 private ready-profile helpers move in S16
