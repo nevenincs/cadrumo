@@ -82,8 +82,6 @@ _M100_ANNUAL_ANSWERS = (
     "--casilla",
     "0166=A05",
     "--binding",
-    "renta-modelo-100-estimacion-directa-es-normal=1",
-    "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
     "--binding",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",

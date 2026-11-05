@@ -536,8 +536,6 @@ def calculate_m100(
             "0165=declarante",
             "--casilla",
             "0166=A05",
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
             "--by",
             "income-acceptance",
         ),

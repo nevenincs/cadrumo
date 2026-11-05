@@ -453,8 +453,6 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "work",
             "calculate",
             str(work_unit_payload["work_unit_id"]),
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
         )
     assert calculated.exit_code == 0, calculated.output
     casilla_values = _payload(calculated.output)["casilla_values"]

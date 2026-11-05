@@ -41,8 +41,8 @@ def test_every_baseline_binding_travels_on_the_channel_its_registry_declaration_
 
     assert decimal
     assert enum
-    assert boolean
     assert {declared[key] for key in decimal} <= {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}
     assert {declared[key] for key in enum} == {BindingValueChannel.ENUM}
-    assert {declared[key] for key in boolean} == {BindingValueChannel.BOOLEAN}
-    assert "renta-modelo-100-estimacion-directa-es-normal" in boolean
+    assert {declared[key] for key in boolean} <= {BindingValueChannel.BOOLEAN}
+    # The modality is the profile's regime, so no baseline states it on the filer's behalf.
+    assert "renta-modelo-100-estimacion-directa-es-normal" not in {*decimal, *enum, *boolean}

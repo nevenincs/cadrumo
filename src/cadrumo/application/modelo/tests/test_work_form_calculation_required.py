@@ -4,9 +4,9 @@ Every expectation about what the engine refuses without is read from the engine
 itself: the 2025 Modelo 100 is calculated over the published registry with one
 answer left out, and the refusal names the binding. The form is then built by
 the real builder, and must ask for exactly the boxes those refusals belong to --
-the earlier year's negative base (1388) always, and the normal direct
-estimation answer (0168) only for a filer whose profile states an economic
-activity, since the calculation reads it only behind that fact.
+the earlier year's negative base (1388) always. The normal direct
+estimation answer (0168) is derived from the profile's estimation regime, so the
+form never asks for it although the engine still refuses a calculation without it.
 """
 
 from __future__ import annotations
@@ -132,7 +132,7 @@ def test_the_inputs_named_are_the_ones_the_engine_refused_without(operation: Pin
 
     assert named(None) == _NEGATIVE_BASE_BOXES
     assert named({_ECONOMIC_ACTIVITY: False}) == _NEGATIVE_BASE_BOXES
-    assert named({_ECONOMIC_ACTIVITY: True}) == {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX}
+    assert named({_ECONOMIC_ACTIVITY: True}) == _NEGATIVE_BASE_BOXES
 
 
 def test_a_carry_between_periods_of_one_year_is_not_named(operation: PinnedAuthorityOperation) -> None:
@@ -169,22 +169,14 @@ def test_the_earlier_negative_base_needs_the_filer_instead_of_waiting_for_an_imp
     assert _needs_you(form) >= _NEGATIVE_BASE_BOXES
 
 
-def test_the_direct_estimation_answer_is_asked_of_a_filer_with_an_activity_only(
+def test_the_direct_estimation_answer_is_never_asked_because_the_profile_derives_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    unknown = form_casilla(built_form(operation, "100", _YEAR, "0A"), _DIRECT_ESTIMATION_BOX)
-    without = form_casilla(
-        built_form(operation, "100", _YEAR, "0A", known_truths={_ECONOMIC_ACTIVITY: False}), _DIRECT_ESTIMATION_BOX
-    )
-    with_activity = form_casilla(
-        built_form(operation, "100", _YEAR, "0A", known_truths={_ECONOMIC_ACTIVITY: True}), _DIRECT_ESTIMATION_BOX
-    )
+    for truths in (None, {_ECONOMIC_ACTIVITY: False}, {_ECONOMIC_ACTIVITY: True}):
+        field = form_casilla(built_form(operation, "100", _YEAR, "0A", known_truths=truths), _DIRECT_ESTIMATION_BOX)
 
-    # A fact the form does not know claims nothing; a filer without an activity is never asked.
-    assert unknown.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert without.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert with_activity.origin is ModeloFormOrigin.NEEDS_INPUT
-    assert with_activity.standing is ModeloFormStanding.NEEDS_YOU
+        assert field.origin is not ModeloFormOrigin.NEEDS_INPUT, truths
+        assert field.standing is not ModeloFormStanding.NEEDS_YOU, truths
 
 
 def test_a_held_answer_is_confirmed_not_asked_again(operation: PinnedAuthorityOperation) -> None:
@@ -193,15 +185,13 @@ def test_a_held_answer_is_confirmed_not_asked_again(operation: PinnedAuthorityOp
         "100",
         _YEAR,
         "0A",
-        held={**dict.fromkeys(_NEGATIVE_BASE_BOXES, Decimal("0")), _DIRECT_ESTIMATION_BOX: "N"},
-        entered=frozenset({_DIRECT_ESTIMATION_BOX}),
+        held=dict.fromkeys(_NEGATIVE_BASE_BOXES, Decimal("0")),
         known_truths={_ECONOMIC_ACTIVITY: True},
     )
 
     for box in _NEGATIVE_BASE_BOXES:
         assert form_casilla(form, box).origin is ModeloFormOrigin.IMPORTED, box
-    assert form_casilla(form, _DIRECT_ESTIMATION_BOX).origin is ModeloFormOrigin.ENTERED
-    assert not {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX} & _needs_you(form)
+    assert not _NEGATIVE_BASE_BOXES & _needs_you(form)
 
 
 def test_the_answers_feed_the_attention_counts_of_the_form_and_its_outline(operation: PinnedAuthorityOperation) -> None:
@@ -214,9 +204,9 @@ def test_the_answers_feed_the_attention_counts_of_the_form_and_its_outline(opera
         if hasattr(field.address, "casilla_id")
     }
 
-    assert form.counts.needs_input >= 2
-    assert form.counts.needs_you >= 2
-    for box in (_EARLIER_NEGATIVE_BASE_BOX, _DIRECT_ESTIMATION_BOX):
+    assert form.counts.needs_input >= 1
+    assert form.counts.needs_you >= 1
+    for box in (_EARLIER_NEGATIVE_BASE_BOX,):
         group = next(item for item in form.outline if sections[box] in item.section_ids)
         assert group.counts.needs_you >= 1, box
         assert group.counts.needs_input >= 1, box

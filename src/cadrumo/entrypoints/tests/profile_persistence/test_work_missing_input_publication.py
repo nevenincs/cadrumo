@@ -42,7 +42,7 @@ _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
 _YEAR = 2025
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _CLOCK = datetime(2026, 5, 21, 10, tzinfo=UTC)
-_REQUIRED_MANUAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+_REQUIRED_BINDING = "renta-base-liquidable-negativa-general-anterior"
 
 
 def _profile() -> None:
@@ -72,7 +72,7 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id != "renta-profile-tax-residence-ccaa"
-        and (not omit_required or binding.id != _REQUIRED_MANUAL_BINDING)
+        and (not omit_required or binding.id != _REQUIRED_BINDING)
         and binding.source != "profile"
         and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
         and binding.provider.kind != "retencion_soportada"
@@ -112,14 +112,14 @@ def _work_and_repositories(
     return unit, work_repo, revision_repo, event_repo
 
 
-def test_real_missing_manual_binding_stops_before_revision_publication(
+def test_real_missing_required_binding_stops_before_revision_publication(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         _profile()
         snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
-        required = next(binding for binding in snapshot.revision.bindings if binding.id == _REQUIRED_MANUAL_BINDING)
-        assert required.provider.kind == "manual_input"
+        required = next(binding for binding in snapshot.revision.bindings if binding.id == _REQUIRED_BINDING)
+        assert required.provider.kind == "previous_filing"
         unit, work_repo, revision_repo, event_repo = _work_and_repositories(operation)
         inputs = _inputs(snapshot, omit_required=True)
         with (
@@ -140,7 +140,7 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
                 ports=ports,
                 clock=_CLOCK,
             )
-        assert refused.value.binding_id == _REQUIRED_MANUAL_BINDING
+        assert refused.value.binding_id == _REQUIRED_BINDING
         assert refused.value.translated_message in {
             "errors.calc.binding_value_missing",
             "errors.calc.bound_casilla_binding_value_missing",
@@ -175,7 +175,7 @@ def test_same_tag_after_publication_remains_generic_and_published(
             raise RegistryValidationError(
                 "injected post-publication diagnostic failure",
                 translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": _REQUIRED_MANUAL_BINDING},
+                context={"binding_id": _REQUIRED_BINDING},
             )
 
         monkeypatch.setattr(calculate_input, "modelo_202_modality_for_record", fail_modality)

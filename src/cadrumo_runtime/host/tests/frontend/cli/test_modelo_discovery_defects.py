@@ -305,12 +305,10 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: ProfileSeeder) -> None:
-    """The Modelo 100 estimación-directa binding offers encoded choices
-    yet is consumed as a Decimal operand. ``bindings list`` must report
-    its ``input_channel`` as ``decimal`` and name the encoded values, so the
-    operator is not misled into supplying a label through the binding channel.
-    """
+def test_bindings_list_names_the_estimation_modality_as_derived_from_the_profile(
+    seed_profile: ProfileSeeder,
+) -> None:
+    """The Modelo 100 modality binding is read from the profile, so it advertises no decimal encoding to type."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
@@ -318,12 +316,11 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: P
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    row = next(line for line in lines if line.startswith("100\t") and "estimacion-directa-es-normal" in line)
-    columns = row.split("\t")
-    assert columns[-2] == "decimal", row
-    assert any(line.startswith("encoded_option\t") and "estimacion-directa-es-normal" in line for line in lines), (
-        result.output
-    )
+    row = next(line for line in lines if line.startswith("100	") and "estimacion-directa-es-normal" in line)
+    assert row.split("	")[4:6] == ["profile", "profile fact"], row
+    assert not any(
+        line.startswith("encoded_option	") and "estimacion-directa-es-normal" in line for line in lines
+    ), result.output
 
 
 def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> None:

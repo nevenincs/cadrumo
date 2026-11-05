@@ -201,8 +201,6 @@ def _calculate_through_cli(
             "0003=32000",
             "--casilla",
             "0102=9600",
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
             "--relation",
             "renta-modelo-130-pagos-fraccionados=0",
             "--relation",

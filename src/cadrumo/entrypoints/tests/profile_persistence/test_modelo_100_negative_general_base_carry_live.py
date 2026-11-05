@@ -178,7 +178,6 @@ def _calculate_m100(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=casilla_inputs,
-            binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
             clock=_CLOCK,
         )
 

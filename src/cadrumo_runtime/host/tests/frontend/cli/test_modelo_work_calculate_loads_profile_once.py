@@ -286,8 +286,6 @@ def test_m100_calculate_reaches_its_outcome_without_a_client_decrypt(
             session,
             profile_decrypts,
             work_unit_id,
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
         )
 
     envelope = json.loads(output)

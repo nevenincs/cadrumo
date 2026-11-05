@@ -201,7 +201,6 @@ _ACTIVITY_ONLY = Persona(
     criterion="devengo",
     activity_start=date(2023, 3, 1),
 )
-_NORMAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
 _ACTIVITY_INPUTS = {ACTIVITY_KEY_CASILLA: ACTIVITY_KEY}
 
 
@@ -299,7 +298,6 @@ def _calculate_autonomo_annual(secure_objects: SecureObjectRepository) -> Calcul
         secure_objects,
         casilla_inputs={validated_casilla_id("0003"): _D("24000.00")},
         text_casilla_inputs=_ACTIVITY_INPUTS,
-        binding_values={_NORMAL_BINDING: _D("0")},
     )
 
 
