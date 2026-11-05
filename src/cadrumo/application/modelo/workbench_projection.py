@@ -57,6 +57,7 @@ from .work_form_declaration_facts import (
     ModeloFormExport,
     ModeloFormFiling,
     ModeloFormResultDirection,
+    ModeloFormYearProjection,
 )
 from .work_form_export_offer import (
     ModeloExportRequestField,
@@ -354,6 +355,7 @@ class PublicModeloWorkForm(BaseModel):
     filing_year: int
     period: PublicPeriod
     registry_revision_id: str
+    year_projection: ModeloFormYearProjection
     work_unit_id: str
     calculation_revision_id: str | None
     language: OutputLanguage

@@ -1069,6 +1069,16 @@ class RegistrySnapshot(RegistryModel):
         """
         return reachable_authority_grade(self.revision.effective_authority_grade, self.revision_projection_direction)
 
+    @property
+    def edition_filing_year(self) -> int:
+        """Return the filing year the selected edition authors.
+
+        The temporal resolution records it; a snapshot built without one is
+        read at its default ``AUTHORED`` direction and so authors its own
+        filing year.
+        """
+        return self.filing_year if self.authored_filing_year is None else self.authored_filing_year
+
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:
         """Require every snapshot map key to name the payload stored beneath it."""

@@ -30,7 +30,15 @@ from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
-from .workbench_fixture import fed_by, form_counts, form_field, form_section, form_text, with_pages
+from .workbench_fixture import (
+    authored_year_projection,
+    fed_by,
+    form_counts,
+    form_field,
+    form_section,
+    form_text,
+    with_pages,
+)
 
 LAST_QUARTER_PAGE = "p2"
 """The page only the last quarter fills in."""
@@ -112,11 +120,13 @@ def sectioned_form(*, last_quarter_applies: bool | None = False) -> ModeloWorkFo
         ),
     )
     every = [*first_fields, missing_last_quarter, assumed_last_quarter, other_assumed]
+    period = Period.from_year_and_code(2026, "1T")
     return ModeloWorkForm(
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=period.filing_year,
+        period=period,
         registry_revision_id="2026-y-siguientes",
+        year_projection=authored_year_projection(period),
         work_unit_id="c" * 64,
         calculation_revision_id="d" * 64,
         language=OutputLanguage.ES,

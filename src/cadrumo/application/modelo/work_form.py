@@ -85,7 +85,7 @@ from .work_form_answers import answer_fields
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
 from .work_form_credits import withholding_credits
-from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure, year_projection
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
 from .work_form_inspection import (
@@ -354,6 +354,7 @@ def _assemble_work_form(
         filing_year=review.filing_year,
         period=review.period,
         registry_revision_id=snapshot.revision.id,
+        year_projection=year_projection(snapshot),
         work_unit_id=review.work_unit_id,
         calculation_revision_id=review.calculation_revision_id,
         language=language,
