@@ -21,6 +21,8 @@ from .routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
 
+_STREAMED_SHARD_PARENT = Path("modelo") / "schema"
+
 if not yaml.__with_libyaml__:
     # The pure-Python scanner is roughly ten times slower on these catalogues;
     # falling back to it silently would turn every rendered message into a
@@ -263,8 +265,11 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
                 self._load_shard_file(rel_shard)
 
     def _scan_shard_file(self, rel_shard: Path, key: str) -> bool:
-        # Streaming pays off for a shard asked one key; a shard asked a second
-        # uncached key is being read broadly, and one full load serves the rest.
+        # Streaming pays off only for a shard asked one key, which is how the
+        # per-Modelo schema shards are read. Any other shard is read broadly, and
+        # scanning it first would parse it a second time for its next key.
+        if rel_shard.parent != _STREAMED_SHARD_PARENT:
+            return False
         if rel_shard in self._scanned_shards or rel_shard in self._loaded_shards:
             return False
         self._scanned_shards.add(rel_shard)
