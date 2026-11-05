@@ -242,11 +242,16 @@ def _record_admission(observed: _DatabaseIdentity) -> None:
 
     Admission runs before a help request, a parse-time refusal or a refused
     storage dependency is decided, and each of those must leave the storage
-    tree as it found it. The receipt therefore joins a cache directory the
-    storage materializer already provisioned and never provisions one itself.
+    tree as it found it. The receipt directory is therefore a materialised
+    member of the cache grouping: whatever provisions the cache -- every
+    dispatched command and the installed runtime -- creates it, and this
+    writer only joins it, never creating a directory itself.
+
+    A skipped receipt is not logged: log redaction opens the authority, so a
+    record raised here would re-enter the admission it reports on.
     """
     path = _receipt_path(observed.digest)
-    if path is None or not path.parent.parent.is_dir():
+    if path is None or not path.parent.is_dir():
         return
     from ....core.atomic_write import atomic_write_best_effort_bytes
 

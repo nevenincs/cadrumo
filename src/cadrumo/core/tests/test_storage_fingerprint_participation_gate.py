@@ -106,6 +106,11 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "A search index rebuilt from a static bundled corpus. It is derived from shipped bytes, "
         "so it carries no taxpayer state of its own.",
     ),
+    ExclusionExpectation(
+        StorageCategory.AUTHORITY_ADMISSION_RECEIPTS,
+        "Per-user proofs that a published authority file was hashed. Any process that reads the "
+        "authority may leave one, and they name that file, never a profile or taxpayer state.",
+    ),
 )
 """The exclusion set, stated independently of the taxonomy, with a reason each.
 
