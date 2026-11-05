@@ -59,3 +59,19 @@ def test_filing_a_modelo_the_persona_never_owes_is_refused() -> None:
     text = f":persona: {SANDBOX_PERSONA_ID}\n:profile: activity-start-date\n:file: 349\n{_REGION}"
     with pytest.raises(ValueError, match="files Modelo 303 only"):
         render_seed(text, name="probe")
+
+
+def test_a_generated_document_is_registered_from_its_fixture_and_attached_to_its_row() -> None:
+    text = ":persona: autonomo-fontanero\n:profile: tax-id\n:ledger: all\n" + _REGION
+    lines = render_seed(text, name="probe").splitlines()
+
+    added = next(
+        index
+        for index, line in enumerate(lines)
+        if "--idempotency-key persona-autonomo-fontanero-factura-fon-alq-01" in line
+    )
+    assert " evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-01.xml " in lines[added]
+    assert lines[added + 1] == "@capture factura_fon_alq_01_evidence result.evidence_id"
+    assert lines[added + 2] == (
+        "@setup aeat app ledger attach {fon_alq_01} --purchase-invoice-evidence-id {factura_fon_alq_01_evidence}"
+    )

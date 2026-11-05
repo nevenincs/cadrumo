@@ -21,7 +21,10 @@ own files state:
 - ``:ledger: all`` records every row of the persona's ledger with its tax
   fields, then the invoice behind each invoiced row (linked to the row), then
   each document (attached to its rows), as the persona materialiser replays
-  them. A document must live in the docs fixtures tree the sandbox copies.
+  them. A specimen document must live in the docs fixtures tree the sandbox
+  copies; a document the persona generates from its row (a Facturae invoice)
+  is written to ``fixtures/personas/<persona>/`` and checked for drift like
+  the frames.
 - ``:carry: <modelo>`` records, before any filing, the Modelo 303 compensation
   balance the persona's first period of its fiscal year starts from: the
   casilla 110 (cuotas pendientes de compensación de periodos anteriores) of
@@ -49,6 +52,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
+from cadrumo.tests.persona_invoices import GeneratedDocument, generated_documents
 from cadrumo.tests.personas import LedgerRow, Persona, YearEnvelope
 from dev._paths import REPO_ROOT, UTF_8
 
@@ -77,6 +81,8 @@ _M303_PENDING_FROM_EARLIER: Final = "110"
 #: Quarter codes and the month each one closes in.
 _QUARTER_END_MONTH: Final = {"1T": 3, "2T": 6, "3T": 9, "4T": 12}
 _QUARTER_END_DAY: Final = {3: 31, 6: 30, 9: 30, 12: 31}
+#: The docs fixtures subdirectory holding the documents personas generate from their rows.
+_GENERATED_DOCUMENTS: Final = "personas"
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,8 +219,14 @@ def _ledger_frames(persona: Persona, envelope: YearEnvelope, *, name: str) -> li
     for row in rows:
         lines.extend(_invoice_frames(persona, envelope, row))
     for document in persona.documents:
-        lines.extend(_document_frames(persona, document.id, document.path, document.attach_to, name=name))
+        path = document.path if document.path is not None else _generated_document_path(persona.id, document.id)
+        lines.extend(_document_frames(persona, document.id, path, document.attach_to, name=name))
     return lines
+
+
+def _generated_document_path(persona_id: str, document_id: str) -> Path:
+    """Where a persona's generated document lies in the docs fixtures tree the sandbox copies."""
+    return default_fixtures_root() / _GENERATED_DOCUMENTS / persona_id / f"{document_id}.xml"
 
 
 def _row_frames(persona: Persona, envelope: YearEnvelope, row: LedgerRow, *, name: str, captured: bool) -> list[str]:
@@ -457,6 +469,68 @@ def _statement_problem(fixtures_root: Path) -> str | None:
     return None
 
 
+# -- the documents personas generate --------------------------------------------------------------------------------
+
+
+def _ledger_personas(seeds_root: Path) -> list[str]:
+    """The personas whose ledger a recipe records, and so whose documents the sandbox must hold."""
+    personas: set[str] = set()
+    for recipe in _recipes(seeds_root):
+        header = parse_seed_header(recipe.read_text(encoding=UTF_8), name=recipe.stem)
+        if header is not None and header.ledger:
+            personas.add(header.persona)
+    return sorted(personas)
+
+
+def _expected_documents(seeds_root: Path) -> dict[Path, str]:
+    expected: dict[Path, str] = {}
+    for persona_id in _ledger_personas(seeds_root):
+        with pinned_persona(persona_id) as (persona, envelope):
+            documents: tuple[GeneratedDocument, ...] = generated_documents(persona, envelope)
+        for document in documents:
+            expected[_generated_document_path(persona_id, document.document_id)] = document.text
+    return expected
+
+
+def _present_documents() -> set[Path]:
+    directory = default_fixtures_root() / _GENERATED_DOCUMENTS
+    return set(directory.glob("*/*.xml")) if directory.is_dir() else set()
+
+
+def _fixture_name(path: Path) -> str:
+    return path.relative_to(default_fixtures_root()).as_posix()
+
+
+def _document_problems(seeds_root: Path) -> list[str]:
+    expected = _expected_documents(seeds_root)
+    problems = [
+        f"fixture:{_fixture_name(path)}: the generated document differs from its persona row; "
+        "regenerate it with: python -m dev.docs.sequences seeds"
+        for path, text in expected.items()
+        if not path.is_file() or path.read_text(encoding=UTF_8) != text
+    ]
+    problems.extend(
+        f"fixture:{_fixture_name(path)}: no persona generates this document; "
+        "regenerate with: python -m dev.docs.sequences seeds"
+        for path in sorted(_present_documents() - set(expected))
+    )
+    return problems
+
+
+def _write_documents(seeds_root: Path) -> list[Path]:
+    expected = _expected_documents(seeds_root)
+    written: list[Path] = []
+    for stale in sorted(_present_documents() - set(expected)):
+        stale.unlink()
+        written.append(stale)
+    for path, text in expected.items():
+        if not path.is_file() or path.read_text(encoding=UTF_8) != text:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding=UTF_8, newline="\n")
+            written.append(path)
+    return written
+
+
 # -- check and write -----------------------------------------------------------------------------------------------
 
 
@@ -472,6 +546,7 @@ def check_seeds(*, seeds_root: Path | None = None) -> tuple[str, ...]:
         statement = _statement_problem(default_fixtures_root())
         if statement is not None:
             problems.append(statement)
+        problems.extend(_document_problems(root))
     for recipe in _recipes(root):
         committed = recipe.read_text(encoding=UTF_8)
         try:
@@ -496,6 +571,8 @@ def write_seeds(*, seeds_root: Path | None = None) -> tuple[Path, ...]:
         target = default_fixtures_root() / name
         target.write_text(text, encoding=UTF_8, newline="\n")
         written.append(target)
+    if seeds_root is None:
+        written.extend(_write_documents(root))
     for recipe in _recipes(root):
         committed = recipe.read_text(encoding=UTF_8)
         expected = render_seed(committed, name=recipe.stem)

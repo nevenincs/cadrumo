@@ -56,6 +56,7 @@ _IDENTITY_FIELDS = ("value", "name", "surnames", "legal_name")
 type IdentityKind = Literal["nif", "nie", "cif", "vat_eu"]
 type IdentityField = Literal["value", "name", "surnames", "legal_name"]
 type DocumentRelation = Literal["specimen", "source"]
+type DocumentGenerator = Literal["facturae"]
 
 
 class PersonaCatalogueError(ValueError):
@@ -291,10 +292,17 @@ class LedgerRow:
 
 @dataclass(frozen=True, slots=True)
 class PersonaDocument:
-    """A reference to an existing specimen, attached to ledger rows."""
+    """A document attached to ledger rows: an existing file, or one generated from the row it evidences.
+
+    Exactly one of ``path`` and ``generator`` is set. A generated document
+    (``generator = "facturae"``) is the invoice its single attached row states,
+    rendered by :mod:`cadrumo.tests.persona_invoices`, so it agrees with the row
+    by construction.
+    """
 
     id: str
-    path: Path
+    path: Path | None
+    generator: DocumentGenerator | None
     media_type: str
     attach_to: tuple[str, ...]
     relation: DocumentRelation
@@ -819,19 +827,29 @@ def _documents(document: _Table, where: str, persona_id: str, refs: frozenset[st
         _keys(
             table,
             here,
-            required=frozenset({"id", "path", "media_type", "attach_to", "relation"}),
-            optional=frozenset({"note"}),
+            required=frozenset({"id", "media_type", "attach_to", "relation"}),
+            optional=frozenset({"note", "path", "generator"}),
         )
-        path = REPO_ROOT / _string(table, "path", here)
-        if not path.is_file():
-            raise _fail(here, "the referenced specimen does not exist")
+        if ("path" in table) == ("generator" in table):
+            raise _fail(here, "a document names exactly one of path and generator")
+        path: Path | None = None
+        generator: DocumentGenerator | None = None
         attach_to = _strings(table, "attach_to", here)
+        if "path" in table:
+            path = REPO_ROOT / _string(table, "path", here)
+            if not path.is_file():
+                raise _fail(here, "the referenced specimen does not exist")
+        else:
+            generator = _choice(_string(table, "generator", here), ("facturae",), here)
+            if len(attach_to) != 1:
+                raise _fail(here, "a generated document is the invoice of exactly one row")
         if not set(attach_to) <= refs:
             raise _fail(here, "attach_to names a ref the ledger does not hold")
         documents.append(
             PersonaDocument(
                 id=_string(table, "id", here),
                 path=path,
+                generator=generator,
                 media_type=_string(table, "media_type", here),
                 attach_to=attach_to,
                 relation=_choice(_string(table, "relation", here), ("specimen", "source"), here),
@@ -1024,6 +1042,10 @@ def parse_persona(
     known_documents = {document.id for document in persona.documents}
     if any(row.document is not None and row.document not in known_documents for row in ledger):
         raise _fail(f"{persona_id}/ledger.csv", "a row names a document documents.toml does not hold")
+    named = {row.ref: row.document for row in ledger}
+    for document in persona.documents:
+        if document.generator is not None and any(named[ref] != document.id for ref in document.attach_to):
+            raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_years(persona, envelope)
     return persona
 
@@ -1080,7 +1102,7 @@ def persona_inputs_digest(persona: Persona) -> str:
     """Digest every file a persona's values come from: its directory, the identity catalogue and its documents."""
     paths = {path for path in (PERSONAS_ROOT / persona.id).rglob("*") if path.is_file()}
     paths.add(PERSONAS_ROOT / "identities.toml")
-    paths.update(document.path for document in persona.documents)
+    paths.update(document.path for document in persona.documents if document.path is not None)
     return file_inputs_digest("persona-inputs", REPO_ROOT, sorted(paths))
 
 

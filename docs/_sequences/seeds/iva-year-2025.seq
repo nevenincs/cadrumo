@@ -261,10 +261,86 @@
 @setup aeat --format json app ledger invoice add --kind received --counterparty-name "Gestoría Arganzuela, S.L." --counterparty-nif B00000042 --country-code ES --invoice-number GA-004 --invoice-date 2025-12-30 --currency EUR --taxable-base 150.00 --iva-rate 21 --iva-category domestic_general
 @capture fon_ges_4_invoice result.invoice_id
 @setup aeat app ledger link {fon_ges_4} --invoice-id {fon_ges_4_invoice}
-@step Register document factura-material as encrypted evidence bytes and attach it to its rows.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --idempotency-key persona-autonomo-fontanero-factura-material
-@capture factura_material_evidence result.evidence_id
-@setup aeat app ledger attach {fon_mat_1} --purchase-invoice-evidence-id {factura_material_evidence}
+@step Register document factura-fon-alq-01 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-01.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-01
+@capture factura_fon_alq_01_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_01} --purchase-invoice-evidence-id {factura_fon_alq_01_evidence}
+@step Register document factura-fon-mat-1 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-1.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-1
+@capture factura_fon_mat_1_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_1} --purchase-invoice-evidence-id {factura_fon_mat_1_evidence}
+@step Register document factura-fon-alq-02 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-02.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-02
+@capture factura_fon_alq_02_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_02} --purchase-invoice-evidence-id {factura_fon_alq_02_evidence}
+@step Register document factura-fon-alq-03 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-03.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-03
+@capture factura_fon_alq_03_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_03} --purchase-invoice-evidence-id {factura_fon_alq_03_evidence}
+@step Register document factura-fon-ges-1 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-1.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-1
+@capture factura_fon_ges_1_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_1} --purchase-invoice-evidence-id {factura_fon_ges_1_evidence}
+@step Register document factura-fon-alq-04 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-04.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-04
+@capture factura_fon_alq_04_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_04} --purchase-invoice-evidence-id {factura_fon_alq_04_evidence}
+@step Register document factura-fon-mat-2 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-2.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-2
+@capture factura_fon_mat_2_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_2} --purchase-invoice-evidence-id {factura_fon_mat_2_evidence}
+@step Register document factura-fon-alq-05 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-05.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-05
+@capture factura_fon_alq_05_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_05} --purchase-invoice-evidence-id {factura_fon_alq_05_evidence}
+@step Register document factura-fon-alq-06 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-06.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-06
+@capture factura_fon_alq_06_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_06} --purchase-invoice-evidence-id {factura_fon_alq_06_evidence}
+@step Register document factura-fon-ges-2 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-2.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-2
+@capture factura_fon_ges_2_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_2} --purchase-invoice-evidence-id {factura_fon_ges_2_evidence}
+@step Register document factura-fon-alq-07 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-07.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-07
+@capture factura_fon_alq_07_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_07} --purchase-invoice-evidence-id {factura_fon_alq_07_evidence}
+@step Register document factura-fon-mat-3 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-3.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-3
+@capture factura_fon_mat_3_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_3} --purchase-invoice-evidence-id {factura_fon_mat_3_evidence}
+@step Register document factura-fon-alq-08 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-08.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-08
+@capture factura_fon_alq_08_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_08} --purchase-invoice-evidence-id {factura_fon_alq_08_evidence}
+@step Register document factura-fon-alq-09 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-09.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-09
+@capture factura_fon_alq_09_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_09} --purchase-invoice-evidence-id {factura_fon_alq_09_evidence}
+@step Register document factura-fon-ges-3 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-3.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-3
+@capture factura_fon_ges_3_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_3} --purchase-invoice-evidence-id {factura_fon_ges_3_evidence}
+@step Register document factura-fon-alq-10 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-10.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-10
+@capture factura_fon_alq_10_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_10} --purchase-invoice-evidence-id {factura_fon_alq_10_evidence}
+@step Register document factura-fon-mat-4 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-mat-4.xml --idempotency-key persona-autonomo-fontanero-factura-fon-mat-4
+@capture factura_fon_mat_4_evidence result.evidence_id
+@setup aeat app ledger attach {fon_mat_4} --purchase-invoice-evidence-id {factura_fon_mat_4_evidence}
+@step Register document factura-fon-alq-11 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-11.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-11
+@capture factura_fon_alq_11_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_11} --purchase-invoice-evidence-id {factura_fon_alq_11_evidence}
+@step Register document factura-fon-alq-12 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-alq-12.xml --idempotency-key persona-autonomo-fontanero-factura-fon-alq-12
+@capture factura_fon_alq_12_evidence result.evidence_id
+@setup aeat app ledger attach {fon_alq_12} --purchase-invoice-evidence-id {factura_fon_alq_12_evidence}
+@step Register document factura-fon-ges-4 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-fontanero/factura-fon-ges-4.xml --idempotency-key persona-autonomo-fontanero-factura-fon-ges-4
+@capture factura_fon_ges_4_evidence result.evidence_id
+@setup aeat app ledger attach {fon_ges_4} --purchase-invoice-evidence-id {factura_fon_ges_4_evidence}
 @step Record the compensation balance the 2025 first quarter starts from, as the persona's figures state.
 @setup aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 @step Open, calculate, verify and record as filed the 2025 1T Modelo 303.

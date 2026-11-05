@@ -18,8 +18,8 @@
 @setup aeat --format json app ledger invoice add --kind received --counterparty-name "Papelería Central, S.L." --counterparty-nif B00000158 --country-code ES --invoice-number C-0087 --invoice-date 2026-02-11 --currency EUR --taxable-base 500.00 --iva-rate 21 --iva-category domestic_general
 @capture alt_mat_01_invoice result.invoice_id
 @setup aeat app ledger link {alt_mat_01} --invoice-id {alt_mat_01_invoice}
-@step Register document factura-material as encrypted evidence bytes and attach it to its rows.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --idempotency-key persona-autonomo-alta-reciente-factura-material
-@capture factura_material_evidence result.evidence_id
-@setup aeat app ledger attach {alt_mat_01} --purchase-invoice-evidence-id {factura_material_evidence}
+@step Register document factura-alt-mat-01 as encrypted evidence bytes and attach it to its rows.
+@setup aeat --format json app ledger evidence add fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml --idempotency-key persona-autonomo-alta-reciente-factura-alt-mat-01
+@capture factura_alt_mat_01_evidence result.evidence_id
+@setup aeat app ledger attach {alt_mat_01} --purchase-invoice-evidence-id {factura_alt_mat_01_evidence}
 :generated: end

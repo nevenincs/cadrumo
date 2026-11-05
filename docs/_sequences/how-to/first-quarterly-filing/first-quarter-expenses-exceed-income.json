@@ -250,15 +250,15 @@
         "ledger",
         "evidence",
         "add",
-        "fixtures/factura-material-oficina.pdf",
+        "fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml",
         "--idempotency-key",
-        "persona-autonomo-alta-reciente-factura-material"
+        "persona-autonomo-alta-reciente-factura-alt-mat-01"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
-          "name": "factura_material_evidence",
-          "value": "e48551feb1ba44a0"
+          "name": "factura_alt_mat_01_evidence",
+          "value": "0021fb5b1e7a777c"
         }
       ],
       "envelope": null,
@@ -276,7 +276,7 @@
         "attach",
         "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
         "--purchase-invoice-evidence-id",
-        "e48551feb1ba44a0"
+        "0021fb5b1e7a777c"
       ],
       "captures": [],
       "envelope": null,

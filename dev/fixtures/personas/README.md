@@ -13,7 +13,7 @@ dev/fixtures/personas/
   <persona-id>/
     persona.toml                  profile facts, household, activity, elections
     ledger.csv                    the persona's bank and invoice rows
-    documents.toml                specimen documents attached to rows
+    documents.toml                documents attached to rows: specimens, or invoices generated from their rows
     expectations.toml             hand-grounded obligations, deadlines and values
 ```
 
@@ -242,6 +242,7 @@ for IRPF.
 | --- | --- |
 | `id` | referenced from `ledger.csv` `document` |
 | `path` | repository path of an existing specimen; files are referenced, never copied |
+| `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota and retención are the row's; the row's `document` column names it |
 | `media_type` | MIME type |
 | `attach_to` | ledger refs |
 | `relation` | `specimen`: the document exercises the evidence path but its printed facts are not the row's facts and must not be confirmed into it; `source`: the document is the row's source and its facts match |

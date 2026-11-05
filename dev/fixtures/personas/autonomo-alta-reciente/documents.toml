@@ -2,9 +2,9 @@ format = 1
 persona = "autonomo-alta-reciente"
 
 [[documents]]
-id = "factura-material"
-path = "docs/_sequences/fixtures/factura-material-oficina.pdf"
-media_type = "application/pdf"
+id = "factura-alt-mat-01"
+generator = "facturae"
+media_type = "application/xml"
 attach_to = ["ALT-MAT-01"]
-relation = "specimen"
-note = "A synthetic received-invoice PDF for office material whose base and cuota equal ALT-MAT-01's. Its printed supplier identifier, invoice number and date are not the row's facts, so a test must not confirm the printed facts into ALT-MAT-01."
+relation = "source"
+note = "The office-material invoice C-0087 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

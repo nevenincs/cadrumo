@@ -126,12 +126,14 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ...tests.persona_invoices import render_facturae
 from ...tests.personas import (
     HouseholdMember,
     IdentityRef,
     LedgerRow,
     Persona,
     PersonaDate,
+    PersonaDocument,
     ProfileValue,
     WithholdingCertificate,
     YearEnvelope,
@@ -725,16 +727,28 @@ def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[
     return invoices
 
 
+def _document_path(persona: Persona, document: PersonaDocument, world: PersonaWorld) -> Path:
+    """The file evidence intake reads: the specimen itself, or the generated invoice written to the workdir."""
+    if document.path is not None:
+        return document.path
+    generated = render_facturae(persona, document, world.envelope)
+    target = world.workdir / "documents" / generated.file_name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(generated.text, encoding="utf-8", newline="\n")
+    return target
+
+
 def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> dict[str, str]:
     evidence: dict[str, str] = {}
     for document in persona.documents:
+        source = _document_path(persona, document, world)
         added = run_operation(
             world,
             LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
             LedgerEvidenceAddRequest(
                 profile_id=world.profile_id,
-                source_path=str(document.path),
-                source_directory=str(document.path.parent),
+                source_path=str(source),
+                source_directory=str(source.parent),
                 notes=f"persona {persona.id} document {document.id} ({document.relation})",
                 idempotency_key=f"persona-{persona.id}-{document.id}",
             ),

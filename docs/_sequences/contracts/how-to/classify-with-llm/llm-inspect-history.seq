@@ -4,4 +4,4 @@
 aeat app ledger view 1703f840
 @step Read the transaction's history.
 @result aeat --format json app ledger history 1703f840
-@expect result.transaction_id == "1703f840306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+@expect result.transaction_id == "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
