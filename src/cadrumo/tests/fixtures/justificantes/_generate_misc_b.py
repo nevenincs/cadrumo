@@ -44,7 +44,7 @@ _MODELO_232_FIXTURES: tuple[_Modelo232Fixture, ...] = (
         ejercicio="2016",
         tipo_ejercicio="1",
         cnae="6201",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
     _Modelo232Fixture(
@@ -52,7 +52,7 @@ _MODELO_232_FIXTURES: tuple[_Modelo232Fixture, ...] = (
         ejercicio="2018",
         tipo_ejercicio="1",
         cnae="6201",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
 )
@@ -199,7 +199,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
         filename="123/2024-1T.pdf",
         ejercicio="2024",
         periodo="1T",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
         render_rows=_MODELO_123_2024_RENDER_ROWS,
     ),
@@ -207,7 +207,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
         filename="123/2023-1T.pdf",
         ejercicio="2023",
         periodo="1T",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
         render_rows=_MODELO_123_2023_RENDER_ROWS,
     ),
@@ -298,7 +298,7 @@ _MODELO_347_FIXTURES: tuple[_Modelo347Fixture, ...] = (
     _Modelo347Fixture(
         filename="347/2024-0A.pdf",
         ejercicio="2024",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
 )
@@ -393,7 +393,7 @@ _MODELO_184_FIXTURES: tuple[_Modelo184Fixture, ...] = (
     _Modelo184Fixture(
         filename="184/2024-0A.pdf",
         ejercicio="2024",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
 )
@@ -521,7 +521,7 @@ _MODELO_131_FIXTURES: tuple[_Modelo131Fixture, ...] = (
         filename="131/2024-1T.pdf",
         ejercicio="2024",
         periodo="1T",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO AUTONOMO EO",
         printed_rows=_MODELO_131_PRINTED_ROWS,
     ),
@@ -616,7 +616,7 @@ _MODELO_840_FIXTURES: tuple[_Modelo840Fixture, ...] = (
         filename="840/2024-0A.pdf",
         ejercicio="2024",
         tipo_declaracion="Alta",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="DEMO AUTONOMO UNO",
     ),
 )
@@ -710,7 +710,7 @@ _MODELO_202_FIXTURES: tuple[_Modelo202Fixture, ...] = (
         filename="202/2025-1P.pdf",
         ejercicio="2025",
         periodo="1P",
-        tax_id="B00000000",
+        tax_id="B00010082",
         full_name="DEMO SOCIEDAD SL",
         printed_rows=_MODELO_202_PRINTED_ROWS,
     ),

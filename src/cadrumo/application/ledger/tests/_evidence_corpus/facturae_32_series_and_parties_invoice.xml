@@ -19,7 +19,7 @@
       <TaxIdentification>
         <PersonTypeCode>F</PersonTypeCode>
         <ResidenceTypeCode>R</ResidenceTypeCode>
-        <TaxIdentificationNumber>00000023T</TaxIdentificationNumber>
+        <TaxIdentificationNumber>00001004S</TaxIdentificationNumber>
       </TaxIdentification>
       <AdministrativeCentres>
         <AdministrativeCentre>
@@ -47,7 +47,7 @@
       <TaxIdentification>
         <PersonTypeCode>J</PersonTypeCode>
         <ResidenceTypeCode>R</ResidenceTypeCode>
-        <TaxIdentificationNumber>A00000018</TaxIdentificationNumber>
+        <TaxIdentificationNumber>A00010017</TaxIdentificationNumber>
       </TaxIdentification>
       <LegalEntity>
         <CorporateName>Talleres Berrocal, S.A.</CorporateName>

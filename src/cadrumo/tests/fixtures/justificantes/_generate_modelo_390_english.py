@@ -108,7 +108,7 @@ _MODELO_390_ENGLISH_FIXTURES: tuple[_Modelo390EnglishFixture, ...] = (
     _Modelo390EnglishFixture(
         filename="390/2021-0A.pdf",
         ejercicio="2021",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         # NIF-SHAPED DECOY, deliberately control-letter invalid. Its trailing
         # eight digits and letter are the shape an unanchored tax-id pattern
