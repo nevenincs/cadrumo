@@ -30,7 +30,7 @@ from ....core.i18n.render import lookup_translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_MODULE_PATH = Path(__file__).resolve().parents[1] / "_framework_localisation.py"
+_MODULE_PATH = Path(__file__).resolve().parents[1] / "framework_localisation.py"
 _LOCALES = (OutputLanguage.ES, OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU)
 
 # A dotted catalogue key under the framework-localisation namespace. Narrow to

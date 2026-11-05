@@ -38,7 +38,7 @@ _AWARENESS_CALLS = ("tzinfo", "astimezone", "fromisoformat", "utc_from_", "as_ut
 #: A naive producer is only acceptable where the SOURCE carries no offset and
 #: inventing one would be a guess.
 NAIVE_PRODUCERS: dict[str, str] = {
-    "adapters/inbound/justificante/_extract.py::_parse_datetime": (
+    "adapters/inbound/justificante/extract.py::parse_datetime": (
         "AEAT prints a Europe/Madrid wall-clock time on the justificante with "
         "no offset, so the receipt states no instant; the parsed value feeds "
         "Justificante.presented_at, which is typed datetime for that reason"

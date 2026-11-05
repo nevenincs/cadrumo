@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CLI_ROOT = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _MODELO_COMMAND_ROOT = "modelo_commands.py"
 _MODELO_PAYLOADS = "modelo_results.py"
-_MODELO_CLI_SUPPORT = "_modelo_cli_support.py"
+_MODELO_CLI_SUPPORT = "modelo_cli_support.py"
 
 _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET = 0
 _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET = 0
@@ -188,7 +188,7 @@ def test_modelo_cli_uses_centralized_operator_addressing_services() -> None:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:
-                    if path.name == "_modelo_behavior_support.py" and alias.name == "ModeloWorkAddress":
+                    if path.name == "modelo_behavior_support.py" and alias.name == "ModeloWorkAddress":
                         # The shared adapter annotates the centralized service's
                         # return type; constructing it locally is still forbidden below.
                         continue

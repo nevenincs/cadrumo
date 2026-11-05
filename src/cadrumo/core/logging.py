@@ -115,7 +115,7 @@ def _safe_factory_args(args: tuple[Any, ...]) -> tuple[Any, ...]:
     return (*args[:5], (snapshot_value(candidate),), *args[6:])
 
 
-def _install_run_context_record_factory() -> None:
+def install_run_context_record_factory() -> None:
     """Install a :class:`logging.LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
     The contextvars live in :mod:`cadrumo.core.observability.context`. They are
@@ -249,7 +249,7 @@ def operator_document_output() -> Generator[None]:
     async/thread contexts keep the same routing. Other invocations and text
     output retain their stderr diagnostics; no process or handler level changes.
     """
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     token = _OPERATOR_DOCUMENT_OUTPUT.set(True)
     try:
         yield
@@ -484,7 +484,7 @@ def _configure_logging() -> None:
     # import time would create a circular import. Inside this function
     # the import is safe because configure_logging() runs after both
     # modules finish loading.
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     _install_secret_scrubbing_filters()
 
     configured = True
@@ -724,7 +724,7 @@ def get_logger(name: str) -> logging.Logger:
     # Stamping run context onto records loads no settings and opens nothing, so
     # it is installed here rather than waiting for a host to configure logging;
     # otherwise records made before configuration carry no ``run_id`` at all.
-    _install_run_context_record_factory()
+    install_run_context_record_factory()
     logger = logging.getLogger(name)
     if not any(isinstance(active_filter, _DispatchFilter) for active_filter in logger.filters):
         logger.filters.insert(0, _DispatchFilter())

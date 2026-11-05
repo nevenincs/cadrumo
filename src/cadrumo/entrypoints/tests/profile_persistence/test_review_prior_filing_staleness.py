@@ -20,7 +20,7 @@ See Also:
     :func:`~cadrumo.application.filing.tests.filing_support.empty_prior_filing_observations_fingerprint`
         Supplies the explicit empty-source fingerprint used by tests and
         overrides.
-    :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
+    :func:`~application.filing.draft_review.prior_filing_observations_fingerprint`
         Stable, order-independent digest over stored prior-observation payloads.
     :mod:`~application.filing.tests.test_review_profile_activity_staleness`
         Sister approval-basis coverage for another self-loaded source surface.

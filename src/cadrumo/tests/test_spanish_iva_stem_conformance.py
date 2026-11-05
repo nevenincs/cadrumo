@@ -64,7 +64,7 @@ _EXTERNAL_VAT_PROSE_VALUES = {
     ),
     # The rendered English operator label for the Modelo 349 operator identifier.
     "entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py": frozenset({"EU VAT number"}),
-    "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
+    "tests/fixtures/justificantes/generate_modelo_390_english.py": frozenset(
         {
             "Deductible VAT",
             "Deductible VAT from internal transactions of current goods and services",

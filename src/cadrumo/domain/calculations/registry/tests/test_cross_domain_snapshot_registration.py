@@ -9,7 +9,7 @@ as an import side effect.
 That registration must NOT depend on import order. ``build_validated_snapshot``
 calls ``_install_cross_domain_snapshot_checks`` before the referential-
 integrity gate runs; the installer imports every peer-domain check module
-named in ``_CROSS_DOMAIN_CHECK_MODULES`` by name. The registry never
+named in ``CROSS_DOMAIN_CHECK_MODULES`` by name. The registry never
 imports ``renta`` statically (that would reverse the dependency direction
 the cross-domain dependency fix, defect F7) -- it owns only the list of peer
 module names. A Modelo 100 snapshot therefore validates the BOE-prescribed
@@ -17,7 +17,7 @@ first-slice routing gate regardless of whether the importing process ever
 imported ``cadrumo.domain.renta`` first.
 
 These tests run in fresh subprocesses so the registry's module-level
-``_CROSS_DOMAIN_SNAPSHOT_CHECKS`` list reflects exactly the import path
+``CROSS_DOMAIN_SNAPSHOT_CHECKS`` list reflects exactly the import path
 under test -- a guarantee no in-process test can give once any sibling
 test in the session has populated that list.
 """
@@ -78,13 +78,13 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
         )
-        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
+        assert vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain checks must be registered before the snapshot build"
         )
 
         snapshot = _published_snapshot("100", filing_year=2025, period="0A", on=date(2025, 12, 31))
         assert snapshot.modelo.id == "100"
-        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
+        assert vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "building an M100 snapshot must register the renta first-slice "
             "routing cross-domain check"
         )
@@ -110,7 +110,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
     gate and every Modelo 100 snapshot validation failed. The side effect now
     belongs to the module that actually calls
     ``register_cross_domain_snapshot_check``, which is also what
-    ``_CROSS_DOMAIN_CHECK_MODULES`` names, so no inert namespace sits between
+    ``CROSS_DOMAIN_CHECK_MODULES`` names, so no inert namespace sits between
     the registry and the registration.
     """
 
@@ -126,7 +126,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
                 return operation.snapshot(modelo, **coordinate)
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
-        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
+        assert vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "importing the check module must register at least one cross-domain check"
         )
 
@@ -164,7 +164,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"
         )
-        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
+        assert vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain checks must be registered without renta imported"
         )
 

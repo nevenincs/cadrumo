@@ -1,6 +1,6 @@
-"""Focused unit tests for _renta_ledger._casilla_aggregation.
+"""Focused unit tests for renta_ledger.renta_ledger_casilla_aggregation.
 
-`_casilla_aggregation` aggregates `RentaDeductibleExpenseObservation`
+`renta_ledger_casilla_aggregation` aggregates `RentaDeductibleExpenseObservation`
 records into a `CasillaAggregation` payload, grouping by
 ``(target_casilla_id, category)`` and producing:
 

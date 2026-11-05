@@ -69,7 +69,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
         effect=OperationEffect.UPDATED,
     )
     captured: dict[str, object] = {}
-    monkeypatch.setattr(handler, "_business_invoice_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(handler, "add_invoice_catalogue", lambda *_args, **_kwargs: (completion, added))
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: captured.update(kwargs))
 

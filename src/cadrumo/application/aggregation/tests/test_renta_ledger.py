@@ -67,7 +67,7 @@ _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTOS_FINANCIEROS_CASILLA",
 )
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="M130_GASTOS_CASILLA")
 
 
 def _invoice(

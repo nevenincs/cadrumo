@@ -203,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
         # Every entry below is performed by THIS main(). The root wheel's
         # corpus-binary shedding and the companions' sub-cap are real
         # guarantees, but they are enforced during cohort construction by
-        # `python_cohort._validate_wheel_contract`, not here: this lane
+        # `python_cohort.validate_wheel_contract`, not here: this lane
         # consumes a prebuilt cohort and never enters the build path, so
         # claiming them would record a proof that did not run. The installed
         # tax oracle is likewise claimed by the `core` lane that runs it.

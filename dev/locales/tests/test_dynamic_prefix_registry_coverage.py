@@ -397,7 +397,7 @@ def test_verdict_factory_keys_remain_scanner_visible() -> None:
         assert key in concrete_keys, (
             f"{key!r} is not collected by scan_source_tree — the "
             "ValidationVerdict.failed() first-positional collection regressed "
-            "(see locales/_ast_scanner.py)."
+            "(see locales/ast_scanner.py)."
         )
 
 
@@ -414,7 +414,7 @@ def test_required_optional_badge_keys_remain_scanner_visible() -> None:
         assert key in concrete_keys, (
             f"{key!r} is not collected by scan_source_tree — the "
             "_*_LOCALE_KEYS constant collection regressed (see "
-            "locales/_ast_scanner.py._extract_locale_constant_keys)."
+            "locales/ast_scanner.py._extract_locale_constant_keys)."
         )
 
 
@@ -518,7 +518,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Context manager around the terminal crash render only: the command
         # context has already closed when a refusal escapes, and the override
         # unwinds before the payload is written.
-        ("entrypoints/cli/_terminal_errors.py", "_requested_output_language"),
+        ("entrypoints/cli/terminal_errors.py", "_requested_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/root_commands.py", "root_command"),
@@ -545,7 +545,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/tui/installation/texts.py", "worded_in"),
         # The runtime entrypoint can outlive the command callback while it renders a
         # captured refusal; it restores the request language only inside that render.
-        ("runtime/commands/main.py", "_emit_error"),
+        ("runtime/commands/main.py", "emit_error"),
     },
 )
 

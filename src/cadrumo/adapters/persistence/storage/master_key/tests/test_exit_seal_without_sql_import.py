@@ -40,7 +40,7 @@ atexit.register(_observe_after_the_substrate_hook)
 
 from datetime import UTC, datetime, timedelta
 
-from cadrumo.adapters.persistence.storage.master_key import active_session as _substrate
+from cadrumo.adapters.persistence.storage.master_key import active_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 
 _opened_at = datetime.now(UTC)

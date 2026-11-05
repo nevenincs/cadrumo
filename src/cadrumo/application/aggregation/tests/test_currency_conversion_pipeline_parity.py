@@ -34,15 +34,15 @@ production classification function for every pipeline that gates on
   ``invoice.base_total_eur``/``invoice.iva_total_eur`` properties that already
   exist on ``Invoice`` for exactly this purpose (and are used correctly in
   ``invoice_retencion.py``). Both are fixed here.
-- ``_iva_transaction._substrate_admission_issue`` (IVA ledger) -- already
+- ``iva_transaction.substrate_admission_issue`` (IVA ledger) -- already
   correct, refuses a converted row outright because its tax substrate
   (``taxable_base``/``iva_amount``) stays native-currency; this is a
   defensible POLICY, not the bug, and this module does not weaken it.
 - ``renta_income_classification.classify_income_transaction`` (M130 casilla 01) --
   fixed here.
-- ``_renta_gasto_ledger._classify_gasto_transaction`` (M130 casilla 02) --
+- ``renta_gasto_ledger.classify_gasto_transaction`` (M130 casilla 02) --
   fixed here.
-- ``_impatriado_income_ledger._classify_impatriado_income_transaction``
+- ``impatriado_income_ledger.classify_impatriado_income_transaction``
   (impatriado base) -- fixed here.
 
 A wider sweep of ``application/`` for the same SHAPE -- any native-currency

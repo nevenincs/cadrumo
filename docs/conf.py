@@ -1836,7 +1836,7 @@ def setup(app):
         from cadrumo.application import diagnostics
         from cadrumo.core.errors.error_codes import ErrorEnvelope, complete_error_envelope_model
 
-        diagnostics._ensure_models_rebuilt()
+        diagnostics.ensure_models_rebuilt()
         complete_error_envelope_model()
         if not ErrorEnvelope.__pydantic_complete__:
             raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")

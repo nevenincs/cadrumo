@@ -19,7 +19,7 @@ _TOOL_PACKAGE_ROOTS = (
 )
 _TOOL_ENTRYPOINT = Path("dev/registry/registry_collapse_verification.py")
 _SNAPSHOT_SOURCE = Path("src/cadrumo/domain/calculations/registry/snapshot.py")
-_SNAPSHOT_DYNAMIC_PROVIDERS = "_CROSS_DOMAIN_CHECK_MODULES"
+_SNAPSHOT_DYNAMIC_PROVIDERS = "CROSS_DOMAIN_CHECK_MODULES"
 
 
 def _local_module_path(repo_root: Path, module: str) -> Path | None:

@@ -164,8 +164,8 @@ def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
     helper_name = normalise_iso_4217_currency.__name__
     call_sites = {
         "default_currency (shared fallback)": default_currency,
-        "_currency_from_aliases (CSV column)": currency_from_aliases,
-        "_resolve_statement_context (OFX header)": resolve_statement_context,
+        "currency_from_aliases (CSV column)": currency_from_aliases,
+        "resolve_statement_context (OFX header)": resolve_statement_context,
         "RawTransaction._normalize_currency (persisted record)": (
             RawTransaction.__dict__["_normalize_currency"].__func__
         ),

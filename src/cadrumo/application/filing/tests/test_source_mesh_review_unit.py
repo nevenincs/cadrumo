@@ -1,7 +1,7 @@
 """Unit coverage for invoice-source approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing.draft_review._invoice_catalogue_fingerprint`
+    :func:`~application.filing.draft_review.invoice_catalogue_fingerprint`
         Order-independent digest helper under test for invoice source changes.
     :class:`~domain.invoices.InvoiceCatalogue`
         Typed invoice collection whose normalized records feed the approval

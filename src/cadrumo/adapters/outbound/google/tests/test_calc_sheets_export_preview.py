@@ -84,9 +84,9 @@ class TestPreviewNeverWrites:
             "_create_spreadsheet",
             "_ensure_plan_tabs_and_grid",
             "_force_spreadsheet_locale",
-            "_write_plan_values",
+            "write_plan_values",
             "_clear_stale_addresses",
-            "_apply_plan_structural_requests",
+            "apply_plan_structural_requests",
         ):
             assert forbidden_call not in source, f"preview_export_plan must never call {forbidden_call}"
 

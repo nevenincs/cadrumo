@@ -307,7 +307,7 @@ def seal_active_bucket_session() -> BucketSession | None:
     return session
 
 
-def _close_active_session_at_exit() -> None:
+def close_active_session_at_exit() -> None:
     """Best-effort close of every live session on interpreter shutdown.
 
     Registered as an :func:`atexit.register` hook below. If a session is
@@ -335,7 +335,7 @@ def _close_active_session_at_exit() -> None:
         return
 
 
-_atexit.register(_close_active_session_at_exit)
+_atexit.register(close_active_session_at_exit)
 
 
 __all__ = [

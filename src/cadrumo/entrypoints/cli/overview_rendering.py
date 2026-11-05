@@ -11,7 +11,7 @@ catalogue action; :func:`resolve_notice_action` resolves it once against the
 live command tree; the resulting
 :class:`~core.json_contract.ResolvedNoticeAction` is then the single object
 carried by the payload row, by the envelope notice, and - through
-:func:`~.common._action_text_lines` - by the executable text line.  Text and
+:func:`~.common.action_text_lines` - by the executable text line.  Text and
 JSON therefore cannot state different advice, because there is only one thing
 to state.
 

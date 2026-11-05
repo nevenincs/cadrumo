@@ -758,7 +758,7 @@ def test_a_mechanics_owner_may_not_hold_a_decimal_tax_value() -> None:
 
 
 @pytest.mark.parametrize(
-    "module", ["producer_snapshot_m360", "producer_snapshot", "withholding_bindings", "_modelo_bindings_invoice_iva"]
+    "module", ["producer_snapshot_m360", "producer_snapshot", "withholding_bindings", "modelo_bindings_invoice_iva"]
 )
 @pytest.mark.parametrize(
     "source",

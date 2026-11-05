@@ -36,7 +36,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.pid_liveness import pid_is_alive
 from ...core.time.clock import now as clock_now
-from ...core.time.clock import now as clock_utc_now
 from ...core.time.utc import coerce_utc_aware
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -305,7 +304,7 @@ def acquire_auth_acquisition_lock(
     """
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = clock_utc_now()
+    now = clock_now()
     from ...core.bucket_pointer import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(

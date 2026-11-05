@@ -9,7 +9,7 @@ forward guidance from ONE resolved projection, never from two independently
 derived strings.
 
 The executable text line is produced by the production envelope helper
-:func:`..common._action_text_lines` from the very notices the JSON envelope
+:func:`..common.action_text_lines` from the very notices the JSON envelope
 carries, so these tests drive that helper rather than reimplementing argv
 rendering; a second renderer here would defeat what they exist to prove.
 """

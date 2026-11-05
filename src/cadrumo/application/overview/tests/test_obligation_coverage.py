@@ -291,10 +291,10 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(*, operation
     assert unmodelled_code not in _dispositions(baseline)
 
     declared = {Modelo("037"): "censo simplificada suprimida; reconocida sin definicion en el registro"}
-    assert coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
+    assert coverage.UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
         "the builder no longer reads the module-level declaration this test rebinds"
     )
-    with scoped_attribute(coverage, "_UNMODELED_OBLIGATIONS", declared):
+    with scoped_attribute(coverage, "UNMODELED_OBLIGATIONS", declared):
         report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
         _assert_total_partition(report, unmodeled=declared, operation=operation)
 

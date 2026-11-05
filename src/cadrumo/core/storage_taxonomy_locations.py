@@ -99,7 +99,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.TEMPORARY_FILES,
         TEMPORARY_FILES_SUBPATH,
-        consumer_module="adapters/persistence/storage/custody/_kdf_worker_supervision.py",
+        consumer_module="adapters/persistence/storage/custody/kdf_worker_supervision.py",
         materialised=True,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -626,7 +626,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # close.
         StorageCategory.BUCKET_DATABASE_FILE,
         f"{_BUCKET_DATABASE_DIRNAME}/{_PRODUCT_DATABASE_FILENAME}",
-        consumer_module="core/_config_validation.py",
+        consumer_module="core/config_validation.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

@@ -30,7 +30,7 @@ _MODULES: tuple[ModuleType, ...] = (
 # separately so a new notice cannot hide behind that one shared constructor.
 _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
     "cadrumo.entrypoints.cli.app_diagnostics_commands": {
-        ("_llm_no_run_data_notice", "code", "operator.ledger.classify"),
+        ("llm_no_run_data_notice", "code", "operator.ledger.classify"),
         ("diagnostics_run_health", "'diagnostics.run_health.session_stale'", None),
         ("diagnostics_run_health", "'diagnostics.run_health.no_session'", None),
         ("diagnostics_errors", "'diagnostics.errors.no_failures'", None),
@@ -41,11 +41,11 @@ _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
         ("_reconcile_notices", "'config.profile.archive.reconcile.failures'", "operator.profile.archive.reconcile"),
     },
     "cadrumo.entrypoints.cli.app_live_commands": {
-        ("_filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),
-        ("_filed_discover_notices", "'live.filed.discover.no_taxpayer_specific_denominator'", None),
+        ("filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),
+        ("filed_discover_notices", "'live.filed.discover.no_taxpayer_specific_denominator'", None),
         ("_limit_reached_notice", "'live.filed.limit_reached'", "operator.live.filed.pull_all"),
-        ("_filed_pull_all_notices", "'live.filed.pull_all.pairs_refused'", "operator.live.filed.pull_all"),
-        ("_filed_pull_all_notices", "'live.filed.pull_all.no_taxpayer_specific_denominator'", None),
+        ("filed_pull_all_notices", "'live.filed.pull_all.pairs_refused'", "operator.live.filed.pull_all"),
+        ("filed_pull_all_notices", "'live.filed.pull_all.no_taxpayer_specific_denominator'", None),
         ("_skipped_casilla_notice", "'live.filed.pull.casillas_not_enrolled'", None),
     },
 }
@@ -119,7 +119,7 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
     llm_callers: set[tuple[str, str]] = set()
     for function in _functions(diagnostics_module):
         for call in ast.walk(function):
-            if isinstance(call, ast.Call) and _call_name(call.func) == "_llm_no_run_data_notice":
+            if isinstance(call, ast.Call) and _call_name(call.func) == "llm_no_run_data_notice":
                 code = _keyword(call, "code")
                 assert code is not None
                 llm_callers.add((function.name, ast.unparse(code)))

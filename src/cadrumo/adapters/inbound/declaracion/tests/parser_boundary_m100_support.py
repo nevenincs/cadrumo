@@ -118,7 +118,7 @@ replace printed one redaction constant into every box of all three files, which
 is why this map could not exist before: there was nothing for it to distinguish.
 
 Mirrored from the stamped amounts in
-``tests/fixtures/justificantes/_generate_modelo_100_corpus.py``, the same
+``tests/fixtures/justificantes/generate_modelo_100_corpus.py``, the same
 arrangement the 2024/2025 current-year fixtures use. The generator is not the
 code under test -- the parser is -- so this is the printed document's own
 authority, and the assertion fails if extraction reads a neighbouring token.

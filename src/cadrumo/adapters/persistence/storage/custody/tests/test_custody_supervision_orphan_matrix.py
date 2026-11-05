@@ -52,7 +52,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
     profile_kdf_lease,
     profile_password_wrap_aad,
 )
-from cadrumo.adapters.persistence.storage.custody.kdf_worker_supervision import _SupervisedKdfWorker
+from cadrumo.adapters.persistence.storage.custody.kdf_worker_supervision import SupervisedKdfWorker
 
 root = Path(sys.argv[1])
 envelope = parse_profile_custody_envelope(Path(sys.argv[2]).read_bytes())
@@ -65,7 +65,7 @@ aad = profile_password_wrap_aad(
 )
 with (
     profile_kdf_lease(deadline=time.monotonic() + 30),
-    _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker,
+    SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker,
 ):
     print("supervising", worker._process.pid, flush=True)
     dek = worker.unwrap(

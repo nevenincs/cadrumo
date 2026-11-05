@@ -361,7 +361,7 @@ def test_the_raise_site_inventory_covers_the_refusal_family() -> None:
     scope_module = os.path.normcase(
         str(Path(cadrumo.__file__).resolve().parent / "domain/calculations/registry/governed_fact_scope.py")
     )
-    m296 = os.path.normcase(str(Path(cadrumo.__file__).resolve().parent / "application/filing/_m296_projection.py"))
+    m296 = os.path.normcase(str(Path(cadrumo.__file__).resolve().parent / "application/filing/m296_projection.py"))
 
     assert any(site.path == scope_module for site in sites)
     assert any(site.path == m296 for site in sites), "the absence-test derivation found no site"

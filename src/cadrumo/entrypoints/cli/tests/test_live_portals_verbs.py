@@ -86,7 +86,7 @@ def test_portal_cli_projection_and_handlers_are_single_homed() -> None:
             isinstance(handler.type, ast.Name)
             and handler.type.id == "PortalRegistryError"
             and any(
-                isinstance(node, ast.Call) and _call_name(node.func) == "_project_portal_refusal"
+                isinstance(node, ast.Call) and _call_name(node.func) == "project_portal_refusal"
                 for node in ast.walk(handler)
             )
             for handler in ast.walk(callback)

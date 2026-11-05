@@ -44,7 +44,7 @@ if mode in {"deferred", "late", "document-deferred"}:
     project_logging.defer_logging_configuration()
 logger = project_logging.get_logger("cadrumo.tests.first_record")
 log_file = Path(sys.argv[1]) / "cadrumo.log"
-before = {"exists": log_file.exists(), "configured": project_logging._configured}
+before = {"exists": log_file.exists(), "configured": project_logging.configured}
 if mode == "overflow":
     for index in range(project_logging._PENDING_RECORD_LIMIT + 5):
         logger.info("held record %d", index)
@@ -55,7 +55,7 @@ else:
         if mode == "document-deferred":
             logger.warning("first record %s", "probe")
 drain()
-after_info = {"exists": log_file.exists(), "configured": project_logging._configured}
+after_info = {"exists": log_file.exists(), "configured": project_logging.configured}
 if mode in {"late", "document-deferred"}:
     project_logging.resume_logging_configuration()
     project_logging.configure_logging()
@@ -65,7 +65,7 @@ elif mode != "overflow":
     logger.warning("first record %s", "probe")
 drain()
 project_logging.shutdown_logging()
-print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured,
+print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging.configured,
                   "dropped": project_logging.diagnostic_delivery_status()['records'].dropped}))
 """
 
@@ -99,7 +99,7 @@ if mode == "held":
 logger.warning("first record")
 assert project_logging.flush_logging(timeout=HANG), project_logging.diagnostic_delivery_status()
 project_logging.shutdown_logging()
-print(json.dumps({"delivered": recorder.messages, "configured": project_logging._configured}))
+print(json.dumps({"delivered": recorder.messages, "configured": project_logging.configured}))
 """
 
 _STAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"

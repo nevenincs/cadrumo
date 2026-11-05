@@ -51,7 +51,7 @@ def test_both_ternary_branches_are_discovered(tmp_path: Path) -> None:
     )
     assert "fixture.ternary.branch_false" in keys, (
         "the ternary's `else` branch key was not discovered — this is the exact blind "
-        "spot the ternary-argument fix in locales/_ast_scanner.py closes; a first-"
+        "spot the ternary-argument fix in locales/ast_scanner.py closes; a first-"
         "literal-only resolver passes for the `if` branch above while silently missing "
         "this one."
     )

@@ -385,7 +385,7 @@ def _scope_violations(source_scopes: dict[Path, set[str]]) -> list[str]:
 
 
 def _assert_renderers_delegate_to_the_canonical_cell(cli_root: Path) -> None:
-    canonical_path = cli_root / "_action_rendering.py"
+    canonical_path = cli_root / "action_rendering.py"
     canonical_tree = ast.parse(canonical_path.read_text(encoding="utf-8"), filename=str(canonical_path))
     canonical_functions = tuple(node for node in canonical_tree.body if isinstance(node, ast.FunctionDef))
     assert [node.name for node in canonical_functions] == ["resolved_precondition_action_json_cell"]
@@ -395,8 +395,8 @@ def _assert_renderers_delegate_to_the_canonical_cell(cli_root: Path) -> None:
     )
 
     action_renderers = {
-        cli_root / "_modelo_work_runs_cli.py": "_workflow_run_tab_line",
-        cli_root / "_modelo_rendering.py": "verification_report_lines",
+        cli_root / "modelo_work_runs_cli.py": "workflow_run_tab_line",
+        cli_root / "modelo_rendering.py": "verification_report_lines",
     }
     retired_helpers = {"_workflow_run_action_text", "_verification_finding_action_text"}
     for path, renderer_name in action_renderers.items():
@@ -419,11 +419,11 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
     """AST guard the complete workflow-run payload and renderer boundary."""
     cli_root = Path(__file__).parents[1]
     source_scopes = {
-        cli_root / "_modelo_work_runs_cli.py": {
-            "_render_workflow_step_summary",
-            "_workflow_run_payload",
+        cli_root / "modelo_work_runs_cli.py": {
+            "render_workflow_step_summary",
+            "workflow_run_payload",
             "_workflow_run_summary_payload",
-            "_workflow_run_tab_line",
+            "workflow_run_tab_line",
             "work_run",
             "work_run_details",
             "work_runs",

@@ -274,8 +274,8 @@ def _ledger_module_paths(directory: Path, *, payloads_only: bool = False) -> tup
 
 
 def test_ledger_scan_keeps_public_results_private_payloads_and_operation_wrappers(tmp_path: Path) -> None:
-    enrolled = {"_ledger_llm_payloads.py", "ledger_business_payloads.py", "ledger_results.py"}
-    wrappers = {"_ledger_support.py", "ledger_commands.py", "operation_ledger_view.py"}
+    enrolled = {"ledger_llm_payloads.py", "ledger_business_payloads.py", "ledger_results.py"}
+    wrappers = {"ledger_support.py", "ledger_commands.py", "operation_ledger_view.py"}
     unrelated = {"calendar_results.py", "ledgerlike_payloads.py"}
     for name in enrolled | wrappers | unrelated:
         (tmp_path / name).write_text("", encoding="utf-8")

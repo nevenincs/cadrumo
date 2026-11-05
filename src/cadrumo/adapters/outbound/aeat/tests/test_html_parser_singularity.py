@@ -25,7 +25,7 @@ from .....core.directory_scan import scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _ADAPTER_ROOT = Path(__file__).resolve().parent.parent
-_CONSTRUCTOR = _ADAPTER_ROOT / "_html.py"
+_CONSTRUCTOR = _ADAPTER_ROOT / "html.py"
 _BACKEND_LITERALS = frozenset({"lxml", "html.parser", "html5lib"})
 
 

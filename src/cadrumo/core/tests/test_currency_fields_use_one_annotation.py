@@ -49,7 +49,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "can name the offending value; normalisation happens once at the "
         "RawTransaction boundary this feeds, not twice"
     ),
-    "adapters/inbound/financial/providers/_mapped_tabular.py::currency": (
+    "adapters/inbound/financial/providers/mapped_tabular.py::currency": (
         "the same raw parse struct as the CSV provider, for the same reason: it "
         "carries the source cell, and RawTransaction normalises it"
     ),

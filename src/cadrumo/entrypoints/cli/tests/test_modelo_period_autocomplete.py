@@ -96,7 +96,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         debug_records = [
             record
             for record in delivered
-            if record.levelno == logging.DEBUG and "_declared_period_tokens" in record.message
+            if record.levelno == logging.DEBUG and "declared_period_tokens" in record.message
         ]
         assert len(debug_records) == 1, [record.message for record in delivered]
         # Handlers receive the traceback as text; the live exception is not kept on the record.

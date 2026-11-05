@@ -188,9 +188,9 @@ def test_pilot_failure_receipt_keeps_public_surface_without_private_notice(tmp_p
     contents = receipt.read_text(encoding="utf-8")
     document = json.loads(contents)
     assert document["phase"] == "lifecycle"
-    assert document["stage"] == "lifecycle._require_fresh_notice"
+    assert document["stage"] == "lifecycle.require_fresh_notice"
     assert document["error"] == (
-        "installed withholding lifecycle._require_fresh_notice failed: modelo.export would start under an earlier "
+        "installed withholding lifecycle.require_fresh_notice failed: modelo.export would start under an earlier "
         "workbench notice; open the declaration afresh first"
     )
     assert document["diagnostic"] == {
@@ -272,8 +272,8 @@ def test_unavailable_home_retains_trusted_control_stage_without_claiming_success
     with pytest.raises(InstalledTuiChildError) as caught:
         asyncio.run(installed_tui_controls.home(pilot))
     failure = installed_tui_withholding.pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
-    assert failure.stage == "lifecycle._home"
-    assert str(failure) == f"installed withholding lifecycle._home failed: {expected_reason}"
+    assert failure.stage == "lifecycle.home"
+    assert str(failure) == f"installed withholding lifecycle.home failed: {expected_reason}"
     assert "private-profile-and-credential" not in str(failure)
 
 

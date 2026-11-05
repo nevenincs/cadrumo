@@ -1,4 +1,4 @@
-"""Focused dev-tool tests for _parity_tapes._diff_paths.
+"""Focused dev-tool tests for parity_tapes.diff_paths.
 
 The recursive diff walker is the correctness gate for parity-tape
 replay verification: `replay_parity_tape` compares the stored

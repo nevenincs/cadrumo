@@ -120,7 +120,7 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("browser_closeable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "evasion:_raise_playwright_stealth_unavailable:BrowserEvasionError:Browser evasion support is unavailable": _contract(
+    "evasion:raise_playwright_stealth_unavailable:BrowserEvasionError:Browser evasion support is unavailable": _contract(
         BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
         (("browser_evasion_support_available", "False"),),
         NoRecoveryOutcome.SAFETY,

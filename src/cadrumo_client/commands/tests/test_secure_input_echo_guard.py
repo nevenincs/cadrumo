@@ -292,14 +292,14 @@ def test_real_console_with_rebound_stdin_refuses_the_echo_fallback(tmp_path: pat
         import json, sys
         sys.stdin = open("CONIN$")
         from cadrumo_client.commands.secure_input import (
-            _stdin_is_a_real_console,
+            stdin_is_a_real_console,
             prompt_secret_no_echo,
         )
         from cadrumo_client.commands.errors import CliRefusedBoundaryError
         verdict = {{
             "is_dunder": sys.stdin is sys.__stdin__,
             "isatty": sys.stdin.isatty(),
-            "real_console": _stdin_is_a_real_console(),
+            "real_console": stdin_is_a_real_console(),
         }}
         try:
             value = prompt_secret_no_echo("secret: ")

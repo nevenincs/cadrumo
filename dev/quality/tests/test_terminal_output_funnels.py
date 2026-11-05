@@ -47,7 +47,7 @@ _FUNNELS: dict[tuple[str, str], str] = {
     ),
     ("src/cadrumo_runtime/host/session_hold.py", "_emit"): "ASCII-bounded protocol line to the parent",
     ("src/cadrumo_runtime/host/session_hold.py", "_report_failure"): "registered error JSON for the parent log",
-    ("src/cadrumo_runtime/host/session_watch.py", "_emit"): "ensure_ascii JSON protocol line",
+    ("src/cadrumo_runtime/host/session_watch.py", "emit"): "ensure_ascii JSON protocol line",
     ("src/cadrumo_agent_service/main.py", "_publish"): "ensure_ascii JSON protocol line",
 }
 

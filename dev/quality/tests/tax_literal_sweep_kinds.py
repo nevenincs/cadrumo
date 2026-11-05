@@ -272,7 +272,7 @@ class BoundReader(_ExpressionKinds):
         indices = self._literal_indices(scope, spelling)
         if indices and max(indices) + 1 in numbers and self._compares_fields_to_labels(scope, spelling):
             return True
-        if self._owner == "adapters/outbound/aeat/sede/_declarations_listbox.py":
+        if self._owner == "adapters/outbound/aeat/sede/declarations_listbox.py":
             return (
                 isinstance(value, ast.Name)
                 and value.id == "cell_texts"

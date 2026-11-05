@@ -477,7 +477,7 @@ def test_invoice_iva_bridge_callers_supply_explicit_deduction_authority_or_refus
     # caller and the exempted refusal proof, rather than pinning a tally that
     # every new call site would have to bump.
     scanned = {(relative_path, function_name) for relative_path, function_name, _ in bridge_calls}
-    assert any(path == "application/aggregation/_modelo_bindings_invoice_iva.py" for path, _ in scanned), (
+    assert any(path == "application/aggregation/modelo_bindings_invoice_iva.py" for path, _ in scanned), (
         "the bridge scan never reached the production caller"
     )
     assert intentional_refusals <= scanned, "the exempted refusal proof was not scanned"
@@ -489,7 +489,7 @@ def test_invoice_iva_bridge_callers_supply_explicit_deduction_authority_or_refus
         )
     production_observation_paths = {
         "domain/iva/invoice_classification.py",
-        "application/aggregation/_modelo_bindings_invoice_iva.py",
+        "application/aggregation/modelo_bindings_invoice_iva.py",
     }
     for relative_path, lineno, keyword_names in observation_calls:
         if relative_path in production_observation_paths:

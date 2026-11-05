@@ -52,19 +52,19 @@ _REGISTRY_TERMINAL_CARRIERS: dict[str, _CarrierContract] = {
             ("target_registered", "False"),
         ),
     ),
-    "_finalise_registry:portal_integrity_error:1": _contract(
+    "finalise_registry:portal_integrity_error:1": _contract(
         PortalRegistryInvariant.PORTAL_ENTRY_UNIQUE,
         (("portal", "entry.portal.value"), ("entry_unique", "False")),
     ),
-    "_finalise_registry:portal_integrity_error:2": _contract(
+    "finalise_registry:portal_integrity_error:2": _contract(
         PortalRegistryInvariant.PORTAL_ENUM_COVERAGE_COMPLETE,
         (("missing_count", "len(missing_values)"), ("enum_coverage_complete", "False")),
     ),
-    "_finalise_registry:portal_integrity_error:3": _contract(
+    "finalise_registry:portal_integrity_error:3": _contract(
         PortalRegistryInvariant.PORTAL_ENUM_COVERAGE_COMPLETE,
         (("extra_count", "len(extra_values)"), ("enum_coverage_complete", "False")),
     ),
-    "_finalise_registry:portal_integrity_error:4": _contract(
+    "finalise_registry:portal_integrity_error:4": _contract(
         PortalRegistryInvariant.ENTRY_PORTAL_MATCHES_MAPPING_KEY,
         (
             ("mapping_portal", "key.value"),

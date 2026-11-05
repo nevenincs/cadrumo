@@ -16,8 +16,7 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
-from ....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
-from ....domain.iva.schema import InvoiceKind as IvaInvoiceKind
+from ....domain.iva.schema import InvoiceKind as InvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -175,7 +174,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
-        kind=CatalogueInvoiceKind.ISSUED,
+        kind=InvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
@@ -215,7 +214,7 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "PURCHASE-WITHOUT-DEDUCTION-AUTHORITY",
-        kind=CatalogueInvoiceKind.RECEIVED,
+        kind=InvoiceKind.RECEIVED,
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
@@ -260,7 +259,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
-        kind=CatalogueInvoiceKind.ISSUED,
+        kind=InvoiceKind.ISSUED,
         issued_at=date(2025, 4, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
@@ -315,7 +314,7 @@ def _resolve_laura_first_quarter_sale(
     )
     invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
-        kind=CatalogueInvoiceKind.ISSUED,
+        kind=InvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
@@ -637,7 +636,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
             regime=OssIossRegime("union_scheme"),
             destination_member_state=EUMemberState.from_registry("de"),
             rate_kind=IvaRateKind("general"),
-            invoice_direction=IvaInvoiceKind.ISSUED,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind("oss_union_services"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("19.00"),
@@ -680,7 +679,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
             regime=OssIossRegime("union_scheme"),
             destination_member_state=EUMemberState.from_registry("it"),
             rate_kind=IvaRateKind("general"),
-            invoice_direction=IvaInvoiceKind.ISSUED,
+            invoice_direction=InvoiceKind.ISSUED,
             transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("22.00"),
@@ -732,7 +731,7 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice = domestic_iva_invoice(
         "DE-1T-SALE",
-        kind=CatalogueInvoiceKind.ISSUED,
+        kind=InvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
@@ -779,7 +778,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     exempt = exempt_intracommunity_invoice(
         "DE-1T-EXEMPT",
-        kind=CatalogueInvoiceKind.ISSUED,
+        kind=InvoiceKind.ISSUED,
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("10000.00"),
     )

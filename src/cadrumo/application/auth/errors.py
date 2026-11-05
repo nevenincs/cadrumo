@@ -26,7 +26,7 @@ class AuthDiagnosticPayloadError(CoreValidationError):
 
     Replaces the bare :exc:`ValueError` raises in
     :func:`~application.auth.diagnostics.diagnostic_payload` (non-object JSON body)
-    and :func:`application.auth.diagnostics._summary_from_payload`
+    and :func:`application.auth.diagnostics.summary_from_payload`
     (missing ``captured_at`` field).  Inherits from
     :class:`core.errors.hierarchy.CoreValidationError`; callers catch the canonical
     registered type rather than relying on builtin ancestry.

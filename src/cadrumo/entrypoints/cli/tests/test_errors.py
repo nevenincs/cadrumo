@@ -2,7 +2,7 @@
 
 These tests pin the memoised wrapper branch in
 :func:`~entrypoints.cli.errors.command_error_boundary` and the
-:func:`~entrypoints.cli.errors._is_memoised_wrapper` TypeGuard used to recover
+:func:`~entrypoints.cli.errors.is_memoised_wrapper` TypeGuard used to recover
 the callback's original callable type. The coverage is intentionally
 identity- and behaviour-based: wrapping the same callback twice must return the
 same object, and the wrapper must still behave like the original callback.

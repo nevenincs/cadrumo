@@ -49,11 +49,11 @@ def refuse_actions(event, args):
 
 sys.addaudithook(refuse_actions)
 sys.meta_path.insert(0, MissingExecutionDependencies())
-from cadrumo.entrypoints.cli.main import _admit_authority_at_startup
+from cadrumo.entrypoints.cli.main import admit_authority_at_startup
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
 
-_admit_authority_at_startup()
+admit_authority_at_startup()
 assert published_authority_generation() is not None
 admission = RegistryTaxIdentityAdmission()
 for candidate in ('SIGN', 'CODE', 'XI', ''):

@@ -419,7 +419,7 @@ from cadrumo_runtime.host.worker import run
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
 
 _store = InMemoryKeyring()
-acceleration_keychain._keyring = lambda: (_store, KeyringError, PasswordDeleteError)
+acceleration_keychain.acceleration_keychain_keyring = lambda: (_store, KeyringError, PasswordDeleteError)
 raise SystemExit(run())
 """
 

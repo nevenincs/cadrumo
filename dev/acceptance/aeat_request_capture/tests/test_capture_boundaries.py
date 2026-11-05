@@ -174,10 +174,10 @@ def test_the_notification_reader_used_here_issues_no_post_and_clicks_no_row() ->
         node.name: node
         for node in ast.walk(tree)
         if isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef)
-        and node.name in {"fetch_notifications_query", "_fetch_and_parse", "_navigate_and_parse"}
+        and node.name in {"fetch_notifications_query", "_fetch_and_parse", "navigate_and_parse"}
     }
 
-    assert set(readers) == {"fetch_notifications_query", "_fetch_and_parse", "_navigate_and_parse"}
+    assert set(readers) == {"fetch_notifications_query", "_fetch_and_parse", "navigate_and_parse"}
     for reader in readers.values():
         attributes = {node.attr for node in ast.walk(reader) if isinstance(node, ast.Attribute)}
         assert attributes.isdisjoint({"click", "post", "request", "fill"}), reader.name

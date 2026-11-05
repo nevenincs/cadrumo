@@ -172,7 +172,7 @@ def test_live_schema_generator_override_uses_the_installed_framework_contract() 
     contracts = framework_contracts({module.name: module})
     definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
 
-    assert not contracts[module.name]["_UnambiguousDefinitionsSchemaGenerator"].pydantic
+    assert not contracts[module.name]["UnambiguousDefinitionsSchemaGenerator"].pydantic
     assert "_UnambiguousDefinitionsSchemaGenerator._build_definitions_remapping" not in definitions
 
 

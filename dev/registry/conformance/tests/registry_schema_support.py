@@ -31,13 +31,13 @@ from ..registry_schema_support import (
     with_revision,
 )
 
-MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
+MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="MISSING_CASILLA")
 
 
-NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
+NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="NAMED_LABEL_CASILLA")
 
 
-DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
+DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="DECL_CNAE_CASILLA")
 
 
 _MODELO_130_DIR = bundled_path("registry", "aeat", "modelos", "130")

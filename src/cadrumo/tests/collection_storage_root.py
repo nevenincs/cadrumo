@@ -112,7 +112,7 @@ session that has simply not written for a while is indistinguishable from
 an abandoned one -- so where mtime is the only available signal the
 threshold has to out-wait the slowest plausible quiet period. The
 ``cadrumo-pytest-<pid>`` family carries a second, direct signal on top of
-it (see :data:`_ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
+it (see :data:`ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
 family, whose names carry no owner, has only this one.
 """
 
@@ -124,7 +124,7 @@ so for that family liveness is directly observable rather than inferred
 from mtime. Once the owning PID no longer resolves to a running process,
 no live session can be using the directory -- that path is derived from
 ``os.getpid()`` and nothing else ever opens it -- so the slow-CI-run case
-:data:`_STALE_AFTER_SECONDS` guards against cannot apply: a slow run's
+:data:`STALE_AFTER_SECONDS` guards against cannot apply: a slow run's
 process is alive by definition and is spared however long it idles.
 
 The grace is therefore not a staleness estimate but a margin for the
@@ -161,7 +161,7 @@ def process_is_live(pid: int) -> bool:
 
     PID reuse is the known unsoundness, and it lands on the safe side too: a
     recycled identifier makes an abandoned directory look owned, which costs
-    one more day of retention before :data:`_STALE_AFTER_SECONDS` reclaims it
+    one more day of retention before :data:`STALE_AFTER_SECONDS` reclaims it
     anyway. It cannot make a live directory look abandoned.
 
     Ordering matters and is satisfied structurally by querying per directory
@@ -241,10 +241,10 @@ def _is_reclaimable(sibling: Path, stem: str, reference: float) -> bool:
 
     Two independent grounds, either sufficient:
 
-    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), the only rule that
+    * the mtime ceiling (:data:`STALE_AFTER_SECONDS`), the only rule that
       applies to a family whose names carry no owner; and
     * the owning process is confirmed gone and the short abandonment grace
-      (:data:`_ABANDONED_AFTER_SECONDS`) has elapsed.
+      (:data:`ABANDONED_AFTER_SECONDS`) has elapsed.
 
     The second is strictly additive: it reclaims sooner where a direct
     liveness answer exists, and never widens what the first alone would take.
@@ -381,9 +381,9 @@ def _numbered_dir_is_reclaimable(directory: Path, reference: float) -> bool:
     storage roots, reading the owner from the lock file's contents rather than
     from the directory's own name:
 
-    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), which is the only rule
+    * the mtime ceiling (:data:`STALE_AFTER_SECONDS`), which is the only rule
       available when the lock is absent or unreadable; and
-    * the owning process is confirmed gone and :data:`_ABANDONED_AFTER_SECONDS`
+    * the owning process is confirmed gone and :data:`ABANDONED_AFTER_SECONDS`
       has elapsed.
 
     The second ground is what pytest structurally cannot apply itself.

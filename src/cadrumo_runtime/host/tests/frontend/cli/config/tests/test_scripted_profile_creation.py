@@ -557,7 +557,7 @@ def test_a_guidance_failure_after_commit_still_reports_the_creation(tmp_path: Pa
 
 #: Calls that mean a password key is being derived: the supervised KDF worker
 #: launch and the key derivation itself.
-_KEY_DERIVATION_CALL_MARKERS = ("_kdf_process:launch_worker", "aead:derive_key")
+_KEY_DERIVATION_CALL_MARKERS = ("kdf_process:launch_worker", "aead:derive_key")
 
 
 def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) -> None:

@@ -82,7 +82,7 @@ def configure_child_exit(monkeypatch: pytest.MonkeyPatch) -> Callable[[int, bool
     launch_process = process_boundary.launch_worker_process
 
     def configure(exit_code: int, trailing_byte: bool = False) -> None:
-        source = "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        source = "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         if trailing_byte:
             source += (
                 "original_write = worker.write_kdf_frame\n"
@@ -284,7 +284,7 @@ def test_missing_result_terminates_writer_before_closing_blocked_reader(
     launch_process = process_boundary.launch_worker_process
     source = (
         "import time\n"
-        "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         "original_write = worker.write_kdf_frame\n"
         "writes = 0\n"
         "def write(fd, value, *, kind):\n"
@@ -331,7 +331,7 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
     """A result is not accepted while its contained producer remains alive."""
     launch_process = process_boundary.launch_worker_process
     source = (
-        "from cadrumo.adapters.persistence.storage.custody import _kdf_worker as worker\n"
+        "from cadrumo.adapters.persistence.storage.custody import kdf_worker as worker\n"
         "import time\n"
         "worker.main()\n"
         "time.sleep(30)\n"

@@ -504,7 +504,7 @@ def render_error_payload(
 
     The single renderer both terminal funnels use — the command boundary's
     :func:`emit_error_and_exit` and the process boundary's
-    :func:`_terminal_errors._emit_crash` — so the two cannot drift on which
+    :func:`terminal_errors.emit_crash` — so the two cannot drift on which
     spine fields an error document carries. In JSON mode the sandbox
     :class:`Notice` rides the ``notices`` channel; in text mode the same notice
     renders through

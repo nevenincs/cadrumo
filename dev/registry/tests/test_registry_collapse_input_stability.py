@@ -34,7 +34,7 @@ def _dynamic_provider_tree(root: Path) -> Path:
     _write(
         root,
         "src/cadrumo/domain/calculations/registry/snapshot.py",
-        "_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (\n"
+        "CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (\n"
         '    "...renta.first_slice_routing_integrity",\n'
         '    "...renta.retenciones_routing_integrity",\n'
         '    "...modelos.perceptor_clave_scope",\n'

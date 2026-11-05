@@ -239,7 +239,7 @@ class StoredSignInRuntime:
         _, decode = profile_authority_contexts()
         with pytest.MonkeyPatch.context() as patched:
             # The login session module stamps the sign-in with its clock.
-            patched.setattr(login_session, "_now", lambda: self.clock() - age)
+            patched.setattr(login_session, "clock_now", lambda: self.clock() - age)
             with authenticate_profile_candidate(
                 bucket_id=self.profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
             ) as candidate:

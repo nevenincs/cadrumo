@@ -34,25 +34,25 @@ class _ValidationCarrier:
 
 
 _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
-    "_key_validation:assert_admissible_object_key_hmac:storage.key.present": _ValidationCarrier(
+    "key_validation:assert_admissible_object_key_hmac:storage.key.present": _ValidationCarrier(
         "storage.key.present",
         {"backend": "<caller>", "field": "object_key_hmac", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_key_validation:assert_admissible_object_key_hmac:storage.key.admissible": _ValidationCarrier(
+    "key_validation:assert_admissible_object_key_hmac:storage.key.admissible": _ValidationCarrier(
         "storage.key.admissible",
         {"backend": "<caller>", "field": "object_key_hmac", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_empty": _ValidationCarrier(
+    "factory:parse_kind:adapters.outbound.storage._factory.errors.kind_empty": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_unknown": _ValidationCarrier(
+    "factory:parse_kind:adapters.outbound.storage._factory.errors.kind_unknown": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -76,13 +76,13 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         None,
         False,
     ),
-    "local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_blank": _ValidationCarrier(
+    "local:validate_namespace:adapters.outbound.storage.local.errors.namespace_blank": _ValidationCarrier(
         "storage.local.namespace.valid",
         {"backend": "local", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_forbidden_characters": _ValidationCarrier(
+    "local:validate_namespace:adapters.outbound.storage.local.errors.namespace_forbidden_characters": _ValidationCarrier(
         "storage.local.namespace.valid",
         {"backend": "local", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -106,31 +106,31 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:__init__:adapters.outbound.storage.google_drive.errors.root_folder_id_blank": _ValidationCarrier(
+    "google_drive:__init__:adapters.outbound.storage.google_drive.errors.root_folder_id_blank": _ValidationCarrier(
         "storage.google_drive.root_folder_id.present",
         {"backend": "google_drive", "field": "root_folder_id", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:__init__:adapters.outbound.storage.google_drive.errors.vault_folder_name_blank": _ValidationCarrier(
+    "google_drive:__init__:adapters.outbound.storage.google_drive.errors.vault_folder_name_blank": _ValidationCarrier(
         "storage.google_drive.vault_folder_name.valid",
         {"backend": "google_drive", "field": "vault_folder_name", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:__init__:adapters.outbound.storage.google_drive.errors.former_vault_folder": _ValidationCarrier(
+    "google_drive:__init__:adapters.outbound.storage.google_drive.errors.former_vault_folder": _ValidationCarrier(
         "storage.google_drive.vault_folder_name.valid",
         {"backend": "google_drive", "field": "vault_folder_name", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:_resolve_vault_folder:adapters.outbound.storage.google_drive.errors.vault_entry_not_folder": _ValidationCarrier(
+    "google_drive:_resolve_vault_folder:adapters.outbound.storage.google_drive.errors.vault_entry_not_folder": _ValidationCarrier(
         "storage.google_drive.vault_entry.folder",
         {"backend": "google_drive", "field": "vault_folder_entry", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:put:adapters.outbound.storage.google_drive.errors.content_hash_blank": _ValidationCarrier(
+    "google_drive:put:adapters.outbound.storage.google_drive.errors.content_hash_blank": _ValidationCarrier(
         "storage.google_drive.content_hash.present",
         {"backend": "google_drive", "field": "content_hash", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -273,8 +273,8 @@ def test_factory_unhandled_kind_exclusion_is_closed_over_the_provider_enum() -> 
 @pytest.mark.parametrize(
     ("backend", "value", "carrier_key"),
     (
-        ("local", " ", "_key_validation:assert_admissible_object_key_hmac:storage.key.present"),
-        ("google_drive", "abc'defg", "_key_validation:assert_admissible_object_key_hmac:storage.key.admissible"),
+        ("local", " ", "key_validation:assert_admissible_object_key_hmac:storage.key.present"),
+        ("google_drive", "abc'defg", "key_validation:assert_admissible_object_key_hmac:storage.key.admissible"),
     ),
 )
 def test_object_key_validation_emits_the_exact_terminal_contract(

@@ -129,7 +129,7 @@ class ProfileMutationRunError(CadrumoError):
 
 
 @cache
-def _registration(request_type: type[BaseModel]) -> OperationPublicDefinitionRegistrationV1:
+def profile_mutation_registration(request_type: type[BaseModel]) -> OperationPublicDefinitionRegistrationV1:
     """Resolve the exact definition and schemas from the canonical owner."""
     if request_type not in _SUPPORTED_REQUEST_TYPES:
         raise TypeError("unsupported profile mutation request type")
@@ -231,7 +231,7 @@ def _profile_mutation_contract(
     if request.profile_id != client.profile_id:
         raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     deadline = bounded_deadline_after(timeout, subject="profile mutation")
-    registration = _registration(type(request))
+    registration = profile_mutation_registration(type(request))
     contract = client.contract(registration.contract.definition_id, deadline=deadline)
     if contract != registration.contract or contract.result_schema is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)

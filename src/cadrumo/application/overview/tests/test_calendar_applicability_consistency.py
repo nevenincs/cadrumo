@@ -189,7 +189,7 @@ def test_derive_modelo_applicability_is_the_shared_implementation() -> None:
 
     from .. import calendar as calendar_module
 
-    calendar_fn = calendar_module._derive_modelo_applicability
+    calendar_fn = calendar_module.derive_modelo_applicability
     explain_fn = getclosurevars(build_overview_explain).globals["derive_modelo_applicability"]
 
     assert calendar_fn is explain_fn, (

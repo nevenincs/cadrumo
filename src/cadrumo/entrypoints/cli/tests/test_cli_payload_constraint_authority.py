@@ -77,9 +77,9 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "config_help_results.py",
         "modelo_amend_wizard_results.py",
         "modelo_bindings_results.py",
-        "_modelo_revision_payload_parts.py",
+        "modelo_revision_payload_parts.py",
         "modelo_spreadsheet_results.py",
-        "_modelo_work_wizard_payloads.py",
+        "modelo_work_wizard_payloads.py",
         "app_live_iva_wallet_results.py",
         "config/archive_reconcile_results.py",
         "ledger_counterparty_results.py",
@@ -94,7 +94,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "modelo_iva_wallet_results.py",
         "modelo_results_m036.py",
         "ledger_results.py",
-        "_config_plantilla_media_payloads.py",
+        "config_plantilla_media_payloads.py",
         "modelo_results.py",
         "ledger_catalogue_invoice_results.py",
         "modelo_review_package_results.py",
@@ -116,7 +116,7 @@ EXEMPT_MODULES: dict[str, str] = {
 # the semantic-consolidation campaign. Each entry is asserted to STILL declare
 # something, so a reconciled module cannot be left behind here.
 OUTSTANDING_MODULES: dict[str, str] = {
-    "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
+    "config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
 }
 
 

@@ -1,4 +1,4 @@
-"""Focused unit tests for financial.detection._ordered_candidates.
+"""Focused unit tests for financial.detection.ordered_candidates.
 
 `_ordered_candidates` builds the content-prioritised candidate
 provider list `detect_provider` walks. The first provider whose

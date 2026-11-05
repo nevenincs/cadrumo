@@ -29,8 +29,8 @@ def _start_holder(venv: Path) -> subprocess.Popen[str]:
             "-c",
             "import os, sys\n"
             "from pathlib import Path\n"
-            "from dev.env.venv import _exclusive\n"
-            "with _exclusive(Path(os.environ['CADRUMO_LOCK_PROBE_VENV'])):\n"
+            "from dev.env.venv import exclusive\n"
+            "with exclusive(Path(os.environ['CADRUMO_LOCK_PROBE_VENV'])):\n"
             "    print('held', flush=True)\n"
             "    sys.stdin.read()\n",
         ],

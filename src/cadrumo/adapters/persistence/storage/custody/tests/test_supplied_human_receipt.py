@@ -95,8 +95,8 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
     assert path.read_bytes() == original
     assert human_keyring.reads == reads
     assert recovered is not None
-    receipt._zeroise(recovered)
-    receipt._zeroise(key)
+    receipt.zeroise(recovered)
+    receipt.zeroise(key)
 
 
 def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survives(
@@ -129,8 +129,8 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
     assert accepted.record == record and recovered == dek
     assert path.read_bytes() == original and account in human_keyring.entries
     assert recovered is not None
-    receipt._zeroise(recovered)
-    receipt._zeroise(key)
+    receipt.zeroise(recovered)
+    receipt.zeroise(key)
 
 
 @pytest.mark.parametrize(
@@ -176,4 +176,4 @@ def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     assert refused.refusal is reason and refused.binding is binding
     assert refused.deletion is receipt.ReceiptDeletion.DELETED
     assert not path.exists() and account not in human_keyring.entries
-    receipt._zeroise(key)
+    receipt.zeroise(key)

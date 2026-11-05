@@ -20,8 +20,8 @@ _STATIC_CONSUMERS = (
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "semantic_map_validation.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "record_design_intermediate.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "joined_record_design.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "_dp30302_field_matrix.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_export_tree.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "dp30302_field_matrix.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "export_tree.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "export_tree_field_derivation.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "variable_envelope.py",
 )

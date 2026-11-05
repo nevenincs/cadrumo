@@ -52,7 +52,7 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
         from datetime import date
         import cadrumo.domain.calculations.registry.snapshot as internals
 
-        internals._CROSS_DOMAIN_CHECK_MODULES = {declared}
+        internals.CROSS_DOMAIN_CHECK_MODULES = {declared}
 
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -66,13 +66,13 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
             _published_snapshot("100", filing_year=2025, period="0A", on=date(2025, 12, 31))
         except RegistryValidationError as error:
             registered = sorted(
-                check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+                check.__module__ for check in vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"]
             )
             print("REFUSED", registered)
             print(error)
         else:
             registered = sorted(
-                check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+                check.__module__ for check in vars(snapshot_validation)["CROSS_DOMAIN_SNAPSHOT_CHECKS"]
             )
             print("BUILT", registered)
         """

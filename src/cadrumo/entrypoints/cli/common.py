@@ -314,7 +314,7 @@ _REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
 #:
 #: :data:`_REQUESTED_CLI_LEAF_CONTEXT` is reset by ``ctx.call_on_close`` when the
 #: Click context closes, which is correct for in-command reads and useless to the
-#: PROCESS boundary: ``_terminal_errors._emit_crash`` runs after that close, so it
+#: PROCESS boundary: ``terminal_errors.emit_crash`` runs after that close, so it
 #: asked and got ``None``, and every refusal escaping there published a null
 #: ``command`` even where the leaf was known.
 #:

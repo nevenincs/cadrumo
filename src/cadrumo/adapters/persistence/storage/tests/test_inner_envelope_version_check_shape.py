@@ -387,6 +387,6 @@ def test_the_governed_surface_is_not_empty() -> None:
     assert {
         "usage_ratios.py",
         "transactions.py",
-        "_secure_enveloped_document.py",
+        "secure_enveloped_document.py",
         "snapshots.py",
     } <= names, f"gate scope lost real read paths; governed modules found: {sorted(names)}"

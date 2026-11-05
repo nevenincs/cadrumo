@@ -77,7 +77,7 @@ def test_repair_verb_runs_clean_without_session_on_fresh_root(
             '{"state":"ok","evidence":{"url":"https://probe.example.org/","http_status":200,'
             '"html_fragment":"","detected_markers":[]},"observed_at":"2026-01-01T00:00:00Z"}'
         )
-        monkeypatch.setattr(repair_commands, "_probe_browser_connectivity", lambda: status)
+        monkeypatch.setattr(repair_commands, "probe_browser_connectivity", lambda: status)
 
     result = invoke_cached_cli(list(verb))
 

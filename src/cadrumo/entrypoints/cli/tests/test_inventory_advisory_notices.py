@@ -123,7 +123,7 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
         "inspect": "inspect_inventory_ledger",
     }[operation]
     monkeypatch.setattr(commands, bridge, lambda *_args, **_kwargs: (completion, payloads[operation]))
-    monkeypatch.setattr(commands, "_inventory_bucket_id", lambda: _PROFILE)
+    monkeypatch.setattr(commands, "active_bucket_id_or_refuse", lambda: _PROFILE)
     monkeypatch.setattr(common, "active_profile_label", lambda: None)
     monkeypatch.setattr(common, "common_is_metadata_invocation", lambda _ctx: False)
     monkeypatch.setattr(

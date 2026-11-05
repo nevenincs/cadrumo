@@ -550,7 +550,7 @@ def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
     }
 
     assert "transcribe_text_layer" in guarded_calls, "the transcription is no longer inside a fallback try"
-    assert "_read_transcription_semantically" not in guarded_calls, (
+    assert "read_transcription_semantically" not in guarded_calls, (
         "the fallback try wraps the semantic read; the missing-reader refusal will be swallowed"
     )
 

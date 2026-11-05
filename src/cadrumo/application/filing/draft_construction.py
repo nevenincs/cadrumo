@@ -78,7 +78,6 @@ from ...domain.filing.validator import ModeloValidator, apply_validation
 from ...domain.period import calculation_filing_date
 from ...domain.submission.models import ModeloDraftStatus
 from .errors import ModeloApplicationError
-from .errors import ModeloApplicationError as ErrorsModeloBuilderError
 
 
 def build_draft(
@@ -131,7 +130,7 @@ def build_draft(
         revision_id=snapshot.revision.id,
     )
     if collection.schema_version != expected_schema_version:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.schema_version_snapshot_mismatch",
             context={
                 "modelo": snapshot.modelo.id,
@@ -269,7 +268,7 @@ def _calculate_draft_result(
             closed_record_row_sets=closed_record_row_sets,
         )
     except RegistryValidationError as exc:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.registry_calculation_failed",
             context={
                 "modelo": snapshot.modelo.id,
@@ -438,7 +437,7 @@ def _validate_built_draft(
     validator = ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
     findings = validator.validate(draft)
     if fail_on_warning and findings:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.findings_under_fail_on_warning",
             context={
                 "modelo": draft.modelo,
@@ -468,7 +467,7 @@ def load_registry_snapshot(
             raise RegistrySnapshotError("filing schema provider snapshot does not match the requested period")
         return snapshot
     except (RegistrySnapshotError, RegistryValidationError, ModeloApplicationError) as exc:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
             context={
                 "modelo": modelo,
@@ -481,7 +480,7 @@ def load_registry_snapshot(
 
 def _registry_period(period: object) -> tuple[int, str]:
     if not isinstance(period, Period):
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.period_type_invalid",
             context={"observed_type": type(period).__name__},
         )
@@ -563,7 +562,7 @@ def _refuse_non_string_input_keys(inputs: ModeloInputs) -> None:
     non_string = tuple(repr(key) for key in inputs if type(key) is not str)
     if not non_string:
         return
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.input_key_not_string",
         context={
             "offending_count": len(non_string),
@@ -576,7 +575,7 @@ def _refuse_padded_input_keys(inputs: ModeloInputs) -> None:
     padded = tuple(key for key in inputs if key != key.strip())
     if not padded:
         return
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.input_key_padded",
         context={
             "offending_count": len(padded),
@@ -590,7 +589,7 @@ def _refuse_noncanonical_casilla_input_keys(inputs: ModeloInputs, snapshot: Regi
     supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
     if not supplied_noncanonical:
         return
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.input_key_noncanonical_casilla",
         context={
             "modelo": snapshot.modelo.id,
@@ -616,7 +615,7 @@ def _refuse_unknown_input_keys(
     unknown = tuple(key for key in inputs if key not in accepted_ids)
     if not unknown:
         return
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.input_key_unknown",
         context={
             "modelo": snapshot.modelo.id,
@@ -658,7 +657,7 @@ def _calendar_date_input(input_id: str, value: object) -> date:
     """Share one calendar-date refusal between calculation and filing values."""
     if isinstance(value, date) and not isinstance(value, datetime):
         return value
-    refusal = ErrorsModeloBuilderError(
+    refusal = ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.date_binding_not_iso",
         context={"binding_id": input_id, "supplied_value": value},
     )
@@ -692,7 +691,7 @@ def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[Casilla
         if value is None:
             continue
         if not isinstance(value, str):
-            raise ErrorsModeloBuilderError(
+            raise ModeloApplicationError(
                 translated_message="application.filing.build_draft.errors.text_casilla_not_string",
                 context={
                     "casilla_id": input_id,
@@ -707,7 +706,7 @@ def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[Casilla
                 tax_id_format=runtime_tax_id_format() if data_type == "nif" else None,
             )
         except RegistryValidationError as exc:
-            raise ErrorsModeloBuilderError(
+            raise ModeloApplicationError(
                 translated_message="application.filing.build_draft.errors.text_casilla_invalid",
                 context={
                     "casilla_id": input_id,
@@ -748,7 +747,7 @@ def binding_provenance(
     legal_refs = binding.legal_refs
     source_refs = binding.source_refs
     if not legal_refs or not source_refs:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.binding_provenance_missing",
             context={
                 "binding_id": binding.id,
@@ -824,9 +823,9 @@ def filing_binding_values(
     return values
 
 
-def _refuse_binding_row_index(binding_id: BindingId, row_key: object) -> ErrorsModeloBuilderError:
+def _refuse_binding_row_index(binding_id: BindingId, row_key: object) -> ModeloApplicationError:
     """Return the refusal for a row key that is not a positive integer."""
-    return ErrorsModeloBuilderError(
+    return ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.binding_row_key_not_positive_integer",
         context={
             "binding_id": binding_id,
@@ -884,7 +883,7 @@ def binding_input(binding_id: BindingId, value: object, binding: BindingDefiniti
     try:
         family = registry_scalar_value_type(data_type)
     except RegistryValidationError as exc:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
             context={"binding_id": binding_id, "data_type": data_type},
         ) from exc
@@ -903,7 +902,7 @@ def binding_input(binding_id: BindingId, value: object, binding: BindingDefiniti
         return decimal_input(binding_id, value)
     if family == "date":
         return None if value is None else _calendar_date_input(binding_id, value)
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.binding_family_has_no_input_channel",
         context={
             "binding_id": binding_id,
@@ -929,7 +928,7 @@ def _text_binding_input(binding_id: BindingId, value: object, data_type: str) ->
             tax_id_format=runtime_tax_id_format() if data_type == "nif" else None,
         )
     except RegistryValidationError as exc:
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.binding_text_value_invalid",
             context={
                 "binding_id": binding_id,
@@ -942,16 +941,16 @@ def _text_binding_input(binding_id: BindingId, value: object, data_type: str) ->
 def _integer_binding_input(binding_id: BindingId, value: object, data_type: str) -> int:
     decimal_value = decimal_input(binding_id, value)
     if decimal_value != decimal_value.to_integral_value():
-        raise ErrorsModeloBuilderError(
+        raise ModeloApplicationError(
             translated_message="application.filing.build_draft.errors.binding_value_not_integer",
             context={"binding_id": binding_id, "data_type": data_type},
         )
     return int(decimal_value)
 
 
-def _refuse_decimal_input(input_id: str, value: object) -> ErrorsModeloBuilderError:
+def _refuse_decimal_input(input_id: str, value: object) -> ModeloApplicationError:
     """Return the refusal for an input that cannot carry a Decimal amount."""
-    return ErrorsModeloBuilderError(
+    return ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.input_not_decimal",
         context={"input_id": input_id, "observed_type": type(value).__name__},
     )
@@ -990,7 +989,7 @@ def boolean_input(input_id: str, value: object) -> bool:
         parsed = parse_bool(value)
         if parsed is not None:
             return parsed
-    raise ErrorsModeloBuilderError(
+    raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.binding_value_not_boolean",
         context={"binding_id": input_id, "observed_type": type(value).__name__},
     )

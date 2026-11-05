@@ -117,7 +117,7 @@ def test_partial_start_closes_every_acquired_descriptor_once(
         monkeypatch.setattr(Path, "mkdir", root_mkdir)
     elif point == "temporary_directory":
         monkeypatch.setattr(supervision.tempfile, "TemporaryDirectory", temporary_directory)
-    monkeypatch.setattr(supervision, "_launch_worker", launch)
+    monkeypatch.setattr(supervision, "launch_worker", launch)
 
     translated = point == "launch" and not interrupted
     with pytest.raises(ProfileCustodyRefusedError if translated else type(primary)) as escaped, worker:

@@ -72,7 +72,7 @@ reduces to ``28``. Printing three different numbers there would render a form
 that contradicts its own stated formula.
 
 Mirrored from the stamped amounts in
-``tests/fixtures/justificantes/_generate_modelo_111.py``, the same arrangement
+``tests/fixtures/justificantes/generate_modelo_111.py``, the same arrangement
 the M100 and current-year fixtures use. The generator is not the code under
 test -- the parser is -- so this is the printed document's own authority.
 """

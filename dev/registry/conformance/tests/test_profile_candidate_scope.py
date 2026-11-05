@@ -48,7 +48,7 @@ def test_report_rereads_changed_candidate_in_the_same_process(monkeypatch: pytes
     modelo = modelos[0]
     revision = next(iter(modelo.revisions.values()))
     selected = modelo.model_copy(update={"revisions": {revision.id: revision}})
-    monkeypatch.setattr(profile_module, "_load_registry_tree", lambda _root: ((selected,), catalogues))
+    monkeypatch.setattr(profile_module, "load_registry_tree", lambda _root: ((selected,), catalogues))
     monkeypatch.setattr(manager, "cached_locale_index", lambda: ({}, ()))
     with outside_governed_fact_validation():
         before = manager.load_conformance_report(validate=False)

@@ -138,7 +138,7 @@ class TestTheExtractionIsOneSharedPredicate:
         happens to agree today, which is precisely the state consolidation
         removes. ``is`` cannot.
         """
-        assert declarations_fetch._landed_origin is adapter_utils.landed_origin
+        assert declarations_fetch.landed_origin is adapter_utils.landed_origin
         assert iva_compensation_wallet.landed_origin is adapter_utils.landed_origin
 
     @pytest.mark.parametrize(

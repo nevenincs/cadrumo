@@ -126,7 +126,7 @@ def extract_raw_text(path: Path) -> str:
     a private name would force that gate to reach into module internals.
 
     This is the same extraction logic as
-    :func:`cadrumo.domain.calculations.registry.validate_evidence._extract_pdf_text_impl`
+    :func:`cadrumo.domain.calculations.registry.validate_evidence.extract_pdf_text_impl`
     and must produce byte-identical output so runtime validation passes.
     """
     try:

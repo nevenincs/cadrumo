@@ -48,7 +48,7 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_window_year",
         "DeadlineEngine._evaluate_conditions",
-        "_project_deadline_windows",
+        "project_deadline_windows",
     },
 )
 
@@ -165,8 +165,8 @@ class TestEveryPinnedRaiseSiteIsStructurallyClean:
 
     def test_every_pinned_raise_site_states_a_registered_key(self) -> None:
         registered = {
-            "_MISSING_WINDOWS_MESSAGE_KEY": NoDeadlineWindowsError.code.message_key,
-            "_SCHEDULE_COMPUTATION_MESSAGE_KEY": ScheduleComputationError.code.message_key,
+            "MISSING_WINDOWS_MESSAGE_KEY": NoDeadlineWindowsError.code.message_key,
+            "SCHEDULE_COMPUTATION_MESSAGE_KEY": ScheduleComputationError.code.message_key,
         }
         stated = {}
         for qualname, call in _pinned_raise_sites():

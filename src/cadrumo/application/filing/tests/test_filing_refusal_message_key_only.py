@@ -62,7 +62,6 @@ _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
         "ModeloBuilderError",
         "ModeloDraftError",
         "ModeloImportError",
-        "_ModeloBuilderError",
     }
 )
 
@@ -73,8 +72,8 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "draft_construction.py",
     "export_parity.py",
     "export_xml_value_limits.py",
-    "_m303_exonerado_390.py",
-    "_m303_export_applicability.py",
+    "m303_exonerado_390.py",
+    "m303_export_applicability.py",
     "draft_review.py",
     "runtime.py",
 )
@@ -94,7 +93,7 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Export receipt and read-back digest invariants are consumed by export.py, whose "
         "export/verify boundary projects them at the filed-artifact boundary."
     ),
-    "_producer_ownership.py": (
+    "producer_ownership.py": (
         "Producer-key ownership invariants are consumed by export_producer.py and reach "
         "the operator only through export.py's public export boundary."
     ),
@@ -102,16 +101,16 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Producer-snapshot completeness is consumed by export.py, whose "
         "public export boundary owns the resulting validation/catch path."
     ),
-    "_export_xml_dictionary.py": (
+    "export_xml_dictionary.py": (
         "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."
     ),
-    "_export_xml_dictionary_modelo100.py": (
-        "Modelo 100 XML routing and declaration invariants feed _export_xml_dictionary.py, "
+    "export_xml_dictionary_modelo100.py": (
+        "Modelo 100 XML routing and declaration invariants feed export_xml_dictionary.py, "
         "then export.py's public export/verification boundary."
     ),
-    "_export_xml_dictionary_values.py": (
-        "XML scalar wire-type and formatting invariants feed _export_xml_dictionary.py, "
+    "export_xml_dictionary_values.py": (
+        "XML scalar wire-type and formatting invariants feed export_xml_dictionary.py, "
         "then export.py's public export/verification boundary."
     ),
     "projection.py": (
@@ -149,11 +148,11 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 #: resolve to the one existing registered application terminal carrier; adding
 #: an undeclared exception type would bypass the registered error taxonomy.
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
-    "draft_construction.py": "_ModeloBuilderError",
+    "draft_construction.py": "ModeloApplicationError",
     "export_parity.py": "FilingExportError",
     "export_xml_value_limits.py": "ModeloApplicationError",
-    "_m303_exonerado_390.py": "FilingExportError",
-    "_m303_export_applicability.py": "FilingExportError",
+    "m303_exonerado_390.py": "FilingExportError",
+    "m303_export_applicability.py": "FilingExportError",
     "runtime.py": "ModeloBuilderError",
 }
 

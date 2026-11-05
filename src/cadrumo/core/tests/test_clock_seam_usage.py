@@ -72,7 +72,7 @@ _ALLOWLIST: dict[str, str] = {
         "explicit `now=` and read wall-clock only as the default on the live "
         "certificate path barred from the frozen-clock seam."
     ),
-    "adapters/outbound/aeat/browser/_site_health_parsers.py": (
+    "adapters/outbound/aeat/browser/site_health_parsers.py": (
         "Injectable live-AEAT site: the browser site-health parser accepts an explicit "
         "`now=` reference and reads wall-clock only as the default while parsing a live "
         "AEAT sede response barred from the frozen-clock seam."

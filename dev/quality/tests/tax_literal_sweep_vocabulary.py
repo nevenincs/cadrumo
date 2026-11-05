@@ -36,7 +36,7 @@ MECHANICS_OWNERS: Final = (
     "adapters/inbound/pdf/",
     "adapters/outbound/aeat/browser/",
     "adapters/outbound/calculation_summary_pdf/",
-    "adapters/outbound/google/_calc_sheets_apply_formatting.py",
+    "adapters/outbound/google/calc_sheets_apply_formatting.py",
     "adapters/outbound/workbook/",
     "adapters/outbound/llm/",
     "application/command_search/",
@@ -60,7 +60,7 @@ MECHANICS_OWNERS: Final = (
     "core/terminal_encoding.py",
     "core/text_fold.py",
     "core/windows_",
-    "domain/calculations/registry/_formula_operator_contracts.py",
+    "domain/calculations/registry/formula_operator_contracts.py",
     "entrypoints/tui/",
 )
 
@@ -393,7 +393,7 @@ POSITIONAL_MECHANICS: Final = frozenset(
 
 """These take a delay, a code point, a numeric base, a mode, a sentinel or a text bound as a bare argument."""
 
-RECORD_DESIGN_READERS: Final = ("application/filing/_export_xml_dictionary",)
+RECORD_DESIGN_READERS: Final = ("application/filing/export_xml_dictionary",)
 
 """These parse the printed dictionary of a published design; its grammar is what they read, not a width they restate."""
 

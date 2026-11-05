@@ -1,7 +1,7 @@
 """Unit coverage for profile-activity approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing.draft_review._profile_activity_fingerprint`
+    :func:`~application.filing.draft_review.profile_activity_fingerprint`
         Order-independent digest helper under test for relation-scoping profile
         facts.
     :func:`~cadrumo.application.filing.tests.filing_support.empty_profile_activity_fingerprint`

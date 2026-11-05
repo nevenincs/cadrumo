@@ -750,7 +750,7 @@ def test_projection_ref_hydration_cannot_spread_beyond_the_loader() -> None:
     for module_name in (
         "semantic_map_validation.py",
         "joined_record_design.py",
-        "_export_tree.py",
+        "export_tree.py",
         "export_fragment_provenance.py",
     ):
         module_path = package_root / "pipeline" / module_name

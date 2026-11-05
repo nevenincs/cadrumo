@@ -123,13 +123,13 @@ def test_blocked_redaction_does_not_block_logging_or_grow_the_queue(tmp_path: Pa
         + """
 from cadrumo.core import log_scrubbing
 entered, release = threading.Event(), threading.Event()
-original = log_scrubbing._scrub_record_message_and_args
+original = log_scrubbing.scrub_record_message_and_args
 def scrub(record):
     if record.msg == 'held-redaction':
         entered.set()
         assert release.wait(HANG)
     original(record)
-log_scrubbing._scrub_record_message_and_args = scrub
+log_scrubbing.scrub_record_message_and_args = scrub
 try:
     logger.warning('held-redaction')
     assert entered.wait(HANG)
@@ -156,7 +156,7 @@ def test_a_blocked_file_sink_leaves_stderr_and_producers_working(tmp_path: Path)
         tmp_path,
         """
 entered, release, stderr_ready = threading.Event(), threading.Event(), threading.Event()
-wrappers = [handler for handler in logging.getLogger().handlers if isinstance(handler, project._AsyncDiagnosticHandler)]
+wrappers = [handler for handler in logging.getLogger().handlers if isinstance(handler, project.AsyncDiagnosticHandler)]
 file = next(handler.sink for handler in wrappers if isinstance(handler.sink, logging.FileHandler))
 stderr = next(handler.sink for handler in wrappers if not isinstance(handler.sink, logging.FileHandler))
 file_emit, stderr_emit = file.emit, stderr.emit
@@ -192,7 +192,7 @@ def test_stuck_sink_cannot_prevent_process_shutdown(tmp_path: Path) -> None:
         """
 entered, never = threading.Event(), threading.Event()
 file = next(handler.sink for handler in logging.getLogger().handlers
-            if isinstance(handler, project._AsyncDiagnosticHandler) and isinstance(handler.sink, logging.FileHandler))
+            if isinstance(handler, project.AsyncDiagnosticHandler) and isinstance(handler.sink, logging.FileHandler))
 def blocked(record):
     entered.set()
     never.wait(3600)

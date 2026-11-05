@@ -1,7 +1,7 @@
 """Unit coverage for prior-filing approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
+    :func:`~application.filing.draft_review.prior_filing_observations_fingerprint`
         Order-independent digest helper under test for bucket-local prior filed
         observations.
     :func:`~cadrumo.application.filing.tests.filing_support.empty_prior_filing_observations_fingerprint`

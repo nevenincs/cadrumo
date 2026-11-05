@@ -19,7 +19,7 @@ def test_profile_preference_read_imports_defer_execution_until_mutation_registra
                 """
                 import sys
                 from cadrumo_client.transport.profile_language import read_profile_language
-                from cadrumo_client.transport.profile_mutations import _registration
+                from cadrumo_client.transport.profile_mutations import profile_mutation_registration
                 from cadrumo.application.user_profile.profile_operation_contracts import (
                     ProfileFieldMutationOperationRequest,
                 )
@@ -27,7 +27,7 @@ def test_profile_preference_read_imports_defer_execution_until_mutation_registra
                 assert callable(read_profile_language)
                 assert 'cadrumo.application.user_profile.operations' not in sys.modules
                 assert 'cadrumo.application.user_profile.profile_operation_execution' not in sys.modules
-                registration = _registration(ProfileFieldMutationOperationRequest)
+                registration = profile_mutation_registration(ProfileFieldMutationOperationRequest)
                 assert registration.contract.definition_id == 'user-profile.field-mutation'
                 assert registration.contract.result_schema is not None
                 assert 'cadrumo.application.user_profile.profile_operation_execution' in sys.modules

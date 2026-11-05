@@ -106,7 +106,7 @@ def _build_moved_into_the_worker_pool(source: str) -> str:
     # The driver builds the cohort only when no sealed cohort was adopted, so
     # the call sits one level inside ``main``; relocating it leaves ``pass``.
     block = (
-        "        _run_step(\n"
+        "        run_step(\n"
         '            [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
         "            repo_root,\n"
         '            "build-cohort",\n'

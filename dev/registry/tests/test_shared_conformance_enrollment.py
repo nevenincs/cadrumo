@@ -15,7 +15,7 @@ def test_the_enrollment_key_covers_maps_profiles_vectors_and_modules_but_not_tes
     registry = tmp_path / "registry"
     planted = {
         "module": registry / "filing_export_conformance_enrollment.py",
-        "nested_module": registry / "pipeline" / "_tree_check.py",
+        "nested_module": registry / "pipeline" / "tree_check.py",
         "semantic_map": registry / "mappings" / "modelo_303" / "2026" / "semantic_map.toml",
         "render_profile": registry / "render_profiles" / "modelo_303" / "2026" / "profile.toml",
         "vector": registry / "conformance_vectors" / "modelo_200.toml",

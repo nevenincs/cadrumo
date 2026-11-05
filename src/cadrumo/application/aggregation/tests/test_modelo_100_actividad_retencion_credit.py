@@ -85,7 +85,7 @@ _M100_RETENCIONES_ACTIVIDADES_CASILLA: CasillaId = validated_casilla_id(
     "0599",
     surface="_M100_RETENCIONES_ACTIVIDADES_CASILLA",
 )
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="M130_RETENCIONES_CASILLA")
 _DOMESTIC_GENERAL = IvaCategory("domestic_general")
 _DOMESTIC_EXEMPT = IvaCategory("domestic_exempt")
 _RENTA_INCOME = BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION

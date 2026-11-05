@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
     ("relative_path", "prefix", "suffixes"),
     [
         (
-            "entrypoints/cli/_app_ledger_actividad_asset_command_specs.py",
+            "entrypoints/cli/app_ledger_actividad_asset_command_specs.py",
             "cli.app.ledger.actividad_asset.",
             ("list_help", "plan_help", "timeline_help", "form_options_help", "acquisition_candidates_help"),
         ),

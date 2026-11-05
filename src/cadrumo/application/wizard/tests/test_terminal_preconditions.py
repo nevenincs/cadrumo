@@ -73,7 +73,7 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "status:_require_active_profile_tax_id:WizardStatusError:1": _contract(
+    "status:require_active_profile_tax_id:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
         (("active_profile_tax_id_declared", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -85,31 +85,31 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_run_full_flow:WizardMissingFlagError:1": _contract(
+    "commands:run_full_flow:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
         (("required_flags_supplied", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
+    "commands:run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "commands:_run_full_flow:WizardUnsupportedConsoleError:1": _contract(
+    "commands:run_full_flow:WizardUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "commands:_require_profile_name:WizardMissingFlagError:1": _contract(
+    "commands:require_profile_name:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
         (("profile_name_supplied", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_require_profile_label_available:WizardValidationError:1": _contract(
+    "commands:require_profile_label_available:WizardValidationError:1": _contract(
         WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
         (("profile_registration_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -274,7 +274,7 @@ def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_c
 
     tree = ast.parse(inspect.getsource(status_module))
     next_action = next(
-        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "next_wizard_action"
     )
     literal_strings = {
         node.value.lower()
@@ -307,7 +307,7 @@ def test_wizard_status_next_action_declares_only_the_registered_resolved_login_a
     source = inspect.getsource(status_module)
     tree = ast.parse(source)
     function = next(
-        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "next_wizard_action"
     )
     action_ids = {
         node.args[0].value

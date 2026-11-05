@@ -169,7 +169,7 @@ def test_borrow_reads_the_proof_without_touching_record_or_keychain(
         assert _snapshot(directory) == files
         assert keychain.entries == entries and keychain.mutations == mutations
     finally:
-        receipt._zeroise(key)
+        receipt.zeroise(key)
 
 
 def _remove_keychain_entry(keychain: _RecordingKeyring, profile_id: UUID, record: PersistedProfileSession) -> None:
@@ -273,7 +273,7 @@ def test_the_runtime_reader_deletes_what_the_borrow_left(
     assert refused.deletion is receipt.ReceiptDeletion.DELETED
     assert not path.exists()
     assert (_SERVICE, f"{profile_id}:{record.session_id}") not in keychain.entries
-    receipt._zeroise(key)
+    receipt.zeroise(key)
 
 
 def test_an_interrupted_key_swap_is_left_by_the_borrow_and_settled_by_the_runtime(
@@ -306,8 +306,8 @@ def test_an_interrupted_key_swap_is_left_by_the_borrow_and_settled_by_the_runtim
 
     assert resumed.resumed and resumed.record == record and dek is not None
     assert not journal.exists() and path.exists()
-    receipt._zeroise(dek)
-    receipt._zeroise(key)
+    receipt.zeroise(dek)
+    receipt.zeroise(key)
 
 
 class NoKeyringError(Exception):

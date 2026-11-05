@@ -85,7 +85,7 @@ _SAFE_WITHHOLDING_CONTROL_REASONS = frozenset(
     }
 )
 _SAFE_WITHHOLDING_CONTROL_FUNCTIONS = frozenset(
-    {"_home", "open_withholding_work", "assert_capture_unavailable", "run_work_lifecycle", "assert_recorded_reopen"}
+    {"home", "open_withholding_work", "assert_capture_unavailable", "run_work_lifecycle", "assert_recorded_reopen"}
 )
 
 

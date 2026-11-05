@@ -92,7 +92,7 @@ def iban_mod_97(canonical: str) -> int:
 
     Existing callers normalize separators and case and independently re-check
     :data:`IBAN_SHAPE_RE` before calling this; see
-    :func:`domain.calculations.registry.schema_scalars._validate_iban_string` and
+    :func:`domain.calculations.registry.schema_scalars.validate_iban_string` and
     ``domain.deadlines.models._validate_iban``. Those call-site
     gates are harmless belt-and-braces now that the shape is enforced here
     too, but they must not be the ONLY thing standing between a malformed

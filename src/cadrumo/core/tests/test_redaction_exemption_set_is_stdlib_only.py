@@ -39,9 +39,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: the observability layer, which imports back into the initialising module.
 _CYCLE_PROBE = """
 import sys
-from cadrumo.core.logging import _install_run_context_record_factory
+from cadrumo.core.logging import install_run_context_record_factory
 
-_install_run_context_record_factory()
+install_run_context_record_factory()
 for name in [n for n in sys.modules if n.startswith('cadrumo')]:
     del sys.modules[name]
 

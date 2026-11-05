@@ -29,8 +29,7 @@ import typer
 import yaml
 
 from ....domain.categories.spending_category_catalogue import spending_category_tokens
-from ..ledger_support import validate_category_id as rules_validator
-from ..ledger_support import validate_category_id as support_validator
+from ..ledger_support import validate_category_id as validate_category_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -50,14 +49,14 @@ def test_every_command_taking_the_flag_reaches_one_implementation() -> None:
     Two functions that merely behaved alike is exactly what was there before,
     and it drifted. Only sameness of object rules that out.
     """
-    assert rules_validator is support_validator
+    assert validate_category_id is validate_category_id
 
 
 def test_a_known_category_is_returned_unchanged() -> None:
     """The positive control: the validator admits the taxonomy it guards."""
     known = spending_category_tokens()[0].value
 
-    assert support_validator(known) == known
+    assert validate_category_id(known) == known
 
 
 def test_an_absent_or_blank_value_is_not_a_refusal() -> None:
@@ -66,8 +65,8 @@ def test_an_absent_or_blank_value_is_not_a_refusal() -> None:
     Kept beside the refusal below so that one cannot be read as "any value the
     enum does not hold is refused" -- absence is a legitimate third answer.
     """
-    assert support_validator(None) is None
-    assert support_validator("   ") is None
+    assert validate_category_id(None) is None
+    assert validate_category_id("   ") is None
 
 
 def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_guidance() -> None:
@@ -84,7 +83,7 @@ def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_guidance() 
     example.
     """
     with pytest.raises(typer.BadParameter) as raised:
-        support_validator("office:material_oficina")
+        validate_category_id("office:material_oficina")
 
     message = str(raised.value)
     assert "office:material_oficina" in message

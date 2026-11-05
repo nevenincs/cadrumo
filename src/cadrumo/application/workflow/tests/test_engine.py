@@ -148,7 +148,7 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
     assert violations == []
     assert sorted(failure_producers) == sorted(
         (
-            ("_deadline_stage", "application.workflow.steps.deadline_missing", "no_action_precondition_verdict"),
+            ("deadline_stage", "application.workflow.steps.deadline_missing", "no_action_precondition_verdict"),
             ("engine", "application.workflow.steps.already_filed", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.auth_certificate_invalid", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.auth_certificate_load_failed", "no_recovery_verdict"),

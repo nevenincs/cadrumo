@@ -303,7 +303,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
     Regression proof for a real defect: an earlier version of
-    ``_isolate_registry_caches`` (``dev/registry/conftest.py``) purged EVERY
+    ``isolate_registry_caches`` (``dev/registry/conftest.py``) purged EVERY
     ``cadrumo_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
@@ -355,7 +355,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "# Re-exports the real session-scoped autouse cache-isolation fixture so this\n"
         "# out-of-tree scratch package, invoked as its own pytest session, is governed\n"
         "# by the identical fixture a real xdist worker's own src/cadrumo test file loads.\n"
-        "from dev.registry.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
+        "from dev.registry.conftest import isolate_registry_caches as isolate_registry_caches\n",
         encoding="utf-8",
     )
     scratch_module_path = scratch_pkg / "test_touch_bundled_registry.py"

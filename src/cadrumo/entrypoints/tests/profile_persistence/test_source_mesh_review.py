@@ -18,7 +18,7 @@ See Also:
         Builds the current review fingerprints, including the invoice catalogue.
     :func:`~application.filing.approval_stale_reasons`
         Compares the stored approval basis with the current invoice digest.
-    :func:`~application.filing.draft_review._invoice_catalogue_fingerprint`
+    :func:`~application.filing.draft_review.invoice_catalogue_fingerprint`
         Stable, order-independent digest over invoice catalogue records.
     :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
         Encrypted invoice store self-loaded by the review layer.

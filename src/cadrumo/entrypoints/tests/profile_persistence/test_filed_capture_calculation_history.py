@@ -61,9 +61,6 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as authority_indexed_authority_for_test,
-)
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.entrypoints.live_state_composition import compose_live_state
@@ -74,7 +71,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
-    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
+    with bundled_indexed_authority().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
             prior_303_observation(pending_compensation=Decimal("1200.00")),
@@ -297,7 +294,7 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:
-    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
+    with bundled_indexed_authority().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
             prior_303_observation(
@@ -325,7 +322,7 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
 
 
 def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: Path) -> None:
-    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
+    with bundled_indexed_authority().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         history_repository = IvaCompensationHistoryRepository()
         history_repository.save_period(

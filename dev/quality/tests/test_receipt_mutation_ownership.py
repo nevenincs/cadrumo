@@ -42,13 +42,13 @@ _TAXONOMY = "core/storage_taxonomy_locations.py"
 
 _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     # The receipt module's own writers and the keychain material they hold.
-    "_write_acceleration_receipt": frozenset({_RECEIPT}),
+    "write_acceleration_receipt": frozenset({_RECEIPT}),
     "store_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
     "delete_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
     "_delete_keychain_entry": frozenset({_KEYCHAIN}),
     "_delete_profile_session": frozenset({_RECEIPT}),
-    "_delete_refused_receipt": frozenset({_RECEIPT}),
-    "_clear_captured_receipt": frozenset({_RECEIPT}),
+    "delete_refused_receipt": frozenset({_RECEIPT}),
+    "clear_captured_receipt": frozenset({_RECEIPT}),
     "PROFILE_SESSION_KEYCHAIN_SERVICE": frozenset({_KEYCHAIN}),
     # Its public mutators, reached only through the storage adapter.
     "mint_profile_session": frozenset({_RECEIPT, _ADAPTER}),

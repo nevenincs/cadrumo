@@ -379,7 +379,7 @@ def _validate_classify_llm_options(
     ``--read-evidence`` and no ``--llm``, a scanned or image invoice is read
     by the model the person picked, through the agent, which needs no subprocess provider
     at all; and a text-layer read whose semantic reader is missing is refused by
-    :func:`~application.ledger.invoice_draft_extraction._refuse_a_text_read_with_no_reader`,
+    :func:`~application.ledger.invoice_draft_extraction.refuse_a_text_read_with_no_reader`,
     which says so instructively and declines to escalate to a heavier engine the
     operator did not ask for. Repeating that judgement here would put an
     environment check in an adapter and give the two answers room to disagree.

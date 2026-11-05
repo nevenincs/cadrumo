@@ -180,7 +180,7 @@ class TestResultSummaryNarrowing:
             observed.append(grade)
             raise CadrumoError("stop after observing the requested grade")
 
-        monkeypatch.setattr(result_summary, "_resolve_registry_snapshot_for_work_unit", _capture_grade)
+        monkeypatch.setattr(result_summary, "resolve_registry_snapshot_for_work_unit", _capture_grade)
 
         assert (
             result_summary.calculation_result_summary(

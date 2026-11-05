@@ -72,7 +72,7 @@ def test_absent_packaged_descriptor_refuses_when_no_root_is_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     absent = tmp_path / "packaged" / _DESCRIPTOR_NAME
-    monkeypatch.setattr(authority_location, "_bundled_path", lambda *parts: absent)
+    monkeypatch.setattr(authority_location, "bundled_path", lambda *parts: absent)
     with override_settings(cadrumo_authority_root=None), pytest.raises(AuthorityDescriptorUnavailableError) as refusal:
         bundled_authority_descriptor_path()
     error = refusal.value

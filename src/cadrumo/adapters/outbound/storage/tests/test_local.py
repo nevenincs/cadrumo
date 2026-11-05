@@ -263,7 +263,7 @@ def test_local_failure_verdict_contracts_cover_every_local_provider_failure_site
         if (
             not isinstance(node, ast.Call)
             or not isinstance(node.func, ast.Name)
-            or node.func.id != "_local_failure_verdict"
+            or node.func.id != "local_failure_verdict"
         ):
             continue
         assert node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)

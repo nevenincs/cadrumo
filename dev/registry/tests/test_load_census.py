@@ -134,7 +134,7 @@ def test_the_evaluator_reads_a_constant_whatever_shape_it_is_built_from() -> Non
     from ..analysis.load_census import evaluated_string_sequence
 
     package = "cadrumo.domain.calculations.registry"
-    members = evaluated_string_sequence(f"{package}.snapshot", "_CROSS_DOMAIN_CHECK_MODULES")
+    members = evaluated_string_sequence(f"{package}.snapshot", "CROSS_DOMAIN_CHECK_MODULES")
 
     assert members is not None, "the live non-literal construction must resolve"
     assert members, "the cross-domain check set is empty, so this proves nothing about the evaluator"

@@ -275,7 +275,7 @@ def test_preparation_scope_retains_lock_lifetime_order_and_original_failure(
     load_settings_result = settings
     monkeypatch.setattr(revocation, "load_settings", load_settings)
     monkeypatch.setattr(revocation, "revocation_storage_span", storage_span)
-    monkeypatch.setattr(revocation, "_auth_mutation_span", mutation_span)
+    monkeypatch.setattr(revocation, "auth_mutation_span", mutation_span)
     monkeypatch.setattr(revocation, "now", clock)
     monkeypatch.setattr(persistence, "workflow_state_repository", workflow_repository)
     scope = revocation.prepared_cleanup_scope(

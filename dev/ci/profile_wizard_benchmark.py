@@ -217,7 +217,7 @@ def observe_worker(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
         observe(patch, recorder, os, "fsync", "storage.fsync")
         observe(patch, recorder, JournalRepositoryBase, "_write_payload", "journal.write")
         observe(patch, recorder, view_reader, "_build_overview_source", "profile.build_overview_source")
-        observe(patch, recorder, view_reader, "_paginate_source", "profile.paginate")
+        observe(patch, recorder, view_reader, "paginate_source", "profile.paginate")
         observe(patch, recorder, WorkerAuthorizationLease, "acquire", "authority.lease_acquire")
         observe(patch, recorder, WorkerAuthorizationLease, "release", "authority.lease_release")
         observe(patch, recorder, ProfileWorkerOperationHost, "require_current_inventory", "worker.current_inventory")

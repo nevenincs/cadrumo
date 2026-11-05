@@ -581,7 +581,7 @@ def main() -> int:
     if suppressed:
         print(
             f"note: {len(suppressed)} documented irreducible external-import gap(s) suppressed "
-            "(optional deps / third-party stubs) - see _IRREDUCIBLE_EXTERNAL_GAPS in dev/quality/types.py",
+            "(optional deps / third-party stubs) - see IRREDUCIBLE_EXTERNAL_GAPS in dev/quality/types.py",
         )
 
     return _emit_type_findings(entries, diagnostics)

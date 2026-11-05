@@ -66,7 +66,7 @@ def expose_unexpected_failure(error, arguments, *, click_context=None):
 
 # This isolated child asserts a successful cold execution. Preserve the exact
 # exception on failure instead of reducing missing dependencies to an envelope.
-runtime_main._emit_error = expose_unexpected_failure
+runtime_main.emit_error = expose_unexpected_failure
 
 output = StringIO()
 with redirect_stdout(output):

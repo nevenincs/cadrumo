@@ -255,7 +255,7 @@ def test_a_malformed_ledger_refuses_with_a_message_rather_than_a_traceback(tmp_p
     """
     package = tmp_path / "dev" / "release"
     package.mkdir(parents=True)
-    for name in ("__init__.py", "_paths.py"):
+    for name in ("__init__.py", "paths.py"):
         shutil.copy2(REPO_ROOT / "dev" / name, tmp_path / "dev" / name)
     for name in ("__init__.py", "version_identity.py", "burned_versions.py", "package_index_probe.py"):
         shutil.copy2(REPO_ROOT / "dev" / "release" / name, package / name)
@@ -281,7 +281,7 @@ def test_the_same_invocation_passes_over_the_ledger_it_ships(tmp_path: Path) -> 
     """
     package = tmp_path / "dev" / "release"
     package.mkdir(parents=True)
-    for name in ("__init__.py", "_paths.py"):
+    for name in ("__init__.py", "paths.py"):
         shutil.copy2(REPO_ROOT / "dev" / name, tmp_path / "dev" / name)
     for name in (
         "__init__.py",

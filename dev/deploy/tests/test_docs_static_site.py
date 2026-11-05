@@ -430,10 +430,10 @@ def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
     """
     calls = _direct_calls(docs_site_build.build_site_roots)
 
-    assert calls.index("_produce_language_roots") < calls.index("_index_site") < calls.index("_compose_apex")
-    assert "_run_site_builds" not in calls, "the build bypasses its own root producer"
+    assert calls.index("produce_language_roots") < calls.index("index_site") < calls.index("compose_apex")
+    assert "run_site_builds" not in calls, "the build bypasses its own root producer"
     produced = _direct_calls(docs_site_build.produce_language_roots)
-    assert "_run_site_builds" in produced, "the root producer no longer produces the roots"
+    assert "run_site_builds" in produced, "the root producer no longer produces the roots"
 
 
 @pytest.mark.parametrize("cpus", [1, 2, 4, 12, 64])
@@ -684,12 +684,11 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     is refused here by name.
     """
     calls = _direct_calls(docs_delivery_activation.docs_delivery_activation_publish)
-    assert calls.index("build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
+    assert calls.index("build_site_roots") < calls.index("validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
     inlined = sorted(
-        {"_run_site_builds", "write_language_entry", "_validate_language_entry", "_validate_language_roots"}
-        & set(calls)
+        {"run_site_builds", "write_language_entry", "validate_language_entry", "validate_language_roots"} & set(calls)
     )
     assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
 

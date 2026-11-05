@@ -30,7 +30,7 @@ _log = get_logger(__name__)
 _UTF_8: Final[str] = UTF_8
 
 
-_UNSCANNED_MODULE_NAMES: frozenset[str] = frozenset({"test_parity.py", "manager.py", "_ast_scanner.py"})
+_UNSCANNED_MODULE_NAMES: frozenset[str] = frozenset({"test_parity.py", "manager.py", "ast_scanner.py"})
 """Modules whose dotted string literals describe the scan itself, not call sites."""
 
 

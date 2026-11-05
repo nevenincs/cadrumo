@@ -30,7 +30,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_RELEASE_HELPER = "_release_bucket_file_handles"
+_RELEASE_HELPER = "release_bucket_file_handles"
 
 
 def _first_statement_calls(function: Callable[..., object], name: str) -> bool:

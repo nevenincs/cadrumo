@@ -253,7 +253,7 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
         and len(node.args) == 1
         and isinstance(node.args[0], ast.Call)
         and isinstance(node.args[0].func, ast.Name)
-        and node.args[0].func.id == "_help_key"
+        and node.args[0].func.id == "help_key"
         and len(node.args[0].args) == 2
         and all(isinstance(argument, ast.Name) for argument in node.args[0].args)
     )
