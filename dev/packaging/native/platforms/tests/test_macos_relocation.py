@@ -9,7 +9,7 @@ import pytest
 
 from ....command_execution import run_command
 from ...agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES
-from ..macos import _require_relocatable_as_shipped, _split_vendor_images
+from ..macos import require_relocatable_as_shipped, split_vendor_images
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -27,8 +27,8 @@ def test_images_beside_a_runtime_receipt_are_vendor_owned_and_the_rest_are_reloc
     extension.parent.mkdir(parents=True)
     node.write_bytes(b"")
     extension.write_bytes(b"")
-    assert _split_vendor_images([node, extension], tmp_path) == ([node], [extension])
-    assert _split_vendor_images([node, extension], tmp_path / "lib/cadrumo/native") == ([], [node, extension])
+    assert split_vendor_images([node, extension], tmp_path) == ([node], [extension])
+    assert split_vendor_images([node, extension], tmp_path / "lib/cadrumo/native") == ([], [node, extension])
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Requires the native macOS toolchain")
@@ -41,11 +41,11 @@ def test_a_vendor_image_must_need_no_rewrite_to_ship_pinned(tmp_path: Path) -> N
         built = run_command(["/usr/bin/cc", "-arch", "arm64", *extra, "-o", str(output), str(source)], cwd=tmp_path)
         assert built.returncode == 0, built.stderr
     before = plain.read_bytes()
-    _require_relocatable_as_shipped(plain, _FLOOR, _SYSTEM)
+    require_relocatable_as_shipped(plain, _FLOOR, _SYSTEM)
     assert plain.read_bytes() == before
     with pytest.raises(ValueError, match="cannot ship as pinned"):
-        _require_relocatable_as_shipped(with_rpath, _FLOOR, _SYSTEM)
+        require_relocatable_as_shipped(with_rpath, _FLOOR, _SYSTEM)
     with pytest.raises(ValueError, match="cannot ship as pinned"):
-        _require_relocatable_as_shipped(plain, _FLOOR, set())
+        require_relocatable_as_shipped(plain, _FLOOR, set())
     with pytest.raises(ValueError, match="deployment floor"):
-        _require_relocatable_as_shipped(plain, (1, 0, 0, 0), _SYSTEM)
+        require_relocatable_as_shipped(plain, (1, 0, 0, 0), _SYSTEM)

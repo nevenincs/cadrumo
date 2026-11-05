@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ...google_oauth import GOOGLE_OAUTH_RESOURCE
-from ..discovered_inputs import _write_discovered_inputs
+from ..discovered_inputs import write_discovered_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -24,6 +24,6 @@ def test_discovery_omits_private_settings_and_build_outputs(tmp_path: Path) -> N
         path.write_text("fixture", encoding="utf-8")
     receipt = tmp_path / "discovered.json"
 
-    _write_discovered_inputs(receipt, root.resolve(), {str(path) for path in (source, private, environment, built)})
+    write_discovered_inputs(receipt, root.resolve(), {str(path) for path in (source, private, environment, built)})
 
     assert json.loads(receipt.read_text(encoding="utf-8")) == [source.as_posix()]

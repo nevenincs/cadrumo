@@ -374,7 +374,7 @@ def _write_marker(marker: Path, state: dict[str, Any]) -> None:
     marker.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
 
 
-def _configure_temporary(build: Path) -> None:
+def configure_temporary(build: Path) -> None:
     """Keep this CMake action and its child process in the build's temporary directory."""
     temporary = build_paths(build)["temporary"]
     temporary.mkdir(parents=True, exist_ok=True)
@@ -391,5 +391,5 @@ if __name__ == "__main__":
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("an executable command is required")
-    _configure_temporary(args.build)
+    configure_temporary(args.build)
     run_cached(args.build, args.spec, command)

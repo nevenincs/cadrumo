@@ -98,7 +98,7 @@ def test_a_failed_compile_stops_the_packaging_build(tmp_path: Path, monkeypatch:
         lambda *_args, **_settings: SimpleNamespace(returncode=2, stdout="boom\n", stderr="", duration_seconds=0),
     )
     with pytest.raises(SystemExit, match="User documentation compile failed: exit 2"):
-        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+        docs_build.compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
     assert (tmp_path / "work" / "compile.log").read_text(encoding="utf-8") == "boom\n"
 
 
@@ -112,7 +112,7 @@ def test_a_compile_that_wrote_no_root_for_a_declared_language_refuses(
         lambda *_args, **_settings: SimpleNamespace(returncode=0, stdout="", stderr="", duration_seconds=0),
     )
     with pytest.raises(DocsPackagingError, match="wrote no root for"):
-        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+        docs_build.compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
 
 
 def test_the_apex_language_is_a_declared_root(tmp_path: Path) -> None:

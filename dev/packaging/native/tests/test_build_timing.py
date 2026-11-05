@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ..build_timing import measure_build
-from ..cached_command import _configure_temporary
+from ..cached_command import configure_temporary
 from ..cargo_command import run_configured_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -30,7 +30,7 @@ def test_cached_command_pins_temporary_environment_to_its_build(
     monkeypatch.setattr(tempfile, "tempdir", None)
     for name in ("TEMP", "TMP", "TMPDIR"):
         monkeypatch.setenv(name, str(tmp_path / "external"))
-    _configure_temporary(tmp_path)
+    configure_temporary(tmp_path)
     expected = str(tmp_path / "temporary")
     assert (tmp_path / "temporary").is_dir()
     assert all(os.environ[name] == expected for name in ("TEMP", "TMP", "TMPDIR"))

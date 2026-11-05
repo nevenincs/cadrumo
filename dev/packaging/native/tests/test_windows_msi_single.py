@@ -15,21 +15,21 @@ from ...command_execution import run_command
 from ..hashing import digest
 from ..identity import DistributionIdentity
 from ..windows_msi import author
-from ..windows_msi_build import _retire
+from ..windows_msi_build import retire
 from ..windows_msi_components import add_machine_service
 from ..windows_msi_database import verify_admission_order, verify_feature_ownership
 from ..windows_msi_identity import release_identity
 from ..windows_msi_single import source
 from ..windows_msi_source import msi_source
 from ..windows_msi_verify import verify_database
-from .test_windows_msi import _prepared
+from .test_windows_msi import prepared
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
 
 
 def _release_source(tmp_path: Path, *, owned: bool = False) -> bytes:
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     author(build, identity, "cadrumo")
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
     stage = build / "installation/stage"
@@ -100,7 +100,7 @@ def test_author_reuses_verified_source_but_refuses_changed_output_currency(
 ) -> None:
     from .. import windows_msi
 
-    build, identity = _prepared(tmp_path)
+    build, identity = prepared(tmp_path)
     generated = author(build, identity, "cadrumo")
 
     def unexpected_generation(*args: object, **kwargs: object) -> bytes:
@@ -128,10 +128,10 @@ def test_retirement_removes_only_unchanged_recorded_outputs_after_complete_prefl
     if modified:
         second.write_bytes(b"changed after previous producer receipt")
         with pytest.raises(ValueError, match="refusing to remove"):
-            _retire(tmp_path, recorded, set(recorded))
+            retire(tmp_path, recorded, set(recorded))
         assert first.is_file() and second.is_file()
     else:
-        _retire(tmp_path, recorded, set(recorded))
+        retire(tmp_path, recorded, set(recorded))
         assert not first.exists() and not second.exists()
     assert current.read_bytes() == current.name.encode()
     assert foreign.read_bytes() == foreign.name.encode()

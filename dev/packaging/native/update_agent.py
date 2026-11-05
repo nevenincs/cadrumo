@@ -29,7 +29,7 @@ from .stdlib import bytecode, require_bytecode_compiler
 from .update_images import publish
 
 
-def _require_runtime_receipt(root: Path, runtime: Path, packages: str, files: Mapping[str, str]) -> None:
+def require_runtime_receipt(root: Path, runtime: Path, packages: str, files: Mapping[str, str]) -> None:
     """Require a full payload rebuild when the agent's non-Python closure changes."""
     member = (PurePosixPath(packages).parent / "agent-runtime.json").as_posix()
     staged = root / member
@@ -96,7 +96,7 @@ def update(build: Path, config: str) -> None:
     _require_installed_dependencies(resolved, manifest["distributions"])
     _require_wheel_dependencies(wheel, target, manifest["python"], manifest["distributions"])
     prefix = contract["paths"]["packages"]
-    _require_runtime_receipt(root, paths["agent"] / "runtime", prefix, manifest["files"])
+    require_runtime_receipt(root, paths["agent"] / "runtime", prefix, manifest["files"])
     prepared = wheel_files(wheel, version=receipt["version"], prefix=prefix)
     owned = (f"{prefix}/cadrumo_agent/", f"{prefix}/cadrumo_agent-{receipt['version']}.dist-info/")
     previous = _previous_agent_members(manifest["files"], owned)

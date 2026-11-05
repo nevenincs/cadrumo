@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .environment_declaration_constants import SCHEMA
-from .environment_declaration_primitives import _fail
+from .environment_declaration_primitives import fail
 from .environment_models import ApplicationEnvironment, FixedValue, InvocationArgument
 
 
@@ -29,7 +29,7 @@ def _package_relative(layout: Mapping[str, Any], key: str) -> str:
         parent = Path(layout["paths"]["executable"]).parent.as_posix()
         return "." if parent in {"", "."} else parent
     if key not in layout["paths"]:
-        raise _fail(f"names a layout path the package does not declare: {key!r}")
+        raise fail(f"names a layout path the package does not declare: {key!r}")
     return str(layout["paths"][key])
 
 
@@ -46,9 +46,9 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
     built = images(layout)
     declared = {entry["image"] for entry in declaration.profiles.values()}
     if declared != set(built):
-        raise _fail(f"profiles must cover exactly the built images {sorted(built)}; declared {sorted(declared)}")
+        raise fail(f"profiles must cover exactly the built images {sorted(built)}; declared {sorted(declared)}")
     if set(declaration.package_values) != {fixed.name for fixed in declaration.package_fixed}:
-        raise _fail("package-fixed values must be resolved before contract generation")
+        raise fail("package-fixed values must be resolved before contract generation")
     authority = _package_relative(layout, declaration.authority.value)
 
     profiles = _compiled_profiles(declaration, layout, built, family)
@@ -132,7 +132,7 @@ def _compiled_fixed(value: FixedValue, layout: Mapping[str, Any], built: tuple[s
         return {"name": value.name, "source": "package", "value": _package_relative(layout, value.value)}
     if value.source == "image":
         if value.value not in built:
-            raise _fail(f"fixed value {value.name} names an image the package does not build: {value.value}")
+            raise fail(f"fixed value {value.name} names an image the package does not build: {value.value}")
         return {"name": value.name, "source": "image", "value": value.value}
     return {"name": value.name, "source": "value", "value": value.value}
 
@@ -170,7 +170,7 @@ def _rust_string(value: str) -> str:
     try:
         value.encode("utf-8")
     except UnicodeEncodeError:
-        raise _fail("cannot spell a value as a contract literal") from None
+        raise fail("cannot spell a value as a contract literal") from None
     escaped = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
     return (
         '"'

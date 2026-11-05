@@ -397,7 +397,7 @@ def test_failed_download_preserves_an_existing_partial_file(tmp_path: Path, monk
 
 def test_sdk_download_size_limit_removes_only_its_partial_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     archive = tmp_path / "sdk.tar"
-    monkeypatch.setattr(posix_sdk_download, "_SDK_DOWNLOAD_LIMIT", 3)
+    monkeypatch.setattr(posix_sdk_download, "SDK_DOWNLOAD_LIMIT", 3)
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"four"))) as client:
         monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="size limit"):
@@ -513,7 +513,7 @@ def test_sdk_decoder_rejects_invalid_source_provenance(tmp_path: Path, source: s
     decoder = tmp_path / "zstd"
     decoder.write_bytes(b"decoder fixture")
     with pytest.raises(ValueError, match="decoder"):
-        posix._archive_decoder(
+        posix.locate_archive_decoder(
             {
                 "cpython_archive_decoder": {
                     "executable": str(decoder),

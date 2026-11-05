@@ -10,7 +10,7 @@ import httpx
 
 _SDK_DOWNLOAD_HOSTS = frozenset({"github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"})
 
-_SDK_DOWNLOAD_LIMIT = 1024 * 1024 * 1024
+SDK_DOWNLOAD_LIMIT = 1024 * 1024 * 1024
 
 
 def _validate_sdk_redirect(current: httpx.URL) -> None:
@@ -27,7 +27,7 @@ def _write_sdk_download(chunks: Iterable[bytes], output: BinaryIO) -> None:
     size = 0
     for chunk in chunks:
         size += len(chunk)
-        if size > _SDK_DOWNLOAD_LIMIT:
+        if size > SDK_DOWNLOAD_LIMIT:
             raise ValueError("CPython SDK exceeds the download size limit")
         output.write(chunk)
 
