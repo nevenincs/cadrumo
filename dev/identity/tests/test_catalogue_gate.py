@@ -49,7 +49,7 @@ _POOL_NIE_RANGE = "Y0001000W"
 _UNBOUND = _nif(99)
 _LISTED_REFUSAL = _nif(28)
 
-_CATALOGUE = {
+_CATALOGUE: dict[str, object] = {
     "format": 1,
     "convention": {
         "generic_pool": {

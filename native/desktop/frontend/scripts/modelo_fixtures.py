@@ -39,7 +39,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from dev._paths import REPO_ROOT
@@ -53,6 +53,9 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+
+if TYPE_CHECKING:
+    from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
 #: The scenario envelopes are build output in the host's build tree, never committed.
@@ -182,7 +185,7 @@ RENTA_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 5, 20, 9, 0, tzinfo=UTC)
 
 
 @cache
-def _catalogue_persona(persona_id: str) -> tuple[Any, Any]:
+def _catalogue_persona(persona_id: str) -> tuple[Persona, YearEnvelope]:
     """The catalogue persona ``persona_id`` and the registry's year envelope it is read in."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
@@ -1493,11 +1496,19 @@ def _filer_persona(filer: RentaFiler) -> str:
     return ACTIVITY_PERSONA if "actividad_economica" in filer.categories.split(",") else SALARIED_PERSONA
 
 
-def _salaried_certificate() -> Any:
+def _salaried_certificate() -> WithholdingCertificate:
     """The employer certificate the salaried persona declares: the figures every salaried filer's form states."""
     persona, _ = _catalogue_persona(SALARIED_PERSONA)
     (certificate,) = (item for item in persona.withholding_certificates if item.payer == RENTA_PAYER)
     return certificate
+
+
+def _salaried_contributions() -> Decimal:
+    """The Social Security contributions the salaried persona's certificate states."""
+    contributions = _salaried_certificate().cotizaciones_seguridad_social
+    if contributions is None:
+        raise SystemExit("the salaried persona's certificate states no Social Security contributions")
+    return contributions
 
 
 def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] | None:
@@ -1510,7 +1521,7 @@ def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] 
     if not filer.salary:
         return None
     certificate = _salaried_certificate()
-    return str(certificate.importe_integro), str(certificate.cotizaciones_seguridad_social)
+    return str(certificate.importe_integro), str(_salaried_contributions())
 
 
 @contextmanager
@@ -1927,7 +1938,7 @@ def _borrador_printed_extra() -> tuple[tuple[str, Decimal], ...]:
     certificate = _salaried_certificate()
     return (
         ("0003", certificate.importe_integro - BORRADOR_PRINTED_REMUNERATION_SHORT),
-        ("0013", certificate.cotizaciones_seguridad_social),
+        ("0013", _salaried_contributions()),
     )
 
 

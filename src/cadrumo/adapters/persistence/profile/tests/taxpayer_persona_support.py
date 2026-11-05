@@ -25,6 +25,6 @@ def seed_modelo_ready_profile(*, bucket_id: str, at: datetime, tax_id: str | Non
         at=at,
         facts=(
             COLEGIO_CONCERTADO_ATTESTATION,
-            *(() if not tax_id else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
+            *(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
         ),
     )

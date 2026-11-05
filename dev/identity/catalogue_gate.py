@@ -187,7 +187,7 @@ def _pool_range(table: dict[str, object], where: str) -> PoolRange:
     first = table.get("first")
     last = table.get("last")
     letters = table.get("letters", [])
-    if shape not in {_NIF_SHAPE, _NIE_SHAPE, _CIF_SHAPE}:
+    if not isinstance(shape, str) or shape not in {_NIF_SHAPE, _NIE_SHAPE, _CIF_SHAPE}:
         raise CatalogueError(f"{where}: kind must be nif, nie or cif")
     if not isinstance(first, int) or not isinstance(last, int) or first > last:
         raise CatalogueError(f"{where}: first and last must be integers with first <= last")
@@ -238,9 +238,14 @@ def parse_catalogue(document: dict[str, object]) -> Catalogue:
 def _tables(value: object) -> list[dict[str, object]]:
     if value is None:
         return []
-    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+    if not isinstance(value, list):
         raise CatalogueError("expected an array of tables")
-    return value
+    tables: list[dict[str, object]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            raise CatalogueError("expected an array of tables")
+        tables.append(item)
+    return tables
 
 
 def read_catalogue(repo_root: Path) -> Catalogue:
