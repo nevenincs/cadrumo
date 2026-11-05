@@ -2,14 +2,6 @@ format = 1
 persona = "minorista-recargo"
 
 [[documents]]
-id = "factura-recargo"
-path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_recargo_invoice.xml"
-media_type = "application/xml"
-attach_to = []
-relation = "specimen"
-note = "A synthetic Facturae 3.2 invoice charging IVA 21 % plus recargo de equivalencia 5.2 %, the same rate pair as MIN-COM-1. Its parties and amounts are no row's facts, so it is attached to none; MIN-COM-1 carries its own generated invoice."
-
-[[documents]]
 id = "factura-min-luz-1"
 generator = "facturae"
 media_type = "application/xml"
@@ -46,5 +38,29 @@ id = "factura-min-com-1"
 generator = "facturae"
 media_type = "application/xml"
 attach_to = ["MIN-COM-1"]
+relation = "source"
+note = "The wholesaler's invoice for the garments this row states, repercuting IVA and recargo de equivalencia (LIVA art. 154.Uno), generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-com-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-COM-2"]
+relation = "source"
+note = "The wholesaler's invoice for the garments this row states, repercuting IVA and recargo de equivalencia (LIVA art. 154.Uno), generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-com-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-COM-3"]
+relation = "source"
+note = "The wholesaler's invoice for the garments this row states, repercuting IVA and recargo de equivalencia (LIVA art. 154.Uno), generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-com-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-COM-4"]
 relation = "source"
 note = "The wholesaler's invoice for the garments this row states, repercuting IVA and recargo de equivalencia (LIVA art. 154.Uno), generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
