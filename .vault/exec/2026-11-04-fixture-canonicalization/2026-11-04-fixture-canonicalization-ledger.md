@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:d14f8334bbd1fe4f94a2e1eda7e5ccb4b3656fe0954a6331036ad9857dc683eb'
+body_hash: 'sha256:c7605935a799d3d7e9250b143e6a0283d5c9383cc9383dbedd06425f5033e3e3'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1027,6 +1027,23 @@ related:
 - `S05` `verify:` `dev.docs.sequences check` -> `pass`
 - `S05` `verify:` `modelo_fixtures double build 0 differing envelopes` -> `pass`
 - `S05` `by:` `coordinator`
+- `S04` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.json`
+- `S04` `verify:` `check-identity` -> `pass`
+- `S04` `verify:` `changed test modules` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
+- `S24` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_contracts.py`
+- `S24` `M` `src/cadrumo/application/aggregation/tests/test_invoice_category_counterparty_mismatch_is_reported.py`
+- `S24` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/tests/test_nif_data_type.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_invoice_accumulative_cross_modelo_periods.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
+- `S24` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.csv`
+- `S24` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.json`
+- `S24` `verify:` `check-identity` -> `pass`
+- `S24` `verify:` `changed test modules` -> `pass`
+- `S24` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -1049,3 +1066,5 @@ related:
 - `S16` Partial: types fail on 6 pre-existing diagnostics outside S16 files. `test_ledger_list_filter` `(FAIL_EXCHANGE_RATE_PROVIDER)` and `test_staged_check_verb` (extra inputs in LedgerStagedCheckEnvelope) fail on pre-migration content too. Remaining local builders wait for S28.
 - `S24` A problem line printed onto an advisory line hid llm-inspect-history drift from refresh. No product operation stores issued-invoice evidence, so issued invoices remain advisory.
 - `S05` The window Modelo family's check needs `node_modules` for prettier; it runs in the S19 full gates
+- `S04` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
+- `S24` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
