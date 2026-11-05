@@ -19,6 +19,7 @@ Python guarantees a deeper wipe than the language can deliver.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -76,6 +77,7 @@ class BucketSession:
         "_routed_settings",
         "_sealed",
         "_storage_root",
+        "_window_lock",
     )
 
     def __init__(
@@ -98,6 +100,10 @@ class BucketSession:
         self._opened_at = opened_at
         self._absolute_deadline = absolute_deadline
         self._sealed = False
+        # Serialises the sliding idle update against a lifetime retarget, so a
+        # touch never writes back an idle deadline computed from a window that
+        # was replaced while it ran.
+        self._window_lock = threading.Lock()
         self._engine: Engine | None = None
         # Small bounded memo behind :meth:`routed_settings`; see that method
         # for why the scope is the session and not the process, and why one
@@ -207,10 +213,11 @@ class BucketSession:
 
     @property
     def absolute_deadline(self) -> datetime:
-        """Return the immutable absolute session-lifetime cap.
+        """Return the absolute session-lifetime cap.
 
-        Fixed when the session opens as ``opened_at + absolute_minutes`` and never
-        refreshed; :meth:`touch` clamps the sliding idle deadline to it.
+        Fixed when the session opens; only :meth:`retarget_lifetime` moves it, for
+        the owner whose leases bound the session. :meth:`touch` clamps the sliding
+        idle deadline to it, so activity alone never extends it.
         """
         return self._absolute_deadline
 
@@ -262,14 +269,45 @@ class BucketSession:
     def touch(self, now: datetime) -> None:
         """Roll the idle deadline forward to `now + idle_window`, clamped to the cap.
 
-        The sliding idle deadline is never advanced past the immutable
-        absolute deadline, so continuous activity within the idle window
+        The sliding idle deadline is never advanced past the absolute
+        deadline, so continuous activity within the idle window
         cannot extend the session beyond its absolute lifetime cap.
         """
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
         now = validate_utc_aware(now)
-        self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
+        with self._window_lock:
+            self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
+
+    def retarget_lifetime(self, *, opened_at: datetime, idle_minutes: int, deadline: datetime) -> None:
+        """Give this live session the lifetime window a replacement for the same key would open with.
+
+        For the owner whose access leases bound the session: when the leases
+        sharing this DEK change, the session takes exactly the opening instant,
+        idle window and deadline a freshly opened session for those leases would
+        carry, and both its idle and absolute deadlines become ``deadline``. The
+        key stays bounded by the leases that admit work, and storage access that
+        already resolved this session keeps a live session instead of one sealed
+        underneath it.
+
+        Raises:
+            BucketLockedError: When the session has already been sealed.
+            StorageValidationError: When ``idle_minutes`` is not positive or the
+                window ends before it opens.
+        """
+        if idle_minutes <= 0:
+            raise _storage_validation_error("idle_minutes must be a strict positive integer")
+        opened_at = validate_utc_aware(opened_at)
+        deadline = validate_utc_aware(deadline)
+        if deadline < opened_at:
+            raise _storage_validation_error("deadline must not precede opened_at")
+        with self._window_lock:
+            if self._sealed:
+                raise BucketLockedError(bucket_id=self._bucket_id)
+            self._opened_at = opened_at
+            self._idle_window = timedelta(minutes=idle_minutes)
+            self._absolute_deadline = deadline
+            self._idle_deadline = deadline
 
     def is_expired(self, now: datetime) -> bool:
         """Return whether the idle window or the absolute cap has elapsed at `now`."""

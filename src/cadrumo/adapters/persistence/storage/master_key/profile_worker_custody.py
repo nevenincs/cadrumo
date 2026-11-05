@@ -7,10 +7,11 @@ import time
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 from threading import Lock
 from types import TracebackType
+from typing import TypeGuard
 from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -68,12 +69,14 @@ class _CapsuleProof:
                 raise error
 
 
-def _session_matches(previous: BucketSession | None, opened: datetime, deadline: datetime, dek: bytes) -> bool:
+def _session_continues(
+    previous: BucketSession | None, bucket_id: str, storage_root: Path, dek: bytes
+) -> TypeGuard[BucketSession]:
     return (
         previous is not None
         and not previous.sealed
-        and previous.opened_at == opened
-        and previous.idle_deadline == previous.absolute_deadline == deadline
+        and previous.bucket_id == bucket_id
+        and previous.storage_root == storage_root
         and previous.dek == dek
     )
 
@@ -467,23 +470,30 @@ class ProfileWorkerCustody:
             return
         opened = min(lease.issued_at for lease in leases.values())
         deadline = max(lease.expires_at for lease in leases.values())
-        previous = current_active_bucket_session()
-        if _session_matches(previous, opened, deadline, dek):
-            # A child lapse does not change its parent's storage lifetime.
-            # Keep the live engine and key session instead of disposing them
-            # at every attended lease boundary.
-            self._leases = leases
-            self._material_update_pending = False
-            return
         # Each request is admitted against its own lease, so a key session that
         # went idle sooner would refuse work a live lease still admits. A window
         # no shorter than the whole lease span clamps every storage access to
         # the latest lease expiry, which stays the only bound on this session.
         whole_minutes, remainder = divmod(deadline - opened, timedelta(minutes=1))
+        idle_minutes = max(1, whole_minutes + (1 if remainder else 0))
+        bucket_id = str(self.identity.binding.profile_id)
+        previous = current_active_bucket_session()
+        # The same spelling a successor opened for this custody would carry, so
+        # a retained engine and route never come from another storage root.
+        storage_root = self.root.expanduser().resolve(strict=False)
+        if _session_continues(previous, bucket_id, storage_root, dek):
+            # Another lease of the same key and root began, was refreshed or ended. A
+            # storage access of a surviving lease may already hold this session
+            # on another thread, so it takes the leases' new window in place
+            # rather than being sealed under that access.
+            previous.retarget_lifetime(opened_at=opened, idle_minutes=idle_minutes, deadline=deadline)
+            self._leases = leases
+            self._material_update_pending = False
+            return
         successor = BucketSession.open_resumed(
-            bucket_id=str(self.identity.binding.profile_id),
+            bucket_id=bucket_id,
             dek=dek,
-            idle_minutes=max(1, whole_minutes + (1 if remainder else 0)),
+            idle_minutes=idle_minutes,
             opened_at=opened,
             idle_deadline=deadline,
             absolute_deadline=deadline,
