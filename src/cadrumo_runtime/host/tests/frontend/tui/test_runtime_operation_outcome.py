@@ -444,7 +444,7 @@ def test_a_write_still_running_at_the_deadline_is_unknown_not_refused(monkeypatc
     controller = _Controller(_OWN_ACCOUNT, observation=_running())
     submissions = _install(monkeypatch, client, controller)
     # The real observation loop runs against a short deadline, so the budget itself expires.
-    monkeypatch.setattr(bridge, "_OPERATION_TIMEOUT_SECONDS", 0.2)
+    monkeypatch.setattr(bridge, "OPERATION_TIMEOUT_SECONDS", 0.2)
 
     with pytest.raises(OperationOutcomeUnknownError) as raised:
         asyncio.run(_door(client)(_add_request()))
@@ -706,7 +706,7 @@ def test_a_read_that_times_out_stays_a_timeout(monkeypatch: pytest.MonkeyPatch) 
     client = _Client()
     controller = _Controller(_REVIEW, observation=_running(_REVIEW))
     _install(monkeypatch, client, controller)
-    monkeypatch.setattr(bridge, "_OPERATION_TIMEOUT_SECONDS", 0.2)
+    monkeypatch.setattr(bridge, "OPERATION_TIMEOUT_SECONDS", 0.2)
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_review_door(client)(LedgerReviewRequest(profile_id=_PROFILE_ID)))

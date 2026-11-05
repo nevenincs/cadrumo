@@ -20,7 +20,7 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -72,7 +72,7 @@ def _register_and_login(*, label: str, passphrase: str) -> None:
     The native login publishes the persistent selection. An in-process
     invocation-only proof would select nothing for the later CLI processes.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     register_profile_with_credentials(
         label=label,
         passphrase=passphrase,

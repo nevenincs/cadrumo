@@ -35,7 +35,7 @@ from cadrumo.domain.invoices.business_premises import SituacionInmueble
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_text_output_support import line_value
 
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
+from .isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import catalogue_after_password_login, native_invoice_runtime_session
 

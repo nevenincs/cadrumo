@@ -99,7 +99,7 @@ def test_a_request_not_under_review_is_refused_as_review_not_found(monkeypatch: 
     client = _inventory_of(monkeypatch, profile_id, _review(profile_id, uuid4()))
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        subject._review(client, uuid4())
+        subject.runtime_access_management_review(client, uuid4())
 
     assert _reason(refused.value) == AutomationReviewRefusal.REVIEW_NOT_FOUND.value == "review_not_found"
 
@@ -109,7 +109,7 @@ def test_a_request_of_another_profile_is_refused_as_review_not_found(monkeypatch
     client = _inventory_of(monkeypatch, uuid4(), _review(uuid4(), request_id))
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        subject._review(client, request_id)
+        subject.runtime_access_management_review(client, request_id)
 
     assert _reason(refused.value) == "review_not_found"
 
@@ -117,11 +117,11 @@ def test_a_request_of_another_profile_is_refused_as_review_not_found(monkeypatch
 def test_a_stale_digest_is_refused_as_review_digest_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id, request_id = uuid4(), uuid4()
     client = _inventory_of(monkeypatch, profile_id, _review(profile_id, request_id))
-    _, review = subject._review(client, request_id)
+    _, review = subject.runtime_access_management_review(client, request_id)
 
-    subject._review_digest(review, "c" * 64)
+    subject.runtime_access_management_review_digest(review, "c" * 64)
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        subject._review_digest(review, "d" * 64)
+        subject.runtime_access_management_review_digest(review, "d" * 64)
 
     assert _reason(refused.value) == AutomationReviewRefusal.REVIEW_DIGEST_MISMATCH.value == "review_digest_mismatch"
 
@@ -131,7 +131,7 @@ def test_a_denial_whose_target_does_not_fit_its_kind_is_refused_as_target_mismat
     monkeypatch: pytest.MonkeyPatch, kind: str, target_id: UUID | None
 ) -> None:
     client = cast(FrontendClient, SimpleNamespace(profile_id=uuid4()))
-    monkeypatch.setattr(subject, "_client", lambda _ctx, *, requested_language: client)
+    monkeypatch.setattr(subject, "runtime_access_management_client", lambda _ctx, *, requested_language: client)
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
         subject.automation_deny(_context(), kind, target_id)

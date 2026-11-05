@@ -14,22 +14,22 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
-from ._ledger_validation_support import open_bucket_session
 from .cli_runner import invoke_cached_cli
+from .ledger_validation_support import open_bucket_session
 
-_N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
 
-_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
-_FOUR_ROW_CSV = (
-    _N26_HEADER
+FOUR_ROW_CSV = (
+    N26_HEADER
     + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n"
     + "2026-04-16,Proveedor SA,Compra material,-50.00,EUR,n26-002\n"
     + "2026-04-17,Cliente Dos,Factura dos,200.00,EUR,n26-003\n"
     + "2026-04-18,Cafe Oscar,Reunion negocios,-12.00,EUR,n26-004\n"
 )
 
-_FOUR_ROW_OFX = """OFXHEADER:100
+FOUR_ROW_OFX = """OFXHEADER:100
 DATA:OFXSGML
 VERSION:102
 SECURITY:NONE
@@ -57,11 +57,11 @@ NEWFILEUID:NONE
 """
 
 
-def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
+def invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
     return invoke_cached_cli(args, env=env)
 
 
-def _invoke_exact_profile(
+def invoke_exact_profile(
     profile: NativeCliProfileFixture,
     args: Sequence[str],
     *,
@@ -91,11 +91,11 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
+def add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
     """Write a synthetic text-bearing PDF and add it as ledger evidence, through the CLI."""
     pdf = tmp_path / filename
     pdf.write_bytes(text_pdf_bytes(lines))
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
+    added = invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
     payload = json.loads(added.output)
     assert isinstance(payload, dict), added.output
@@ -106,20 +106,20 @@ def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> s
     return evidence_id
 
 
-def _imported_transaction_id(tmp_path: Path) -> str:
+def imported_transaction_id(tmp_path: Path) -> str:
     """Seed a row through the legacy active-profile CLI helper."""
-    return _seeded_transaction_id(tmp_path, invoke=_invoke)
+    return _seeded_transaction_id(tmp_path, invoke=invoke)
 
 
-def _imported_transaction_id_exact_profile(profile: NativeCliProfileFixture, tmp_path: Path) -> str:
+def imported_transaction_id_exact_profile(profile: NativeCliProfileFixture, tmp_path: Path) -> str:
     """Seed a row through one explicitly selected exact profile."""
-    return _seeded_transaction_id(tmp_path, invoke=lambda args: _invoke_exact_profile(profile, args))
+    return _seeded_transaction_id(tmp_path, invoke=lambda args: invoke_exact_profile(profile, args))
 
 
 def _seeded_transaction_id(tmp_path: Path, *, invoke: Callable[[Sequence[str]], Result]) -> str:
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
         newline="\n",
     )

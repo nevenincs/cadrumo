@@ -26,7 +26,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from ._profile_cli_support import invoke_native_profile
+from .profile_cli_support import invoke_native_profile
 
 pytestmark = [
     pytest.mark.integration,

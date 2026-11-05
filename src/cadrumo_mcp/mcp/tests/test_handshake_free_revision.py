@@ -24,7 +24,7 @@ from ..protocol_contract import MCP_TOOL_CATALOGUE, SIGN_IN_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .session import connected_handshake_free_client, connected_server_and_client_session
-from .test_execute_typed_input_tool import _AnsweringClient
+from .test_execute_typed_input_tool import AnsweringClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -157,7 +157,7 @@ async def test_a_read_tool_and_a_refusal_answer_a_handshake_free_client_as_they_
 async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handshake_free_client(
     negotiation: _Negotiation,
 ) -> None:
-    modern_lease, legacy_lease = _AnsweringClient(uuid4()), _AnsweringClient(uuid4())
+    modern_lease, legacy_lease = AnsweringClient(uuid4()), AnsweringClient(uuid4())
     modern_adapter = RuntimeMcpAdapter(profile_id=modern_lease.profile_id, client=cast(FrontendClient, modern_lease))
     legacy_adapter = RuntimeMcpAdapter(profile_id=legacy_lease.profile_id, client=cast(FrontendClient, legacy_lease))
     try:

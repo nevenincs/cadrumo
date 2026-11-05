@@ -106,16 +106,16 @@ def test_a_slow_recheck_is_reported_by_name_and_a_prompt_one_is_not(
         peer = verifier.verify_service(context, channel, _descriptor(image))
         assert peer is not None
 
-        with caplog.at_level(logging.DEBUG, logger=service_verification._log.name):
-            monkeypatch.setattr(service_verification, "_SERVICE_RECHECK_SLOW_SECONDS", 3600.0)
+        with caplog.at_level(logging.DEBUG, logger=service_verification.log.name):
+            monkeypatch.setattr(service_verification, "SERVICE_RECHECK_SLOW_SECONDS", 3600.0)
             assert verifier.recheck_service(context, channel, peer)
-            assert delivered_records(caplog, service_verification._log.name) == []
+            assert delivered_records(caplog, service_verification.log.name) == []
 
-            monkeypatch.setattr(service_verification, "_SERVICE_RECHECK_SLOW_SECONDS", 0.0)
+            monkeypatch.setattr(service_verification, "SERVICE_RECHECK_SLOW_SECONDS", 0.0)
             assert verifier.recheck_service(context, channel, peer)
             assert not verifier.recheck_service(context, channel, replace(peer, process_incarnation="1"))
 
-    completed, refused = delivered_records(caplog, service_verification._log.name)
+    completed, refused = delivered_records(caplog, service_verification.log.name)
     assert completed.getMessage() == refused.getMessage() == "service_recheck_slow"
     assert completed.levelno == logging.WARNING
     assert completed.__dict__["outcome"] == refused.__dict__["outcome"] == "completed"

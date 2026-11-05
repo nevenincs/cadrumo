@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.profile_grounding import build_profile
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

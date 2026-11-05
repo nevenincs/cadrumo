@@ -55,7 +55,7 @@ from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 from ..automation_lifecycle_service import AutomationLifecycleService
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import (
+from .session_authority_support import (
     AdmissionOwner,
     Subject,
     lifecycle,

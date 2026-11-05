@@ -15,23 +15,22 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
-from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
-from ._ledger_llm_support import ledger_llm_profile
-from .ledger_ux_support import _invoke_exact_profile
+from .ledger_llm_support import import_one_transaction, ledger_llm_profile
+from .ledger_ux_support import invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["ledger_llm_profile"]
 
 
 def _invoke(ledger_llm_profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
-    return _invoke_exact_profile(ledger_llm_profile, args)
+    return invoke_exact_profile(ledger_llm_profile, args)
 
 
 def _import_one_transaction(ledger_llm_profile: NativeCliProfileFixture, tmp_path: Path) -> str:
-    return _shared_import_one_transaction(
+    return import_one_transaction(
         tmp_path,
         invoke_cli=partial(_invoke, ledger_llm_profile),
         payee="Restaurante Sol",
@@ -44,7 +43,7 @@ def _import_one_transaction(ledger_llm_profile: NativeCliProfileFixture, tmp_pat
 def _row_by_id(ledger_llm_profile: NativeCliProfileFixture, transaction_id: str) -> dict[str, Any]:
     listed = _invoke(ledger_llm_profile, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    rows = _json_result(listed)["rows"]
+    rows = unwrap_cli_result(listed)["rows"]
     return {r["transaction_id"]: r for r in rows}[transaction_id]
 
 

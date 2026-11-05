@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from ..domain.catalog import LaneId, ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
 from ..domain.record import ModelId
@@ -141,7 +141,7 @@ class ProviderSettingsRefusalCode(StrEnum):
 class ProviderSettingsRefusal(BaseModel):
     """A typed refusal carrying no secret and no storage detail."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: ProviderSettingsRefusalCode
 
@@ -149,7 +149,7 @@ class ProviderSettingsRefusal(BaseModel):
 class ProviderSettingsActionAccepted(BaseModel):
     """A committed action, with the provider's status read back after commit."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entry: ProviderStatusEntry
 

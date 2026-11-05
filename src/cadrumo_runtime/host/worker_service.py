@@ -64,8 +64,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 )
 
 from ..adapters.worker_transport import WorkerChannel
-from . import worker_cleanup as _worker_cleanup
-from . import worker_operation_requests as _worker_requests
+from . import worker_cleanup, worker_operation_requests
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import WorkerSubmissionStaging
@@ -78,7 +77,7 @@ _PASSWORD_DISPATCH_SLOW_SECONDS = 1.5
 _EXPIRY_MARGIN_SECONDS = 0.05
 #: Control actions that only read, so they leave custody expiry asleep.
 _READS = frozenset({"status", "activity"})
-_log = get_logger(__name__)
+log = get_logger(__name__)
 
 _CONTROL_REQUEST_TYPES = (
     ProfileWorkerControlRequest,
@@ -138,7 +137,7 @@ _CONTROL_ACTIONS = frozenset(
 
 
 @dataclass(frozen=True, slots=True)
-class _WorkerControl:
+class WorkerControl:
     """Dependencies shared by the parent-command handlers."""
 
     channel: WorkerChannel
@@ -147,8 +146,8 @@ class _WorkerControl:
     operations: ProfileWorkerOperationHost
     uploads: WorkerSubmissionStaging
     failed: asyncio.Event
-    operation_release: _worker_cleanup.WorkerRelease[OperationDrainResult]
-    upload_release: _worker_cleanup.WorkerRelease[None]
+    operation_release: worker_cleanup.WorkerRelease[OperationDrainResult]
+    upload_release: worker_cleanup.WorkerRelease[None]
     changed: asyncio.Event
 
 
@@ -165,7 +164,7 @@ async def _until_change(stop: asyncio.Event, changed: asyncio.Event, delay: floa
         await asyncio.gather(*waiters, return_exceptions=True)
 
 
-async def _expire_custody(
+async def expire_custody(
     stop: asyncio.Event,
     failed: asyncio.Event,
     custody: ProfileWorkerCustody,
@@ -198,7 +197,7 @@ async def _expire_custody(
         except Exception as error:
             failed.set()
             diagnostic_event(
-                _log,
+                log,
                 "profile_worker_custody_observation_failed",
                 fields=diagnostic_error_fields(error),
                 level=40,
@@ -208,7 +207,7 @@ async def _expire_custody(
         delay = min(deadlines) if deadlines else None
 
 
-async def _handle_lease_control(context: _WorkerControl, request: ProfileWorkerLeaseRequest) -> None:
+async def _handle_lease_control(context: WorkerControl, request: ProfileWorkerLeaseRequest) -> None:
     """Install, refresh or share one lease without detaching its cancellation owner."""
     if request.action == "install":
 
@@ -235,7 +234,7 @@ async def _handle_lease_control(context: _WorkerControl, request: ProfileWorkerL
         )
 
 
-async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
+async def handle_custody_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
     if isinstance(request, ProfileWorkerLeaseRequest):
         await _handle_lease_control(context, request)
         return "status"
@@ -300,7 +299,7 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
     return None
 
 
-async def _handle_metadata_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
+async def _handle_metadata_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
     if isinstance(request, ProfileWorkerSettlementRequest):
         settled = await context.operations.settlement(request.operation_identity, timeout=request.wait_seconds)
         write_document(
@@ -317,7 +316,7 @@ async def _handle_metadata_control(context: _WorkerControl, request: object) -> 
     return None
 
 
-async def _handle_human_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
+async def _handle_human_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest) or request.action not in {"password", "receipt"}:
         return None
     timeout_deadline = request.timeout_deadline or DEFAULT_TIMEOUT_POLICY.deadline().instant
@@ -337,7 +336,7 @@ async def _handle_human_control(context: _WorkerControl, request: object) -> _Co
         with read_secret(context.channel, deadline=timeout_deadline) as secret:
             context.human.require_attempt(request.proof_attempt_id).raise_if_cancelled()
             if request.action == "password":
-                with startup_phase(_log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)):
+                with startup_phase(log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)):
                     return context.human.authenticate(
                         secret, timeout_deadline=request.timeout_deadline, attempt_id=request.proof_attempt_id
                     )
@@ -362,7 +361,7 @@ async def _handle_human_control(context: _WorkerControl, request: object) -> _Co
     return "handled"
 
 
-async def _handle_action_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
+async def handle_action_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest):
         return None
     if request.action == "activity":
@@ -402,7 +401,7 @@ async def _handle_action_control(context: _WorkerControl, request: object) -> _C
     return "stop"
 
 
-async def _dispatch_control_request(context: _WorkerControl, request: object) -> _ControlDisposition:
+async def _dispatch_control_request(context: WorkerControl, request: object) -> _ControlDisposition:
     if isinstance(
         request,
         # A contract may compose the registry; it travels on the operation
@@ -427,7 +426,7 @@ async def _dispatch_control_request(context: _WorkerControl, request: object) ->
         await asyncio.to_thread(serve_extension_record, context.channel, context.custody, request)
         return "handled"
 
-    disposition = await _handle_custody_control(context, request)
+    disposition = await handle_custody_control(context, request)
     if disposition is not None:
         return disposition
     disposition = await _handle_metadata_control(context, request)
@@ -436,7 +435,7 @@ async def _dispatch_control_request(context: _WorkerControl, request: object) ->
     disposition = await _handle_human_control(context, request)
     if disposition is not None:
         return disposition
-    disposition = await _handle_action_control(context, request)
+    disposition = await handle_action_control(context, request)
     return disposition if disposition is not None else "status"
 
 
@@ -474,7 +473,7 @@ def _record_control_dispatch_started(request: object) -> None:
     """Mark which validated control request is active if its synchronous handler stalls."""
     try:
         diagnostic_event(
-            _log,
+            log,
             "profile_worker_control_dispatch_started",
             fields={**_control_dispatch_metadata(request), "outcome": "started"},
         )
@@ -482,7 +481,7 @@ def _record_control_dispatch_started(request: object) -> None:
         return
 
 
-def _record_control_dispatch_elapsed(
+def record_control_dispatch_elapsed(
     request: object,
     *,
     handler_started: float,
@@ -500,7 +499,7 @@ def _record_control_dispatch_elapsed(
         return
     try:
         diagnostic_event(
-            _log,
+            log,
             "profile_worker_control_dispatch_slow",
             fields={
                 **_control_dispatch_metadata(request),
@@ -515,21 +514,21 @@ def _record_control_dispatch_elapsed(
         return
 
 
-async def _timed_control_dispatch(context: _WorkerControl, request: object) -> _ControlDisposition:
+async def _timed_control_dispatch(context: WorkerControl, request: object) -> _ControlDisposition:
     """Record bounded dispatch timing without changing raised errors."""
     _record_control_dispatch_started(request)
     dispatch_started = time.monotonic()
     try:
         disposition = await _dispatch_control_request(context, request)
     except BaseException as error:
-        _record_control_dispatch_elapsed(
+        record_control_dispatch_elapsed(
             request,
             handler_started=dispatch_started,
             outcome="raised",
             primary_error=error,
         )
         raise
-    _record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
+    record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
     return disposition
 
 
@@ -555,13 +554,15 @@ def _is_observational_control(request: object) -> bool:
     return isinstance(request, ProfileWorkerControlRequest) and request.action in _READS
 
 
-async def _serve_control_requests(
-    context: _WorkerControl, input_executor: ThreadPoolExecutor, ready: asyncio.Event | None = None
+async def serve_control_requests(
+    context: WorkerControl, input_executor: ThreadPoolExecutor, ready: asyncio.Event | None = None
 ) -> None:
     if ready is not None:
         ready.set()
     while not context.failed.is_set():
-        request = (await _worker_requests.receive(context.channel, context.failed, input_executor, control=True)).root
+        request = (
+            await worker_operation_requests.receive(context.channel, context.failed, input_executor, control=True)
+        ).root
         if context.failed.is_set():
             raise RefusalError(RefusalCode.UNAVAILABLE)
         observed = False
@@ -641,9 +642,9 @@ async def _finish_service(
     expiry: asyncio.Task[None],
     executing: asyncio.Task[None],
     warming: asyncio.Task[None],
-    operation_release: _worker_cleanup.WorkerRelease[OperationDrainResult],
-    human_release: _worker_cleanup.WorkerRelease[None],
-    upload_release: _worker_cleanup.WorkerRelease[None],
+    operation_release: worker_cleanup.WorkerRelease[OperationDrainResult],
+    human_release: worker_cleanup.WorkerRelease[None],
+    upload_release: worker_cleanup.WorkerRelease[None],
     primary_error: BaseException | None,
 ) -> None:
     stop.set()
@@ -653,7 +654,7 @@ async def _finish_service(
     if raise_task_failure:
         primary_error = task_failures[0]
     if primary_error is not None and task_failures:
-        _worker_cleanup.retain_task_failures(primary_error, task_failures)
+        worker_cleanup.retain_task_failures(primary_error, task_failures)
     await close_async_resources(
         operation_release,
         human_release,
@@ -676,7 +677,7 @@ async def _serve_proof_requests(
     ready.set()
     try:
         while not failed.is_set():
-            if not await _worker_requests._input_ready(channel, failed, input_executor):
+            if not await worker_operation_requests.input_ready(channel, failed, input_executor):
                 continue
             deadline = DEFAULT_TIMEOUT_POLICY.deadline().instant
 
@@ -707,7 +708,7 @@ async def _serve_proof_requests(
         failed.set()
 
 
-async def _serve(
+async def serve(
     channel: WorkerChannel,
     operation_channel: WorkerChannel,
     proof_channel: WorkerChannel,
@@ -721,10 +722,10 @@ async def _serve(
     # used by application work or creating a new thread for every request.
     input_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="profile-worker-input")
     uploads = WorkerSubmissionStaging()
-    operation_release = _worker_cleanup.WorkerRelease(operations.close)
-    human_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(human.close))
-    upload_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(uploads.close))
-    context = _WorkerControl(
+    operation_release = worker_cleanup.WorkerRelease(operations.close)
+    human_release = worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(human.close))
+    upload_release = worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(uploads.close))
+    context = WorkerControl(
         channel=channel,
         custody=custody,
         human=human,
@@ -736,17 +737,17 @@ async def _serve(
         changed=changed,
     )
     expiry = asyncio.create_task(
-        _expire_custody(stop, failed, custody, uploads, human, changed, operations), name="profile-custody-expiry"
+        expire_custody(stop, failed, custody, uploads, human, changed, operations), name="profile-custody-expiry"
     )
     executing = asyncio.create_task(
-        _worker_requests.operate(
+        worker_operation_requests.operate(
             operation_channel, operations, failed, uploads, changed, input_executor, operation_ready
         ),
         name="profile-operation-requests",
     )
     warming = asyncio.create_task(asyncio.to_thread(operations.warm_imports), name="profile-operation-imports")
     controlling = asyncio.create_task(
-        _serve_control_requests(context, input_executor, control_ready), name="profile-control-requests"
+        serve_control_requests(context, input_executor, control_ready), name="profile-control-requests"
     )
     proof_control = asyncio.create_task(
         _serve_proof_requests(proof_channel, human, failed, input_executor, proof_ready),

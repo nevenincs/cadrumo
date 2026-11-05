@@ -116,8 +116,8 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
     )
     monkeypatch.setattr(windows_process, "launch_in_windows_job", port.launch)
     # The synthetic Job lists PIDs with no process objects behind them; only the active count is observed here.
-    monkeypatch.setattr(windows_process, "_retain_job_members", lambda job: ())
-    monkeypatch.setattr(windows_process, "_job_process_ids", lambda job: (101, 102, 103) if port.active else ())
+    monkeypatch.setattr(windows_process, "retain_job_members", lambda job: ())
+    monkeypatch.setattr(windows_process, "job_process_ids", lambda job: (101, 102, 103) if port.active else ())
     return port
 
 
@@ -161,7 +161,7 @@ def test_job_pid_query_uses_only_returned_slots_and_grows_on_more_data(
     monkeypatch.setattr(
         ctypes, "WinDLL", lambda *args, **kwargs: SimpleNamespace(QueryInformationJobObject=query), raising=False
     )
-    assert windows_process._job_process_ids(7) == expected
+    assert windows_process.job_process_ids(7) == expected
     assert len(sizes) == len(replies)
     if len(sizes) > 1:
         assert sizes[1] > sizes[0]
@@ -187,7 +187,7 @@ def test_job_pid_query_refuses_invalid_slots_native_failure_and_unbounded_growth
         ctypes, "WinDLL", lambda *args, **kwargs: SimpleNamespace(QueryInformationJobObject=query), raising=False
     )
     with pytest.raises(RefusalError) as refused:
-        windows_process._job_process_ids(7)
+        windows_process.job_process_ids(7)
     assert refused.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
     assert 1 <= calls <= 8
 
@@ -321,7 +321,7 @@ def test_a_missed_bound_is_reported_as_expired_and_starts_the_watch_of_the_late_
     assert expired.__dict__["members_signalled_seconds"] is None
     assert (settled.__dict__["outcome"], settled.levelno) == ("completed", logging.DEBUG)
     # Only the missed bound is watched, and with the original children.
-    assert watched == [(3, windows_process._LATE_EXIT_OBSERVATION_SECONDS)]
+    assert watched == [(3, windows_process.LATE_EXIT_OBSERVATION_SECONDS)]
 
 
 def test_another_termination_failure_is_reported_with_its_error_and_is_not_watched(

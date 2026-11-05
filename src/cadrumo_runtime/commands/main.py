@@ -50,10 +50,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
     """Run one runtime configuration command without entering the daemon server."""
     argv = list(sys.argv[1:] if arguments is None else arguments)
     with operator_document_output() if argv_requests_json(argv) else nullcontext():
-        return _run_command(argv)
+        return run_command(argv)
 
 
-def _run_command(argv: list[str]) -> int:
+def run_command(argv: list[str]) -> int:
     """Dispatch and render within the invocation's diagnostic routing scope."""
     was_deferred = logging_configuration_deferred()
     defer_logging_configuration()
@@ -98,16 +98,16 @@ def _run_deferred_command(argv: list[str]) -> int:
             translated_message="errors.refused.refused_cli_validation_boundary",
             context={"boundary_error_type": type(error).__name__},
         )
-        return _emit_error(boundary, argv, click_context=getattr(error, "ctx", None), durable=command_started)
+        return emit_error(boundary, argv, click_context=getattr(error, "ctx", None), durable=command_started)
     except CadrumoError as error:
-        return _emit_error(error, argv, durable=command_started)
+        return emit_error(error, argv, durable=command_started)
     except Exception as error:
         boundary = CliUnexpectedBoundaryError(error)
-        return _emit_error(boundary, argv, durable=command_started)
+        return emit_error(boundary, argv, durable=command_started)
     return 0
 
 
-def _emit_error(
+def emit_error(
     error: CadrumoError,
     arguments: Sequence[str],
     *,
@@ -125,7 +125,7 @@ def _emit_error(
         override_settings(cadrumo_output_language=captured.output_language) if captured is not None else nullcontext()
     )
     with language_scope:
-        return _render_error(error, arguments, click_context=click_context)
+        return render_error(error, arguments, click_context=click_context)
 
 
 def _context_requests_json(click_context: object | None) -> bool:
@@ -138,7 +138,7 @@ def _context_requests_json(click_context: object | None) -> bool:
     return False
 
 
-def _render_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
+def render_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
     """Render while the invocation's captured language is active."""
     from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 

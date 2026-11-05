@@ -52,7 +52,7 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
 
     monkeypatch.setattr(credentials, "effective_storage_root", lambda: tmp_path)
     monkeypatch.setattr(credentials, "open_installed_client", open_client)
-    monkeypatch.setattr(credentials, "_authenticate_reference", authenticate)
+    monkeypatch.setattr(credentials, "authenticate_reference", authenticate)
     monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: 100.0))
     if explicit_timeout is None:
         admitted = await credentials.open_installed_credential_client(

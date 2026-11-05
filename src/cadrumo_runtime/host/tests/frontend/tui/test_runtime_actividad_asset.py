@@ -65,7 +65,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
-from ._door_session_support import terminal_observation
+from .door_session_support import terminal_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

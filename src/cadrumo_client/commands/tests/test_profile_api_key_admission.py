@@ -89,7 +89,7 @@ def test_selected_method_refuses_the_other_valid_payload(
                 method=method,
             )
         else:
-            admission._password(
+            admission.password(
                 cast(FrontendClient, witness),
                 selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
                 not_persisted=lambda: pytest.fail("a refused secret signed nothing in"),

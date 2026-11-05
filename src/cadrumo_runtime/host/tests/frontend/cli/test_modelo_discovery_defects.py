@@ -25,20 +25,20 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
-    create_calculable_modelo_work_unit as _create_111_work_unit,
+    create_calculable_modelo_work_unit,
+    create_m303_work_unit,
 )
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m303_work_unit
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -303,7 +303,7 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
+    assert unwrap_schema_envelope(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
 
 
 # ---------------------------------------------------------------------------
@@ -539,7 +539,7 @@ def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: Pro
             "0A",
         ],
     )
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["ready"] is False
     # A not-ready scope still reports its payload and says so through its exit status.
     assert result.exit_code != 0, result.output
@@ -581,7 +581,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
     )
 
     # Overall readiness also waits on calculation bindings; the profile half is the subject here.
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["profile_ready"] is True
     assert "irpf.uses_objective_estimation" not in result.output
     assert "uses_objective_estimation_irpf" not in result.output
@@ -602,7 +602,7 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_111_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
     )
@@ -627,12 +627,12 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_111_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
-    summary = _payload(result.output)["result_summary"]
+    summary = unwrap_schema_envelope(result.output)["result_summary"]
     assert summary, result.output
     assert all({"role", "casilla_id", "value", "label"} <= set(row) for row in summary)
     assert any(row["casilla_id"] == "30" for row in summary)
@@ -655,7 +655,7 @@ def _create_202_work_unit(period: str) -> str:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["period"] == {"filing_year": 2026, "code": period}
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
@@ -695,7 +695,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str,
     )
     assert result.exit_code == 0, result.output
     assert "invalid registry period" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     # The engine ran and persisted a draft calculation revision —
     # the same end stage Modelo 200 / 303 reach.
     assert payload["state"] == "borrador"
@@ -738,4 +738,4 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profil
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
-        assert _payload(calculated.output)["state"] == "borrador"
+        assert unwrap_schema_envelope(calculated.output)["state"] == "borrador"

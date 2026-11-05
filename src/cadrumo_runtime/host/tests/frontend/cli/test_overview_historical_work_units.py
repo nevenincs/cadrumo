@@ -18,10 +18,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,
@@ -168,7 +168,7 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    entries = _calendar_entries_by_target(_payload(result.output)["entries"])
+    entries = _calendar_entries_by_target(unwrap_schema_envelope(result.output)["entries"])
     for modelo, year, period in created:
         entry = entries[(modelo, f"{year} {period}")]
         assert entry["user_state"] == "late"
@@ -189,7 +189,7 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
     )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["range"]["from_date"] <= "2022-01-01"
     items = _backlog_entries_by_target(payload["items"])
     for (modelo, year, period), work_unit_id in created.items():
@@ -225,7 +225,7 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
     )
 
     assert backlog_result.exit_code == 0, backlog_result.output
-    backlog_payload = _payload(backlog_result.output)
+    backlog_payload = unwrap_schema_envelope(backlog_result.output)
     assert all(item["local_work_unit_id"] != work_unit_id for item in backlog_payload["items"])
 
     calendar_result = _invoke(
@@ -244,7 +244,7 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
     )
 
     assert calendar_result.exit_code == 0, calendar_result.output
-    entries = _calendar_entries_by_target(_payload(calendar_result.output)["entries"])
+    entries = _calendar_entries_by_target(unwrap_schema_envelope(calendar_result.output)["entries"])
     entry = entries[("130", "2022 1T")]
     assert entry["user_state"] == "filed"
     assert entry["local_filing_state"] == "ready_to_file"

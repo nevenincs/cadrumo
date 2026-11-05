@@ -22,7 +22,7 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from ...native_profile_facts import native_general_iva_facts
-from .ledger_ux_support import _invoke_exact_profile
+from .ledger_ux_support import invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -71,11 +71,11 @@ def test_classify_fixture_applies_through_bulk_classify(tmp_path: Path) -> None:
             label="native-ledger-classify-fixture",
             facts=native_general_iva_facts(surnames="Classify fixture", description="design"),
         )
-        imported = _invoke_exact_profile(
+        imported = invoke_exact_profile(
             profile, ["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"]
         )
         assert imported.exit_code == 0, imported.output
-        result = _invoke_exact_profile(
+        result = invoke_exact_profile(
             profile, ["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)]
         )
         assert result.exit_code == 0, result.output

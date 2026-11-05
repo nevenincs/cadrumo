@@ -84,7 +84,7 @@ async def _serve(
         return ProfileWorkerRequest(request)
 
     monkeypatch.setattr(worker_operation_requests, "receive", receive)
-    monkeypatch.setattr(worker_operation_requests, "_dispatch_request", handler)
+    monkeypatch.setattr(worker_operation_requests, "dispatch_request", handler)
     uploads = WorkerSubmissionStaging()
     operations = SimpleNamespace(custody=SimpleNamespace(identity=_identity()))
     try:
@@ -123,15 +123,15 @@ async def test_a_prompt_request_logs_its_closed_type_and_definition_at_debug(
         assert record.__dict__["definition_id"] == "ledger.rule.add"
     assert started.__dict__["outcome"] == "started"
     assert elapsed.__dict__["outcome"] == "completed"
-    assert 0 <= elapsed.__dict__["elapsed_seconds"] < worker_operation_requests._OPERATION_REQUEST_SLOW_SECONDS
-    assert elapsed.__dict__["budget_seconds"] == worker_operation_requests._OPERATION_REQUEST_SLOW_SECONDS
+    assert 0 <= elapsed.__dict__["elapsed_seconds"] < worker_operation_requests.OPERATION_REQUEST_SLOW_SECONDS
+    assert elapsed.__dict__["budget_seconds"] == worker_operation_requests.OPERATION_REQUEST_SLOW_SECONDS
 
 
 @pytest.mark.asyncio
 async def test_a_request_past_the_slow_bound_is_logged_at_warning(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    monkeypatch.setattr(worker_operation_requests, "_OPERATION_REQUEST_SLOW_SECONDS", 0.05)
+    monkeypatch.setattr(worker_operation_requests, "OPERATION_REQUEST_SLOW_SECONDS", 0.05)
 
     async def handler(*_args: object) -> None:
         await asyncio.sleep(0.15)

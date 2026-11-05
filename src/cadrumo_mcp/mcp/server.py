@@ -146,10 +146,10 @@ def serve(
         finally:
             await adapter.close()
 
-    _serve_until_orderly_shutdown(lambda: anyio.run(run))
+    serve_until_orderly_shutdown(lambda: anyio.run(run))
 
 
-def _serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:
+def serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:
     """Release shared authority only after the stdio transport returns normally."""
     serve_transport()
     release_bundled_indexed_authority()

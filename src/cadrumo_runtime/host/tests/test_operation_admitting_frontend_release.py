@@ -925,7 +925,7 @@ def test_an_admission_nobody_starts_settles_once_its_owner_has_lapsed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A submitter that vanishes after its receipt leaves no operation unsettled and no subject held for good."""
-    monkeypatch.setattr(operation_settlement, "_LAPSE_CHECK_SECONDS", 0.0)
+    monkeypatch.setattr(operation_settlement, "LAPSE_CHECK_SECONDS", 0.0)
 
     async def scenario(worker: _Worker) -> None:
         supervisor = worker.host.composed().submission.supervisor

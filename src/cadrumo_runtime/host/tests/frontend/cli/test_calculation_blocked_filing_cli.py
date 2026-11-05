@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -40,13 +40,12 @@ from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourc
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,7 +94,7 @@ def _calculate_and_verify() -> tuple[str, str]:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
     revision_id = _recalculate(work_unit_id, _FIRST_BOX_16)
     return work_unit_id, revision_id
@@ -114,7 +113,7 @@ def _recalculate(work_unit_id: str, box_16: str) -> str:
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    verified_payload = _payload(verified.output)
+    verified_payload = unwrap_schema_envelope(verified.output)
     assert verified_payload["granted_verificado_completo"] is True
     revision_id = verified_payload["calculation_revision_id"]
     assert isinstance(revision_id, str)
@@ -259,18 +258,18 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
     _assert_unverified(filed.exit_code, filed.output, revision_id=blocked_revision_id)
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
-    assert _payload(status.output)["filed_calculation_revision_id"] is None
+    assert unwrap_schema_envelope(status.output)["filed_calculation_revision_id"] is None
 
     cleared_revision_id = _recalculate(work_unit_id, _LATER_BOX_16)
     assert cleared_revision_id not in {blocked_revision_id, clean_revision_id}
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
-    assert _payload(status.output)["current_calculation_revision_id"] == cleared_revision_id
+    assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == cleared_revision_id
 
     cleared_output = tmp_path / "modelo-130-cleared.txt"
     exit_code, output = _export(work_unit_id, cleared_output)
     assert exit_code == 0, output
-    assert _payload(output)["calculation_revision_id"] == cleared_revision_id
+    assert unwrap_schema_envelope(output)["calculation_revision_id"] == cleared_revision_id
     assert cleared_output.stat().st_size > 0
 
 
@@ -285,6 +284,6 @@ def test_the_identical_calculation_without_the_note_exports(seed_profile: Profil
     exit_code, output = _export(work_unit_id, output_path)
 
     assert exit_code == 0, output
-    assert _payload(output)["calculation_revision_id"] == planted_revision_id
+    assert unwrap_schema_envelope(output)["calculation_revision_id"] == planted_revision_id
     assert output_path.stat().st_size > 0
     assert json.loads(output)["status"] != "error"

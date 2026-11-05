@@ -32,7 +32,7 @@ from ..profile_host import RuntimeProfileHost
 pytestmark = [pytest.mark.hex_entrypoint]
 
 
-class _FailedWorker:
+class FailedWorker:
     def __init__(self) -> None:
         self.contained = False
         self.settled = False
@@ -47,19 +47,19 @@ class _FailedWorker:
         self.settled = True
 
 
-class _EmptyApprovals:
+class EmptyApprovals:
     """Explicit absent approval phases for the worker/containment fault ports."""
 
     def close(self) -> int:
         return 0
 
 
-class _Owner:
-    def __init__(self, worker: _FailedWorker | None, *, construction_settled: bool = True) -> None:
-        self.worker: _FailedWorker | None = worker
+class Owner:
+    def __init__(self, worker: FailedWorker | None, *, construction_settled: bool = True) -> None:
+        self.worker: FailedWorker | None = worker
         self.construction_settled = construction_settled
 
-    def begin_drain(self) -> _FailedWorker | None:
+    def begin_drain(self) -> FailedWorker | None:
         return self.worker
 
     def settle(self, *, deadline: float) -> None:
@@ -81,13 +81,13 @@ def test_missing_receipt_is_reported_after_containment(tmp_path: Path) -> None:
         runtime_boot_id=uuid4(),
         stop=stop,
     )
-    worker = _FailedWorker()
+    worker = FailedWorker()
     profiles._profiles[profile_id] = cast(
         "RuntimeProfileHost",
         SimpleNamespace(
             store=SimpleNamespace(binding=SimpleNamespace(profile_id=profile_id)),
-            owner=_Owner(worker),
-            approvals=_EmptyApprovals(),
+            owner=Owner(worker),
+            approvals=EmptyApprovals(),
         ),
     )
 
@@ -113,8 +113,8 @@ def test_stalled_constructor_keeps_profile_owned_without_waiting_past_deadline(t
         "RuntimeProfileHost",
         SimpleNamespace(
             store=SimpleNamespace(binding=SimpleNamespace(profile_id=profile_id)),
-            owner=_Owner(None, construction_settled=False),
-            approvals=_EmptyApprovals(),
+            owner=Owner(None, construction_settled=False),
+            approvals=EmptyApprovals(),
         ),
     )
 
@@ -126,16 +126,16 @@ def test_stalled_constructor_keeps_profile_owned_without_waiting_past_deadline(t
     assert profiles._profiles[profile_id].owner is not None
 
 
-class _RetiringOwner(_Owner):
+class _RetiringOwner(Owner):
     """An explicit worker port preserves the real begin-drain transfer contract."""
 
-    def __init__(self, worker: _FailedWorker) -> None:
+    def __init__(self, worker: FailedWorker) -> None:
         super().__init__(worker)
         self.retiring = worker
         self.begin_calls = 0
 
     @override
-    def begin_drain(self) -> _FailedWorker | None:
+    def begin_drain(self) -> FailedWorker | None:
         self.begin_calls += 1
         worker = self.worker
         self.worker = None
@@ -148,7 +148,7 @@ class _RetiringOwner(_Owner):
 
 
 def _retained_profiles(
-    tmp_path: Path, worker: _FailedWorker, *, approvals: _EmptyApprovals | None = None
+    tmp_path: Path, worker: FailedWorker, *, approvals: EmptyApprovals | None = None
 ) -> tuple[RuntimeProfileConnections, UUID, _RetiringOwner]:
     profile_id = uuid4()
     profiles = RuntimeProfileConnections(
@@ -160,7 +160,7 @@ def _retained_profiles(
         SimpleNamespace(
             store=SimpleNamespace(binding=SimpleNamespace(profile_id=profile_id)),
             owner=owner,
-            approvals=approvals if approvals is not None else _EmptyApprovals(),
+            approvals=approvals if approvals is not None else EmptyApprovals(),
         ),
     )
     return profiles, profile_id, owner
@@ -173,7 +173,7 @@ def test_retry_keeps_original_worker_and_live_shutdown_thread(tmp_path: Path, bl
     attempts: list[Thread] = []
     request_attempts: list[Thread] = []
 
-    class HeldWorker(_FailedWorker):
+    class HeldWorker(FailedWorker):
         @override
         def drain(self, *, deadline: float) -> None:
             request_attempts.append(current_thread())
@@ -224,7 +224,7 @@ def test_retry_keeps_original_worker_and_live_shutdown_thread(tmp_path: Path, bl
 
 @pytest.mark.unit
 def test_retry_failed_terminal_containment_keeps_original_receipt_expectation(tmp_path: Path) -> None:
-    class FailedCloseWorker(_FailedWorker):
+    class FailedCloseWorker(FailedWorker):
         def __init__(self) -> None:
             super().__init__()
             self.drain_calls = 0
@@ -264,7 +264,7 @@ def test_server_retry_retains_listener_until_original_profile_thread_settles(tmp
     entered, release = Event(), Event()
     requests: list[Thread] = []
 
-    class HeldWorker(_FailedWorker):
+    class HeldWorker(FailedWorker):
         @override
         def drain(self, *, deadline: float) -> None:
             requests.append(current_thread())
@@ -340,7 +340,7 @@ def test_server_retry_retains_listener_until_original_profile_thread_settles(tmp
 def test_concurrent_drain_attempt_uses_its_remaining_deadline(tmp_path: Path) -> None:
     entered, release = Event(), Event()
 
-    class HeldWorker(_FailedWorker):
+    class HeldWorker(FailedWorker):
         @override
         def drain(self, *, deadline: float) -> None:
             entered.set()
@@ -465,7 +465,7 @@ def test_drain_releases_real_prepared_approval_password_proof(tmp_path: Path, *,
             stop=Event(),
         )
 
-        class CallbackOwner(_Owner):
+        class CallbackOwner(Owner):
             @override
             def settle(self, *, deadline: float) -> None:
                 if callback is not None:
@@ -520,7 +520,7 @@ def test_drain_releases_real_prepared_approval_password_proof(tmp_path: Path, *,
 @pytest.mark.unit
 @pytest.mark.parametrize("failed_phase", [1, 2], ids=["before-worker-drain", "after-callback-settlement"])
 def test_approval_release_failure_retains_original_host_for_retry(tmp_path: Path, failed_phase: int) -> None:
-    class FailedApprovals(_EmptyApprovals):
+    class FailedApprovals(EmptyApprovals):
         def __init__(self) -> None:
             self.attempts = 0
 
@@ -531,7 +531,7 @@ def test_approval_release_failure_retains_original_host_for_retry(tmp_path: Path
                 raise RuntimeError("approval release failed")
             return super().close()
 
-    approvals, worker = FailedApprovals(), _FailedWorker()
+    approvals, worker = FailedApprovals(), FailedWorker()
     profiles, profile_id, owner = _retained_profiles(tmp_path, worker, approvals=approvals)
     host = profiles._profiles[profile_id]
     failed = profiles.drain(deadline=time.monotonic() + 1)

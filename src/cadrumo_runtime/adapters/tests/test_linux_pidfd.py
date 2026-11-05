@@ -57,7 +57,7 @@ def test_linux_polling_refuses_unsupported_platform_before_handle_access(
 ) -> None:
     monkeypatch.setattr(linux_worker_process.sys, "platform", platform)
     with pytest.raises(RefusalError) as alive_refusal:
-        linux_worker_process._pidfd_alive(-1)
+        linux_worker_process.pidfd_alive(-1)
     assert alive_refusal.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
 
     process = linux_worker_process.LinuxOwnedProcess(pid=os.getpid(), pidfd=-1)

@@ -22,12 +22,12 @@ from cadrumo_client.contracts.transport import ConnectionContext
 
 from ..profile_connection import ProfileConnection
 from ..profile_host import RuntimeProfileHost
-from .test_login_scope_binding import _Login
+from .test_login_scope_binding import Login
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _host(tmp_path: Path) -> tuple[RuntimeProfileHost, ProfileConnection]:
+def owner_scope_reuse_host(tmp_path: Path) -> tuple[RuntimeProfileHost, ProfileConnection]:
     binding = ProfileAccessBinding(
         profile_id=uuid4(),
         installation_id=uuid4(),
@@ -38,7 +38,7 @@ def _host(tmp_path: Path) -> tuple[RuntimeProfileHost, ProfileConnection]:
     boot = uuid4()
     connection = ProfileConnection(
         ConnectionContext(uuid4(), boot, Peer(os_owner_id=binding.os_owner_id, process_id=1234)),
-        _Login(binding.os_owner_id),
+        Login(binding.os_owner_id),
         uuid4(),
         binding.profile_id,
         OperationFrontendProjection.TUI,
@@ -55,7 +55,7 @@ def _host(tmp_path: Path) -> tuple[RuntimeProfileHost, ProfileConnection]:
 
 
 def test_owner_ceiling_reuse_is_bound_to_contract_inventory_and_destination(tmp_path: Path) -> None:
-    host, connection = _host(tmp_path)
+    host, connection = owner_scope_reuse_host(tmp_path)
     initial = host.scope(connection)
     assert host.scope(connection) is initial
 
@@ -74,7 +74,7 @@ def test_owner_ceiling_reuse_is_bound_to_contract_inventory_and_destination(tmp_
 
 
 def test_delegated_scope_never_reuses_an_owner_ceiling(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    host, connection = _host(tmp_path)
+    host, connection = owner_scope_reuse_host(tmp_path)
     host.scope(connection)
     connection.method = "api_key"
     calls = 0

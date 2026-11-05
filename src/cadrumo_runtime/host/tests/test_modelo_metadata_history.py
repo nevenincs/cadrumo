@@ -204,7 +204,7 @@ def _submit_payload(
     return reply
 
 
-def _observe(
+def observe(
     connection: VerifiedConnection, profile_id: UUID, session_id: UUID, operation_id: OperationId
 ) -> OperationObservationSuccessV1:
     reply = connection.operation(
@@ -253,7 +253,7 @@ def _run_original_read(
     assert isinstance(started, OperationAcknowledged), started
     deadline = time.monotonic() + 10
     while True:
-        before = _observe(api, profile_id, api_session, operation_id).projection
+        before = observe(api, profile_id, api_session, operation_id).projection
         if before.terminal_condition is not None:
             break
         assert time.monotonic() < deadline
@@ -289,7 +289,7 @@ def _project_historical_result(
     before_revision: int,
     original: WorkUnit,
 ) -> OperationResult:
-    historical = _observe(api, profile_id, api_session, operation_id).projection
+    historical = observe(api, profile_id, api_session, operation_id).projection
     assert historical.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert historical.revision == before_revision
     schema = contract.contract.result_schema

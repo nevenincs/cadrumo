@@ -21,7 +21,7 @@ def _detail(label: str, value: object) -> str:
     return f"{tr(f'tui.automation_inventory.{label}')}: {_value(value)}"
 
 
-def _scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
+def scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
     counted = ", ".join(f"{item.category.value} {item.count}" for item in scope.disclosure_summary)
     categories = ", ".join(f"{item.category.value} ({item.destination_id})" for item in scope.disclosure_categories)
     if scope.periods is None:
@@ -41,14 +41,14 @@ def _scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
     )
 
 
-def _grant_detail(item: AutomationGrantProjection) -> str:
+def grant_detail(item: AutomationGrantProjection) -> str:
     return "\n".join(
         (
             _detail("id", item.grant_id),
             _detail("client", item.client_id),
             _detail("state", item.state.value),
             _detail("expires", item.expires_at.isoformat()),
-            *_scope(item.scope),
+            *scope(item.scope),
             _detail("unattended", item.unattended),
             *((tr("tui.automation_inventory.unattended_notice"),) if item.unattended else ()),
             _detail("os_lock", item.allow_os_lock),
@@ -56,7 +56,7 @@ def _grant_detail(item: AutomationGrantProjection) -> str:
     )
 
 
-def _key_detail(item: AutomationKeyProjection) -> str:
+def key_detail(item: AutomationKeyProjection) -> str:
     return "\n".join(
         (
             _detail("id", item.key_id),
@@ -68,7 +68,7 @@ def _key_detail(item: AutomationKeyProjection) -> str:
     )
 
 
-def _request_detail(item: AutomationReviewProjection) -> str:
+def request_detail(item: AutomationReviewProjection) -> str:
     return "\n".join(
         (
             _detail("profile", item.receipt.profile_id),
@@ -86,7 +86,7 @@ def _request_detail(item: AutomationReviewProjection) -> str:
             ),
             _detail("target_grant", item.proposal.target_grant_id or ""),
             _detail("target_key", item.proposal.target_key_id or ""),
-            *_scope(item.proposal.scope),
+            *scope(item.proposal.scope),
             _detail("unattended", item.proposal.unattended),
             *((tr("tui.automation_inventory.unattended_notice"),) if item.proposal.unattended else ()),
             _detail("os_lock", item.proposal.allow_os_lock),

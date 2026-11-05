@@ -762,7 +762,7 @@ def test_service_record_reply_is_not_bounded_by_the_client_input_window(
 
         # Serving a read always outlasts a client input window this short, as waiting on the guards does a long one.
         with monkeypatch.context() as patch:
-            patch.setattr(extension_records, "_CLIENT_INPUT_SECONDS", 0.001)
+            patch.setattr(extension_records, "CLIENT_INPUT_SECONDS", 0.001)
             present, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
         try:
             assert present.state == "present" and present.revision == written.revision
@@ -798,7 +798,7 @@ def test_service_record_write_input_is_bounded_and_waited_for_outside_the_profil
         )
 
         with monkeypatch.context() as patch:
-            patch.setattr(extension_records, "_CLIENT_INPUT_SECONDS", 5.0)
+            patch.setattr(extension_records, "CLIENT_INPUT_SECONDS", 5.0)
             with service.connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 30) as held:
                 assert isinstance(held.reply().root, SecretReady)
                 waiting_since = time.monotonic()

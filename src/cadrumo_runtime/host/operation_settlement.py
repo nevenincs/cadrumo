@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from .operation_host import ProfileWorkerOperationHost
 
-_LAPSE_CHECK_SECONDS = 30.0
+LAPSE_CHECK_SECONDS = 30.0
 _log = get_logger(__name__)
 
 
@@ -70,7 +70,7 @@ async def settle_lapsed_operations(host: ProfileWorkerOperationHost) -> None:
     """
     now = monotonic()
     checked_at = host.lapse_checked_at
-    if host.lapse_lock.locked() or (checked_at is not None and now - checked_at < _LAPSE_CHECK_SECONDS):
+    if host.lapse_lock.locked() or (checked_at is not None and now - checked_at < LAPSE_CHECK_SECONDS):
         return
     async with host.lapse_lock:
         host.lapse_checked_at = now

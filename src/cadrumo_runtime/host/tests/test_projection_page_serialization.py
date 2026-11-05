@@ -17,7 +17,7 @@ from cadrumo_client.contracts.projection_pages import (
     project_encoded_page,
 )
 
-from ..operation_host import _projection_document
+from ..operation_host import projection_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,8 +38,8 @@ class _BadProjection(BaseModel):
 
 def test_paged_projection_has_the_same_canonical_bytes_as_full_validation() -> None:
     result = _NestedProjection(label="ñ" * 40_000, nested=[{"amount": 19, "name": "áé"}])
-    full = _projection_document(result, paged=False)
-    paged = _projection_document(result, paged=True)
+    full = projection_document(result, paged=False)
+    paged = projection_document(result, paged=True)
     assert canonical_json_bytes(paged) == canonical_json_bytes(full)
     first = project_encoded_page(encode_projection_document(paged), ProjectionPageRequest())
     assert first.decode() == canonical_json_bytes(full)[: len(first.decode())]
@@ -48,12 +48,12 @@ def test_paged_projection_has_the_same_canonical_bytes_as_full_validation() -> N
 @pytest.mark.parametrize("replacement", [[], 7])
 def test_paged_projection_refuses_invalid_root(replacement: Any) -> None:
     with pytest.raises(ValidationError):
-        _projection_document(_BadProjection(replacement=replacement), paged=True)
+        projection_document(_BadProjection(replacement=replacement), paged=True)
 
 
 def test_paged_projection_refuses_malformed_serializer_output() -> None:
     with pytest.raises(PydanticSerializationError):
-        _projection_document(_BadProjection(replacement={"bad": object()}), paged=True)
+        projection_document(_BadProjection(replacement={"bad": object()}), paged=True)
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
@@ -74,4 +74,4 @@ def test_paged_projection_refuses_excessive_nesting_at_canonical_encoder() -> No
 
 def test_pydantic_serializer_normalizes_nonfinite_and_nonstring_keys_consistently() -> None:
     result = _BadProjection(replacement={1: float("nan")})
-    assert _projection_document(result, paged=True) == _projection_document(result, paged=False)
+    assert projection_document(result, paged=True) == projection_document(result, paged=False)

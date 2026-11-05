@@ -30,9 +30,7 @@ from cadrumo.adapters.persistence.storage.profile_custody import build_profile_c
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
-)
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
@@ -55,7 +53,7 @@ from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [
     pytest.mark.integration,
@@ -177,7 +175,7 @@ def _assert_resume_and_view(
 
 def test_installed_cli_resumes_other_profile_without_retiring_independent_api_session(
     monkeypatch: pytest.MonkeyPatch,
-    _isolated_cli_backend: Path,
+    isolated_cli_backend: Path,
     run_cadrumo_cli,
 ) -> None:
     """A saved human sign-in resumes without prompting while another profile's API session survives."""
@@ -193,20 +191,20 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
         acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, _KeyringError, _KeyringError)
     )
     passphrase = dev_test_database_password()
-    _isolated_cli_backend.mkdir(parents=True, exist_ok=True)
-    endpoint = WindowsEndpoint(storage_root=_isolated_cli_backend)
+    isolated_cli_backend.mkdir(parents=True, exist_ok=True)
+    endpoint = WindowsEndpoint(storage_root=isolated_cli_backend)
     installed = installation(
-        storage_root=_isolated_cli_backend,
+        storage_root=isolated_cli_backend,
         os_owner_id=owner_id(),
         storage_identity=endpoint.storage_identity,
     )
     with administration_subject(
-        _isolated_cli_backend.parent,
+        isolated_cli_backend.parent,
         os_owner_id=owner_id(),
         installation_id=installed.installation_id,
         profile_label="Receipt profile A",
     ) as enrollment:
-        assert enrollment.store.root == _isolated_cli_backend
+        assert enrollment.store.root == isolated_cli_backend
         first_id = enrollment.store.binding.profile_id
         enrollment_id = uuid4()
         enrollment.service.request(enrollment_id, enrollment.proposal)
@@ -219,10 +217,10 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
         close_active_bucket_session()
         second_id = UUID(register_cli_profile(label="Receipt profile B", log_in=False))
         close_active_bucket_session()
-        _persist_receipts(installed.installation_id, _isolated_cli_backend, first_id, second_id, passphrase)
+        _persist_receipts(installed.installation_id, isolated_cli_backend, first_id, second_id, passphrase)
         _select(first_id)
-        first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
-        second_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=second_id)
+        first_receipt = receipt_store.profile_session_path(storage_root=isolated_cli_backend, profile_id=first_id)
+        second_receipt = receipt_store.profile_session_path(storage_root=isolated_cli_backend, profile_id=second_id)
         assert first_receipt.is_file() and second_receipt.is_file()
         before_second = second_receipt.read_bytes()
         second_keyring = {key: value for key, value in keyring.entries.items() if key[1].startswith(f"{second_id}:")}
@@ -231,7 +229,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
 
         stop, boot = Event(), uuid4()
         profiles = RuntimeProfileConnections(
-            storage_root=_isolated_cli_backend,
+            storage_root=isolated_cli_backend,
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,

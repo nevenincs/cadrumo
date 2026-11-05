@@ -42,8 +42,8 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 
 from ...contracts.tests.inventory_request_support import inventory_request
-from ..worker_authorization import _require_inventory_ipc_budget, _write_permit
-from ..worker_authorization_lease import _read_inventory_permit
+from ..worker_authorization import require_inventory_ipc_budget, write_permit
+from ..worker_authorization_lease import read_inventory_permit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -195,7 +195,7 @@ def _receive(worker: MemoryChannel, *, request_id: UUID, boot_id: UUID) -> Worke
     deadline = time.monotonic() + 5
     header = read_document(worker, WorkerAuthorizationReply, deadline=deadline).root
     assert isinstance(header, WorkerAutomationInventoryTransfer)
-    return _read_inventory_permit(
+    return read_inventory_permit(
         worker, header, inventory_request(request_id), runtime_boot_id=boot_id, deadline=deadline
     )
 
@@ -207,12 +207,12 @@ def test_the_shipped_budget_is_one_mebibyte() -> None:
 def test_thirty_two_agent_keys_cross_the_worker_channel_whole() -> None:
     inventory = _agent_key_inventory(_AGENT_KEYS)
     assert _size(inventory) > MAXIMUM_FRAME_BYTES
-    _require_inventory_ipc_budget(inventory)
+    require_inventory_ipc_budget(inventory)
     runtime, worker = _channels()
     request_id, boot_id = uuid4(), uuid4()
     permit = _permit(inventory, request_id=request_id, boot_id=boot_id)
 
-    _write_permit(runtime, permit, deadline=time.monotonic() + 5)
+    write_permit(runtime, permit, deadline=time.monotonic() + 5)
 
     assert len(runtime.writes) > 2
     assert all(len(frame) <= MAXIMUM_FRAME_BYTES + 5 for frame in runtime.writes)
@@ -223,15 +223,15 @@ def test_thirty_two_agent_keys_cross_the_worker_channel_whole() -> None:
 
 def test_an_inventory_at_the_budget_is_released_and_one_byte_more_is_refused() -> None:
     at_budget = _inventory_of_size(_ONE_MIB)
-    _require_inventory_ipc_budget(at_budget)
+    require_inventory_ipc_budget(at_budget)
     runtime, worker = _channels()
     request_id, boot_id = uuid4(), uuid4()
     permit = _permit(at_budget, request_id=request_id, boot_id=boot_id)
-    _write_permit(runtime, permit, deadline=time.monotonic() + 5)
+    write_permit(runtime, permit, deadline=time.monotonic() + 5)
     assert _receive(worker, request_id=request_id, boot_id=boot_id) == permit
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        _require_inventory_ipc_budget(_inventory_of_size(_ONE_MIB + 1))
+        require_inventory_ipc_budget(_inventory_of_size(_ONE_MIB + 1))
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 

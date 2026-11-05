@@ -52,7 +52,7 @@ from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -184,7 +184,7 @@ def seeded_queue(tmp_path: Path) -> Iterator[None]:
 
 
 def _listed(*args: str) -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "list", *args])
+    result = invoke(["--format", "json", "app", "ledger", "evidence", "review", "list", *args])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert isinstance(payload, dict)
@@ -284,7 +284,7 @@ def test_the_notice_is_absent_when_the_narrowed_queue_carries_none() -> None:
 @pytest.mark.usefixtures("seeded_queue")
 def test_the_text_queue_carries_the_same_counts_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "list"])
+    result = invoke(["app", "ledger", "evidence", "review", "list"])
 
     assert result.exit_code == 0, result.output
     lines = {line.split("\t")[0]: line for line in result.output.splitlines()}

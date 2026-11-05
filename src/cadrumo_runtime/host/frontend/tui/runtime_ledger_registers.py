@@ -607,7 +607,7 @@ class RuntimeInventoryTuiDoorV1:
         return await asyncio.to_thread(_read_closing_authority, path)
 
 
-def _read_typed_file[ModelT: BaseModel](path: str, model: type[ModelT]) -> ModelT:
+def read_typed_file[ModelT: BaseModel](path: str, model: type[ModelT]) -> ModelT:
     """Validate one operator-named JSON file against its canonical model; its content is never echoed."""
     try:
         return model.model_validate_json(Path(path).expanduser().read_text(encoding=UTF_8_ENCODING))
@@ -620,11 +620,11 @@ def _read_typed_file[ModelT: BaseModel](path: str, model: type[ModelT]) -> Model
 
 
 def _read_closing_value_facts(path: str) -> InventoryClosingValueFactsInput:
-    return _read_typed_file(path, InventoryClosingValueFactsInput)
+    return read_typed_file(path, InventoryClosingValueFactsInput)
 
 
 def _read_acquisition_cost(path: str) -> InventoryAcquisitionCostRequest:
-    facts = _read_typed_file(path, InventoryAcquisitionFacts)
+    facts = read_typed_file(path, InventoryAcquisitionFacts)
     try:
         return InventoryAcquisitionCostRequest.from_domain(facts.to_cost())
     except ValidationError as error:
@@ -634,7 +634,7 @@ def _read_acquisition_cost(path: str) -> InventoryAcquisitionCostRequest:
 
 
 def _read_closing_authority(path: str) -> InventoryClosingAuthorityRecordInput:
-    return InventoryClosingAuthorityRecordInput.from_domain(_read_typed_file(path, InventoryClosingAuthorityRecord))
+    return InventoryClosingAuthorityRecordInput.from_domain(read_typed_file(path, InventoryClosingAuthorityRecord))
 
 
 def compose_registers_tools(client: FrontendClient, profile_label: str) -> tuple[LedgerToolV1, ...]:

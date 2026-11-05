@@ -27,7 +27,7 @@ from cadrumo_client.transport.frontend_client_contracts import CustodyRecovering
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...admin import AdminServer
-from ...main import _wait_out_recovery
+from ...main import wait_out_recovery
 from ...service import AgentService
 from .admin_wire_support import read_frame, send_frame
 
@@ -211,10 +211,10 @@ def test_the_main_loop_waits_out_a_suspension_and_reads_its_lease_again_at_the_n
     wake = Event()
     wake.set()
     runtime.answers(denial=AccessDenialCode.CUSTODY_RECOVERING, window=30)
-    assert _wait_out_recovery(service, wake) is True
+    assert wait_out_recovery(service, wake) is True
     assert runtime.claims == 0
     runtime.answers(denial=None)
-    assert _wait_out_recovery(service, wake) is False
+    assert wait_out_recovery(service, wake) is False
     assert runtime.claims == 0
 
 

@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 
@@ -187,7 +187,7 @@ def _calculate_through_cli(
             str(_REVIEWED_EDITION),
         )
         assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-        work_unit_id = _payload(created.output)["work_unit_id"]
+        work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
         assert isinstance(work_unit_id, str) and work_unit_id, created.output
         result = session.invoke_password(
             "app",
@@ -207,7 +207,7 @@ def _calculate_through_cli(
             "renta-modelo-131-pagos-fraccionados=0",
         )
     assert result.exit_code == 0, result.output
-    return _payload(result.output)
+    return unwrap_schema_envelope(result.output)
 
 
 def test_m100_cli_calculate_names_the_unresolved_rental_activity_credit(

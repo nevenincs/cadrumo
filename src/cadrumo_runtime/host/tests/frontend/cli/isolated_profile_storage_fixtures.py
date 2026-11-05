@@ -22,7 +22,7 @@ from .runtime_profile_backend import (
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
+def isolated_state(tmp_path: Path) -> Iterator[None]:
     with isolated_sessionless_storage_root(tmp_path=tmp_path):
         yield
 

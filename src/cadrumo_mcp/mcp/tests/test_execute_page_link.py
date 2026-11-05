@@ -12,7 +12,7 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
 )
 from cadrumo.application.workflow.run_read_operation import WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID
 
-from .test_execute_subject_tool import _RUN_ID, _execute, _RecordingClient, _run_payload, _snapshot_payload
+from .test_execute_subject_tool import RUN_ID, RecordingClient, execute, run_payload, snapshot_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -21,9 +21,9 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 @pytest.mark.anyio
 async def test_a_submitted_profile_operation_links_its_page_even_when_its_outcome_is_unknown() -> None:
-    client = _RecordingClient(_PROFILE)
+    client = RecordingClient(_PROFILE)
 
-    result = await _execute(client, {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID, "payload": {"kind": "status"}})
+    result = await execute(client, {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID, "payload": {"kind": "status"}})
 
     # The submission may have committed, so the person is still shown where to look.
     assert result["outcome"] == "unresolved"
@@ -35,14 +35,14 @@ async def test_a_submitted_profile_operation_links_its_page_even_when_its_outcom
 
 @pytest.mark.anyio
 async def test_a_declaration_operation_links_the_declarations_page() -> None:
-    client = _RecordingClient(_PROFILE)
+    client = RecordingClient(_PROFILE)
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
             "subject_ref": "c" * 64,
-            "payload": _snapshot_payload(_PROFILE),
+            "payload": snapshot_payload(_PROFILE),
         },
     )
 
@@ -51,21 +51,21 @@ async def test_a_declaration_operation_links_the_declarations_page() -> None:
 
 @pytest.mark.anyio
 async def test_an_operation_no_page_shows_carries_no_link() -> None:
-    client = _RecordingClient(_PROFILE)
+    client = RecordingClient(_PROFILE)
 
-    result = await _execute(
-        client, {"definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID, "payload": _run_payload(_PROFILE)}
+    result = await execute(
+        client, {"definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID, "payload": run_payload(_PROFILE)}
     )
 
-    assert [item.subject_ref for item in client.submitted] == [_RUN_ID]
+    assert [item.subject_ref for item in client.submitted] == [RUN_ID]
     assert "page" not in result
 
 
 @pytest.mark.anyio
 async def test_a_refused_call_changed_nothing_and_carries_no_link() -> None:
-    client = _RecordingClient(_PROFILE)
+    client = RecordingClient(_PROFILE)
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,

@@ -160,7 +160,7 @@ def main() -> None:
     mode, filename = sys.argv[1:]
     record = Path(filename)
     if mode == "pid-churn":
-        with _ProgressWatchdog() as watchdog:
+        with ProgressWatchdog() as watchdog:
             _pid_churn(record, progress=watchdog.progress)
         return
     lifetime = Timer(20, os._exit, args=(124,))
@@ -196,7 +196,7 @@ def main() -> None:
     lifetime.cancel()
 
 
-class _ProgressWatchdog:
+class ProgressWatchdog:
     """Exit a stuck churn fixture, resetting only after a real child milestone."""
 
     def __init__(
@@ -214,7 +214,7 @@ class _ProgressWatchdog:
         self._stopped = False
         self._thread = Thread(target=self._watch, name="churn-progress-watchdog", daemon=True)
 
-    def __enter__(self) -> _ProgressWatchdog:
+    def __enter__(self) -> ProgressWatchdog:
         self._thread.start()
         return self
 
@@ -244,7 +244,7 @@ def _pid_churn(record: Path, *, progress: Callable[[], None]) -> None:
     """Exercise process enumeration and retained-handle cleanup against real exits."""
     from concurrent.futures import ThreadPoolExecutor
 
-    from ..windows_process import WindowsProcessScope, _release_job_members, _retain_job_members
+    from ..windows_process import WindowsProcessScope, release_job_members, retain_job_members
 
     scope = WindowsProcessScope()
     try:
@@ -267,8 +267,8 @@ def _pid_churn(record: Path, *, progress: Callable[[], None]) -> None:
             running = [workers.submit(churn) for _ in range(3)]
             while not all(future.done() for future in running):
                 assert scope._job is not None
-                retained = _retain_job_members(scope._job)
-                _release_job_members(retained)
+                retained = retain_job_members(scope._job)
+                release_job_members(retained)
                 assert all(pid > 0 for pid in scope.active_process_ids())
                 queries += 1
             launched = sum(future.result() for future in running)

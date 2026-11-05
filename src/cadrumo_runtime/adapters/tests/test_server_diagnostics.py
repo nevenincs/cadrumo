@@ -82,7 +82,7 @@ def logger(monkeypatch: pytest.MonkeyPatch) -> logging.Logger:
     """
     selected = logging.Logger(runtime_server.__name__, level=logging.DEBUG)
     selected.propagate = False
-    monkeypatch.setattr(runtime_server, "_LOGGER", selected)
+    monkeypatch.setattr(runtime_server, "LOGGER", selected)
     return selected
 
 

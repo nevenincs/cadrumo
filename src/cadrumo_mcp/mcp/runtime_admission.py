@@ -67,7 +67,7 @@ class AdmissionDenial:
         return FrontendRefusedError(self.code, sign_in=self.sign_in)
 
 
-def _runtime_selection() -> ActiveProfileReply:
+def runtime_selection() -> ActiveProfileReply:
     """Ask the running runtime which profile is selected, on a connection that holds no session."""
     client = asyncio.run(open_installed_installation_client())
     try:
@@ -84,7 +84,7 @@ def selected_profile_id(*, expected: UUID | None) -> UUID:
     sign-in by a later selection. A selection the runtime could not read is
     refused as storage unavailable, never as nothing selected.
     """
-    answer = _runtime_selection()
+    answer = runtime_selection()
     profile_id = answer.selected_profile_id
     if profile_id is None:
         if answer.presence is SignInPresence.UNKNOWN:

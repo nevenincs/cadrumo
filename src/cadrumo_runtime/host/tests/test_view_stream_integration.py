@@ -130,7 +130,7 @@ from cadrumo_client.transport.view_stream import (
 from ...adapters.worker_transport import worker_endpoint
 from ..view_stream_relay import ViewStreamRelay
 from ..worker_view_stream import WorkerViewStream, WorkerViewStreams
-from .test_view_stream_relay import _RUNTIME_NAMESPACE, _Clock, _Lane, _Window
+from .test_view_stream_relay import RUNTIME_NAMESPACE, Clock, Lane, Window
 from .view_session_world import ViewHttpBoundary, ViewSessionWorld
 from .view_stream_host_support import bind_worker_leg, synthetic_worker_identity
 
@@ -337,7 +337,7 @@ class _View:
 
     settling: asyncio.Task[OperationPersistedSnapshot]
 
-    lane: _Lane
+    lane: Lane
 
     site: _SedeStandIn
 
@@ -347,7 +347,7 @@ class _View:
 class _Panel:
     """The person's window: one reader of the view connection, which carries images, documents and transfers."""
 
-    def __init__(self, window: _Window) -> None:
+    def __init__(self, window: Window) -> None:
 
         self.window = window
 
@@ -547,11 +547,11 @@ async def _running_view(
 
     settling = asyncio.ensure_future(world.run_to_settlement(supervisor, operation_id))
 
-    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=RUNTIME_NAMESPACE)
 
     runtime.listen()
 
-    lanes: list[_Lane] = []
+    lanes: list[Lane] = []
 
     try:
         await world.until(lambda: bool(opened) or settling.done(), timeout=_SECONDS)
@@ -564,8 +564,8 @@ async def _running_view(
 
         assert bind == ViewWorkerBind(operation_id=operation_id, session_id=session_id)
 
-        lane = _Lane(
-            tmp_path, relay, _Clock(), identity, operation_id, session_id, person_id, runtime, held, sink=opened[0]
+        lane = Lane(
+            tmp_path, relay, Clock(), identity, operation_id, session_id, person_id, runtime, held, sink=opened[0]
         )
 
         lanes.append(lane)

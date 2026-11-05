@@ -153,7 +153,7 @@ def test_starved_worker_control_reply_keeps_the_worker() -> None:
 
 
 def test_control_reply_beyond_timeout_contains_the_worker() -> None:
-    worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
+    worker = _worker(latency=transport.CONTROL_EXCHANGE_SECONDS + 1)
 
     with pytest.raises(RefusalError) as refused:
         worker.status()
@@ -243,7 +243,7 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
 
 def test_default_control_timeout_also_ends_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
     worker = _worker(latency=0)
-    monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
+    monkeypatch.setattr(transport, "CONTROL_EXCHANGE_SECONDS", 0.03)
     with ThreadPoolExecutor(max_workers=1) as pool:
         with worker._lock:
             queued = pool.submit(worker.status)
@@ -259,7 +259,7 @@ def test_queued_caller_that_times_out_is_named_without_containing_the_worker(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     worker = _worker(latency=0)
-    monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
+    monkeypatch.setattr(transport, "CONTROL_EXCHANGE_SECONDS", 0.03)
     caplog.set_level(logging.DEBUG, logger=transport.__name__)
     with ThreadPoolExecutor(max_workers=1) as pool, worker._lock:
         queued = pool.submit(worker.status)
@@ -293,7 +293,7 @@ def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
 
 
 def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyPatch) -> None:
-    worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
+    worker = _worker(latency=transport.CONTROL_EXCHANGE_SECONDS + 1)
     retiring = transport.ProfileWorkerTransport._retire_failed_exchange
 
     def retire(self: transport.ProfileWorkerTransport, error: BaseException, deadline: float | None) -> None:

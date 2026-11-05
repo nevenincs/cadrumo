@@ -11,7 +11,7 @@ from threading import Thread
 
 import pytest
 
-from ...main import _MAX_STARTUP_FRAME_BYTES, _read_startup_frame
+from ...main import MAX_STARTUP_FRAME_BYTES, read_startup_frame
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -89,7 +89,7 @@ def test_startup_frame_reader_leaves_bytes_after_its_newline_for_lifetime_monito
     try:
         os.write(writer, frame + b"extra")
         os.close(writer)
-        assert _read_startup_frame(reader) == frame
+        assert read_startup_frame(reader) == frame
         assert os.read(reader, 1) == b"e"
     finally:
         os.close(reader)
@@ -97,7 +97,7 @@ def test_startup_frame_reader_leaves_bytes_after_its_newline_for_lifetime_monito
 
 def test_startup_frame_reader_stops_at_the_existing_size_limit() -> None:
     reader, writer = os.pipe()
-    payload = b"x" * (_MAX_STARTUP_FRAME_BYTES + 2) + b"\n"
+    payload = b"x" * (MAX_STARTUP_FRAME_BYTES + 2) + b"\n"
     errors: list[OSError] = []
 
     def write_frame() -> None:
@@ -114,11 +114,11 @@ def test_startup_frame_reader_stops_at_the_existing_size_limit() -> None:
     writer_thread = Thread(target=write_frame)
     writer_thread.start()
     try:
-        line = _read_startup_frame(reader)
+        line = read_startup_frame(reader)
         writer_thread.join(timeout=5)
         assert not writer_thread.is_alive()
         assert not errors
-        assert len(line) == _MAX_STARTUP_FRAME_BYTES + 1
+        assert len(line) == MAX_STARTUP_FRAME_BYTES + 1
         assert not line.endswith(b"\n")
     finally:
         os.close(reader)

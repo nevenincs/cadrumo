@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 # Both budgets start when their frames are due, never at dispatch: the client
 # controls only its own input, and queueing for a fence or a worker is not its time.
-_CLIENT_INPUT_SECONDS = 10
+CLIENT_INPUT_SECONDS = 10
 _REPLY_WRITE_SECONDS = 5
 
 
@@ -136,7 +136,7 @@ def read_extension_input(exchange: ExtensionExchange, payload: bytearray) -> boo
         if not exchange.active():
             exchange.refuse(ExtensionRecordRefusal.LEASE_INACTIVE)
             return False
-        deadline = time.monotonic() + _CLIENT_INPUT_SECONDS
+        deadline = time.monotonic() + CLIENT_INPUT_SECONDS
         write_document(
             exchange.channel,
             SecretReady(

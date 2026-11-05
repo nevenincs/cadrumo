@@ -40,7 +40,7 @@ _LOGGER_NAME = "cadrumo_client.transport.windows_process"
 
 
 def test_churn_watchdog_resets_on_progress_and_expires_when_progress_stops() -> None:
-    from .job_fixture import _ProgressWatchdog
+    from .job_fixture import ProgressWatchdog
 
     observed: queue.Queue[float] = queue.Queue()
     expired = threading.Event()
@@ -51,7 +51,7 @@ def test_churn_watchdog_resets_on_progress_and_expires_when_progress_stops() -> 
             observed.put(now)
         return now
 
-    watchdog = _ProgressWatchdog(timeout=60, clock=clock, expired=expired.set)
+    watchdog = ProgressWatchdog(timeout=60, clock=clock, expired=expired.set)
     with watchdog:
         assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 0
         with watchdog._condition:

@@ -23,7 +23,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
@@ -34,9 +34,9 @@ from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
-from .test_m303_zero_cuota_and_investment_inputs_cli import _profile_facts
+from .test_m303_zero_cuota_and_investment_inputs_cli import profile_facts
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -107,7 +107,7 @@ def _ledger_row_count() -> int:
 
 def test_an_iva_rate_typed_as_a_percentage_is_refused_and_writes_nothing(request: pytest.FixtureRequest) -> None:
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
 
     added = _add_sale("21")
 
@@ -119,7 +119,7 @@ def test_an_iva_rate_typed_as_a_percentage_is_refused_and_writes_nothing(request
 
 def test_an_iva_bearing_sale_reaches_a_calculated_and_verified_quarter(request: pytest.FixtureRequest) -> None:
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     _seed_operator()
 
     added = _add_sale("0.21")

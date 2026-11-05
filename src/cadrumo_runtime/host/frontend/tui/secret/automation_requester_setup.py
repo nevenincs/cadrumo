@@ -10,13 +10,13 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from . import automation_requester_contracts as _contracts
+from . import automation_requester_contracts
 
 
 def validate_client_admission(
     profile_id: UUID,
     client: FrontendClient | None,
-    open_client: _contracts.RequesterClientOpener | None,
+    open_client: automation_requester_contracts.RequesterClientOpener | None,
     reviewer_client: FrontendClient | None,
     journey_timeout: float,
 ) -> None:

@@ -30,17 +30,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
-from ._profile_cli_support import (
-    create_quiet_profile as _create_profile,
+from .profile_cli_support import (
+    create_quiet_profile,
+    edit_quiet_profile,
+    invoke_protected_profile,
+    profile_rows,
 )
-from ._profile_cli_support import (
-    edit_quiet_profile as _edit_profile,
-)
-from ._profile_cli_support import invoke_protected_profile
-from ._profile_cli_support import native_profile_runtime as native_profile_runtime
-from ._profile_cli_support import (
-    profile_rows as _profile_rows,
-)
+from .profile_cli_support import native_profile_runtime as native_profile_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -74,7 +70,7 @@ def _registered_profile_exists(name: str) -> bool:
 def test_legal_entity_profile_create_defers_missing_legal_form_to_complete_setup() -> None:
     """Registration persists an incomplete legal entity; completion enforces its form."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         "missing-form-co",
         "--entity-type",
         "legal_entity",
@@ -96,7 +92,7 @@ def test_legal_entity_profile_create_defers_missing_legal_form_to_complete_setup
 def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None:
     """Registration leaves the operator at the explicit setup declaration."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         "irnr-profile",
         "--entity-type",
         "natural_person",
@@ -146,7 +142,7 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
         log_in=False,
     )
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "branch-to-legal",
         "--entity-type",
         "legal_entity",
@@ -154,7 +150,7 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
 
     assert edit.exit_code != 0, edit.output
     assert "--legal-name" in edit.output
-    rows = _profile_rows("branch-to-legal")
+    rows = profile_rows("branch-to-legal")
     assert rows["taxpayer_type.entity_type"] == "natural_person"
     assert rows["identity.name"] == "Branch"
     assert rows["identity.surnames"] == "Operator"
@@ -189,7 +185,7 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
         log_in=False,
     )
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "branch-to-natural",
         "--entity-type",
         "natural_person",
@@ -198,7 +194,7 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     )
 
     assert edit.exit_code == 0, edit.output
-    rows = _profile_rows("branch-to-natural")
+    rows = profile_rows("branch-to-natural")
     assert rows["taxpayer_type.entity_type"] == "natural_person"
     assert rows["identity.name"] == "Branch"
     assert "identity.surnames" not in rows
@@ -223,7 +219,7 @@ def test_profile_create_refuses_foral_tax_residence_with_concierto_economico_red
 ) -> None:
     """Foral tax residences must refuse AEAT profile creation with a legal redirect."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         name,
         "--entity-type",
         "natural_person",

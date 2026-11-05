@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,

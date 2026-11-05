@@ -37,10 +37,9 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
@@ -98,7 +97,7 @@ _NO_PRIOR_PAGOS_FRACCIONADOS = ("--binding", "modelo-130-pagos-fraccionados-ante
 
 def _seed_ready_profile(root: Path, profile_id: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=(
@@ -129,7 +128,7 @@ def _seed_ready_profile(root: Path, profile_id: str) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         root=root,
         label="register-owned acquisition",

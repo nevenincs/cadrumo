@@ -21,12 +21,12 @@ from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
 from .. import runtime_adapter as mcp_runtime
 from ..runtime_adapter import RuntimeMcpAdapter
-from .test_authentication_handover import _Client
+from .test_authentication_handover import Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class _CloseClient(_Client):
+class _CloseClient(Client):
     def __init__(self, profile_id: UUID, *, fail_once: bool = False, fail_status: bool = False) -> None:
         super().__init__(profile_id, fail_status=fail_status)
         self.fail_once = fail_once

@@ -27,8 +27,7 @@ from typing import Final
 from pydantic import BaseModel, SecretStr
 
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
@@ -80,7 +79,7 @@ class ProviderCredentialUnavailableReason(StrEnum):
 class ResolvedDirectCredential(BaseModel):
     """A direct key or token a consumer may use. Its repr masks the secret."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     provider: LaneId
     consumer: ProviderConsumer
@@ -95,7 +94,7 @@ class ResolvedDirectCredential(BaseModel):
 class ResolvedProviderSignIn(BaseModel):
     """The assistant uses the provider's own CLI sign-in; Cadrumo hands over no secret."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LaneId
     consumer: ProviderConsumer
@@ -105,7 +104,7 @@ class ResolvedProviderSignIn(BaseModel):
 class ProviderCredentialUnavailable(BaseModel):
     """No credential resolves, for a typed reason."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     consumer: ProviderConsumer
@@ -115,7 +114,7 @@ class ProviderCredentialUnavailable(BaseModel):
 class ResolvedKeyless(BaseModel):
     """A keyless lane is usable with no credential; Cadrumo hands over no secret and no URL."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LaneId
     consumer: ProviderConsumer

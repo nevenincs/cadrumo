@@ -35,7 +35,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_reads import read_operation
 
-_READ_TIMEOUT_SECONDS = 120.0
+READ_TIMEOUT_SECONDS = 120.0
 
 
 class RuntimeModeloWorkbenchSource:
@@ -89,7 +89,7 @@ class RuntimeModeloWorkbenchSource:
         """Assemble one casilla's help in the worker, for the revision and calculation the form showed."""
         # Cancellation of the UI observer cannot stop its worker thread.
         # Serialize until that read returns, sharing one queue/read deadline.
-        deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
+        deadline = time.monotonic() + READ_TIMEOUT_SECONDS
         if not self._help_read_lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
             raise RefusalError(RefusalCode.TIMEOUT)
         try:

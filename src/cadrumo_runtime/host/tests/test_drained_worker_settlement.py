@@ -35,7 +35,7 @@ from cadrumo_runtime.contracts.profile_worker import ProfileWorkerDrained
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..shutdown import RuntimeStop
-from .test_runtime_drain_refusal import _EmptyApprovals, _FailedWorker, _Owner
+from .test_runtime_drain_refusal import EmptyApprovals, FailedWorker, Owner
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -133,7 +133,7 @@ def _profiles(root: Path, registry: OperationRegistry | None) -> tuple[RuntimePr
 
 def _host(profiles: RuntimeProfileConnections, worker: _DrainedWorker) -> None:
     profiles._profiles[worker.identity.binding.profile_id] = cast(
-        RuntimeProfileHost, SimpleNamespace(owner=_Owner(cast(_FailedWorker, worker)), approvals=_EmptyApprovals())
+        RuntimeProfileHost, SimpleNamespace(owner=Owner(cast(FailedWorker, worker)), approvals=EmptyApprovals())
     )
 
 

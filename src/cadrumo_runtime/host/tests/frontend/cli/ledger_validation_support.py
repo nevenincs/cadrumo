@@ -17,14 +17,14 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.cli_json_support import require_json_object
 
-from ._ledger_llm_support import _import_one_transaction
 from .cli_runner import invoke_cached_cli
+from .ledger_llm_support import import_one_transaction
 from .runtime_profile_backend import operator_profile_bound_to_cli
 
-_PROFILE_LABEL = "tester"
+PROFILE_LABEL = "tester"
 
 
-def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
+def invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
     return invoke_cached_cli(args, env=env)
 
 
@@ -58,7 +58,7 @@ def open_bucket_session(tmp_path: Path) -> Generator[None]:
     ):
         try:
             with operator_profile_bound_to_cli(
-                storage_root=storage_root, label=_PROFILE_LABEL, prepare=_declare_general_regime_iva_profile
+                storage_root=storage_root, label=PROFILE_LABEL, prepare=declare_general_regime_iva_profile
             ):
                 yield
         finally:
@@ -73,9 +73,9 @@ def import_validation_transaction(tmp_path: Path) -> str:
     home, and a second copy of it drifted here under a name claiming it also
     created a profile, which it never did. Only the scenario data is local.
     """
-    return _import_one_transaction(
+    return import_one_transaction(
         tmp_path,
-        invoke_cli=_invoke,
+        invoke_cli=invoke,
         payee="Client SL",
         reference="Invoice 1",
         amount="-50.00",
@@ -83,7 +83,7 @@ def import_validation_transaction(tmp_path: Path) -> str:
     )
 
 
-def _set_profile_axis(key: str, value: str) -> None:
+def set_profile_axis(key: str, value: str) -> None:
     set_active_test_profile_facts((UserProfileFact(path=key, value=value),))
 
 
@@ -119,7 +119,7 @@ _GENERAL_REGIME_IVA_AXES: tuple[tuple[str, str | bool], ...] = (
 _FILER_FISCAL_ADDRESS_AXES: tuple[tuple[str, str | bool], ...] = ((FILER_POSTCODE_FACT_PATH, "28013"),)
 
 
-def _declare_general_regime_iva_profile() -> None:
+def declare_general_regime_iva_profile() -> None:
     """Complete the minimal profile for a domestic general-regime filer.
 
     ``register_minimal_profile`` deliberately registers the smallest profile
@@ -143,8 +143,8 @@ def _declare_general_regime_iva_profile() -> None:
     )
 
 
-def _add_eligible_mixed_expense() -> str:
-    result = _invoke(
+def add_eligible_mixed_expense() -> str:
+    result = invoke(
         [
             "--format",
             "json",
@@ -175,11 +175,11 @@ def _add_eligible_mixed_expense() -> str:
     return transaction_id
 
 
-def _flatten_box(text: str) -> str:
+def flatten_box(text: str) -> str:
     return " ".join(text.replace("│", " ").split())
 
 
-def _assert_pipeline_managed_state_refusal(flat: str, output: str) -> None:
+def assert_pipeline_managed_state_refusal(flat: str, output: str) -> None:
     assert "set automatically" in flat, output
     assert "cannot be assigned by hand" in flat, output
     assert "BUSINESS, PERSONAL, MIXED" in flat, output

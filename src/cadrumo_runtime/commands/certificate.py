@@ -35,7 +35,7 @@ from pydantic import SecretStr
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 
 from .presentation import emit_envelope
@@ -60,7 +60,7 @@ def certificate_register(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Register (or re-point) a named certificate source for the active profile."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_certificate import register_source
 
     result = register_source(ctx, name=name, file=file, friendly_name=friendly_name)
@@ -84,7 +84,7 @@ def certificate_list(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Enumerate every registered certificate source for the active profile."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import CertificateSourceListPayload, CertificateSourcePayloadEntry
 
     from .runtime_certificate import list_sources
@@ -120,7 +120,7 @@ def certificate_select(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Mark ``name`` the active certificate source; its path becomes the certificate-provider path."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_certificate import select_source
 
     result = select_source(ctx, name=name)
@@ -150,7 +150,7 @@ def certificate_remove(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove ``name`` from the certificate-source registry. A no-op when ``name`` is not registered."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_certificate import remove_source
 
     result = remove_source(ctx, name=name)
@@ -183,7 +183,7 @@ def certificate_check(
     managing several apoderado certificates gets a reminder for each one
     individually rather than only the active certificate.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.auth.probes import PROBE_RESULTS_NEEDING_ATTENTION
     from cadrumo_client.commands.payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
 
@@ -253,7 +253,7 @@ def certificate_secret_set(
     history must not see it): it arrives via a hidden no-echo prompt or one
     bounded strict-JSON object through one canonical machine-secret channel.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.secure_input import (
         prompt_secret_no_echo,
         read_machine_secret_payload,
@@ -307,7 +307,7 @@ def certificate_secret_remove(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove the passphrase bound to the named certificate source. A no-op when unset."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_certificate import remove_source_passphrase
 
     result = remove_source_passphrase(ctx, name=name)

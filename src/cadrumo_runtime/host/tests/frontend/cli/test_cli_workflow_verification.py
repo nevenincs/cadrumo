@@ -21,7 +21,7 @@ from cadrumo.application.operator_surface.contract import get_operator_surface_c
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
@@ -259,11 +259,11 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     assert text_review.exit_code == 0, text_review.output
 
     return _WorkflowRoundTripOutcome(
-        status_payload=_json(status),
-        configured_payload=_json(configured),
-        imported_payload=_json(imported),
-        overview_payload=_json(overview),
-        review_payload=_json(review),
+        status_payload=unwrap_cli_result(status),
+        configured_payload=unwrap_cli_result(configured),
+        imported_payload=unwrap_cli_result(imported),
+        overview_payload=unwrap_cli_result(overview),
+        review_payload=unwrap_cli_result(review),
         review_text=text_review.output,
     )
 
@@ -363,7 +363,7 @@ def native_certificate_auth_reads(
             tested = invoke_read("test")
             assert status.exit_code == 0, status.output
             assert tested.exit_code == 0, tested.output
-            return _json(status), _json(tested)
+            return unwrap_cli_result(status), unwrap_cli_result(tested)
 
 
 def test_config_app_round_trip_certificate_auth_status_reports_configured(

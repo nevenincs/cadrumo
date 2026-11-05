@@ -29,7 +29,7 @@ from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resou
 from .worker_transport import WorkerChannel
 
 if TYPE_CHECKING:
-    from .worker_proof_control import _ProofCommand
+    from .worker_proof_control import ProofCommand
 
 _WORKER_NATIVE_HEALTH_WAIT_SECONDS = 2.0
 _NATIVE_GUARD_SLOW_SECONDS = 0.5
@@ -41,7 +41,7 @@ _NativeCallName = Literal[
     "health_check",
     "containment",
 ]
-_log = get_logger(__name__)
+log = get_logger(__name__)
 
 
 class ProfileWorkerNativeLifetime:
@@ -62,7 +62,7 @@ class ProfileWorkerNativeLifetime:
     _operation_channel: WorkerChannel | None
     _proof_channel: WorkerChannel | None = None
     _proof_dispatch_thread: Thread | None = None
-    _proof_commands: Queue[_ProofCommand | None] | None = None
+    _proof_commands: Queue[ProofCommand | None] | None = None
     _human_cancellation: ProfileProofCancellation | None = None
     _human_candidate: UUID | None
     _human_deadline: float | None
@@ -286,6 +286,6 @@ def _safe_diagnostic_event(
 ) -> None:
     """Keep timing telemetry from changing containment or refusal behavior."""
     try:
-        diagnostic_event(_log, event, fields=fields, level=level, primary_error=primary_error)
+        diagnostic_event(log, event, fields=fields, level=level, primary_error=primary_error)
     except BaseException:
         return

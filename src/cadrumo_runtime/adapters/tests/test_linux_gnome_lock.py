@@ -193,7 +193,7 @@ def test_native_pidfd_session_and_same_owner_bracket_the_response(
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return ("other" if failure == "session" else "c42", bus.uid + (failure == "uid"))
 
-    monkeypatch.setattr(linux_gnome_lock, "_shell_pidfd", owned_process)
+    monkeypatch.setattr(linux_gnome_lock, "shell_pidfd", owned_process)
     if failure is not None:
         with pytest.raises(RefusalError) as caught:
             sample_gnome_lock(bus, uid=bus.uid, session_id="c42", peer_session=peer_session, expected=expected)
@@ -230,9 +230,9 @@ def test_bound_login_release_requires_current_observer_and_preserves_custody_ind
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return observer, GnomeLockState(_EPOCH, 1, False, False, "user")
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
     assert result.active and result.lock_state is (OsLockState.UNKNOWN if failure else OsLockState.UNLOCKED)
     assert result.unattended is (LoginEligibility.UNKNOWN if failure else LoginEligibility.ELIGIBLE)
@@ -250,9 +250,9 @@ def test_missing_observer_never_reselects_an_enabled_later_producer(monkeypatch:
     def unexpectedly_called(*_args: object) -> None:
         raise AssertionError("A missing capture must remain UNKNOWN")
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", unexpectedly_called)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", unexpectedly_called)
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert result.active and result.lock_state is OsLockState.UNKNOWN and result.unattended is LoginEligibility.UNKNOWN
 
@@ -275,9 +275,9 @@ def _observe_with_gnome_state(
         assert expected == observer
         return observer, state
 
-    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
-    monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
+    monkeypatch.setattr(linux_logind_native, "NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_login, "gnome_observation", current_observer)
     return binding.observe(credential_facilities=credential_facilities)
 
 

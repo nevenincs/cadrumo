@@ -28,7 +28,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.payloads import ConfigProfileRecoveryResult, ConfigProfileRecoveryStatusResult
 from cadrumo_client.commands.recovery_handover import recovery_handover
 from cadrumo_client.commands.secure_input import (
@@ -39,7 +39,7 @@ from cadrumo_client.commands.secure_input import (
 )
 
 from .presentation import emit_envelope
-from .profile_admission import _profile_id
+from .profile_admission import profile_admission_profile_id
 
 
 class RecoveryEnableSecrets(MachineSecretPayload):
@@ -83,7 +83,7 @@ def _collect_passphrase(*, secrets_stdin: bool, secrets_fd: int | None) -> str:
 
 def _active_profile_id(ctx: typer.Context) -> UUID:
     """Resolve the exact root-selected or active profile for recovery operations."""
-    profile_id, _label = _profile_id(ctx)
+    profile_id, _label = profile_admission_profile_id(ctx)
     return profile_id
 
 
@@ -96,7 +96,7 @@ def profile_recovery_enable(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Enrol a recovery code for the active profile after proving its passphrase."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 
     profile_id = _active_profile_id(ctx)
@@ -140,7 +140,7 @@ def profile_recovery_disable(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove the active profile's recovery code after proving its passphrase."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.user_profile.recovery_custody import revoke_profile_recovery
 
     profile_id = _active_profile_id(ctx)
@@ -165,7 +165,7 @@ def profile_recovery_status(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Report whether the active profile has a recovery code enrolled."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_recovery_status import read_recovery_status
 
     status = read_recovery_status(ctx)

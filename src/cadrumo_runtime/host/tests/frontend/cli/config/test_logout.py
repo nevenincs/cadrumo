@@ -12,7 +12,7 @@ from click.testing import Result
 from pydantic import TypeAdapter
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
@@ -28,7 +28,7 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, Sig
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
@@ -182,9 +182,9 @@ def test_logout_missing_human_proof_refuses_and_keeps_selection(
 
 
 def test_logout_refuses_corrupt_default_without_claiming_idempotence(
-    _isolated_cli_backend: Path, run_cadrumo_cli: Callable[..., Result]
+    isolated_cli_backend: Path, run_cadrumo_cli: Callable[..., Result]
 ) -> None:
-    root = _isolated_cli_backend
+    root = isolated_cli_backend
     root.mkdir(exist_ok=True)
     corrupt = b"not = valid = toml"
     pointer_path(root).write_bytes(corrupt)

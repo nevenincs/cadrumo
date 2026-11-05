@@ -20,7 +20,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ..view_stream_relay import ViewStreamRelay
 from ..view_stream_worker_link import open_worker_view_leg
-from .test_view_stream_relay import _same_process_worker
+from .test_view_stream_relay import same_process_worker
 
 _LISTEN_SECONDS = 30.0
 
@@ -54,7 +54,7 @@ def bind_worker_leg(
             bind, channel = open_worker_view_leg(
                 storage_root=storage_root,
                 identity=identity,
-                verify=_same_process_worker,
+                verify=same_process_worker,
                 product_version=product_version,
             )
         except ProfileAccessRefusedError as refused:

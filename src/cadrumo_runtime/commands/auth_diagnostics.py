@@ -6,8 +6,8 @@ import typer
 
 from cadrumo.application.auth.diagnostics import AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from .presentation import emit_envelope
 
@@ -17,14 +17,14 @@ def auth_diagnostics_list(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import AuthDiagnosticsListResult
 
     from .runtime_auth_read import cli_auth_read
 
     report = cli_auth_read(ctx, kind="diagnostics_list", output_language=output_language).diagnostics_list
     if report is None:
-        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
+        raise CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     lines = [f"row_count\t{report.row_count}"]
     for row in report.rows:
         lines.append(_auth_diagnostic_text_row(row))
@@ -38,13 +38,13 @@ def auth_diagnostics_view(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_auth_read import cli_auth_read
 
     result = cli_auth_read(ctx, kind="diagnostics_view", diagnostic_id=diagnostic_id, output_language=output_language)
     detail = result.diagnostics_view
     if detail is None:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.auth.diagnostics.not_found",
             context={"diagnostic_id": diagnostic_id},
         )
@@ -107,7 +107,7 @@ def auth_diagnostics_report(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_auth_diagnostic_report import report_auth_diagnostic_phone_state
 
     result = report_auth_diagnostic_phone_state(

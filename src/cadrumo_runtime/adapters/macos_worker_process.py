@@ -111,7 +111,7 @@ def macos_worker_job_definition(
     """
     if not MACOS_WORKER_LABEL_PATTERN.fullmatch(label) or not executable.is_absolute() or not directory.is_absolute():
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    environment = _validated_environment(_CLEAN_ENVIRONMENT if environment is None else environment)
+    environment = validated_environment(_CLEAN_ENVIRONMENT if environment is None else environment)
     script_selection = ("--worker-script", str(worker_script)) if worker_script is not None else ()
     program = (
         "/usr/bin/env",
@@ -152,7 +152,7 @@ def macos_worker_job_definition(
     )
 
 
-def _validated_environment(environment: Mapping[str, str]) -> dict[str, str]:
+def validated_environment(environment: Mapping[str, str]) -> dict[str, str]:
     """Admit only fixed interpreter controls and explicitly configured data paths."""
     allowed_paths = worker_path_environment_names()
     extras = set(environment) - set(_CLEAN_ENVIRONMENT)
@@ -278,7 +278,7 @@ class MacosProcessScope:
         if self._started or not executable.is_absolute() or not directory.is_absolute():
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         arguments = validated_worker_arguments(arguments, worker_script=self._worker_script)
-        environment = _validated_environment(environment)
+        environment = validated_environment(environment)
         # Keep the venv interpreter path: resolving its symlink changes Python's
         # pyvenv.cfg discovery and can launch without the installed package.
         if not executable.is_file() or not os.access(executable, os.X_OK):

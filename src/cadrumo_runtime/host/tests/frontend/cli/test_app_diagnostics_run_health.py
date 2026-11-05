@@ -24,11 +24,11 @@ from cadrumo.entrypoints.cli.diagnostics_results import (
     LlmRunProviderPayload,
     RunRecordPayload,
 )
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._diagnostics_cli_support import invoke_diagnostics, seed_claude_and_codex_runs
+from .diagnostics_cli_support import invoke_diagnostics, seed_claude_and_codex_runs
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,7 +45,7 @@ def test_run_health_reports_seeded_llm_runs_and_no_session(diagnostics_native_pr
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "run-health"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     providers = {row["provider"]: row for row in payload["llm_providers"]}
@@ -98,7 +98,7 @@ def test_run_health_provider_filter_scopes_the_report(diagnostics_native_profile
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert len(payload["llm_providers"]) == 1
     assert payload["llm_providers"][0]["provider"] == "llm:codex:test-model"
@@ -124,7 +124,7 @@ def test_run_health_since_until_scopes_by_date(diagnostics_native_profile: Nativ
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert payload["llm_providers"][0]["provider"] == "llm:claude:test-model"

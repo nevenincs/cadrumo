@@ -77,7 +77,7 @@ class RuntimeInvoiceAddTuiDoorV1:
 
     async def __call__(self, entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         """Keep every parsed entry fact and disclose only the operation's typed result."""
-        request = _request_from_entry(self._profile_id, entry)
+        request = request_from_entry(self._profile_id, entry)
         result = await self._execute(request, entry=entry)
         invoice = result.invoice
         if result.outcome != "created" or invoice is None:
@@ -172,7 +172,7 @@ class RuntimeInvoiceAddTuiDoorV1:
         )
 
 
-def _request_from_entry(profile_id: UUID, entry: LedgerInvoiceEntryV1) -> InvoiceAddRequest:
+def request_from_entry(profile_id: UUID, entry: LedgerInvoiceEntryV1) -> InvoiceAddRequest:
     """Copy the complete parsed form into the operation's bounded private request."""
     return InvoiceAddRequest(
         profile_id=profile_id,

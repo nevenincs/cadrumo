@@ -22,8 +22,8 @@ from cadrumo.core.i18n.render import tr
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 from .test_actividad_asset_accelerated_da18_cli import (
-    _BASIS,
-    _LANGUAGES,
+    BASIS,
+    LANGUAGES,
     electric_van,
     seed_direct_normal_profile,
     van_payment,
@@ -43,7 +43,7 @@ def _forecast(language: str) -> Result:
             *("--format", "json", "--language", language),
             *("app", "ledger", "actividad-asset", "forecast", _ASSET_ID),
             *("--covered-from", date(2024, 1, 1).isoformat(), "--covered-until", date(2025, 1, 1).isoformat()),
-            *("--free-depreciation-amount", str(_BASIS)),
+            *("--free-depreciation-amount", str(BASIS)),
         ],
     )
 
@@ -62,7 +62,7 @@ def _refusals(tmp_path: Path, residence: str) -> dict[str, Result]:
         assert created.exit_code == 0, created.output
         # The ledger itself refuses to book a payment for such a residence, so it is recorded after the asset exists.
         seed_direct_normal_profile(profile.storage_root, profile.bucket_id, residence=residence)
-        return {language: _forecast(language) for language in _LANGUAGES}
+        return {language: _forecast(language) for language in LANGUAGES}
 
 
 @pytest.mark.parametrize(
@@ -83,4 +83,4 @@ def test_a_forecast_for_a_foral_or_unreadable_residence_refuses_in_every_languag
         error = json.loads(refused.output)["error"]
         assert error["message"] == tr(key, locale=language), refused.output
         messages.add(error["message"])
-    assert len(messages) == len(_LANGUAGES)
+    assert len(messages) == len(LANGUAGES)

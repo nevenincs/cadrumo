@@ -25,7 +25,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,

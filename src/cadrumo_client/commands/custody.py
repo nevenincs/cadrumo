@@ -52,7 +52,7 @@ class LoginSecrets(MachineSecretPayload):
     passphrase: SecretStr
 
 
-def _config_logout_result(
+def config_logout_result(
     outcome: HumanSignedOut | None,
     *,
     logged_out_profile: str | None,
@@ -150,7 +150,7 @@ def _previous_profile_label(outcome: ProfileLoginOutcome) -> str | None:
     return None if target is None else target.label
 
 
-def _login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
+def login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
     """Project one login outcome's non-blocking diagnostics onto the Notice channel.
 
     Three distinct operator-visible conditions ride here rather than as
@@ -237,7 +237,7 @@ def _login_password_proof(
         )
 
 
-def _login_through_the_prompt(
+def login_through_the_prompt(
     ctx: typer.Context,
     *,
     name: str | None,
@@ -315,7 +315,7 @@ def config_login(
         secrets_stdin=secrets_stdin,
         secrets_fd=secrets_fd,
     )
-    outcome = _login_through_the_prompt(
+    outcome = login_through_the_prompt(
         ctx,
         name=name,
         machine_secret=machine_secret,
@@ -334,7 +334,7 @@ def config_login(
         already_authenticated=outcome.already_authenticated,
         closed_previous_profile=previous_profile,
     )
-    notices = _login_notices(outcome, previous_profile=previous_profile)
+    notices = login_notices(outcome, previous_profile=previous_profile)
     _emit_envelope(
         ctx,
         command="config.login",
@@ -422,7 +422,7 @@ def config_logout(
     signed_out = selected
     logged_out_profile = target.label if target is not None else signed_out
 
-    result = _config_logout_result(
+    result = config_logout_result(
         outcome,
         logged_out_profile=logged_out_profile,
         already_logged_out=signed_out is None,

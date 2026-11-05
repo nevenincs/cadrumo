@@ -150,7 +150,7 @@ def _root_profile_source(
     return source.selection, source.method, source.credential_reference
 
 
-def _profile_id(ctx: typer.Context, *, through_runtime: bool = False) -> tuple[UUID, str | None]:
+def profile_admission_profile_id(ctx: typer.Context, *, through_runtime: bool = False) -> tuple[UUID, str | None]:
     """Return the profile the root ``--profile`` names, or the selected one.
 
     ``through_runtime`` asks the running runtime to resolve a named profile
@@ -272,7 +272,7 @@ def _open_authenticated_profile(
         raise
 
 
-def _open_recovery_profile(ctx: typer.Context, profile_id: UUID) -> None:
+def open_recovery_profile(ctx: typer.Context, profile_id: UUID) -> None:
     from cadrumo_client.commands.profile_binding import bind_profile_client
     from cadrumo_client.transport.installed_client import open_installed_client
 
@@ -316,7 +316,7 @@ def _bind_sessionless_target(ctx: typer.Context, spec: CommandSpec, posture: Pro
         if _root_profile_options_are_supplied(ctx):
             _refuse("profile_secrets_inapplicable")
         if runtime_root_context(ctx).profile is not None:
-            profile_id, _ = _profile_id(ctx, through_runtime=spec.key == "config_passphrase_change")
+            profile_id, _ = profile_admission_profile_id(ctx, through_runtime=spec.key == "config_passphrase_change")
             _bind_target(ctx, profile_id)
         elif spec.key == "config_passphrase_change":
             from cadrumo_client.commands.profile_selection import command_profile_id
@@ -353,8 +353,8 @@ def _early_profile_preflight(
     if spec.key == "config_profile_resume":
         if selection is not None or credential_reference is not None:
             _refuse("profile_secrets_inapplicable")
-        profile_id, _ = _profile_id(ctx, through_runtime=True)
-        _open_recovery_profile(ctx, profile_id)
+        profile_id, _ = profile_admission_profile_id(ctx, through_runtime=True)
+        open_recovery_profile(ctx, profile_id)
         return True
     return False
 
@@ -374,7 +374,7 @@ def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: 
         _refuse("profile_secrets_api_key_requires_channel")
     if credential_reference is not None and posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
         _refuse("profile_credential_ref_inapplicable")
-    profile_id, _label = _profile_id(ctx, through_runtime=True)
+    profile_id, _label = profile_admission_profile_id(ctx, through_runtime=True)
     _open_authenticated_profile(
         ctx,
         profile_id,

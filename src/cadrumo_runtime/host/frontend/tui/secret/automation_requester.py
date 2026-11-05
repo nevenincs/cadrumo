@@ -25,9 +25,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from . import automation_requester_cleanup as _requester_cleanup
-from . import automation_requester_contracts as _requester_contracts
-from . import automation_requester_setup as _requester_setup
+from . import automation_requester_cleanup, automation_requester_contracts, automation_requester_setup
 from .automation_requester_delivery import RequesterDeliveryMixin
 from .automation_requester_draft import RequesterDraftMixin
 from .automation_requester_presentation import RequesterPresentationMixin
@@ -49,7 +47,7 @@ class RuntimeAutomationRequesterScreen(
     RequesterDraftMixin,
     RequesterDeliveryMixin,
     RequesterPresentationMixin,
-    ModalScreen[_requester_contracts.AutomationRequestOutcome | None],
+    ModalScreen[automation_requester_contracts.AutomationRequestOutcome | None],
 ):
     """Present explicit scope consent and retain one submitted delivery until settled."""
 
@@ -78,14 +76,16 @@ class RuntimeAutomationRequesterScreen(
         contracts: OperationPublicContractSetV1,
         secrets_store: AutomationSecretStore,
         client: FrontendClient | None = None,
-        open_client: _requester_contracts.RequesterClientOpener | None = None,
-        fresh_credential_client: _requester_contracts.FreshCredentialClientOpener | None = None,
+        open_client: automation_requester_contracts.RequesterClientOpener | None = None,
+        fresh_credential_client: automation_requester_contracts.FreshCredentialClientOpener | None = None,
         reviewer_client: FrontendClient | None = None,
         journey_timeout: float = 300,
     ) -> None:
         """Pin requester and optional reviewer; decisions keep their own runtime proof."""
         super().__init__()
-        _requester_setup.validate_client_admission(profile_id, client, open_client, reviewer_client, journey_timeout)
+        automation_requester_setup.validate_client_admission(
+            profile_id, client, open_client, reviewer_client, journey_timeout
+        )
         self._profile_id = profile_id
         self._client = client
         self._session_id = client.session_id if client is not None else None
@@ -97,15 +97,15 @@ class RuntimeAutomationRequesterScreen(
         self._reviewer_access_lost = False
         self._secrets_store = secrets_store
         self._journey_timeout = journey_timeout
-        self._operation_choices = _requester_setup.operation_choices(contracts)
-        self._disclosure_choices = _requester_setup.disclosure_choices(contracts)
+        self._operation_choices = automation_requester_setup.operation_choices(contracts)
+        self._disclosure_choices = automation_requester_setup.disclosure_choices(contracts)
         self._periods: set[Period] = set()
         self._request_task: asyncio.Task[None] | None = None
         self._busy = False
         self._live = True
-        self._outcome: _requester_contracts.AutomationRequestOutcome | None = None
+        self._outcome: automation_requester_contracts.AutomationRequestOutcome | None = None
         self._submitted: AutomationReceiptProjection | None = None
-        self._cleanup_owners: dict[int, _requester_cleanup.RequesterCleanup] = {}
+        self._cleanup_owners: dict[int, automation_requester_cleanup.RequesterCleanup] = {}
 
     @override
     def compose(self) -> ComposeResult:

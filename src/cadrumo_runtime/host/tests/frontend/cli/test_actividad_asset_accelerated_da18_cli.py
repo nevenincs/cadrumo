@@ -26,7 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -50,8 +50,7 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     VehicleCategory,
     VehiclePrivateUse,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
@@ -60,15 +59,15 @@ from .runtime_profile_backend import runtime_cli_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-_BASIS = Decimal("30000.00")
+BASIS = Decimal("30000.00")
 _ACCELERATED_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
 _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_da18_depreciation_not_computed"
-_LANGUAGES = ("en", "es", "ca", "hu")
+LANGUAGES = ("en", "es", "ca", "hu")
 
 
 def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = "madrid") -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=(
@@ -99,7 +98,7 @@ def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = 
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         root=root,
         label="accelerated electric mobility",
@@ -113,7 +112,7 @@ def van_payment(asset_id: str, in_service: date) -> str:
             *("--format", "json", "app", "ledger", "add"),
             *("--date", in_service.isoformat(), "--amount", "36300.00", "--direction", "OUTGOING"),
             *("--description", f"Compra de furgoneta {asset_id}", "--classification", "BUSINESS"),
-            *("--taxable-base", str(_BASIS), "--iva-rate", "0.21", "--iva-amount", "6300.00"),
+            *("--taxable-base", str(BASIS), "--iva-rate", "0.21", "--iva-amount", "6300.00"),
         ],
     )
     assert invoked.exit_code == 0, invoked.output
@@ -138,7 +137,7 @@ def electric_van(asset_id: str, in_service: date, transaction_id: str) -> str:
         asset_kind=AssetKind.MATERIAL,
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=_BASIS,
+            basis_amount=BASIS,
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="furgoneta afecta al 100% a la actividad",
         ),
@@ -167,7 +166,7 @@ def _forecast(asset_id: str, year: int, *, language: str = "es") -> Result:
             *("--format", "json", "--language", language),
             *("app", "ledger", "actividad-asset", "forecast", asset_id),
             *("--covered-from", date(year, 1, 1).isoformat(), "--covered-until", date(year + 1, 1, 1).isoformat()),
-            *("--free-depreciation-amount", str(_BASIS)),
+            *("--free-depreciation-amount", str(BASIS)),
         ],
     )
 
@@ -185,7 +184,7 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
                 ],
             )
             assert created.exit_code == 0, created.output
-        refusals = {language: _forecast("van-2023", 2023, language=language) for language in _LANGUAGES}
+        refusals = {language: _forecast("van-2023", 2023, language=language) for language in LANGUAGES}
         admitted = _forecast("van-2024", 2024)
 
     messages: set[str] = set()
@@ -199,10 +198,10 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
         assert error["context"]["asset_id"] == "van-2023"
         messages.add(error["message"])
     # Each supported language renders its own translation, not a shared fallback text.
-    assert len(messages) == len(_LANGUAGES)
+    assert len(messages) == len(LANGUAGES)
 
     assert admitted.exit_code == 0, admitted.output
     forecast = unwrap_schema_envelope(admitted.output)
     assert isinstance(forecast, dict)
     assert forecast["method"] == AmortizationMethod.ELECTRIC_VEHICLE_FREE.value
-    assert Decimal(str(forecast["amount"])) == _BASIS
+    assert Decimal(str(forecast["amount"])) == BASIS

@@ -23,7 +23,7 @@ from .....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .....frontend.tui.secret.runtime_login_contracts import (
     RuntimeLoginMethod,
 )
-from ._runtime_login_support import (
+from .runtime_login_support import (
     HandoffOwner,
     LoginHost,
     NoReceiverLoginHost,

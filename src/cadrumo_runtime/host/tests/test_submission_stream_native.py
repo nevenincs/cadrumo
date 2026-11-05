@@ -86,8 +86,8 @@ from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .served_runtime import SyntheticLogin, admit_session
-from .test_modelo_metadata import _connect, _issue_scoped_key, _seed_periods
-from .test_modelo_metadata_history import _observe
+from .test_modelo_metadata import connect, issue_scoped_key, seed_periods
+from .test_modelo_metadata_history import observe
 
 pytestmark = [
     pytest.mark.integration,
@@ -187,10 +187,10 @@ def native_bulk_runtime(
                     allow_period_independent=False,
                     allow_delegation=False,
                 )
-                api_key = _issue_scoped_key(subject, scope=scope)
+                api_key = issue_scoped_key(subject, scope=scope)
             else:
-                work_unit, _ = _seed_periods(profile_id)
-                api_key = _issue_scoped_key(subject)
+                work_unit, _ = seed_periods(profile_id)
+                api_key = issue_scoped_key(subject)
             close_active_bucket_session()
 
             stop, boot = Event(), uuid4()
@@ -376,7 +376,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
     work_unit: WorkUnit | ModeloWorkRenamePublicResultV2 = native_bulk_runtime.work_unit
 
     with ExitStack() as clients:
-        initial = _connect(endpoint)
+        initial = connect(endpoint)
         clients.callback(initial.close)
         initial_session = admit_session(initial, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
 
@@ -391,7 +391,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
         )
         initial.close()
 
-        interrupted = _connect(endpoint)
+        interrupted = connect(endpoint)
         clients.callback(interrupted.close)
         interrupted_session = admit_session(
             interrupted, profile_id, method="api_key", proof=native_bulk_runtime.api_key
@@ -414,7 +414,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             _send_chunk(upload, partial_content, 0)
         interrupted.close()
 
-        survivor = _connect(endpoint)
+        survivor = connect(endpoint)
         clients.callback(survivor.close)
         survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
         work_unit = _rename_and_execute(
@@ -426,13 +426,13 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
         )
         survivor.close()
 
-        uploader = _connect(endpoint)
+        uploader = connect(endpoint)
         clients.callback(uploader.close)
         upload_session = admit_session(uploader, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
-        survivor = _connect(endpoint)
+        survivor = connect(endpoint)
         clients.callback(survivor.close)
         survivor_session = admit_session(survivor, profile_id, method="api_key", proof=native_bulk_runtime.api_key)
-        human = _connect(endpoint)
+        human = connect(endpoint)
         clients.callback(human.close)
         human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
 
@@ -495,7 +495,7 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
     runtime = native_bulk_runtime
     encoded = runtime.edit_input
     assert encoded is not None
-    client = _connect(runtime.endpoint)
+    client = connect(runtime.endpoint)
     try:
         session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
         for definition_id, expected_effect in (
@@ -529,7 +529,7 @@ def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
             assert isinstance(started, OperationAcknowledged), started
             deadline = time.monotonic() + 30
             while True:
-                observed = _observe(client, runtime.profile_id, session_id, operation_id)
+                observed = observe(client, runtime.profile_id, session_id, operation_id)
                 if observed.projection.terminal_condition is not None:
                     break
                 assert time.monotonic() < deadline
@@ -555,7 +555,7 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     assert encoded is not None
     unread = json.loads(encoded.model_dump_json())
     unread["submission"]["binding_intents"][0]["synthetic_member"] = "synthetic"
-    client = _connect(runtime.endpoint)
+    client = connect(runtime.endpoint)
     try:
         session_id = admit_session(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
 

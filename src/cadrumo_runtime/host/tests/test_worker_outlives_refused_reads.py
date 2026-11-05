@@ -98,7 +98,7 @@ from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .served_runtime import SyntheticLogin, admit_session
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_modelo_metadata import _connect, _seed_periods, _submit
+from .test_modelo_metadata import connect, seed_periods, submit
 
 pytestmark = [
     pytest.mark.integration,
@@ -346,7 +346,7 @@ class _ServedUnits:
     remove_every_unit: Callable[[], None]
 
     def rename(self, unit: WorkUnit, new_name: str) -> OperationId:
-        submitted = _submit(
+        submitted = submit(
             self.session.connection,
             self.session.profile_id,
             self.session.session_id,
@@ -384,7 +384,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
             tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
         ) as subject:
             profile_id = subject.store.binding.profile_id
-            first, second = _seed_periods(profile_id)
+            first, second = seed_periods(profile_id)
             # This process keeps its own view of the store open, to write it behind the worker later.
             catalogue = WorkUnitCatalogueRepository(
                 bucket_id=str(profile_id), objects=secure_object_repository_for_active_bucket()
@@ -411,7 +411,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(HANG_GUARD_SECONDS)
-                    connection = _connect(endpoint)
+                    connection = connect(endpoint)
                     try:
                         session_id = admit_session(
                             connection, profile_id, method="password", proof=PROFILE_INPUT.encode()
@@ -448,7 +448,7 @@ def test_a_read_after_its_work_unit_was_discarded_is_served_because_a_discard_ke
             .model_validate_json(json.dumps(result.document))
             .projection.unit
         )
-        discarded = _submit(
+        discarded = submit(
             session.connection,
             session.profile_id,
             session.session_id,

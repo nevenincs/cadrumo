@@ -49,7 +49,7 @@ from ..protocol_contract import PERSON_ACT_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .session import connected_server_and_client_session
-from .test_operation_search_tool import _AdmittedClient
+from .test_operation_search_tool import AdmittedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -83,11 +83,11 @@ def _registry() -> OperationRegistry:
     )
 
 
-class _AnsweringClient:
+class AnsweringClient:
     """The admitted lease over a transport that answers, keeping each exchange in the order it was handed."""
 
     def __init__(self, profile_id: UUID) -> None:
-        self._lease = _AdmittedClient(profile_id, _registry())
+        self._lease = AdmittedClient(profile_id, _registry())
         self.profile_id, self.registry = profile_id, self._lease.registry
         self.frontend, self.session_id = self._lease.frontend, self._lease.session_id
         self.exchanges: list[object] = []
@@ -125,7 +125,7 @@ class _AnsweringClient:
         )
 
 
-async def _call(client: _AnsweringClient, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+async def _call(client: AnsweringClient, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         return await adapter.call(tool, arguments)
@@ -133,7 +133,7 @@ async def _call(client: _AnsweringClient, tool: str, arguments: dict[str, Any]) 
         await adapter.close()
 
 
-def _export(client: _AnsweringClient, **more: object) -> dict[str, Any]:
+def _export(client: AnsweringClient, **more: object) -> dict[str, Any]:
     """A call of the profile export, an operation whose contract requires a secret."""
     return {
         "definition_id": PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
@@ -144,7 +144,7 @@ def _export(client: _AnsweringClient, **more: object) -> dict[str, Any]:
 
 @pytest.mark.anyio
 async def test_an_operation_that_requires_a_secret_is_the_persons_act_and_nothing_is_sent() -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -170,7 +170,7 @@ async def test_an_operation_that_requires_a_secret_is_the_persons_act_and_nothin
 async def test_a_call_that_gives_a_secret_or_names_one_is_refused_before_anything_is_sent(
     field: str, definition_id: str
 ) -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
     arguments = {"definition_id": definition_id, "payload": {}, field: _TYPED}
 
     result = await _call(client, "execute", arguments)
@@ -182,7 +182,7 @@ async def test_a_call_that_gives_a_secret_or_names_one_is_refused_before_anythin
 
 @pytest.mark.anyio
 async def test_no_tool_declares_an_argument_that_takes_or_names_a_secret() -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -198,7 +198,7 @@ async def test_no_tool_declares_an_argument_that_takes_or_names_a_secret() -> No
 
 @pytest.mark.anyio
 async def test_describe_gives_the_typed_operator_input_schema_only_where_the_contract_declares_an_operand() -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
 
     edit = await _call(client, "describe", {"definition_id": MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID})
     read = await _call(client, "describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
@@ -212,7 +212,7 @@ async def test_describe_gives_the_typed_operator_input_schema_only_where_the_con
 
 @pytest.mark.anyio
 async def test_typed_operator_input_travels_on_the_financial_input_exchange_under_the_supplied_subject() -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
 
     result = await _call(
         client,
@@ -253,7 +253,7 @@ async def test_typed_operator_input_travels_on_the_financial_input_exchange_unde
 async def test_typed_operator_input_without_its_subject_or_with_a_replay_key_is_refused_before_submitting(
     more: dict[str, str], message: str
 ) -> None:
-    client = _AnsweringClient(uuid4())
+    client = AnsweringClient(uuid4())
 
     result = await _call(
         client,

@@ -27,8 +27,8 @@ from cadrumo.application.user_profile.preflight import build_profile_preflight_r
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._overview_calendar_support import _CALENDAR_GATING_FACT_OVERRIDES
-from ._overview_native_support import invoke_native_overview
+from .overview_calendar_support import CALENDAR_GATING_FACT_OVERRIDES
+from .overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,
@@ -85,7 +85,7 @@ def refusals_with_the_fact_unanswered(tmp_path_factory: pytest.TempPathFactory) 
     with native_cli_profile_scope(tmp_path_factory.mktemp("refusals")) as fixture:
         fixture.register(
             label="Unanswered overview profile",
-            facts={key: value for key, value in _CALENDAR_GATING_FACT_OVERRIDES.items() if key != _OMITTED_FACT_PATH},
+            facts={key: value for key, value in CALENDAR_GATING_FACT_OVERRIDES.items() if key != _OMITTED_FACT_PATH},
         )
         token = _ACTIVE_NATIVE.set(fixture)
         try:
@@ -193,7 +193,7 @@ def test_answering_the_fact_removes_this_refusal(tmp_path: Path) -> None:
     proves only that the verb refuses, never that the omission is why.
     """
     with native_cli_profile_scope(tmp_path) as fixture:
-        fixture.register(label="Answered overview profile", facts=_CALENDAR_GATING_FACT_OVERRIDES)
+        fixture.register(label="Answered overview profile", facts=CALENDAR_GATING_FACT_OVERRIDES)
         token = _ACTIVE_NATIVE.set(fixture)
         try:
             result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])

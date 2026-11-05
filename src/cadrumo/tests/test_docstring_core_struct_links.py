@@ -385,7 +385,7 @@ def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
     "target",
     [
         "cadrumo_client.commands.errors.CliRefusedBoundaryError",
-        "cadrumo_runtime.commands._apoderado.apoderado_scopes_list",
+        "cadrumo_runtime.commands.apoderado.apoderado_scopes_list",
     ],
 )
 def test_qualified_sibling_definitions_are_scanned(target: str) -> None:

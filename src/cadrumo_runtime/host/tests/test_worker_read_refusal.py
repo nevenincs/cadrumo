@@ -60,7 +60,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 from ...adapters.worker_transport import WorkerChannel
 from .. import worker_operation_requests
 from ..operation_host import ProfileWorkerOperationHost
-from ..worker_operation_requests import _is_read, read_refusal
+from ..worker_operation_requests import is_read, read_refusal
 from ..worker_submission_staging import WorkerSubmissionStaging
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -136,7 +136,7 @@ async def test_read_dispatch_does_not_schedule_custody_expiry_but_upload_changes
     # Isolate scheduling from the operation's effects; request classification
     # and the real dispatch loop determine whether the expiry task is woken.
     monkeypatch.setattr(worker_operation_requests, "receive", receive)
-    monkeypatch.setattr(worker_operation_requests, "_dispatch_request", dispatch)
+    monkeypatch.setattr(worker_operation_requests, "dispatch_request", dispatch)
     with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(asyncio.CancelledError):
         await worker_operation_requests.operate(
             cast(WorkerChannel, object()),
@@ -259,10 +259,10 @@ def test_an_observation_a_projection_a_page_and_the_inspection_of_a_review_are_t
         ),
     )
 
-    assert [_is_read(request) for request in reads] == [True] * len(reads)
-    assert [_is_read(request) for request in acts] == [False] * len(acts)
+    assert [is_read(request) for request in reads] == [True] * len(reads)
+    assert [is_read(request) for request in acts] == [False] * len(acts)
     # A request read back from its wire document is classified as the one that was sent.
-    assert [_is_read(type(request).model_validate_json(request.model_dump_json())) for request in (*reads, *acts)] == [
+    assert [is_read(type(request).model_validate_json(request.model_dump_json())) for request in (*reads, *acts)] == [
         *([True] * len(reads)),
         *([False] * len(acts)),
     ]

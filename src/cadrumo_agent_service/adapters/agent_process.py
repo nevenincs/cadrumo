@@ -33,7 +33,7 @@ _DIAGNOSTIC_BACKLOG_BYTES: Final = 1024 * 1024
 """Agent output the application log may fall behind by before the excess is dropped."""
 
 
-class _StandardErrorTail:
+class StandardErrorTail:
     """The bounded end of an agent's standard error, drained for as long as any writer holds the pipe.
 
     The agent's standard error is a private pipe, so the service must read it
@@ -189,7 +189,7 @@ class WindowsAgentProcess:
 
         self._output = standard_output
 
-        self._standard_error = _StandardErrorTail(
+        self._standard_error = StandardErrorTail(
             standard_error,
             limit=STANDARD_ERROR_TAIL_BYTES,
             diagnostics=AgentDiagnosticLines(diagnostic_sink or AgentDiagnosticSink(), pid=process.pid),
@@ -589,7 +589,7 @@ class WindowsAgentInvocationRunner:
         try:
             standard_input.close()
 
-            errors = _StandardErrorTail(
+            errors = StandardErrorTail(
                 standard_error,
                 limit=STANDARD_ERROR_TAIL_BYTES,
                 diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=process.pid, cli=True),

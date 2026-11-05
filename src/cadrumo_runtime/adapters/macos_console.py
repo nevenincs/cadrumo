@@ -125,7 +125,7 @@ def _release_native_owners(
         release_entry(root)
 
 
-def _registry_snapshot() -> object:
+def registry_snapshot() -> object:
     """Copy a bounded registry-root property list; release every native owner."""
     iokit = ctypes.CDLL("/System/Library/Frameworks/IOKit.framework/IOKit")
     cf = ctypes.CDLL("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
@@ -168,8 +168,8 @@ def observe_console_lock(owner: str, session_id: int) -> OsLockState:
     if sys.platform != "darwin":
         return OsLockState.UNKNOWN
     try:
-        first = _registry_snapshot()
-        second = _registry_snapshot()
+        first = registry_snapshot()
+        second = registry_snapshot()
         if not isinstance(first, dict) or not isinstance(second, dict):
             return _unavailable("console_snapshot_unavailable")
         keys = ("IOConsoleLocked", "IOConsoleUsers")

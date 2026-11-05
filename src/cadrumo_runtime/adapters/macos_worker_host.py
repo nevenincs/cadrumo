@@ -142,7 +142,7 @@ class MacosWorkerHost(Protocol):
         ...
 
 
-def _private_open_flags(*, nonblocking: bool = False) -> int:
+def private_open_flags(*, nonblocking: bool = False) -> int:
     """Darwin open flags refusing symlinks and keeping descriptors out of children."""
     if sys.platform == "darwin":
         return os.O_NOFOLLOW | os.O_CLOEXEC | (os.O_NONBLOCK if nonblocking else 0)
@@ -175,7 +175,7 @@ class NativeMacosWorkerHost:
         directory, descriptor = self._directory(create=True)
         name = label + _DEFINITION_SUFFIX
         try:
-            file = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _private_open_flags(), 0o600, dir_fd=descriptor)
+            file = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | private_open_flags(), 0o600, dir_fd=descriptor)
             try:
                 try:
                     write_all(file, definition)
@@ -213,7 +213,7 @@ class NativeMacosWorkerHost:
         terminate_macos_coalition(coalition, deadline=deadline)
 
     def _read_marker(self, descriptor: int, name: str) -> bytes:
-        file = os.open(name, os.O_RDONLY | _private_open_flags(nonblocking=True), dir_fd=descriptor)
+        file = os.open(name, os.O_RDONLY | private_open_flags(nonblocking=True), dir_fd=descriptor)
         try:
             metadata = os.fstat(file)
             if (
@@ -251,7 +251,7 @@ class NativeMacosWorkerHost:
         pending = label + _PENDING_SUFFIX
         try:
             file = os.open(
-                pending, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | _private_open_flags(), 0o600, dir_fd=descriptor
+                pending, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | private_open_flags(), 0o600, dir_fd=descriptor
             )
             try:
                 metadata = os.fstat(file)

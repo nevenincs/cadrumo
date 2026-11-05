@@ -65,7 +65,7 @@ _STREAMS_FIXTURE = "cadrumo_runtime.host.tests.supervised_streams_fixture"
 _STILL_ACTIVE = 259
 
 
-def _endpoint(root: Path) -> _Endpoint:
+def supervised_runtime_endpoint(root: Path) -> _Endpoint:
     if sys.platform == "win32":
         return WindowsEndpoint(storage_root=root)
     return PosixEndpoint(storage_root=root)
@@ -93,7 +93,7 @@ async def _reap(process: asyncio.subprocess.Process) -> None:
 
 
 @asynccontextmanager
-async def _supervised(
+async def supervised(
     root: Path, identity: str, *, announcements: int | None = None
 ) -> AsyncGenerator[asyncio.subprocess.Process]:
     environment = os.environ.copy()
@@ -129,7 +129,7 @@ def _parse(line: bytes) -> RuntimeAnnouncement:
     return _ANNOUNCEMENTS.validate_json(line[:-1], strict=True)
 
 
-async def _announcement(process: asyncio.subprocess.Process, *, timeout: float = 10) -> RuntimeAnnouncement:
+async def announcement(process: asyncio.subprocess.Process, *, timeout: float = 10) -> RuntimeAnnouncement:
     assert process.stdout is not None and process.stderr is not None
     line = await asyncio.wait_for(process.stdout.readline(), timeout=timeout)
     if not line:
@@ -139,19 +139,19 @@ async def _announcement(process: asyncio.subprocess.Process, *, timeout: float =
     return _parse(line)
 
 
-async def _ready(process: asyncio.subprocess.Process) -> RuntimeReady:
-    ready = await _announcement(process, timeout=_STARTUP_TIMEOUT_SECONDS)
+async def supervised_runtime_ready(process: asyncio.subprocess.Process) -> RuntimeReady:
+    ready = await announcement(process, timeout=_STARTUP_TIMEOUT_SECONDS)
     assert isinstance(ready, RuntimeReady)
     return ready
 
 
-async def _send(process: asyncio.subprocess.Process, line: bytes) -> None:
+async def send(process: asyncio.subprocess.Process, line: bytes) -> None:
     assert process.stdin is not None
     process.stdin.write(line)
     await process.stdin.drain()
 
 
-async def _exit_code(process: asyncio.subprocess.Process) -> int:
+async def exit_code(process: asyncio.subprocess.Process) -> int:
     return await asyncio.wait_for(process.wait(), timeout=_STARTUP_TIMEOUT_SECONDS)
 
 
@@ -163,7 +163,7 @@ async def _remaining_output(process: asyncio.subprocess.Process) -> tuple[bytes,
     return output, errors
 
 
-def _connect(endpoint: _Endpoint) -> VerifiedConnection:
+def connect(endpoint: _Endpoint) -> VerifiedConnection:
     return VerifiedConnection(
         endpoint.connect(timeout=2),
         expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
@@ -171,7 +171,7 @@ def _connect(endpoint: _Endpoint) -> VerifiedConnection:
     )
 
 
-def _boot_of(client: VerifiedConnection) -> UUID:
+def boot_of(client: VerifiedConnection) -> UUID:
     request = SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
     return client.session(request, deadline=time.monotonic() + 3).runtime_boot_id
 
@@ -210,7 +210,7 @@ def _assert_boot_record_names(root: Path, ready: RuntimeReady) -> None:
 
 @pytest.mark.asyncio
 async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     earlier = RuntimeBootRecord(
         boot_id=uuid4(),
         pid=1,
@@ -222,19 +222,19 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
     # An earlier boot that ended without cleanup left its record behind.
     assert RuntimeBootRecordPublication(storage_root=tmp_path, record=earlier).publish()
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            ready = await _ready(process)
+        async with supervised(tmp_path, endpoint.storage_identity) as process:
+            ready = await supervised_runtime_ready(process)
             assert ready.pid == process.pid
             assert ready.version == version("cadrumo")
             assert ready.storage_identity == endpoint.storage_identity
             assert ready.admission == "development"
             # The record is in place, and replaced, when ready is observed.
             _assert_boot_record_names(tmp_path, ready)
-            client = _connect(endpoint)
+            client = connect(endpoint)
             try:
-                assert _boot_of(client) == ready.boot_id
-                await _send(process, b'{"type":"ping","seq":7}\n')
-                heartbeat = await _announcement(process)
+                assert boot_of(client) == ready.boot_id
+                await send(process, b'{"type":"ping","seq":7}\n')
+                heartbeat = await announcement(process)
                 assert isinstance(heartbeat, RuntimeHeartbeat)
                 assert heartbeat.seq == 7
                 assert heartbeat.tick_age_ms is not None and heartbeat.tick_age_ms < 5000
@@ -242,9 +242,9 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
                 assert heartbeat.in_flight_operations == 0
             finally:
                 client.close()
-            await _send(process, b'{"type":"stop"}\n')
-            assert await _announcement(process) == RuntimeStopping(reason=ExitReason.SUPERVISOR_STOP)
-            assert await _exit_code(process) == ExitReason.SUPERVISOR_STOP
+            await send(process, b'{"type":"stop"}\n')
+            assert await announcement(process) == RuntimeStopping(reason=ExitReason.SUPERVISOR_STOP)
+            assert await exit_code(process) == ExitReason.SUPERVISOR_STOP
             # Diagnostics went to the redacted log; the launcher received none.
             assert await _remaining_output(process) == (b"", b"")
             # A clean exit removes the record.
@@ -264,13 +264,13 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
 async def test_an_idle_runtime_stops_for_stop_if_idle_and_session_end(
     tmp_path: Path, command: bytes, reason: ExitReason
 ) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            _assert_boot_record_names(tmp_path, await _ready(process))
-            await _send(process, command)
-            assert await _announcement(process) == RuntimeStopping(reason=reason)
-            assert await _exit_code(process) == reason
+        async with supervised(tmp_path, endpoint.storage_identity) as process:
+            _assert_boot_record_names(tmp_path, await supervised_runtime_ready(process))
+            await send(process, command)
+            assert await announcement(process) == RuntimeStopping(reason=reason)
+            assert await exit_code(process) == reason
             assert await _remaining_output(process) == (b"", b"")
             assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
     finally:
@@ -279,7 +279,7 @@ async def test_an_idle_runtime_stops_for_stop_if_idle_and_session_end(
 
 @pytest.mark.asyncio
 async def test_lines_outside_the_grammar_are_refused_and_the_channel_stays_open(tmp_path: Path) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     malformed = (
         b"not json\n",
         b'{"type":"ping","seq":1,"extra":true}\n',
@@ -289,44 +289,44 @@ async def test_lines_outside_the_grammar_are_refused_and_the_channel_stays_open(
         b"\n",
     )
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            await _ready(process)
+        async with supervised(tmp_path, endpoint.storage_identity) as process:
+            await supervised_runtime_ready(process)
             for line in malformed:
-                await _send(process, line)
-                assert await _announcement(process) == RuntimeRefused(code=ProtocolLineRefusal.MALFORMED)
-            await _send(process, b'{"type":"ping","seq":1' + b" " * (4 * MAX_LINE_BYTES) + b"}\n")
-            assert await _announcement(process) == RuntimeRefused(code=ProtocolLineRefusal.OVERSIZED)
-            await _send(process, b'{"type":"ping","seq":9}\n')
-            heartbeat = await _announcement(process)
+                await send(process, line)
+                assert await announcement(process) == RuntimeRefused(code=ProtocolLineRefusal.MALFORMED)
+            await send(process, b'{"type":"ping","seq":1' + b" " * (4 * MAX_LINE_BYTES) + b"}\n")
+            assert await announcement(process) == RuntimeRefused(code=ProtocolLineRefusal.OVERSIZED)
+            await send(process, b'{"type":"ping","seq":9}\n')
+            heartbeat = await announcement(process)
             assert isinstance(heartbeat, RuntimeHeartbeat) and heartbeat.seq == 9
-            await _send(process, b'{"type":"stop"}\n')
-            assert await _announcement(process) == RuntimeStopping(reason=ExitReason.SUPERVISOR_STOP)
-            assert await _exit_code(process) == ExitReason.SUPERVISOR_STOP
+            await send(process, b'{"type":"stop"}\n')
+            assert await announcement(process) == RuntimeStopping(reason=ExitReason.SUPERVISOR_STOP)
+            assert await exit_code(process) == ExitReason.SUPERVISOR_STOP
     finally:
         endpoint.close()
 
 
 @pytest.mark.asyncio
 async def test_end_of_input_keeps_the_runtime_serving(tmp_path: Path) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            ready = await _ready(process)
+        async with supervised(tmp_path, endpoint.storage_identity) as process:
+            ready = await supervised_runtime_ready(process)
             assert process.stdin is not None
             process.stdin.close()
             await asyncio.sleep(1)
             assert process.returncode is None
-            client = _connect(endpoint)
+            client = connect(endpoint)
             try:
-                assert _boot_of(client) == ready.boot_id
+                assert boot_of(client) == ready.boot_id
             finally:
                 client.close()
             assert process.returncode is None
             if sys.platform != "win32":
                 # OS stop signals still reach the drain after the supervisor left.
                 process.send_signal(signal.SIGTERM)
-                assert await _announcement(process) == RuntimeStopping(reason=ExitReason.SIGNAL_STOP)
-                assert await _exit_code(process) == ExitReason.SIGNAL_STOP
+                assert await announcement(process) == RuntimeStopping(reason=ExitReason.SIGNAL_STOP)
+                assert await exit_code(process) == ExitReason.SIGNAL_STOP
     finally:
         endpoint.close()
 
@@ -343,10 +343,10 @@ def _read_line(descriptor: int) -> bytes:
 
 @pytest.mark.asyncio
 async def test_a_lost_announcement_reader_changes_no_exit_code(tmp_path: Path) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     reader, writer = os.pipe()
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity, announcements=writer) as process:
+        async with supervised(tmp_path, endpoint.storage_identity, announcements=writer) as process:
             os.close(writer)
             writer = -1
             line = await asyncio.wait_for(asyncio.to_thread(_read_line, reader), timeout=_STARTUP_TIMEOUT_SECONDS)
@@ -355,10 +355,10 @@ async def test_a_lost_announcement_reader_changes_no_exit_code(tmp_path: Path) -
             os.close(reader)
             reader = -1
             for seq in range(3):
-                await _send(process, b'{"type":"ping","seq":%d}\n' % seq)
+                await send(process, b'{"type":"ping","seq":%d}\n' % seq)
             await asyncio.sleep(0.5)
-            await _send(process, b'{"type":"stop"}\n')
-            assert await _exit_code(process) == ExitReason.SUPERVISOR_STOP
+            await send(process, b'{"type":"stop"}\n')
+            assert await exit_code(process) == ExitReason.SUPERVISOR_STOP
     finally:
         for descriptor in (reader, writer):
             if descriptor >= 0:
@@ -388,7 +388,7 @@ def _alive(pid: int) -> bool:
     return True
 
 
-def _log_text(root: Path) -> str:
+def log_text(root: Path) -> str:
     logs = root / storage_location(StorageCategory.LOGS).relative_path()
     return "".join(path.read_text(encoding="utf-8") for path in logs.rglob("*") if path.is_file())
 
@@ -435,7 +435,7 @@ async def test_descendants_and_stray_writes_cannot_reach_the_protocol_streams(
         assert result["inheritable"] == [False] * (4 if sys.platform == "win32" else 2)
         (tmp_path / "release").write_text("go", encoding="ascii")
         assert await asyncio.wait_for(process.wait(), timeout=20) == 0
-        log = _log_text(tmp_path)
+        log = log_text(tmp_path)
         assert "ZeroDivisionError" in log and "synthetic-failing-thread" in log
         assert "synthetic stray warning" in log
     finally:
@@ -456,7 +456,7 @@ async def test_an_unexpected_failure_reports_only_its_reason_code(
         assert exit_code == ExitReason.UNEXPECTED_FAILURE
         assert output == b'{"type":"stopping","reason":73}\n'
         assert errors == b""
-        assert "LookupError" in _log_text(tmp_path)
+        assert "LookupError" in log_text(tmp_path)
     finally:
         await _end(process)
 

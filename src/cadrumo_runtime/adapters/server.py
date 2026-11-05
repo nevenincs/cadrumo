@@ -28,7 +28,7 @@ from cadrumo_runtime.contracts.profile_host import ProfileDrainResult, ProfileHa
 
 from .server_connection_handling import RuntimeConnectionHandling
 
-_LOGGER = get_logger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class RuntimeListener(Protocol):
@@ -123,7 +123,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         incomplete = Event()
         primary_error: BaseException | None = None
         try:
-            with startup_phase(_LOGGER, "listener_listen"):
+            with startup_phase(LOGGER, "listener_listen"):
                 self.listener.listen()
             workers = ThreadPoolExecutor(max_workers=32, thread_name_prefix="cadrumo-ipc")
             try:
@@ -133,7 +133,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 accept_error: BaseException | None = None
                 try:
                     diagnostic_event(
-                        _LOGGER,
+                        LOGGER,
                         "runtime_listener_ready",
                         fields={
                             "runtime_boot_id": str(self.identity.boot_id),
@@ -148,7 +148,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                     self.stop.set()
                     try:
                         diagnostic_event(
-                            _LOGGER,
+                            LOGGER,
                             "runtime_listener_drain_started",
                             fields={"drain_timeout_seconds": self.DRAIN_SECONDS},
                             primary_error=accept_error,
@@ -174,7 +174,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             if not incomplete.is_set():
                 self._release_listener(primary_error)
             diagnostic_event(
-                _LOGGER,
+                LOGGER,
                 "runtime_listener_stopped",
                 fields={
                     "cleanup_incomplete": incomplete.is_set(),

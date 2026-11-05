@@ -41,7 +41,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from .. import profile_worker_human_admission, profile_worker_lifetime, profile_worker_transport
 from ..worker_lease_transfer import read_worker_lease
-from ._profile_worker_cleanup_support import (
+from .profile_worker_cleanup_support import (
     Channel,
     Fixture,
     Release,
@@ -743,13 +743,13 @@ def test_native_guard_slow_call_emits_only_closed_call_metadata(
 
             clock_patch.setattr(profile_worker_lifetime, "time", SimpleNamespace(monotonic=lambda: next(times)))
 
-            caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime._log.name)
+            caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime.log.name)
 
             assert worker._owns_native_process(1234)
 
         record = next(
             item
-            for item in delivered_records(caplog, profile_worker_lifetime._log.name)
+            for item in delivered_records(caplog, profile_worker_lifetime.log.name)
             if item.getMessage() == "profile_worker_native_guard_call_slow"
         )
 
@@ -785,7 +785,7 @@ def test_native_guard_wait_failure_names_held_call_without_private_identifiers(
 
     monkeypatch.setattr(fixture.scope, "active_process_ids", blocked_membership)
 
-    caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime._log.name)
+    caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime.log.name)
 
     pool = ThreadPoolExecutor(max_workers=1)
 
@@ -801,7 +801,7 @@ def test_native_guard_wait_failure_names_held_call_without_private_identifiers(
 
         record = next(
             item
-            for item in delivered_records(caplog, profile_worker_lifetime._log.name)
+            for item in delivered_records(caplog, profile_worker_lifetime.log.name)
             if item.getMessage() == "profile_worker_native_guard_wait_failed"
         )
 

@@ -33,16 +33,12 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
-from ._profile_cli_support import (
-    edit_quiet_profile as _edit_profile,
+from .profile_cli_support import (
+    edit_quiet_profile,
+    profile_rows,
+    seed_profile,
 )
-from ._profile_cli_support import native_profile_runtime as native_profile_runtime
-from ._profile_cli_support import (
-    profile_rows as _profile_rows,
-)
-from ._profile_cli_support import (
-    seed_profile as _seed_profile,
-)
+from .profile_cli_support import native_profile_runtime as native_profile_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -66,7 +62,7 @@ _LEGAL_ENTITY_FACTS = {
 
 
 def _seed_legal_entity(name: str, *, activity: str) -> str:
-    return _seed_profile(name, **_LEGAL_ENTITY_FACTS, **{"activities.description": activity})
+    return seed_profile(name, **_LEGAL_ENTITY_FACTS, **{"activities.description": activity})
 
 
 def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:
@@ -76,10 +72,10 @@ def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:
     can decide without re-parsing."""
 
     _seed_legal_entity("incn-co", activity="asesoria")
-    result = _edit_profile("incn-co", "--incn-prior-12-months", "7500000.00")
+    result = edit_quiet_profile("incn-co", "--incn-prior-12-months", "7500000.00")
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows("incn-co")
+    rows = profile_rows("incn-co")
     assert rows["taxpayer_type.incn_prior_12_months"] == "7500000.00"
 
 
@@ -91,7 +87,7 @@ def test_profile_creates_without_incn_flag_leaves_fact_unset() -> None:
 
     _seed_legal_entity("no-incn-co", activity="comercio")
 
-    rows = _profile_rows("no-incn-co")
+    rows = profile_rows("no-incn-co")
     assert "taxpayer_type.incn_prior_12_months" not in rows
 
 
@@ -101,10 +97,10 @@ def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:
     into the 15 percent new-entity rate override."""
 
     _seed_legal_entity("new-co", activity="consultoria")
-    result = _edit_profile("new-co", "--new-entity-first-two-profit-periods")
+    result = edit_quiet_profile("new-co", "--new-entity-first-two-profit-periods")
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows("new-co")
+    rows = profile_rows("new-co")
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
 
 
@@ -118,7 +114,7 @@ def test_profile_creates_without_new_entity_flag_leaves_fact_undeclared() -> Non
 
     _seed_legal_entity("no-new-co", activity="asesoria")
 
-    rows = _profile_rows("no-new-co")
+    rows = profile_rows("no-new-co")
     assert "taxpayer_type.new_entity_first_two_profit_periods" not in rows
 
 
@@ -129,10 +125,10 @@ def test_no_new_entity_first_two_profit_periods_flag_records_declared_false() ->
     undeclared profile."""
 
     _seed_legal_entity("decline-new-co", activity="asesoria")
-    result = _edit_profile("decline-new-co", "--no-new-entity-first-two-profit-periods")
+    result = edit_quiet_profile("decline-new-co", "--no-new-entity-first-two-profit-periods")
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows("decline-new-co")
+    rows = profile_rows("decline-new-co")
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "false"
 
 
@@ -143,7 +139,7 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
 
     _seed_legal_entity("edit-co", activity="asesoria")
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "edit-co",
         "--incn-prior-12-months",
         "1234567.89",
@@ -151,7 +147,7 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
     )
     assert edit.exit_code == 0, edit.output
 
-    rows = _profile_rows("edit-co")
+    rows = profile_rows("edit-co")
     assert rows["taxpayer_type.incn_prior_12_months"] == "1234567.89"
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
     # Other facts left untouched by the patch edit.
@@ -163,7 +159,7 @@ def test_charge_iban_flag_is_rejected_after_the_profile_export_path_cutover() ->
     """The real CLI cannot reintroduce the retired persisted debit path."""
     _seed_legal_entity("charge-account-co", activity="asesoria")
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "charge-account-co",
         "--charge-iban",
         "ES7921000813610123456789",
@@ -171,5 +167,5 @@ def test_charge_iban_flag_is_rejected_after_the_profile_export_path_cutover() ->
     assert edit.exit_code != 0
     assert "--charge-iban" in edit.output
 
-    rows = _profile_rows("charge-account-co")
+    rows = profile_rows("charge-account-co")
     assert not any(path.startswith("filing_export.") for path in rows)

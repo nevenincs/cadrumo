@@ -252,17 +252,17 @@ def test_period_restrictions_and_review_validity_are_not_collapsed() -> None:
     scope = inventory.grants[0].scope
     unrestricted = scope.model_copy(update={"periods": None})
     none_allowed = scope.model_copy(update={"periods": ()})
-    assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject._scope(unrestricted))
-    assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject._scope(none_allowed))
-    assert "2026/3T" in "\n".join(detail_subject._scope(scope))
+    assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject.scope(unrestricted))
+    assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject.scope(none_allowed))
+    assert "2026/3T" in "\n".join(detail_subject.scope(scope))
     unattended_notice = tr("tui.automation_inventory.unattended_notice")
-    assert unattended_notice in detail_subject._grant_detail(inventory.grants[0])
-    assert unattended_notice not in detail_subject._grant_detail(
+    assert unattended_notice in detail_subject.grant_detail(inventory.grants[0])
+    assert unattended_notice not in detail_subject.grant_detail(
         inventory.grants[0].model_copy(update={"unattended": False})
     )
 
     request = inventory.requests[0]
-    detail = detail_subject._request_detail(request)
+    detail = detail_subject.request_detail(request)
     assert request.expires_at.isoformat() in detail
     assert request.proposal.expires_at.isoformat() in detail
     assert request.proposal.key_expires_at is not None

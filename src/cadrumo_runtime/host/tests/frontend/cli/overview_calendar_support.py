@@ -43,7 +43,7 @@ from cadrumo.tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_ur
 
 __all__ = ["isolated_backend"]
 
-_SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
+SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
 _CALCULATION_REVISION_ID = "b" * 64
 
@@ -64,7 +64,7 @@ PRIMARY_PROFILE_ID: str = "11111111-1111-4111-8111-111111111111"
 #: fixtures exercise their own scenario-specific warnings, not this generic
 #: completeness gate. ``iva.regime`` and ``irpf.estimation_regime`` are the
 #: two other gating keys; ``register_minimal_profile`` already sets both.
-_CALENDAR_GATING_FACT_OVERRIDES: dict[str, str] = {
+CALENDAR_GATING_FACT_OVERRIDES: dict[str, str] = {
     "withholding.has_employees": "false",
     "withholding.pays_professionals_with_retencion": "false",
     "irpf.art109_activity_income_withholding_ge_70pct": "false",
@@ -84,7 +84,7 @@ def isolated_calendar_backend(tmp_path: Path) -> Generator[None]:
         register_minimal_profile(
             profile_id=PRIMARY_PROFILE_ID,
             display_name="operator",
-            overrides=_CALENDAR_GATING_FACT_OVERRIDES,
+            overrides=CALENDAR_GATING_FACT_OVERRIDES,
         )
         yield
 
@@ -109,12 +109,12 @@ def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Gen
     so the fact is genuinely ABSENT rather than present-and-false. The two are
     different states and only absence raises the warning.
     """
-    unknown = tuple(path for path in omitted if path not in _CALENDAR_GATING_FACT_OVERRIDES)
+    unknown = tuple(path for path in omitted if path not in CALENDAR_GATING_FACT_OVERRIDES)
     if unknown:
         raise AssertionError(
             f"not gating facts this fixture answers, so omitting them changes nothing: {list(unknown)}",
         )
-    overrides = dict(_CALENDAR_GATING_FACT_OVERRIDES)
+    overrides = dict(CALENDAR_GATING_FACT_OVERRIDES)
     for path in omitted:
         overrides[path] = ""
     with (
@@ -137,7 +137,7 @@ def _observed_casilla_observations(value: Decimal):
     )
 
 
-def _modelo_record_with_external_justificante(
+def modelo_record_with_external_justificante(
     *,
     csv: str,
     bucket_id: str | None = None,
@@ -170,7 +170,7 @@ def _modelo_record_with_external_justificante(
     )
 
 
-def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
+def justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
@@ -191,7 +191,7 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
         )
 
 
-def _stamp_calendar_enrolment_from_censo() -> None:
+def stamp_calendar_enrolment_from_censo() -> None:
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         record = load_test_profile_record(PRIMARY_PROFILE_ID)
         censo_paths = {

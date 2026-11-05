@@ -29,7 +29,7 @@ def _signed_out(access_remains: bool | None) -> HumanSignedOut:
 
 @pytest.mark.parametrize("access_remains", [True, False, None])
 def test_logout_projection_preserves_remaining_access_without_inference(access_remains: bool | None) -> None:
-    result = custody._config_logout_result(
+    result = custody.config_logout_result(
         _signed_out(access_remains),
         logged_out_profile="Selected profile",
         already_logged_out=False,
@@ -42,7 +42,7 @@ def test_logout_projection_preserves_remaining_access_without_inference(access_r
 
 
 def test_logout_without_a_runtime_observation_keeps_access_unknown() -> None:
-    result = custody._config_logout_result(
+    result = custody.config_logout_result(
         None,
         logged_out_profile=None,
         already_logged_out=True,

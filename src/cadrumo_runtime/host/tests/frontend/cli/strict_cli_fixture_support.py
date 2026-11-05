@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import override_settings
 
-from ._cli_surface_support import isolated_cli_surface_backend
+from .cli_surface_support import isolated_cli_surface_backend
 from .modelo_profile_seed import ProfileSeeder
 from .runtime_profile_backend import runtime_profile_backend_fixture
 

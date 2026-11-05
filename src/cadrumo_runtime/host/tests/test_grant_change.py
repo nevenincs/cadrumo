@@ -48,7 +48,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from .served_runtime import ServedRuntime, SyntheticLogin, connect_verified, serving_runtime
-from .test_automation_enrollment import _login, _result, _submit_operation
+from .test_automation_enrollment import login, result, submit_operation
 
 pytestmark = [
     pytest.mark.integration,
@@ -117,7 +117,7 @@ def _request_grant_change(
 ) -> tuple[UUID, FrontendClient, UUID, NativeEnrollmentClient, EnrollmentProposal]:
     grant, kind, profile_id = change.grant, change.kind, change.profile_id
     # The person signs in first: a key reaches the profile only under a live sign-in.
-    human_id = _login(change.human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+    human_id = login(change.human, profile_id, method="password", proof=PROFILE_INPUT.encode())
     api = FrontendClient(change.raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
     api.login_api_key(bytearray(change.original_secret), timeout=25)
     old_session = api.session_id
@@ -202,7 +202,7 @@ def _approve_as_human(
 
     polling = served.pool.submit(serve_requester)
     try:
-        contract, operation, observed = _submit_operation(
+        contract, operation, observed = submit_operation(
             human,
             profile_id=profile_id,
             session_id=human_id,
@@ -223,7 +223,7 @@ def _approve_as_human(
             OperationResultProjectionSuccessV1[AutomationReceiptProjection]
             .model_validate_json(
                 json.dumps(
-                    _result(
+                    result(
                         human,
                         profile_id=profile_id,
                         session_id=human_id,

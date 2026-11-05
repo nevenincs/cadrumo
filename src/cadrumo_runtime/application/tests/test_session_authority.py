@@ -48,7 +48,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest
 
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import (
+from .session_authority_support import (
     AdmissionOwner,
     Subject,
     attended_tree,

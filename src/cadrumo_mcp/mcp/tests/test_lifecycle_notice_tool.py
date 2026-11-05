@@ -28,7 +28,7 @@ from .. import runtime_adapter as mcp_runtime
 from ..lifecycle_notices import LifecycleNoticeBoard
 from ..protocol_contract import sign_in_remedy
 from ..runtime_adapter import RuntimeMcpAdapter
-from .test_authentication_handover import _Client
+from .test_authentication_handover import Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -70,7 +70,7 @@ def test_a_notice_not_yet_told_outlives_its_connection_for_exactly_one_result() 
     assert _told(board, "status") is None
 
 
-class _WatchedClient(_Client):
+class _WatchedClient(Client):
     """A key lease that keeps the receivers the adapter subscribes, as the runtime's connection does."""
 
     def __init__(self, profile_id: UUID) -> None:

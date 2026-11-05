@@ -27,8 +27,7 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
     LlmConfidenceProviderPayload,
     LlmUsageCostProviderPayload,
 )
-from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import (
     diagnostics_native_profile,
     invoke_diagnostics_cli,
@@ -206,7 +205,7 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
 
     result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_data"] is True
     assert payload["low_confidence_threshold"] == "0.5"
@@ -238,7 +237,7 @@ def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     claude = {row["provider"]: row for row in payload["confidence_providers"]}["claude"]
     assert payload["since"] == "2026-04-02"
@@ -274,7 +273,7 @@ def test_llm_diagnostics_reversed_usage_window_keeps_confidence(
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
     assert payload["since"] == "2026-04-03"
     assert payload["until"] == "2026-04-01"
     assert payload["usage_providers"] == []
@@ -288,7 +287,7 @@ def test_llm_diagnostics_empty_is_instructive(diagnostics_native_profile: Native
     """JSON notices and human text explain that neither metric store has data."""
     result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_data"] is False
     assert payload["usage_providers"] == []

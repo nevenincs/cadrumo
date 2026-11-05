@@ -41,7 +41,7 @@ def test_cli_notice_never_contaminates_json_or_unattended_output(
     monkeypatch.setattr(binding, "json_output_requested", lambda: machine)
     monkeypatch.setattr(sys.stdin, "isatty", lambda: terminal)
     monkeypatch.setattr(sys.stderr, "isatty", lambda: terminal)
-    monkeypatch.setattr(binding, "_release_profile_client", lambda *_: None)
+    monkeypatch.setattr(binding, "release_profile_client", lambda *_: None)
     context = typer.Context(typer.main.TyperCommand(name="notice"))
     with context:
         binding.bind_profile_client(context, client, profile_id=client.profile_id)

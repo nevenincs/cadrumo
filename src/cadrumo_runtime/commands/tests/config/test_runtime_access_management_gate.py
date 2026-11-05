@@ -111,7 +111,7 @@ def test_resume_binds_the_explicit_profile_through_runtime_admission(monkeypatch
     )
     monkeypatch.setattr(
         admission,
-        "_open_recovery_profile",
+        "open_recovery_profile",
         lambda _ctx, target: events.append(("bind_recovery_profile", target)),
     )
     ctx = _context(profile="Selected profile")
@@ -156,7 +156,7 @@ def test_passphrase_change_pins_the_runtime_target_before_handler_entry(
 
 def test_resume_rejects_root_password_source_before_binding(monkeypatch: pytest.MonkeyPatch) -> None:
     events: list[str] = []
-    monkeypatch.setattr(admission, "_open_recovery_profile", lambda *_args: events.append("bind"))
+    monkeypatch.setattr(admission, "open_recovery_profile", lambda *_args: events.append("bind"))
     ctx = _context(profile_secrets_stdin=True)
     try:
         with pytest.raises(CliRefusedBoundaryError) as refused:

@@ -33,8 +33,7 @@ from cadrumo_client.transport.transport_cleanup import TransportCleanup
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_native_identity import worker_operation_namespace, worker_proof_namespace
 from ..adapters.worker_transport import WorkerChannel, worker_endpoint
-from . import worker_cleanup as _worker_cleanup
-from . import worker_service as _worker_service
+from . import worker_cleanup, worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_stall_watchdog import watch_event_loop
@@ -77,7 +76,7 @@ def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
 
 def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunResources) -> ProfileWorkerIdentity:
     endpoint = worker_endpoint(storage_root=options.storage_root, worker_namespace=options.worker_id)
-    resources.endpoint_releases.append(_worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(endpoint.close)))
+    resources.endpoint_releases.append(worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(endpoint.close)))
     channel = endpoint.connect(timeout=resources.timeout.remaining_seconds())
     resources.channel = channel
     channel_release = TransportCleanup(channel)
@@ -113,7 +112,7 @@ def _open_operation_channel(
         worker_namespace=(worker_proof_namespace if proof else worker_operation_namespace)(identity.worker_id),
     )
     resources.endpoint_releases.append(
-        _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(operation_endpoint.close))
+        worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(operation_endpoint.close))
     )
     operation_channel = operation_endpoint.connect(timeout=resources.timeout.remaining_seconds())
     if proof:
@@ -146,7 +145,7 @@ def _open_operation_channel(
     write_document(operation_channel, identity, deadline=deadline)
 
 
-async def _serve_watched(
+async def serve_watched(
     channel: WorkerChannel,
     operation_channel: WorkerChannel,
     proof_channel: WorkerChannel,
@@ -156,7 +155,7 @@ async def _serve_watched(
 ) -> None:
     """Serve private channels while a stalled loop leaves every thread's stack on disk."""
     async with watch_event_loop():
-        await _worker_service._serve(channel, operation_channel, proof_channel, custody, human, operations)
+        await worker_service.serve(channel, operation_channel, proof_channel, custody, human, operations)
 
 
 def _serve_connected_worker(
@@ -194,7 +193,7 @@ def _serve_connected_worker(
             ),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
-        asyncio.run(_serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
+        asyncio.run(serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
 
 
 def _run_worker(
@@ -213,7 +212,7 @@ def _run_worker(
 def _collect_worker_failures(primary_error: BaseException | None) -> tuple[BaseException, ...]:
     if primary_error is None:
         return ()
-    _worker_cleanup.retain_task_failures(primary_error, ())
+    worker_cleanup.retain_task_failures(primary_error, ())
     failures: tuple[BaseException, ...] = (primary_error,)
     task_failures = primary_error.__dict__.get("worker_task_errors")
     if isinstance(task_failures, tuple):
@@ -247,7 +246,7 @@ async def _close_worker_resources(resources: _WorkerRunResources, primary_error:
     custody_release = None
     if resources.custody is not None:
         custody = resources.custody
-        custody_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(custody.close))
+        custody_release = worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(custody.close))
     try:
         await close_async_resources(
             custody_release,
@@ -260,7 +259,7 @@ async def _close_worker_resources(resources: _WorkerRunResources, primary_error:
         )
     finally:
         if primary_error is not None:
-            _worker_cleanup.retain_task_failures(primary_error, ())
+            worker_cleanup.retain_task_failures(primary_error, ())
 
 
 def _release_worker_resources(resources: _WorkerRunResources, primary_error: BaseException | None) -> None:

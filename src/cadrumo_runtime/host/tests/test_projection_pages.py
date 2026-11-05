@@ -59,7 +59,7 @@ from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
 from .served_runtime import SyntheticLogin, connect_verified, serving_runtime
-from .test_automation_enrollment import _submit_operation
+from .test_automation_enrollment import submit_operation
 
 pytestmark = [
     pytest.mark.integration,
@@ -177,7 +177,7 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
                     client.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
                     control.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
                     assert client.session_id is not None
-                    contract, submitted, observed = _submit_operation(
+                    contract, submitted, observed = submit_operation(
                         raw,
                         profile_id=profile_id,
                         session_id=client.session_id,
@@ -371,7 +371,7 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
             cleanup.callback(control.close)
             client.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
             control.login_password(bytearray(PROFILE_INPUT.encode()), timeout=25)
-            contract, submitted, observed = _submit_operation(
+            contract, submitted, observed = submit_operation(
                 raw,
                 profile_id=profile_id,
                 session_id=client.session_id,

@@ -19,7 +19,7 @@ from .profile_worker_operation_client import ProfileWorkerOperationClient
 
 
 @dataclass
-class _ProofCommand:
+class ProofCommand:
     request: ProofControlRequest
     deadline: float
     finished: Event = field(default_factory=Event)
@@ -27,7 +27,7 @@ class _ProofCommand:
 
 
 def _proof_reply_matches(
-    reply: ProfileWorkerProofAcknowledged, command: _ProofCommand, identity: ProfileWorkerIdentity
+    reply: ProfileWorkerProofAcknowledged, command: ProofCommand, identity: ProfileWorkerIdentity
 ) -> bool:
     """Require the exact worker, request and proof attempt in the acknowledgement."""
     return (
@@ -82,7 +82,7 @@ class ProfileWorkerProofControl(ProfileWorkerOperationClient):
         commands = self._proof_commands
         if self._stopping.is_set() or commands is None or self._proof_failure is not None:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        command = _ProofCommand(
+        command = ProofCommand(
             ProofControlRequest(action=action, request_id=uuid4(), proof_attempt_id=attempt_id), deadline
         )
         commands.put_nowait(command)

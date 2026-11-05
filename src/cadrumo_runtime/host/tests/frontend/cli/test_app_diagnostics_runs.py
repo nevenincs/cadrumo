@@ -14,11 +14,11 @@ import json
 
 import pytest
 
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._diagnostics_cli_support import invoke_diagnostics, seed_claude_and_codex_runs
+from .diagnostics_cli_support import invoke_diagnostics, seed_claude_and_codex_runs
 
 pytestmark = [
     pytest.mark.integration,
@@ -37,7 +37,7 @@ def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile:
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "runs"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     assert payload["total_runs"] == 3
@@ -70,7 +70,7 @@ def test_runs_provider_filter_scopes_the_listing(diagnostics_native_profile: Nat
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert len(payload["runs"]) == 1
     assert payload["runs"][0]["provider"] == "llm:codex:test-model"
@@ -96,7 +96,7 @@ def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliPr
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert payload["runs"][0]["run_id"] == "run-1"
@@ -110,7 +110,7 @@ def test_runs_limit_caps_the_most_recent_rows(diagnostics_native_profile: Native
         ["--format", "json", "app", "diagnostics", "runs", "--limit", "2"], diagnostics_native_profile
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert [row["run_id"] for row in payload["runs"]] == ["run-3", "run-2"]
     assert payload["total_runs"] == 2

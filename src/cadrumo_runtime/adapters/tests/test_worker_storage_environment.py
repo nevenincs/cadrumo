@@ -29,7 +29,7 @@ def test_linux_worker_receives_the_pinned_storage_root_and_managed_temp(
     monkeypatch.setenv("PYTHONPATH", "must-not-cross-worker-boundary")
 
     storage_root = tmp_path / "worker-storage"
-    environment = profile_worker._worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+    environment = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
 
     temporary_root = storage_root / "tmp"
     assert environment["PATH"] == "/usr/bin:/bin"
@@ -55,7 +55,7 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
 
     storage_root = tmp_path / "worker-storage"
     monkeypatch.setenv(PROFILE_ROOT_VARIABLE, str(tmp_path / "another-profiles-folder"))
-    environment = profile_worker._worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+    environment = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
 
     assert environment[PROFILE_ROOT_VARIABLE] == str(profile_root(storage_root.resolve(), _PROFILE))
     assert environment["XDG_CACHE_HOME"] == str(tmp_path / "pinned-cache")
@@ -74,7 +74,7 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
     image = tmp_path / "package" / "bin" / "agent-image"
     monkeypatch.setenv(_PACKAGE_AGENT_VARIABLE, str(image))
 
-    environment = profile_worker._worker_launch_environment(
+    environment = profile_worker.worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
 
@@ -82,7 +82,7 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
     # Service executable locations are not part of the operator worker path allowlist.
     assert _PACKAGE_AGENT_VARIABLE not in worker_path_environment_names()
     monkeypatch.delenv(_PACKAGE_AGENT_VARIABLE)
-    assert _PACKAGE_AGENT_VARIABLE not in profile_worker._worker_launch_environment(
+    assert _PACKAGE_AGENT_VARIABLE not in profile_worker.worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
 
@@ -91,12 +91,12 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
 def test_the_launch_environment_of_a_profile_worker_passes_its_isolated_scope(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
 ) -> None:
-    from ..macos_worker_process import _validated_environment
+    from ..macos_worker_process import validated_environment
 
     monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
-    environment = profile_worker._worker_launch_environment(
+    environment = profile_worker.worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
     environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
     assert PROFILE_ROOT_VARIABLE in environment
-    assert _validated_environment(environment) == environment
+    assert validated_environment(environment) == environment

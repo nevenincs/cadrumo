@@ -63,7 +63,9 @@ class AutomationApprovalSecrets(MachineSecretPayload):
     passphrase: SecretStr
 
 
-def _client(ctx: typer.Context, *, requested_language: OutputLanguage | None) -> FrontendClient:
+def runtime_access_management_client(
+    ctx: typer.Context, *, requested_language: OutputLanguage | None
+) -> FrontendClient:
     pointer = require_active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     language = resolve_runtime_profile_output_language(client, requested=requested_language)
@@ -75,7 +77,7 @@ def _refused(error: FrontendRefusedError) -> CliRefusedBoundaryError:
     return CliRefusedBoundaryError(context=error.context)
 
 
-def _session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
+def session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
     return RuntimeSessionPayload(
         session_id=session.session_id,
         profile_id=session.profile_id,
@@ -93,14 +95,14 @@ def _session_payload(session: PublicAccessSession, *, instant: datetime) -> Runt
 
 def profile_sessions(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
     """List allowlisted sessions and their remaining access for this profile."""
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     try:
         sessions = client.sessions()
     except FrontendRefusedError as error:
         raise _refused(error) from error
     instant = now()
     projected = tuple(
-        _session_payload(item, instant=instant) for item in sorted(sessions, key=lambda item: item.session_id)
+        session_payload(item, instant=instant) for item in sorted(sessions, key=lambda item: item.session_id)
     )
     emit_envelope(
         ctx,
@@ -119,7 +121,7 @@ def profile_disclosures(ctx: typer.Context, offset: int = 0, output_language: Ou
     Each run is a session of its own, so a page is read by offset alone and is
     not pinned to the list an earlier run read.
     """
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     try:
         page = client.disclosure_page(DisclosurePageRequest(offset=offset))
     except FrontendRefusedError as error:
@@ -148,7 +150,7 @@ def profile_disclosures(ctx: typer.Context, offset: int = 0, output_language: Ou
 
 def automation_list(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
     """Read one authorized public automation inventory through the runtime."""
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     try:
         completed = read_automation_inventory(client)
     except FrontendRefusedError as error:
@@ -192,7 +194,7 @@ def automation_disclosures(
     Each run reads the inventory afresh; ``--expected-digest`` pins a later
     page to the list an earlier run counted, and is refused if it changed.
     """
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     try:
         request = DisclosurePageRequest(offset=offset, expected_digest=expected_digest)
     except ValueError:
@@ -228,7 +230,9 @@ def automation_disclosures(
     )
 
 
-def _review(client: FrontendClient, request_id: UUID) -> tuple[OperationId, AutomationReviewProjection]:
+def runtime_access_management_review(
+    client: FrontendClient, request_id: UUID
+) -> tuple[OperationId, AutomationReviewProjection]:
     """Find one exact currently reviewed request before any approval proof read."""
     try:
         completed = read_automation_inventory(client)
@@ -247,7 +251,7 @@ def _review_not_found() -> CliRefusedBoundaryError:
     )
 
 
-def _review_digest(review: AutomationReviewProjection, supplied: str) -> None:
+def runtime_access_management_review_digest(review: AutomationReviewProjection, supplied: str) -> None:
     if supplied != review.receipt.review_digest:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.automation.review_digest_mismatch",
@@ -298,8 +302,8 @@ def _review_lines(review: AutomationReviewProjection) -> tuple[str, ...]:
 
 def automation_inspect(ctx: typer.Context, request_id: UUID, output_language: OutputLanguage | None = None) -> None:
     """Show only the selected current public review and its digest."""
-    client = _client(ctx, requested_language=output_language)
-    inventory_operation_id, review = _review(client, request_id)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
+    inventory_operation_id, review = runtime_access_management_review(client, request_id)
     emit_envelope(
         ctx,
         command="config.profile.automation.inspect",
@@ -314,7 +318,7 @@ def automation_inspect(ctx: typer.Context, request_id: UUID, output_language: Ou
     )
 
 
-def _approval_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
+def approval_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         return bytearray(prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt")).encode("utf-8"))
@@ -371,10 +375,10 @@ def automation_approve(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Approve an exact current review using a separate fresh password proof."""
-    client = _client(ctx, requested_language=output_language)
-    inventory_operation_id, review = _review(client, request_id)
-    _review_digest(review, review_digest)
-    password = _approval_password(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
+    inventory_operation_id, review = runtime_access_management_review(client, request_id)
+    runtime_access_management_review_digest(review, review_digest)
+    password = approval_password(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     try:
         _decision_result(
             ctx,
@@ -395,9 +399,9 @@ def automation_decline(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Decline an exact current review without asking for a password."""
-    client = _client(ctx, requested_language=output_language)
-    inventory_operation_id, review = _review(client, request_id)
-    _review_digest(review, review_digest)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
+    inventory_operation_id, review = runtime_access_management_review(client, request_id)
+    runtime_access_management_review_digest(review, review_digest)
     _decision_result(
         ctx,
         client,
@@ -415,7 +419,7 @@ def automation_deny(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Revoke one key, one grant, or all profile automation."""
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     if kind not in {"key", "grant", "all"} or ((kind != "all") != (target_id is not None)):
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.automation.deny.target_mismatch",
@@ -441,7 +445,7 @@ def automation_deny(
     )
 
 
-def _lock_result(client: FrontendClient, *, all_sessions: bool, session: UUID | None) -> ConfigProfileLockResult:
+def lock_result(client: FrontendClient, *, all_sessions: bool, session: UUID | None) -> ConfigProfileLockResult:
     """Preserve the exact selected target and the runtime's actual cascade."""
     if all_sessions and session is not None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.lock.selector_conflict")
@@ -480,9 +484,9 @@ def profile_lock(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Retire this session, a selected session, or the whole profile."""
-    client = _client(ctx, requested_language=output_language)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
     try:
-        result = _lock_result(client, all_sessions=all_sessions, session=session)
+        result = lock_result(client, all_sessions=all_sessions, session=session)
     except FrontendRefusedError as error:
         raise _refused(error) from error
     emit_envelope(
@@ -498,7 +502,7 @@ def profile_lock(
     )
 
 
-def _resume_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
+def resume_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         return bytearray(prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt")).encode("utf-8"))
@@ -517,8 +521,8 @@ def profile_resume(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Unlock human access and reactivate only explicitly selected grants."""
-    client = _client(ctx, requested_language=output_language)
-    password = _resume_password(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    client = runtime_access_management_client(ctx, requested_language=output_language)
+    password = resume_password(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     try:
         try:
             receipt = client.recover_profile(password, grants=frozenset(grant))

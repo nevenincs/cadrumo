@@ -31,7 +31,7 @@ _QUIET_PASSES = 2
 _PASS_INTERVAL_SECONDS = 0.002
 
 
-class _CoalitionInfo(ctypes.Structure):
+class CoalitionInfo(ctypes.Structure):
     _fields_ = (("coalition_ids", ctypes.c_uint64 * 2), ("reserved", ctypes.c_uint64 * 3))
 
 
@@ -41,9 +41,9 @@ def decode_macos_resource_coalition(payload: bytes) -> int:
     Args:
         payload: Exact native proc_pidcoalitioninfo record.
     """
-    if len(payload) != ctypes.sizeof(_CoalitionInfo):
+    if len(payload) != ctypes.sizeof(CoalitionInfo):
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    value = _CoalitionInfo.from_buffer_copy(payload)
+    value = CoalitionInfo.from_buffer_copy(payload)
     coalition = int(value.coalition_ids[0])
     if coalition <= 0:
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -58,7 +58,7 @@ def read_macos_resource_coalition(pid: int) -> int | None:
     """
     if sys.platform != "darwin":
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(_CoalitionInfo))
+    payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(CoalitionInfo))
     return None if payload is None else decode_macos_resource_coalition(payload)
 
 

@@ -28,7 +28,7 @@ from ...adapters.worker_transport import WorkerChannel
 from .. import worker_service
 from ..operation_host import ProfileWorkerOperationHost
 from ..profile_login import ProfileWorkerHumanLogin
-from ..worker import _serve_watched
+from ..worker import serve_watched
 from ..worker_stall_watchdog import (
     DUMP_NAME_PREFIX,
     DUMP_NAME_SUFFIX,
@@ -197,9 +197,9 @@ async def test_the_worker_serves_both_channels_inside_the_watchdog(
     async def serve(*_owners: object) -> None:
         served.append(_dump_path(default_log_file_path().parent).exists())
 
-    monkeypatch.setattr(worker_service, "_serve", serve)
+    monkeypatch.setattr(worker_service, "serve", serve)
     with override_settings(cadrumo_storage_root=tmp_path):
-        await _serve_watched(
+        await serve_watched(
             cast(WorkerChannel, object()),
             cast(WorkerChannel, object()),
             cast(WorkerChannel, object()),

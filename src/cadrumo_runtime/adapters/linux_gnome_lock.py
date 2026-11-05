@@ -200,7 +200,7 @@ def sample_gnome_lock(
     if sys.platform != "linux" or uid != os.getuid():
         raise _unavailable()
     identity, owner, pid = _identity(bus, uid)
-    with _shell_pidfd(pid, uid) as pidfd:
+    with shell_pidfd(pid, uid) as pidfd:
         _alive(pidfd)
         if peer_session(pidfd) != (session_id, uid):
             raise _unavailable()
@@ -222,7 +222,7 @@ def sample_gnome_lock(
 
 
 @contextmanager
-def _shell_pidfd(pid: int, uid: int) -> Generator[int]:
+def shell_pidfd(pid: int, uid: int) -> Generator[int]:
     if sys.platform != "linux":
         raise _unavailable()
     pidfd = open_linux_pidfd(pid)

@@ -86,7 +86,7 @@ def test_known_audit_flags_do_not_grant_lock_or_unattended_authority(
     flags: int,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    value = macos_login._session_observation(100022, 0, 100022, flags)
+    value = macos_login.session_observation(100022, 0, 100022, flags)
     assert value == MacosSessionObservation(100022, flags)
     monkeypatch.setattr(macos_login, "observe_macos_session", lambda _session_id: value)
     context = MacosLoginBinding("501", 100022).observe(credential_facilities=Availability.AVAILABLE)
@@ -100,9 +100,9 @@ def test_audit_record_unknown_flags_error_and_changed_session_still_refuse(
     status: int, observed: int, flags: int
 ) -> None:
     with pytest.raises(RefusalError) as caught:
-        macos_login._session_observation(42, status, observed, flags)
+        macos_login.session_observation(42, status, observed, flags)
     assert caught.value.reason is RefusalCode.UNAVAILABLE
-    assert macos_login._session_observation(42, -60500, 0, 0) is None
+    assert macos_login.session_observation(42, -60500, 0, 0) is None
 
 
 @pytest.mark.parametrize("lock_state", [OsLockState.LOCKED, OsLockState.UNLOCKED])

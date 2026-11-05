@@ -7,17 +7,17 @@ from dataclasses import dataclass
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-_SESSION_ID = re.compile(r"[A-Za-z0-9_]{1,64}\Z", re.ASCII)
+SESSION_ID = re.compile(r"[A-Za-z0-9_]{1,64}\Z", re.ASCII)
 
-_SESSION_PATH = re.compile(rb"/org/freedesktop/login1/session/[A-Za-z0-9_]{1,192}\Z", re.ASCII)
+SESSION_PATH = re.compile(rb"/org/freedesktop/login1/session/[A-Za-z0-9_]{1,192}\Z", re.ASCII)
 
 
-def _unavailable() -> RefusalError:
+def unavailable() -> RefusalError:
     return RefusalError(RefusalCode.UNAVAILABLE)
 
 
 def _valid_session_identifier(value: object) -> bool:
-    return type(value) is str and _SESSION_ID.fullmatch(value) is not None
+    return type(value) is str and SESSION_ID.fullmatch(value) is not None
 
 
 def _valid_owner_id(value: object) -> bool:
@@ -47,19 +47,19 @@ class LinuxSessionObservation:
     def __post_init__(self) -> None:
         """Reject unsupported or malformed native facts before they become evidence."""
         if not _valid_session_identifier(self.session_id):
-            raise _unavailable()
+            raise unavailable()
         if not _valid_owner_id(self.uid):
-            raise _unavailable()
+            raise unavailable()
         if not _valid_session_generation(self.created_monotonic_usec):
-            raise _unavailable()
+            raise unavailable()
         if self.session_class != "user" or self.session_type not in ("x11", "wayland"):
-            raise _unavailable()
+            raise unavailable()
         if self.state not in ("active", "online", "closing") or type(self.locked_hint) is not bool:
-            raise _unavailable()
+            raise unavailable()
 
 
 @dataclass(frozen=True)
-class _SessionRecord:
+class SessionRecord:
     """Typed native properties before supported-desktop admission is decided."""
 
     session_id: str
@@ -72,15 +72,15 @@ class _SessionRecord:
 
     def __post_init__(self) -> None:
         if not _valid_session_identifier(self.session_id):
-            raise _unavailable()
+            raise unavailable()
         if not _valid_owner_id(self.uid):
-            raise _unavailable()
+            raise unavailable()
         if not _valid_session_generation(self.created_monotonic_usec):
-            raise _unavailable()
+            raise unavailable()
         if not all(_valid_native_label(value) for value in (self.session_class, self.session_type, self.state)):
-            raise _unavailable()
+            raise unavailable()
         if type(self.locked_hint) is not bool:
-            raise _unavailable()
+            raise unavailable()
 
     def desktop(self) -> LinuxSessionObservation:
         """Keep the original class=user, x11/wayland admission unchanged."""
@@ -110,15 +110,15 @@ class _SessionRecord:
 
 
 @dataclass(frozen=True)
-class _SessionReference:
+class SessionReference:
     session_id: str
     uid: int
     object_path: bytes
 
     def __post_init__(self) -> None:
         if not _valid_session_identifier(self.session_id):
-            raise _unavailable()
+            raise unavailable()
         if not _valid_owner_id(self.uid):
-            raise _unavailable()
-        if type(self.object_path) is not bytes or not _SESSION_PATH.fullmatch(self.object_path):
-            raise _unavailable()
+            raise unavailable()
+        if type(self.object_path) is not bytes or not SESSION_PATH.fullmatch(self.object_path):
+            raise unavailable()

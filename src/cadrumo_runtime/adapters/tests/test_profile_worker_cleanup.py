@@ -32,7 +32,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 )
 
 from .. import profile_worker, profile_worker_human_admission, profile_worker_lifetime, profile_worker_transport
-from ._profile_worker_cleanup_support import Channel, Fixture, control_reply, retained_cleanup_error
+from .profile_worker_cleanup_support import Channel, Fixture, control_reply, retained_cleanup_error
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

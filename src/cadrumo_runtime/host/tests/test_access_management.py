@@ -54,7 +54,7 @@ pytestmark = [
 ]
 
 
-def _login(
+def login(
     connection: VerifiedConnection,
     profile_id: UUID,
     *,
@@ -240,7 +240,7 @@ def _revoke_selected_key(access: _Access, api_id: UUID) -> None:
     try:
         renewed_human_id = admit_session(renewed_human, profile_id, method="password", proof=PROFILE_INPUT.encode())
         renewed_api_id = admit_session(renewed_api, profile_id, method="api_key", proof=access.selected_secret)
-        assert isinstance(_login(held_api, profile_id, method="api_key", proof=access.held_secret), AccessRefusal)
+        assert isinstance(login(held_api, profile_id, method="api_key", proof=access.held_secret), AccessRefusal)
 
         revoked = renewed_human.deny_automation(
             AutomationDeny(

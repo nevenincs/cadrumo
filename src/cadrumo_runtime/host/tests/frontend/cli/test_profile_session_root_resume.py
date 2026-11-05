@@ -33,12 +33,12 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.common import boundary_requested_leaf_scope, cli_policy_refusal_projection
 from cadrumo.entrypoints.cli.tests.error_boundary_scope import suspend_error_boundary
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
@@ -86,7 +86,7 @@ def native_runtime(_isolated_root: Path) -> Iterator[None]:
 
 def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     """Register one current credential capsule and return its immutable UUID."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
     del tax_id  # Current registration creates the initial incomplete fact record.
@@ -103,7 +103,7 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 
 def _login(label: str | None = None) -> None:
     """Establish the session through the application login door, for ``label`` or the active profile."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
     from cadrumo.core.bucket_pointer import require_active_bucket_id
 
@@ -127,7 +127,7 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
     through the runtime worker's own step, as a persisted sign-in does.
     """
     _login()
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     persist_signed_in_receipt(
         storage_root,
         UUID(bucket_id),
@@ -146,7 +146,7 @@ def _resume(bucket_id: str, *, storage_root: Path) -> ProfileSessionRefusalReaso
     from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
     from cadrumo_runtime.host.profile_receipt import resume_profile_candidate
 
-    _, decode = _profile_contexts_for_test()
+    _, decode = profile_authority_contexts()
     try:
         with (
             borrow_receipt_proof(profile_id=UUID(bucket_id)) as proof,
@@ -560,7 +560,7 @@ class TestFailClosedRefusals:
             custody_generation=envelope.password_generation,
             dek_epoch=envelope.dek_epoch,
             dek=dek,
-            now=_now() - timedelta(minutes=minutes),
+            now=now() - timedelta(minutes=minutes),
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
             login_id=RECEIPT_LOGIN_ID,

@@ -74,7 +74,7 @@ def profiles(tmp_path: Path):
         yield subjects
 
 
-class _AllowWorkerOperations(UnavailableApprovalAuthority):
+class AllowWorkerOperations(UnavailableApprovalAuthority):
     """Permit only the operation checks exercised by this installed-worker case."""
 
     @contextmanager
@@ -307,7 +307,7 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
     _select_profile(root, identity_a.binding.profile_id)
     assert read_pointer(root).bucket_id == str(identity_a.binding.profile_id)
 
-    authority = _AllowWorkerOperations()
+    authority = AllowWorkerOperations()
     with ExitStack() as cleanup:
         worker_a = ProfileWorkerProcess(identity_a, storage_root=root, authorization=authority)
         cleanup.callback(release_worker, worker_a)

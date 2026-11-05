@@ -113,7 +113,7 @@ def caller_thread_capture(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[log
     logger.propagate = False
     handler = _Capture()
     logger.addHandler(handler)
-    monkeypatch.setattr(runtime_login_attempt, "_LOGGER", logger)
+    monkeypatch.setattr(runtime_login_attempt, "LOGGER", logger)
     try:
         yield logger, handler
     finally:

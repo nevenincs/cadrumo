@@ -229,7 +229,7 @@ def test_attestation_start_transport_failure_retains_canonical_reason_and_unknow
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
-            runtime_lifecycle._admit_attestation(
+            runtime_lifecycle.admit_attestation(
                 cast(FrontendClient, client),
                 lifecycle,
                 _NOW,
@@ -255,7 +255,7 @@ def test_attestation_terminal_refusal_uses_registered_refusal_code_and_observed_
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         asyncio.run(
-            runtime_lifecycle._admit_attestation(
+            runtime_lifecycle.admit_attestation(
                 cast(FrontendClient, client),
                 lifecycle,
                 _NOW,

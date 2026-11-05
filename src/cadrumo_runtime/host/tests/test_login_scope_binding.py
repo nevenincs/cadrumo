@@ -23,7 +23,7 @@ from ..profile_connections import RuntimeProfileConnections
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-class _Login:
+class Login:
     """One active native login retained by the already admitted connection."""
 
     login_id = "scope-test-login"
@@ -84,7 +84,7 @@ def _login(profile_id: UUID, *, scope: AccessScope) -> ProfileLogin:
 def _admitted_connection(context: ConnectionContext, profile_id: UUID, scope: AccessScope) -> ProfileConnection:
     return ProfileConnection(
         context,
-        login=_Login(context.peer.os_owner_id),
+        login=Login(context.peer.os_owner_id),
         client_id=uuid4(),
         profile_id=profile_id,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,

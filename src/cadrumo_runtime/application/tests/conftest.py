@@ -12,7 +12,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 
-from ._session_authority_support import Recovery, Subject
+from .session_authority_support import Recovery, Subject
 
 
 @pytest.fixture

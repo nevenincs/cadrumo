@@ -53,12 +53,12 @@ def test_runtime_failure_durability_follows_actual_handler_entry(
     monkeypatch.setattr(runtime_main, "build_command_app", compiled_command)
     monkeypatch.setattr(runtime_main, "get_command", lambda app: app)
     monkeypatch.setattr(runtime_main, "log_cli_boundary_failure", log)
-    monkeypatch.setattr(runtime_main, "_render_error", lambda *args, **kwargs: 2)
+    monkeypatch.setattr(runtime_main, "render_error", lambda *args, **kwargs: 2)
     monkeypatch.setattr(runtime_main, "register_client_logging_namespace", lambda: None)
     monkeypatch.setattr(runtime_main, "configure_stdio_for_utf8", lambda: None)
     monkeypatch.setattr(runtime_main, "disable_rich_cli_rendering", lambda: None)
 
-    assert runtime_main._run_command([]) == 2
+    assert runtime_main.run_command([]) == 2
     assert runtime_main.logging_configuration_deferred() is was_deferred
     assert len(records) == 1
     boundary, logged_error, durable = records[0]

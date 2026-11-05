@@ -69,7 +69,7 @@ from cadrumo.entrypoints.tui.operations.outcome import SessionExpiredOutcomeUnkn
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
-from ..runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
+from ..runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, request_from_entry
 
 pytestmark = pytest.mark.hex_entrypoint
 
@@ -548,7 +548,7 @@ def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
         },
     )
 
-    request = _request_from_entry(_PROFILE_ID, entry)
+    request = request_from_entry(_PROFILE_ID, entry)
 
     assert request.business_premises_lease == InvoiceAddBusinessPremisesLease(
         situacion_inmueble="1",

@@ -76,7 +76,7 @@ from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status
 from .surfaces import McpSurface
 
 #: One tool call's budget: its exchanges may wait as long as the runtime's single-exchange maximum.
-_TIMEOUT = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+TIMEOUT = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 
 
 class _AdmittedConnection(Protocol):
@@ -114,7 +114,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
         raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     if name == "status":
         return _admitted_status(client, admission, connection.surface, args)
-    deadline = time.monotonic() + _TIMEOUT
+    deadline = time.monotonic() + TIMEOUT
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")

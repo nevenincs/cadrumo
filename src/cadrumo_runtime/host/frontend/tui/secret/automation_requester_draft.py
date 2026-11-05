@@ -14,7 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureC
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from . import automation_requester_contracts as _contracts
+from . import automation_requester_contracts
 
 if TYPE_CHECKING:
     from .automation_requester import RuntimeAutomationRequesterScreen
@@ -40,7 +40,7 @@ class RequesterDraftMixin:
             raise ValueError("noncanonical UUID")
         return parsed
 
-    def _draft(self: RuntimeAutomationRequesterScreen) -> _contracts.ProposalDraft:
+    def _draft(self: RuntimeAutomationRequesterScreen) -> automation_requester_contracts.ProposalDraft:
         kind = self._selected_kind()
         operations = self._selected_operations()
         actions = self._selected_actions()
@@ -51,7 +51,7 @@ class RequesterDraftMixin:
         key_expiry = datetime.fromisoformat(key_raw) if key_raw else None
         reference = self._optional_uuid(self.query_one("#automation-request-reference", Input).value)
         self._validate_reference(reference)
-        return _contracts.ProposalDraft(
+        return automation_requester_contracts.ProposalDraft(
             kind=kind,
             operations=operations,
             actions=actions,

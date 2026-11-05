@@ -11,7 +11,7 @@ from cadrumo.core.i18n.render import tr
 
 from ..secret.automation_decision import RuntimeAutomationDecisionScreen
 from ..secret.automation_decision_outcome import AutomationDecisionUiOutcome
-from .automation_inventory_details import _request_detail
+from .automation_inventory_details import request_detail
 
 if TYPE_CHECKING:
     from .automation_inventory import RuntimeAutomationInventoryScreen
@@ -85,7 +85,7 @@ class AutomationInventoryDecisionMixin:
             self._client,
             review,
             decision=decision,
-            consent_text=_request_detail(review),
+            consent_text=request_detail(review),
             session_expires_at=self._binding.known_expires_at,
             on_access_lost=self._lose_access,
         )

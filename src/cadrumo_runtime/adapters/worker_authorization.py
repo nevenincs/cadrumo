@@ -78,7 +78,7 @@ def worker_authorization_namespace(worker_id: UUID) -> UUID:
     return uuid5(worker_id, "cadrumo-operation-authorization")
 
 
-def _require_inventory_ipc_budget(inventory: AutomationInventory) -> None:
+def require_inventory_ipc_budget(inventory: AutomationInventory) -> None:
     """Refuse a whole inventory that cannot fit a protected native response."""
     size = len(canonical_json_bytes(inventory.model_dump(mode="json")))
     if size > WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
@@ -278,7 +278,7 @@ class WorkerAuthorizationServer:
             allowed = fence.enter_context(guard)
             permit = self._held_permit(request, allowed, permit_id)
             replied[0] = True
-            _write_permit(channel, permit, deadline=time.monotonic() + 5)
+            write_permit(channel, permit, deadline=time.monotonic() + 5)
             if not hold_fence:
                 fence.close()
             try:
@@ -522,7 +522,7 @@ class WorkerAuthorizationServer:
         if isinstance(request, WorkerAutomationInventoryRequest):
             if not isinstance(allowed, WorkerAutomationInventoryAllowed):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
-            _require_inventory_ipc_budget(allowed.inventory)
+            require_inventory_ipc_budget(allowed.inventory)
             permit = WorkerAutomationInventoryPermit(
                 request_id=request.request_id,
                 runtime_boot_id=self.identity.runtime_boot_id,
@@ -593,7 +593,7 @@ class WorkerAuthorizationServer:
         return reply
 
 
-def _write_permit(
+def write_permit(
     channel: ByteChannel,
     permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit,
     *,

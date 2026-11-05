@@ -30,10 +30,10 @@ from cadrumo_client.commands.shared_contracts import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+    translation_key,
 )
-from cadrumo_client.commands.shared_contracts import translation_key as _key
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.commands.spec_schema import config_payload_schema as _schema
+from cadrumo_client.commands.spec_schema import config_payload_schema
 from cadrumo_client.contracts.command_ports import CommandNodeKind, ProfileAuthenticationPosture
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage", __package__))
@@ -69,7 +69,7 @@ def _option(
         declarations=declarations,
         value=value,
         default=ParameterDefault.required() if required else ParameterDefault.value(False if flag else None),
-        help_key=_key(help_key),
+        help_key=translation_key(help_key),
         is_flag=flag,
         flag_value=True if flag else None,
         multiple=multiple,
@@ -94,9 +94,9 @@ _OUTPUT_LANGUAGE_OPTION = _option(
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_apoderado": "._apoderado",
+    "_apoderado": ".apoderado",
     "_auth": ".auth",
-    "_auth_diagnostics": "._auth_diagnostics",
+    "_auth_diagnostics": ".auth_diagnostics",
     "certificate": ".certificate",
 }
 
@@ -123,13 +123,15 @@ def _leaf(
         parent_key=parent,
         token=token,
         kind=CommandNodeKind.LEAF,
-        help_key=_key(help_key),
+        help_key=translation_key(help_key),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(*parameters, _OUTPUT_LANGUAGE_OPTION),
         policy=policy,
         handler=_handler(module, handler),
-        result_schema=schema if isinstance(schema, ResultSchemaSpec) else _schema(schema, key.replace("_", ".")),
+        result_schema=schema
+        if isinstance(schema, ResultSchemaSpec)
+        else config_payload_schema(schema, key.replace("_", ".")),
         machine_secret=machine_secret,
         profile_authentication=profile_authentication,
     )
@@ -265,7 +267,10 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_READ,
         (
             ArgumentSpec(
-                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id",
+                TEXT_VALUE,
+                ParameterDefault.required(),
+                translation_key("cli.config.auth.diagnostics.id_help"),
             ),
         ),
     ),
@@ -280,7 +285,10 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             ArgumentSpec(
-                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id",
+                TEXT_VALUE,
+                ParameterDefault.required(),
+                translation_key("cli.config.auth.diagnostics.id_help"),
             ),
             _option(
                 "phone_state",

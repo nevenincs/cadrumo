@@ -30,7 +30,7 @@ from pydantic import (
 )
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_LANE_ID_PATTERN,
     MODEL_RUN_MODEL_ID_MAX_LENGTH,
@@ -188,7 +188,7 @@ def validate_loopback_http_base_url(value: str) -> str:
 class ModelLicence(BaseModel):
     """The licence the agent states for one model, shown to the person and never judged by Cadrumo."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     spdx: str | None = Field(min_length=1, max_length=256)
     """The SPDX identifier, when the licence has one."""
@@ -205,7 +205,7 @@ class CatalogModelFacts(BaseModel):
     agent does not state is ``None``; nothing is inferred in its place.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)
     """The model value a run names on its lane."""
@@ -267,7 +267,7 @@ class BackgroundOption(StrEnum):
 class LaneBackground(BaseModel):
     """What a background run on one lane takes, as the agent declares it."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     runnable: bool
     """Whether the lane runs background requests at all."""
@@ -295,7 +295,7 @@ def _in_declared_order[T](values: tuple[T, ...], vocabulary: tuple[T, ...]) -> b
 class ProviderCatalogEntry(BaseModel):
     """One lane the agent reports and a profile can manage a credential for."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: LaneId
     """The agent's lane id; commands address a lane by it and its record is keyed by it."""
@@ -370,7 +370,7 @@ class ProviderCatalogEntry(BaseModel):
 class ProviderCatalog(BaseModel):
     """The validated lane catalog the agent reported."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[5]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)

@@ -43,7 +43,7 @@ from ...contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
-from ..automation_inventory import AutomationInventoryReadError, _exact_profile, read_automation_inventory
+from ..automation_inventory import AutomationInventoryReadError, exact_profile, read_automation_inventory
 from ..frontend_client import FrontendClient
 from .refused_observation import refused_observation
 
@@ -180,5 +180,5 @@ def test_a_foreign_key_row_cannot_join_the_bound_profile_inventory() -> None:
         ),
         requests=(),
     )
-    assert not _exact_profile(projection, selected)
-    assert _exact_profile(projection, foreign)
+    assert not exact_profile(projection, selected)
+    assert exact_profile(projection, foreign)

@@ -24,7 +24,7 @@ type _Action = Literal[
     "refresh", "deny_key", "deny_grant", "deny_all", "lock_current", "lock_selected", "lock_profile", "resume"
 ]
 
-_BUTTON_ACTIONS: Final[dict[str, _Action]] = {
+BUTTON_ACTIONS: Final[dict[str, _Action]] = {
     "runtime-access-refresh": "refresh",
     "runtime-access-deny-key": "deny_key",
     "runtime-access-deny-grant": "deny_grant",
@@ -102,7 +102,7 @@ class _RuntimeAccessActionHost(Protocol):
     async def _perform_resume(self) -> tuple[bool, str | None]: ...
 
 
-class _RuntimeAccessActionsMixin:
+class RuntimeAccessActionsMixin:
     async def _perform(self: _RuntimeAccessActionHost, action: _Action) -> None:
         if self._busy or not self._active():
             return

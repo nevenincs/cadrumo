@@ -29,7 +29,7 @@ def test_holder_selects_the_declared_human_frontend(
         observed.append((profile, password_stdin, frontend, persist_receipt))
         return 0
 
-    monkeypatch.setattr(session_hold, "_hold", hold)
+    monkeypatch.setattr(session_hold, "hold", hold)
     assert session_hold.main(["--profile-id", str(profile_id), *arguments]) == 0
     assert observed == [(profile_id, False, expected, False)]
     assert profile_login_session_port() is caller_port

@@ -18,15 +18,15 @@ from cadrumo_client.transport.framing import VerifiedConnection
 
 from ..supervised_protocol import RuntimeHeartbeat, RuntimeStopping
 from .test_supervised_runtime import (
-    _announcement,
-    _boot_of,
-    _connect,
-    _endpoint,
-    _exit_code,
-    _log_text,
-    _ready,
-    _send,
-    _supervised,
+    announcement,
+    boot_of,
+    connect,
+    exit_code,
+    log_text,
+    send,
+    supervised,
+    supervised_runtime_endpoint,
+    supervised_runtime_ready,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -34,16 +34,16 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.mark.asyncio
 async def test_headless_runtime_load_and_foreign_interference(tmp_path: Path) -> None:
-    endpoint = _endpoint(tmp_path)
+    endpoint = supervised_runtime_endpoint(tmp_path)
     began = time.perf_counter()
     try:
-        async with _supervised(tmp_path, endpoint.storage_identity) as process:
-            ready = await _ready(process)
+        async with supervised(tmp_path, endpoint.storage_identity) as process:
+            ready = await supervised_runtime_ready(process)
             startup_ms = (time.perf_counter() - began) * 1000
             with ExitStack() as cleanup:
                 clients = []
                 for _ in range(8):
-                    client = _connect(endpoint)
+                    client = connect(endpoint)
                     cleanup.callback(client.close)
                     clients.append(client)
 
@@ -51,7 +51,7 @@ async def test_headless_runtime_load_and_foreign_interference(tmp_path: Path) ->
                     samples = []
                     for _ in range(16):
                         started = time.perf_counter()
-                        assert _boot_of(client) == ready.boot_id
+                        assert boot_of(client) == ready.boot_id
                         samples.append((time.perf_counter() - started) * 1000)
                     return samples
 
@@ -80,16 +80,16 @@ async def test_headless_runtime_load_and_foreign_interference(tmp_path: Path) ->
                 for _ in range(32):
                     abandoned = endpoint.connect(timeout=2)
                     abandoned.close()
-                assert _boot_of(clients[0]) == ready.boot_id
-                await _send(process, b'{"type":"ping","seq":1}\n')
-                heartbeat = await _announcement(process)
+                assert boot_of(clients[0]) == ready.boot_id
+                await send(process, b'{"type":"ping","seq":1}\n')
+                heartbeat = await announcement(process)
                 assert isinstance(heartbeat, RuntimeHeartbeat)
                 assert heartbeat.in_flight_operations == 0
                 assert process.returncode is None
             stopping = time.perf_counter()
-            await _send(process, b'{"type":"session-end"}\n')
-            assert await _announcement(process) == RuntimeStopping(reason=ExitReason.SESSION_END_SETTLE)
-            assert await _exit_code(process) == ExitReason.SESSION_END_SETTLE
+            await send(process, b'{"type":"session-end"}\n')
+            assert await announcement(process) == RuntimeStopping(reason=ExitReason.SESSION_END_SETTLE)
+            assert await exit_code(process) == ExitReason.SESSION_END_SETTLE
             print(
                 "HEADLESS_BENCHMARK_JSON="
                 + json.dumps(
@@ -99,7 +99,7 @@ async def test_headless_runtime_load_and_foreign_interference(tmp_path: Path) ->
                             phase: float(seconds) * 1000
                             for phase, seconds in re.findall(
                                 r"runtime_startup phase=(\w+) transition=leave elapsed_seconds=([\d.]+)",
-                                _log_text(tmp_path),
+                                log_text(tmp_path),
                             )
                         },
                         "shutdown_ms": (time.perf_counter() - stopping) * 1000,

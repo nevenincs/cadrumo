@@ -47,7 +47,7 @@ pytestmark = [
 ]
 
 
-class _MutableLogin(SyntheticLogin):
+class MutableLogin(SyntheticLogin):
     locked = False
 
     @override
@@ -63,7 +63,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     valid_proof = case != "wrong-proof"
-    login = _MutableLogin("native-access-management-test-login")
+    login = MutableLogin("native-access-management-test-login")
     original_rewrap = recovery_custody.rewrap_profile_passphrase_under_lock
     if case == "publication-failure":
 

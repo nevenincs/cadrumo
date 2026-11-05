@@ -14,13 +14,13 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import macos_process as native
-from ..macos_process import _BsdProcessInfo, decode_macos_process_info
+from ..macos_process import BsdProcessInfo, decode_macos_process_info
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def _record() -> _BsdProcessInfo:
-    value = _BsdProcessInfo()
+def _record() -> BsdProcessInfo:
+    value = BsdProcessInfo()
     value.pid, value.parent_pid, value.group_id = 123, 100, 123
     value.uid = value.real_uid = value.saved_uid = 501
     value.status = 2
@@ -28,7 +28,7 @@ def _record() -> _BsdProcessInfo:
     return value
 
 
-def _payload(record: _BsdProcessInfo) -> bytes:
+def _payload(record: BsdProcessInfo) -> bytes:
     return ctypes.string_at(ctypes.byref(record), ctypes.sizeof(record))
 
 
@@ -72,13 +72,13 @@ class _NativeQuery:
     argtypes: tuple[object, ...] = ()
     restype: object = None
 
-    def __init__(self, *, count: int, error_number: int, record: _BsdProcessInfo) -> None:
+    def __init__(self, *, count: int, error_number: int, record: BsdProcessInfo) -> None:
         self.count = count
         self.error_number = error_number
         self.record = record
 
     def __call__(self, pid: int, flavor: int, argument: int, buffer: ctypes.c_void_p, size: int) -> int:
-        assert pid == 123 and flavor == 3 and argument == 0 and size == ctypes.sizeof(_BsdProcessInfo)
+        assert pid == 123 and flavor == 3 and argument == 0 and size == ctypes.sizeof(BsdProcessInfo)
         ctypes.memmove(buffer, ctypes.byref(self.record), size)
         ctypes.set_errno(self.error_number)
         return self.count
@@ -150,7 +150,7 @@ class _WatchNativePort:
             raise self.close_failure
 
     def install(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        query = _NativeQuery(count=ctypes.sizeof(_BsdProcessInfo), error_number=0, record=_record())
+        query = _NativeQuery(count=ctypes.sizeof(BsdProcessInfo), error_number=0, record=_record())
         system = SimpleNamespace(kqueue=_NativeWatchCall(17), kevent=_NativeWatchCall(0))
 
         def load(name: str, *, use_errno: bool) -> _NativeLibrary | SimpleNamespace:

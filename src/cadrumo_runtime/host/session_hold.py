@@ -31,9 +31,9 @@ from cadrumo_client.transport.profile_language import ProfileLanguage, read_prof
 
 from .session_hold_operations import RELAY_ACTION_KEYS, OperationRelay, RelayRefusedError, relay_reply
 
-_MAXIMUM_REQUEST_LINE_BYTES = 16_384
+MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
-_MAXIMUM_PASSWORD_BYTES = 4_096
+MAXIMUM_PASSWORD_BYTES = 4_096
 _LOGGER = get_logger(__name__)
 
 type _Arrival = Literal[
@@ -41,7 +41,7 @@ type _Arrival = Literal[
 ]
 
 
-def _read_stdin_bytes(fd: int, size: int) -> bytearray:
+def read_stdin_bytes(fd: int, size: int) -> bytearray:
     """Read at most ``size`` raw stdin bytes without buffering ahead."""
     result = bytearray()
     try:
@@ -56,7 +56,7 @@ def _read_stdin_bytes(fd: int, size: int) -> bytearray:
         raise
 
 
-def _read_stdin_line(fd: int, maximum_bytes: int) -> bytes:
+def read_stdin_line(fd: int, maximum_bytes: int) -> bytes:
     """Read one bounded newline frame without locking Python's stdin buffer."""
     line = bytearray()
     while len(line) <= maximum_bytes:
@@ -151,11 +151,11 @@ def hold_sign_in(
     """Read a bounded proof, wiping its bytes after the sign-in attempt."""
     resumed = not password_stdin
     if password_stdin:
-        header = _read_stdin_bytes(stdin_fd, 4)
+        header = read_stdin_bytes(stdin_fd, 4)
         if len(header) != 4:
             return None
         length = struct.unpack("!I", header)[0]
-        if length > _MAXIMUM_PASSWORD_BYTES:
+        if length > MAXIMUM_PASSWORD_BYTES:
             return None
         if length == 0:
             # The window signed in on its own connection and stored the sign-in; this
@@ -167,7 +167,7 @@ def hold_sign_in(
                 _emit(_sign_in_refusal(refused))
                 return None
         else:
-            secret = _read_stdin_bytes(stdin_fd, length)
+            secret = read_stdin_bytes(stdin_fd, length)
             try:
                 if len(secret) != length:
                     return None
@@ -185,7 +185,7 @@ def hold_sign_in(
 
 def parse_hold_request(line: bytes) -> tuple[UUID, str, dict[str, object]] | None:
     """Validate the complete line, correlation ID and action-specific keys."""
-    if len(line) > _MAXIMUM_REQUEST_LINE_BYTES or not line.endswith(b"\n"):
+    if len(line) > MAXIMUM_REQUEST_LINE_BYTES or not line.endswith(b"\n"):
         _emit_refusal("invalid", uuid4())
         return None
     try:
@@ -440,11 +440,11 @@ def serve_held_session(client: FrontendClient, status: ProfileStatus, profile_id
     def read_lines() -> None:
         while not retired.is_set():
             line_slot.acquire()
-            line = _read_stdin_line(stdin_fd, _MAXIMUM_REQUEST_LINE_BYTES)
+            line = read_stdin_line(stdin_fd, MAXIMUM_REQUEST_LINE_BYTES)
             if retired.is_set():
                 return
             inbox.put(("line", line))
-            if not line or len(line) > _MAXIMUM_REQUEST_LINE_BYTES:
+            if not line or len(line) > MAXIMUM_REQUEST_LINE_BYTES:
                 return
 
     Thread(target=read_lines, name="human-session-input", daemon=True).start()
@@ -480,7 +480,7 @@ def run_hold_inbox(
             return outcome
 
 
-async def _hold(
+async def hold(
     profile_id: UUID,
     *,
     password_stdin: bool,
@@ -530,7 +530,7 @@ def main(arguments: list[str] | None = None) -> int:
     try:
         with composed_profile_persistence_ports():
             return asyncio.run(
-                _hold(
+                hold(
                     options.profile_id,
                     password_stdin=options.password_stdin,
                     frontend=options.frontend,

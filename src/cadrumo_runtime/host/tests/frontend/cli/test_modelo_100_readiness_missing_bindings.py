@@ -10,7 +10,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
@@ -88,7 +88,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
         ],
     )  # fmt: skip
         assert readiness.exit_code == 2, readiness.output
-        readiness_payload = _payload(readiness.output)
+        readiness_payload = unwrap_schema_envelope(readiness.output)
 
         missing = invoke(
         [
@@ -101,7 +101,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
         ],
     )  # fmt: skip
         assert missing.exit_code == 0, (missing.output, tuple(failures))
-        bindings_payload = _payload(missing.output)
+        bindings_payload = unwrap_schema_envelope(missing.output)
         text_readiness = invoke(
             [
                 "app",

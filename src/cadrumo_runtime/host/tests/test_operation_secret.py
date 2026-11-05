@@ -53,7 +53,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from .served_runtime import ServedRuntime, SyntheticLogin, serving_runtime
-from .test_modelo_metadata import _issue_scoped_key
+from .test_modelo_metadata import issue_scoped_key
 
 pytestmark = [
     pytest.mark.integration,
@@ -265,7 +265,7 @@ def test_original_export_secret_is_one_use_and_another_sessions_answer_is_refuse
         profile_id = subject.store.binding.profile_id
         destination = tmp_path / "private-transfer.bundle"
         # A third session, admitted by a genuine key on another frontend, also answers the wait.
-        api_key = _issue_scoped_key(subject)
+        api_key = issue_scoped_key(subject)
         close_active_bucket_session()
         with serving_runtime(
             endpoint,

@@ -13,7 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDen
 
 from .. import session_authority_core
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import Subject
+from .session_authority_support import Subject
 
 pytestmark = [
     pytest.mark.integration,
@@ -50,7 +50,7 @@ def test_unavailable_observation_reason_classifies_current_facts(
         )
         context = changed(context, login_contexts=(login,))
     facts = SessionAuthorityFacts(subject.owner.current.profile, context)
-    assert session_authority_core._unavailable_observation_reason(human, facts) == reason
+    assert session_authority_core.unavailable_observation_reason(human, facts) == reason
 
 
 def test_unknown_observation_emits_only_safe_reason_and_does_not_retire(

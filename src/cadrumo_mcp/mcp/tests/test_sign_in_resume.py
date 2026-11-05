@@ -66,7 +66,7 @@ def _installation_selection() -> ActiveProfileReply:
 @pytest.fixture(autouse=True)
 def _runtime_answers_the_selection(monkeypatch: pytest.MonkeyPatch) -> None:
     """The runtime is a double here, so its selection answer is the one the test selected."""
-    monkeypatch.setattr(mcp_admission, "_runtime_selection", _installation_selection)
+    monkeypatch.setattr(mcp_admission, "runtime_selection", _installation_selection)
 
 
 _FULL = MCP_SURFACES[McpSurfaceName.FULL]

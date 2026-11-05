@@ -26,7 +26,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -40,7 +40,7 @@ from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_env
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

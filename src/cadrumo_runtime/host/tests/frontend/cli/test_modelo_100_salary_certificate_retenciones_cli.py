@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 
@@ -161,7 +161,7 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             str(_REVIEWED_EDITION),
         )
         assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-        work_unit_id = _payload(created.output)["work_unit_id"]
+        work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
         assert isinstance(work_unit_id, str) and work_unit_id, created.output
         result = session.invoke_password(
             "app",
@@ -182,6 +182,6 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
         )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert Decimal(payload["casilla_values"]["0596"]) == _CERTIFIED_RETENCION
     assert Decimal(payload["casilla_values"]["0609"]) == _CERTIFIED_RETENCION

@@ -41,24 +41,24 @@ from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixtu
     native_profile_view_server,
 )
 
-from ._machine_secret_channels_support import (
-    _CERTIFICATE_INPUT,
-    _HARNESS,
-    _NEW_PROFILE_INPUT,
-    _WINDOWS_HANDLE_HARNESS,
-    _assert_success,
-    _base_interpreter_pythonpath,
-    _combined,
-    _complete_registered_profile,
-    _envelope,
-    _register_certificate_source,
-    _restore_material,
-    _run,
-    _settings,
+from .machine_secret_channels_support import (
+    CERTIFICATE_INPUT,
+    HARNESS,
+    NEW_PROFILE_INPUT,
+    WINDOWS_HANDLE_HARNESS,
+    assert_success,
+    base_interpreter_pythonpath,
     bootstrap_interpreter,
     cleanup_keychain,
+    complete_registered_profile,
+    machine_secret_channels_combined,
+    machine_secret_channels_envelope,
+    machine_secret_channels_settings,
+    register_certificate_source,
+    restore_material,
+    run,
 )
-from ._machine_secret_channels_support import host_profile_runtime as host_profile_runtime
+from .machine_secret_channels_support import host_profile_runtime as host_profile_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -97,11 +97,11 @@ def test_login_succeeds_through_each_leaf_channel(
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "login", "s13-operator"]
     result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
+        run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+        else run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
     )
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["command"] == "config.login"
     if channel == "fd":
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
@@ -141,9 +141,9 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
     command = ["--format", "json", "config", "profile", "recovery", "enable"]
     env = subprocess_cli_env(
         strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
-        extra={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring", "PYTHONPATH": _base_interpreter_pythonpath()},
+        extra={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring", "PYTHONPATH": base_interpreter_pythonpath()},
     )
-    settings = _settings(root)
+    settings = machine_secret_channels_settings(root)
     try:
         if os.name == "nt":
             import msvcrt
@@ -165,7 +165,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
             }
             args = [*command, *(("--secrets-stdin",) if channel == "stdin" else ())]
             result = run_audited_process(
-                [bootstrap_interpreter(), "-c", _WINDOWS_HANDLE_HARNESS, json.dumps(harness_payload), *args],
+                [bootstrap_interpreter(), "-c", WINDOWS_HANDLE_HARNESS, json.dumps(harness_payload), *args],
                 cwd=SRC_CADRUMO,
                 env=env,
                 input=payload if channel == "stdin" else None,
@@ -193,7 +193,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 "assert_closed_descriptors": descriptors,
             }
             result = run_audited_process(
-                [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args],
+                [sys.executable, "-c", HARNESS, json.dumps(harness_payload), *args],
                 cwd=SRC_CADRUMO,
                 env=env,
                 input=payload if channel == "stdin" else None,
@@ -222,11 +222,11 @@ def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, chann
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT, "passphrase_confirmation": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
     result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
+        run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+        else run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
     )
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["result"]["status"] == "created"
     codes = [notice["code"] for notice in document["notices"]]
     assert "PROFILE_RECOVERY_NOT_ENROLLED" in codes
@@ -242,7 +242,7 @@ def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Pa
     register_password_only_profile(root)
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     result = _run_profile_recovery_enable(root, channel=channel, payload=payload)
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["command"] == "config.profile.recovery.enable"
     assert document["result"]["enrolled"] is True
     assert document["result"]["changed"] is True
@@ -267,16 +267,16 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
     payload = json.dumps(
         {
             "current_passphrase": FIXTURE_PROFILE_INPUT,
-            "new_passphrase": _NEW_PROFILE_INPUT,
-            "new_passphrase_confirmation": _NEW_PROFILE_INPUT,
+            "new_passphrase": NEW_PROFILE_INPUT,
+            "new_passphrase_confirmation": NEW_PROFILE_INPUT,
         }
     )
     args = ["--format", "json", "config", "passphrase", "change"]
     with native_profile_view_server(root):
         result = (
-            _run(root, [*args, "--secrets-stdin"], stdin=payload, program="cadrumo-runtime")
+            run(root, [*args, "--secrets-stdin"], stdin=payload, program="cadrumo-runtime")
             if channel == "stdin"
-            else _run(
+            else run(
                 root,
                 [*args, "--secrets-fd", "{fd:0}"],
                 inherited_payloads=(payload,),
@@ -284,13 +284,13 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
                 program="cadrumo-runtime",
             )
         )
-        document = _assert_success(result, root)
-        reopened = _run(
+        document = assert_success(result, root)
+        reopened = run(
             root,
             ["--format", "json", "config", "login", "rotation-target", "--secrets-stdin"],
-            stdin=json.dumps({"passphrase": _NEW_PROFILE_INPUT}),
+            stdin=json.dumps({"passphrase": NEW_PROFILE_INPUT}),
         )
-        login_document = _assert_success(reopened, root)
+        login_document = assert_success(reopened, root)
     assert document["status"] == "success"
     assert document["command"] == "config.passphrase.change"
     assert document["result"] == {
@@ -312,7 +312,7 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
-    capsule = _restore_material(tmp_path / f"material-{channel}")
+    capsule = restore_material(tmp_path / f"material-{channel}")
     root = tmp_path / f"restore-{channel}"
     args = [
         "--format",
@@ -327,11 +327,11 @@ def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str
     ]
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
+        run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+        else run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
     )
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["result"]["authority"] == "password"
     assert document["result"]["recovery_enrolled"] is False
 
@@ -340,13 +340,13 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path, host_profile_runt
     root = tmp_path / "fd-zero"
     outcome = register_password_only_profile(root)
     host_profile_runtime(root)
-    result = _run(
+    result = run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
         stdin=json.dumps({"passphrase": FIXTURE_PROFILE_INPUT}),
         assert_closed_fd_zero=True,
     )
-    assert _assert_success(result, root)["command"] == "config.login"
+    assert assert_success(result, root)["command"] == "config.login"
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
@@ -356,12 +356,12 @@ def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(
     root = tmp_path / "root-read"
     register_password_only_profile(root, label="root-reader")
     host_profile_runtime(root)
-    result = _run(
+    result = run(
         root,
         ["--format", "json", "--profile-secrets-stdin", "config", "profile", "history", "root-reader"],
         stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
     )
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["command"] == "config.bucket.history"
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
@@ -375,9 +375,9 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     root = tmp_path / "certificate"
     register_password_only_profile(root, label="cert-operator")
     host_profile_runtime(root)
-    _register_certificate_source(root, name="s13-cert")
+    register_certificate_source(root, name="s13-cert")
     profile_payload = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
-    leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT})
+    leaf_payload = json.dumps({"certificate_passphrase": CERTIFICATE_INPUT})
     args = ["--format", "json"]
     inherited: list[str] = []
     stdin: str | None = None
@@ -394,7 +394,7 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     else:
         args.append("--secrets-stdin")
         stdin = leaf_payload
-    result = _run(
+    result = run(
         root,
         args,
         stdin=stdin,
@@ -402,7 +402,7 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
         assert_closed_indices=tuple(range(len(inherited))),
         program="cadrumo-runtime",
     )
-    document = _assert_success(result, root)
+    document = assert_success(result, root)
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
@@ -416,7 +416,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
         root = tmp_path / "posix-descriptor-reader"
         register_password_only_profile(root, label="posix-reader")
         host_profile_runtime(root)
-        result = _run(
+        result = run(
             root,
             [
                 "--format",
@@ -431,7 +431,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
             inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
             assert_closed_index=0,
         )
-        document = _assert_success(result, root)
+        document = assert_success(result, root)
         assert document["command"] == "config.bucket.history"
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
         return
@@ -454,7 +454,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
             strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-                "PYTHONPATH": _base_interpreter_pythonpath(),
+                "PYTHONPATH": base_interpreter_pythonpath(),
                 "CADRUMO_STORAGE_ROOT": str(root),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
@@ -492,7 +492,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
         if writer >= 0:
             os.close(writer)
         os.close(reader)
-    document = _assert_success(as_text_completed_process(result), root)
+    document = assert_success(as_text_completed_process(result), root)
     assert document["command"] == "config.bucket.history"
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
@@ -541,7 +541,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
         strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
         extra={
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-            "PYTHONPATH": _base_interpreter_pythonpath(),
+            "PYTHONPATH": base_interpreter_pythonpath(),
             "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
@@ -712,8 +712,8 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
         root = tmp_path / "posix-descriptor-certificate"
         register_password_only_profile(root, label="posix-writer")
         host_profile_runtime(root)
-        _register_certificate_source(root, name="s13-posix-cert")
-        result = _run(
+        register_certificate_source(root, name="s13-posix-cert")
+        result = run(
             root,
             [
                 "--format",
@@ -729,12 +729,12 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "s13-posix-cert",
                 "--secrets-stdin",
             ],
-            stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
+            stdin=json.dumps({"certificate_passphrase": CERTIFICATE_INPUT}),
             inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
             assert_closed_index=0,
             program="cadrumo-runtime",
         )
-        document = _assert_success(result, root)
+        document = assert_success(result, root)
         assert document["command"] == "config.auth.certificate.secret.set"
         assert document["result"]["has_secret"] is True
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
@@ -745,7 +745,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
     root = tmp_path / "windows-certificate"
     register_password_only_profile(root, label="windows-writer")
     host_profile_runtime(root)
-    _register_certificate_source(root, name="s13-windows-cert")
+    register_certificate_source(root, name="s13-windows-cert")
     reader, writer = os.pipe()
     try:
         os.write(writer, json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}).encode())
@@ -759,7 +759,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-                "PYTHONPATH": _base_interpreter_pythonpath(),
+                "PYTHONPATH": base_interpreter_pythonpath(),
                 "CADRUMO_STORAGE_ROOT": str(root),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
@@ -788,7 +788,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
+            input=json.dumps({"certificate_passphrase": CERTIFICATE_INPUT}),
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -802,7 +802,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
         if writer >= 0:
             os.close(writer)
         os.close(reader)
-    document = _assert_success(as_text_completed_process(result), root)
+    document = assert_success(as_text_completed_process(result), root)
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
@@ -927,7 +927,7 @@ def _cold_profile_templates(tmp_path_factory: pytest.TempPathFactory) -> Iterato
     register_password_only_profile(incomplete)
     register_password_only_profile(complete)
     with native_profile_view_server(complete):
-        _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
+        complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
     try:
         yield {"incomplete": incomplete, "complete": complete}
     finally:
@@ -974,7 +974,7 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         logout_before = receipt, selected_before
     archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
     if leaf == "archive-inspect":
-        exported = _run(
+        exported = run(
             root,
             [
                 "--format",
@@ -989,19 +989,19 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
             ],
             stdin=_PROFILE_AUTHENTICATION,
         )
-        assert exported.returncode == 0, _combined(exported)
+        assert exported.returncode == 0, machine_secret_channels_combined(exported)
 
-    result = _run(
+    result = run(
         root,
         ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
         stdin=stdin,
     )
 
-    envelope = _envelope(result)
+    envelope = machine_secret_channels_envelope(result)
     error_code = str((envelope.get("error") or {}).get("code", ""))
-    assert not error_code.startswith("INTERNAL"), _combined(result)
+    assert not error_code.startswith("INTERNAL"), machine_secret_channels_combined(result)
     expected = 2 if leaf in _COLD_REFUSALS[state] else 0
-    assert result.returncode == expected, _combined(result)
+    assert result.returncode == expected, machine_secret_channels_combined(result)
     if leaf == "logout":
         assert logout_before is not None
         receipt, selected_before = logout_before
@@ -1010,7 +1010,7 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         assert error["code"] == "REFUSED_CLI_BOUNDARY" and error["context"] == {"reason": "absent"}
         assert error["message"] == lookup_translation(
             "cli.config.errors.profile_session_logout_unproven", locale="en"
-        ), _combined(result)
+        ), machine_secret_channels_combined(result)
         assert not receipt.exists()
         assert observe_active_profile_pointer(root) == selected_before
     if stdin is _PROFILE_AUTHENTICATION and expected == 0:
@@ -1019,4 +1019,4 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         # without saying so, because the wizard emits its own envelope and
         # never received the notice root authentication had staged.
         codes = [notice["code"] for notice in envelope["notices"]]
-        assert "config.login.session_not_persisted" in codes, _combined(result)
+        assert "config.login.session_not_persisted" in codes, machine_secret_channels_combined(result)

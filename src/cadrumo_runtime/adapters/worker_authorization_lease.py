@@ -132,7 +132,7 @@ class WorkerAuthorizationLease:
                 clean = True
                 raise_worker_access_refusal(reply)
             received = (
-                _read_inventory_permit(
+                read_inventory_permit(
                     channel, reply, self.request, runtime_boot_id=self.identity.runtime_boot_id, deadline=deadline
                 )
                 if isinstance(reply, WorkerAutomationInventoryTransfer)
@@ -327,7 +327,7 @@ def _publication_definition(phase: WorkerApprovalPublicationPhase) -> str:
     )
 
 
-def _read_inventory_permit(
+def read_inventory_permit(
     channel: ByteChannel,
     header: WorkerAutomationInventoryTransfer,
     request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,

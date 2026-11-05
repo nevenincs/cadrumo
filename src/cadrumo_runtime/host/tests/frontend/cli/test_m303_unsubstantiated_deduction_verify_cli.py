@@ -25,7 +25,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -35,13 +35,13 @@ from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_n
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 from .test_m303_zero_cuota_and_investment_inputs_cli import (
-    _add_sale,
-    _added_transaction_id,
-    _profile_facts,
-    _seed_zero_compensation_wallet_decision,
+    add_sale,
+    added_transaction_id,
+    profile_facts,
+    seed_zero_compensation_wallet_decision,
 )
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -61,11 +61,11 @@ def _invoke(args: list[str]) -> Result:
 
 def _seed_quarter(request: pytest.FixtureRequest) -> None:
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
-    _add_sale()
+    seed_zero_compensation_wallet_decision(bucket_id)
+    add_sale()
 
 
 def _add_intra_eu_acquisition() -> str:
@@ -74,7 +74,7 @@ def _add_intra_eu_acquisition() -> str:
     The movement is the base alone: the supplier invoices no Spanish IVA, the
     buyer accrues and deducts the cuota itself.
     """
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app", "ledger", "add",
@@ -97,7 +97,7 @@ def _add_intra_eu_acquisition() -> str:
 
 def _add_purchase_without_invoice() -> str:
     """A domestic purchase claiming its deduction with no purchase invoice linked."""
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app", "ledger", "add",
@@ -284,7 +284,7 @@ def test_each_unrecordable_supporting_document_has_its_own_terminal_finding(
     """Equal-looking entries remain two distinct blocked documents after real persistence."""
     _seed_quarter(request)
     transactions = tuple(
-        _added_transaction_id(
+        added_transaction_id(
             _invoke(
                 [
                     "app",

@@ -33,7 +33,7 @@ from cadrumo_runtime.adapters.connection_handshake import accept_connection_hand
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-def _channels() -> tuple[MemoryChannel, MemoryChannel, ServerHello]:
+def channels() -> tuple[MemoryChannel, MemoryChannel, ServerHello]:
     client, server = MemoryChannel(), MemoryChannel()
     client.pair(server)
     identity = ServerHello(product_version="frontend-management", storage_identity="a" * 64, boot_id=uuid4())
@@ -50,7 +50,7 @@ def _client(channel: MemoryChannel, identity: ServerHello, profile_id: UUID) -> 
 
 
 def test_recovery_uses_one_generation_and_never_admits_a_session() -> None:
-    client_channel, server_channel, identity = _channels()
+    client_channel, server_channel, identity = channels()
     profile_id, connection_id, grant_id = uuid4(), uuid4(), uuid4()
     password = bytearray(b"synthetic-recovery-password")
 
@@ -123,7 +123,7 @@ def test_recovery_uses_one_generation_and_never_admits_a_session() -> None:
 
 
 def test_inventory_and_denial_use_current_session_then_profile_lock_retires_it() -> None:
-    client_channel, server_channel, identity = _channels()
+    client_channel, server_channel, identity = channels()
     profile_id, session_id, connection_id = uuid4(), uuid4(), uuid4()
 
     def serve() -> None:

@@ -11,9 +11,8 @@ from cadrumo.application.auth.operator_results import AuthLogoutResult, AuthRese
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import strict_round_trip
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
-from cadrumo_client.commands.output import precondition_action_lines
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language, precondition_action_lines
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -60,7 +59,7 @@ def auth_providers(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.reference_catalogue import list_auth_providers
 
     result = list_auth_providers()
@@ -76,20 +75,20 @@ def auth_configure(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Configure the active authentication provider."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .runtime_auth_configure import run_auth_configure
 
     configure_result = run_auth_configure(
         ctx, provider=provider, certificate_path=file, clave_movil_route=clave_movil_route
     )
-    from cadrumo_client.commands.payloads import AuthConfigurePayload as _AuthConfigurePayload
+    from cadrumo_client.commands.payloads import AuthConfigurePayload
 
     precondition_action = (
         resolve_cli_precondition_action(configure_result.precondition_verdict)
         if configure_result.precondition_verdict is not None
         else None
     )
-    auth_configure_payload = _AuthConfigurePayload.from_result(
+    auth_configure_payload = AuthConfigurePayload.from_result(
         configure_result,
         precondition_action=precondition_action,
     )
@@ -115,14 +114,14 @@ def auth_status(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Show the configured local authentication state."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import AuthStatusPayload
 
     from .runtime_auth_read import cli_auth_read
 
     result = cli_auth_read(ctx, kind="status", provider=provider, output_language=output_language).status
     if result is None:
-        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
+        raise CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthStatusPayload.from_result(
         result,
@@ -170,14 +169,14 @@ def auth_test(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import AuthTestPayload
 
     from .runtime_auth_read import cli_auth_read
 
     result = cli_auth_read(ctx, kind="test", provider=provider, output_language=output_language).test
     if result is None:
-        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
+        raise CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthTestPayload.from_test_result(
         result,
@@ -203,7 +202,7 @@ def auth_login(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import AuthLoginPayload
 
     from .runtime_auth_login import run_auth_login
@@ -226,7 +225,7 @@ def auth_logout(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Terminate local auth sessions without removing provider configuration."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     completed = run_auth_teardown(
         ctx,
         kind="logout",
@@ -250,7 +249,7 @@ def auth_logout(
                 f"cleared_session_state\t{result.cleared_session_state}",
             ),
         )
-    except (typer.Exit, _CliRefusedBoundaryError):
+    except (typer.Exit, CliRefusedBoundaryError):
         raise
     except Exception:
         raise _teardown_presentation_error(completed) from None
@@ -264,9 +263,9 @@ def auth_reset(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove local auth configuration and persisted provider state."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     if not yes:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.auth.reset_requires_yes",
         )
     completed = run_auth_teardown(
@@ -287,7 +286,7 @@ def auth_reset(
             result=payload,
             lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
         )
-    except (typer.Exit, _CliRefusedBoundaryError):
+    except (typer.Exit, CliRefusedBoundaryError):
         raise
     except Exception:
         raise _teardown_presentation_error(completed) from None
@@ -295,7 +294,7 @@ def auth_reset(
 
 def _teardown_presentation_error(
     completed: RegisteredOperationCompletion[AuthLogoutResult] | RegisteredOperationCompletion[AuthResetResult],
-) -> _CliRefusedBoundaryError:
+) -> CliRefusedBoundaryError:
     """Keep the settled teardown receipt when local rendering fails."""
     return submitted_operation_error(
         completed.operation_id,

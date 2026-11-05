@@ -94,7 +94,7 @@ def _contract() -> OperationPublicDefinitionContractV1:
     return registration.contract
 
 
-def _exact_profile(projection: AutomationInventoryProjection, profile_id: UUID) -> bool:
+def exact_profile(projection: AutomationInventoryProjection, profile_id: UUID) -> bool:
     return (
         all(item.profile_id == profile_id for item in projection.grants)
         and all(item.profile_id == profile_id for item in projection.keys)
@@ -208,7 +208,7 @@ def _read_inventory_projection(
     if (
         result.result_schema != contract.result_schema
         or result.definition_contract_digest != contract.definition_contract_digest
-        or not _exact_profile(result.projection, profile_id)
+        or not exact_profile(result.projection, profile_id)
         or not pinned.holds(client)
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)

@@ -49,7 +49,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import _invoke, open_ledger_ux_session
+from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,7 +103,7 @@ def seeded_draft(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iter
 
 
 def _envelope() -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
+    result = invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
     assert result.exit_code == 0, result.output
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
 
@@ -164,7 +164,7 @@ def test_each_notice_names_the_code_the_document_stated_and_the_party() -> None:
 @pytest.mark.usefixtures("seeded_draft")
 def test_the_text_surface_carries_the_same_advisories_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
+    result = invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
 
     assert result.exit_code == 0, result.output
     assert _UNASSIGNED_CODE in result.output

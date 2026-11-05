@@ -867,7 +867,7 @@ def test_native_host_translates_nonpositive_writes_before_publication(
     monkeypatch.setattr(native, "_directory", lambda *, create: (tmp_path, directory_fd))
     monkeypatch.setattr(macos_worker_host, "os", native_os)
     monkeypatch.setattr(descriptor_write, "os", native_os)
-    monkeypatch.setattr(macos_worker_host, "_private_open_flags", lambda *, nonblocking=False: 0)
+    monkeypatch.setattr(macos_worker_host, "private_open_flags", lambda *, nonblocking=False: 0)
     monkeypatch.setattr(macos_worker_host, "posix_owner_uid", lambda: _UID)
     monkeypatch.setattr(
         macos_worker_host,

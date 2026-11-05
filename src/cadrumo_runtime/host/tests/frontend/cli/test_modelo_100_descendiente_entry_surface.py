@@ -40,8 +40,7 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_unbound_cli
@@ -183,13 +182,13 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
     _seed_natural_person_profile(runtime_profile)
 
     add_result = _add_descendiente(runtime_profile, "NACIMIENTO=2015-04-01")
-    add_payload = _payload(add_result.output)
+    add_payload = unwrap_schema_envelope(add_result.output)
     assert add_payload["added"] == 1
     assert add_payload["total"] == 1
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
-    calc_payload = _payload(calc_result.output)
+    calc_payload = unwrap_schema_envelope(calc_result.output)
 
     expected = _registry_first_tranche(2024)
     actual = Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID]))
@@ -233,7 +232,7 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
     work_unit_id = _create_renta_2024_unit(runtime_profile)
 
     calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
-    calc_payload = _payload(calc_result.output)
+    calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
     notices = unwrap_envelope_notices(calc_result.output)
@@ -264,7 +263,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
-    calc_payload = _payload(calc_result.output)
+    calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
     notices = unwrap_envelope_notices(calc_result.output)
@@ -327,12 +326,12 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
 
     remove_result = _invoke(runtime_profile, ["--format", "json", "config", "profile", "descendiente", "remove", "0"])
     assert remove_result.exit_code == 0, remove_result.output
-    remove_payload = _payload(remove_result.output)
+    remove_payload = unwrap_schema_envelope(remove_result.output)
     assert remove_payload["total"] == 0
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
-    calc_payload = _payload(calc_result.output)
+    calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
     notices = unwrap_envelope_notices(calc_result.output)
@@ -404,7 +403,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
-    calc_payload = _payload(calc_result.output)
+    calc_payload = unwrap_schema_envelope(calc_result.output)
 
     # Only May, June and July fall after the April birthday, so Art. 81.3
     # prorates the annual ceiling to three twelfths of it. The 600 those months
@@ -430,7 +429,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
     fired = [
         n
@@ -484,7 +483,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
 
     # The manual's printed figure.
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
     # The registry ceiling agrees with the manual's arithmetic. Asserted
     # separately so a drifted parameter is named as such rather than showing up
     # as a wrong casilla with no indication of which input moved.
@@ -524,7 +523,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
     fired = [
         n
@@ -563,7 +562,7 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
 
 
 def test_an_overlapping_declaration_still_reaches_its_shared_months(
@@ -585,7 +584,7 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
 
 
 def test_the_flag_refuses_both_spend_shapes_for_one_child(
@@ -658,7 +657,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
 
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("450.00")
+    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("450.00")
 
 
 def test_the_population_term_binds_the_0613_cap(
@@ -689,7 +688,10 @@ def test_the_population_term_binds_the_0613_cap(
     # One eligible child in the guardería all year against a mother who
     # qualified all year, so the proration keeps the whole annual ceiling.
     # Read from the registry rather than restated here.
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == _registry_guarderia_cap_anual()
+    assert (
+        Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"]))
+        == _registry_guarderia_cap_anual()
+    )
 
 
 def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:

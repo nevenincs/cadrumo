@@ -15,11 +15,11 @@ import pytest
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._ledger_llm_support import (
-    _import_one_transaction as _shared_import_one_transaction,
+from .ledger_llm_support import (
+    import_one_transaction,
+    ledger_llm_profile,
 )
-from ._ledger_llm_support import ledger_llm_profile
-from .ledger_ux_support import _invoke_exact_profile
+from .ledger_ux_support import invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["ledger_llm_profile"]
@@ -27,9 +27,9 @@ __all__ = ["ledger_llm_profile"]
 
 def _import_one_transaction(ledger_llm_profile: NativeCliProfileFixture, tmp_path: Path) -> str:
     """Import one CSV row (gross 121.00 outgoing) and return its transaction id."""
-    return _shared_import_one_transaction(
+    return import_one_transaction(
         tmp_path,
-        invoke_cli=partial(_invoke_exact_profile, ledger_llm_profile),
+        invoke_cli=partial(invoke_exact_profile, ledger_llm_profile),
         payee="Proveedor Mixto SL",
         reference="mixed invoice",
         amount="-121.00",
@@ -38,7 +38,7 @@ def _import_one_transaction(ledger_llm_profile: NativeCliProfileFixture, tmp_pat
 
 
 def _rows(ledger_llm_profile: NativeCliProfileFixture) -> list[dict[str, Any]]:
-    listed = _invoke_exact_profile(ledger_llm_profile, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_exact_profile(ledger_llm_profile, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     return unwrap_cli_result(listed)["rows"]
 
@@ -50,7 +50,7 @@ def test_llm_split_apply_without_yes_is_refused(
 ) -> None:
     tx = _import_one_transaction(ledger_llm_profile, tmp_path)
 
-    result = _invoke_exact_profile(ledger_llm_profile, ["app", "ledger", "split", tx, "--llm", "--apply"])
+    result = invoke_exact_profile(ledger_llm_profile, ["app", "ledger", "split", tx, "--llm", "--apply"])
     assert result.exit_code != 0
     # Nothing was persisted: the single parent row is intact.
     assert (
@@ -70,7 +70,7 @@ def test_llm_split_rejects_manual_child_flags(
 ) -> None:
     tx = _import_one_transaction(ledger_llm_profile, tmp_path)
 
-    result = _invoke_exact_profile(
+    result = invoke_exact_profile(
         ledger_llm_profile,
         [
             "app",

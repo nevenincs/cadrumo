@@ -18,15 +18,15 @@ from cadrumo.core.hashing import sha256_hex
 
 from ..contracts.contracts import ChannelWake, EndpointPresence, RefusalCode, RefusalError
 from .posix import (
-    _accept_socket,
-    _lock_exclusive,
-    _lock_flags,
-    _open_lock,
-    _socket_metadata,
-    _unix_socket,
+    accept_socket,
+    lock_exclusive,
+    lock_flags,
+    open_lock,
     open_private_namespace,
     posix_owner_uid,
     posix_storage_identity,
+    socket_metadata,
+    unix_socket,
 )
 from .posix_channel import PosixChannel
 
@@ -63,7 +63,7 @@ def _verify_namespace_identity(endpoint: PosixEndpoint) -> None:
 
 
 def _owned_socket_metadata(endpoint: PosixEndpoint) -> os.stat_result:
-    metadata = _socket_metadata(endpoint._directory_fd, endpoint._name)
+    metadata = socket_metadata(endpoint._directory_fd, endpoint._name)
     if metadata is None:
         raise RefusalError(RefusalCode.ENDPOINT_NOT_READY)
     if sys.platform == "win32" or not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
@@ -73,7 +73,7 @@ def _owned_socket_metadata(endpoint: PosixEndpoint) -> os.stat_result:
 
 def _verify_socket_incarnation(endpoint: PosixEndpoint, original: os.stat_result) -> None:
     endpoint._verify_namespace()
-    current = _socket_metadata(endpoint._directory_fd, endpoint._name)
+    current = socket_metadata(endpoint._directory_fd, endpoint._name)
     if (
         current is None
         or (current.st_dev, current.st_ino) != (original.st_dev, original.st_ino)
@@ -121,7 +121,7 @@ def _retain_endpoint_lock(endpoint: PosixEndpoint, descriptor: int) -> None:
     if metadata.st_mode & 0o077:
         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
     try:
-        _lock_exclusive(descriptor)
+        lock_exclusive(descriptor)
     except BlockingIOError:
         raise RefusalError(RefusalCode.OWNER_BUSY) from None
     endpoint._lock_fd = descriptor
@@ -129,7 +129,7 @@ def _retain_endpoint_lock(endpoint: PosixEndpoint, descriptor: int) -> None:
 
 def _bind_endpoint_listener(endpoint: PosixEndpoint, backlog: int) -> None:
     endpoint._remove_stale_socket()
-    listener = _unix_socket()
+    listener = unix_socket()
     endpoint._listener = listener
     listener.bind(str(endpoint._path))
     metadata = _owned_socket_metadata(endpoint)
@@ -246,7 +246,7 @@ class PosixEndpoint:
         self._verify_namespace()
         try:
             metadata = _owned_socket_metadata(self)
-            sock = _unix_socket()
+            sock = unix_socket()
             try:
                 return _connect_verified_socket(self, sock, metadata, timeout)
             except BaseException:
@@ -269,9 +269,9 @@ class PosixEndpoint:
                 return EndpointPresence.ABSENT
             return EndpointPresence.INDETERMINATE
         try:
-            if _socket_metadata(self._directory_fd, self._name) is None:
+            if socket_metadata(self._directory_fd, self._name) is None:
                 return EndpointPresence.ABSENT
-            with _unix_socket() as probe:
+            with unix_socket() as probe:
                 probe.settimeout(_PRESENCE_PROBE_SECONDS)
                 try:
                     probe.connect(str(self._path))
@@ -291,10 +291,10 @@ class PosixEndpoint:
             raise RefusalError(RefusalCode.OWNER_BUSY)
         self._verify_namespace()
         lock_name = self._name.removesuffix(".sock") + ".lock"
-        flags = _lock_flags()
+        flags = lock_flags()
         # Exclusive creation avoids Darwin's observed concurrent O_CREAT/openat
         # ENOENT race. The persistent inode is never replaced or unlinked.
-        descriptor = _open_lock(self._directory_fd, lock_name, flags)
+        descriptor = open_lock(self._directory_fd, lock_name, flags)
         try:
             _retain_endpoint_lock(self, descriptor)
             _bind_endpoint_listener(self, backlog)
@@ -305,11 +305,11 @@ class PosixEndpoint:
     def _remove_stale_socket(self) -> None:
         if sys.platform == "win32":
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        metadata = _socket_metadata(self._directory_fd, self._name)
+        metadata = socket_metadata(self._directory_fd, self._name)
         if metadata is not None:
             if not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
                 raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
-            with _unix_socket() as probe:
+            with unix_socket() as probe:
                 probe.settimeout(0.25)
                 try:
                     probe.connect(str(self._path))
@@ -319,7 +319,7 @@ class PosixEndpoint:
                 else:
                     raise RefusalError(RefusalCode.OWNER_BUSY)
             self._verify_namespace()
-            current = _socket_metadata(self._directory_fd, self._name)
+            current = socket_metadata(self._directory_fd, self._name)
             if current is None or (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
                 raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
             os.unlink(self._name, dir_fd=self._directory_fd)
@@ -341,7 +341,7 @@ class PosixEndpoint:
         # The connection is waiting now; one its peer abandoned meanwhile is not waited for.
         self._listener.settimeout(0)
         try:
-            return PosixChannel(_accept_socket(self._listener))
+            return PosixChannel(accept_socket(self._listener))
         except (TimeoutError, BlockingIOError):
             raise RefusalError(RefusalCode.TIMEOUT) from None
 
@@ -353,7 +353,7 @@ class PosixEndpoint:
             self._listener = None
         if self._socket_identity is not None:
             with contextlib.suppress(OSError):
-                metadata = _socket_metadata(self._directory_fd, self._name)
+                metadata = socket_metadata(self._directory_fd, self._name)
                 if metadata is not None and (metadata.st_dev, metadata.st_ino) == self._socket_identity:
                     os.unlink(self._name, dir_fd=self._directory_fd)
             self._socket_identity = None

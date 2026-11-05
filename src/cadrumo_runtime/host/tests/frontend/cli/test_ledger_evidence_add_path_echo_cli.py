@@ -21,7 +21,7 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
 
-from .ledger_ux_support import _invoke, open_bucket_session
+from .ledger_ux_support import invoke, open_bucket_session
 
 __all__ = ["open_bucket_session"]
 
@@ -43,7 +43,7 @@ def test_evidence_add_echoes_forward_slash_argv_path_verbatim(tmp_path: Path) ->
 
     argv_path = "fixtures/factura.pdf"  # forward slashes, exactly as an operator types
     with scoped_cwd(tmp_path):
-        added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
+        added = invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
 
     record = json.loads(added.output)["result"]

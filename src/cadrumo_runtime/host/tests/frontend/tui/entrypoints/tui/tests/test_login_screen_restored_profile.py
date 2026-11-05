@@ -26,7 +26,7 @@ from textual.widgets import Button, Input
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -94,7 +94,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
         # Registration validates facts against registry authority, so it runs under a real lease.
         with bundled_indexed_authority().operation():
-            profile_create_context, profile_decode_context = _profile_contexts_for_test()
+            profile_create_context, profile_decode_context = profile_authority_contexts()
             outcome = register_profile_with_credentials(
                 label="Restore-born",
                 passphrase=_CREDENTIAL_INPUT,

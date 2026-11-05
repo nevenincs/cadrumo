@@ -6,8 +6,8 @@ import typer
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import bound_profile_client
 
 from .presentation import emit_envelope
@@ -25,7 +25,7 @@ def apoderado_scopes_list(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List all available representative scopes in the vocabulary."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.reference_catalogue import list_apoderado_scopes
 
     from .profile_support import authority_operation
@@ -39,7 +39,7 @@ def apoderado_status(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ApoderadoStatusResult
 
     result = read_apoderado_status(ctx)
@@ -84,7 +84,7 @@ def apoderado_configure(
     the write lands only in the apoderado encrypted namespace -- never as a
     profile fact.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo.application.auth.apoderado_flow import collect_apoderado_flow_answers
     from cadrumo.application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError
     from cadrumo.application.flows.errors import FlowUnsupportedConsoleError
@@ -95,11 +95,11 @@ def apoderado_configure(
         try:
             represented_nif, scope_tokens = collect_apoderado_flow_answers(catalogue)
         except FlowUnsupportedConsoleError as exc:
-            raise _CliRefusedBoundaryError(
+            raise CliRefusedBoundaryError(
                 translated_message="cli.config.auth.apoderado.configure.no_console_hint",
             ) from exc
         except ApoderadoRepresentedNifInvalidError as exc:
-            raise _CliRefusedBoundaryError(
+            raise CliRefusedBoundaryError(
                 translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
             ) from exc
     else:
@@ -107,7 +107,7 @@ def apoderado_configure(
             # A late, catalogue-driven refusal must enumerate the accepted
             # scope set, never bare "value required" -- the CLI gate is the
             # operator's first instructive surface.
-            raise _CliRefusedBoundaryError(
+            raise CliRefusedBoundaryError(
                 translated_message="cli.config.auth.apoderado.configure.scope_required",
                 context={"codes": ", ".join(sorted(catalogue.code_set()))},
             )
@@ -117,7 +117,7 @@ def apoderado_configure(
     except ApoderadoRepresentedNifInvalidError as exc:
         # The NIF is sent only as an ephemeral operation operand and never enters
         # the request or refusal context.
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
         ) from exc
 
@@ -143,7 +143,7 @@ def apoderado_clear(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ApoderadoClearResult
 
     profile_id = bound_profile_client(ctx).profile_id
@@ -161,7 +161,7 @@ def apoderado_check(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     # ``check`` is the live-verification verb. The live AEAT-read path is not
     # wired (live reads are refused at this boundary per the safety gate), so
     # the service refuses rather than silently re-reading stored configuration

@@ -24,7 +24,7 @@ from click.testing import Result
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from ._profile_cli_support import partial_taxpayer_invoker
+from .profile_cli_support import partial_taxpayer_invoker
 
 pytestmark = [
     pytest.mark.integration,

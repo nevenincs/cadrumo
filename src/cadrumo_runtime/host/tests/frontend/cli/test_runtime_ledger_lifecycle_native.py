@@ -42,7 +42,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from ...native_profile_facts import native_general_iva_facts
-from ._profile_cli_support import invoke_native_profile_revealing
+from .profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,

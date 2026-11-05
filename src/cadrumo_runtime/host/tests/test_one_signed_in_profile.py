@@ -45,7 +45,7 @@ from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..sign_in_sweep import revoke_other_saved_sign_ins
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_runtime_password_rotation import _fresh_client, _native_runtime
+from .test_runtime_password_rotation import native_runtime, runtime_password_rotation_fresh_client
 
 pytestmark = [
     pytest.mark.integration,
@@ -58,15 +58,15 @@ pytestmark = [
 
 def test_signing_in_to_another_profile_signs_the_first_out_everywhere_and_back_again(tmp_path: Path) -> None:
     with (
-        _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root),
-        _fresh_client(launch, first_id) as person,
-        _fresh_client(launch, first_id) as sibling,
+        native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root),
+        runtime_password_rotation_fresh_client(launch, first_id) as person,
+        runtime_password_rotation_fresh_client(launch, first_id) as sibling,
     ):
         person.login_password(bytearray(PROFILE_INPUT.encode()))
         sibling.login_password(bytearray(PROFILE_INPUT.encode()))
         assert person.status().status.connected and sibling.status().status.connected
 
-        with _fresh_client(launch, second_id) as other:
+        with runtime_password_rotation_fresh_client(launch, second_id) as other:
             other.login_password(bytearray(PROFILE_INPUT.encode()))
 
             # Every session of the first profile ended; the profile signed in to is the only one.
@@ -76,7 +76,7 @@ def test_signing_in_to_another_profile_signs_the_first_out_everywhere_and_back_a
             assert other.status().status.connected
             assert other.status().status.profile_id == second_id
 
-            with _fresh_client(launch, first_id) as returning:
+            with runtime_password_rotation_fresh_client(launch, first_id) as returning:
                 returning.login_password(bytearray(PROFILE_INPUT.encode()))
 
                 with pytest.raises(FrontendRefusedError):
@@ -143,7 +143,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
         return result
 
     monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
-    with _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, root):
+    with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, root):
 
         def store_receipt(profile_id: UUID) -> None:
             binding = owners[0]._profiles[profile_id].store.binding
@@ -160,9 +160,9 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
                 )
 
         with (
-            _fresh_client(launch, first_id) as person,
-            _fresh_client(launch, first_id) as activity,
-            _fresh_client(launch, second_id) as other,
+            runtime_password_rotation_fresh_client(launch, first_id) as person,
+            runtime_password_rotation_fresh_client(launch, first_id) as activity,
+            runtime_password_rotation_fresh_client(launch, second_id) as other,
         ):
             person.login_password(bytearray(PROFILE_INPUT.encode()))
             store_receipt(first_id)
@@ -183,7 +183,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
                 activity.note_activity()
             assert other.status().status.connected
             # B's durable receipt also remains valid after the stale helper completes.
-            with _fresh_client(launch, second_id) as returning:
+            with runtime_password_rotation_fresh_client(launch, second_id) as returning:
                 assert returning.resume_receipt().status.connected
             assert other.status().status.connected
 
@@ -193,7 +193,7 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
 ) -> None:
     """A second admission cannot sweep after the first handover retired it."""
     first_finished, second_admitted, release = Event(), Event(), Event()
-    with _native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root):
+    with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root):
         original_finish = RuntimeProfileConnections._finish_login
         original_admit = RuntimeProfileConnections._admit_human_login
 
@@ -229,8 +229,8 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
         monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
         monkeypatch.setattr(RuntimeProfileConnections, "_admit_human_login", admit)
         with (
-            _fresh_client(launch, first_id) as first,
-            _fresh_client(launch, second_id) as second,
+            runtime_password_rotation_fresh_client(launch, first_id) as first,
+            runtime_password_rotation_fresh_client(launch, second_id) as second,
             ThreadPoolExecutor(max_workers=2) as pool,
         ):
             first_result = pool.submit(first.login_password, bytearray(PROFILE_INPUT.encode()))

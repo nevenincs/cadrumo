@@ -895,7 +895,7 @@ def test_typed_source_files_are_read_off_the_event_loop(monkeypatch: pytest.Monk
         ),
     )
     on_loop: list[bool] = []
-    real = module._read_typed_file
+    real = module.read_typed_file
 
     def recording(path: str, model: type[BaseModel]) -> BaseModel:
         try:
@@ -906,7 +906,7 @@ def test_typed_source_files_are_read_off_the_event_loop(monkeypatch: pytest.Monk
             on_loop.append(True)
         return real(path, model)
 
-    monkeypatch.setattr(module, "_read_typed_file", recording)
+    monkeypatch.setattr(module, "read_typed_file", recording)
     purchase = tmp_path / "purchase.json"
     purchase.write_text(synthetic_acquisition_cost().model_dump_json(), encoding="utf-8")
     asyncio.run(_inventory(client).read_acquisition_cost(str(purchase)))

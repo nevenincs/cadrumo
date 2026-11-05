@@ -93,7 +93,7 @@ class _ObservedClientPort(MemoryNativePort):
         super().replace(namespace, account, value)
 
 
-def _login(
+def login(
     client: VerifiedConnection,
     profile_id: UUID,
     *,
@@ -114,7 +114,7 @@ def _login(
     return status.status.session_id
 
 
-def _submit_operation(
+def submit_operation(
     client: VerifiedConnection,
     *,
     profile_id: UUID,
@@ -184,7 +184,7 @@ def _submit_operation(
         time.sleep(0.02)
 
 
-def _result(
+def result(
     client: VerifiedConnection,
     *,
     profile_id: UUID,
@@ -267,8 +267,8 @@ def _review_and_refuse_wrong_digest(
     run: _Preunlock, prepared: EnrollmentPrepared, submitted: AutomationReceiptProjection
 ) -> UUID:
     profile_id, human = run.profile_id, run.human
-    human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-    inventory_contract, inventory_op, inventory_done = _submit_operation(
+    human_id = login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+    inventory_contract, inventory_op, inventory_done = submit_operation(
         human,
         profile_id=profile_id,
         session_id=human_id,
@@ -280,7 +280,7 @@ def _review_and_refuse_wrong_digest(
         OperationResultProjectionSuccessV1[AutomationInventoryProjection]
         .model_validate_json(
             json.dumps(
-                _result(
+                result(
                     human,
                     profile_id=profile_id,
                     session_id=human_id,
@@ -297,7 +297,7 @@ def _review_and_refuse_wrong_digest(
     assert review.client_id == prepared.client_id
     assert review.destination_id == prepared.destination_id
 
-    _, wrong_approval, rejected = _submit_operation(
+    _, wrong_approval, rejected = submit_operation(
         human,
         profile_id=profile_id,
         session_id=human_id,
@@ -327,7 +327,7 @@ def _approve_while_polling(
 
     polling = run.pool.submit(poll_client)
     try:
-        approval_contract, approval_op, approval_done = _submit_operation(
+        approval_contract, approval_op, approval_done = submit_operation(
             run.human,
             profile_id=profile_id,
             session_id=human_id,
@@ -344,7 +344,7 @@ def _approve_while_polling(
             OperationResultProjectionSuccessV1[AutomationReceiptProjection]
             .model_validate_json(
                 json.dumps(
-                    _result(
+                    result(
                         run.human,
                         profile_id=profile_id,
                         session_id=human_id,
@@ -407,7 +407,7 @@ def _login_with_delivered_credential(
     assert run.client_native.events[-1] == read_event
     api = connect_verified(run.endpoint)
     try:
-        api_id = _login(api, run.profile_id, method="api_key", proof=credential.get_secret_value())
+        api_id = login(api, run.profile_id, method="api_key", proof=credential.get_secret_value())
         assert api_id != human_id
     finally:
         api.close()
@@ -506,7 +506,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                 assert isinstance(prepared, EnrollmentPrepared)
                 client = NativeEnrollmentClient(connection=requester, prepared=prepared, secrets_store=client_native)
                 submitted = client.submit(enrollment_proposal(), timeout=10)
-                human_id = _login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                human_id = login(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
                 done = Event()
 
                 def poll_client() -> None:
@@ -517,7 +517,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
 
                 polling = pool.submit(poll_client)
                 try:
-                    _, _, failed = _submit_operation(
+                    _, _, failed = submit_operation(
                         human,
                         profile_id=profile_id,
                         session_id=human_id,
@@ -549,7 +549,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                 with pytest.raises(AutomationCustodyError):
                     client.credential()
 
-                _, _, wrong_decline = _submit_operation(
+                _, _, wrong_decline = submit_operation(
                     human,
                     profile_id=profile_id,
                     session_id=human_id,
@@ -561,7 +561,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                 assert wrong_decline.projection.terminal_condition is OperationTerminalCondition.REFUSED
                 assert store.enrollment_state().requests[0].stage is EnrollmentStage.CANDIDATE
 
-                decline_contract, decline_op, declined = _submit_operation(
+                decline_contract, decline_op, declined = submit_operation(
                     human,
                     profile_id=profile_id,
                     session_id=human_id,
@@ -578,7 +578,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                     OperationResultProjectionSuccessV1[AutomationReceiptProjection]
                     .model_validate_json(
                         json.dumps(
-                            _result(
+                            result(
                                 human,
                                 profile_id=profile_id,
                                 session_id=human_id,

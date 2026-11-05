@@ -36,7 +36,7 @@ class ProfileRecoveryVerification(MachineSecretPayload):
     recovery_code: SecretStr
 
 
-def _write_recovery_handoff(descriptor: int, code: str) -> None:
+def write_recovery_handoff(descriptor: int, code: str) -> None:
     """Write one bounded secret document and close its descriptor on every exit."""
     raw = bytearray(json.dumps({"recovery_code": code}, separators=(",", ":")).encode(UTF_8_ENCODING) + b"\n")
     try:
@@ -109,7 +109,7 @@ def recovery_handover(
             supplied = prompt_secret_no_echo(tr("cli.config.profile.recovery.verification_prompt"))
         else:
             handoff_fd, verification_fd = descriptors
-            _write_recovery_handoff(handoff_fd, expected)
+            write_recovery_handoff(handoff_fd, expected)
             supplied = _read_recovery_verification(verification_fd).recovery_code.get_secret_value()
         try:
             try:

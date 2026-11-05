@@ -29,12 +29,12 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.entrypoints.overview_evidence_composition import local_calendar_filing_evidence
 from cadrumo.tests.inventory import FIXTURES_DIR
 
-from ._overview_calendar_support import (
-    _SOURCE_URL,
+from .overview_calendar_support import (
     PRIMARY_PROFILE_ID,
-    _justificante_metadata,
-    _modelo_record_with_external_justificante,
+    SOURCE_URL,
     isolated_backend,
+    justificante_metadata,
+    modelo_record_with_external_justificante,
 )
 
 __all__ = ["isolated_backend"]
@@ -93,7 +93,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(artefact_body),
                 sha256=hashlib.sha256(artefact_body).hexdigest(),
@@ -128,7 +128,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 artefacts=(
                     FiledDeclaracionArtefact(
                         kind="justificante_pdf",
-                        source_url=_SOURCE_URL,
+                        source_url=SOURCE_URL,
                         content_type="application/pdf",
                         byte_count=32,
                         sha256="f" * 64,
@@ -146,7 +146,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ("303", 2025, Period.from_year_and_code(2025, "3T"), "12345678901234567892"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(wrong_identity_body),
                 sha256=hashlib.sha256(wrong_identity_body).hexdigest(),
@@ -174,7 +174,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ("303", 2025, Period.from_year_and_code(2025, "4T"), "12345678901234567893"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(non_active_body),
                 sha256=hashlib.sha256(non_active_body).hexdigest(),
@@ -248,7 +248,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
-                source_url=_SOURCE_URL,
+                source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(pdf_bytes),
                 sha256=hashlib.sha256(pdf_bytes).hexdigest(),
@@ -317,8 +317,8 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
     csv = "JUST3032025X1T7"
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
-        repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
-        JustificanteRepository().save(_justificante_metadata(csv=csv))
+        repo.save(upsert_filing_record(repo.load(), modelo_record_with_external_justificante(csv=csv)))
+        JustificanteRepository().save(justificante_metadata(csv=csv))
 
         with bundled_indexed_authority().operation() as operation:
             evidence, _notice = local_calendar_filing_evidence(

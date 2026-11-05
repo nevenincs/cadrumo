@@ -224,7 +224,7 @@ def test_a_parent_session_retired_after_the_admission_recheck_receives_no_header
     body = encode_model_run_body(ModelRunBody(prompt="Factura 7", max_output_tokens=16))
     with service_record_runtime(tmp_path, model_runs=True) as runtime:
         service, announced = _admitted(runtime, SERVICE_ID)
-        recheck = model_runs_module._service_still_admitted
+        recheck = model_runs_module.service_still_admitted
 
         def retire_after_recheck(
             connections: RuntimeProfileConnections,
@@ -236,7 +236,7 @@ def test_a_parent_session_retired_after_the_admission_recheck_receives_no_header
             _lock_person(runtime)
             return admitted
 
-        monkeypatch.setattr(model_runs_module, "_service_still_admitted", retire_after_recheck)
+        monkeypatch.setattr(model_runs_module, "service_still_admitted", retire_after_recheck)
         with ThreadPoolExecutor(max_workers=1) as pool:
             waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _run(body), body)
             run_id = announced.get(timeout=_ANNOUNCEMENT_SECONDS)

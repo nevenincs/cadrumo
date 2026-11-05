@@ -27,9 +27,9 @@ from .macos_process import read_macos_process, read_macos_process_arguments
 from .native_peer import require_live_native_peer
 from .service_descriptors import package_member_path
 
-_log = get_logger(__name__)
+log = get_logger(__name__)
 
-_SERVICE_RECHECK_SLOW_SECONDS: Final = 1.0
+SERVICE_RECHECK_SLOW_SECONDS: Final = 1.0
 """Reading a peer's process and image from the kernel can stall; a recheck this long is reported."""
 
 
@@ -331,7 +331,7 @@ class InstalledNativeServiceVerifier:
         kernel incarnation on the same retained channel, still running the same
         image file, is the evidence ``verify_service`` established.
         """
-        with diagnostic_slow_call(_log, "service_recheck_slow", threshold_seconds=_SERVICE_RECHECK_SLOW_SECONDS):
+        with diagnostic_slow_call(log, "service_recheck_slow", threshold_seconds=SERVICE_RECHECK_SLOW_SECONDS):
             try:
                 if (
                     context.peer != channel.peer

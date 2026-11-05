@@ -11,8 +11,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.categories.spending_category_catalogue import spending_category_tokens
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import (
-    _imported_transaction_id,
-    _invoke,
+    imported_transaction_id,
+    invoke,
     open_bucket_session,
 )
 
@@ -30,7 +30,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     tmp_path: Path,
 ) -> None:
     """`ledger categories` enumerates every SpendingCategory id."""
-    result = _invoke(["--format", "json", "app", "ledger", "categories"])
+    result = invoke(["--format", "json", "app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     listed = set(payload["category_ids"])
@@ -55,7 +55,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
 
 def test_ledger_status_text_names_active_profile_without_storage_id(tmp_path: Path) -> None:
     """Status presents the operator label; the storage UUID is not useful text UX."""
-    result = _invoke(["--language", "en", "app", "ledger", "status"])
+    result = invoke(["--language", "en", "app", "ledger", "status"])
 
     assert result.exit_code == 0, result.output
     assert result.output.splitlines()[0] == "Profile\ttester"
@@ -65,8 +65,8 @@ def test_ledger_status_text_names_active_profile_without_storage_id(tmp_path: Pa
 
 def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     """An id outside the closed taxonomy is refused, not silently kept."""
-    txn = _imported_transaction_id(tmp_path)
-    result = _invoke(
+    txn = imported_transaction_id(tmp_path)
+    result = invoke(
         [
             "app",
             "ledger",
@@ -86,8 +86,8 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
 
 def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
     """A real SpendingCategory id still classifies successfully."""
-    txn = _imported_transaction_id(tmp_path)
-    result = _invoke(
+    txn = imported_transaction_id(tmp_path)
+    result = invoke(
         [
             "--format",
             "json",
@@ -108,8 +108,8 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
 
 def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> None:
     """`--reaffirm` must not print a plain-text notice before JSON output."""
-    txn = _imported_transaction_id(tmp_path)
-    first = _invoke(
+    txn = imported_transaction_id(tmp_path)
+    first = invoke(
         [
             "app",
             "ledger",
@@ -121,7 +121,7 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
     )
     assert first.exit_code == 0, first.output
 
-    reaffirmed = _invoke(
+    reaffirmed = invoke(
         [
             "--format",
             "json",
@@ -147,7 +147,7 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
 
 def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     """The catalogue makes exact category flag values unmistakable."""
-    result = _invoke(["app", "ledger", "categories"])
+    result = invoke(["app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     output = result.output
     assert "category-id" in output
@@ -166,7 +166,7 @@ def test_classify_help_exposes_the_irpf_category_contract(
     The category listing command is tested through its own live surface above;
     localized option help only carries the ids and legal guidance.
     """
-    result = _invoke(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
+    result = invoke(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
     assert result.exit_code == 0, result.output
     flat = " ".join(result.output.split())
     assert "actividad_economica" in flat
@@ -186,8 +186,8 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
     tmp_path: Path,
 ) -> None:
     """A rejected `--category-id` names one concrete valid id."""
-    txn = _imported_transaction_id(tmp_path)
-    result = _invoke(
+    txn = imported_transaction_id(tmp_path)
+    result = invoke(
         [
             "app",
             "ledger",

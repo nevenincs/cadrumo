@@ -208,7 +208,7 @@ def test_the_describe_tool_says_where_the_question_ids_are() -> None:
 def test_oversized_question_preserves_the_bound_without_a_nonadvancing_cursor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         vocabulary_module,
-        "_profile_questions",
+        "profile_questions",
         lambda: {"path": "values[].question_id", "logical_generation": "test", "questions": [{"help": "x" * 9_000}]},
     )
     page = payload_vocabulary(PROFILE_PATCH_OPERATION_DEFINITION_ID, limit=20)

@@ -18,7 +18,7 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
-from ..agent_process import _StandardErrorTail
+from ..agent_process import StandardErrorTail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -150,7 +150,7 @@ def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
 
     reader, writer = os.pipe()
     stream = os.fdopen(reader, "rb")
-    tail = _StandardErrorTail(
+    tail = StandardErrorTail(
         stream, limit=8192, diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=os.getpid())
     )
     try:
@@ -221,7 +221,7 @@ def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: P
     logger.addHandler(stalled)
     reader, writer = os.pipe()
     stream = os.fdopen(reader, "rb")
-    tail = _StandardErrorTail(
+    tail = StandardErrorTail(
         stream, limit=8192, diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=os.getpid())
     )
     try:

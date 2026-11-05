@@ -5,20 +5,18 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from cadrumo.application.wizard import catalogue as _wizard_catalogue
-from cadrumo.application.wizard import persistence as _wizard_persistence
+from cadrumo.application.wizard import catalogue, persistence
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_snapshot,
 )
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
-_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
-_NIF = "12345678Z"
+_WIZARD_REGISTRATION_MODULES = (catalogue, persistence)
+NIF = "12345678Z"
 #: Guidance-test bucket id, used as both the active bucket and the stored
 #: ``profile_id`` (a bucket holds one live profile keyed by its own id).
 #: ``UserProfileRecord.profile_id`` requires a UUIDv4, so this is a UUID.
@@ -36,7 +34,7 @@ _GUIDANCE_NIF = "87654321X"
 _SEED_BUCKET_ID = "21212121-2121-4121-8121-212121212121"
 
 
-def _state(
+def state(
     *,
     filing_year: int,
     period: str,
@@ -45,7 +43,7 @@ def _state(
 ) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.APP_FILING,
-        taxpayer_nif=_NIF,
+        taxpayer_nif=NIF,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         registry_snapshot_ref=published_snapshot("303", filing_year=filing_year, period=period).snapshot_ref,
@@ -73,25 +71,25 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=created_at,
             updated_at=created_at,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         label="Test runtime profile",
     )
 
 
-def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
+def seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
     created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             profile_id=bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
@@ -118,7 +116,7 @@ def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
             ),
             created_at=created_at,
             updated_at=created_at,
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
         label="Guidance Test Autonomo",
     )

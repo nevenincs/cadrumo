@@ -92,7 +92,7 @@ def isolated_cadrumo_root(tmp_path: Path) -> Iterator[None]:
 @pytest.fixture
 def native_overview_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
     """Register a readiness-complete synthetic profile before worker login."""
-    from ._overview_native_support import registered_overview_profile
+    from .overview_native_support import registered_overview_profile
 
     with registered_overview_profile(tmp_path) as fixture:
         yield fixture

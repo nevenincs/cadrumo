@@ -19,7 +19,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from ._iva_wallet_inspector_support import _NIF, _state
+from .iva_wallet_inspector_support import NIF, state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -36,9 +36,9 @@ def test_balance_totals_remaining_after_fifo_applications(
 ) -> None:
     """Q1 2024 +1200, Q2 2024 -300, Q1 2025 -500 leaves 400 active at as_of_year=2028."""
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2024, period="1T", generated=Decimal("1200.00")))
-    repo.save_period(_state(filing_year=2024, period="2T", applied=Decimal("300.00")))
-    repo.save_period(_state(filing_year=2025, period="1T", applied=Decimal("500.00")))
+    repo.save_period(state(filing_year=2024, period="1T", generated=Decimal("1200.00")))
+    repo.save_period(state(filing_year=2024, period="2T", applied=Decimal("300.00")))
+    repo.save_period(state(filing_year=2025, period="1T", applied=Decimal("500.00")))
 
     report = query_iva_wallet_balance(
         as_of_year=2028,
@@ -62,8 +62,8 @@ def test_balance_splits_active_and_expired_lots(
 ) -> None:
     """Two remaining lots: 2022 is expired, 2025 is still usable at as_of_year=2028."""
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
-    repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
+    repo.save_period(state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+    repo.save_period(state(filing_year=2025, period="2T", generated=Decimal("200.00")))
 
     report = query_iva_wallet_balance(
         as_of_year=2028,
@@ -86,7 +86,7 @@ def test_next_expiry_year_none_when_no_active_lots_with_balance(
 ) -> None:
     """All remaining balance is in expired lots: next_expiry_year is None."""
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+    repo.save_period(state(filing_year=2022, period="4T", generated=Decimal("100.00")))
 
     report = query_iva_wallet_balance(
         as_of_year=2028,
@@ -123,11 +123,11 @@ def _register_profile_with_expiring_and_active_lots(
     profile: NativeCliProfileFixture, label: str, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """Register a profile whose wallet holds a 2022 lot of 100.00 and a 2025 lot of 200.00."""
-    profile.register(label=label, facts={"identity.tax_id": _NIF})
+    profile.register(label=label, facts={"identity.tax_id": NIF})
     reauthenticate_native_profile(profile, authority_operation=authority_operation)
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
-    repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
+    repo.save_period(state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+    repo.save_period(state(filing_year=2025, period="2T", generated=Decimal("200.00")))
 
 
 def test_cli_balance_verb_emits_expected_keys(

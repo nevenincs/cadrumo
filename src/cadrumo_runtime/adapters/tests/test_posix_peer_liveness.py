@@ -36,7 +36,7 @@ def _token(pid: int) -> MacosPeerAuditToken:
 
 @pytest.fixture
 def channel(monkeypatch: pytest.MonkeyPatch) -> Iterator[posix.PosixChannel]:
-    monkeypatch.setattr(posix, "_peer", lambda _socket: Peer(os_owner_id="501", process_id=123))
+    monkeypatch.setattr(posix, "peer", lambda _socket: Peer(os_owner_id="501", process_id=123))
     connected = posix.PosixChannel(cast(socket.socket, _KernelSocket()))
     try:
         yield connected
@@ -86,8 +86,8 @@ def test_linux_liveness_borrows_and_releases_the_peer_pidfd(
     monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(native_peer, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(posix, "os", SimpleNamespace(get_inheritable=os.get_inheritable, close=close_owned))
-    monkeypatch.setattr(posix, "_linux_peer_pidfd", lambda _socket: descriptor)
-    monkeypatch.setattr(posix, "_require_live_linux_pidfd", checked.append)
+    monkeypatch.setattr(posix, "linux_peer_pidfd", lambda _socket: descriptor)
+    monkeypatch.setattr(posix, "require_live_linux_pidfd", checked.append)
     try:
         native_peer.require_live_native_peer(channel)
     finally:

@@ -133,14 +133,12 @@ def observe_macos_session(session_id: int) -> MacosSessionObservation | None:
         query.restype = ctypes.c_int32
         observed, attributes = ctypes.c_uint32(), ctypes.c_uint32()
         status = query(session_id, ctypes.byref(observed), ctypes.byref(attributes))
-        return _session_observation(session_id, status, observed.value, attributes.value)
+        return session_observation(session_id, status, observed.value, attributes.value)
     except (AttributeError, OSError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
 
 
-def _session_observation(
-    session_id: int, status: int, observed: int, attributes: int
-) -> MacosSessionObservation | None:
+def session_observation(session_id: int, status: int, observed: int, attributes: int) -> MacosSessionObservation | None:
     # SessionGetInfo forwards audit session flags, including bsm/audit.h's
     # console-access (0x2000) and authenticated (0x4000) facts. Neither is
     # proof of an unlocked desktop or unattended eligibility.

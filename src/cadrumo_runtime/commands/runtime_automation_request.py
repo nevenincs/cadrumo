@@ -91,7 +91,7 @@ def _required_change_kind(kind: object) -> EnrollmentKind:
     return EnrollmentKind(kind)
 
 
-def _matching_change_payload(payload: AutomationChangeInput, kind: object) -> EnrollmentProposal:
+def matching_change_payload(payload: AutomationChangeInput, kind: object) -> EnrollmentProposal:
     if payload.proposal.kind is not _required_change_kind(kind):
         raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.automation_change_kind_mismatch")
     return payload.proposal
@@ -109,7 +109,7 @@ def refuse_missing_create_proposal(*, proposal_supplied: bool) -> None:
         )
 
 
-def _create_proposal(selection: MachineSecretSelection | None) -> _CreateProposal:
+def runtime_automation_request_create_proposal(selection: MachineSecretSelection | None) -> _CreateProposal:
     refuse_missing_create_proposal(proposal_supplied=selection is not None)
     if selection is None:
         raise CliRefusedBoundaryError(
@@ -154,7 +154,7 @@ def automation_create(
 ) -> None:
     """Submit one first enrollment and serve protected delivery until terminal."""
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    create_proposal = _create_proposal(selection)
+    create_proposal = runtime_automation_request_create_proposal(selection)
     profile_id = UUID(str(require_active_profile_pointer().bucket_id))
     store = installed_automation_secret_store()
     client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
@@ -209,7 +209,7 @@ def automation_change(
             translated_message="cli.config.custody.errors.automation_change_proposal_required"
         )
     payload = read_machine_secret_payload(AutomationChangeInput, selection=selection)
-    proposal = _matching_change_payload(payload, kind)
+    proposal = matching_change_payload(payload, kind)
     del payload
     original_reference = require_automation_change_credential_reference(ctx)
     profile_id = UUID(str(require_active_profile_pointer().bucket_id))

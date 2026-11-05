@@ -20,14 +20,14 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 
-from .test_frontend_access_management import _channels
+from .test_frontend_access_management import channels
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.mark.parametrize("lifecycle", [False, True])
 def test_same_connection_events_demultiplex_and_clear_idle_client(lifecycle: bool) -> None:
-    inbound, outbound, identity = _channels()
+    inbound, outbound, identity = channels()
     connection_id, profile_id, session_id = uuid4(), uuid4(), uuid4()
     send, done, retired = Event(), Event(), Event()
     notice = (

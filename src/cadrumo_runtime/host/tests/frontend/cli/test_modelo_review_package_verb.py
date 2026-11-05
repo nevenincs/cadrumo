@@ -33,11 +33,11 @@ from cadrumo.entrypoints.cli.tests.modelo_review_package_support import (
     build_review_package_via_cli,
     seed_exportable_modelo_revision,
 )
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
-from ._strict_cli_fixture_support import seeded_runtime_backend
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import seed_profile
+from .strict_cli_fixture_support import seeded_runtime_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -114,7 +114,7 @@ def test_review_package_build_then_verify_end_to_end(tmp_path: Path, *, operatio
     )
 
     assert build_result.exit_code == 0, build_result.output
-    build_payload = _payload(build_result.output)
+    build_payload = unwrap_schema_envelope(build_result.output)
     assert build_payload["calculation_revision_id"] == calculation_revision_id
     assert build_payload["modelo"] == "111"
     assert build_payload["filing_year"] == 2026
@@ -146,7 +146,7 @@ def test_review_package_build_then_verify_end_to_end(tmp_path: Path, *, operatio
     )
 
     assert verify_result.exit_code == 0, verify_result.output
-    verify_payload = _payload(verify_result.output)
+    verify_payload = unwrap_schema_envelope(verify_result.output)
     assert verify_payload["is_clean"] is True
     assert verify_payload["missing"] == []
     assert verify_payload["unexpected"] == []
@@ -180,7 +180,7 @@ def test_review_package_verify_detects_tampered_member(tmp_path: Path, *, operat
     )
 
     assert verify_result.exit_code == 0, verify_result.output
-    verify_payload = _payload(verify_result.output)
+    verify_payload = unwrap_schema_envelope(verify_result.output)
     assert verify_payload["is_clean"] is False
     assert verify_payload["mismatched"] == ["draft.fichero-boe"]
 

@@ -34,8 +34,8 @@ from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from ..surfaces import MCP_SURFACES, McpSurface
 from .session import connected_server_and_client_session
-from .test_operation_search_tool import _AdmittedClient, _registry
-from .test_result_page_tool import _observed_operation_id, _ObservedClient
+from .test_operation_search_tool import AdmittedClient, operation_search_tool_registry
+from .test_result_page_tool import ObservedClient, observed_operation_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -74,9 +74,9 @@ class _WatchedLease:
     """An admitted lease that answers reads and keeps what was asked of it, by method and by exchange."""
 
     def __init__(self, profile_id: UUID) -> None:
-        registry = _registry()
-        self._lease = _AdmittedClient(profile_id, registry)
-        self._observed = _ObservedClient(profile_id, registry)
+        registry = operation_search_tool_registry()
+        self._lease = AdmittedClient(profile_id, registry)
+        self._observed = ObservedClient(profile_id, registry)
         self.profile_id, self.frontend, self.session_id = profile_id, self._lease.frontend, self._lease.session_id
         self.sent: list[type] = []
         self.unexpected: list[str] = []
@@ -115,7 +115,7 @@ class _WatchedLease:
 
 def _read_only_calls() -> dict[str, dict[str, object]]:
     """One representative call for each read-only tool that is served under a session."""
-    operation_id = _observed_operation_id()
+    operation_id = observed_operation_id()
     digest = sha256_hex(b"synthetic review contract")
     review = OperationReviewProjectionRequestV1(
         reference=OperationReviewProjectionReferenceV1(

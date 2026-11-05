@@ -16,10 +16,10 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ._isolated_profile_storage_fixtures import (
+from .cli_runner import invoke_cached_cli
+from .isolated_profile_storage_fixtures import (
     active_profile_isolated_backend as isolated_backend,
 )
-from .cli_runner import invoke_cached_cli
 from .test_runtime_invoice_add import native_invoice_runtime_session, password_profile_session
 
 __all__ = ["isolated_backend"]

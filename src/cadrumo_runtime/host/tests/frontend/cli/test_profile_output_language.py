@@ -20,9 +20,9 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
-from ._profile_cli_support import invoke_protected_profile
-from ._profile_cli_support import native_profile_runtime as native_profile_runtime
 from .cli_runner import invoke_cached_cli
+from .profile_cli_support import invoke_protected_profile
+from .profile_cli_support import native_profile_runtime as native_profile_runtime
 
 __all__ = ["isolated_profile_storage"]
 

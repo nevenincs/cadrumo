@@ -83,9 +83,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import m111_withholding
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
-from cadrumo.tests.cli_envelope import require_error_document
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 from cadrumo.tests.optional_extra_absence import optional_extra_absent
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -374,13 +372,13 @@ def test_the_summary_lands_and_names_the_key_it_is_signed_with(
     result = _summary(work_unit_id, output, session=report_session)
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     landed = output.read_bytes()
     assert landed.startswith(b"%PDF-1.7")
     assert payload["document_format"] == CalculationReportDocumentFormat.PDF.value
     assert payload["file_sha256"] == hashlib.sha256(landed).hexdigest()
     assert payload["signing_key_fingerprint"] == hashlib.sha256(bytes.fromhex(_signed_by(output))).hexdigest()
-    codes = {notice["code"] for notice in _notices(result.output)}
+    codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
     assert "modelo.work.report.local_calculation_not_official_evidence" in codes
 
 
@@ -414,7 +412,7 @@ def test_a_summary_verifies_against_the_store_and_exits_zero(
     result = _verify(output, session=report_session)
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["operation"] == "modelo.work.report_verify"
     assert payload["outcome"] == "verified"
     assert payload["store_checked"] is True
@@ -445,7 +443,7 @@ def test_a_modelo_303_summary_verifies_with_every_check_ok(
 
     assert written.exit_code == 0, written.output
     assert verified.exit_code == 0, verified.output
-    payload = _payload(verified.output)
+    payload = unwrap_schema_envelope(verified.output)
     assert payload["outcome"] == "verified"
     assert payload["store_checked"] is True
     assert payload["reasons"] == []
@@ -464,11 +462,13 @@ def test_a_document_only_check_is_unpinned_until_a_key_is_trusted(summary_path: 
     pinned = _verify(summary_path, "--document-only", "--trusted-key", _signed_by(summary_path))
 
     assert unpinned.exit_code == 0, unpinned.output
-    assert _payload(unpinned.output)["outcome"] == "valid_unpinned"
-    assert _payload(unpinned.output)["store_checked"] is False
-    assert "modelo.work.report_verify.valid_unpinned" in {notice["code"] for notice in _notices(unpinned.output)}
+    assert unwrap_schema_envelope(unpinned.output)["outcome"] == "valid_unpinned"
+    assert unwrap_schema_envelope(unpinned.output)["store_checked"] is False
+    assert "modelo.work.report_verify.valid_unpinned" in {
+        notice["code"] for notice in unwrap_envelope_notices(unpinned.output)
+    }
     assert pinned.exit_code == 0, pinned.output
-    assert _payload(pinned.output)["outcome"] == "verified"
+    assert unwrap_schema_envelope(pinned.output)["outcome"] == "verified"
 
 
 def test_a_tampered_summary_is_refused_with_a_non_zero_exit(summary_path: Path, tmp_path: Path) -> None:
@@ -482,7 +482,7 @@ def test_a_tampered_summary_is_refused_with_a_non_zero_exit(summary_path: Path, 
     result = _verify(tampered, "--document-only")
 
     assert result.exit_code == 1
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["outcome"] == "refused"
     assert payload["reasons"] == ["signature_invalid"]
 
@@ -491,7 +491,7 @@ def test_another_trusted_key_refuses_the_summary(summary_path: Path) -> None:
     result = _verify(summary_path, "--document-only", "--trusted-key", "ab" * 32)
 
     assert result.exit_code == 1
-    assert _payload(result.output)["reasons"] == ["signing_key_untrusted"]
+    assert unwrap_schema_envelope(result.output)["reasons"] == ["signing_key_untrusted"]
 
 
 def test_a_malformed_trusted_key_and_a_missing_file_are_refused(summary_path: Path, tmp_path: Path) -> None:
@@ -541,4 +541,4 @@ def test_verification_needs_no_pdf_extra(summary_path: Path, pdf_extra_absent: N
     result = _verify(summary_path, "--document-only")
 
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["outcome"] == "valid_unpinned"
+    assert unwrap_schema_envelope(result.output)["outcome"] == "valid_unpinned"

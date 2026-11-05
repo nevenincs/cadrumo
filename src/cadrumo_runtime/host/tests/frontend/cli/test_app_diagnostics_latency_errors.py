@@ -17,11 +17,11 @@ from datetime import UTC, datetime
 import pytest
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._diagnostics_cli_support import invoke_diagnostics
+from .diagnostics_cli_support import invoke_diagnostics
 
 pytestmark = [
     pytest.mark.integration,
@@ -79,7 +79,7 @@ def test_latency_reports_nearest_rank_percentiles(diagnostics_native_profile: Na
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "latency"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     overall = payload["overall"]
@@ -122,7 +122,7 @@ def test_latency_provider_filter_omits_by_provider_breakdown(
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["overall"]["entries"] == 10
     assert payload["by_provider"] == []
@@ -147,7 +147,7 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["overall"]["entries"] == 1
     assert payload["overall"]["p50_duration_ms"] == 100
@@ -169,7 +169,7 @@ def test_errors_reports_breakdown_by_provider_and_kind(diagnostics_native_profil
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_failures"] is True
     assert payload["total_runs"] == 4
@@ -203,7 +203,7 @@ def test_errors_succeeded_only_reports_no_failures(diagnostics_native_profile: N
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "errors"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 10
     assert payload["total_failed"] == 0
@@ -219,7 +219,7 @@ def test_errors_provider_filter_scopes_the_breakdown(diagnostics_native_profile:
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert payload["total_failed"] == 1

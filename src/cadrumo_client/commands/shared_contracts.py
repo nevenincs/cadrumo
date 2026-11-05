@@ -7,13 +7,13 @@ from enum import Enum
 from importlib.util import resolve_name
 from typing import Final
 
-from cadrumo_client.commands._parameter_validation import (
+from cadrumo_client.commands.parameter_validation import (
     require_token,
     validate_not_supported_schema,
     validate_target_schema,
     validate_unavailable_schema,
 )
-from cadrumo_client.commands._policy_validation import (
+from cadrumo_client.commands.policy_validation import (
     validate_deferred_target,
     validate_lazy_binding,
     validate_parameter_constraint,
@@ -21,7 +21,7 @@ from cadrumo_client.commands._policy_validation import (
     validate_translation_key,
     validate_value_contract,
 )
-from cadrumo_client.commands._structure_validation import validate_result_schema
+from cadrumo_client.commands.structure_validation import validate_result_schema
 
 type LiteralValue = str | int | float | bool | bytes | None
 

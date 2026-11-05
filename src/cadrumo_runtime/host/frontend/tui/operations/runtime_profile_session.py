@@ -24,7 +24,7 @@ from cadrumo_client.transport.operation_controller import OperationController, a
 
 from ..runtime_account_session import read_runtime_account_session, session_lost_with_receipt
 
-_OPERATION_TIMEOUT_SECONDS = 120
+OPERATION_TIMEOUT_SECONDS = 120
 #: The effects a read may settle with: neither leaves records changed.
 _RECORDS_UNCHANGED: Final = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
@@ -136,7 +136,7 @@ class RuntimeProfileSession:
             schema_version=1,
             model_type=type(request),
         )
-        deadline = time.monotonic() + _OPERATION_TIMEOUT_SECONDS
+        deadline = time.monotonic() + OPERATION_TIMEOUT_SECONDS
         try:
             controller = await OperationController.submit(
                 self._client,

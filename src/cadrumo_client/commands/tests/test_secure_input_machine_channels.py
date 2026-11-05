@@ -17,7 +17,7 @@ from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.subprocess_cli import as_bytes_completed_process
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.secure_input import (
-    _MAX_SECRETS_BYTES,
+    MAX_SECRETS_BYTES,
     MachineSecretChannel,
     MachineSecretPayload,
     MachineSecretSelection,
@@ -130,7 +130,7 @@ def test_selection_rejects_an_unknown_runtime_channel_before_reading() -> None:
     try:
         with pytest.raises(TypeError, match="known channel"):
             methodcaller("__call__", "unknown", descriptor)(MachineSecretSelection)
-        assert os.read(descriptor, _MAX_SECRETS_BYTES) == _payload()
+        assert os.read(descriptor, MAX_SECRETS_BYTES) == _payload()
     finally:
         os.close(descriptor)
 
@@ -141,7 +141,7 @@ def test_channel_conflict_refuses_before_reading_either_source() -> None:
         with pytest.raises(CliRefusedBoundaryError) as caught:
             select_machine_secret_channel(secrets_stdin=True, secrets_fd=descriptor)
         assert caught.value.translated_message == "cli.config.custody.errors.secrets_channel_conflict"
-        assert os.read(descriptor, _MAX_SECRETS_BYTES) == _payload()
+        assert os.read(descriptor, MAX_SECRETS_BYTES) == _payload()
     finally:
         os.close(descriptor)
 
@@ -222,7 +222,7 @@ def test_stdin_reader_accepts_the_bound_channel() -> None:
 
 
 def test_stdin_reader_refuses_payload_above_the_bound_without_leaking_it() -> None:
-    oversized = _SUPPLIED_VALUE.encode() + b"x" * _MAX_SECRETS_BYTES
+    oversized = _SUPPLIED_VALUE.encode() + b"x" * MAX_SECRETS_BYTES
     result = _run_stdin_reader(oversized)
     assert result.returncode == 0, result.stderr.decode(errors="replace")
     assert result.stdout.strip() == b"cli.config.custody.errors.secrets_stdin_too_large"
@@ -266,7 +266,7 @@ def test_fd_reader_closes_after_success_and_second_read_refuses() -> None:
     assert caught.value.translated_message == "cli.config.custody.errors.secrets_fd_unreadable"
 
 
-@pytest.mark.parametrize("raw", [b"not-json", b"x" * (_MAX_SECRETS_BYTES + 1)])
+@pytest.mark.parametrize("raw", [b"not-json", b"x" * (MAX_SECRETS_BYTES + 1)])
 def test_fd_reader_closes_after_every_payload_refusal(raw: bytes) -> None:
     descriptor = _file_with(raw)
     with pytest.raises(CliRefusedBoundaryError) as caught:
@@ -305,6 +305,6 @@ def test_selected_reader_rejects_a_model_outside_the_strict_frozen_base_before_r
                 _PermissivePayload,  # type: ignore[type-var]  # ty: ignore[invalid-argument-type]  # reason: passing a permissive model is the refusal under test
                 selection=selection,
             )
-        assert os.read(descriptor, _MAX_SECRETS_BYTES) == raw
+        assert os.read(descriptor, MAX_SECRETS_BYTES) == raw
     finally:
         os.close(descriptor)

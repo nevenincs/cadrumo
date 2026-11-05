@@ -26,7 +26,7 @@ from cadrumo_client.transport.automation_requester import (
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from . import automation_requester_contracts as _contracts
+from . import automation_requester_contracts
 from .automation_requester_cleanup import RequesterCleanup
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class RequesterDeliveryMixin:
     def _reconcile(
         self: RuntimeAutomationRequesterScreen,
         enrollment: NativeEnrollmentClient,
-        draft: _contracts.ProposalDraft,
+        draft: automation_requester_contracts.ProposalDraft,
     ) -> Callable[..., AutomationReceiptProjection]:
         fresh_opener = self._fresh_credential_client
         if fresh_opener is None or draft.credential_reference is None:
@@ -95,7 +95,7 @@ class RequesterDeliveryMixin:
     def _reconciliation_reference(
         self: RuntimeAutomationRequesterScreen,
         enrollment: NativeEnrollmentClient,
-        draft: _contracts.ProposalDraft,
+        draft: automation_requester_contracts.ProposalDraft,
     ) -> UUID:
         if draft.kind is EnrollmentKind.ROTATE:
             reference = enrollment.delivered_credential_metadata().credential_reference
@@ -121,14 +121,16 @@ class RequesterDeliveryMixin:
                 close_async_resources(cleanup, task_name="tui-requester-reconcile-close", primary_error=primary_error)
             )
 
-    async def _execute(self: RuntimeAutomationRequesterScreen, draft: _contracts.ProposalDraft) -> None:
+    async def _execute(
+        self: RuntimeAutomationRequesterScreen, draft: automation_requester_contracts.ProposalDraft
+    ) -> None:
         state = _RequestExecutionState()
         try:
             client = await self._open_request_client()
             await self._run_request(client, draft, state)
         except AutomationRequesterUncertainError as error:
             self._retain_cleanup_errors(error)
-            self._outcome = _contracts.AutomationRequestOutcome(
+            self._outcome = automation_requester_contracts.AutomationRequestOutcome(
                 error.request_id,
                 str(self._submitted.review_digest) if self._submitted is not None else None,
                 None,
@@ -187,7 +189,7 @@ class RequesterDeliveryMixin:
     async def _run_request(
         self: RuntimeAutomationRequesterScreen,
         client: FrontendClient,
-        draft: _contracts.ProposalDraft,
+        draft: automation_requester_contracts.ProposalDraft,
         state: _RequestExecutionState,
     ) -> None:
         enrollment = await await_cancellation_complete(
@@ -227,7 +229,7 @@ class RequesterDeliveryMixin:
         )
 
     def _set_failed_outcome(self: RuntimeAutomationRequesterScreen, state: _RequestExecutionState) -> None:
-        self._outcome = _contracts.AutomationRequestOutcome(
+        self._outcome = automation_requester_contracts.AutomationRequestOutcome(
             state.request_id if state.submitted_attempted else None,
             str(self._submitted.review_digest) if self._submitted is not None else None,
             None,
@@ -237,9 +239,11 @@ class RequesterDeliveryMixin:
         )
 
     @staticmethod
-    def _completed_outcome(completed: AutomationRequesterCompletion) -> _contracts.AutomationRequestOutcome:
+    def _completed_outcome(
+        completed: AutomationRequesterCompletion,
+    ) -> automation_requester_contracts.AutomationRequestOutcome:
         terminal = completed.terminal
-        return _contracts.AutomationRequestOutcome(
+        return automation_requester_contracts.AutomationRequestOutcome(
             terminal.request_id,
             str(terminal.review_digest),
             terminal.stage,

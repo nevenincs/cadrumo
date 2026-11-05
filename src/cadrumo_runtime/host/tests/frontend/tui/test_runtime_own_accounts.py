@@ -33,7 +33,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....frontend.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
-from ._door_session_support import (
+from .door_session_support import (
     PROFILE_ID,
     SESSION_ID,
     ScriptedController,

@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
@@ -52,15 +52,14 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.modelo_review_package_support import seed_exportable_modelo_revision
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 
 @pytest.fixture(autouse=True)
@@ -922,9 +921,9 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
-    notices = _notices(result.output)
+    notices = unwrap_envelope_notices(result.output)
     notice = next(notice for notice in notices if notice["code"] == "modelo.export.local_export_not_official_evidence")
     assert notice["severity"] == "warning"
     assert notice["context"]["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
@@ -971,7 +970,7 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
     )
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["calculation_revision_id"] == revision_ids[1]
     assert out.exists()
 

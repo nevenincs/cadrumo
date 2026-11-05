@@ -52,7 +52,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -197,7 +197,7 @@ def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, g
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    raw_values = _payload(result.output)["casilla_values"]
+    raw_values = unwrap_schema_envelope(result.output)["casilla_values"]
     assert isinstance(raw_values, dict), f"casilla_values must be an object, got {type(raw_values).__name__}"
     return {_casilla_id_from_payload(key): str(value) for key, value in raw_values.items()}
 
@@ -278,7 +278,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert compare_result.exit_code == 0, compare_result.output
     assert "Traceback" not in compare_result.output
 
-    payload = _payload(compare_result.output)
+    payload = unwrap_schema_envelope(compare_result.output)
     assert payload["year_a"] == 2025
     assert payload["year_b"] == 2026
     assert payload["modelo"] == "130"

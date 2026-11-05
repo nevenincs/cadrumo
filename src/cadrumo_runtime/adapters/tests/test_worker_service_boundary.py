@@ -71,7 +71,7 @@ def _worker_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, image: 
         monkeypatch.setenv(_PACKAGE_AGENT_VARIABLE, str(image))
     root = tmp_path / "worker-storage"
     profile_id = UUID("8a6c2b7e-1d0f-4e9a-8b4c-3d2e1f0a9b8c")
-    environment = profile_worker._worker_launch_environment(storage_root=root, profile_id=profile_id)
+    environment = profile_worker.worker_launch_environment(storage_root=root, profile_id=profile_id)
     # The worker delegates environment filtering to the declared shared policy.
     expected = child_environment(
         ChildEnvironmentProfile.OPERATOR,

@@ -12,7 +12,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
@@ -41,7 +41,7 @@ class PassphraseResetSecrets(MachineSecretPayload):
     new_passphrase_confirmation: SecretStr
 
 
-def _collect_passphrases(*, secrets_stdin: bool, secrets_fd: int | None) -> PassphraseChangeSecrets:
+def collect_passphrases(*, secrets_stdin: bool, secrets_fd: int | None) -> PassphraseChangeSecrets:
     """Resolve all three rotation values through one explicit or interactive door."""
     from cadrumo_client.commands.secure_input import (
         prompt_secret_no_echo,
@@ -77,7 +77,7 @@ def passphrase_change(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigPassphraseChangeResult
     from cadrumo_client.commands.profile_selection import command_profile_id
 
@@ -89,7 +89,7 @@ def passphrase_change(
     # The selected profile is fixed before reading a leaf secret channel.
     current, replacement, confirmation = bytearray(), bytearray(), bytearray()
     try:
-        secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        secrets = collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
         try:
             current.extend(secrets.current_passphrase.get_secret_value().encode("utf-8"))
             replacement.extend(secrets.new_passphrase.get_secret_value().encode("utf-8"))
@@ -176,7 +176,7 @@ def passphrase_reset(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Replace a forgotten passphrase by proving the profile's recovery code."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigPassphraseResetResult
     from cadrumo_client.commands.profile_selection import require_runtime_login_target
 

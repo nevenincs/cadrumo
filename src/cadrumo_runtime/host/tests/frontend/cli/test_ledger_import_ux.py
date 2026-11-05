@@ -15,11 +15,11 @@ from cadrumo.tests.cli_json_support import require_json_object
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .ledger_ux_support import (
-    _FOUR_ROW_CSV,
-    _FOUR_ROW_OFX,
-    _N26_HEADER,
-    _invoke,
-    _invoke_exact_profile,
+    FOUR_ROW_CSV,
+    FOUR_ROW_OFX,
+    N26_HEADER,
+    invoke,
+    invoke_exact_profile,
     open_bucket_session,
 )
 
@@ -62,7 +62,7 @@ def _assert_transaction_validation_error(output: str) -> dict[str, object]:
 
 def test_import_help_lists_recognised_providers() -> None:
     """`import --help` enumerates the accepted --provider values."""
-    result = _invoke(["app", "ledger", "import", "--help"])
+    result = invoke(["app", "ledger", "import", "--help"])
     assert result.exit_code == 0, result.output
     haystack = " ".join(result.output.split())
     for provider in LedgerProviderID:
@@ -73,10 +73,10 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
     """An unknown --provider is refused with the recognised set inline."""
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    result = _invoke(
+    result = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "quickbooks"],
     )
     assert result.exit_code != 0
@@ -95,7 +95,7 @@ def test_missing_csv_is_refused_at_the_file_parameter(tmp_path: Path) -> None:
     """A missing source is refused by the ``--file`` existence contract before any import runs."""
     missing = tmp_path / "missing.csv"
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -122,7 +122,7 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     statement = tmp_path / "generic.csv"
     statement.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -159,7 +159,7 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
         ),
         (
             "blank-currency.csv",
-            _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,,n26-001\n",
+            N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,,n26-001\n",
         ),
     ],
 )
@@ -172,16 +172,16 @@ def test_missing_or_blank_csv_currency_imports_as_default_and_list_view_succeed(
     statement = tmp_path / filename
     statement.write_text(contents, encoding="utf-8")
 
-    imported = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    imported = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
+    listed = invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     rows = json.loads(listed.output)["result"]["rows"]
     assert len(rows) == 1
     assert rows[0]["currency"] == "EUR"
 
-    viewed = _invoke(["--format", "json", "app", "ledger", "view", rows[0]["transaction_id"]])
+    viewed = invoke(["--format", "json", "app", "ledger", "view", rows[0]["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
     assert json.loads(viewed.output)["result"]["transaction"]["currency"] == "EUR"
 
@@ -190,11 +190,11 @@ def test_short_csv_currency_preserves_typed_import_refusal(tmp_path: Path) -> No
     """A malformed nonblank currency preserves the import refusal identity."""
     statement = tmp_path / "short-currency.csv"
     statement.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
         encoding="utf-8",
     )
 
-    result = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    result = invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
 
     assert result.exit_code != 0
     _assert_transaction_validation_error(result.output)
@@ -211,11 +211,11 @@ def test_malformed_csv_date_import_preserves_contract_across_locales(
     """A malformed CSV date preserves one locale-neutral refusal contract."""
     statement = tmp_path / f"bad-date-{locale}.csv"
     statement.write_text(
-        _N26_HEADER + "not-a-date,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "not-a-date,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
 
-    result = _invoke(
+    result = invoke(
         [
             "--language",
             locale,
@@ -242,8 +242,8 @@ def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None
     the canonical typed refusal rather than becoming a zero-row success.
     """
     statement = tmp_path / "empty.csv"
-    statement.write_text(_N26_HEADER, encoding="utf-8")
-    result = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    statement.write_text(N26_HEADER, encoding="utf-8")
+    result = invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert result.exit_code != 0
     _assert_transaction_validation_error(result.output)
 
@@ -258,8 +258,8 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
     success. The notice line is the fix.
     """
     statement = tmp_path / "blank.csv"
-    statement.write_text(_N26_HEADER + " , , , , , \n", encoding="utf-8")
-    result = _invoke(
+    statement.write_text(N26_HEADER + " , , , , , \n", encoding="utf-8")
+    result = invoke(
         [
             "--language",
             locale,
@@ -290,7 +290,7 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
 def _two_quarter_statement(tmp_path: Path) -> Path:
     statement = tmp_path / "two-quarters.csv"
     statement.write_text(
-        _N26_HEADER
+        N26_HEADER
         + "2026-01-15,Client SL,Invoice 1,121.00,EUR,n26-101\n"
         + "2026-04-15,Client SL,Invoice 2,242.00,EUR,n26-102\n",
         encoding="utf-8",
@@ -299,7 +299,7 @@ def _two_quarter_statement(tmp_path: Path) -> Path:
 
 
 def _period_import(profile: NativeCliProfileFixture, statement: Path, *scope: str) -> dict[str, object]:
-    result = _invoke_exact_profile(
+    result = invoke_exact_profile(
         profile,
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", *scope],
     )
@@ -340,7 +340,7 @@ def test_import_into_an_unregistered_own_account_is_refused(tmp_path: Path) -> N
     statement = _two_quarter_statement(tmp_path)
     with native_cli_profile_scope(tmp_path / "native") as profile:
         profile.register(label="account-ledger-import", facts={})
-        refused = _invoke_exact_profile(
+        refused = invoke_exact_profile(
             profile,
             [
                 "--format",
@@ -356,7 +356,7 @@ def test_import_into_an_unregistered_own_account_is_refused(tmp_path: Path) -> N
                 "acc-01",
             ],
         )
-        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+        listed = invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
 
     assert refused.exit_code != 0
     error = require_json_object(_json_document(refused.output)["error"])
@@ -370,12 +370,12 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
     """Re-importing only-duplicate rows reports why nothing was added."""
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    first = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    first = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
-    second = _invoke(
+    second = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
     )
     assert second.exit_code == 0, second.output
@@ -399,9 +399,9 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     real import would add.
     """
     statement = tmp_path / "statement.csv"
-    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    statement.write_text(FOUR_ROW_CSV, encoding="utf-8")
 
-    dry_run = _invoke(
+    dry_run = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
@@ -417,7 +417,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
         "action": None,
     }
 
-    real = _invoke(
+    real = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
     )
     assert real.exit_code == 0, real.output
@@ -427,12 +427,12 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
 def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> None:
     """After a real import the dry run previews every row as a would-skip."""
     statement = tmp_path / "statement.csv"
-    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    statement.write_text(FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    first = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
-    dry_run = _invoke(
+    dry_run = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
@@ -451,29 +451,29 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     stamped import fingerprint is stable across the edit.
     """
     statement = tmp_path / "statement.csv"
-    statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    statement.write_text(FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    first = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
+    listed = invoke(["--format", "json", "app", "ledger", "list"])
     rows = json.loads(listed.output)["result"]["rows"]
     assert len(rows) == 4
     target = rows[0]["transaction_id"]
 
-    edited = _invoke(
+    edited = invoke(
         ["app", "ledger", "update", target, "--description", "Invoice 1 - corrected narrative"],
     )
     assert edited.exit_code == 0, edited.output
 
-    reimport = _invoke(
+    reimport = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
     )
     assert reimport.exit_code == 0, reimport.output
     payload = json.loads(reimport.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] == 4
-    after = _invoke(["--format", "json", "app", "ledger", "list"])
+    after = invoke(["--format", "json", "app", "ledger", "list"])
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
@@ -487,34 +487,34 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
     the provider id and file format.
     """
     csv_statement = tmp_path / "statement.csv"
-    csv_statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    csv_statement.write_text(FOUR_ROW_CSV, encoding="utf-8")
     ofx_statement = tmp_path / "statement.ofx"
-    ofx_statement.write_text(_FOUR_ROW_OFX, encoding="ascii")
+    ofx_statement.write_text(FOUR_ROW_OFX, encoding="ascii")
 
-    csv_import = _invoke(["app", "ledger", "import", "--file", str(csv_statement), "--provider", "csv"])
+    csv_import = invoke(["app", "ledger", "import", "--file", str(csv_statement), "--provider", "csv"])
     assert csv_import.exit_code == 0, csv_import.output
 
-    ofx_import = _invoke(
+    ofx_import = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(ofx_statement), "--provider", "ofx"],
     )
     assert ofx_import.exit_code == 0, ofx_import.output
     payload = json.loads(ofx_import.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] == 4
-    after = _invoke(["--format", "json", "app", "ledger", "list"])
+    after = invoke(["--format", "json", "app", "ledger", "list"])
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
 def test_identical_statement_bytes_under_another_filename_do_not_duplicate_movements(tmp_path: Path) -> None:
     first_path = tmp_path / "statement.csv"
     second_path = tmp_path / "renamed.csv"
-    first_path.write_text(_FOUR_ROW_CSV, encoding="utf-8")
-    second_path.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    first_path.write_text(FOUR_ROW_CSV, encoding="utf-8")
+    second_path.write_text(FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _invoke(["app", "ledger", "import", "--file", str(first_path), "--provider", "csv"])
+    first = invoke(["app", "ledger", "import", "--file", str(first_path), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
-    replay = _invoke(
+    replay = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(second_path), "--provider", "csv"],
     )
     assert replay.exit_code == 0, replay.output
@@ -522,7 +522,7 @@ def test_identical_statement_bytes_under_another_filename_do_not_duplicate_movem
     assert payload["imported"] == 0
     assert payload["skipped"] == 4
 
-    after = _invoke(["--format", "json", "app", "ledger", "list"])
+    after = invoke(["--format", "json", "app", "ledger", "list"])
     assert after.exit_code == 0, after.output
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
@@ -537,17 +537,17 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     """
     first = tmp_path / "first.csv"
     first.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    assert _invoke(["app", "ledger", "import", "--file", str(first), "--provider", "csv"]).exit_code == 0
+    assert invoke(["app", "ledger", "import", "--file", str(first), "--provider", "csv"]).exit_code == 0
 
     second = tmp_path / "second.csv"
     second.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
+        N26_HEADER + "2026-04-15,Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
         encoding="utf-8",
     )
-    result = _invoke(
+    result = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(second), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
@@ -574,9 +574,9 @@ def test_relative_import_and_verification_source_use_the_callers_directory(
     caller = tmp_path / "caller"
     statements = caller / "statements"
     statements.mkdir(parents=True)
-    rows = _FOUR_ROW_CSV.splitlines(keepends=True)
+    rows = FOUR_ROW_CSV.splitlines(keepends=True)
     if source_kind == "file":
-        (statements / "statement.csv").write_text(_FOUR_ROW_CSV, encoding="utf-8")
+        (statements / "statement.csv").write_text(FOUR_ROW_CSV, encoding="utf-8")
         relative_source = Path("statements/statement.csv")
         file_count = 1
     else:
@@ -595,7 +595,7 @@ def test_relative_import_and_verification_source_use_the_callers_directory(
         assert profile.storage_root != caller
         assert not (profile.storage_root / relative_source).exists()
         assert not (profile.storage_root / "original-export.bin").exists()
-        imported = _invoke_exact_profile(
+        imported = invoke_exact_profile(
             profile,
             [
                 "--format",
@@ -625,7 +625,7 @@ def test_relative_import_and_verification_source_use_the_callers_directory(
         assert isinstance(validations, list) and len(validations) == file_count
         assert all(isinstance(item, dict) and item["valid"] is True for item in validations)
 
-        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+        listed = invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
         assert listed.exit_code == 0, listed.output
         readback = require_json_object(_json_document(listed.output)["result"])
         persisted_rows = readback["rows"]
@@ -643,13 +643,13 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     """
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     original = tmp_path / "original-export.csv"
     original.write_text(statement.read_text(encoding="utf-8"), encoding="utf-8")
 
-    unverified = _invoke(
+    unverified = invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert unverified.exit_code == 0, unverified.output
@@ -658,7 +658,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     assert unverified_source["path"] is None
     assert unverified_source["sha256"] is None
 
-    verify_without_source_file = _invoke(
+    verify_without_source_file = invoke(
         [
             "--format",
             "json",
@@ -679,7 +679,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     assert verify_only_source["path"] is None
     assert verify_only_source["sha256"] is None
 
-    verified = _invoke(
+    verified = invoke(
         [
             "--format",
             "json",
@@ -704,7 +704,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     assert verified_source["sha256"] is not None
     assert verified_source["sha256"] != unverified_source["sha256"]
 
-    verify_source_without_verify = _invoke(
+    verify_source_without_verify = invoke(
         [
             "--format",
             "json",

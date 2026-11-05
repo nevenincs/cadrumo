@@ -117,7 +117,7 @@ from ....frontend.tui.runtime_ledger_evidence_files import (
     compose_evidence_files_tools,
     compose_runtime_evidence_files_doors,
 )
-from ._door_session_support import (
+from .door_session_support import (
     NOW,
     OTHER_PROFILE_ID,
     PROFILE_ID,

@@ -31,11 +31,11 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._isolated_profile_storage_fixtures import _isolated_state
 from .cli_runner import invoke_cached_cli, semantic_cli_output
+from .isolated_profile_storage_fixtures import isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_isolated_state"]
+__all__ = ["isolated_state"]
 
 # The option string we assert must appear in every target command's help.
 _OPTION_FLAG = "--output-language"

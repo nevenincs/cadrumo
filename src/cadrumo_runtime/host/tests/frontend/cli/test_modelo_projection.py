@@ -73,7 +73,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -420,7 +420,7 @@ def test_modelo_project_uses_revision_declared_default_bindings(
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
     assert "unknown registry binding ids" not in project_result.output
-    payload = _payload(project_result.output)
+    payload = unwrap_schema_envelope(project_result.output)
     assert payload["year"] == filing_year
     assert payload["quarters_available"] == ["1T"]
 
@@ -498,7 +498,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             calc_args += ["--binding", f"modelo-130-pagos-fraccionados-anteriores={_PRIOR_PAGOS[period]}"]
         calc_result = invoke_cached_cli(calc_args)
         assert calc_result.exit_code == 0, f"M130 calculate failed for period {period}: {calc_result.output}"
-        quarter_payload = _payload(calc_result.output)
+        quarter_payload = unwrap_schema_envelope(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # casilla 03 is the cumulative (year-to-date) rendimiento neto.
         rendimiento_key = str(_M130_RENDIMIENTO_NETO_CASILLA)
@@ -540,7 +540,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     )  # fmt: skip
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
-    proj_payload = _payload(project_result.output)
+    proj_payload = unwrap_schema_envelope(project_result.output)
 
     assert proj_payload["quarters_filed"] == 4
     assert proj_payload["is_extrapolated"] is False

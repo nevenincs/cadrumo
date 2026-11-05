@@ -106,7 +106,7 @@ class _ProfileSetWatch:
         return InstallationScreen(on_records_changed=changed, locale=locale)
 
 
-def _run_installation_area(reason_code: str) -> bool:
+def run_installation_area(reason_code: str) -> bool:
     """Offer the installation area alone when the profiles cannot be listed.
 
     Repairing an installation is most needed exactly when its profiles cannot
@@ -119,7 +119,7 @@ def _run_installation_area(reason_code: str) -> bool:
     return watch.changed
 
 
-def _run_registration_screen() -> bool:
+def run_registration_screen() -> bool:
     """Create the first profile, finish recovery, then release bootstrap custody.
 
     Returns whether the profiles should be read again: a profile was created
@@ -157,7 +157,7 @@ def _run_registration_screen() -> bool:
         _release_bootstrap_custody()
 
 
-async def _open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+async def open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
     return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout)
 
 
@@ -193,13 +193,13 @@ async def _run_runtime_session(
             profile_id=profile_id,
             contracts=operation_contracts(),
             secrets_store=installed_automation_secret_store(),
-            open_client=_open_client,
+            open_client=open_client,
         )
 
     watch = _ProfileSetWatch()
     async with runtime_login_session(
         choices=inventory.choices,
-        open_client=_open_client,
+        open_client=open_client,
         open_credential_client=_open_credential_client,
         requester_factory=requester_for_login,
         installation_factory=watch.installation_area,
@@ -248,7 +248,7 @@ async def _run_runtime_session(
             return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
         async def open_recovery_client(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
-            return await _open_client(handoff.profile_id, timeout=timeout)
+            return await open_client(handoff.profile_id, timeout=timeout)
 
         def requester_for_human(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
             if client is not handoff.client:
@@ -257,7 +257,7 @@ async def _run_runtime_session(
                 profile_id=handoff.profile_id,
                 contracts=operation_contracts(),
                 secrets_store=installed_automation_secret_store(),
-                open_client=_open_client,
+                open_client=open_client,
                 reviewer_client=client,
             )
 
@@ -297,10 +297,10 @@ def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
 
 
 def _registration_completed(headless: bool) -> bool:
-    return False if headless else _run_registration_screen()
+    return False if headless else run_registration_screen()
 
 
-def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
+def runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
     if any(
         isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
         for name in ("async_cleanup_error", "cleanup_error")
@@ -321,7 +321,7 @@ def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
     return SESSION_INVENTORY_UNAVAILABLE
 
 
-def _attempt_runtime_session(
+def attempt_runtime_session(
     inventory: ProfileLoginInventoryV1,
     operation_registry: Callable[[], OperationRegistry],
     choose_profile: bool,
@@ -341,7 +341,7 @@ def _attempt_runtime_session(
             )
         )
     except (FrontendRefusedError, RefusalError) as error:
-        return _runtime_session_refusal(error)
+        return runtime_session_refusal(error)
 
 
 def _inventory_disposition(
@@ -351,7 +351,7 @@ def _inventory_disposition(
     if (
         not headless
         and inventory.state in _UNLISTED_STATES
-        and _run_installation_area(inventory.reason_code or inventory.state.value)
+        and run_installation_area(inventory.reason_code or inventory.state.value)
     ):
         return "retry"
     unavailable = _unavailable_inventory(inventory)
@@ -415,7 +415,7 @@ def run_installed_workbench_session(
             if disposition is not None:
                 return disposition
             started = time.monotonic()
-            recompose = _attempt_runtime_session(
+            recompose = attempt_runtime_session(
                 inventory,
                 operation_registry,
                 choose_profile,

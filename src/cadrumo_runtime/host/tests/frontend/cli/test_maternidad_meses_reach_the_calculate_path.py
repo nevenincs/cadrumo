@@ -42,11 +42,10 @@ from click.testing import Result
 
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli as _invoke_cached_cli
+from .cli_runner import invoke_cached_cli as cli_runner_invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -135,7 +134,7 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
     runtime, so each invocation names the profile and supplies the password
     exactly as the registered secret transport does.
     """
-    return _invoke_cached_cli(
+    return cli_runner_invoke_cached_cli(
         ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
         input=json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}),
     )
@@ -180,12 +179,12 @@ def _calculate(*extra_flags: str) -> tuple[int, str]:
 
 
 def _casilla_0611(output: str) -> Decimal:
-    return Decimal(str(_payload(output)["casilla_values"][_MATERNIDAD_CASILLA_ID]))
+    return Decimal(str(unwrap_schema_envelope(output)["casilla_values"][_MATERNIDAD_CASILLA_ID]))
 
 
 def _casilla_0611_observation(output: str) -> dict[str, object]:
     """Return 0611's persisted, registry-grounded calculation observation."""
-    observations = _payload(output)["observations"]
+    observations = unwrap_schema_envelope(output)["observations"]
     observation = next(
         observation for observation in observations if observation["casilla_id"] == _MATERNIDAD_CASILLA_ID
     )

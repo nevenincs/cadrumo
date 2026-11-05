@@ -6,29 +6,23 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
 
-from cadrumo_client.commands._parameter_validation import require_identifier as _require_identifier
-from cadrumo_client.commands._policy_validation import validate_machine_secret as _validate_machine_secret
-from cadrumo_client.commands._policy_validation import (
-    validate_machine_secret_condition as _validate_machine_secret_condition,
-)
-from cadrumo_client.commands._policy_validation import validate_machine_secret_field as _validate_machine_secret_field
-from cadrumo_client.commands._policy_validation import (
-    validate_machine_secret_variant as _validate_machine_secret_variant,
-)
-from cadrumo_client.commands._policy_validation import validate_profile_secret as _validate_profile_secret
-from cadrumo_client.commands._structure_validation import validate_recovery_directions as _validate_recovery_directions
-from cadrumo_client.commands._structure_validation import (
-    validate_recovery_json_fields as _validate_recovery_json_fields,
-)
-from cadrumo_client.commands._structure_validation import validate_recovery_limits as _validate_recovery_limits
-from cadrumo_client.commands._structure_validation import validate_recovery_parameters as _validate_recovery_parameters
-from cadrumo_client.commands._structure_validation import (
-    validate_recovery_reserved_descriptors as _validate_recovery_reserved_descriptors,
-)
-from cadrumo_client.commands._structure_validation import (
-    validate_windows_handle_bootstrap as _validate_windows_handle_bootstrap,
+from cadrumo_client.commands.parameter_validation import require_identifier
+from cadrumo_client.commands.policy_validation import (
+    validate_machine_secret,
+    validate_machine_secret_condition,
+    validate_machine_secret_field,
+    validate_machine_secret_variant,
+    validate_profile_secret,
 )
 from cadrumo_client.commands.shared_contracts import DeferredTarget
+from cadrumo_client.commands.structure_validation import (
+    validate_recovery_directions,
+    validate_recovery_json_fields,
+    validate_recovery_limits,
+    validate_recovery_parameters,
+    validate_recovery_reserved_descriptors,
+    validate_windows_handle_bootstrap,
+)
 from cadrumo_client.contracts.command_ports import (
     MachineSecretPresenceValue,
 )
@@ -57,7 +51,7 @@ class MachineSecretFieldSpec:
 
     def __post_init__(self) -> None:
         """Validate the value-free machine-secret field declaration."""
-        _validate_machine_secret_field(self.name, require_identifier=_require_identifier)
+        validate_machine_secret_field(self.name, require_identifier=require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +63,7 @@ class MachineSecretConditionSpec:
 
     def __post_init__(self) -> None:
         """Validate the option-presence condition declaration."""
-        _validate_machine_secret_condition(self.option_name, require_identifier=_require_identifier)
+        validate_machine_secret_condition(self.option_name, require_identifier=require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,7 +77,7 @@ class MachineSecretVariantSpec:
 
     def __post_init__(self) -> None:
         """Validate the payload variant key and field layout."""
-        _validate_machine_secret_variant(self.key, self.fields, require_identifier=_require_identifier)
+        validate_machine_secret_variant(self.key, self.fields, require_identifier=require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,7 +88,7 @@ class MachineSecretSpec:
 
     def __post_init__(self) -> None:
         """Validate the complete machine-secret contract."""
-        _validate_machine_secret(self.variants)
+        validate_machine_secret(self.variants)
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,8 +102,8 @@ class ProfileSecretSpec:
 
     def __post_init__(self) -> None:
         """Validate the declared fields, their unique names and the Windows bootstrap token, or raise."""
-        _validate_profile_secret(self.fields)
-        _validate_windows_handle_bootstrap(self.windows_handle_bootstrap)
+        validate_profile_secret(self.fields)
+        validate_windows_handle_bootstrap(self.windows_handle_bootstrap)
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,15 +127,15 @@ class RecoveryHandoffSpec:
 
     def __post_init__(self) -> None:
         """Validate the recovery handoff protocol's parameters and flag invariants, or raise."""
-        _validate_recovery_directions(self.handoff_direction, self.verification_direction)
-        _validate_recovery_parameters(
+        validate_recovery_directions(self.handoff_direction, self.verification_direction)
+        validate_recovery_parameters(
             self.handoff_parameter,
             self.verification_parameter,
             self.collides_with_parameters,
-            require_identifier=_require_identifier,
+            require_identifier=require_identifier,
         )
-        _validate_recovery_json_fields(self.json_fields, require_identifier=_require_identifier)
-        _validate_recovery_limits(
+        validate_recovery_json_fields(self.json_fields, require_identifier=require_identifier)
+        validate_recovery_limits(
             self.maximum_bytes,
             self.required_together,
             self.strict_utf8_object,
@@ -149,5 +143,5 @@ class RecoveryHandoffSpec:
             self.descriptors_closed,
             self.descriptors_must_differ,
         )
-        _validate_recovery_reserved_descriptors(self.reserved_descriptors)
-        _validate_windows_handle_bootstrap(self.windows_handle_bootstrap)
+        validate_recovery_reserved_descriptors(self.reserved_descriptors)
+        validate_windows_handle_bootstrap(self.windows_handle_bootstrap)

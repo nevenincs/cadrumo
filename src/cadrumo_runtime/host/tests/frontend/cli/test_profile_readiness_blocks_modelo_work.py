@@ -11,19 +11,19 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.user_profile.language_resolver import mirror_profile_output_language_hint
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
+from .profile_cli_support import invoke_protected_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -135,7 +135,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
             ],
         )  # fmt: skip
         assert readiness_json.exit_code == 2, readiness_json.output
-        readiness_payload = _payload(readiness_json.output)
+        readiness_payload = unwrap_schema_envelope(readiness_json.output)
         (readiness_missing_row,) = readiness_payload["missing"]
         assert readiness_missing_row["selector"] and readiness_missing_row["label"]
         assert readiness_missing_row["label"] != readiness_missing_row["selector"]
@@ -178,7 +178,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
 
         status = invoke_protected_profile("pere-landlord", "status", json_output=True)
         assert status.exit_code == 0, status.output
-        status_payload = _payload(status.output)
+        status_payload = unwrap_schema_envelope(status.output)
         assert status_payload["configured"] is True
         assert status_payload["activity_present"] is False
 
@@ -235,7 +235,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             ],
         )  # fmt: skip
         assert calculated.exit_code == 0, calculated.output
-        calculation_payload = _payload(calculated.output)
+        calculation_payload = unwrap_schema_envelope(calculated.output)
         assert calculation_payload["calculation_revision_id"]
         assert Decimal(str(calculation_payload["casilla_values"]["0545"])) > Decimal("0")
         assert Decimal(str(calculation_payload["casilla_values"]["0546"])) > Decimal("0")
@@ -274,7 +274,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
     with native_profile_view_server(load_settings().cadrumo_storage_root):
         status = invoke_protected_profile("comunidad-sin-actividad", "status", json_output=True)
         assert status.exit_code == 0, status.output
-        status_payload = _payload(status.output)
+        status_payload = unwrap_schema_envelope(status.output)
         assert status_payload["configured"] is False
         assert status_payload["activity_present"] is False
 

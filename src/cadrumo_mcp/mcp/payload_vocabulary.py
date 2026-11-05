@@ -25,7 +25,7 @@ PAYLOAD_VOCABULARY_MEMBER: Final = "payload_vocabulary"
 _PROFILE_ANSWER_PATH: Final = "values[].question_id"
 
 
-def _profile_questions() -> dict[str, Any]:
+def profile_questions() -> dict[str, Any]:
     """List every profile answer a patch may set, as the command line's own options name them.
 
     Imported on use, so that describing any other operation loads none of it.
@@ -74,7 +74,7 @@ def payload_vocabulary(definition_id: str, *, limit: int = 0, cursor: int = 0) -
     if limit == 0:
         return {"path": _PROFILE_ANSWER_PATH, "saved_answers_source": source, "next_cursor": cursor}
     try:
-        catalogue = _profile_questions()
+        catalogue = profile_questions()
         questions = catalogue.pop("questions")
         page: list[dict[str, Any]] = []
         for question in questions[cursor : cursor + min(limit, 20)]:

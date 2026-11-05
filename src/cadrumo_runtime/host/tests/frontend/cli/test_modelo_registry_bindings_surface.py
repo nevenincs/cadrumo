@@ -16,11 +16,10 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli as _invoke_cached_cli
+from .cli_runner import invoke_cached_cli as cli_runner_invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -74,7 +73,7 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
         )
     assert profile.label is not None
     close_active_bucket_session()
-    return _invoke_cached_cli(
+    return cli_runner_invoke_cached_cli(
         ("--profile", profile.label, "--profile-secrets-stdin", *args),
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
@@ -142,7 +141,7 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     )
 
     assert json_result.exit_code == 0, json_result.output
-    notices = _notices(json_result.output)
+    notices = unwrap_envelope_notices(json_result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["severity"] == "warning"
     assert notice["context"]["modelo_filter"] == "303"
@@ -189,7 +188,7 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    notices = _notices(result.output)
+    notices = unwrap_envelope_notices(result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["context"]["modelo_filter"] == "303"
     assert notice["context"]["year_filter"] == "2025"
@@ -249,7 +248,9 @@ def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -
 
     assert result.exit_code == 0, result.output
     scope_notices = [
-        notice for notice in _notices(result.output) if notice["code"] == "modelo.bindings.list.unscoped_revision"
+        notice
+        for notice in unwrap_envelope_notices(result.output)
+        if notice["code"] == "modelo.bindings.list.unscoped_revision"
     ]
     assert scope_notices == []
 
@@ -446,7 +447,7 @@ def test_bindings_resolve_echoes_override_for_known_key() -> None:
         ],
     )
     assert json_result.exit_code == 0, json_result.output
-    payload = _payload(json_result.output)
+    payload = unwrap_schema_envelope(json_result.output)
     row = next(item for item in payload["bindings"] if item["binding_id"] == "modelo-303-iva-repercutido-general-cuota")
     assert row["override"] == "1234.56"
 
@@ -473,7 +474,9 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
         ],
     )
     assert listed.exit_code == 0, listed.output
-    relation_rows = [row for row in _payload(listed.output)["bindings"] if row["source"] == "relation_prefill"]
+    relation_rows = [
+        row for row in unwrap_schema_envelope(listed.output)["bindings"] if row["source"] == "relation_prefill"
+    ]
     assert relation_rows
     assert {row["readiness"] for row in relation_rows} == {"entrada de relación"}
 
@@ -496,7 +499,9 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
         ],
     )
     assert resolved.exit_code == 0, resolved.output
-    ledger_rows = [row for row in _payload(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"]
+    ledger_rows = [
+        row for row in unwrap_schema_envelope(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"
+    ]
     assert ledger_rows
     assert {row["readiness"] for row in ledger_rows} == {"datos de tus registros"}
 
@@ -674,7 +679,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     bindings = payload["bindings"]
     assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
     snapshot = published_snapshot("100", filing_year=2025, period="0A")
@@ -723,7 +728,7 @@ def test_bindings_list_exposes_m100_suffered_work_withholding_as_a_payer_record_
         ],
     )
     assert result.exit_code == 0, result.output
-    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
+    rows = {row["binding_id"]: row for row in unwrap_schema_envelope(result.output)["bindings"]}
     row = rows["renta-retencion-soportada-trabajo"]
     assert row["source"] == "retencion_soportada"
     assert row["input_channel"] == "decimal"
@@ -751,7 +756,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     scope = ["--modelo", "200", "--year", "2025", "--period", "0A"]
     result = _invoke_in_english(["--format", "json", "app", "modelo", "bindings", "list", *scope])
     assert result.exit_code == 0, result.output
-    rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
+    rows = {row["binding_id"]: row for row in unwrap_schema_envelope(result.output)["bindings"]}
 
     # Cross-check against the authoritative snapshot: every relation-prefill
     # binding's own id must surface as its relation input on the listed row.

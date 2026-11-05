@@ -56,10 +56,10 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.tty import stdin_is_tty
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 MACHINE_SECRET_MAX_BYTES = 8192
-_MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES
+MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES
 """Upper bound on a machine-channel secrets payload; a larger read refuses.
 
 A recovery-key + passphrase JSON object is a few hundred bytes; the cap keeps a
@@ -180,19 +180,19 @@ def validate_secrets_payload[SecretsModelT: BaseModel](
         decoded = raw.decode(UTF_8_ENCODING)
         payload = json.loads(decoded, object_pairs_hook=reject_duplicate_json_members)
     except (ValueError, UnicodeDecodeError) as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message=invalid_json_key,
             context={"expected_fields": expected_fields},
         ) from exc
     if not isinstance(payload, dict):
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message=invalid_json_key,
             context={"expected_fields": expected_fields},
         )
     try:
         return model.model_validate(payload)
     except ValidationError as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message=missing_fields_key,
             context={"expected_fields": expected_fields},
         ) from exc
@@ -211,10 +211,10 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](
     refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
     are never echoed or logged.
     """
-    raw = bytearray(sys.stdin.buffer.read(_MAX_SECRETS_BYTES + 1))
+    raw = bytearray(sys.stdin.buffer.read(MAX_SECRETS_BYTES + 1))
     try:
-        if len(raw) > _MAX_SECRETS_BYTES:
-            raise _CliRefusedBoundaryError(
+        if len(raw) > MAX_SECRETS_BYTES:
+            raise CliRefusedBoundaryError(
                 translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_too_large",
             )
         return validate_secrets_payload(
@@ -291,20 +291,20 @@ def _read_secrets_fd[SecretsModelT: BaseModel](
     fault.
     """
     if descriptor < 0 or descriptor in _RESERVED_OUTPUT_DESCRIPTORS:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_reserved_stream",
             context={"descriptor": str(descriptor)},
         )
     try:
-        raw = _read_descriptor_to_bound(descriptor, maximum_bytes=_MAX_SECRETS_BYTES)
+        raw = _read_descriptor_to_bound(descriptor, maximum_bytes=MAX_SECRETS_BYTES)
     except OSError as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_unreadable",
             context={"descriptor": str(descriptor)},
         ) from exc
     try:
-        if len(raw) > _MAX_SECRETS_BYTES:
-            raise _CliRefusedBoundaryError(
+        if len(raw) > MAX_SECRETS_BYTES:
+            raise CliRefusedBoundaryError(
                 translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_too_large",
             )
         return validate_secrets_payload(
@@ -332,7 +332,7 @@ def select_machine_secret_channel(
     route is a verified terminal prompt or a refusal.
     """
     if secrets_stdin and secrets_fd is not None:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.secrets_channel_conflict",
         )
     if secrets_stdin:
@@ -350,7 +350,7 @@ def select_profile_secret_channel(
 ) -> ProfileSecretSelection | None:
     """Validate the root-scope choice without reading or authenticating."""
     if profile_secrets_stdin and profile_secrets_fd is not None:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.profile_secrets_channel_conflict",
         )
     if profile_secrets_stdin:
@@ -398,7 +398,7 @@ def read_profile_secret_payload[SecretsModelT: MachineSecretPayload](
     return _read_secrets_fd(model, descriptor=descriptor, diagnostic_prefix="profile_secrets")
 
 
-def _stdin_is_a_real_console() -> bool:
+def stdin_is_a_real_console() -> bool:
     """Return whether stdin is a genuine console, not merely a character device.
 
     ``isatty()`` is necessary but NOT sufficient on Windows. Both the ``NUL``
@@ -452,7 +452,7 @@ def terminal_can_prompt_for_secrets() -> bool:
     for the caller choosing between the hardened prompt and a different
     channel entirely.
     """
-    return stdin_is_tty() and _stdin_is_a_real_console()
+    return stdin_is_tty() and stdin_is_a_real_console()
 
 
 def write_to_controlling_terminal(text: str) -> None:
@@ -493,7 +493,7 @@ def write_to_controlling_terminal(text: str) -> None:
             the device cannot be opened.
     """
     if not terminal_can_prompt_for_secrets():
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.no_controlling_terminal_for_secret",
         )
     device = "CONOUT$" if sys.platform == "win32" else "/dev/tty"
@@ -506,7 +506,7 @@ def write_to_controlling_terminal(text: str) -> None:
             terminal.write("\n")
             terminal.flush()
     except OSError as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.no_controlling_terminal_for_secret",
         ) from exc
 
@@ -557,14 +557,14 @@ def prompt_secret_no_echo(prompt: str) -> str:
     is a blocking interactive read on a single-threaded CLI process.
     """
     if not terminal_can_prompt_for_secrets():
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
     if sys.platform == "win32" and sys.stdin is not sys.__stdin__:
         # win_getpass dispatches to the echoing fallback on exactly this
         # condition; isatty() does not detect it. POSIX is excluded because
         # unix_getpass opens /dev/tty itself and suppresses echo regardless.
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.echo_suppression_unavailable",
         )
     try:
@@ -572,17 +572,17 @@ def prompt_secret_no_echo(prompt: str) -> str:
             warnings.simplefilter("error", getpass.GetPassWarning)
             return getpass.getpass(prompt)
     except getpass.GetPassWarning as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.echo_suppression_unavailable",
         ) from exc
     except EOFError as exc:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         ) from exc
     except OSError as exc:
         # A console-less terminal layer can fail the underlying msvcrt/tty call;
         # surface this module's own refusal instead of the generic boundary.
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.echo_suppression_unavailable",
         ) from exc
 

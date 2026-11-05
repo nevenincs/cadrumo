@@ -41,7 +41,7 @@ from cadrumo.application.ledger.invoice_draft_records import (
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings
 
-from .ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,7 +107,7 @@ def _store(bucket_id: str, draft: InvoiceDraft) -> None:
 
 
 def _json_notices() -> list[dict[str, object]]:
-    result = _invoke(["--format", "json", *_REVIEW_VIEW])
+    result = invoke(["--format", "json", *_REVIEW_VIEW])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     assert envelope["command"] == "ledger.evidence.review.view", result.output
@@ -120,7 +120,7 @@ def _json_notices() -> list[dict[str, object]]:
 
 
 def _text_notice_codes() -> list[str]:
-    result = _invoke(_REVIEW_VIEW)
+    result = invoke(_REVIEW_VIEW)
     assert result.exit_code == 0, result.output
     return [line.split("\t")[1] for line in result.output.splitlines() if line.startswith("notice\t")]
 

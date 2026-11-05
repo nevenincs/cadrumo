@@ -32,13 +32,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
 from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
+from .isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -155,7 +155,7 @@ def test_auth_logout_does_not_require_yes(tmp_path: Path) -> None:
     """Logout stays non-destructive; confirmed reset clears provider configuration."""
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(label="auth-logout-ready", facts={"identity.name": "Auth", "identity.surnames": "Logout"})
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             from cadrumo.application.auth.operator import configure_operator_auth
 
             configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=operation)

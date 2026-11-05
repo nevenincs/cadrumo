@@ -19,7 +19,7 @@ from cadrumo.tests.log_records import delivered_records
 
 from .. import profile_host, session_owner
 from ..profile_host import RuntimeProfileHost
-from .test_owner_scope_reuse import _host
+from .test_owner_scope_reuse import owner_scope_reuse_host
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -28,8 +28,8 @@ _EVENT = "profile_guard_slow"
 
 
 def _slow_host(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, seconds: float) -> RuntimeProfileHost:
-    monkeypatch.setattr(profile_host, "_GUARD_SLOW_SECONDS", seconds)
-    return _host(tmp_path)[0]
+    monkeypatch.setattr(profile_host, "GUARD_SLOW_SECONDS", seconds)
+    return owner_scope_reuse_host(tmp_path)[0]
 
 
 def _guard_events(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:

@@ -106,7 +106,7 @@ def _admission_ports(
 
     monkeypatch.setattr(credentials, "effective_storage_root", lambda: tmp_path)
     monkeypatch.setattr(credentials, "open_installed_client", open_transport)
-    monkeypatch.setattr(credentials, "_authenticate_reference", authenticate_reference)
+    monkeypatch.setattr(credentials, "authenticate_reference", authenticate_reference)
     return reference
 
 

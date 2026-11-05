@@ -35,7 +35,7 @@ from ....frontend.tui.secret.automation_requester import RuntimeAutomationReques
 from ....frontend.tui.secret.automation_requester_contracts import FreshCredentialClientOpener, RequesterClientOpener
 from ....frontend.tui.secret.runtime_login import RuntimeRequesterFactory
 from ....frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
-from .test_runtime_admission import _OwnedClient
+from .test_runtime_admission import OwnedClient
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -76,7 +76,7 @@ def _session_callbacks(
     profile_id: UUID,
     requester: Literal["none", "login", "api", "api_reference", "human"],
 ) -> list[_ObservedRequester]:
-    client = _OwnedClient(profile_id)
+    client = OwnedClient(profile_id)
     method = (
         RuntimeLoginMethod.API_KEY
         if requester == "api"
@@ -226,7 +226,7 @@ def test_sessions_without_a_requester_do_not_build_the_operation_registry(
     def refuse_build() -> OperationRegistry:
         raise AssertionError("ordinary installed session built requester contracts")
 
-    monkeypatch.setattr(installed_session, "_run_registration_screen", register)
+    monkeypatch.setattr(installed_session, "run_registration_screen", register)
     monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", refuse_build)
     assert installed_session.run_installed_workbench_session(headless=scenario == "headless") == 0
     assert screens == []
@@ -258,10 +258,10 @@ def test_each_requester_receives_the_same_fully_validated_public_contract_set(
     assert screen._profile_id == profile_id
     if requester == "login":
         assert screen._client is None and screen._reviewer_client is None
-        assert screen._open_client is installed_session._open_client
+        assert screen._open_client is installed_session.open_client
     elif requester == "human":
         assert screen._client is None and screen._reviewer_client is not None
-        assert screen._open_client is installed_session._open_client
+        assert screen._open_client is installed_session.open_client
     else:
         assert screen._client is not None and screen._reviewer_client is None
         assert screen._fresh_credential_client is not None and screen._open_client is None
@@ -283,7 +283,7 @@ def test_unavailable_inventory_preserves_refusal_without_building_requester_cont
         return False
 
     monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", refuse_build)
-    monkeypatch.setattr(installed_session, "_run_installation_area", offer_installation_area)
+    monkeypatch.setattr(installed_session, "run_installation_area", offer_installation_area)
     assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
     assert capsys.readouterr().err.strip() == reason
     # The acts that can repair an installation need no profile, so they are offered before giving up.
@@ -299,7 +299,7 @@ def test_an_unlistable_inventory_is_read_again_after_the_installation_area_chang
     )
     _bootstrap(monkeypatch, iter((degraded, _recognized_inventory(profile_id))))
     screens = _session_callbacks(monkeypatch, profile_id, "none")
-    monkeypatch.setattr(installed_session, "_run_installation_area", lambda _reason: True)
+    monkeypatch.setattr(installed_session, "run_installation_area", lambda _reason: True)
 
     assert installed_session.run_installed_workbench_session() == installed_session.SESSION_COMPLETED
     assert capsys.readouterr().err == "" and screens == []
@@ -314,7 +314,7 @@ def test_a_headless_run_never_opens_the_installation_area(monkeypatch: pytest.Mo
     def refuse_area(_reason: str) -> bool:
         raise AssertionError("a headless run opened an interactive area")
 
-    monkeypatch.setattr(installed_session, "_run_installation_area", refuse_area)
+    monkeypatch.setattr(installed_session, "run_installation_area", refuse_area)
     assert (
         installed_session.run_installed_workbench_session(headless=True)
         == installed_session.SESSION_INVENTORY_UNAVAILABLE
@@ -378,9 +378,9 @@ def test_registration_reads_the_profiles_again_when_the_installation_area_change
     monkeypatch.setattr(credentials, "run_credential_screen", run_registration)
 
     # Abandoned with nothing changed: there is still no profile to sign in to.
-    assert installed_session._run_registration_screen() is False
+    assert installed_session.run_registration_screen() is False
     # Abandoned after an act that may have created or removed profiles: look again.
-    assert installed_session._run_registration_screen() is True
+    assert installed_session.run_registration_screen() is True
     assert len(opened) == 2
 
 
@@ -416,7 +416,7 @@ def test_the_operation_registry_is_shared_across_recomposition_but_fresh_in_a_se
         return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if len(observed) == 1 else None
 
     monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", build)
-    monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
+    monkeypatch.setattr(installed_session, "attempt_runtime_session", attempt)
     assert installed_session.run_installed_workbench_session() == 0
     assert len(registries) == 1 and observed[0] is observed[1]
     assert choices == [False, True]
@@ -457,7 +457,7 @@ def test_only_an_established_session_dropped_by_the_runtime_is_resumed_without_a
         return None if reason is None else AccountRecomposeRequiredV1(reason=reason)
 
     monkeypatch.setattr(installed_session.time, "monotonic", lambda: now[0])
-    monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
+    monkeypatch.setattr(installed_session, "attempt_runtime_session", attempt)
     assert installed_session.run_installed_workbench_session() == 0
     assert resumed == [True, True, False, False]
 
@@ -490,7 +490,7 @@ def test_a_failed_registry_composition_propagates_and_publishes_nothing(
         supplier()
 
     monkeypatch.setattr(operation_composition, "build_manifest_operation_registry", build)
-    monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
+    monkeypatch.setattr(installed_session, "attempt_runtime_session", attempt)
     with pytest.raises(InternalInvariantError, match="no public contract composition"):
         installed_session.run_installed_workbench_session()
     assert builds == 1

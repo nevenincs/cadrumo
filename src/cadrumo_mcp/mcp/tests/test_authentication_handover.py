@@ -54,7 +54,7 @@ _STATUS_REFUSALS = (
 )
 
 
-class _Client:
+class Client:
     def __init__(
         self, profile_id: UUID, *, fail_status: bool = False, status_flaw: str | None = None, at: datetime | None = None
     ) -> None:
@@ -143,9 +143,9 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
 ) -> None:
     monkeypatch.setattr(mcp_admission, "now", lambda: _AT)
     profile_id, reference = uuid4(), uuid4()
-    original = _Client(profile_id, at=_AT)
+    original = Client(profile_id, at=_AT)
     original_session = original.session_id
-    candidate = _Client(
+    candidate = Client(
         profile_id,
         fail_status=failure == "status",
         status_flaw=failure,
@@ -202,7 +202,7 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
     monkeypatch: pytest.MonkeyPatch, status_flaw: str | None, expected_code: str | None
 ) -> None:
     profile_id = uuid4()
-    client = _Client(profile_id, status_flaw=status_flaw, at=_AT)
+    client = Client(profile_id, status_flaw=status_flaw, at=_AT)
     samples: list[datetime] = []
 
     def sample_after_status() -> datetime:

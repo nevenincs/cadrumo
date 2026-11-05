@@ -28,7 +28,7 @@ from .windows_process_pipes import windows_parent_streams, windows_standard_pipe
 
 _LOGGER = get_logger(__name__)
 
-_LATE_EXIT_OBSERVATION_SECONDS: Final = 60.0
+LATE_EXIT_OBSERVATION_SECONDS: Final = 60.0
 """How long, after a termination missed its bound, a child that had not yet exited is still watched."""
 
 if sys.platform == "win32":
@@ -220,7 +220,7 @@ class WindowsProcessScope:
         )
         self._report_child_terminations(failure)
         if expired:
-            watch_windows_late_exit(self._children, started=observed.started, seconds=_LATE_EXIT_OBSERVATION_SECONDS)
+            watch_windows_late_exit(self._children, started=observed.started, seconds=LATE_EXIT_OBSERVATION_SECONDS)
 
     def _report_child_terminations(self, failure: BaseException | None) -> None:
         for child in self._children:
@@ -307,7 +307,7 @@ class WindowsProcessScope:
                 raise RefusalError(self._termination_failure)
             if self._job is None:
                 return ()
-            return _job_process_ids(self._job)
+            return job_process_ids(self._job)
 
     def work_done(self) -> tuple[int, ...] | None:
         """The job's accumulated processor time, page faults, processes and I/O, or ``None`` once it is released.
@@ -429,7 +429,7 @@ def _terminate_windows_job(job: int, deadline: float, observed: _JobTermination)
     terminate_job = cast("Callable[[int, int], None]", win32job.TerminateJobObject)
     query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
     try:
-        members = _retain_job_members(job)
+        members = retain_job_members(job)
     except BaseException:
         # The members still end; termination stays unproven and the caller keeps the Job for a retry.
         terminate_job(job, 1)
@@ -447,7 +447,7 @@ def _terminate_windows_job(job: int, deadline: float, observed: _JobTermination)
         _await_job_members(members, deadline)
         observed.members_signalled = round(time.monotonic() - requested, 3)
     finally:
-        _release_job_members(members)
+        release_job_members(members)
 
 
 def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float) -> None:
@@ -465,7 +465,7 @@ def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
-def _release_job_members(members: tuple[NativeWindowsHandle, ...]) -> None:
+def release_job_members(members: tuple[NativeWindowsHandle, ...]) -> None:
     """Close every retained member handle; these handles are observation only and own nothing."""
     failures: list[BaseException] = []
     for member in members:
@@ -477,7 +477,7 @@ def _release_job_members(members: tuple[NativeWindowsHandle, ...]) -> None:
         raise failures[0]
 
 
-def _job_process_ids(job: int) -> tuple[int, ...]:
+def job_process_ids(job: int) -> tuple[int, ...]:
     """Read only initialized PID slots, with bounded growth while membership changes."""
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -511,14 +511,14 @@ def _job_process_ids(job: int) -> tuple[int, ...]:
     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check="job_process_ids_unavailable")
 
 
-def _retain_job_members(job: int) -> tuple[NativeWindowsHandle, ...]:
+def retain_job_members(job: int) -> tuple[NativeWindowsHandle, ...]:
     """Open a waitable handle on every current member, confirmed in this Job so a reused PID is never waited on."""
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     import pywintypes
     import win32api
 
-    listed = _job_process_ids(job)
+    listed = job_process_ids(job)
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     observe = kernel.IsProcessInJob
     observe.argtypes = (wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL))

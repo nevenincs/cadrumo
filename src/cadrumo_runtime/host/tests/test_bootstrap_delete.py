@@ -51,8 +51,8 @@ from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .served_runtime import connect_verified
-from .test_access_management import _login
-from .test_bootstrap_reset import _MutableLogin
+from .test_access_management import login
+from .test_bootstrap_reset import MutableLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -69,7 +69,7 @@ class _DeleteRun:
     endpoint: WindowsEndpoint
     profile: UUID
     capsule: Path
-    login: _MutableLogin
+    login: MutableLogin
     profiles: RuntimeProfileConnections
     monkeypatch: pytest.MonkeyPatch
     completed_after_disconnect: Event
@@ -106,7 +106,7 @@ def _disconnect_after_acceptance(
 
 def _admit_hosted_profile(run: _DeleteRun) -> tuple[VerifiedConnection, BucketDeletionFingerprint]:
     hosted_wire = connect_verified(run.endpoint)
-    admitted = _login(hosted_wire, run.profile, method="password", proof=PROFILE_INPUT.encode())
+    admitted = login(hosted_wire, run.profile, method="password", proof=PROFILE_INPUT.encode())
     assert not isinstance(admitted, AccessRefusal), admitted
     return hosted_wire, _deletion_fingerprint(run.root, run.profile)
 
@@ -224,11 +224,11 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
     case: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    login = _MutableLogin("native-access-management-test-login")
+    login = MutableLogin("native-access-management-test-login")
     captured_channels: list[ByteChannel] = []
     completed_after_disconnect = Event()
 
-    def capture(channel: ByteChannel) -> _MutableLogin:
+    def capture(channel: ByteChannel) -> MutableLogin:
         captured_channels.append(channel)
         return login
 
@@ -458,7 +458,7 @@ def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
     tmp_path: Path, overlap: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Hold real polling after wire admission; custody stays fresh and owns durable completion."""
-    login = _MutableLogin("native-access-management-test-login")
+    login = MutableLogin("native-access-management-test-login")
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
     endpoint = WindowsEndpoint(storage_root=root)

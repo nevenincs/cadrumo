@@ -110,7 +110,7 @@ _COMPOSITION_MODULES = (
 )
 
 
-def _projection_document(result: BaseModel, *, paged: bool) -> dict[str, JsonValue]:
+def projection_document(result: BaseModel, *, paged: bool) -> dict[str, JsonValue]:
     """Keep the full result shape and validate the paged document root once."""
     serialized = result.model_dump(mode="json", serialize_as_any=True)
     if paged:
@@ -753,7 +753,7 @@ class ProfileWorkerOperationHost:
         operation_id, action = _projection_target(request)
         async with self.release(session_id, operation_id, frontend, action) as authorization:
             result = await self._resolve_projection(request, session_id, frontend, page=None)
-            yield _projection_document(result, paged=False), authorization
+            yield projection_document(result, paged=False), authorization
 
     @asynccontextmanager
     async def project_page(
@@ -791,7 +791,7 @@ class ProfileWorkerOperationHost:
             if continued is not None and continued.result is result:
                 document = continued.document
             else:
-                document = encode_projection_document(_projection_document(result, paged=True))
+                document = encode_projection_document(projection_document(result, paged=True))
                 self._paged_delivery = _PagedDelivery(operation_id, session_id, frontend, invocation, result, document)
             yield project_encoded_page(document, page), authorization
 

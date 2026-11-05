@@ -33,7 +33,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -51,7 +51,7 @@ from cadrumo.tests.cli_envelope import (
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -75,7 +75,7 @@ _PREMIUM = Decimal("240.00")
 _INVESTMENT_ASSET_ID = "BI-2025-ORDENADOR"
 
 
-def _profile_facts() -> dict[str, str]:
+def profile_facts() -> dict[str, str]:
     facts = {
         fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
         for fact in MODELO_READY_PROFILE_FACTS
@@ -88,7 +88,7 @@ def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(["--format", "json", *args])
 
 
-def _added_transaction_id(result: Result) -> str:
+def added_transaction_id(result: Result) -> str:
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
     transaction = payload["transaction"]
@@ -98,7 +98,7 @@ def _added_transaction_id(result: Result) -> str:
     return transaction_id
 
 
-def _seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
+def seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
     """Record the first-period nil compensation decision 303 asks before calculating."""
     snapshot_ref = published_snapshot("303", filing_year=2025, period="1T").snapshot_ref
     with open_test_profile_session(bucket_id):
@@ -173,8 +173,8 @@ def _register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Dec
     return evidence_id
 
 
-def _add_sale() -> str:
-    return _added_transaction_id(
+def add_sale() -> str:
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -207,7 +207,7 @@ def _add_taxable_purchase(tmp_path: Path, *, extra_options: tuple[str, ...] = ()
     evidence_id = _register_purchase_invoice_evidence(
         tmp_path, label="corriente", base=_PURCHASE_BASE, cuota=_PURCHASE_CUOTA
     )
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -247,7 +247,7 @@ def _add_investment_purchase(tmp_path: Path) -> str:
     evidence_id = _register_purchase_invoice_evidence(
         tmp_path, label="inversion", base=_INVESTMENT_BASE, cuota=_INVESTMENT_CUOTA
     )
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -310,7 +310,7 @@ def _declare_bien_inversion(acquisition_ledger_id: str) -> None:
 
 
 def _add_reta_quota() -> str:
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -342,7 +342,7 @@ def _add_reta_quota() -> str:
 
 
 def _add_exempt_premium() -> str:
-    return _added_transaction_id(
+    return added_transaction_id(
         _invoke(
             [
                 "app",
@@ -396,12 +396,12 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
 ) -> None:
     """All five rows reach one 2025 1T calculation, and the casillas match hand arithmetic."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     _add_taxable_purchase(tmp_path)
     _declare_bien_inversion(_add_investment_purchase(tmp_path))
     _add_reta_quota()
@@ -456,12 +456,12 @@ def test_an_investment_asset_id_without_its_register_record_is_refused(
     without declaring the record.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     investment_transaction_id = _add_investment_purchase(tmp_path)
 
     refused = _calculate_1t()
@@ -487,12 +487,12 @@ def test_a_reta_quota_without_its_iva_substrate_still_blocks_the_quarter(
     undeclared base on a return, so the remedy stays the operator's declaration.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    bare = _added_transaction_id(
+    bare = added_transaction_id(
         _invoke(
             [
                 "app",
@@ -532,10 +532,10 @@ def test_the_declared_substrate_unblocks_the_same_row(request: pytest.FixtureReq
     blocked the quarter but that nothing the operator could declare unblocked it.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
     quota = _add_reta_quota()
     assert quota
@@ -554,13 +554,13 @@ def test_a_deduction_claimed_on_the_exempt_premium_is_refused_by_the_cli(
 ) -> None:
     """A premium that bore no cuota cannot claim one, and the refusal names the row."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
     evidence_id = _register_purchase_invoice_evidence(tmp_path, label="prima", base=_PREMIUM, cuota=Decimal("0.00"))
-    premium = _added_transaction_id(
+    premium = added_transaction_id(
         _invoke(
             [
                 "app",
@@ -616,12 +616,12 @@ def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
     asset is corrected rather than quietly carrying a link nothing reads.
     """
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
-    seeded_profile(label="operator", facts=_profile_facts())
+    seeded_profile(label="operator", facts=profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_zero_compensation_wallet_decision(bucket_id)
+    seed_zero_compensation_wallet_decision(bucket_id)
 
-    _add_sale()
+    add_sale()
     purchase = _add_taxable_purchase(
         tmp_path,
         extra_options=("--investment-asset-id", _INVESTMENT_ASSET_ID),

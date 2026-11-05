@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from click.testing import Result
 
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
@@ -84,13 +84,13 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
     )
 
     assert added.exit_code == 0, added.output
-    added_payload = _json(added)
+    added_payload = unwrap_cli_result(added)
     transaction = added_payload["transaction"]
     assert transaction["iva_category"] == "domestic_general"
 
     viewed = _invoke(["--format", "json", "app", "ledger", "view", added_payload["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
-    viewed_transaction = _json(viewed)["transaction"]
+    viewed_transaction = unwrap_cli_result(viewed)["transaction"]
     assert viewed_transaction["iva_category"] == "domestic_general"
 
 
@@ -128,7 +128,7 @@ def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
     )
 
     assert added.exit_code == 0, added.output
-    transaction = _json(added)["transaction"]
+    transaction = unwrap_cli_result(added)["transaction"]
     assert transaction["iva_category"] == "intra_community_supply"
     assert transaction["counterparty_country"] == "DE"
     assert transaction["source_jurisdiction"] == "DE"
@@ -172,10 +172,10 @@ def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
         ],
     )
     assert added.exit_code == 0, added.output
-    transaction = _json(added)["transaction"]
+    transaction = unwrap_cli_result(added)["transaction"]
     assert Decimal(transaction["business_pct"]) == Decimal("0.60")
     assert transaction["usage_ratio_id"] == "telefonia_fija"
 
-    viewed = _invoke(["--language", "en", "app", "ledger", "view", _json(added)["transaction_id"]])
+    viewed = _invoke(["--language", "en", "app", "ledger", "view", unwrap_cli_result(added)["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
     assert "Usage ratio id\ttelefonia_fija" in viewed.output

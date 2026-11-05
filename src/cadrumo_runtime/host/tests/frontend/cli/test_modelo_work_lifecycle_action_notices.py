@@ -11,7 +11,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -22,12 +22,12 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
 )
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 
 from .cli_runner import semantic_cli_output
 from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
@@ -48,7 +48,9 @@ def _seed_discarded_work(work_unit_id: str) -> None:
 
 
 def _notice(output: str, code: str) -> dict[str, object]:
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(next(item for item in _notices(output) if item["code"] == code))
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(
+        next(item for item in unwrap_envelope_notices(output) if item["code"] == code)
+    )
 
 
 def _discarded_work_evidence(work_unit_id: str) -> dict[str, str | int]:

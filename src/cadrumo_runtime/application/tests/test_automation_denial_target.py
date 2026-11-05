@@ -11,7 +11,7 @@ from cadrumo.application.user_profile.automation_lifecycle import AutomationDeni
 from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-from ._session_authority_support import Subject, lifecycle
+from .session_authority_support import Subject, lifecycle
 
 pytestmark = [
     pytest.mark.integration,

@@ -14,7 +14,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 )
 from cadrumo.core.i18n.render import tr
 
-from .automation_inventory_details import _grant_detail, _key_detail, _request_detail
+from .automation_inventory_details import grant_detail, key_detail, request_detail
 
 if TYPE_CHECKING:
     from .automation_inventory import RuntimeAutomationInventoryScreen
@@ -32,11 +32,11 @@ def _table_row(item: object) -> tuple[str, str, str]:
 
 def _first_detail(inventory: AutomationInventoryProjection) -> str:
     if inventory.grants:
-        return _grant_detail(inventory.grants[0])
+        return grant_detail(inventory.grants[0])
     if inventory.requests:
-        return _request_detail(inventory.requests[0])
+        return request_detail(inventory.requests[0])
     if inventory.keys:
-        return _key_detail(inventory.keys[0])
+        return key_detail(inventory.keys[0])
     return tr("tui.automation_inventory.empty")
 
 
@@ -97,17 +97,17 @@ class AutomationInventoryViewMixin:
             self._selected_review = None
             grant = inventory.grants[index]
             self._select_disclosures(grant.grant_id, grant.scope.disclosure_digest)
-            details = _grant_detail(grant)
+            details = grant_detail(grant)
         elif table.id == "automation-inventory-keys" and index < len(inventory.keys):
             self._selected_review = None
             self._select_disclosures(None, None)
-            details = _key_detail(inventory.keys[index])
+            details = key_detail(inventory.keys[index])
         elif table.id == "automation-inventory-requests" and index < len(inventory.requests):
             self._selected_review = inventory.requests[index]
             self._select_disclosures(
                 self._selected_review.receipt.request_id, self._selected_review.proposal.scope.disclosure_digest
             )
-            details = _request_detail(self._selected_review)
+            details = request_detail(self._selected_review)
         else:
             return
         self.query_one("#automation-inventory-details", Static).update(details)

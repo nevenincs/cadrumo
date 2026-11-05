@@ -26,7 +26,7 @@ from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from .profile.automation_inventory import RuntimeAutomationInventoryScreen
-from .runtime_access_actions import _BUTTON_ACTIONS, _RuntimeAccessActionsMixin
+from .runtime_access_actions import BUTTON_ACTIONS, RuntimeAccessActionsMixin
 from .runtime_access_projection import session_rows
 from .runtime_recovery_client import RecoveryClientCleanup, RecoveryClientOpener
 
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
 
-class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None]):
+class RuntimeAccessManagementScreen(RuntimeAccessActionsMixin, ModalScreen[None]):
     """Borrow one admitted TUI client and separately own each recovery connection.
 
     The installed account lifecycle supplies the exact admitted connection.
@@ -303,7 +303,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
             return
         if self._inventory_button(button_id):
             return
-        action = _BUTTON_ACTIONS.get(button_id or "")
+        action = BUTTON_ACTIONS.get(button_id or "")
         if action is None or (action == "resume" and self._resume_fenced()):
             return
         self._worker = self.run_worker(self._perform(action), group="runtime-access", exclusive=True)

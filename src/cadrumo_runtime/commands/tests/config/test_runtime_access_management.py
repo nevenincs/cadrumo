@@ -45,7 +45,7 @@ from cadrumo_client.contracts.profile_access import SessionsLocked
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...access_management_specs import RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS
-from ...runtime_access_management import ProfileResumeSecrets, _lock_result, _resume_password, _session_payload
+from ...runtime_access_management import ProfileResumeSecrets, lock_result, resume_password, session_payload
 from .runtime_cli import invoke_runtime_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -140,7 +140,7 @@ def test_session_payload_flattens_periods_and_reports_remaining_access() -> None
         ),
         expires_at=instant + timedelta(seconds=70),
     )
-    projected = _session_payload(session, instant=instant)
+    projected = session_payload(session, instant=instant)
     assert projected.profile_id == profile_id
     assert projected.remaining_seconds == 70
     assert projected.scope.periods is not None
@@ -157,7 +157,7 @@ def test_resume_password_consumes_staged_bounded_secret_once() -> None:
     assert selection is not None
     try:
         stage_machine_secret_payload(ProfileResumeSecrets(passphrase=SecretStr(proof_text)))
-        proof = _resume_password(secrets_stdin=True, secrets_fd=None)
+        proof = resume_password(secrets_stdin=True, secrets_fd=None)
         assert proof == proof_text.encode("utf-8")
         proof[:] = bytes(len(proof))
         assert not any(proof)
@@ -235,7 +235,7 @@ def test_selected_session_lock_preserves_exact_requested_target_and_returned_cas
     target = uuid4()
     child = uuid4()
     client.cascade = (target, child)
-    result = _lock_result(client, all_sessions=False, session=target)
+    result = lock_result(client, all_sessions=False, session=target)
     assert client.calls == [f"selected:{target}"]
     assert result.scope == "selected"
     assert result.target_session_id == target
@@ -247,15 +247,15 @@ def test_selected_session_lock_preserves_exact_requested_target_and_returned_cas
 def test_lock_selectors_are_mutually_exclusive_and_default_remains_current() -> None:
     client = _LockClient()
     with pytest.raises(CliRefusedBoundaryError):
-        _lock_result(client, all_sessions=True, session=uuid4())
+        lock_result(client, all_sessions=True, session=uuid4())
     assert client.calls == []
     current_id = client.session_id
-    current = _lock_result(client, all_sessions=False, session=None)
+    current = lock_result(client, all_sessions=False, session=None)
     assert current.scope == "current"
     assert current.target_session_id is None
     assert current.session_ids == (current_id,)
     assert client.calls == ["current"]
-    global_result = _lock_result(client, all_sessions=True, session=None)
+    global_result = lock_result(client, all_sessions=True, session=None)
     assert global_result.scope == "profile"
     assert global_result.denial is not None
     assert client.calls[-1] == AutomationDenialKind.PROFILE_LOCK.value

@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ._profile_cli_support import partial_taxpayer_invoker
+from .profile_cli_support import partial_taxpayer_invoker
 
 pytestmark = [
     pytest.mark.integration,

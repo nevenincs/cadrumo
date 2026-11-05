@@ -30,7 +30,7 @@ from .service_support import service_failure
 
 _LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
-_MAX_STARTUP_FRAME_BYTES = 64 * 1024
+MAX_STARTUP_FRAME_BYTES = 64 * 1024
 _CLAIM_RETRY_SECONDS = 1.0
 _RECOVERY_SLACK_SECONDS = 1.0
 """How long past a recovery window the service waits for the runtime's cue before it reads its lease again."""
@@ -44,10 +44,10 @@ def _process_uptime() -> float:
         return -1.0
 
 
-def _read_startup_frame(stdin_fd: int) -> bytearray:
+def read_startup_frame(stdin_fd: int) -> bytearray:
     """Read one bounded startup line without buffering past its newline."""
     line = bytearray()
-    while len(line) <= _MAX_STARTUP_FRAME_BYTES:
+    while len(line) <= MAX_STARTUP_FRAME_BYTES:
         part = os.read(stdin_fd, 1)
         if not part:
             break
@@ -57,7 +57,7 @@ def _read_startup_frame(stdin_fd: int) -> bytearray:
     return line
 
 
-def _wait_out_recovery(service: AgentService, wake: Event) -> bool:
+def wait_out_recovery(service: AgentService, wake: Event) -> bool:
     """Wait for a suspended lease to return, and say whether it was suspended.
 
     The runtime cues this connection when its parent rebinds and again if the
@@ -101,9 +101,9 @@ def _serve() -> None:
     wake = Event()
     try:
         stdin_fd = sys.stdin.fileno()
-        line = _read_startup_frame(stdin_fd)
+        line = read_startup_frame(stdin_fd)
         try:
-            if len(line) > _MAX_STARTUP_FRAME_BYTES or not line.endswith(b"\n"):
+            if len(line) > MAX_STARTUP_FRAME_BYTES or not line.endswith(b"\n"):
                 raise ValueError("invalid_startup_frame")
             frame = ServiceStartupFrame.model_validate_json(line)
             bearer = bytearray(frame.bearer, "ascii")
@@ -146,7 +146,7 @@ def _serve() -> None:
                 # as EOF. The final cleanup path still owns service teardown.
                 pass
             finally:
-                _end_lifetime(service, stop, wake)
+                end_lifetime(service, stop, wake)
 
         Thread(target=lifetime_ended, name="agent-service-lifetime", daemon=True).start()
         connected = client.connected
@@ -171,14 +171,14 @@ def _serve() -> None:
                 "service_id": SERVICE_ID,
             }
         )
-        _run_service_loop(client, service, stop, wake)
+        run_service_loop(client, service, stop, wake)
     except Exception as error:
         _publish(service_failure(error))
     finally:
         _close_service(service, server, client, relay, bearer, gateway_bearer)
 
 
-def _end_lifetime(service: AgentService, stop: Event, wake: Event) -> None:
+def end_lifetime(service: AgentService, stop: Event, wake: Event) -> None:
     """End the service at its parent's close, marking the end before the connection closes.
 
     Closing the service also closes its runtime connection, which cuts short
@@ -192,13 +192,13 @@ def _end_lifetime(service: AgentService, stop: Event, wake: Event) -> None:
         wake.set()
 
 
-def _run_service_loop(client: InstalledServiceClient, service: AgentService, stop: Event, wake: Event) -> None:
+def run_service_loop(client: InstalledServiceClient, service: AgentService, stop: Event, wake: Event) -> None:
     admitted = False
     started = False
     while not stop.is_set():
         # Clear before claiming, so a push that lands during the claim wakes the next turn.
         wake.clear()
-        if _wait_out_recovery(service, wake):
+        if wait_out_recovery(service, wake):
             continue
         claimed, lease = _claim_or_retry(client, wake, stop)
         if not claimed:

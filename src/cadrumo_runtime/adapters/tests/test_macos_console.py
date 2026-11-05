@@ -140,7 +140,7 @@ def test_malformed_snapshots_are_unknown(snapshot: object) -> None:
 def test_two_equal_snapshots_return_console_state(monkeypatch: pytest.MonkeyPatch) -> None:
     snapshots = iter([_snapshot(), _snapshot()])
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
-    monkeypatch.setattr(macos_console, "_registry_snapshot", lambda: next(snapshots))
+    monkeypatch.setattr(macos_console, "registry_snapshot", lambda: next(snapshots))
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNLOCKED
 
 
@@ -157,7 +157,7 @@ def test_changed_snapshots_are_unknown(change: str, monkeypatch: pytest.MonkeyPa
         first["IOConsoleUsers"][0]["kCGSessionLoginDoneKey"] = 1
     snapshots = iter([first, second])
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
-    monkeypatch.setattr(macos_console, "_registry_snapshot", lambda: next(snapshots))
+    monkeypatch.setattr(macos_console, "registry_snapshot", lambda: next(snapshots))
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
 
 
@@ -165,7 +165,7 @@ def test_changed_snapshots_are_unknown(change: str, monkeypatch: pytest.MonkeyPa
 def test_missing_snapshots_are_unknown(first: object, second: object, monkeypatch: pytest.MonkeyPatch) -> None:
     snapshots = iter([first, second])
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
-    monkeypatch.setattr(macos_console, "_registry_snapshot", lambda: next(snapshots))
+    monkeypatch.setattr(macos_console, "registry_snapshot", lambda: next(snapshots))
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
 
 
@@ -175,7 +175,7 @@ def test_native_snapshot_errors_are_unknown(error: type[Exception], monkeypatch:
         raise error("unavailable")
 
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
-    monkeypatch.setattr(macos_console, "_registry_snapshot", fail)
+    monkeypatch.setattr(macos_console, "registry_snapshot", fail)
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
 
 
@@ -217,7 +217,7 @@ def test_unknown_observation_logs_only_a_reason_code(
         events.append((event, fields, level))
 
     monkeypatch.setattr(macos_console.sys, "platform", "darwin")
-    monkeypatch.setattr(macos_console, "_registry_snapshot", read_snapshot)
+    monkeypatch.setattr(macos_console, "registry_snapshot", read_snapshot)
     monkeypatch.setattr(macos_console, "diagnostic_event", record)
     assert macos_console.observe_console_lock("501", 100022) is OsLockState.UNKNOWN
     assert events == [("macos_console_observation_unavailable", {"reason_code": reason}, logging.DEBUG)]
@@ -253,6 +253,6 @@ def test_registry_snapshot_releases_error_document_and_root_on_encode_failure(mo
         CFRelease=NativeFunction(),
     )
     monkeypatch.setattr(macos_console.ctypes, "CDLL", lambda path: iokit if "IOKit" in path else cf)
-    assert macos_console._registry_snapshot() is None
+    assert macos_console.registry_snapshot() is None
     assert [args[0].value for args in cf.CFRelease.calls] == [22, 11]
     assert iokit.IOObjectRelease.calls == [(7,)]

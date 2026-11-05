@@ -63,7 +63,7 @@ pytestmark = [
 ]
 
 
-def _no_activity_authority(_: object) -> NoReturn:
+def no_activity_authority(_: object) -> NoReturn:
     raise AssertionError("activity observation must not request credentials or authority")
 
 
@@ -121,8 +121,8 @@ def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSe
     owner = ProfileWorkerSessionOwner(
         worker.identity,
         storage_root=root,
-        observe=_no_activity_authority,
-        human_secret=_no_activity_authority,
+        observe=no_activity_authority,
+        human_secret=no_activity_authority,
         guard=RLock(),
     )
     owner._worker = worker
@@ -160,7 +160,7 @@ def test_unanswered_activity_probe_keeps_the_busy_worker_and_its_sessions(
     import win32event
 
     control_budget = 1.0
-    monkeypatch.setattr(profile_worker_transport, "_CONTROL_EXCHANGE_SECONDS", control_budget)
+    monkeypatch.setattr(profile_worker_transport, "CONTROL_EXCHANGE_SECONDS", control_budget)
 
     armed_name, entered_name, release_name = (f"Local\\cadrumo-probe-test-{uuid4()}" for _ in range(3))
     armed, entered, release = (
@@ -237,7 +237,7 @@ def test_native_contention_refuses_custody_observation_but_only_worker_death_los
             owner.close()
 
 
-def _profile_baseline(profile_id: object) -> tuple[int, str]:
+def profile_baseline(profile_id: object) -> tuple[int, str]:
     """Read the real encrypted record before handing custody to a native worker."""
     _, decode = profile_authority_contexts()
     authenticate_profile_for_invocation(
@@ -323,7 +323,7 @@ class BoundaryAuthority(UnavailableApprovalAuthority):
 def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path: Path, deny_commit: bool) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
+        expected_revision, expected_digest = profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=deny_commit)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         activity = _activity_owner(worker, root)
@@ -462,7 +462,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
 def test_custody_control_retires_while_operation_waits_for_profile_authority(tmp_path: Path) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
+        expected_revision, expected_digest = profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=False)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         try:

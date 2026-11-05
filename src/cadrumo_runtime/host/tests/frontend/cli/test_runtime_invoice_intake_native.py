@@ -13,7 +13,7 @@ from click.testing import Result
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._profile_cli_support import invoke_native_profile
+from .profile_cli_support import invoke_native_profile
 
 pytestmark = [
     pytest.mark.integration,

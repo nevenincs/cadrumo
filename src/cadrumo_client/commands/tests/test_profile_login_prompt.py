@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
@@ -31,7 +31,7 @@ from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ..custody import _login_through_the_prompt
+from ..custody import login_through_the_prompt
 from ..errors import CliRefusedBoundaryError
 from ..secure_input import MachineSecretChannel, MachineSecretSelection
 from .runtime_target_double import answer_login_targets_locally
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
     from pytest import MonkeyPatch
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -203,7 +203,7 @@ def test_explicit_password_reads_once_wipes_and_persists(monkeypatch: MonkeyPatc
     try:
         os.write(writer, json.dumps({"passphrase": _PASSWORD}).encode())
         os.close(writer)
-        outcome = _login_through_the_prompt(
+        outcome = login_through_the_prompt(
             _ctx(),
             name=str(profile_id),
             machine_secret=MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, reader),
@@ -232,7 +232,7 @@ def test_receipt_resume_avoids_prompt_and_preserves_deadlines(monkeypatch: Monke
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
     monkeypatch.setattr("cadrumo_client.commands.custody.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
 
-    outcome = _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
+    outcome = login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
     assert client.calls == ["resume", "status", "close"]
     assert outcome.already_authenticated and outcome.session_persisted
@@ -248,7 +248,7 @@ def test_receipt_resume_without_a_console_reuses_the_live_sign_in(monkeypatch: M
     _install_client(monkeypatch, client)
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: False)
 
-    outcome = _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
+    outcome = login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
     assert client.calls == ["resume", "status", "close"]
     assert outcome.already_authenticated and outcome.session_persisted
@@ -263,7 +263,7 @@ def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: Monke
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: False)
 
     with pytest.raises(CliRefusedBoundaryError):
-        _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
+        login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
     assert client.calls == ["resume", "close"]
     assert client.password_buffer is None
@@ -280,7 +280,7 @@ def test_a_login_writes_no_selection_and_leaves_a_concurrent_one_standing(monkey
     _install_client(monkeypatch, client)
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
 
-    outcome = _login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
+    outcome = login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
     selected = observe_active_profile_pointer()
 
     # The runtime is the selection's only writer; this command wrote none over the concurrent one.
@@ -302,7 +302,7 @@ def test_concurrent_sign_in_to_the_same_profile_is_not_a_selection_conflict(monk
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
     published = observe_active_profile_pointer()
 
-    outcome = _login_through_the_prompt(_ctx(), name=str(target_id), machine_secret=None)
+    outcome = login_through_the_prompt(_ctx(), name=str(target_id), machine_secret=None)
 
     assert outcome.bucket_id == str(target_id)
     assert client.calls == ["resume", "status", "close"]
@@ -313,7 +313,7 @@ def test_concurrent_sign_in_to_the_same_profile_is_not_a_selection_conflict(monk
 
 
 def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
-    monkeypatch: MonkeyPatch, _isolated_cli_backend: Path
+    monkeypatch: MonkeyPatch, isolated_cli_backend: Path
 ) -> None:
     first_id = UUID(register_cli_profile(label="Existing login", log_in=False))
     second_id = UUID(register_cli_profile(label="Failed candidate", log_in=False))
@@ -324,7 +324,7 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, _KeyringError, _KeyringError)
     )
     synthetic_receipt = receipt_store.mint_profile_session(
-        storage_root=_isolated_cli_backend,
+        storage_root=isolated_cli_backend,
         profile_id=first_id,
         custody_generation=1,
         dek_epoch="synthetic-first-profile-epoch",
@@ -333,10 +333,10 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         idle_minutes=15,
         absolute_minutes=240,
         login_id=RECEIPT_LOGIN_ID,
-        sign_in=committed_sign_in(_isolated_cli_backend, first_id),
-        generation=committed_sign_in(_isolated_cli_backend, first_id).establish().current,
+        sign_in=committed_sign_in(isolated_cli_backend, first_id),
+        generation=committed_sign_in(isolated_cli_backend, first_id).establish().current,
     )
-    receipt_path = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
+    receipt_path = receipt_store.profile_session_path(storage_root=isolated_cli_backend, profile_id=first_id)
     original_receipt = receipt_path.read_bytes()
     original_key = keyring.entries[
         (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{first_id}:{synthetic_receipt.session_id}")
@@ -350,7 +350,7 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         os.write(writer, json.dumps({"passphrase": _PASSWORD}).encode())
         os.close(writer)
         with pytest.raises(CliRefusedBoundaryError):
-            _login_through_the_prompt(
+            login_through_the_prompt(
                 _ctx(),
                 name=str(second_id),
                 machine_secret=MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, reader),

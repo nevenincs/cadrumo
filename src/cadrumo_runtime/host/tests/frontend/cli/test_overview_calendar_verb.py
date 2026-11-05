@@ -48,16 +48,16 @@ from cadrumo.entrypoints.live_state_composition import compose_notifications_por
 from cadrumo.entrypoints.overview_evidence_composition import live_censo_verified_profile_keys
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from . import _overview_calendar_support
-from ._overview_calendar_support import (
-    _CALENDAR_GATING_FACT_OVERRIDES,
-    _SOURCE_URL,
+from . import overview_calendar_support
+from .overview_calendar_support import (
+    CALENDAR_GATING_FACT_OVERRIDES,
     PRIMARY_PROFILE_ID,
-    _justificante_metadata,
-    _modelo_record_with_external_justificante,
-    _stamp_calendar_enrolment_from_censo,
+    SOURCE_URL,
+    justificante_metadata,
+    modelo_record_with_external_justificante,
+    stamp_calendar_enrolment_from_censo,
 )
-from ._overview_native_support import invoke_native_overview
+from .overview_native_support import invoke_native_overview
 
 __all__ = ["isolated_backend"]
 
@@ -79,21 +79,21 @@ def isolated_backend(tmp_path: Path) -> Iterator[None]:
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label="operator",
-            facts={**_CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "57964777Q"},
+            facts={**CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "57964777Q"},
         )
         from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
         resolved = str(ProfileCapsuleLifecycle().select("operator").profile_id)
         previous = PRIMARY_PROFILE_ID
         PRIMARY_PROFILE_ID = resolved
-        _overview_calendar_support.PRIMARY_PROFILE_ID = resolved
+        overview_calendar_support.PRIMARY_PROFILE_ID = resolved
         token = _ACTIVE_NATIVE.set(fixture)
         try:
             yield
         finally:
             _ACTIVE_NATIVE.reset(token)
             PRIMARY_PROFILE_ID = previous
-            _overview_calendar_support.PRIMARY_PROFILE_ID = previous
+            overview_calendar_support.PRIMARY_PROFILE_ID = previous
 
 
 # The pipe-joined choice set, bracket-agnostic: Typer renders a Choice
@@ -206,7 +206,7 @@ def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
 
 
 def test_calendar_accepts_censo_stamped_enrolment() -> None:
-    _stamp_calendar_enrolment_from_censo()
+    stamp_calendar_enrolment_from_censo()
 
     result = _invoke(
         [
@@ -544,7 +544,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
                     leida=False,
-                    source_url=str(_SOURCE_URL),
+                    source_url=str(SOURCE_URL),
                 ),
                 RemoteNotification(
                     certificado_id="2699101808461",
@@ -557,11 +557,11 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
                     leida=True,
-                    source_url=str(_SOURCE_URL),
+                    source_url=str(SOURCE_URL),
                 ),
             ),
             captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
-            source_url=str(_SOURCE_URL),
+            source_url=str(SOURCE_URL),
         ),
     )
 
@@ -594,7 +594,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
 
 
 def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
-    _stamp_calendar_enrolment_from_censo()
+    stamp_calendar_enrolment_from_censo()
     ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
@@ -658,10 +658,10 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
 
 
 def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
-    _stamp_calendar_enrolment_from_censo()
+    stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
-    record = _modelo_record_with_external_justificante(
+    record = modelo_record_with_external_justificante(
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
@@ -749,10 +749,10 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
 
 
 def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
-    _stamp_calendar_enrolment_from_censo()
+    stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
-    record = _modelo_record_with_external_justificante(
+    record = modelo_record_with_external_justificante(
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
@@ -837,9 +837,9 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
 
 
 def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante() -> None:
-    _stamp_calendar_enrolment_from_censo()
+    stamp_calendar_enrolment_from_censo()
     csv = "CSVREG-303-2025-1T"
-    record = _modelo_record_with_external_justificante(
+    record = modelo_record_with_external_justificante(
         csv=csv,
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
     )
@@ -896,12 +896,12 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
 
 def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     csv = "JUST3032025X1T7"
-    record = _modelo_record_with_external_justificante(csv=csv)
-    _stamp_calendar_enrolment_from_censo()
+    record = modelo_record_with_external_justificante(csv=csv)
+    stamp_calendar_enrolment_from_censo()
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
-        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="57964777Q"))
+        JustificanteRepository().save(justificante_metadata(csv=csv, tax_id="57964777Q"))
 
     result = _invoke(
         [

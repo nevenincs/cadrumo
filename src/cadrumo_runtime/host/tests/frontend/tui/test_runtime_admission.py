@@ -54,7 +54,7 @@ class _RootFailureError(Exception):
     pass
 
 
-class _OwnedClient(FrontendClient):
+class OwnedClient(FrontendClient):
     """Synthetic transport outcome; only frontend resource ownership is tested."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -151,7 +151,7 @@ class _OwnedClient(FrontendClient):
 @pytest.mark.parametrize("root_fails", [False, True])
 async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_fails: bool) -> None:
     profile_id = uuid4()
-    client = _OwnedClient(profile_id)
+    client = OwnedClient(profile_id)
 
     async def open_client(selected: UUID) -> FrontendClient:
         assert selected == profile_id
@@ -189,7 +189,7 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
 async def test_explicit_preselected_profile_resumes_before_password_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id = uuid4()
 
-    class ResumeClient(_OwnedClient):
+    class ResumeClient(OwnedClient):
         @override
         def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
             return super().login_password(bytearray(b"synthetic-proof"))
@@ -212,7 +212,7 @@ async def test_explicit_preselected_profile_resumes_before_password_prompt(monke
     assert client.closed == 1
 
 
-class _RefusedResumeClient(_OwnedClient):
+class _RefusedResumeClient(OwnedClient):
     """A connection whose saved sign-in the runtime refuses for one typed reason."""
 
     def __init__(self, profile_id: UUID, refusal: ProfileReceiptRefusedError) -> None:
@@ -236,7 +236,7 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
 ) -> None:
     profile_id = uuid4()
     resumed = _RefusedResumeClient(profile_id, ProfileReceiptRefusedError(reason))
-    password = _OwnedClient(profile_id)
+    password = OwnedClient(profile_id)
     clients = iter((resumed, password))
     seen: list[tuple[str, bool]] = []
 
@@ -352,7 +352,7 @@ async def test_cancelled_login_does_not_create_or_transfer_a_client() -> None:
 @pytest.mark.asyncio
 async def test_stored_reference_handoff_stays_owned_through_restricted_session_scope() -> None:
     profile_id, reference = uuid4(), uuid4()
-    client = _OwnedClient(profile_id)
+    client = OwnedClient(profile_id)
     calls: list[tuple[UUID, UUID]] = []
 
     async def open_client(_selected: UUID) -> FrontendClient:
@@ -393,7 +393,7 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
 async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: str) -> None:
     profile_id = uuid4()
 
-    class FailingClient(_OwnedClient):
+    class FailingClient(OwnedClient):
         def __init__(self) -> None:
             super().__init__(profile_id)
             self.attempts = 0

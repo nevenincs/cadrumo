@@ -44,7 +44,7 @@ _SUCCESSOR = b"synthetic-worker-password-successor"
 
 
 @contextmanager
-def _native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor, UUID, Path]]:
+def native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor, UUID, Path]]:
     """Launch a real installed server over synthetic OS and native-store ports."""
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[0][0].binding.profile_id
@@ -92,25 +92,25 @@ def _native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor, U
                     endpoint.close()
 
 
-def _fresh_client(launch: LaunchDoor, profile_id: UUID, timeout: float = 90) -> FrontendClient:
+def runtime_password_rotation_fresh_client(launch: LaunchDoor, profile_id: UUID, timeout: float = 90) -> FrontendClient:
     return asyncio.run(
         FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI, timeout=timeout)
     )
 
 
 def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: Path) -> None:
-    with _native_runtime(tmp_path) as (profile_id, other_profile_id, launch, installation_id, root):
+    with native_runtime(tmp_path) as (profile_id, other_profile_id, launch, installation_id, root):
         before = current_automation_profile_binding(
             profile_id=profile_id, installation_id=installation_id, os_owner_id=owner_id(), root=root
         )
 
         def fresh_client(timeout: float = 90) -> FrontendClient:
-            return _fresh_client(launch, profile_id, timeout)
+            return runtime_password_rotation_fresh_client(launch, profile_id, timeout)
 
         with (
             fresh_client() as client,
             fresh_client() as sibling,
-            _fresh_client(launch, other_profile_id) as other_profile,
+            runtime_password_rotation_fresh_client(launch, other_profile_id) as other_profile,
         ):
             other_profile.login_password(bytearray(PROFILE_INPUT.encode()))
             assert other_profile.status().status.connected
@@ -156,13 +156,13 @@ def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: 
 
 
 def test_wrong_current_password_refuses_without_retiring_original_session(tmp_path: Path) -> None:
-    with _native_runtime(tmp_path) as (profile_id, _other_profile_id, launch, installation_id, root):
+    with native_runtime(tmp_path) as (profile_id, _other_profile_id, launch, installation_id, root):
         before = current_automation_profile_binding(
             profile_id=profile_id, installation_id=installation_id, os_owner_id=owner_id(), root=root
         )
 
         def fresh_client(timeout: float = 90) -> FrontendClient:
-            return _fresh_client(launch, profile_id, timeout)
+            return runtime_password_rotation_fresh_client(launch, profile_id, timeout)
 
         with fresh_client() as client:
             client.login_password(bytearray(PROFILE_INPUT.encode()))

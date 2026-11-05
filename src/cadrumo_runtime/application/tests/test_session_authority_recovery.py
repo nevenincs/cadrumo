@@ -28,7 +28,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import (
+from .session_authority_support import (
     LifecycleOwner,
     Recovery,
     Subject,

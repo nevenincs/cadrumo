@@ -23,7 +23,7 @@ from ...adapters.worker_transport import WorkerChannel, worker_endpoint
 from ..view_stream_state import close_view_leg_quietly
 from ..view_stream_worker_link import open_worker_view_leg
 from ..worker_view_stream import WorkerViewStream
-from .test_view_stream_relay import _operation_id, _same_process_worker
+from .test_view_stream_relay import same_process_worker, view_stream_relay_operation_id
 from .view_stream_host_support import synthetic_worker_identity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -44,7 +44,7 @@ def test_a_refusal_that_keeps_listeners_listening_leaves_the_view_listener_servi
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refusal: RefusalCode
 ) -> None:
     identity = synthetic_worker_identity()
-    bind = ViewWorkerBind(operation_id=_operation_id(), session_id=uuid4())
+    bind = ViewWorkerBind(operation_id=view_stream_relay_operation_id(), session_id=uuid4())
     endpoint = worker_endpoint(storage_root=tmp_path, worker_namespace=worker_view_namespace(identity.worker_id))
     real_accept = endpoint.accept
     refused: list[bool] = []
@@ -67,7 +67,7 @@ def test_a_refusal_that_keeps_listeners_listening_leaves_the_view_listener_servi
     try:
         _wait_until(lambda: bool(refused))
         bound, channel = open_worker_view_leg(
-            storage_root=tmp_path, identity=identity, verify=_same_process_worker, product_version=_VERSION
+            storage_root=tmp_path, identity=identity, verify=same_process_worker, product_version=_VERSION
         )
         legs.append(channel)
         assert bound == bind

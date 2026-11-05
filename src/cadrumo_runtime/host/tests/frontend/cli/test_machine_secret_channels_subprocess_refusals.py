@@ -14,21 +14,21 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import (
     register_password_only_profile,
 )
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo_runtime.host.tests.frontend.cli._machine_secret_channels_support import (
-    _NEW_PROFILE_INPUT,
-    _OVERSIZE_INPUT,
-    _PROMPTS,
-    _REFUSAL_INPUT,
-    _assert_refused,
-    _combined,
-    _register_certificate_source,
-    _restore_material,
-    _run,
-    _storage_snapshot,
+from cadrumo_runtime.host.tests.frontend.cli.machine_secret_channels_support import (
+    NEW_PROFILE_INPUT,
+    OVERSIZE_INPUT,
+    PROMPTS,
+    REFUSAL_INPUT,
+    assert_refused,
     cleanup_keychain,
+    machine_secret_channels_combined,
+    register_certificate_source,
+    restore_material,
+    run,
     seed_certificate_source_for_refusal,
+    storage_snapshot,
 )
-from cadrumo_runtime.host.tests.frontend.cli._machine_secret_channels_support import (
+from cadrumo_runtime.host.tests.frontend.cli.machine_secret_channels_support import (
     host_profile_runtime as host_profile_runtime,
 )
 
@@ -56,16 +56,16 @@ def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
     tmp_path: Path, program: Literal["aeat", "cadrumo-runtime"], command: tuple[str, ...]
 ) -> None:
     root = tmp_path / "same-scope"
-    result = _run(
+    result = run(
         root,
         ["--format", "json", *command, "--secrets-stdin", "--secrets-fd", "{fd:0}"],
-        stdin=_REFUSAL_INPUT,
-        inherited_payloads=(_REFUSAL_INPUT,),
+        stdin=REFUSAL_INPUT,
+        inherited_payloads=(REFUSAL_INPUT,),
         assert_unread_indices=(0,),
         assert_stdin_unread=True,
         program=program,
     )
-    combined = _assert_refused(result, root, before={})
+    combined = assert_refused(result, root, before={})
     assert '"status":"error"' in combined
     assert "S14_STDIN_UNREAD" in result.stderr
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
@@ -73,7 +73,7 @@ def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
 
 def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path: Path) -> None:
     root = tmp_path / "root-same-scope"
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -85,12 +85,12 @@ def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path:
             "profile",
             "history",
         ],
-        stdin=_REFUSAL_INPUT,
-        inherited_payloads=(_REFUSAL_INPUT,),
+        stdin=REFUSAL_INPUT,
+        inherited_payloads=(REFUSAL_INPUT,),
         assert_unread_indices=(0,),
         assert_stdin_unread=True,
     )
-    combined = _assert_refused(result, root, before={})
+    combined = assert_refused(result, root, before={})
     assert '"status":"error"' in combined
     assert "S14_STDIN_UNREAD" in result.stderr
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
@@ -104,26 +104,26 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
     register_password_only_profile(root, label="collision-operator")
     host_profile_runtime(root)
     seed_certificate_source_for_refusal(root, profile_label="collision-operator", name="collision-cert")
-    before = _storage_snapshot(root)
+    before = storage_snapshot(root)
     args = ["--format", "json"]
     inherited: tuple[str, ...] = ()
     stdin: str | None = None
     if collision == "two-stdin":
         args.append("--profile-secrets-stdin")
         leaf = ("--secrets-stdin",)
-        stdin = _REFUSAL_INPUT
+        stdin = REFUSAL_INPUT
     elif collision == "root-fd0":
         args.extend(("--profile-secrets-fd", "0"))
         leaf = ("--secrets-stdin",)
-        stdin = _REFUSAL_INPUT
+        stdin = REFUSAL_INPUT
     elif collision == "leaf-fd0":
         args.append("--profile-secrets-stdin")
         leaf = ("--secrets-fd", "0")
-        stdin = _REFUSAL_INPUT
+        stdin = REFUSAL_INPUT
     else:
         args.extend(("--profile-secrets-fd", "{fd:0}"))
         leaf = ("--secrets-fd", "{fd:0}")
-        inherited = (_REFUSAL_INPUT,)
+        inherited = (REFUSAL_INPUT,)
     args.extend(
         (
             "config",
@@ -136,7 +136,7 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
             *leaf,
         )
     )
-    result = _run(
+    result = run(
         root,
         args,
         stdin=stdin,
@@ -145,7 +145,7 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
         assert_stdin_unread=stdin is not None,
         program="cadrumo-runtime",
     )
-    combined = _assert_refused(result, root, before=before)
+    combined = assert_refused(result, root, before=before)
     assert '"status":"error"' in combined
     if stdin is not None:
         assert "S14_STDIN_UNREAD" in result.stderr
@@ -161,7 +161,7 @@ def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(
     tmp_path: Path, descriptor: int, expected: str
 ) -> None:
     root = tmp_path / f"leaf-fd-{descriptor}"
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -175,7 +175,7 @@ def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(
             str(descriptor),
         ],
     )
-    assert expected in _assert_refused(result, root, before={})
+    assert expected in assert_refused(result, root, before={})
 
 
 @pytest.mark.parametrize(
@@ -193,8 +193,8 @@ def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(
     root = tmp_path / f"root-fd-{descriptor}"
     register_password_only_profile(root, label="root-fd-operator")
     host_profile_runtime(root)
-    before = _storage_snapshot(root)
-    result = _run(
+    before = storage_snapshot(root)
+    result = run(
         root,
         [
             "--format",
@@ -207,13 +207,13 @@ def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(
             "root-fd-operator",
         ],
     )
-    assert expected in _assert_refused(result, root, before=before)
+    assert expected in assert_refused(result, root, before=before)
 
 
 _MALFORMED_CREATE_PAYLOADS = (
     pytest.param(b"\xff", "invalid", (), id="invalid-utf8"),
-    pytest.param(f"{_REFUSAL_INPUT}{{broken", "invalid", (_REFUSAL_INPUT,), id="invalid-json"),
-    pytest.param(json.dumps(_REFUSAL_INPUT), "invalid", (_REFUSAL_INPUT,), id="non-object"),
+    pytest.param(f"{REFUSAL_INPUT}{{broken", "invalid", (REFUSAL_INPUT,), id="invalid-json"),
+    pytest.param(json.dumps(REFUSAL_INPUT), "invalid", (REFUSAL_INPUT,), id="non-object"),
     pytest.param(
         '{"passphrase":"s14-duplicate-first","passphrase":"s14-duplicate-second",'
         '"passphrase_confirmation":"s14-duplicate-second"}',
@@ -238,12 +238,12 @@ _MALFORMED_CREATE_PAYLOADS = (
     pytest.param(
         json.dumps(
             {
-                "passphrase": _OVERSIZE_INPUT * 220,
-                "passphrase_confirmation": _OVERSIZE_INPUT * 220,
+                "passphrase": OVERSIZE_INPUT * 220,
+                "passphrase_confirmation": OVERSIZE_INPUT * 220,
             }
         ),
         "large",
-        (_OVERSIZE_INPUT,),
+        (OVERSIZE_INPUT,),
         id="oversize-valid-json",
     ),
     pytest.param("", "invalid", (), id="empty"),
@@ -258,7 +258,7 @@ def test_leaf_strict_payload_refusals_close_descriptor_without_mutation(
     planted_secrets: tuple[str, ...],
 ) -> None:
     root = tmp_path / "malformed-leaf"
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -274,7 +274,7 @@ def test_leaf_strict_payload_refusals_close_descriptor_without_mutation(
         inherited_payloads=(payload,),
         assert_closed_index=0,
     )
-    combined = _assert_refused(result, root, before={}, extra_secrets=planted_secrets)
+    combined = assert_refused(result, root, before={}, extra_secrets=planted_secrets)
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
     assert {
         "invalid": "not a valid JSON object",
@@ -294,8 +294,8 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
     root = tmp_path / "malformed-root"
     register_password_only_profile(root, label="malformed-root-operator")
     host_profile_runtime(root)
-    before = _storage_snapshot(root)
-    result = _run(
+    before = storage_snapshot(root)
+    result = run(
         root,
         [
             "--format",
@@ -310,7 +310,7 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
         inherited_payloads=(payload,),
         assert_closed_index=0,
     )
-    combined = _assert_refused(result, root, before=before, extra_secrets=planted_secrets)
+    combined = assert_refused(result, root, before=before, extra_secrets=planted_secrets)
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
     assert {
         "invalid": "one strict UTF-8 JSON object",
@@ -320,9 +320,9 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
 
 
 def test_retired_restore_password_field_is_refused_without_publication(tmp_path: Path) -> None:
-    capsule = _restore_material(tmp_path / "legacy-restore-material")
+    capsule = restore_material(tmp_path / "legacy-restore-material")
     root = tmp_path / "legacy-restore"
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -338,7 +338,7 @@ def test_retired_restore_password_field_is_refused_without_publication(tmp_path:
         ],
         stdin=json.dumps({"password": FIXTURE_PROFILE_INPUT}),
     )
-    assert "unexpected ones" in _assert_refused(result, root, before={})
+    assert "unexpected ones" in assert_refused(result, root, before={})
 
 
 def test_retired_certificate_secret_field_is_refused_without_mutation(
@@ -347,9 +347,9 @@ def test_retired_certificate_secret_field_is_refused_without_mutation(
     root = tmp_path / "legacy-certificate"
     register_password_only_profile(root, label="legacy-cert-operator")
     host_profile_runtime(root)
-    _register_certificate_source(root, name="legacy-cert")
-    before = _storage_snapshot(root)
-    result = _run(
+    register_certificate_source(root, name="legacy-cert")
+    before = storage_snapshot(root)
+    result = run(
         root,
         [
             "--format",
@@ -365,23 +365,23 @@ def test_retired_certificate_secret_field_is_refused_without_mutation(
             "legacy-cert",
             "--secrets-stdin",
         ],
-        stdin=json.dumps({"secret": _REFUSAL_INPUT}),
+        stdin=json.dumps({"secret": REFUSAL_INPUT}),
         inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
         assert_closed_index=0,
         program="cadrumo-runtime",
     )
-    assert "unexpected ones" in _assert_refused(result, root, before=before)
+    assert "unexpected ones" in assert_refused(result, root, before=before)
 
 
 def test_hostile_environment_secret_is_ignored_by_leaf_cli(tmp_path: Path) -> None:
     root = tmp_path / "hostile-environment"
-    result = _run(
+    result = run(
         root,
         ["--format", "json", "config", "profile", "create", "hostile-env", "--quiet"],
         stdin="",
-        hostile_env={"CADRUMO_SECRET_PASSPHRASE": _REFUSAL_INPUT},
+        hostile_env={"CADRUMO_SECRET_PASSPHRASE": REFUSAL_INPUT},
     )
-    combined = _assert_refused(result, root, before={})
+    combined = assert_refused(result, root, before={})
     assert "No passphrase channel is available." in combined
 
 
@@ -391,7 +391,7 @@ def test_explicit_root_source_is_read_despite_a_live_local_session(
     root = tmp_path / "live-session-unused"
     register_password_only_profile(root, label="live-session-operator")
     host_profile_runtime(root)
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -403,12 +403,12 @@ def test_explicit_root_source_is_read_despite_a_live_local_session(
             "history",
             "live-session-operator",
         ],
-        inherited_payloads=(_REFUSAL_INPUT,),
+        inherited_payloads=(REFUSAL_INPUT,),
         preauthenticate_label="live-session-operator",
         assert_dispatch_state_unchanged=True,
         assert_closed_index=0,
     )
-    combined = _assert_refused(result, root)
+    combined = assert_refused(result, root)
     assert '"status":"error"' in combined
     assert "one strict UTF-8 JSON object" in combined
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
@@ -444,7 +444,7 @@ def test_explicit_root_source_is_read_despite_a_live_local_session(
         ),
         (
             ("config", "profile", "history", "wrong-nonblank-secret-target"),
-            {"profile_passphrase": _REFUSAL_INPUT},
+            {"profile_passphrase": REFUSAL_INPUT},
             True,
             "The profile password was not accepted.",
         ),
@@ -463,9 +463,9 @@ def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
     if command[-1] in {"wrong-secret-target", "wrong-nonblank-secret-target"}:
         register_password_only_profile(root, label=command[-1])
         host_profile_runtime(root)
-    before = _storage_snapshot(root)
+    before = storage_snapshot(root)
     serialized_payload = json.dumps(payload)
-    result = _run(
+    result = run(
         root,
         ["--format", "json", "--profile-secrets-fd", "{fd:0}", *command],
         inherited_payloads=(serialized_payload,),
@@ -473,7 +473,7 @@ def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
         assert_unread_indices=() if consumed else (0,),
         unread_payload=serialized_payload,
     )
-    combined = _assert_refused(result, root, before=before)
+    combined = assert_refused(result, root, before=before)
     assert ("S13_DESCRIPTOR_CLOSED" if consumed else "S14_DESCRIPTOR_UNREAD") in result.stderr
     if expected:
         assert expected in combined, combined
@@ -484,15 +484,15 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
 ) -> None:
     root = tmp_path / "self-auth-exemption"
     register_password_only_profile(root, label="self-auth-operator")
-    before = _storage_snapshot(root)
+    before = storage_snapshot(root)
     leaf_payload = json.dumps(
         {
             "current_passphrase": FIXTURE_PROFILE_INPUT,
-            "new_passphrase": _NEW_PROFILE_INPUT,
-            "new_passphrase_confirmation": _NEW_PROFILE_INPUT,
+            "new_passphrase": NEW_PROFILE_INPUT,
+            "new_passphrase_confirmation": NEW_PROFILE_INPUT,
         }
     )
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -505,11 +505,11 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
             "--secrets-stdin",
         ],
         stdin=leaf_payload,
-        inherited_payloads=(_REFUSAL_INPUT,),
+        inherited_payloads=(REFUSAL_INPUT,),
         assert_unread_indices=(0,),
         program="cadrumo-runtime",
     )
-    combined = _assert_refused(result, root, before=before)
+    combined = assert_refused(result, root, before=before)
     assert '"status":"error"' in combined
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
@@ -529,19 +529,19 @@ def test_help_and_parse_failures_never_read_root_secret_source(
     expected_diagnostic: str,
 ) -> None:
     root = tmp_path / "parse-precedence"
-    result = _run(
+    result = run(
         root,
         ["--profile-secrets-fd", "{fd:0}", *command],
-        inherited_payloads=(_REFUSAL_INPUT,),
+        inherited_payloads=(REFUSAL_INPUT,),
         assert_unread_indices=(0,),
     )
-    combined = _combined(result)
+    combined = machine_secret_channels_combined(result)
     assert result.returncode == expected_code, combined
     assert expected_diagnostic in combined
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
-    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
-    assert _REFUSAL_INPUT not in combined
-    assert _storage_snapshot(root) == {}
+    assert not any(prompt in combined.lower() for prompt in PROMPTS)
+    assert REFUSAL_INPUT not in combined
+    assert storage_snapshot(root) == {}
 
 
 @pytest.mark.parametrize(
@@ -557,7 +557,7 @@ def test_four_locale_conflict_snapshots_are_localized_and_secret_free(
     tmp_path: Path, locale: str, expected: str
 ) -> None:
     root = tmp_path / f"locale-{locale}"
-    result = _run(
+    result = run(
         root,
         [
             "--format",
@@ -571,8 +571,8 @@ def test_four_locale_conflict_snapshots_are_localized_and_secret_free(
             "--secrets-fd",
             "999999",
         ],
-        stdin=_REFUSAL_INPUT,
+        stdin=REFUSAL_INPUT,
         output_language=OutputLanguage(locale),
     )
-    combined = _assert_refused(result, root, before={})
+    combined = assert_refused(result, root, before={})
     assert expected in combined

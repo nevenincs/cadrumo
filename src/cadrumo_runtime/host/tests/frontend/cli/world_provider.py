@@ -19,8 +19,8 @@ from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import (
 )
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
-from ._cli_surface_support import _active_bucket_id, create_cli_surface_profile, isolated_cli_surface_backend
-from ._ledger_validation_support import _set_profile_axis, open_bucket_session
+from .cli_surface_support import active_bucket_id, create_cli_surface_profile, isolated_cli_surface_backend
+from .ledger_validation_support import open_bucket_session, set_profile_axis
 from .runtime_profile_backend import (
     copied_runtime_profile_backend,
     runtime_profile_backend,
@@ -59,7 +59,7 @@ class RuntimeCliWorldProvider:
     def human_probe(
         self, tmp_path: Path, *, client_native_store: AutomationSecretStore | None = None
     ) -> Generator[HumanProbeSession]:
-        from ._command_drive_support import seeded_probe_runtime
+        from .command_drive_support import seeded_probe_runtime
 
         with seeded_probe_runtime(tmp_path, client_native_store=client_native_store) as runtime:
             yield runtime
@@ -124,7 +124,7 @@ class RuntimeCliWorldProvider:
         create_cli_surface_profile(label, log_in=log_in)
 
     def active_bucket_id(self) -> str:
-        return _active_bucket_id()
+        return active_bucket_id()
 
     def set_profile_axis(self, key: str, value: str) -> None:
-        _set_profile_axis(key, value)
+        set_profile_axis(key, value)

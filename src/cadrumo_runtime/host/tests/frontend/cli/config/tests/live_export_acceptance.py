@@ -27,14 +27,14 @@ _TEXT_LIST: TypeAdapter[list[str]] = TypeAdapter(list[str])
 _TEXT_MAP: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str])
 
 
-def _text_field(document: dict[str, object], key: str) -> str:
+def text_field(document: dict[str, object], key: str) -> str:
     value = document[key]
     if not isinstance(value, str) or not value:
         raise RuntimeError(f"acceptance field {key!r} requires nonempty text")
     return value
 
 
-def _cli_result(stdout: str, stage: str) -> dict[str, object]:
+def cli_result(stdout: str, stage: str) -> dict[str, object]:
     envelope = _JSON_OBJECT.validate_json(stdout, strict=True)
     if envelope.get("active_profile") != _PROFILE:
         raise RuntimeError(f"{stage}: unexpected CLI profile/result")
@@ -110,7 +110,7 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
         raise RuntimeError(f"{stage}: protected-input output check failed")
     if completed.returncode:
         raise RuntimeError(f"{stage}: CLI refused (exit {completed.returncode}); inspect acceptance logs")
-    return _cli_result(stdout, stage)
+    return cli_result(stdout, stage)
 
 
 def _load_or_create_journal(root: Path, journal_path: Path) -> dict[str, object]:
@@ -129,7 +129,7 @@ def _load_or_create_journal(root: Path, journal_path: Path) -> dict[str, object]
         "version": 1,
         "run_id": str(run_id),
         "publication_id": str(uuid4()),
-        "work_unit_id": _text_field(source, "work_unit_id"),
+        "work_unit_id": text_field(source, "work_unit_id"),
         "synthetic_input": str(Decimal(100000 + run_id.int % 90000000) / 100),
     }
     _write_json(journal_path, journal)
@@ -147,7 +147,7 @@ def _ensure_saved_calculation(
             root, evidence, "previous-revisions", ["app", "modelo", "work", "revisions", work_id]
         )
         previous_rows = _JSON_OBJECT_ROWS.validate_python(previous["revisions"], strict=True)
-        journal["previous_revision_ids"] = [_text_field(row, "calculation_revision_id") for row in previous_rows]
+        journal["previous_revision_ids"] = [text_field(row, "calculation_revision_id") for row in previous_rows]
         _write_json(journal_path, journal)
     old_ids = set(_TEXT_LIST.validate_python(journal["previous_revision_ids"], strict=True))
     calculated = run_protected_live_cli(
@@ -161,7 +161,7 @@ def _ensure_saved_calculation(
             "calculate",
             work_id,
             "--casilla",
-            f"05={_text_field(journal, 'synthetic_input')}",
+            f"05={text_field(journal, 'synthetic_input')}",
             "--casilla",
             "06=0.00",
             "--binding",
@@ -170,7 +170,7 @@ def _ensure_saved_calculation(
             "modelo-130-resultados-negativos-anteriores=0",
         ],
     )
-    revision_id = _text_field(calculated, "calculation_revision_id")
+    revision_id = text_field(calculated, "calculation_revision_id")
     if revision_id in old_ids or calculated.get("saved") is not True:
         raise RuntimeError("calculation did not save a new synthetic revision")
     journal["calculation_revision_id"] = revision_id
@@ -186,7 +186,7 @@ def _verify_saved_revision(
     if baseline["calculation_revision_id"] != revision_id or baseline["work_unit_id"] != work_id:
         raise RuntimeError("saved revision differs from the selected synthetic calculation")
     inputs = _TEXT_MAP.validate_python(baseline["input_values_by_casilla_id"], strict=True)
-    if not any(Decimal(value) == Decimal(_text_field(journal, "synthetic_input")) for value in inputs.values()):
+    if not any(Decimal(value) == Decimal(text_field(journal, "synthetic_input")) for value in inputs.values()):
         raise RuntimeError("retained synthetic input did not round-trip")
 
 
@@ -264,7 +264,7 @@ def _ensure_native_publication(
     native = _JSON_OBJECT.validate_python(native_result["publication"], strict=True)
     if native["publication_id"] != publication_id:
         raise RuntimeError("native publication returned another idempotency identity")
-    if _text_field(native, "snapshot_digest") != _text_field(xlsx, "snapshot_digest"):
+    if text_field(native, "snapshot_digest") != text_field(xlsx, "snapshot_digest"):
         raise RuntimeError("local and native exports used different retained snapshots")
     journal["google"] = native
     _write_json(journal_path, journal)
@@ -286,19 +286,19 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
     logs.mkdir(parents=True, exist_ok=True)
     journal_path = logs / "acceptance-journal.json"
     journal = _load_or_create_journal(root, journal_path)
-    publication_id = _text_field(journal, "publication_id")
+    publication_id = text_field(journal, "publication_id")
     UUID(publication_id)
-    evidence = logs / _text_field(journal, "run_id")
+    evidence = logs / text_field(journal, "run_id")
     evidence.mkdir(exist_ok=True)
-    work_id = _text_field(journal, "work_unit_id")
+    work_id = text_field(journal, "work_unit_id")
     _ensure_saved_calculation(root, evidence, journal, journal_path, work_id)
-    revision_id = _text_field(journal, "calculation_revision_id")
+    revision_id = text_field(journal, "calculation_revision_id")
     _verify_saved_revision(root, evidence, journal, revision_id, work_id)
     output = evidence / "saved-calculation-review.xlsx"
     _ensure_local_export(root, evidence, journal, journal_path, revision_id, output)
     sheet_count, formula_count = _inspect_workbook(output, revision_id)
     xlsx = _JSON_OBJECT.validate_python(journal["xlsx"], strict=True)
-    if hashlib.sha256(output.read_bytes()).hexdigest() != _text_field(xlsx, "file_sha256"):
+    if hashlib.sha256(output.read_bytes()).hexdigest() != text_field(xlsx, "file_sha256"):
         raise RuntimeError("published XLSX bytes differ from the registered receipt")
     _ensure_native_publication(root, evidence, journal, journal_path, revision_id, publication_id, xlsx)
     package = importlib.util.find_spec("cadrumo")
@@ -312,8 +312,8 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
         "work_unit_id": work_id,
         "calculation_revision_id": revision_id,
         "publication_id": publication_id,
-        "spreadsheet_url": _text_field(google, "spreadsheet_url"),
-        "spreadsheet_id": _text_field(google, "spreadsheet_id"),
+        "spreadsheet_url": text_field(google, "spreadsheet_url"),
+        "spreadsheet_id": text_field(google, "spreadsheet_id"),
         "xlsx_path": str(output),
         "evidence_directory": str(evidence),
         "checks": {

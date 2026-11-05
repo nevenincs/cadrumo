@@ -12,7 +12,7 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-_PROFILE_FACTS = {
+PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",
     "identity.name": "Native",
     "identity.surnames": "Ledger Review",
@@ -33,11 +33,11 @@ def ledger_llm_profile(tmp_path: Path, authority_operation: object) -> Iterator[
     """Register one encrypted profile and own its real native runtime for this case."""
     del authority_operation
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-ledger-llm-review", facts=_PROFILE_FACTS)
+        profile.register(label="native-ledger-llm-review", facts=PROFILE_FACTS)
         yield profile
 
 
-def _import_one_transaction(
+def import_one_transaction(
     tmp_path: Path,
     *,
     invoke_cli: Callable[[Sequence[str]], Result],

@@ -82,7 +82,7 @@ def test_list_uses_bound_profile_and_emits_only_public_projection(monkeypatch: p
     completion = AutomationInventoryCompletion(operation_id="a" * 64, projection=projection)
     client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
     seen: list[object] = []
-    monkeypatch.setattr(subject, "_client", lambda _ctx, *, requested_language: client)
+    monkeypatch.setattr(subject, "runtime_access_management_client", lambda _ctx, *, requested_language: client)
 
     def read(bound: FrontendClient) -> AutomationInventoryCompletion:
         assert bound is client
@@ -117,7 +117,7 @@ def test_post_submit_uncertainty_keeps_operation_identity_without_success_envelo
 ) -> None:
     operation_id = "b" * 64
     client = cast(FrontendClient, SimpleNamespace(profile_id=uuid4()))
-    monkeypatch.setattr(subject, "_client", lambda _ctx, *, requested_language: client)
+    monkeypatch.setattr(subject, "runtime_access_management_client", lambda _ctx, *, requested_language: client)
     monkeypatch.setattr(
         subject,
         "read_automation_inventory",

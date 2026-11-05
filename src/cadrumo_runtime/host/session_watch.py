@@ -35,7 +35,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 
-_RECONNECT_SECONDS = (1.0, 2.0, 5.0, 10.0, 30.0)
+RECONNECT_SECONDS = (1.0, 2.0, 5.0, 10.0, 30.0)
 """Waits between attempts while the runtime is unavailable; reconnection, not observation."""
 _DEADLINE_MARGIN_SECONDS = 0.5
 """A coarse timer then wakes after a deadline, never just before it."""
@@ -43,7 +43,7 @@ _DEADLINE_MARGIN_SECONDS = 0.5
 _FILE_NAME, _DIR_NAME, _LAST_WRITE = 0x001, 0x002, 0x010
 
 
-class _Wakes:
+class Wakes:
     """Why the watch woke; each flag is set by its own source and taken once."""
 
     def __init__(self) -> None:
@@ -89,7 +89,7 @@ class _Wakes:
         return cued, pointer
 
 
-def _emit(document: Mapping[str, object]) -> None:
+def emit(document: Mapping[str, object]) -> None:
     sys.stdout.write(json.dumps(document, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
@@ -98,7 +98,7 @@ class _PointerUnreadableError(Exception):
     """The active-profile pointer could not be read; its next change is the next reason to try."""
 
 
-def _selection() -> tuple[UUID | None, str | None]:
+def selection() -> tuple[UUID | None, str | None]:
     """The selected profile and its public label, read as ``config sign-in-status`` reads them."""
     from cadrumo.adapters.persistence.storage.errors import StorageValidationError
     from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
@@ -132,7 +132,7 @@ def _observation(
     }
 
 
-def _profiles() -> dict[str, object]:
+def profiles() -> dict[str, object]:
     """The profiles on this computer as ``config profile list`` lists them: labels and the selection only."""
     from cadrumo.application.user_profile.profile_summary import profile_listing
     from cadrumo.core.errors.hierarchy import CadrumoError
@@ -193,7 +193,7 @@ def _watch_directory(directory: Path, changes: int, changed: Callable[[], None],
         close(handle)
 
 
-def _watch_parent(stdin_fd: int, wakes: _Wakes) -> None:
+def watch_parent(stdin_fd: int, wakes: Wakes) -> None:
     """Each newline from the parent asks for a fresh line; the end of its input ends the watch."""
     with contextlib.suppress(OSError):
         while byte := os.read(stdin_fd, 1):
@@ -205,7 +205,7 @@ def _watch_parent(stdin_fd: int, wakes: _Wakes) -> None:
 type _Publish = Callable[[dict[str, object]], None]
 
 
-def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes: _Wakes, publish: _Publish) -> bool:
+def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes: Wakes, publish: _Publish) -> bool:
     """Follow one profile on one connection; return whether its connection was lost."""
     try:
         status = client.watch_sign_in(wakes.cue).status
@@ -219,7 +219,7 @@ def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes:
             return False
         if pointer:
             try:
-                moved = _selection() != (profile_id, label)
+                moved = selection() != (profile_id, label)
             except _PointerUnreadableError:
                 moved = True
             if moved:
@@ -235,19 +235,19 @@ def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes:
     return False
 
 
-def _watch(wakes: _Wakes) -> int:
+def watch(wakes: Wakes) -> int:
     previous: list[dict[str, object]] = []
 
     def publish(observation: dict[str, object]) -> None:
-        observation = {**observation, "profiles": _profiles()}
+        observation = {**observation, "profiles": profiles()}
         if wakes.take_forced() or previous != [observation]:
             previous[:] = [observation]
-            _emit(observation)
+            emit(observation)
 
     attempt = 0
     while not wakes.stopping.is_set():
         try:
-            profile_id, label = _selection()
+            profile_id, label = selection()
         except _PointerUnreadableError:
             publish(_observation(None, None, None, "active_profile_unreadable"))
             wakes.wait(None)
@@ -260,7 +260,7 @@ def _watch(wakes: _Wakes) -> int:
             client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
         except (RefusalError, FrontendRefusedError, OSError) as error:
             publish(_observation(profile_id, label, None, _refusal_code(error)))
-            wakes.wait(_RECONNECT_SECONDS[min(attempt, len(_RECONNECT_SECONDS) - 1)])
+            wakes.wait(RECONNECT_SECONDS[min(attempt, len(RECONNECT_SECONDS) - 1)])
             attempt += 1
             continue
         try:
@@ -269,7 +269,7 @@ def _watch(wakes: _Wakes) -> int:
             client.close()
         attempt = attempt + 1 if lost else 0
         if lost:
-            wakes.wait(_RECONNECT_SECONDS[min(attempt - 1, len(_RECONNECT_SECONDS) - 1)])
+            wakes.wait(RECONNECT_SECONDS[min(attempt - 1, len(RECONNECT_SECONDS) - 1)])
     return 0
 
 
@@ -285,8 +285,8 @@ def main(arguments: list[str] | None = None) -> int:
     from cadrumo.core.storage_taxonomy import StorageCategory
     from cadrumo.core.storage_taxonomy_locations import storage_path
 
-    wakes = _Wakes()
-    Thread(target=_watch_parent, args=(sys.stdin.fileno(), wakes), name="watch-parent", daemon=True).start()
+    wakes = Wakes()
+    Thread(target=watch_parent, args=(sys.stdin.fileno(), wakes), name="watch-parent", daemon=True).start()
     with composed_profile_persistence_ports():
         # The pointer is replaced by rename, a name change; a write in place changes its write time.
         pointer = pointer_path(effective_storage_root()).parent, _FILE_NAME | _LAST_WRITE, wakes.pointer_moved
@@ -296,4 +296,4 @@ def main(arguments: list[str] | None = None) -> int:
             Thread(
                 target=_watch_directory, args=(directory, changes, changed, wakes.stopping), name=name, daemon=True
             ).start()
-        return _watch(wakes)
+        return watch(wakes)

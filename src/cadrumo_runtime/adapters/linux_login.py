@@ -14,9 +14,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 from cadrumo_client.transport.posix import posix_owner_uid
 
-from . import linux_login_models as _models
-from . import linux_logind_bus as _bus
-from . import linux_logind_native as _native
+from . import linux_login_models, linux_logind_bus, linux_logind_native
 from .linux_gnome_lock import (
     GnomeLockBinding,
     GnomeLockState,
@@ -49,72 +47,74 @@ class LinuxLoginBinding:
 def capture_linux_login(pidfd: int, *, expected_owner: str) -> LinuxLoginBinding:
     """Borrow a kernel-bound peer PIDFD and fence its session around the snapshot."""
     if sys.platform != "linux":
-        raise _models._unavailable()
+        raise linux_login_models.unavailable()
     try:
-        _native._ensure_pidfd_alive(pidfd)
-        native = _native._NativeLogin()
-        boot = _native._boot_id()
+        linux_logind_native.ensure_pidfd_alive(pidfd)
+        native = linux_logind_native.NativeLogin()
+        boot = linux_logind_native.boot_id()
         session_id, uid, observation = _capture_login_snapshot(native, pidfd, expected_owner, boot)
-        _native._ensure_pidfd_alive(pidfd)
+        linux_logind_native.ensure_pidfd_alive(pidfd)
         lock_binding = _capture_optional_gnome_lock(native, session_id, uid)
         if lock_binding is not None:
             _require_same_login_snapshot(native, session_id, observation, boot)
-        _native._ensure_pidfd_alive(pidfd)
+        linux_logind_native.ensure_pidfd_alive(pidfd)
         return LinuxLoginBinding(expected_owner, boot, session_id, observation.created_monotonic_usec, lock_binding)
     except (OSError, AttributeError, ValueError, TypeError, OverflowError):
-        raise _models._unavailable() from None
+        raise linux_login_models.unavailable() from None
 
 
 def _capture_login_snapshot(
-    native: _native._NativeLogin, pidfd: int, expected_owner: str, boot: UUID
-) -> tuple[str, int, _models.LinuxSessionObservation]:
+    native: linux_logind_native.NativeLogin, pidfd: int, expected_owner: str, boot: UUID
+) -> tuple[str, int, linux_login_models.LinuxSessionObservation]:
     session_id, uid = native.peer_session(pidfd)
     if str(uid) != expected_owner:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     observation = native.session(session_id)
     if observation.uid != uid or observation.state not in ("online", "active"):
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    if native.peer_session(pidfd) != (session_id, uid) or _native._boot_id() != boot:
+    if native.peer_session(pidfd) != (session_id, uid) or linux_logind_native.boot_id() != boot:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     return session_id, uid, observation
 
 
-def _capture_optional_gnome_lock(native: _native._NativeLogin, session_id: str, uid: int) -> GnomeLockBinding | None:
+def _capture_optional_gnome_lock(
+    native: linux_logind_native.NativeLogin, session_id: str, uid: int
+) -> GnomeLockBinding | None:
     lock_binding: GnomeLockBinding | None = None
     with suppress(RefusalError, OSError, AttributeError, ValueError, TypeError, OverflowError):
-        lock_binding, _ = _gnome_observation(native, session_id, uid)
+        lock_binding, _ = gnome_observation(native, session_id, uid)
     return lock_binding
 
 
 def _require_same_login_snapshot(
-    native: _native._NativeLogin,
+    native: linux_logind_native.NativeLogin,
     session_id: str,
-    observation: _models.LinuxSessionObservation,
+    observation: linux_login_models.LinuxSessionObservation,
     boot: UUID,
 ) -> None:
-    if native.session(session_id) != observation or _native._boot_id() != boot:
+    if native.session(session_id) != observation or linux_logind_native.boot_id() != boot:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
 
 
-def _gnome_observation(
-    native: _native._NativeLogin,
+def gnome_observation(
+    native: linux_logind_native.NativeLogin,
     session_id: str,
     uid: int,
     expected: GnomeLockBinding | None = None,
     *,
     deadline: float | None = None,
 ) -> tuple[GnomeLockBinding, GnomeLockState]:
-    deadline = deadline if deadline is not None else time.monotonic() + _bus._BUS_TIMEOUT_SECONDS
+    deadline = deadline if deadline is not None else time.monotonic() + linux_logind_bus.BUS_TIMEOUT_SECONDS
     require_gnome_login_producer(uid)
     path = gnome_user_bus_path(uid)
     socket_identity = path.lstat()
-    with _bus._SessionBus(native.library, path=path, peer_uid=uid, deadline=deadline) as bus:
+    with linux_logind_bus.SessionBus(native.library, path=path, peer_uid=uid, deadline=deadline) as bus:
         result = sample_gnome_lock(
             bus, uid=uid, session_id=session_id, peer_session=native.peer_session, expected=expected
         )
         require_gnome_login_producer(uid)
         if gnome_user_bus_path(uid) != path or path.lstat() != socket_identity:
-            raise _models._unavailable()
+            raise linux_login_models.unavailable()
         bus.remaining_usec()
         return result
 
@@ -149,9 +149,9 @@ def observe_linux_login(binding: LinuxLoginBinding, *, credential_facilities: Av
 
 def _current_login_snapshot(
     binding: LinuxLoginBinding,
-) -> tuple[_native._NativeLogin | None, _models.LinuxSessionObservation | None, bool]:
-    boot_matches = _native._boot_id() == binding.boot_id
-    native = _native._NativeLogin() if boot_matches else None
+) -> tuple[linux_logind_native.NativeLogin | None, linux_login_models.LinuxSessionObservation | None, bool]:
+    boot_matches = linux_logind_native.boot_id() == binding.boot_id
+    native = linux_logind_native.NativeLogin() if boot_matches else None
     observation = native.session(binding.session_id) if native is not None else None
     valid = (
         observation is not None
@@ -159,15 +159,15 @@ def _current_login_snapshot(
         and str(observation.uid) == binding.os_owner_id
         and observation.created_monotonic_usec == binding.created_monotonic_usec
         and observation.state in ("online", "active")
-        and _native._boot_id() == binding.boot_id
+        and linux_logind_native.boot_id() == binding.boot_id
     )
     return native, observation, valid
 
 
 def _current_lock_observation(
     binding: LinuxLoginBinding,
-    native: _native._NativeLogin | None,
-    observation: _models.LinuxSessionObservation | None,
+    native: linux_logind_native.NativeLogin | None,
+    observation: linux_login_models.LinuxSessionObservation | None,
     valid: bool,
 ) -> tuple[bool, OsLockState, LoginEligibility]:
     lock_state = OsLockState.UNKNOWN
@@ -175,9 +175,9 @@ def _current_lock_observation(
     if not valid or native is None or binding.gnome_lock is None:
         return valid, lock_state, eligibility
     try:
-        _, gnome = _gnome_observation(native, binding.session_id, int(binding.os_owner_id), binding.gnome_lock)
+        _, gnome = gnome_observation(native, binding.session_id, int(binding.os_owner_id), binding.gnome_lock)
         # Lock observations cannot outlive a changed native login snapshot.
-        if native.session(binding.session_id) != observation or _native._boot_id() != binding.boot_id:
+        if native.session(binding.session_id) != observation or linux_logind_native.boot_id() != binding.boot_id:
             return False, lock_state, LoginEligibility.INELIGIBLE
         lock_state = _gnome_lock_state(gnome, binding.gnome_lock)
         eligibility = gnome.eligibility
@@ -212,10 +212,10 @@ def linux_login_inventory(*, expected_owner: str) -> LoginInventory:
         uid = posix_owner_uid()
         if expected_owner != str(uid):
             return unknown
-        deadline = time.monotonic() + _bus._BUS_TIMEOUT_SECONDS
-        boot = _native._boot_id()
-        native = _native._NativeLogin()
-        with _bus._SessionBus(native.library, deadline=deadline) as bus:
+        deadline = time.monotonic() + linux_logind_bus.BUS_TIMEOUT_SECONDS
+        boot = linux_logind_native.boot_id()
+        native = linux_logind_native.NativeLogin()
+        with linux_logind_bus.SessionBus(native.library, deadline=deadline) as bus:
             owner = _trusted_logind_bus_owner(bus)
             if owner is None:
                 return unknown
@@ -231,10 +231,14 @@ def linux_login_inventory(*, expected_owner: str) -> LoginInventory:
         return unknown
 
 
-def _trusted_logind_bus_owner(bus: _bus._SessionBus) -> bytes | None:
+def _trusted_logind_bus_owner(bus: linux_logind_bus.SessionBus) -> bytes | None:
     owner = bus.login_owner()
     with bus.call(
-        _bus._BUS_DESTINATION, _bus._BUS_PATH, _bus._BUS_DESTINATION, b"GetConnectionUnixUser", owner
+        linux_logind_bus.BUS_DESTINATION,
+        linux_logind_bus.BUS_PATH,
+        linux_logind_bus.BUS_DESTINATION,
+        b"GetConnectionUnixUser",
+        owner,
     ) as reply:
         if bus.read_integer(reply, b"u") != 0:
             return None
@@ -243,10 +247,10 @@ def _trusted_logind_bus_owner(bus: _bus._SessionBus) -> bytes | None:
 
 
 def _observe_inventory_sessions(
-    bus: _bus._SessionBus,
-    native: _native._NativeLogin,
+    bus: linux_logind_bus.SessionBus,
+    native: linux_logind_native.NativeLogin,
     owner: bytes,
-    rows: tuple[_models._SessionReference, ...],
+    rows: tuple[linux_login_models.SessionReference, ...],
     uid: int,
     expected_owner: str,
     boot: UUID,
@@ -269,16 +273,16 @@ def _observe_inventory_sessions(
 
 
 def _inventory_snapshot_is_stable(
-    bus: _bus._SessionBus, owner: bytes, before: tuple[_models._SessionReference, ...], boot: UUID
+    bus: linux_logind_bus.SessionBus, owner: bytes, before: tuple[linux_login_models.SessionReference, ...], boot: UUID
 ) -> bool:
-    return bus.sessions(owner) == before and bus.login_owner() == owner and _native._boot_id() == boot
+    return bus.sessions(owner) == before and bus.login_owner() == owner and linux_logind_native.boot_id() == boot
 
 
 def _observe_inventory_row(
-    bus: _bus._SessionBus,
-    native: _native._NativeLogin,
+    bus: linux_logind_bus.SessionBus,
+    native: linux_logind_native.NativeLogin,
     owner: bytes,
-    row: _models._SessionReference,
+    row: linux_login_models.SessionReference,
     uid: int,
     expected_owner: str,
     boot: UUID,
@@ -286,17 +290,17 @@ def _observe_inventory_row(
 ) -> tuple[LinuxLoginBinding | None, bool]:
     first = bus.session_record(owner, row.session_id, expected_path=row.object_path)
     if first.uid != uid:
-        raise _models._unavailable()
+        raise linux_login_models.unavailable()
     if first.known_ineligible:
         stable = bus.session_record(owner, row.session_id, expected_path=row.object_path) == first
         return None, stable
     observation = first.desktop()
     if observation.state not in ("online", "active"):
-        raise _models._unavailable()
-    lock_binding, state = _gnome_observation(native, row.session_id, uid, deadline=deadline)
+        raise linux_login_models.unavailable()
+    lock_binding, state = gnome_observation(native, row.session_id, uid, deadline=deadline)
     if state.eligibility is not LoginEligibility.ELIGIBLE:
-        raise _models._unavailable()
+        raise linux_login_models.unavailable()
     if bus.session_record(owner, row.session_id, expected_path=row.object_path) != first:
-        raise _models._unavailable()
+        raise linux_login_models.unavailable()
     bus.remaining_usec()
     return LinuxLoginBinding(expected_owner, boot, row.session_id, first.created_monotonic_usec, lock_binding), True

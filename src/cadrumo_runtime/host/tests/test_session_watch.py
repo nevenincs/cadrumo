@@ -73,12 +73,12 @@ def test_the_watch_follows_cues_pointer_moves_deadlines_and_reconnects(monkeypat
     selection: list[tuple[UUID | None, str | None]] = [(first, "Primero")]
     profiles: list[dict[str, object]] = [_listing(("Primero", True))]
     monkeypatch.setattr(session_watch, "open_installed_client", runtime.open)
-    monkeypatch.setattr(session_watch, "_selection", lambda: selection[0])
-    monkeypatch.setattr(session_watch, "_profiles", lambda: profiles[0])
-    monkeypatch.setattr(session_watch, "_emit", lambda document: lines.append(json.loads(json.dumps(document))))
-    monkeypatch.setattr(session_watch, "_RECONNECT_SECONDS", (0.1,))
-    wakes = session_watch._Wakes()
-    watching = Thread(target=session_watch._watch, args=(wakes,), daemon=True)
+    monkeypatch.setattr(session_watch, "selection", lambda: selection[0])
+    monkeypatch.setattr(session_watch, "profiles", lambda: profiles[0])
+    monkeypatch.setattr(session_watch, "emit", lambda document: lines.append(json.loads(json.dumps(document))))
+    monkeypatch.setattr(session_watch, "RECONNECT_SECONDS", (0.1,))
+    wakes = session_watch.Wakes()
+    watching = Thread(target=session_watch.watch, args=(wakes,), daemon=True)
     watching.start()
     try:
         _until(lambda: len(lines) == 1, "the first observation")
@@ -159,11 +159,11 @@ def test_no_selected_profile_is_absent_until_the_pointer_moves(monkeypatch: pyte
     lines: list[dict[str, object]] = []
     selection: list[tuple[UUID | None, str | None]] = [(None, None)]
     monkeypatch.setattr(session_watch, "open_installed_client", runtime.open)
-    monkeypatch.setattr(session_watch, "_selection", lambda: selection[0])
-    monkeypatch.setattr(session_watch, "_profiles", lambda: _listing())
-    monkeypatch.setattr(session_watch, "_emit", lines.append)
-    wakes = session_watch._Wakes()
-    watching = Thread(target=session_watch._watch, args=(wakes,), daemon=True)
+    monkeypatch.setattr(session_watch, "selection", lambda: selection[0])
+    monkeypatch.setattr(session_watch, "profiles", lambda: _listing())
+    monkeypatch.setattr(session_watch, "emit", lines.append)
+    wakes = session_watch.Wakes()
+    watching = Thread(target=session_watch.watch, args=(wakes,), daemon=True)
     watching.start()
     try:
         _until(lambda: len(lines) == 1, "the first observation")
@@ -184,8 +184,8 @@ def test_the_watch_ends_when_its_parent_closes_standard_input() -> None:
     import os
 
     reader, writer = os.pipe()
-    wakes = session_watch._Wakes()
-    parent = Thread(target=session_watch._watch_parent, args=(reader, wakes), daemon=True)
+    wakes = session_watch.Wakes()
+    parent = Thread(target=session_watch.watch_parent, args=(reader, wakes), daemon=True)
     parent.start()
     try:
         os.write(writer, b"\n")
@@ -199,7 +199,7 @@ def test_the_watch_ends_when_its_parent_closes_standard_input() -> None:
 
 
 def test_a_cue_and_a_pointer_change_are_each_taken_once() -> None:
-    wakes = session_watch._Wakes()
+    wakes = session_watch.Wakes()
     wakes.cue()
     wakes.pointer_moved()
     assert wakes.wait(0) == (True, True)

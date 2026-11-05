@@ -7,13 +7,13 @@ from collections.abc import Callable
 import pytest
 from click.testing import Result
 
-from cadrumo.entrypoints.cli import command_specs as _command_specs
+from cadrumo.entrypoints.cli import command_specs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_tax_graph_keeps_direct_auth_entrypoints_and_drops_moved_auth_verbs() -> None:
-    keys = set(_command_specs.COMMAND_GRAPH.by_key())
+    keys = set(command_specs.COMMAND_GRAPH.by_key())
     assert {"config_login", "config_logout", "config_profile_create", "config_profile_list"} <= keys
     assert not keys.intersection(
         {

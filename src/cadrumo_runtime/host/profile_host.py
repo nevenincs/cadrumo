@@ -95,7 +95,7 @@ from .profile_lock_observation import locked_login_ids
 from .profile_scope import delegated_profile_scope, person_profile_scope
 from .session_owner import ProfileWorkerSessionOwner
 
-_GUARD_SLOW_SECONDS: Final = 1.0
+GUARD_SLOW_SECONDS: Final = 1.0
 """A wait for, or a hold of, the profile guard this long is reported with the code that entered it."""
 
 
@@ -134,7 +134,7 @@ class RuntimeProfileHost:
         self._connected, self._logins, self._admitting = connected, logins, admitting
         self._recipient = recipient
         self._wall_clock = wall_clock
-        self.guard = TimedRLock(slow_seconds=_GUARD_SLOW_SECONDS, event="profile_guard_slow")
+        self.guard = TimedRLock(slow_seconds=GUARD_SLOW_SECONDS, event="profile_guard_slow")
         self._replacement_retirement_guard = Lock()
         self._committed_binding = CommittedProfileBindingWatch(
             profile_id=store.binding.profile_id,

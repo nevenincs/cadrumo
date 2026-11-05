@@ -85,7 +85,7 @@ def _observable_login_ids(facts: SessionAuthorityFacts, os_owner_id: str) -> set
     return live_logins | uncertain_logins
 
 
-def _unavailable_observation_reason(session: AccessSession, facts: SessionAuthorityFacts) -> str:
+def unavailable_observation_reason(session: AccessSession, facts: SessionAuthorityFacts) -> str:
     """Describe an admission observation without exposing session or owner IDs."""
     if not facts.context.private_work_available:
         return "private_work_unavailable"
@@ -335,7 +335,7 @@ class SessionAuthorityCore:
             diagnostic_event(
                 _log,
                 "runtime_session_observation_unavailable",
-                fields={"reason_code": _unavailable_observation_reason(session, facts)},
+                fields={"reason_code": unavailable_observation_reason(session, facts)},
                 level=logging.DEBUG,
             )
         if (

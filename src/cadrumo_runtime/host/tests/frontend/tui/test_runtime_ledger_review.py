@@ -57,7 +57,7 @@ from ....frontend.tui.runtime_ledger_review import (
     RuntimeLedgerReviewTuiDoorV1,
     compose_runtime_ledger_review_doors,
 )
-from ._door_session_support import (
+from .door_session_support import (
     NOW,
     OTHER_PROFILE_ID,
     PROFILE_ID,

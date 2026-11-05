@@ -401,7 +401,7 @@ class _Worker(ProfileWorkerHumanAdmission):
                 human = ProfileWorkerHumanLogin(self.custody, decode=host.profile_decode_context)
                 try:
                     asyncio.run(
-                        worker_service._serve(
+                        worker_service.serve(
                             cast(WorkerChannel, control),
                             cast(WorkerChannel, operations),
                             cast(WorkerChannel, proof),

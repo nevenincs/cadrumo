@@ -56,7 +56,7 @@ def test_scope_constructor_owner_survives_public_refusal_and_failed_settlement(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, request: pytest.FixtureRequest
 ) -> None:
     port = cast(_NativeScopeFaults, request.getfixturevalue("native"))
-    owner = _owner(tmp_path)
+    owner = worker_construction_cleanup_owner(tmp_path)
     primary = RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     port.setup_error = primary
     port.close_failures = {7: 2}
@@ -141,7 +141,7 @@ def test_concurrent_custody_cannot_construct_a_second_worker_while_first_launch_
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release = Event(), Event()
     constructed: list[ProfileWorkerIdentity] = []
@@ -188,7 +188,7 @@ def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
 ) -> None:
     """A sign-in that arrives while its watch is starting the worker waits for that worker, never a second one."""
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release = Event(), Event()
     constructed: list[ProfileWorkerIdentity] = []
@@ -222,7 +222,7 @@ def test_cancelled_proof_leaves_shared_construction_and_its_next_joiner_untouche
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release, joined = Event(), Event(), Event()
     cancellation = ProfileProofCancellation()
@@ -302,7 +302,7 @@ def test_cancelled_proof_leaves_shared_construction_and_its_next_joiner_untouche
 
 def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_path: Path) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     connection_id = uuid4()
     facts = SessionAuthorityFacts(
         ProfileAccessState(
@@ -394,7 +394,7 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
     tmp_path: Path, stopping: bool
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     connection_id = uuid4()
     primary = RefusalError(RefusalCode.TIMEOUT)
 
@@ -450,7 +450,7 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
 @pytest.mark.parametrize("outcome", ["fenced", "containment_failure", "queue_timeout"])
 def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tmp_path: Path, outcome: str) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     session_id = uuid4()
 
     class FencedWorker(_Candidate):
@@ -491,7 +491,7 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         owner.settle()
 
 
-def _owner(root: Path, guard: RLock | None = None) -> ProfileWorkerSessionOwner:
+def worker_construction_cleanup_owner(root: Path, guard: RLock | None = None) -> ProfileWorkerSessionOwner:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
         runtime_boot_id=uuid4(),
@@ -523,7 +523,7 @@ def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_se
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str, failures: int
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=failures)
     primary = (
         RefusalError(RefusalCode.PEER_UNTRUSTED)
@@ -615,7 +615,7 @@ def test_stop_racing_returned_candidate_keeps_recoverable_construction_settlemen
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failures: int
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=failures)
 
     def late_native_constructor(*args: object, **kwargs: object) -> ProfileWorkerProcess:
@@ -642,7 +642,7 @@ def test_published_worker_drain_preserves_recoverable_construction_after_body_fa
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     guard = RLock()
-    owner = _owner(tmp_path, guard)
+    owner = worker_construction_cleanup_owner(tmp_path, guard)
     candidate = _Candidate(owner.identity, guard, failures=0)
     primary = OSError("synthetic failure after published worker drain")
 

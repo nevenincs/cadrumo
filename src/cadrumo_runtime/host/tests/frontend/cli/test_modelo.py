@@ -8,8 +8,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 
-from ._modelo_fixtures import active_cli_profile_fixture
 from .cli_runner import invoke_cached_cli
+from .modelo_fixtures import active_cli_profile_fixture
 
 __all__ = ["active_cli_profile_fixture"]
 

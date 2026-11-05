@@ -58,8 +58,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _result
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 
@@ -198,7 +197,7 @@ def _create_m130_work_unit(session: NativeApiCliSession[None], *, filing_year: i
         "--revision", _revision_id(filing_year, period),
     )  # fmt: skip
     assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-    work_unit_id = _result(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str) and work_unit_id, created.output
     return work_unit_id
 
@@ -293,7 +292,7 @@ def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context
     observed_after = today_madrid()
 
     envelope = json.loads(result.output)
-    inner = _result(result.output)
+    inner = unwrap_schema_envelope(result.output)
     notices = unwrap_envelope_notices(result.output)
 
     # JSON status is no longer a bare success: a warning notice rode the spine.
@@ -355,7 +354,7 @@ def test_calculate_in_time_period_carries_no_unassessed_preview_notice(
         result = _calculate_m130(session, work_unit_id)
     observed_after = today_madrid()
 
-    inner = _result(result.output)
+    inner = unwrap_schema_envelope(result.output)
     notices = unwrap_envelope_notices(result.output)
 
     assert [notice for notice in notices if notice["code"] == _UNASSESSED_PREVIEW_NOTICE_CODE] == [], (

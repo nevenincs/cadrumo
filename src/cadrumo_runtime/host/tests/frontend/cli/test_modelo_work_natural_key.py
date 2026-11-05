@@ -13,17 +13,16 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import capture_m111_invoice_withholding
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
@@ -128,7 +127,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     capture_m111_invoice_withholding()
 
     status = _invoke(
@@ -140,7 +139,9 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     )  # fmt: skip
     assert status.exit_code == 0, status.output
     status_notice = next(
-        notice for notice in _notices(status.output) if notice["code"] == "modelo.work.status.next_action"
+        notice
+        for notice in unwrap_envelope_notices(status.output)
+        if notice["code"] == "modelo.work.status.next_action"
     )
     assert status_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.calculate",
@@ -157,8 +158,8 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
-    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
+    assert unwrap_schema_envelope(calculated.output)["work_unit_id"] == work_unit_id
 
     verified = _invoke(
         [
@@ -168,13 +169,13 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
-    assert _payload(verified.output)["granted_verificado_completo"] is True
+    assert unwrap_schema_envelope(verified.output)["calculation_revision_id"] == calculation_revision_id
+    assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is True
     # A granted verification has no recovery action or speculative next-step
     # notice: export requires additional material input that this verifier does
     # not own.
     assert _envelope_status(verified.output) == "warning", verified.output
-    granted_notices = _notices(verified.output)
+    granted_notices = unwrap_envelope_notices(verified.output)
     assert [notice["code"] for notice in granted_notices] == ["config.login.session_not_persisted"], verified.output
     assert granted_notices[0]["action"] is None
 
@@ -188,7 +189,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         ],
     )  # fmt: skip
     assert exported.exit_code == 0, exported.output
-    payload = _payload(exported.output)
+    payload = unwrap_schema_envelope(exported.output)
     assert payload["work_unit_id"] == work_unit_id
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert out.exists()
@@ -224,7 +225,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     first = _invoke(
         [
@@ -234,10 +235,12 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
-    assert _payload(first.output)["granted_verificado_completo"] is True, first.output
-    report_id = _payload(first.output)["verification_report_id"]
+    assert unwrap_schema_envelope(first.output)["granted_verificado_completo"] is True, first.output
+    report_id = unwrap_schema_envelope(first.output)["verification_report_id"]
     # The first verify grants and carries no idempotent-no-op notice.
-    assert "modelo.work.verify.idempotent_noop" not in [n["code"] for n in _notices(first.output)], first.output
+    assert "modelo.work.verify.idempotent_noop" not in [n["code"] for n in unwrap_envelope_notices(first.output)], (
+        first.output
+    )
 
     # Work-addressed re-verify (natural key): collapses to the existing report.
     work_addressed = _invoke(
@@ -248,10 +251,12 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert work_addressed.exit_code == 0, work_addressed.output
-    assert _payload(work_addressed.output)["verification_report_id"] == report_id, work_addressed.output
-    assert _payload(work_addressed.output)["calculation_revision_id"] == calculation_revision_id, work_addressed.output
+    assert unwrap_schema_envelope(work_addressed.output)["verification_report_id"] == report_id, work_addressed.output
+    assert unwrap_schema_envelope(work_addressed.output)["calculation_revision_id"] == calculation_revision_id, (
+        work_addressed.output
+    )
     work_addressed_noop = next(
-        n for n in _notices(work_addressed.output) if n["code"] == "modelo.work.verify.idempotent_noop"
+        n for n in unwrap_envelope_notices(work_addressed.output) if n["code"] == "modelo.work.verify.idempotent_noop"
     )
     assert work_addressed_noop["severity"] == "info", work_addressed.output
     assert work_addressed_noop["context"]["verification_report_id"] == report_id, work_addressed.output
@@ -264,10 +269,12 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert revision_addressed.exit_code == 0, revision_addressed.output
-    assert _payload(revision_addressed.output)["verification_report_id"] == report_id, revision_addressed.output
-    assert "modelo.work.verify.idempotent_noop" in [n["code"] for n in _notices(revision_addressed.output)], (
+    assert unwrap_schema_envelope(revision_addressed.output)["verification_report_id"] == report_id, (
         revision_addressed.output
     )
+    assert "modelo.work.verify.idempotent_noop" in [
+        n["code"] for n in unwrap_envelope_notices(revision_addressed.output)
+    ], revision_addressed.output
 
 
 def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state() -> None:
@@ -287,7 +294,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
 
     # Casilla 02 (gastos) is bucket-bound (aggregated from deductible ledger
     # rows) and cannot be supplied via --casilla; with no expense seeded it
@@ -302,8 +309,8 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
-    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
+    assert unwrap_schema_envelope(calculated.output)["work_unit_id"] == work_unit_id
 
     verified = _invoke(
         [
@@ -313,7 +320,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         ],
     )  # fmt: skip
     assert verified.exit_code == 1, verified.output
-    payload = _payload(verified.output)
+    payload = unwrap_schema_envelope(verified.output)
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
@@ -331,7 +338,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     # (NoticeSeverity has no ERROR member; a non-granted verify must read a
     # non-success status).
     assert _envelope_status(verified.output) == "warning", verified.output
-    notices = _notices(verified.output)
+    notices = unwrap_envelope_notices(verified.output)
     assert notices, verified.output
     blocking = next(
         notice for notice in notices if notice["code"] == "modelo.work.verify.finding.cross_period_dependency_unclean"
@@ -390,7 +397,7 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     assert calculated.exit_code == 0, calculated.output
     assert "validate_construct_closure() missing" not in calculated.output
     assert "Traceback" not in calculated.output
-    casillas = _payload(calculated.output)["casilla_values"]
+    casillas = unwrap_schema_envelope(calculated.output)["casilla_values"]
     # RIRPF art. 30.2.4a, by hand: rendimiento previo = 3000 - 600 = 2400.
     #   2023 (7 %): provision 2400 x 7 % = 168; 02 = 600 + 168 = 768; 03 = 3000 - 768 = 2232;
     #               04 = 2232 x 20 % = 446.40; 19 = 446.40 - 100 = 346.40.
@@ -434,7 +441,7 @@ def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_
     assert calculated.exit_code == 0, calculated.output
     blockers = [
         notice["context"]
-        for notice in _notices(calculated.output)
+        for notice in unwrap_envelope_notices(calculated.output)
         if notice["context"] is not None and notice["context"].get("level") == "blocks"
     ]
     income_blocker = next(context for context in blockers if context.get("box") == "01")
@@ -485,7 +492,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     verified = _invoke(
         [
@@ -495,7 +502,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
-    verify_payload = _payload(verified.output)
+    verify_payload = unwrap_schema_envelope(verified.output)
     assert verify_payload["calculation_revision_id"] == calculation_revision_id
     assert verify_payload["granted_verificado_completo"] is True
 
@@ -510,7 +517,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         ],
     )  # fmt: skip
     assert filed.exit_code == 0, filed.output
-    file_payload = _payload(filed.output)
+    file_payload = unwrap_schema_envelope(filed.output)
     assert file_payload["calculation_revision_id"] == calculation_revision_id
     assert file_payload["aeat_accepted"] is False
 
@@ -543,7 +550,7 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_adjacent_work_reads_resolve_visible_targets() -> None:
@@ -558,7 +565,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     capture_m111_invoice_withholding()
 
     calculated = _invoke(
@@ -569,7 +576,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+    calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     shown_revision = _invoke(
         [
@@ -580,7 +587,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         ],
     )  # fmt: skip
     assert shown_revision.exit_code == 0, shown_revision.output
-    assert _payload(shown_revision.output)["calculation_revision_id"] == calculation_revision_id
+    assert unwrap_schema_envelope(shown_revision.output)["calculation_revision_id"] == calculation_revision_id
 
     history = _invoke(
         [
@@ -590,10 +597,12 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         ],
     )  # fmt: skip
     assert history.exit_code == 0, history.output
-    assert _payload(history.output)["work_unit_id"] == work_unit_id
-    assert _payload(history.output)["event_count"] >= 2
+    assert unwrap_schema_envelope(history.output)["work_unit_id"] == work_unit_id
+    assert unwrap_schema_envelope(history.output)["event_count"] >= 2
     history_notice = next(
-        notice for notice in _notices(history.output) if notice["code"] == "modelo.work.history.next_action"
+        notice
+        for notice in unwrap_envelope_notices(history.output)
+        if notice["code"] == "modelo.work.history.next_action"
     )
     assert history_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.status",

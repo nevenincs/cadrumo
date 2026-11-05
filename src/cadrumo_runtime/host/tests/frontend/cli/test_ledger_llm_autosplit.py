@@ -24,25 +24,23 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
+from cadrumo.tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from cadrumo.tests.cli_json_support import require_json_object
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
-from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
-from ._ledger_llm_support import ledger_llm_profile
-from .ledger_ux_support import _invoke_exact_profile
+from .ledger_llm_support import import_one_transaction, ledger_llm_profile
+from .ledger_ux_support import invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["ledger_llm_profile"]
 
 
 def _invoke(ledger_llm_profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
-    return _invoke_exact_profile(ledger_llm_profile, args)
+    return invoke_exact_profile(ledger_llm_profile, args)
 
 
 def _import_one_transaction(ledger_llm_profile: NativeCliProfileFixture, tmp_path: Path) -> str:
-    return _shared_import_one_transaction(
+    return import_one_transaction(
         tmp_path,
         invoke_cli=partial(_invoke, ledger_llm_profile),
         payee="Proveedor Mixto SL",
@@ -64,7 +62,7 @@ def _import_two_transactions(ledger_llm_profile: NativeCliProfileFixture, tmp_pa
     assert imported.exit_code == 0, imported.output
     listed = _invoke(ledger_llm_profile, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    rows = require_json_object(_json_result(listed))["rows"]
+    rows = require_json_object(unwrap_cli_result(listed))["rows"]
     assert isinstance(rows, list)
     transaction_ids: list[str] = []
     for row in rows:
@@ -143,7 +141,7 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(
 
     filtered = _invoke(ledger_llm_profile, ["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
     assert filtered.exit_code == 0, filtered.output
-    shown = {row["transaction_id"] for row in _json_result(filtered)["rows"]}
+    shown = {row["transaction_id"] for row in unwrap_cli_result(filtered)["rows"]}
     assert rejected_id not in shown
     assert unrelated_id in shown
 

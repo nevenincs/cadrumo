@@ -15,8 +15,7 @@ from typing import Protocol
 from pydantic import BaseModel
 
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
@@ -27,7 +26,7 @@ from ..domain.record import LocalModelListRecord, ProviderSettingsRecord
 class StoredProviderRecord(BaseModel):
     """A present record that decrypted and validated, with its row revision."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     record: ProviderSettingsRecord
     revision: Hex64Str
@@ -36,7 +35,7 @@ class StoredProviderRecord(BaseModel):
 class AbsentProviderRecord(BaseModel):
     """No record is stored for the provider: both axes are unset."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LaneId
 
@@ -48,7 +47,7 @@ class UnreadableProviderRecord(BaseModel):
     may remove it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LaneId
     revision: Hex64Str | None
@@ -60,7 +59,7 @@ type ProviderRecordRead = StoredProviderRecord | AbsentProviderRecord | Unreadab
 class StoredLocalModelList(BaseModel):
     """The local model list record decrypted and validated, with its row revision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     record: LocalModelListRecord
     revision: Hex64Str
@@ -69,7 +68,7 @@ class StoredLocalModelList(BaseModel):
 class AbsentLocalModelList(BaseModel):
     """No model list record is stored: the person added no model by name."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class UnreadableLocalModelList(BaseModel):
@@ -81,7 +80,7 @@ class UnreadableLocalModelList(BaseModel):
     secure-object funnel, which stamps a revision on each write.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     revision: Hex64Str
 
@@ -101,7 +100,7 @@ class StoreRefusalCode(StrEnum):
 class StoreRefusal(BaseModel):
     """A typed store refusal carrying no storage detail."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: StoreRefusalCode
 
@@ -113,7 +112,7 @@ class StoreGenerations(BaseModel):
     changes with every committed provider-settings write or deletion.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sign_in: Hex64Str
     provider_settings: Hex64Str
@@ -156,7 +155,7 @@ class ProviderCatalogSource(Protocol):
 class LiveLaneBackground(BaseModel):
     """What the running agent's live catalogue says a background run on one lane takes."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     accepted_media: tuple[ModelRunMediaKind, ...] | None
     """The attachment families the lane takes; ``None`` when the catalogue does not say."""

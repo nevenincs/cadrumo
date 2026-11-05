@@ -30,11 +30,11 @@ from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-_NEW_PROFILE_INPUT = "s13-new-profile-passphrase-that-must-never-escape"
-_CERTIFICATE_INPUT = "s13-certificate-passphrase-that-must-never-escape"
-_REFUSAL_INPUT = "s14-refusal-secret-that-must-never-escape"
-_OVERSIZE_INPUT = "s14-oversize-secret-that-must-never-escape"
-_ALL_SECRETS = (FIXTURE_PROFILE_INPUT, _NEW_PROFILE_INPUT, _CERTIFICATE_INPUT, _REFUSAL_INPUT)
+NEW_PROFILE_INPUT = "s13-new-profile-passphrase-that-must-never-escape"
+CERTIFICATE_INPUT = "s13-certificate-passphrase-that-must-never-escape"
+REFUSAL_INPUT = "s14-refusal-secret-that-must-never-escape"
+OVERSIZE_INPUT = "s14-oversize-secret-that-must-never-escape"
+_ALL_SECRETS = (FIXTURE_PROFILE_INPUT, NEW_PROFILE_INPUT, CERTIFICATE_INPUT, REFUSAL_INPUT)
 
 
 def bootstrap_interpreter() -> str:
@@ -48,7 +48,7 @@ def bootstrap_interpreter() -> str:
     return str(resolved)
 
 
-_PROMPTS = (
+PROMPTS = (
     "profile passphrase:",
     "current profile passphrase:",
     "new profile passphrase:",
@@ -58,7 +58,7 @@ _PROMPTS = (
 )
 
 
-def _base_interpreter_pythonpath() -> str:
+def base_interpreter_pythonpath() -> str:
     """Preserve the active environment's imports without launching its stub."""
     return os.pathsep.join(entry for entry in sys.path if entry)
 
@@ -88,7 +88,7 @@ _DURABLE_SNAPSHOT_SOURCE = dedent(
 )
 
 
-_HARNESS = (
+HARNESS = (
     dedent(
         """
     import json
@@ -182,7 +182,7 @@ _HARNESS = (
     )
 )
 
-_WINDOWS_HANDLE_HARNESS = (
+WINDOWS_HANDLE_HARNESS = (
     dedent(
         """
     import json
@@ -287,7 +287,9 @@ _WINDOWS_HANDLE_HARNESS = (
 )
 
 
-def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLanguage.EN) -> dict[str, object]:
+def machine_secret_channels_settings(
+    storage_root: Path, *, output_language: OutputLanguage = OutputLanguage.EN
+) -> dict[str, object]:
     authority_root = load_settings().cadrumo_authority_root
     return {
         "cadrumo_authority_root": None if authority_root is None else str(authority_root),
@@ -382,7 +384,7 @@ def _windows_startup(handles: Sequence[int]) -> WindowsStartupInfo:
     raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
 
 
-def _run(
+def run(
     storage_root: Path,
     args: Sequence[str],
     *,
@@ -398,7 +400,7 @@ def _run(
     output_language: OutputLanguage = OutputLanguage.EN,
     assert_unread_indices: Sequence[int] = (),
     assert_stdin_unread: bool = False,
-    unread_payload: str = _REFUSAL_INPUT,
+    unread_payload: str = REFUSAL_INPUT,
 ) -> subprocess.CompletedProcess[str]:
     """Run the real CLI, mapping payload pipes to argv ``{fd}`` tokens."""
     if inherited_payloads and os.name == "nt":
@@ -419,7 +421,7 @@ def _run(
     with _payload_channels(inherited_payloads) as readers:
         rendered_args = _render_fd_args(args, readers)
         payload = {
-            "settings": _settings(storage_root, output_language=output_language),
+            "settings": machine_secret_channels_settings(storage_root, output_language=output_language),
             "program": program,
             "assert_closed_descriptors": [
                 *(() if assert_closed_index is None else (readers[assert_closed_index],)),
@@ -435,7 +437,7 @@ def _run(
         }
         return as_text_completed_process(
             run_audited_process(
-                [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
+                [sys.executable, "-c", HARNESS, json.dumps(payload), *rendered_args],
                 cwd=SRC_CADRUMO,
                 env=subprocess_cli_env(
                     strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
@@ -478,7 +480,7 @@ def _run_windows_handles(
         command, handles, profile_handle, secrets_handle = _windows_command_and_handles(args, readers)
         startup = _windows_startup(handles)
         payload = {
-            "settings": _settings(storage_root, output_language=output_language),
+            "settings": machine_secret_channels_settings(storage_root, output_language=output_language),
             "program": program,
             "profile_handle": profile_handle,
             "secrets_handle": secrets_handle,
@@ -494,7 +496,7 @@ def _run_windows_handles(
                 [
                     bootstrap_interpreter(),
                     "-c",
-                    _WINDOWS_HANDLE_HARNESS,
+                    WINDOWS_HANDLE_HARNESS,
                     json.dumps(payload),
                     *command,
                 ],
@@ -503,7 +505,7 @@ def _run_windows_handles(
                     strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
                     extra={
                         "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-                        "PYTHONPATH": _base_interpreter_pythonpath(),
+                        "PYTHONPATH": base_interpreter_pythonpath(),
                         **(hostile_env or {}),
                     },
                 ),
@@ -520,11 +522,11 @@ def _run_windows_handles(
         )
 
 
-def _combined(result: subprocess.CompletedProcess[str]) -> str:
+def machine_secret_channels_combined(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
-def _storage_snapshot(root: Path) -> dict[str, bytes]:
+def storage_snapshot(root: Path) -> dict[str, bytes]:
     """Capture every durable custody artifact except diagnostic logs.
 
     Any process that reads the tax authority may leave its per-user admission
@@ -555,7 +557,7 @@ def _is_diagnostic(root: Path, path: Path) -> bool:
 
 def _assert_no_prompts(combined: str) -> None:
     """Ensure machine-secret subprocesses never fall back to interactive prompts."""
-    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
+    assert not any(prompt in combined.lower() for prompt in PROMPTS)
 
 
 def _assert_no_secrets(combined: str, extra_secrets: Sequence[str]) -> None:
@@ -585,14 +587,14 @@ def _assert_refusal_envelope(result: subprocess.CompletedProcess[str], combined:
     assert isinstance(envelope["error"].get("message"), str)
 
 
-def _assert_refused(
+def assert_refused(
     result: subprocess.CompletedProcess[str],
     root: Path,
     *,
     before: dict[str, bytes] | None = None,
     extra_secrets: Sequence[str] = (),
 ) -> str:
-    combined = _combined(result)
+    combined = machine_secret_channels_combined(result)
     assert result.returncode == 2, combined
     _assert_refusal_envelope(result, combined)
     _assert_no_prompts(combined)
@@ -600,19 +602,19 @@ def _assert_refused(
     _assert_no_secrets(combined, extra_secrets)
     _assert_secret_free_logs(root, secrets)
     if before is not None:
-        after = _storage_snapshot(root)
+        after = storage_snapshot(root)
         changed_paths = sorted(path for path in before.keys() | after.keys() if before.get(path) != after.get(path))
         assert after == before, f"durable storage changed: {changed_paths}"
     return combined
 
 
-def _assert_success(
+def assert_success(
     result: subprocess.CompletedProcess[str],
     storage_root: Path,
     *,
     extra_secrets: Sequence[str] = (),
 ) -> dict[str, Any]:
-    combined = _combined(result)
+    combined = machine_secret_channels_combined(result)
     assert result.returncode == 0, combined
     _assert_no_prompts(combined)
     secrets = (*_ALL_SECRETS, *extra_secrets)
@@ -655,10 +657,10 @@ def seed_certificate_source_for_refusal(storage_root: Path, *, profile_label: st
             close_active_bucket_session()
 
 
-def _register_certificate_source(storage_root: Path, *, name: str) -> None:
+def register_certificate_source(storage_root: Path, *, name: str) -> None:
     certificate_path = storage_root / "s13-certificate.p12"
     certificate_path.write_bytes(b"registered source placeholder")
-    result = _run(
+    result = run(
         storage_root,
         [
             "--format",
@@ -676,7 +678,7 @@ def _register_certificate_source(storage_root: Path, *, name: str) -> None:
         stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
         program="cadrumo-runtime",
     )
-    assert result.returncode == 0, _combined(result)
+    assert result.returncode == 0, machine_secret_channels_combined(result)
 
 
 @pytest.fixture
@@ -699,7 +701,7 @@ def cleanup_keychain(tmp_path: Path) -> None:
             reap_profile_session_keys(child)
 
 
-def _restore_material(tmp_path: Path) -> Path:
+def restore_material(tmp_path: Path) -> Path:
     """Register a profile in a scratch root and return its committed capsule directory."""
     source = tmp_path / "restore-source"
     outcome = register_password_only_profile(source)
@@ -708,19 +710,19 @@ def _restore_material(tmp_path: Path) -> Path:
     return load_committed_profile_password_material(UUID(outcome.profile_id), root=source).capsule_path
 
 
-def _complete_registered_profile(storage_root: Path, *, flags: Sequence[str]) -> None:
+def complete_registered_profile(storage_root: Path, *, flags: Sequence[str]) -> None:
     """Answer every required question and promote the profile, each in its own process."""
     authentication = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
     for command in (("edit", "--quiet", *flags), ("complete-setup",)):
-        result = _run(
+        result = run(
             storage_root,
             ["--format", "json", "--profile-secrets-stdin", "config", "profile", *command],
             stdin=authentication,
         )
-        assert result.returncode == 0, _combined(result)
+        assert result.returncode == 0, machine_secret_channels_combined(result)
 
 
-def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+def machine_secret_channels_envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
     """Return the one JSON envelope a ``--format json`` run printed, on either stream."""
     with suppress(ValueError):
         document = json.loads(result.stdout)
@@ -731,4 +733,4 @@ def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
             document = json.loads(line)
             if isinstance(document, dict):
                 return document
-    raise AssertionError(f"no JSON envelope in the output:\n{_combined(result)}")
+    raise AssertionError(f"no JSON envelope in the output:\n{machine_secret_channels_combined(result)}")

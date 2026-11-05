@@ -487,8 +487,8 @@ def test_malformed_wts_inventory_never_corroborates_absence(native: _Native, row
 def test_a_slow_account_lookup_is_reported_with_its_outcome_and_never_names_the_account(
     native: _Native, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    monkeypatch.setattr(windows_desktop_observation, "_ACCOUNT_LOOKUP_SLOW_SECONDS", 0.0)
-    logger_name = windows_desktop_observation._log.name
+    monkeypatch.setattr(windows_desktop_observation, "ACCOUNT_LOOKUP_SLOW_SECONDS", 0.0)
+    logger_name = windows_desktop_observation.log.name
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         assert windows_login_inventory(expected_owner=_OWNER).complete
         completed = delivered_records(caplog, logger_name)

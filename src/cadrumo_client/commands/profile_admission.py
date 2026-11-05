@@ -43,7 +43,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installed_client import open_installed_client
 
 
-def _password(
+def password(
     client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
 ) -> None:
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
@@ -128,7 +128,7 @@ def authenticate_profile_client(
         _api_key(client, selection=root_selection)
         return
     if root_selection is not None:
-        _password(client, selection=root_selection, not_persisted=not_persisted)
+        password(client, selection=root_selection, not_persisted=not_persisted)
         return
     # A live sign-in on this OS login admits every client, attached to a terminal or not.
     try:
@@ -142,7 +142,7 @@ def authenticate_profile_client(
         refusal = error.reason
         if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
             if terminal_can_prompt_for_secrets():
-                _password(client, selection=None, not_persisted=not_persisted)
+                password(client, selection=None, not_persisted=not_persisted)
                 return
             raise attach_cli_policy_verdict(
                 CliRefusedBoundaryError(

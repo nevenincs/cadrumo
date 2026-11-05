@@ -26,18 +26,18 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
     seed_m130_income_transaction,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
 )
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .modelo_profile_seed import seed_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
@@ -61,7 +61,7 @@ def _calculate_m130_draft() -> str:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    created_payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(created.output))
+    created_payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(created.output))
     work_unit_id = created_payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
 
@@ -79,7 +79,7 @@ def _calculate_m130_draft() -> str:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(calculated.output))
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(calculated.output))
     casilla_values = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["casilla_values"])
     assert casilla_values["07"] == "1600.00", casilla_values
     revision_id = payload["calculation_revision_id"]
@@ -167,7 +167,7 @@ def test_work_revision_json_observation_carries_formula_op() -> None:
 
     shown = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
-    payload = _payload(shown.output)
+    payload = unwrap_schema_envelope(shown.output)
 
     observation_07 = next(obs for obs in payload["observations"] if obs["casilla_id"] == "07")
     assert observation_07["op"] == "subtract"

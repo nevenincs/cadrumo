@@ -74,8 +74,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from .served_runtime import SyntheticLogin, admit_session, serving_runtime
-from .test_modelo_metadata import _connect, _submit
-from .test_modelo_metadata_history import _observe
+from .test_modelo_metadata import connect, submit
+from .test_modelo_metadata_history import observe
 
 pytestmark = [
     pytest.mark.integration,
@@ -104,7 +104,7 @@ def _run[T: BaseModel](
         deadline=deadline,
     )
     assert isinstance(contract, OperationContractReply), contract
-    submitted = _submit(
+    submitted = submit(
         client,
         profile_id,
         session_id,
@@ -126,7 +126,7 @@ def _run[T: BaseModel](
     )
     assert isinstance(started, OperationAcknowledged), started
     while True:
-        terminal = _observe(client, profile_id, session_id, operation_id).projection
+        terminal = observe(client, profile_id, session_id, operation_id).projection
         if terminal.terminal_condition is not None:
             break
         assert time.monotonic() < deadline
@@ -360,7 +360,7 @@ def _file_twice_and_refuse_foreign_subject(
         assert filed.advisories == advisories
         receipts.append(record)
     assert receipts[0] == receipts[1]
-    denied = _submit(
+    denied = submit(
         client,
         profile_id,
         session_id,
@@ -396,7 +396,7 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
             capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
             secret_store=lambda: subject.native,
         ):
-            client = _connect(endpoint)
+            client = connect(endpoint)
             try:
                 session_id = admit_session(client, profile_id, method="api_key", proof=key)
                 if calculate_in_runtime:

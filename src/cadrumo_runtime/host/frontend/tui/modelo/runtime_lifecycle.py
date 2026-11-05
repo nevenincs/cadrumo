@@ -104,7 +104,7 @@ def _attestation_admission(
     return receipt.to_admission()
 
 
-async def _admit_attestation(
+async def admit_attestation(
     client: FrontendClient,
     declaration: DeclarationsWorkspaceDeclarationRefV1,
     observed_at: datetime,
@@ -237,7 +237,7 @@ class _RuntimeModeloLifecycleBindings:
 
     def admit(self, observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
         self.require_session()
-        return asyncio.run(_admit_attestation(self.client, self.declaration, observed_at, self.session_id))
+        return asyncio.run(admit_attestation(self.client, self.declaration, observed_at, self.session_id))
 
     def renew(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
         projection = self.read(

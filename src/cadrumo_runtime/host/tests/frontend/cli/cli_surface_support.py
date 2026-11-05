@@ -55,7 +55,7 @@ def create_cli_surface_profile(label: str = "operator", *, log_in: bool = True) 
     )
 
 
-def _active_bucket_id() -> str:
+def active_bucket_id() -> str:
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()

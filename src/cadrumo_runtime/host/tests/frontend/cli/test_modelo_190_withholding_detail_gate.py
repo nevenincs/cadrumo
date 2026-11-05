@@ -51,8 +51,7 @@ from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
@@ -151,7 +150,7 @@ def _add_received_professional_invoice(session: NativeApiCliSession[None], *, nu
         "--iva-category", "domestic_general",
     )  # fmt: skip
     assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
-    invoice_id = _payload(created.output)["invoice_id"]
+    invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
     assert isinstance(invoice_id, str) and invoice_id, created.output
     return invoice_id
 
@@ -177,7 +176,7 @@ def _create_190_work_unit(session: NativeApiCliSession[None]) -> str:
         "--modelo", "190", "--year", _FILING_YEAR, "--period", "0A",
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(created.output))
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(created.output))
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
     return work_unit_id
@@ -194,7 +193,7 @@ def _calculate(session: NativeApiCliSession[None], work_unit_id: str) -> str:
         work_unit_id,
     )
     assert calculated.exit_code == 0, calculated.output
-    payload = _payload(calculated.output)
+    payload = unwrap_schema_envelope(calculated.output)
     values = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["casilla_values"])
     assert values["decl.total-percepciones"] == "0", calculated.output
     assert values["decl.percepciones-total"] == "0.00", calculated.output
@@ -243,7 +242,7 @@ def test_verify_refuses_an_empty_190_contradicted_by_invoice_retenciones(
         )
 
         assert verified.exit_code == 1, verified.output
-        payload = _payload(verified.output)
+        payload = unwrap_schema_envelope(verified.output)
         assert payload["granted_verificado_completo"] is False
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "blocking"
@@ -279,7 +278,7 @@ def test_verify_refuses_an_attested_nil_190_contradicted_by_a_ledger_payment(
         )
 
         assert verified.exit_code == 1, verified.output
-        assert _payload(verified.output)["granted_verificado_completo"] is False
+        assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is False
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "blocking"
         assert facts["contradicting_invoice_count"] == "0"
@@ -328,7 +327,7 @@ def test_verify_grants_a_fully_attested_nil_190(
         )
 
         assert verified.exit_code == 0, verified.output
-        payload = _payload(verified.output)
+        payload = unwrap_schema_envelope(verified.output)
         assert payload["granted_verificado_completo"] is True
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "warning"
@@ -357,7 +356,7 @@ def test_the_refusal_renders_in_every_supported_locale(
                 calculation_revision_id,
             )
             assert verified.exit_code == 1, verified.output
-            assert _payload(verified.output)["granted_verificado_completo"] is False
+            assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is False
             facts = _finding_facts(verified.output)
             assert facts["severity"] == "blocking"
             assert facts["contradicting_invoice_count"] == "1"
@@ -417,7 +416,7 @@ def test_the_refused_revision_cannot_be_filed_locally(
             calculation_revision_id,
         )
         assert refused.exit_code == 1, refused.output
-        assert _payload(refused.output)["granted_verificado_completo"] is False
+        assert unwrap_schema_envelope(refused.output)["granted_verificado_completo"] is False
         assert _finding_facts(refused.output)["contradicting_invoice_count"] == "1"
 
         filed = session.invoke_password("app", "modelo", "work", "file", calculation_revision_id)

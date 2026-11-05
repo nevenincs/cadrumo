@@ -143,7 +143,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             endpoint.listen()
             operation_endpoint.listen()
             proof_endpoint.listen()
-            environment = _worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
+            environment = worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
             environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
             product_version = version("cadrumo")
             worker_entrypoint = (
@@ -409,7 +409,7 @@ def _direct_windows_interpreter(interpreter: str, environment: dict[str, str]) -
     return base
 
 
-def _worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
+def worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
     """Pin the storage root and keep operator storage controls across the isolated worker boundary.
 
     POSIX workers start from a fixed noncredential environment; Windows workers

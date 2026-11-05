@@ -13,8 +13,8 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
+    isolated_cli_backend,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
@@ -22,15 +22,14 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -50,7 +49,7 @@ def _store_current_profile(
     iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=runtime_profile.bucket_id,
             facts=(

@@ -17,7 +17,7 @@ from .. import macos_process as native
 from ..macos_process import (
     MacosProcessIncarnation,
     MacosSignalDelivery,
-    _UniqueIdentifierInfo,
+    UniqueIdentifierInfo,
     decode_macos_incarnation,
     macos_audit_token,
     macos_signal_delivery,
@@ -27,14 +27,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _record(*, version: int = 41, unique_id: int = 9_000_001) -> bytes:
-    value = _UniqueIdentifierInfo()
+    value = UniqueIdentifierInfo()
     value.unique_id, value.parent_unique_id = unique_id, 9_000_000
     value.version, value.original_parent_version = version, 7
     return ctypes.string_at(ctypes.byref(value), ctypes.sizeof(value))
 
 
 def test_incarnation_record_carries_pid_version_and_unique_identity() -> None:
-    assert ctypes.sizeof(_UniqueIdentifierInfo) == 56
+    assert ctypes.sizeof(UniqueIdentifierInfo) == 56
     assert decode_macos_incarnation(_record(), pid=123) == MacosProcessIncarnation(
         pid=123, version=41, unique_id=9_000_001
     )

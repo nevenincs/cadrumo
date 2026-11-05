@@ -16,7 +16,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import macos_coalition as native
 from ..macos_coalition import (
-    _CoalitionInfo,
+    CoalitionInfo,
     decode_macos_resource_coalition,
     macos_coalition_members,
     terminate_macos_coalition,
@@ -223,13 +223,13 @@ def test_invalid_termination_request_refuses_before_native_access(coalition: int
 
 
 def _coalition_record(resource: int, jetsam: int = 99) -> bytes:
-    value = _CoalitionInfo()
+    value = CoalitionInfo()
     value.coalition_ids[0], value.coalition_ids[1] = resource, jetsam
     return ctypes.string_at(ctypes.byref(value), ctypes.sizeof(value))
 
 
 def test_coalition_record_uses_the_resource_word() -> None:
-    assert ctypes.sizeof(_CoalitionInfo) == 40
+    assert ctypes.sizeof(CoalitionInfo) == 40
     assert decode_macos_resource_coalition(_coalition_record(1056028)) == 1056028
 
 

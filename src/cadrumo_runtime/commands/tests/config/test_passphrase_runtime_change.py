@@ -91,7 +91,7 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: str(profile_id))
     monkeypatch.setattr(
         passphrase,
-        "_collect_passphrases",
+        "collect_passphrases",
         lambda **_kwargs: passphrase.PassphraseChangeSecrets(
             current_passphrase=SecretStr("current-secret"),
             new_passphrase=SecretStr("replacement-secret"),
@@ -129,7 +129,7 @@ def test_missing_active_profile_refuses_before_collecting_a_secret(monkeypatch: 
     def forbidden(**_kwargs: object) -> None:
         raise AssertionError("missing target consumed a secret")
 
-    monkeypatch.setattr(passphrase, "_collect_passphrases", forbidden)
+    monkeypatch.setattr(passphrase, "collect_passphrases", forbidden)
     monkeypatch.setattr(passphrase, "open_cli_profile_client", lambda _target, _ctx: forbidden())
     with pytest.raises(CliRefusedBoundaryError):
         passphrase.passphrase_change(_context())
@@ -154,7 +154,7 @@ def test_post_submit_uncertainty_keeps_operation_identity_and_wipes_proofs(monke
     monkeypatch.setattr(passphrase, "open_cli_profile_client", lambda _profile_id, _ctx: client)
     monkeypatch.setattr(
         passphrase,
-        "_collect_passphrases",
+        "collect_passphrases",
         lambda **_kwargs: passphrase.PassphraseChangeSecrets(
             current_passphrase=SecretStr("current-secret"),
             new_passphrase=SecretStr("replacement-secret"),

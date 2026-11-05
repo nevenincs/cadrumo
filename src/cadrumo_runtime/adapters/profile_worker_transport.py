@@ -61,7 +61,7 @@ from .worker_transport import WorkerChannel
 _OPERATION_EXCHANGE_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 #: Control waits end on the reply or actual channel/process loss. The remaining
 #: finite bound is timeout containment, never a readiness or performance test.
-_CONTROL_EXCHANGE_SECONDS = DEFAULT_TIMEOUT_POLICY.timeout_seconds
+CONTROL_EXCHANGE_SECONDS = DEFAULT_TIMEOUT_POLICY.timeout_seconds
 #: How often an owed activity reply is looked for. Readiness is observed without
 #: consuming bytes, so a probe can stop waiting without desynchronising the stream.
 _PROBE_POLL_SECONDS = 0.02
@@ -96,7 +96,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         lock = self._operation_lock if operation else self._lock
         attempt = ExchangeAttempt()
         started = time.monotonic()
-        default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else _CONTROL_EXCHANGE_SECONDS
+        default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else CONTROL_EXCHANGE_SECONDS
         wire_deadline = started + default_seconds if deadline is None else deadline
         try:
             _acquire_exchange_lock(lock, wire_deadline, request, operation=operation)
@@ -246,7 +246,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
                 if not self._settle_unanswered_probe(channel, deadline):
                     return None
                 # A one-frame request: bound only a stalled pipe, never the worker's answer.
-                write_document(channel, request, deadline=time.monotonic() + _CONTROL_EXCHANGE_SECONDS)
+                write_document(channel, request, deadline=time.monotonic() + CONTROL_EXCHANGE_SECONDS)
                 self._unanswered_probe = request.root.request_id
                 reply = self._take_probe_reply(channel, deadline)
             except BaseException as error:
@@ -309,7 +309,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         self, request: ProfileWorkerExtensionRecordRequest, payload: bytearray | None = None
     ) -> tuple[ExtensionRecordReply, bytearray]:
         """Exchange opaque bytes on the existing protected worker control pipe."""
-        deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
+        deadline = time.monotonic() + CONTROL_EXCHANGE_SECONDS
         material = bytearray()
         undispatched = False
         _acquire_exchange_lock(self._lock, deadline, ProfileWorkerRequest(request), operation=False)
@@ -413,7 +413,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             time.sleep(min(_PROBE_POLL_SECONDS, remaining))
         # The worker writes a reply as one frame. Once it has begun, a frame
         # that does not complete within the control budget is a framing fault.
-        reply = read_document(channel, ProfileWorkerReply, deadline=time.monotonic() + _CONTROL_EXCHANGE_SECONDS).root
+        reply = read_document(channel, ProfileWorkerReply, deadline=time.monotonic() + CONTROL_EXCHANGE_SECONDS).root
         if (
             reply.identity != self.identity
             or reply.request_id != self._unanswered_probe

@@ -27,11 +27,11 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .session import connected_server_and_client_session
-from .test_operation_search_tool import _AdmittedClient
+from .test_operation_search_tool import AdmittedClient
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_RUN_ID = "a" * 16
+RUN_ID = "a" * 16
 _REVISION_ID = "b" * 64
 _WORK_UNIT_ID = "c" * 64
 
@@ -66,7 +66,7 @@ def _registry() -> OperationRegistry:
     )
 
 
-class _RecordingClient(_AdmittedClient):
+class RecordingClient(AdmittedClient):
     """The admitted lease, keeping each submission it is handed before its transport times out."""
 
     def __init__(self, profile_id: UUID) -> None:
@@ -80,7 +80,7 @@ class _RecordingClient(_AdmittedClient):
         super().operation(request, deadline=deadline)
 
 
-async def _execute(client: _RecordingClient, arguments: dict[str, Any]) -> dict[str, Any]:
+async def execute(client: RecordingClient, arguments: dict[str, Any]) -> dict[str, Any]:
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         return await adapter.call("execute", arguments)
@@ -88,17 +88,17 @@ async def _execute(client: _RecordingClient, arguments: dict[str, Any]) -> dict[
         await adapter.close()
 
 
-def _run_payload(profile_id: UUID) -> dict[str, object]:
-    return {"profile_id": str(profile_id), "run_id": _RUN_ID}
+def run_payload(profile_id: UUID) -> dict[str, object]:
+    return {"profile_id": str(profile_id), "run_id": RUN_ID}
 
 
-def _snapshot_payload(profile_id: UUID) -> dict[str, object]:
+def snapshot_payload(profile_id: UUID) -> dict[str, object]:
     return {"profile_id": str(profile_id), "calculation_revision_id": _REVISION_ID}
 
 
 @pytest.mark.anyio
 async def test_describe_and_search_state_the_subject_form_of_every_operation() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
         found = await adapter.call("search", {})
@@ -121,9 +121,9 @@ async def test_describe_and_search_state_the_subject_form_of_every_operation() -
 @pytest.mark.anyio
 async def test_execute_without_a_subject_submits_the_admitted_profile_for_a_profile_operation() -> None:
     profile_id = UUID("5aa00000-0000-4000-8000-0000000000aa")
-    client = _RecordingClient(profile_id)
+    client = RecordingClient(profile_id)
 
-    result = await _execute(client, {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID, "payload": {"kind": "status"}})
+    result = await execute(client, {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID, "payload": {"kind": "status"}})
 
     assert result["outcome"] == "unresolved"
     assert [item.subject_ref for item in client.submitted] == ["profile:5aa00000-0000-4000-8000-0000000000aa"]
@@ -131,39 +131,39 @@ async def test_execute_without_a_subject_submits_the_admitted_profile_for_a_prof
 
 @pytest.mark.anyio
 async def test_execute_without_a_subject_submits_the_payload_field_the_contract_names() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
-        {"definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID, "payload": _run_payload(client.profile_id)},
+        {"definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID, "payload": run_payload(client.profile_id)},
     )
 
     assert result["outcome"] == "unresolved"
-    assert [item.subject_ref for item in client.submitted] == [_RUN_ID]
+    assert [item.subject_ref for item in client.submitted] == [RUN_ID]
 
 
 @pytest.mark.anyio
 async def test_execute_accepts_a_supplied_subject_that_is_the_declared_one() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
-            "subject_ref": _RUN_ID,
-            "payload": _run_payload(client.profile_id),
+            "subject_ref": RUN_ID,
+            "payload": run_payload(client.profile_id),
         },
     )
 
     assert result["outcome"] == "unresolved"
-    assert [item.subject_ref for item in client.submitted] == [_RUN_ID]
+    assert [item.subject_ref for item in client.submitted] == [RUN_ID]
 
 
 @pytest.mark.anyio
 async def test_execute_refuses_a_subject_that_contradicts_a_profile_operation_before_submitting() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
@@ -185,14 +185,14 @@ async def test_execute_refuses_a_subject_that_contradicts_a_profile_operation_be
 
 @pytest.mark.anyio
 async def test_execute_refuses_a_subject_that_contradicts_the_payload_field_before_submitting() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
             "subject_ref": f"profile:{client.profile_id}",
-            "payload": _run_payload(client.profile_id),
+            "payload": run_payload(client.profile_id),
         },
     )
 
@@ -209,13 +209,13 @@ async def test_execute_refuses_a_subject_that_contradicts_the_payload_field_befo
 
 @pytest.mark.anyio
 async def test_execute_refuses_a_payload_without_the_field_its_subject_is_read_from() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
-            "subject_ref": _RUN_ID,
+            "subject_ref": RUN_ID,
             "payload": {"profile_id": str(client.profile_id)},
         },
     )
@@ -230,10 +230,10 @@ async def test_execute_refuses_a_payload_without_the_field_its_subject_is_read_f
 
 @pytest.mark.anyio
 async def test_execute_refuses_a_stored_work_unit_operation_without_a_subject_and_names_the_key_field() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
     arguments: dict[str, Any] = {
         "definition_id": MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
-        "payload": _snapshot_payload(client.profile_id),
+        "payload": snapshot_payload(client.profile_id),
     }
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(FrontendClient, client))
     try:
@@ -256,14 +256,14 @@ async def test_execute_refuses_a_stored_work_unit_operation_without_a_subject_an
 
 @pytest.mark.anyio
 async def test_execute_passes_on_the_work_unit_a_client_supplies_for_a_stored_record() -> None:
-    client = _RecordingClient(uuid4())
+    client = RecordingClient(uuid4())
 
-    result = await _execute(
+    result = await execute(
         client,
         {
             "definition_id": MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
             "subject_ref": _WORK_UNIT_ID,
-            "payload": _snapshot_payload(client.profile_id),
+            "payload": snapshot_payload(client.profile_id),
         },
     )
 

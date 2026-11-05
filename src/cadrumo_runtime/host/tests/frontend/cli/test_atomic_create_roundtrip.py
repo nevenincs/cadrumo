@@ -31,7 +31,7 @@ from cadrumo.application.user_profile.registration import ProfileRegistrationErr
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .cli_runner import invoke_unbound_cli
@@ -128,27 +128,27 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
-    list_names = [row["name"] for row in _json(listing)["profiles"]]
+    list_names = [row["name"] for row in unwrap_cli_result(listing)["profiles"]]
     assert list_names == ["alice"], list_names
     # The bucket id is redacted at the CLI boundary; the placeholder is stable.
-    assert _json(listing)["profiles"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert unwrap_cli_result(listing)["profiles"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
     show_first = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show_first.exit_code == 0, show_first.output
-    assert _json(show_first)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert unwrap_cli_result(show_first)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     # display_name is the operator label — the positional create arg.
-    assert _json(show_first)["display_name"] == "alice"
+    assert unwrap_cli_result(show_first)["display_name"] == "alice"
 
     unlock = _login("alice")
     assert unlock.exit_code == 0, unlock.output
-    assert _json(unlock)["active_profile"] == "alice"
+    assert unwrap_cli_result(unlock)["active_profile"] == "alice"
 
     show_second = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show_second.exit_code == 0, show_second.output
-    assert _json(show_second)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert unwrap_cli_result(show_second)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
     # The placeholder is stable across calls; display name agrees.
-    assert _json(show_first)["display_name"] == _json(show_second)["display_name"]
+    assert unwrap_cli_result(show_first)["display_name"] == unwrap_cli_result(show_second)["display_name"]
 
 
 def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> None:
@@ -163,7 +163,7 @@ def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> No
 
     show = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show.exit_code == 0, show.output
-    facts = {row["path"]: row["value"] for row in _json(show)["facts"]}
+    facts = {row["path"]: row["value"] for row in unwrap_cli_result(show)["facts"]}
     # The NIF is redacted at the CLI surface; assert the redaction shape, not
     # the raw operator value. The sha256 prefix is deterministic for the input.
     assert facts["identity.tax_id"].startswith("sha256:")
@@ -184,22 +184,22 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
-    assert sorted(row["name"] for row in _json(listing)["profiles"]) == ["alice", "bob"]
+    assert sorted(row["name"] for row in unwrap_cli_result(listing)["profiles"]) == ["alice", "bob"]
 
     unlock_alice = _login("alice")
     assert unlock_alice.exit_code == 0, unlock_alice.output
     show_alice = _invoke(["--format", "json", "config", "profile", "view"])
-    assert _json(show_alice)["display_name"] == "alice"
+    assert unwrap_cli_result(show_alice)["display_name"] == "alice"
 
     unlock_bob = _login("bob")
     assert unlock_bob.exit_code == 0, unlock_bob.output
     show_bob = _invoke(["--format", "json", "config", "profile", "view"])
-    assert _json(show_bob)["display_name"] == "bob"
+    assert unwrap_cli_result(show_bob)["display_name"] == "bob"
     # The two profiles surface distinct operator-visible display_names; profile
     # UUIDs are redacted at the CLI boundary to the shared placeholder.
-    assert _json(show_alice)["display_name"] != _json(show_bob)["display_name"]
-    assert _json(show_alice)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-    assert _json(show_bob)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert unwrap_cli_result(show_alice)["display_name"] != unwrap_cli_result(show_bob)["display_name"]
+    assert unwrap_cli_result(show_alice)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert unwrap_cli_result(show_bob)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
 
 def test_atomic_create_refuses_a_label_differing_only_in_case(_cli_storage: Path) -> None:
@@ -225,4 +225,4 @@ def test_atomic_create_refuses_a_label_differing_only_in_case(_cli_storage: Path
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
-    assert [row["name"] for row in _json(listing)["profiles"]] == ["Only One"]
+    assert [row["name"] for row in unwrap_cli_result(listing)["profiles"]] == ["Only One"]

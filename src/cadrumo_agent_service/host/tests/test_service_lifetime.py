@@ -75,14 +75,14 @@ class _Client:
 
 
 def _run(client: _Client, service: _Service, stop: Event, wake: Event) -> None:
-    main._run_service_loop(cast(InstalledServiceClient, client), cast(AgentService, service), stop, wake)
+    main.run_service_loop(cast(InstalledServiceClient, client), cast(AgentService, service), stop, wake)
 
 
 def test_the_lifetime_end_is_marked_before_the_connection_closes() -> None:
     stop, wake = Event(), Event()
     service = _Service(_Connection(), stop)
     service.released.set()
-    main._end_lifetime(cast(AgentService, service), stop, wake)
+    main.end_lifetime(cast(AgentService, service), stop, wake)
     assert service.stop_set_at_close is True
     assert stop.is_set() and wake.is_set()
 
@@ -94,7 +94,7 @@ def test_a_claim_cut_short_by_the_service_lifetime_end_drains_without_a_refusal(
     connection = _Connection()
     service = _Service(connection, stop)
     # The parent closes the service's input while a lease claim waits for its reply.
-    lifetime = Thread(target=main._end_lifetime, args=(service, stop, wake), name="test-service-lifetime")
+    lifetime = Thread(target=main.end_lifetime, args=(service, stop, wake), name="test-service-lifetime")
     client = _Client(connection, lifetime.start)
     try:
         with caplog.at_level(logging.DEBUG, logger="cadrumo_agent_service"):

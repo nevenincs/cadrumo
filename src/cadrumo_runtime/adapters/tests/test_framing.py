@@ -94,7 +94,7 @@ class CleanupChannel:
         self.released = True
 
 
-def _connection(channel: CleanupChannel) -> VerifiedConnection:
+def framing_connection(channel: CleanupChannel) -> VerifiedConnection:
     hello = ServerHello(product_version="cleanup-test", storage_identity="a" * 64, boot_id=uuid4())
     write_document(channel, hello, deadline=time.monotonic() + 5)
     channel.inbound.extend(b"".join(channel.writes))
@@ -109,7 +109,7 @@ def _connection(channel: CleanupChannel) -> VerifiedConnection:
 @pytest.mark.parametrize("frontend_owner", [False, True], ids=["verified-connection", "frontend-client"])
 def test_close_failure_retries_cleanup_without_reopening_exchanges(frontend_owner: bool) -> None:
     channel = CleanupChannel(close_failures=1)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     owner = (
         FrontendClient(connection, profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT)
         if frontend_owner
@@ -152,7 +152,7 @@ def test_close_failure_retries_cleanup_without_reopening_exchanges(frontend_owne
 @pytest.mark.parametrize("frontend_owner", [False, True], ids=["verified-connection", "frontend-client"])
 def test_successful_close_is_idempotent(frontend_owner: bool) -> None:
     channel = CleanupChannel(close_failures=0)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     owner = (
         FrontendClient(connection, profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT)
         if frontend_owner
@@ -174,7 +174,7 @@ def _answer(channel: CleanupChannel, *documents: BaseModel) -> None:
 
 def test_a_held_exchange_reads_every_step_of_one_request_and_admits_no_other_until_it_ends() -> None:
     channel = CleanupChannel(close_failures=0)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     request = SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
     coordinates = {
         "request_id": request.request_id,
@@ -218,7 +218,7 @@ def test_a_held_exchange_reads_every_step_of_one_request_and_admits_no_other_unt
 @pytest.mark.parametrize("fault", ["another-request", "caller"])
 def test_a_held_exchange_that_fails_closes_the_connection_and_wipes_its_secret(fault: str) -> None:
     channel = CleanupChannel(close_failures=0)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     request = SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
     _answer(
         channel,
@@ -451,7 +451,7 @@ async def test_public_frame_failure_preserves_primary_and_retains_failed_release
 @pytest.mark.asyncio
 async def test_failed_exchange_retains_one_owner_fences_admission_and_retries_once() -> None:
     channel = FaultChannel(direction="none")
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     channel.direction = "read"
     with pytest.raises(RefusalError) as caught:
         connection.session(
@@ -611,7 +611,7 @@ def _large_session_inventory() -> SessionInventoryReply:
 @pytest.mark.parametrize("large", [False, True], ids=["single-frame", "complete-scope-transfer"])
 def test_session_inventory_is_transparent_complete_and_individually_bounded(large: bool) -> None:
     channel = CleanupChannel(close_failures=0)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     inventory = _large_session_inventory()
     inventory = inventory.model_copy(
         update={"runtime_boot_id": connection.hello.boot_id, "sessions": inventory.sessions if large else ()}
@@ -636,7 +636,7 @@ def test_session_inventory_is_transparent_complete_and_individually_bounded(larg
 @pytest.mark.parametrize("identity", ["request_id", "runtime_boot_id", "connection_id"])
 def test_session_inventory_transfer_header_is_correlated_before_chunks(identity: str) -> None:
     channel = CleanupChannel(close_failures=0)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     inventory = _large_session_inventory().model_copy(update={"runtime_boot_id": connection.hello.boot_id})
     request = SessionInventory(
         request_id=inventory.request_id, profile_id=inventory.sessions[0].profile_id, session_id=uuid4()
@@ -737,7 +737,7 @@ async def test_session_inventory_transfer_type_failure_retains_one_cleanup_owner
 @pytest.mark.asyncio
 async def test_frontend_cleanup_adopts_failed_connection_owner_without_duplicate_native_retry() -> None:
     channel = FaultChannel(direction="none", close_failures=3)
-    connection = _connection(channel)
+    connection = framing_connection(channel)
     client = FrontendClient(connection, profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT)
     channel.direction = "read"
     primary: BaseException | None = None
@@ -777,10 +777,10 @@ async def test_frontend_cleanup_adopts_failed_connection_owner_without_duplicate
 @pytest.mark.asyncio
 async def test_frontend_cleanup_does_not_adopt_another_connections_failed_owner() -> None:
     foreign_channel = FaultChannel(direction="none")
-    foreign_connection = _connection(foreign_channel)
+    foreign_connection = framing_connection(foreign_channel)
     own_channel = CleanupChannel(close_failures=0)
     client = FrontendClient(
-        _connection(own_channel), profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        framing_connection(own_channel), profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
     foreign_channel.direction = "read"
     with pytest.raises(RefusalError) as caught:

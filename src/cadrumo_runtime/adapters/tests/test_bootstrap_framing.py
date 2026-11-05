@@ -20,7 +20,7 @@ from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .test_framing import CleanupChannel, _connection
+from .test_framing import CleanupChannel, framing_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -56,7 +56,7 @@ def test_delete_frontend_retains_transaction_identity_after_lost_commit() -> Non
                 self.inbound.extend(b"".join(recorder.writes))
 
     channel = LostReplyChannel(close_failures=0)
-    wire = _connection(channel)
+    wire = framing_connection(channel)
     profile = uuid4()
     confirmation = ProfileCustodyDeleteConfirmation(
         transaction_id=uuid4(),
@@ -78,7 +78,7 @@ def test_delete_frontend_retains_transaction_identity_after_lost_commit() -> Non
 @pytest.mark.parametrize("readiness", ["refusal", "wrong-request", "ready"])
 def test_reset_secret_is_sent_only_after_matching_readiness(readiness: str) -> None:
     channel = CleanupChannel(close_failures=0)
-    wire = _connection(channel)
+    wire = framing_connection(channel)
     channel.writes.clear()
     request = PasswordReset(request_id=uuid4(), profile_id=uuid4(), envelope_digest="sha256:" + "a" * 64)
     connection_id = uuid4()

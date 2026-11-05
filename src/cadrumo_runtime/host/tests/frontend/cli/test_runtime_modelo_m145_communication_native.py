@@ -41,7 +41,7 @@ from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
-from ._profile_cli_support import invoke_native_profile_revealing
+from .profile_cli_support import invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,

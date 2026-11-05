@@ -43,7 +43,7 @@ from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from .ledger_ux_support import _add_evidence, _invoke, open_bucket_session
+from .ledger_ux_support import add_evidence, invoke, open_bucket_session
 from .portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -110,7 +110,7 @@ def _recording_agent(
 
 
 def _extract(evidence_id: str) -> tuple[int, dict[str, Any]]:
-    extracted = _invoke(["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id])
+    extracted = invoke(["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id])
     return extracted.exit_code, json.loads(extracted.output)
 
 
@@ -123,7 +123,7 @@ def test_a_fill_the_model_does_not_fit_leaves_the_label_reading_standing_and_is_
 ) -> None:
 
     with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -206,24 +206,24 @@ def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
         "--kind", "received",
         "--counterparty-name", _SUPPLIER_NAME,
     ]  # fmt: skip
-    confirmed = _invoke(args)
+    confirmed = invoke(args)
     if confirmed.exit_code == 0:
         return confirmed
     error = json.loads(confirmed.output)["error"]
     assert error["code"] == "REFUSED_LEDGER_CONFIRMATION_BLOCKED", confirmed.output
-    review = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", evidence_id])
+    review = invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", evidence_id])
     assert review.exit_code == 0, review.output
     blockers = json.loads(review.output)["result"]["blockers"]
     direction = [blocker for blocker in blockers if blocker["reason"] == "unresolved_direction"]
     assert len(direction) == 1, review.output
-    return _invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
+    return invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
 
 
 def test_confirm_reports_the_fill_the_model_does_not_fit_on_the_draft_it_re_reads(tmp_path: Path) -> None:
     """Confirm reads the document again, so the operator minting from it is told the same thing."""
 
     with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         _store_reading_for_review(evidence_id)
         confirmed = _confirm_supplying_the_unassigned_identifier(evidence_id)
 
@@ -241,7 +241,7 @@ def test_a_fill_the_service_answers_is_merged_without_a_label_reading_notice(tmp
     """The positive control for the detector above: the same recorder sees an admitted fill arrive."""
 
     with _recording_agent() as service:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -255,7 +255,7 @@ def test_an_unavailable_lane_leaves_the_label_reading_standing_with_a_warning(tm
     """The service cannot run the role's lane: the fill is refused at its lookup and nothing is run."""
 
     with _recording_agent(lookup_refusal=ModelRunRefusalCode.LANE_UNAVAILABLE) as service:
-        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -276,7 +276,7 @@ def test_a_does_not_fit_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -
     """With no label reading to stand on, the model read is required and its refusal is the command's."""
 
     with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
-        evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
+        evidence_id = add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code != 0, envelope
@@ -292,7 +292,7 @@ _STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
 
 
 def _batch(folder: Path, *, kind: str = "received") -> tuple[int, dict[str, Any]]:
-    ran = _invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", kind])
+    ran = invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", kind])
     return ran.exit_code, json.loads(ran.output)
 
 

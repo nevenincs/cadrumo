@@ -100,7 +100,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _VERSION = "test"
 
 
-def _same_process_worker(channel: WorkerChannel) -> None:
+def same_process_worker(channel: WorkerChannel) -> None:
     """Stand in for the worker owner's containment check: this test process is the worker."""
     if channel.peer.process_id != os.getpid():
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
@@ -120,7 +120,7 @@ def _synthetic_identity() -> ProfileWorkerIdentity:
     )
 
 
-def _operation_id() -> str:
+def view_stream_relay_operation_id() -> str:
     return content_hash_hex({"view": str(uuid4())})
 
 
@@ -148,7 +148,7 @@ def _wait_until(condition: Callable[[], bool], *, seconds: float = 5.0) -> None:
         time.sleep(0.01)
 
 
-class _Clock:
+class Clock:
     def __init__(self) -> None:
         self.offset = 0.0
 
@@ -157,7 +157,7 @@ class _Clock:
 
 
 @dataclass
-class _Window:
+class Window:
     client: ByteChannel
     server: ByteChannel
     context: ConnectionContext
@@ -181,14 +181,14 @@ class _Views:
 
     root: Path
     relay: ViewStreamRelay
-    clock: _Clock
+    clock: Clock
     identity: ProfileWorkerIdentity
     operation_id: str
     session_id: UUID
     person_id: UUID
     runtime: WorkerEndpoint
     held: set[tuple[UUID, UUID]]
-    windows: list[_Window] = field(default_factory=list)
+    windows: list[Window] = field(default_factory=list)
 
     def grant(
         self,
@@ -207,14 +207,14 @@ class _Views:
             runtime_boot_id=self.identity.runtime_boot_id,
         )
 
-    def connect_window(self) -> _Window:
+    def connect_window(self) -> Window:
         accepted: list[ByteChannel] = []
         accepting = Thread(target=lambda: accepted.append(self.runtime.accept(timeout=5)))
         accepting.start()
         client = self.runtime_endpoint().connect(timeout=5)
         accepting.join()
         server = accepted[0]
-        window = _Window(
+        window = Window(
             client=client,
             server=server,
             context=ConnectionContext(uuid4(), self.identity.runtime_boot_id, server.peer),
@@ -224,9 +224,9 @@ class _Views:
         return window
 
     def runtime_endpoint(self) -> WorkerEndpoint:
-        return worker_endpoint(storage_root=self.root, worker_namespace=_RUNTIME_NAMESPACE)
+        return worker_endpoint(storage_root=self.root, worker_namespace=RUNTIME_NAMESPACE)
 
-    def attach(self) -> _Window:
+    def attach(self) -> Window:
         window = self.connect_window()
         token = self.relay.issue(self.grant(peer=window.server.peer))
         leg = self.relay.admit(
@@ -242,21 +242,21 @@ class _Views:
 
 
 @dataclass(kw_only=True)
-class _Lane(_Views):
+class Lane(_Views):
     """The relay's view served by this process's own worker sink."""
 
     sink: WorkerViewStream
 
 
-_RUNTIME_NAMESPACE = uuid4()
+RUNTIME_NAMESPACE = uuid4()
 
 
 @pytest.fixture
-def lane(tmp_path: Path) -> Iterator[_Lane]:
+def lane(tmp_path: Path) -> Iterator[Lane]:
     identity = _synthetic_identity()
-    operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
+    operation_id, session_id, person_id = view_stream_relay_operation_id(), uuid4(), uuid4()
     held = {(person_id, session_id)}
-    clock = _Clock()
+    clock = Clock()
     relay = ViewStreamRelay(
         runtime_boot_id=identity.runtime_boot_id,
         holds_session=lambda connection, session: (connection, session) in held,
@@ -266,14 +266,14 @@ def lane(tmp_path: Path) -> Iterator[_Lane]:
         storage_root=tmp_path, identity=identity, parent_pid=os.getpid(), product_version=_VERSION
     ).open_view(operation_id=operation_id, session_id=session_id)
     bind, channel = open_worker_view_leg(
-        storage_root=tmp_path, identity=identity, verify=_same_process_worker, product_version=_VERSION
+        storage_root=tmp_path, identity=identity, verify=same_process_worker, product_version=_VERSION
     )
     assert bind == ViewWorkerBind(operation_id=operation_id, session_id=session_id)
     relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
     _wait_until(lambda: sink.connected)
-    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=RUNTIME_NAMESPACE)
     runtime.listen()
-    built = _Lane(tmp_path, relay, clock, identity, operation_id, session_id, person_id, runtime, held, sink=sink)
+    built = Lane(tmp_path, relay, clock, identity, operation_id, session_id, person_id, runtime, held, sink=sink)
     try:
         yield built
     finally:
@@ -293,7 +293,7 @@ def _refused(call: Callable[[], object]) -> AccessDenialCode | RefusalCode:
     return error.reason
 
 
-def test_view_attach_from_another_session_or_profile_is_refused(lane: _Lane) -> None:
+def test_view_attach_from_another_session_or_profile_is_refused(lane: Lane) -> None:
     window = lane.connect_window()
     assert (
         _refused(lambda: lane.relay.issue(lane.grant(peer=window.server.peer, session_id=uuid4())))
@@ -304,12 +304,14 @@ def test_view_attach_from_another_session_or_profile_is_refused(lane: _Lane) -> 
         is AccessDenialCode.OPERATION_UNAVAILABLE
     )
     assert (
-        _refused(lambda: lane.relay.issue(lane.grant(peer=window.server.peer, operation_id=_operation_id())))
+        _refused(
+            lambda: lane.relay.issue(lane.grant(peer=window.server.peer, operation_id=view_stream_relay_operation_id()))
+        )
         is AccessDenialCode.OPERATION_UNAVAILABLE
     )
 
 
-def test_view_token_is_single_use_expires_and_names_its_operation(lane: _Lane) -> None:
+def test_view_token_is_single_use_expires_and_names_its_operation(lane: Lane) -> None:
     window = lane.connect_window()
     token = lane.relay.issue(lane.grant(peer=window.server.peer))
 
@@ -331,7 +333,10 @@ def test_view_token_is_single_use_expires_and_names_its_operation(lane: _Lane) -
     lane.clock.offset = 0.0
 
     other_operation = lane.relay.issue(lane.grant(peer=window.server.peer))
-    assert _refused(lambda: admit(other_operation, _operation_id())) is AccessDenialCode.CONNECTION_MISMATCH
+    assert (
+        _refused(lambda: admit(other_operation, view_stream_relay_operation_id()))
+        is AccessDenialCode.CONNECTION_MISMATCH
+    )
     # A refused presentation spends the token too.
     assert _refused(lambda: admit(other_operation)) is AccessDenialCode.CONNECTION_MISMATCH
 
@@ -343,7 +348,7 @@ def test_view_token_is_single_use_expires_and_names_its_operation(lane: _Lane) -
     assert _refused(lambda: admit(signed_out)) is AccessDenialCode.AUTHENTICATION_REQUIRED
 
 
-def test_view_connection_from_another_native_peer_is_refused(lane: _Lane) -> None:
+def test_view_connection_from_another_native_peer_is_refused(lane: Lane) -> None:
     person = lane.connect_window()
     token = lane.relay.issue(lane.grant(peer=person.server.peer))
     accepted: list[ByteChannel] = []
@@ -364,7 +369,7 @@ def test_view_connection_from_another_native_peer_is_refused(lane: _Lane) -> Non
             "sys.stdin.read()\n"
             "channel.close()\n",
         ],
-        env={**os.environ, "VIEW_TEST_ROOT": str(lane.root), "VIEW_TEST_NAMESPACE": str(_RUNTIME_NAMESPACE)},
+        env={**os.environ, "VIEW_TEST_ROOT": str(lane.root), "VIEW_TEST_NAMESPACE": str(RUNTIME_NAMESPACE)},
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
@@ -403,7 +408,7 @@ def test_view_connection_from_another_native_peer_is_refused(lane: _Lane) -> Non
     )
 
 
-def test_view_images_flow_only_under_window_credit_and_newest_first(lane: _Lane) -> None:
+def test_view_images_flow_only_under_window_credit_and_newest_first(lane: Lane) -> None:
     window = lane.attach()
     lane.sink.offer_image(*_image(1))
     lane.sink.offer_image(*_image(2))
@@ -418,7 +423,7 @@ def test_view_images_flow_only_under_window_credit_and_newest_first(lane: _Lane)
     assert window.quiet()
 
 
-def test_view_images_without_window_credit_are_dropped_not_buffered(lane: _Lane) -> None:
+def test_view_images_without_window_credit_are_dropped_not_buffered(lane: Lane) -> None:
     first = lane.attach()
     first.send(ViewCredit(images=2))
     lane.sink.offer_image(*_image(1))
@@ -463,7 +468,7 @@ def _open_scripted_worker(
     serving = Thread(target=serve)
     serving.start()
     opened, host_end = open_worker_view_leg(
-        storage_root=storage_root, identity=identity, verify=_same_process_worker, product_version=_VERSION
+        storage_root=storage_root, identity=identity, verify=same_process_worker, product_version=_VERSION
     )
     serving.join()
     assert opened == bind
@@ -472,7 +477,7 @@ def _open_scripted_worker(
 
 def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: Path) -> None:
     identity = _synthetic_identity()
-    operation_id, session_id = _operation_id(), uuid4()
+    operation_id, session_id = view_stream_relay_operation_id(), uuid4()
     bind = ViewWorkerBind(operation_id=operation_id, session_id=session_id)
     endpoint, worker, channel = _open_scripted_worker(tmp_path, identity, bind)
     relay = ViewStreamRelay(runtime_boot_id=identity.runtime_boot_id, holds_session=lambda _c, _s: True)
@@ -509,7 +514,7 @@ def test_view_worker_leg_admits_only_the_verified_worker(tmp_path: Path) -> None
     sinks: ViewStreamSinks = WorkerViewStreams(
         storage_root=tmp_path, identity=identity, parent_pid=os.getpid(), product_version=_VERSION
     )
-    sink: ViewStreamSink = sinks.open_view(operation_id=_operation_id(), session_id=uuid4())
+    sink: ViewStreamSink = sinks.open_view(operation_id=view_stream_relay_operation_id(), session_id=uuid4())
     try:
         with pytest.raises(RefusalError):
             open_worker_view_leg(storage_root=tmp_path, identity=identity, verify=foreign, product_version=_VERSION)
@@ -519,7 +524,7 @@ def test_view_worker_leg_admits_only_the_verified_worker(tmp_path: Path) -> None
     assert sink.ended
 
 
-def test_view_operation_end_unbinds_the_window_before_the_worker_settles(lane: _Lane) -> None:
+def test_view_operation_end_unbinds_the_window_before_the_worker_settles(lane: Lane) -> None:
     window = lane.attach()
     lane.sink.close(ViewClosedReason.CANCELLED)
     # close() returns only once the host unbound: the operation may settle now, and nothing is bound.
@@ -530,7 +535,7 @@ def test_view_operation_end_unbinds_the_window_before_the_worker_settles(lane: _
 
 
 @pytest.mark.parametrize("retire", ["sign_out", "lock", "unheld"])
-def test_view_session_retirement_unbinds_both_legs_at_once(lane: _Lane, retire: str) -> None:
+def test_view_session_retirement_unbinds_both_legs_at_once(lane: Lane, retire: str) -> None:
     window = lane.attach()
     if retire == "unheld":
         lane.held.clear()
@@ -563,9 +568,9 @@ class _ScriptedLane(_Views):
 @pytest.fixture
 def scripted_lane(tmp_path: Path) -> Iterator[_ScriptedLane]:
     identity = _synthetic_identity()
-    operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
+    operation_id, session_id, person_id = view_stream_relay_operation_id(), uuid4(), uuid4()
     held = {(person_id, session_id)}
-    clock = _Clock()
+    clock = Clock()
     relay = ViewStreamRelay(
         runtime_boot_id=identity.runtime_boot_id,
         holds_session=lambda connection, session: (connection, session) in held,
@@ -574,7 +579,7 @@ def scripted_lane(tmp_path: Path) -> Iterator[_ScriptedLane]:
     bind = ViewWorkerBind(operation_id=operation_id, session_id=session_id)
     endpoint, worker, channel = _open_scripted_worker(tmp_path, identity, bind)
     relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
-    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=RUNTIME_NAMESPACE)
     runtime.listen()
     built = _ScriptedLane(
         root=tmp_path,
@@ -600,7 +605,7 @@ def scripted_lane(tmp_path: Path) -> Iterator[_ScriptedLane]:
         runtime.close()
 
 
-def _read_until_end(window: _Window) -> tuple[list[object], Thread]:
+def _read_until_end(window: Window) -> tuple[list[object], Thread]:
     """Everything the window reads, on its own thread, until it is told the view closed or the connection ends.
 
     A refusal ends the list with its reason.
@@ -623,7 +628,7 @@ def _read_until_end(window: _Window) -> tuple[list[object], Thread]:
     return received, reading
 
 
-def _start_image_and_stall(lane: _ScriptedLane, window: _Window) -> tuple[bytes, list[bytes]]:
+def _start_image_and_stall(lane: _ScriptedLane, window: Window) -> tuple[bytes, list[bytes]]:
     """Credit one image and write its announcement and first chunk, which the host passes on to the window.
 
     The host's forwarder then holds the window's writer in the middle of the image's chunk run, waiting for the
@@ -685,7 +690,7 @@ def test_view_window_is_not_told_inside_an_image_the_worker_never_finishes(scrip
     _wait_until(lambda: scripted_lane.relay.worker_bind(scripted_lane.operation_id) is None)
 
 
-def test_view_person_connection_close_unbinds_only_the_window(lane: _Lane) -> None:
+def test_view_person_connection_close_unbinds_only_the_window(lane: Lane) -> None:
     window = lane.attach()
     lane.relay.disconnect(lane.person_id)
     assert window.read() == ViewClosed(reason=ViewClosedReason.SESSION_RETIRED)
@@ -693,7 +698,7 @@ def test_view_person_connection_close_unbinds_only_the_window(lane: _Lane) -> No
     assert not lane.sink.ended
 
 
-def test_view_window_credit_beyond_two_is_a_violation(lane: _Lane) -> None:
+def test_view_window_credit_beyond_two_is_a_violation(lane: Lane) -> None:
     window = lane.attach()
     window.send(ViewCredit(images=2))
     window.send(ViewCredit(images=1))
@@ -701,7 +706,7 @@ def test_view_window_credit_beyond_two_is_a_violation(lane: _Lane) -> None:
     assert lane.relay.worker_bind(lane.operation_id) is not None
 
 
-def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: _Lane) -> None:
+def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: Lane) -> None:
     window = lane.attach()
     window.send(ViewNavigate(verb=ViewNavigateVerb.RELOAD))
     assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
@@ -710,7 +715,7 @@ def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: _La
     _wait_until(lambda: lane.sink.ended)
 
 
-def test_clipboard_request_reply_and_commit_stay_on_the_view_stream(lane: _Lane) -> None:
+def test_clipboard_request_reply_and_commit_stay_on_the_view_stream(lane: Lane) -> None:
     window = lane.attach()
     request = ViewClipboard(request_id=7, action=ViewClipboardAction.CUT)
     window.send(request)
@@ -739,7 +744,7 @@ def _key_presses(count: int) -> list[ViewInput]:
 
 
 def _type_all(
-    window: _Window, presses: list[ViewInput], *, seconds: float, refusals: list[RefusalCode] | None = None
+    window: Window, presses: list[ViewInput], *, seconds: float, refusals: list[RefusalCode] | None = None
 ) -> Thread:
     """Send every press from the window on its own thread, each write waiting up to ``seconds``."""
 
@@ -773,7 +778,7 @@ _HELD_SECONDS = 6.0
 """Longer than any per-frame bound the relay applies."""
 
 
-def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane: _Lane) -> None:
+def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane: Lane) -> None:
     window = lane.attach()
     # More key presses than the worker queues, sent before the view takes any: each release must arrive.
     presses = _key_presses(1_500)
@@ -789,7 +794,7 @@ def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane:
     assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
 
 
-def test_view_input_the_worker_holds_back_past_any_frame_bound_keeps_the_view(lane: _Lane) -> None:
+def test_view_input_the_worker_holds_back_past_any_frame_bound_keeps_the_view(lane: Lane) -> None:
     window = lane.attach()
     presses = _key_presses(_HELD_PRESSES)
     typing = _type_all(window, presses, seconds=60)
@@ -806,7 +811,7 @@ def test_view_input_the_worker_holds_back_past_any_frame_bound_keeps_the_view(la
     assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
 
 
-def test_view_images_keep_reaching_the_window_while_input_is_held(lane: _Lane) -> None:
+def test_view_images_keep_reaching_the_window_while_input_is_held(lane: Lane) -> None:
     window = lane.attach()
     window.send(ViewCredit(images=2))
     # Upstream is ordered: once the worker has the navigation, it holds the credit sent before it.
@@ -843,7 +848,7 @@ def _other_process_worker(channel: WorkerChannel) -> None:
 
 def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: Path) -> None:
     identity = _synthetic_identity()
-    operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
+    operation_id, session_id, person_id = view_stream_relay_operation_id(), uuid4(), uuid4()
     held = {(person_id, session_id)}
     relay = ViewStreamRelay(
         runtime_boot_id=identity.runtime_boot_id,
@@ -884,8 +889,8 @@ def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: P
         stdout=subprocess.PIPE,
         text=True,
     )
-    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
-    views = _Views(tmp_path, relay, _Clock(), identity, operation_id, session_id, person_id, runtime, held)
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=RUNTIME_NAMESPACE)
+    views = _Views(tmp_path, relay, Clock(), identity, operation_id, session_id, person_id, runtime, held)
     try:
         assert child.stdout is not None
         assert child.stdout.readline().strip() == "listening"
@@ -933,7 +938,7 @@ def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: P
 
 
 def test_view_attach_documents_travel_the_public_request_door() -> None:
-    operation_id, token = _operation_id(), os.urandom(32).hex()
+    operation_id, token = view_stream_relay_operation_id(), os.urandom(32).hex()
     attach = ViewAttachRequest(request_id=uuid4(), profile_id=uuid4(), session_id=uuid4(), operation_id=operation_id)
     connect = ViewConnect(request_id=uuid4(), operation_id=operation_id, attach_token=token)
     assert Request.model_validate_json(attach.model_dump_json()).root == attach
@@ -986,7 +991,10 @@ def test_operation_and_view_doors_preserve_admission_refusal_order(tmp_path: Pat
                 request_context,
                 server,
                 ViewAttachRequest(
-                    request_id=request_id, profile_id=profile, session_id=session, operation_id=_operation_id()
+                    request_id=request_id,
+                    profile_id=profile,
+                    session_id=session,
+                    operation_id=view_stream_relay_operation_id(),
                 ),
             )
         else:
@@ -1028,16 +1036,16 @@ def test_operation_and_view_doors_preserve_admission_refusal_order(tmp_path: Pat
         endpoint.close()
 
 
-def _transfer_window(window: _Window) -> tuple[ViewDownstreamReader, ViewTransferReceiver]:
+def _transfer_window(window: Window) -> tuple[ViewDownstreamReader, ViewTransferReceiver]:
     receiver = ViewTransferReceiver(ViewTransferDirection.DOWNLOAD)
     return ViewDownstreamReader(window.client, transfers=receiver), receiver
 
 
-def _write_upstream(window: _Window, document: ViewTransferUpstreamDocument) -> None:
+def _write_upstream(window: Window, document: ViewTransferUpstreamDocument) -> None:
     write_view_transfer_document(window.client, document, deadline=time.monotonic() + 5)
 
 
-def test_view_download_bytes_reach_the_window_under_its_transfer_credit(lane: _Lane) -> None:
+def test_view_download_bytes_reach_the_window_under_its_transfer_credit(lane: Lane) -> None:
     window = lane.attach()
     reader, receiver = _transfer_window(window)
     payload = os.urandom(5 * 65_520 + 1_234)
@@ -1066,7 +1074,7 @@ def test_view_download_bytes_reach_the_window_under_its_transfer_credit(lane: _L
     assert bytes(received) == payload and delivered == [True]
 
 
-def test_view_worker_cancel_releases_a_download_waiting_for_credit_and_tells_the_window(lane: _Lane) -> None:
+def test_view_worker_cancel_releases_a_download_waiting_for_credit_and_tells_the_window(lane: Lane) -> None:
     window = lane.attach()
     reader, _ = _transfer_window(window)
     lane.sink.send(ViewDownload(transfer_id=1, filename="justificante.pdf"))
@@ -1091,7 +1099,7 @@ def test_view_worker_cancel_releases_a_download_waiting_for_credit_and_tells_the
     assert not lane.sink.ended
 
 
-def test_view_upload_reaches_the_worker_whole_and_checked(lane: _Lane) -> None:
+def test_view_upload_reaches_the_worker_whole_and_checked(lane: Lane) -> None:
     window = lane.attach()
     reader, _ = _transfer_window(window)
     upload = os.urandom(2 * 65_520 + 77)
@@ -1114,7 +1122,7 @@ def test_view_upload_reaches_the_worker_whole_and_checked(lane: _Lane) -> None:
     assert (uploaded.chooser_id, uploaded.name, uploaded.data) == (1, "a.bin", upload)
 
 
-def test_view_upload_cancel_names_only_the_chooser_its_file_was_for(lane: _Lane) -> None:
+def test_view_upload_cancel_names_only_the_chooser_its_file_was_for(lane: Lane) -> None:
     window = lane.attach()
     reader, _ = _transfer_window(window)
     for chooser_id in (1, 2):
@@ -1129,14 +1137,14 @@ def test_view_upload_cancel_names_only_the_chooser_its_file_was_for(lane: _Lane)
     assert lane.sink.receive(timeout=0.5) is None
 
 
-def test_view_close_from_the_window_reaches_the_worker(lane: _Lane) -> None:
+def test_view_close_from_the_window_reaches_the_worker(lane: Lane) -> None:
     window = lane.attach()
     write_view_document(window.client, ViewClose(), deadline=time.monotonic() + 5)
     assert lane.sink.receive(timeout=5) == ViewClose()
     assert not lane.sink.ended
 
 
-def test_view_window_connection_drop_closes_the_view_like_its_close(lane: _Lane) -> None:
+def test_view_window_connection_drop_closes_the_view_like_its_close(lane: Lane) -> None:
     window = lane.attach()
     window.client.close()
     assert lane.sink.receive(timeout=5) == ViewClose()

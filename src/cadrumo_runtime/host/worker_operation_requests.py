@@ -71,7 +71,7 @@ from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 _LOGGER = get_logger(__name__)
 
-_OPERATION_REQUEST_SLOW_SECONDS: Final = 2.0
+OPERATION_REQUEST_SLOW_SECONDS: Final = 2.0
 """An operation-channel request that takes this long to answer is logged as slow."""
 
 
@@ -106,10 +106,10 @@ def _record_operation_elapsed(fields: dict[str, DiagnosticValue], *, started: fl
         fields={
             **fields,
             "elapsed_seconds": round(elapsed, 3),
-            "budget_seconds": _OPERATION_REQUEST_SLOW_SECONDS,
+            "budget_seconds": OPERATION_REQUEST_SLOW_SECONDS,
             "outcome": outcome,
         },
-        level=logging.WARNING if elapsed >= _OPERATION_REQUEST_SLOW_SECONDS else logging.DEBUG,
+        level=logging.WARNING if elapsed >= OPERATION_REQUEST_SLOW_SECONDS else logging.DEBUG,
         primary_error=sys.exception(),
     )
 
@@ -131,12 +131,12 @@ async def receive(
         return request
 
     while not failed.is_set():
-        if await _input_ready(channel, failed, input_executor):
+        if await input_ready(channel, failed, input_executor):
             return await await_cancellation_complete(asyncio.to_thread(read), task_name="profile-worker-read")
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-async def _input_ready(channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor) -> bool:
+async def input_ready(channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor) -> bool:
     """Block one thread on the channel until input, the worker's failure, or cancellation.
 
     The service owns its input executor separately from application work. Each
@@ -204,7 +204,7 @@ async def operate(
             started = time.monotonic()
             outcome = "raised"
             try:
-                await _dispatch_request(channel, operations, request, uploads)
+                await dispatch_request(channel, operations, request, uploads)
                 expiry_needed = _needs_upload_expiry(request, uploads)
                 outcome = "completed"
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
@@ -243,12 +243,12 @@ def _needs_upload_expiry(request: object, uploads: WorkerSubmissionStaging) -> b
     its sessions. Other requests always wake the expiry owner.
     """
     return not (
-        (_is_read(request) or isinstance(request, ProfileWorkerContractRequest))
+        (is_read(request) or isinstance(request, ProfileWorkerContractRequest))
         and uploads.seconds_until_expiry() is None
     )
 
 
-async def _dispatch_request(
+async def dispatch_request(
     channel: WorkerChannel,
     operations: ProfileWorkerOperationHost,
     request: object,
@@ -270,7 +270,7 @@ async def _dispatch_request(
     if isinstance(request, ProfileWorkerOperationRequest | ProfileWorkerResumeRequest):
         await _handle_operation(channel, operations, request)
         return
-    if _is_read(request):
+    if is_read(request):
         await _serve_read(channel, operations, request)
         return
     if isinstance(request, ProfileWorkerManageRequest):
@@ -494,7 +494,7 @@ type _ReadRequest = (
 )
 
 
-def _is_read(request: object) -> TypeGuard[_ReadRequest]:
+def is_read(request: object) -> TypeGuard[_ReadRequest]:
     """Tell whether a request only reads: an observation, a projection, a page, or the inspection of a review."""
     if isinstance(request, ProfileWorkerManageRequest):
         # Applying and rejecting a review extend this request type; only the type itself inspects.

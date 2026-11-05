@@ -57,8 +57,8 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.profile_lifecycle_support import seed
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
+from .profile_cli_support import invoke_protected_profile
 
 __all__ = ["profile_storage_root_fixture"]
 

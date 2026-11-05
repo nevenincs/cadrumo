@@ -27,11 +27,11 @@ from ..containment_commands import ContainmentCommand, run_containment_command_s
 from ..linux_pidfd import open_linux_pidfd
 from ..linux_worker_process import (
     LinuxProcessScope,
-    _cgroup_empty,
-    _cgroup_for,
-    _unit_absent,
-    _unit_properties,
+    cgroup_empty,
+    cgroup_for,
     linux_process_start_identity,
+    unit_absent,
+    unit_properties,
 )
 
 pytestmark = [
@@ -133,12 +133,12 @@ class _ContainmentCleanup:
         deadline = time.monotonic() + 10
         try:
             if self.cgroup:
-                while not _cgroup_empty(self.cgroup):
+                while not cgroup_empty(self.cgroup):
                     if time.monotonic() >= deadline:
                         raise RefusalError(RefusalCode.TIMEOUT)
                     time.sleep(0.05)
             # An unknown cgroup from partial construction needs exact native absence.
-            if (failure is not None or not self.cgroup) and not _unit_absent(self.unit):
+            if (failure is not None or not self.cgroup) and not unit_absent(self.unit):
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         except BaseException as observation_error:
             if failure is not None:
@@ -296,7 +296,7 @@ def _verify_resistant_descendants(
         cleanup.descendant_fds.append(descriptor)
         assert not _dead(descriptor)
         assert linux_process_start_identity(pid) == record["start_identity"]
-        assert _cgroup_for(pid) == facts["cgroup"]
+        assert cgroup_for(pid) == facts["cgroup"]
         assert os.getsid(pid) == pid and os.getpgid(pid) == pid
         assert pid != int(facts["worker_group"])
         status = (Path("/proc") / str(pid) / "status").read_text(encoding="ascii")
@@ -387,7 +387,7 @@ def _verify_browser_roles(
         descriptor = open_linux_pidfd(pid)
         cleanup.descendant_fds.append(descriptor)
         assert not _dead(descriptor)
-        assert _cgroup_for(pid) == facts["cgroup"]
+        assert cgroup_for(pid) == facts["cgroup"]
         _assert_marker_absent(pid, device=device, inode=inode)
         _assert_marker_absent(pid, device=worker_device, inode=worker_inode)
         selected = (native / "exe").resolve(strict=True)
@@ -520,13 +520,13 @@ def test_linux_worker_service_kills_independent_group_on_owner_loss(
         while not (
             _dead(worker_fd)
             and _dead(guardian_fd)
-            and _cgroup_empty(str(facts["cgroup"]))
+            and cgroup_empty(str(facts["cgroup"]))
             and all(_dead(descriptor) for descriptor in cleanup.descendant_fds)
         ):
             assert time.monotonic() < deadline, "systemd retained the private worker cgroup after owner loss"
             time.sleep(0.05)
         assert all(_dead(descriptor) for descriptor in cleanup.descendant_fds)
-        assert _cgroup_empty(str(facts["cgroup"]))
+        assert cgroup_empty(str(facts["cgroup"]))
         if failed_owner == "worker":
             assert parent.poll() is None
     except BaseException as error:
@@ -562,7 +562,7 @@ def _await_registration_barrier(
 def _await_active_guardian(unit: str, parent: subprocess.Popen[bytes]) -> dict[str, str]:
     deadline = time.monotonic() + 10
     while True:
-        properties = _unit_properties(unit)
+        properties = unit_properties(unit)
         if properties["ActiveState"] == "active" and int(properties["MainPID"]) > 0:
             break
         assert parent.poll() is None
@@ -576,7 +576,7 @@ def _await_active_guardian(unit: str, parent: subprocess.Popen[bytes]) -> dict[s
 def _verify_registered_guardian(
     parent: subprocess.Popen[bytes], guardian_pid: int, guardian_fd: int, guardian_start: str, cgroup: str
 ) -> Path:
-    assert not _dead(guardian_fd) and _cgroup_for(guardian_pid) == cgroup
+    assert not _dead(guardian_fd) and cgroup_for(guardian_pid) == cgroup
     guardian_native = Path("/proc") / str(guardian_pid)
     interpreter = Path(sys.executable).resolve(strict=True)
     assert (guardian_native / "exe").resolve(strict=True) == interpreter
@@ -613,7 +613,7 @@ def _verify_registered_worker(
     worker_pid: int, worker_fd: int, worker_start: str, guardian_pid: int, cgroup: str, interpreter: Path
 ) -> None:
     assert sys.platform == "linux", "this helper proves native Linux containment"
-    assert not _dead(worker_fd) and _cgroup_for(worker_pid) == cgroup
+    assert not _dead(worker_fd) and cgroup_for(worker_pid) == cgroup
     worker_native = Path("/proc") / str(worker_pid)
     assert (worker_native / "exe").resolve(strict=True) == interpreter
     worker_args = (worker_native / "cmdline").read_bytes().split(b"\0")
@@ -650,18 +650,18 @@ def test_linux_worker_owner_loss_during_registration(tmp_path: Path) -> None:
         worker_fd = cleanup.worker_fd
         _verify_registered_worker(worker_pid, worker_fd, worker_start, guardian_pid, cgroup, interpreter)
         assert linux_process_start_identity(guardian_pid) == guardian_start and not _dead(guardian_fd)
-        assert _unit_properties(unit)["MainPID"] == str(guardian_pid)
+        assert unit_properties(unit)["MainPID"] == str(guardian_pid)
         assert parent.poll() is None and not (tmp_path / "linux-worker-ready.json").exists()
         assert json.loads((tmp_path / "linux-worker-acquired.json").read_text(encoding="ascii")) == reservation
         assert barrier_deadline - time.monotonic() >= 5, "registration barrier expired before owner loss"
         os.kill(parent.pid, signal.SIGKILL)
         assert time.monotonic() < barrier_deadline, "owner-loss signal was issued after barrier expiry"
         deadline = time.monotonic() + 10
-        while not (_dead(worker_fd) and _dead(guardian_fd) and _cgroup_empty(cgroup) and _unit_absent(unit)):
+        while not (_dead(worker_fd) and _dead(guardian_fd) and cgroup_empty(cgroup) and unit_absent(unit)):
             assert time.monotonic() < deadline, "registered unit survived owner loss before acknowledgment transfer"
             time.sleep(0.05)
         assert _dead(worker_fd) and _dead(guardian_fd)
-        assert _cgroup_empty(cgroup) and _unit_absent(unit)
+        assert cgroup_empty(cgroup) and unit_absent(unit)
     except BaseException as error:
         primary = error
         raise

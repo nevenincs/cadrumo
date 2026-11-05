@@ -22,19 +22,19 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
-def _runtime_delete_owner(_isolated_cli_backend: Path) -> Iterator[None]:
-    _isolated_cli_backend.mkdir(parents=True, exist_ok=True)
-    with native_cli_profile_server(_isolated_cli_backend):
+def _runtime_delete_owner(isolated_cli_backend: Path) -> Iterator[None]:
+    isolated_cli_backend.mkdir(parents=True, exist_ok=True)
+    with native_cli_profile_server(isolated_cli_backend):
         yield
 
 

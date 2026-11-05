@@ -18,11 +18,11 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
+from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.diagnostics_native_support import diagnostics_native_profile
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from ._diagnostics_cli_support import invoke_diagnostics
+from .diagnostics_cli_support import invoke_diagnostics
 
 pytestmark = [
     pytest.mark.integration,
@@ -105,7 +105,7 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
 
     result = invoke_diagnostics(["--format", "json", "app", "diagnostics", "llm-usage"], diagnostics_native_profile)
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["has_run_data"] is True
     assert payload["total_runs"] == 6
@@ -148,7 +148,7 @@ def test_llm_usage_provider_filter_scopes_the_summary(diagnostics_native_profile
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert len(payload["by_provider"]) == 1
     assert payload["by_provider"][0]["provider"] == "llm:codex:test-model"
@@ -176,7 +176,7 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
         diagnostics_native_profile,
     )
     assert result.exit_code == 0, result.output
-    payload = _json_result(result)
+    payload = unwrap_cli_result(result)
 
     assert payload["total_runs"] == 1
     assert len(payload["by_provider"]) == 1

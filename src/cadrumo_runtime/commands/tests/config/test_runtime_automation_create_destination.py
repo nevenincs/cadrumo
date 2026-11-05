@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo_client.commands.secure_input import select_machine_secret_channel
 from cadrumo_client.contracts.access_vocabulary import DisclosureCategory, DisclosureCategoryGrant
-from cadrumo_runtime.commands.runtime_automation_request import _create_proposal
+from cadrumo_runtime.commands.runtime_automation_request import runtime_automation_request_create_proposal
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,7 +60,7 @@ def test_created_key_names_the_minted_destination_whatever_the_person_wrote(subj
         os.close(write_end)
     selection = select_machine_secret_channel(secrets_stdin=False, secrets_fd=read_end)
 
-    proposal = _create_proposal(selection)(minted)
+    proposal = runtime_automation_request_create_proposal(selection)(minted)
 
     request_id = uuid4()
     subject.service.request(request_id, proposal)

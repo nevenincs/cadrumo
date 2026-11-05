@@ -175,7 +175,7 @@ class ProfileConnectionModelRunsMixin:
             ):
                 return _refuse(self, context, channel, request.request_id)
             pending.fetched = True
-        if not _service_still_admitted(self, context, channel, request):
+        if not service_still_admitted(self, context, channel, request):
             pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
             return _refuse(self, context, channel, request.request_id)
         with self._guard:
@@ -224,7 +224,7 @@ class ProfileConnectionModelRunsMixin:
             lease = None if service is None else service.lease
             admitted = _admitted_lease(self, context, request)
         outcome = request.outcome
-        if not admitted or not _service_still_admitted(self, context, channel, request):
+        if not admitted or not service_still_admitted(self, context, channel, request):
             return _refuse(self, context, channel, request.request_id)
         text = bytearray()
         if outcome.text_byte_count:
@@ -241,7 +241,7 @@ class ProfileConnectionModelRunsMixin:
         if (
             pending is not None
             and completion_pending_matches(pending, context, request)
-            and _service_still_admitted(self, context, channel, request)
+            and service_still_admitted(self, context, channel, request)
         ):
             with self._guard:
                 if completion_is_current(
@@ -353,7 +353,7 @@ def _admitted_lease(
     )
 
 
-def _service_still_admitted(
+def service_still_admitted(
     connections: RuntimeProfileConnections,
     context: ConnectionContext,
     channel: ByteChannel,

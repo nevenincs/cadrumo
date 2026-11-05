@@ -30,7 +30,7 @@ from ..protocol_contract import MCP_TOOL_CATALOGUE, UNKNOWN_OUTCOME_MEMBER, has_
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .session import connected_server_and_client_session
-from .test_result_page_tool import _auth_registry, _observed_operation_id, _ObservedClient
+from .test_result_page_tool import ObservedClient, auth_registry, observed_operation_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -45,7 +45,7 @@ def _document(called: CallToolResult) -> dict[str, object]:
     return cast("dict[str, object]", called.structured_content)
 
 
-class _UnsettledClient(_ObservedClient):
+class _UnsettledClient(ObservedClient):
     """A lease whose runtime observes one operation in the state a test names."""
 
     lifecycle = OperationLifecycle.TERMINAL
@@ -85,10 +85,10 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
     told: str | None,
 ) -> None:
     profile_id = uuid4()
-    client = _UnsettledClient(profile_id, _auth_registry())
+    client = _UnsettledClient(profile_id, auth_registry())
     client.lifecycle, client.condition, client.effect = lifecycle, condition, effect
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
-    request = OperationObservationRequestV1(operation_id=_observed_operation_id(), after_cursor=0, page_limit=10)
+    request = OperationObservationRequestV1(operation_id=observed_operation_id(), after_cursor=0, page_limit=10)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             observed = await sdk.call_tool("observe", {"observation": request.model_dump(mode="json")})
@@ -99,7 +99,7 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
     assert observed.is_error is False and document["outcome"] == "reply"
     next_call = cast("dict[str, object]", document["next_call"])
     assert next_call["tool"] == ("result" if lifecycle is OperationLifecycle.TERMINAL else "observe")
-    assert _observed_operation_id() in json.dumps(next_call)
+    assert observed_operation_id() in json.dumps(next_call)
     if told is None:
         assert UNKNOWN_OUTCOME_MEMBER not in document
     else:
@@ -110,9 +110,9 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
 @pytest.mark.anyio
 async def test_compact_observation_keeps_terminal_truth_and_returns_an_executable_result_read() -> None:
     profile_id = uuid4()
-    client = _UnsettledClient(profile_id, _auth_registry())
+    client = _UnsettledClient(profile_id, auth_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
-    request = OperationObservationRequestV1(operation_id=_observed_operation_id(), after_cursor=0, page_limit=1)
+    request = OperationObservationRequestV1(operation_id=observed_operation_id(), after_cursor=0, page_limit=1)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             full = _document(await sdk.call_tool("observe", {"observation": request.model_dump(mode="json")}))

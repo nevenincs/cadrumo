@@ -208,7 +208,7 @@ def test_queue_and_transport_share_one_deadline(monkeypatch: pytest.MonkeyPatch)
 
 def test_queue_timeout_never_starts_a_second_operation(monkeypatch: pytest.MonkeyPatch) -> None:
     source, _, _, _, transport = _source(monkeypatch)
-    monkeypatch.setattr(reads, "_READ_TIMEOUT_SECONDS", 0.02)
+    monkeypatch.setattr(reads, "READ_TIMEOUT_SECONDS", 0.02)
 
     async def scenario() -> None:
         first = asyncio.create_task(asyncio.to_thread(_help, source, "01"))

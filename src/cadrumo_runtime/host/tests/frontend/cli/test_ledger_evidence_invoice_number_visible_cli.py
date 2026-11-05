@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
 
-from .ledger_ux_support import _invoke, open_bucket_session
+from .ledger_ux_support import invoke, open_bucket_session
 
 __all__ = ["open_bucket_session"]
 
@@ -29,7 +29,7 @@ _UPDATED_NUMBER = "F-2026/0143"
 
 
 def _result(arguments: list[str]) -> dict[str, object]:
-    invoked = _invoke(["--format", "json", "app", "ledger", "evidence", *arguments])
+    invoked = invoke(["--format", "json", "app", "ledger", "evidence", *arguments])
     assert invoked.exit_code == 0, invoked.output
     result = json.loads(invoked.output)["result"]
     assert isinstance(result, dict)
@@ -44,7 +44,7 @@ def test_evidence_add_view_list_and_update_show_the_invoice_number_as_recorded(t
         viewed = _result(["view", evidence_id])
         listed = _result(["list"])
         updated = _result(["update", evidence_id, "--invoice-number", _UPDATED_NUMBER])
-        text_view = _invoke(["app", "ledger", "evidence", "view", evidence_id])
+        text_view = invoke(["app", "ledger", "evidence", "view", evidence_id])
 
     assert added["invoice_number"] == _INVOICE_NUMBER
     assert viewed["invoice_number"] == _INVOICE_NUMBER

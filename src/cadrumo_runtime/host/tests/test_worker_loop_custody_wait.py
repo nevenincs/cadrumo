@@ -103,7 +103,7 @@ async def _serve_control(
         return request
 
     monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
-    context = worker_service._WorkerControl(
+    context = worker_service.WorkerControl(
         channel=cast(WorkerChannel, parent),
         custody=custody,
         human=cast(ProfileWorkerHumanLogin, object()),
@@ -115,7 +115,7 @@ async def _serve_control(
         changed=asyncio.Event(),
     )
     with ThreadPoolExecutor(max_workers=1) as input_executor, pytest.raises(RefusalError):
-        await worker_service._serve_control_requests(context, input_executor)
+        await worker_service.serve_control_requests(context, input_executor)
 
 
 def _control(action: Literal["activity", "status"]) -> ProfileWorkerRequest:

@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -21,11 +21,11 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
 )
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .modelo_profile_seed import seed_profile, seed_test_profile
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
@@ -73,7 +73,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
     status = invoke_modelo_scenario_cli(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
-    status_payload = _payload(status.output)
+    status_payload = unwrap_schema_envelope(status.output)
     assert status_payload["configured"] is False
     assert status_payload["activity_present"] is False
 
@@ -98,7 +98,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def _assert_incomplete_readiness_json() -> dict[str, Any]:
@@ -114,7 +114,7 @@ def _assert_incomplete_readiness_json() -> dict[str, Any]:
         ],
     )  # fmt: skip
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["ready"] is False
     assert "declared complete" in readiness_payload["profile_refusal"]
@@ -185,8 +185,8 @@ def _assert_completing_setup_clears_the_profile_refusal() -> None:
         ],
     )  # fmt: skip
     assert after.exit_code == 2, after.output
-    assert _payload(after.output)["profile_ready"] is True
-    assert _payload(after.output)["profile_refusal"] == ""
+    assert unwrap_schema_envelope(after.output)["profile_ready"] is True
+    assert unwrap_schema_envelope(after.output)["profile_refusal"] == ""
     assert all(notice["code"] != "modelo.readiness.profile_refusal" for notice in json.loads(after.output)["notices"])
 
 
@@ -224,7 +224,7 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None:
@@ -250,7 +250,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() -> None:
@@ -281,7 +281,7 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile() -> None:
@@ -327,7 +327,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0
 
 
 def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> None:
@@ -352,7 +352,7 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
     )  # fmt: skip
 
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["registry_ready"] is True
     assert readiness_payload["profile_ready"] is True
     assert readiness_payload["profile_refusal"] == ""
@@ -372,13 +372,13 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
     )  # fmt: skip
 
     assert create.exit_code == 0, create.output
-    create_payload = _payload(create.output)
+    create_payload = unwrap_schema_envelope(create.output)
     assert create_payload["status"] == "created"
     assert create_payload["modelo"] == "349"
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:
@@ -396,7 +396,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
     )  # fmt: skip
 
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["ready"] is False
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["profile_refusal"]
@@ -434,14 +434,14 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
     )  # fmt: skip
 
     assert bypass.exit_code == 0, bypass.output
-    bypass_payload = _payload(bypass.output)
+    bypass_payload = unwrap_schema_envelope(bypass.output)
     assert bypass_payload["status"] == "created"
     assert bypass_payload["modelo"] == "200"
     assert bypass_payload["applicability_guard_bypassed"] is True
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 1
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 1
 
 
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
@@ -471,4 +471,4 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert unwrap_schema_envelope(listed.output)["work_unit_count"] == 0

@@ -107,7 +107,7 @@ def _unit(profile_id: UUID, period: Period) -> WorkUnit:
     )
 
 
-def _seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
+def seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
     """Persist two canonical units into the actual encrypted catalogue."""
     units = (_unit(profile_id, _FIRST), _unit(profile_id, _SECOND))
     repository = WorkUnitCatalogueRepository(
@@ -161,7 +161,7 @@ def _scope(destination_id: UUID) -> AccessScope:
     )
 
 
-def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
+def issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
     requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
     subject.owner.requesting = requester
     subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
@@ -184,7 +184,7 @@ def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | No
     return credential.get_secret_value()
 
 
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
+def connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     return VerifiedConnection(
         endpoint.connect(timeout=HANG_GUARD_SECONDS),
         expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
@@ -192,7 +192,7 @@ def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     )
 
 
-def _submit(
+def submit(
     connection: VerifiedConnection,
     profile_id: UUID,
     session_id: UUID,
@@ -225,8 +225,8 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
         tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
     ) as subject:
         profile_id = subject.store.binding.profile_id
-        allowed_unit, forbidden_unit = _seed_periods(profile_id)
-        api_key = _issue_scoped_key(subject)
+        allowed_unit, forbidden_unit = seed_periods(profile_id)
+        api_key = issue_scoped_key(subject)
         close_active_bucket_session()
 
         with serving_runtime(
@@ -235,7 +235,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
             capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
             secret_store=lambda: subject.native,
         ):
-            api, human = _connect(endpoint), _connect(endpoint)
+            api, human = connect(endpoint), connect(endpoint)
             try:
                 # The person signs in first; the key admits only while they are signed in.
                 human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
@@ -257,7 +257,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                     observed_updated_at=allowed_unit.updated_at,
                     actor="native-test-operator",
                 )
-                submitted = _submit(
+                submitted = submit(
                     api,
                     profile_id,
                     api_session,
@@ -292,7 +292,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                 assert typed.projection.name == "Scoped native rename"
                 assert typed.projection.bucket_id == str(profile_id)
 
-                denied_period = _submit(
+                denied_period = submit(
                     api,
                     profile_id,
                     api_session,
@@ -308,7 +308,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                 )
                 assert isinstance(denied_period, AccessRefusal), denied_period
                 assert denied_period.code is AccessDenialCode.PERIOD_DENIED
-                denied_discard = _submit(
+                denied_discard = submit(
                     api,
                     profile_id,
                     api_session,
@@ -326,7 +326,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                 )
                 assert isinstance(denied_discard, AccessRefusal), denied_discard
                 assert denied_discard.code is AccessDenialCode.PERIOD_DENIED
-                mismatched_subject = _submit(
+                mismatched_subject = submit(
                     api,
                     profile_id,
                     api_session,
@@ -336,7 +336,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                 )
                 assert isinstance(mismatched_subject, AccessRefusal), mismatched_subject
                 assert mismatched_subject.code is AccessDenialCode.OPERATION_DENIED
-                mismatched_profile = _submit(
+                mismatched_profile = submit(
                     api,
                     uuid4(),
                     api_session,

@@ -41,8 +41,7 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 
@@ -118,7 +117,7 @@ def new_settings_generation() -> str:
 class ProviderCredential(BaseModel):
     """One stored direct credential and its optional gateway URL."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: CredentialKind
     secret: SecretStr
@@ -149,13 +148,13 @@ class ProviderCredential(BaseModel):
 class ProviderPreferences(BaseModel):
     """Validated non-secret preferences; deliberately empty in schema version 1."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class ProviderSettingsRecord(BaseModel):
     """One profile's settings for one provider."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     schema_version: Literal[1]
     provider: LaneId
@@ -187,7 +186,7 @@ ModelId = Annotated[str, StringConstraints(pattern=MODEL_RUN_MODEL_ID_PATTERN)]
 class ListedModel(BaseModel):
     """One lane and one of its models, as the person named them; nothing here is secret."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     lane: LaneId
     """The catalogue lane id, never the provider identity alone."""
@@ -204,7 +203,7 @@ class LocalModelListRecord(BaseModel):
     picker, on any lane, local or not; ``None`` when none is stored.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[2]
     models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
@@ -228,7 +227,7 @@ class LocalModelListRecord(BaseModel):
 class _RoleChoice(BaseModel):
     """One entry of the per-role record schema version 1 stored before the model list."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     role: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
     lane: LaneId
@@ -238,7 +237,7 @@ class _RoleChoice(BaseModel):
 class _RoleChoicesRecord(BaseModel):
     """Schema version 1 of the record: the lane and model the person chose per role."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     selections: tuple[_RoleChoice, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)

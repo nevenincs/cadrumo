@@ -39,12 +39,12 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
-from ._isolated_profile_storage_fixtures import _isolated_state
 from .cli_runner import invoke_cached_cli
+from .isolated_profile_storage_fixtures import isolated_state
 from .runtime_profile_backend import operator_profile_bound_to_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_isolated_state"]
+__all__ = ["isolated_state"]
 
 
 def _invoke(args: list[str], *, pin_language: str | None = "en"):

@@ -23,8 +23,8 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._profile_cli_support import invoke_profile_create, login_profile
 from .cli_runner import invoke_cached_cli, semantic_cli_output
+from .profile_cli_support import invoke_profile_create, login_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

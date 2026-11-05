@@ -141,7 +141,7 @@ async def test_startup_adaptation_retains_transitive_owners_through_duplicates_a
         primary.__cause__ = timeout
     original_cause = primary.__cause__
 
-    startup._carry_cleanup_owner(primary, cancellation)
+    startup.carry_cleanup_owner(primary, cancellation)
 
     with pytest.raises(type(primary)) as caught:
         raise primary
@@ -318,7 +318,7 @@ def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFac
         logger.addHandler(handler)
         return handler
 
-    monkeypatch.setattr(startup, "_LOGGER", logger)
+    monkeypatch.setattr(startup, "LOGGER", logger)
     try:
         yield install
     finally:

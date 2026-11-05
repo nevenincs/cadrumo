@@ -38,7 +38,7 @@ class _CredentialClientCleanup:
         await asyncio.to_thread(self.client.close)
 
 
-def _authenticate_reference(
+def authenticate_reference(
     client: FrontendClient,
     *,
     root: Path,
@@ -105,7 +105,7 @@ async def open_installed_credential_client(
             on_connected(client)
         await await_cancellation_complete(
             asyncio.to_thread(
-                _authenticate_reference,
+                authenticate_reference,
                 client,
                 root=root,
                 credential_reference=credential_reference,

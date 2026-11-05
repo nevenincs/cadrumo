@@ -42,7 +42,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import revisio
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -256,7 +256,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     # casilla DP200014:00562 is the cuota-integra output casilla.
     cuota = payload["casilla_values"]["DP200014:00562"]
     # Oracle: 50.000,00 x 21 % + 50.000,00 x 22 % = 10.500,00 + 11.000,00 = 21.500,00 EUR
@@ -326,7 +326,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     cuota = payload["casilla_values"]["03"]
     # Oracle: 18 % x 10.000,00 = 1.800,00 EUR (LIS Art. 40.2)
     assert Decimal(cuota) == Decimal("1800.00"), (
@@ -408,7 +408,7 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     casilla_07 = payload["casilla_values"]["07"]
     # Oracle: 20 % x (12.000 - 4.000) = 1.600,00 EUR (IRPF Art. 99,
     # RD 439/2007 Art. 110, AEAT DR 130 Instrucciones Casilla 07)
@@ -463,7 +463,7 @@ def test_modelo_303_calculate_surface_is_reachable(
     # reachable non-traceback response.  We assert no Python traceback.
     assert "Traceback" not in result.output
     if result.exit_code == 0:
-        payload = _payload(result.output)
+        payload = unwrap_schema_envelope(result.output)
         assert "casilla_values" in payload, result.output
         # iva.resultado is the regulatory net IVA output casilla.
         assert "iva.resultado" in payload["casilla_values"], (
@@ -621,5 +621,5 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert "casilla_values" in payload, result.output

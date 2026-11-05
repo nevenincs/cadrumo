@@ -47,8 +47,8 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from ._ledger_llm_support import _PROFILE_FACTS
 from .cli_runner import invoke_cached_cli
+from .ledger_llm_support import PROFILE_FACTS
 
 pytestmark = [
     pytest.mark.integration,
@@ -195,7 +195,7 @@ def native_review(tmp_path: Path, authority_operation: PinnedAuthorityOperation)
     """Serve a registered profile whose worker reads through an admitted agent service."""
     agent = _Agent()
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-ledger-reviewed-provider", facts=_PROFILE_FACTS, model_runs=agent)
+        profile.register(label="native-ledger-reviewed-provider", facts=PROFILE_FACTS, model_runs=agent)
         yield _NativeReview(profile, authority_operation, agent)
 
 
