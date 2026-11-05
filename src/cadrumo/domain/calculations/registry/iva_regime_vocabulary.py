@@ -37,6 +37,9 @@ _REGIME_EXENTO_KEY = "iva_regime.exento_token"
 
 _REGIME_PREFIX = "iva_regime."
 
+#: Declared by the regime order; the vocabulary names no semantic key for it.
+_REGIME_RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
+
 
 @dataclass(frozen=True, slots=True)
 class IvaRegimeDefinition:
@@ -214,6 +217,19 @@ def iva_regime_simplificado_token(
     )
 
 
+def iva_regime_recargo_equivalencia_token(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> IVARegime:
+    """Return the recargo de equivalencia regime token, refusing a vocabulary that lacks it."""
+    return require_iva_regime(
+        _REGIME_RECARGO_EQUIVALENCIA,
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
 def iva_regime_reagp_token(
     *,
     effective_date: date | None = None,
@@ -248,6 +264,7 @@ __all__ = [
     "iva_regime_exento_token",
     "iva_regime_no_aplica_token",
     "iva_regime_reagp_token",
+    "iva_regime_recargo_equivalencia_token",
     "iva_regime_simplificado_token",
     "require_iva_regime",
     "resolve_iva_regime_catalogue",

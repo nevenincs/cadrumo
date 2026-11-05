@@ -341,6 +341,11 @@ class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
     Attributes:
+        regime_composition: How the general and simplified regimes combine in
+            Modelo 303. ``None`` for a taxpayer whose only IVA regime is the
+            recargo de equivalencia: the supplier charges the recargo and the
+            retailer files no Modelo 303 for those activities (LIVA arts.
+            154-163), so there is no composition to state.
         roi_enrolled: Registered on the Registro de Operadores
             Intracomunitarios (ROI / VIES).
         oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
@@ -366,7 +371,7 @@ class ModeloIVAProfile(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
-    regime_composition: M303RegimeComposition
+    regime_composition: M303RegimeComposition | None = None
     roi_enrolled: bool = False
     oss_enrolled: bool = False
     group_member_enrolled: bool = False

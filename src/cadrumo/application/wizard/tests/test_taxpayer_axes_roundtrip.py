@@ -154,6 +154,7 @@ class TestTaxpayerProfileProjection:
         assert profile.iva_regime == IVARegime("REAGP")
         iva = profile.iva
         assert iva is not None
+        assert iva.regime_composition is not None
         assert iva.regime_composition.value == "general"
         assert iva.cash_accounting_regime_enrolled is False
         assert iva.voluntary_sii_enrolled is False
